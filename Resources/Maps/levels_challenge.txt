@@ -1,0 +1,1 @@
+1 4 0 0 0 0 playerspawn_-42.5_-55.76_rot_0 p_-42.5_-48.26_end_ candelbig_-43.37_-56.42_rot_45
