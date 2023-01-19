@@ -58,10 +58,10 @@ public class PlayerScript : MonoBehaviour
   }
 
   int _saveLoadoutIndex;
-  /*public void ResetLoadoutIndex()
-  {
-    _profile._loadoutIndex;
-  }*/
+
+  //
+  GameScript.PlayerProfile.Equipment _equipment_start;
+  public static int _NumPlayers_Start;
 
   // Colored ring under player
   MeshRenderer[] _ring;
@@ -169,6 +169,9 @@ public class PlayerScript : MonoBehaviour
     EquipStart();
 
     _saveLoadoutIndex = _profile._loadoutIndex;
+
+    // Save start loadout for challenges
+    _equipment_start = _equipment;
 
     // Set camera position
     _camPos = GameScript.GameResources._Camera_Main.transform.position;

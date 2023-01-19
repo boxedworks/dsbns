@@ -301,6 +301,9 @@ public class GameScript : MonoBehaviour
     if (_PlayerIter < Settings._NumberPlayers)
       for (; _PlayerIter < Settings._NumberPlayers; _PlayerIter++)
         PlayerspawnScript._PlayerSpawns[0].SpawnPlayer();
+
+    // Save player num for challenges
+    PlayerScript._NumPlayers_Start = Settings._NumberPlayers;
   }
 
   static Coroutine _tutorialCo;
@@ -3596,7 +3599,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       }
     }
 
-    public static FunctionsC.SaveableStat_Bool 
+    public static FunctionsC.SaveableStat_Bool
       _Extra_RemoveBatGuy;
     public static float _VERSION = 1.25f;
 
