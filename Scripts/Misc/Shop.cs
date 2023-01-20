@@ -478,7 +478,7 @@ public static class Shop
 
   public static void ShowUnlocks(Menu2.MenuType toMenu)
   {
-    Menu2.GenericMenu(new string[] { "new unlocks\n\n", _UnlockString }, (UnityEngine.Random.value < 0.5f ? "ok" : "nice"), toMenu);
+    Menu2.GenericMenu(new string[] { "new unlocks\n\n", _UnlockString }, (UnityEngine.Random.value < 0.5f ? "wow" : "nice"), toMenu);
     _UnlockString = "";
   }
 

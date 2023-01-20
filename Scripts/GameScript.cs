@@ -3167,6 +3167,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
           {
 
             // Check time extra
+            // "unlock by completing sneaky level 40, solo, with just a knife",
             case 40:
 
               if (
@@ -3183,6 +3184,28 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
               {
                 Debug.Log("Unlocked EXTRA_TIME");
                 Shop.AddAvailableUnlock(Shop.Unlocks.EXTRA_TIME, true);
+              }
+
+              break;
+
+            // Check gravity extra
+            // "unlock by completing sneaky level 80, solo, with just a knife and silenced pistol",
+            case 80:
+
+              if (
+                equipment_start._perks.Count == 0 &&
+                equipment_start._utilities_left.Length == 0 &&
+                equipment_start._utilities_right.Length == 0 &&
+                (
+                  (equipment_start._item_left0 == ItemManager.Items.KNIFE && equipment_start._item_right0 == ItemManager.Items.PISTOL_SILENCED && equipment_start._item_left1 == ItemManager.Items.NONE && equipment_start._item_right1 == ItemManager.Items.NONE) ||
+                  (equipment_start._item_left0 == ItemManager.Items.PISTOL_SILENCED && equipment_start._item_right0 == ItemManager.Items.KNIFE && equipment_start._item_left1 == ItemManager.Items.NONE && equipment_start._item_right1 == ItemManager.Items.NONE) ||
+                  (equipment_start._item_left0 == ItemManager.Items.NONE && equipment_start._item_right0 == ItemManager.Items.NONE && equipment_start._item_left1 == ItemManager.Items.KNIFE && equipment_start._item_right1 == ItemManager.Items.PISTOL_SILENCED) ||
+                  (equipment_start._item_left0 == ItemManager.Items.NONE && equipment_start._item_right0 == ItemManager.Items.NONE && equipment_start._item_left1 == ItemManager.Items.PISTOL_SILENCED && equipment_start._item_right1 == ItemManager.Items.KNIFE)
+                )
+              )
+              {
+                Debug.Log("Unlocked EXTRA_GRAVITY");
+                Shop.AddAvailableUnlock(Shop.Unlocks.EXTRA_GRAVITY, true);
               }
 
               break;

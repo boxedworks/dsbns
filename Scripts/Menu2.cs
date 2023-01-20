@@ -6076,7 +6076,7 @@ a gampad if plugged in.~1
       },
       "set gravity's direction",
 
-      "unlock by...",
+      "unlock by completing sneaky level 80, solo, with just a knife and silenced pistol",
       () => { return Shop.Unlocked(Shop.Unlocks.EXTRA_GRAVITY); }
     );
 
