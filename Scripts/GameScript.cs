@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+using System.Linq;
+
 public class GameScript : MonoBehaviour
 {
   public static TextMesh _debugText;
@@ -287,17 +289,20 @@ public class GameScript : MonoBehaviour
     _PlayerIter = 0;
     if (PlayerScript._Players != null)
     {
+
       // Count number of players to spawn.. only used if trying to stay persistant or players joined?
-      foreach (PlayerScript p in PlayerScript._Players) if (p != null && !p._ragdoll._dead) _PlayerIter++;
+      foreach (var p in PlayerScript._Players) if (p != null && !p._ragdoll._dead) _PlayerIter++;
+
       // Remove null / dead players
-      for (int i = PlayerScript._Players.Count - 1; i >= 0; i--)
+      for (var i = PlayerScript._Players.Count - 1; i >= 0; i--)
       {
-        PlayerScript p = PlayerScript._Players[i];
+        var p = PlayerScript._Players[i];
         if (p == null || p._ragdoll == null || !p._ragdoll._dead)
           PlayerScript._Players.RemoveAt(i);
       }
     }
-    //
+
+    // Spawn players
     if (_PlayerIter < Settings._NumberPlayers)
       for (; _PlayerIter < Settings._NumberPlayers; _PlayerIter++)
         PlayerspawnScript._PlayerSpawns[0].SpawnPlayer();
@@ -994,14 +999,17 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
           alive_player = p;
           break;
         }
+
         // Check for an alive player
         if (alive_player == null) return;
+
         // Count number of players to spawn.. only used if trying to stay persistant or players joined?
-        foreach (PlayerScript p in PlayerScript._Players) if (p != null && !p._ragdoll._dead) _PlayerIter++;
+        foreach (var p in PlayerScript._Players) if (p != null && !p._ragdoll._dead) _PlayerIter++;
+
         // Remove null / dead players
-        for (int i = PlayerScript._Players.Count - 1; i >= 0; i--)
+        for (var i = PlayerScript._Players.Count - 1; i >= 0; i--)
         {
-          PlayerScript p = PlayerScript._Players[i];
+          var p = PlayerScript._Players[i];
           if (p == null || p._ragdoll == null || p._ragdoll._dead)
           {
             ActiveRagdoll._Ragdolls.Remove(p._ragdoll);
@@ -1013,16 +1021,18 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
             FunctionsC.PlaySound(ref _audioListenerSource, "Ragdoll/Pop", 0.9f, 1.05f);
           }
         }
+
         // Remove old items / utilities
         var objects = GameResources._Container_Objects;
-        for (int i = objects.childCount - 1; i >= 0; i--)
+        for (var i = objects.childCount - 1; i >= 0; i--)
         {
           var obj = objects.GetChild(i);
           if (obj.name == "BookcaseOpen" || obj.name == "Interactable") continue;
           GameObject.Destroy(obj.gameObject);
         }
+
         // Heal and reload all players
-        foreach (PlayerScript p in PlayerScript._Players)
+        foreach (var p in PlayerScript._Players)
           if (p != null && p._ragdoll != null)
           {
             HealPlayer(p);
@@ -1507,6 +1517,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         Levels._UnlockAllLevels = !Levels._UnlockAllLevels;
       }
     }
+
     // Check for controller change
     if (Time.unscaledTime - _lastInputCheck > 0.25f)
     {
@@ -1522,13 +1533,15 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       if (Settings._NumberControllers != numcontrollers_save)
       {
         var ui = GameResources._UI_Player;
-        for (int i = 1; i < 4; i++)
+        for (var i = 1; i < 4; i++)
           ui.GetChild(i).gameObject.SetActive(i < Settings._NumberPlayers);
+
         // Pause if a controller was unplugged and playing
         if (!Menu2._InMenus && (!_EditorTesting) && Settings._NumberControllers != PlayerScript._Players.Count)
           Menu2.OnControllersChanged(Settings._NumberControllers - numcontrollers_save, numcontrollers_save);
       }
     }
+
     // Update survial mode
     if (IsSurvival() && !_EditorEnabled)
       SurvivalMode.Update();
@@ -3102,8 +3115,80 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
 #if UNITY_STANDALONE
         // Check for achievements
         if (Levels._CurrentLevelIndex == 0 && Settings._DIFFICULTY == 0)
+        {
           SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.LEVEL_0_COMPLETED);
+        }
 #endif
+      }
+    }
+
+    // Check for extras challenges
+    if (_GameMode == GameModes.CLASSIC)
+    {
+      bool EquipmentIsEqual(PlayerProfile.Equipment e0, PlayerProfile.Equipment e1)
+      {
+
+        // Check items equal
+        if (e0._item_left0 != e1._item_left0) { return false; }
+        if (e0._item_right0 != e1._item_right0) { return false; }
+        if (e0._item_left1 != e1._item_left1) { return false; }
+        if (e0._item_right1 != e1._item_right1) { return false; }
+
+        // Check perks equal
+        if (e0._perks.Count != e1._perks.Count) return false;
+        foreach (var perk0 in e0._perks)
+        {
+          if (!e1._perks.Contains(perk0)) return false;
+        }
+
+        // Check utilities equal
+        if (e0._utilities_left.Length != e1._utilities_left.Length) return false;
+        foreach (var utlity0 in e0._utilities_left)
+        {
+          if (!e1._utilities_left.Contains(utlity0)) return false;
+        }
+        if (e0._utilities_right.Length != e1._utilities_right.Length) return false;
+        foreach (var utlity0 in e0._utilities_right)
+        {
+          if (!e1._utilities_right.Contains(utlity0)) return false;
+        }
+
+        return true;
+      }
+
+      Debug.Log(PlayerScript._NumPlayers_Start);
+      Debug.Log(PlayerScript._Players.Count);
+      if (PlayerScript._NumPlayers_Start == 1 && PlayerScript._Players.Count > 0)
+      {
+
+        var equipment_start = PlayerScript._Players[0]._equipment_start;
+        if (EquipmentIsEqual(equipment_start, PlayerScript._Players[0]._equipment))
+          switch (Levels._CurrentLevelIndex + 1)
+          {
+
+            // Check time extra
+            case 40:
+
+              if (
+                equipment_start._perks.Count == 0 &&
+                equipment_start._utilities_left.Length == 0 &&
+                equipment_start._utilities_right.Length == 0 &&
+                (
+                  (equipment_start._item_left0 == ItemManager.Items.KNIFE && equipment_start._item_right0 == ItemManager.Items.NONE && equipment_start._item_left1 == ItemManager.Items.NONE && equipment_start._item_right1 == ItemManager.Items.NONE) ||
+                  (equipment_start._item_left0 == ItemManager.Items.NONE && equipment_start._item_right0 == ItemManager.Items.KNIFE && equipment_start._item_left1 == ItemManager.Items.NONE && equipment_start._item_right1 == ItemManager.Items.NONE) ||
+                  (equipment_start._item_left0 == ItemManager.Items.NONE && equipment_start._item_right0 == ItemManager.Items.NONE && equipment_start._item_left1 == ItemManager.Items.KNIFE && equipment_start._item_right1 == ItemManager.Items.NONE) ||
+                  (equipment_start._item_left0 == ItemManager.Items.NONE && equipment_start._item_right0 == ItemManager.Items.NONE && equipment_start._item_left1 == ItemManager.Items.NONE && equipment_start._item_right1 == ItemManager.Items.KNIFE)
+                )
+              )
+              {
+                Debug.Log("Unlocked EXTRA_TIME");
+                Shop.AddAvailableUnlock(Shop.Unlocks.EXTRA_TIME, true);
+              }
+
+              break;
+
+          }
+
       }
     }
 

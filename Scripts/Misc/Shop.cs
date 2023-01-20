@@ -47,9 +47,9 @@ public static class Shop
       "you can find overall stats in the options menu",
 
       "equip mods to gain special attributes",
-      "you can only equip 4 mods at a time",
+      "you can equip up to 4 mods",
 
-      "every steam review helps this game"
+      "every steam review helps this game :)"
     };
     static string[] _Tips_Classic = new string[]
     {
@@ -57,8 +57,8 @@ public static class Shop
       "beat classic levels to add more unlocks to the shop",
       "purchase 'MAX_EQUIPMENT_POINTS' in the shop to equip more items in your loadouts",
       "for loadouts, you can only equip as many items as you have equipment points",
-      "use the filters in the shop menu or unlock menu to make them easier to read",
-      "most actions you do make noise that can alert enemies",
+      "use filters in the shop or unlock menus to make them easier to read",
+      "most actions make noise that can alert enemies",
       "stuck on a level? try making a different loadout",
       "you only have 1 health in classic mode",
       "you can equip two of the same weapon or utility if you have enough points",
@@ -211,6 +211,12 @@ public static class Shop
     MAX_EQUIPMENT_POINTS_9,
 
     MODE_SURVIVAL,
+
+    EXTRA_TIME,
+    EXTRA_GRAVITY,
+    EXTRA_HORDE,
+    EXTRA_CHASER,
+
     TUTORIAL_PART0,
     TUTORIAL_PART1
   }
@@ -307,6 +313,12 @@ public static class Shop
     _Unlocks_Descriptions.Add(Unlocks.MAX_EQUIPMENT_POINTS_9, new Tuple<string, int>("equipment-points, (+1)", 9));
 
     _Unlocks_Descriptions.Add(Unlocks.MODE_SURVIVAL, new Tuple<string, int>("purchase to unlock survival mode", 0));
+
+    _Unlocks_Descriptions.Add(Unlocks.EXTRA_TIME, new Tuple<string, int>("purchase to unlock the 'time' extra", 0));
+    _Unlocks_Descriptions.Add(Unlocks.EXTRA_GRAVITY, new Tuple<string, int>("purchase to unlock the 'gravity' extra", 0));
+    _Unlocks_Descriptions.Add(Unlocks.EXTRA_HORDE, new Tuple<string, int>("purchase to unlock the 'horde' extra", 0));
+    _Unlocks_Descriptions.Add(Unlocks.EXTRA_CHASER, new Tuple<string, int>("purchase to unlock the 'chaser' extra", 0));
+
     _Unlocks_Descriptions.Add(Unlocks.TUTORIAL_PART0, new Tuple<string, int>("", 0));
     _Unlocks_Descriptions.Add(Unlocks.TUTORIAL_PART1, new Tuple<string, int>("", 0));
 

@@ -52,7 +52,7 @@ public class PlayerScript : MonoBehaviour
     }
   }
 
-  GameScript.PlayerProfile.Equipment _equipment
+  public GameScript.PlayerProfile.Equipment _equipment
   {
     get { return _profile._equipment; }
   }
@@ -60,7 +60,7 @@ public class PlayerScript : MonoBehaviour
   int _saveLoadoutIndex;
 
   //
-  GameScript.PlayerProfile.Equipment _equipment_start;
+  public GameScript.PlayerProfile.Equipment _equipment_start;
   public static int _NumPlayers_Start;
 
   // Colored ring under player

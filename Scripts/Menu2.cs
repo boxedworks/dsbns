@@ -4008,10 +4008,10 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
                 var item_other = CurrentLoadout()._equipment._item_left0;
                 // Check for two handed
                 if (((item_selected == GameScript.ItemManager.Items.BAT || item_selected == GameScript.ItemManager.Items.SWORD) &&
-        (item_other != GameScript.ItemManager.Items.NONE)) ||
-        ((item_other == GameScript.ItemManager.Items.BAT || item_other == GameScript.ItemManager.Items.SWORD) &&
-        (item_selected != GameScript.ItemManager.Items.NONE))
-        )
+                  (item_other != GameScript.ItemManager.Items.NONE)) ||
+                  ((item_other == GameScript.ItemManager.Items.BAT || item_other == GameScript.ItemManager.Items.SWORD) &&
+                  (item_selected != GameScript.ItemManager.Items.NONE))
+                  )
                   CurrentLoadout()._equipment._item_left0 = GameScript.ItemManager.Items.NONE;
                 if (CurrentLoadout().CanEquipItem(ActiveRagdoll.Side.RIGHT, 0, item_selected))
                 {
@@ -6038,6 +6038,24 @@ a gampad if plugged in.~1
       }
     }
 
+    // Superhot
+    AddExtraSelection(
+      "time",
+      () => { return GameScript.Settings._Extra_Superhot ? "movement" : "normal"; },
+      new DropdownSelectionComponent[] {
+        new DropdownSelectionComponent("normal", "time is normal", (MenuComponent component) => {
+            GameScript.Settings._Extra_Superhot = false;
+        }),
+        new DropdownSelectionComponent("movement", "time only moves when you move", (MenuComponent component) => {
+            GameScript.Settings._Extra_Superhot = true;
+        }),
+      },
+      "set the speed that time passes",
+
+      "unlock by completing sneaky level 40, solo, with just a knife",
+      () => { return Shop.Unlocked(Shop.Unlocks.EXTRA_TIME); }
+    );
+
     // Gravity direction
     AddExtraSelection(
       "gravity",
@@ -6059,25 +6077,7 @@ a gampad if plugged in.~1
       "set gravity's direction",
 
       "unlock by...",
-      () => { return false; }
-    );
-
-    // Superhot
-    AddExtraSelection(
-      "time",
-      () => { return GameScript.Settings._Extra_Superhot ? "movement" : "normal"; },
-      new DropdownSelectionComponent[] {
-        new DropdownSelectionComponent("normal", "time is normal", (MenuComponent component) => {
-            GameScript.Settings._Extra_Superhot = false;
-        }),
-        new DropdownSelectionComponent("movement", "time only moves when you move", (MenuComponent component) => {
-            GameScript.Settings._Extra_Superhot = true;
-        }),
-      },
-      "set the speed that time passes",
-
-      "unlock by...",
-      () => { return false; }
+      () => { return Shop.Unlocked(Shop.Unlocks.EXTRA_GRAVITY); }
     );
 
     // Crazy zombies
@@ -6095,7 +6095,7 @@ a gampad if plugged in.~1
       "toggle a horde mode",
 
       "unlock by...",
-      () => { return false; }
+      () => { return Shop.Unlocked(Shop.Unlocks.EXTRA_HORDE); }
     );
 
     // Remove bat guy
@@ -6113,7 +6113,7 @@ a gampad if plugged in.~1
       "toggle the removal of the chasing guy",
 
       "unlock by...",
-      () => { return false; },
+      () => { return Shop.Unlocked(Shop.Unlocks.EXTRA_CHASER); },
 
       "\n\n"
     );
@@ -6437,12 +6437,14 @@ a gampad if plugged in.~1
   }
 
   // Wrapper struct for adding dropdown selections
-  class DropdownSelectionComponent{
+  class DropdownSelectionComponent
+  {
     public string _selectionPrompt,
       _selectionDescription;
     public System.Action<MenuComponent> on_selected;
 
-    public DropdownSelectionComponent(string promp, string desc, System.Action<MenuComponent> onselect){
+    public DropdownSelectionComponent(string promp, string desc, System.Action<MenuComponent> onselect)
+    {
       _selectionPrompt = promp;
       _selectionDescription = desc;
       on_selected = onselect;
