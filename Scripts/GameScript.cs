@@ -111,7 +111,12 @@ public class GameScript : MonoBehaviour
       _Table, _Table_Bush,
       _TableSmall,
       _Chair, _Chair_Stump,
-      _BookcaseClosed, _BookcaseOpen, _BookcaseBig, _RugRectangle,
+      _BookcaseClosed,
+
+      _BookcaseOpen, _BookcaseOpen_Bush,
+      _BookcaseBig, _BookcaseBig_Bush,
+
+      _RugRectangle,
 
 
       _Barrel, _Barrel_Rock,
@@ -149,8 +154,12 @@ public class GameScript : MonoBehaviour
 
       _TableSmall = Resources.Load("TableSmall") as GameObject;
       _BookcaseClosed = Resources.Load("BookcaseClosed") as GameObject;
+
       _BookcaseOpen = Resources.Load("BookcaseOpen") as GameObject;
+      _BookcaseOpen_Bush = Resources.Load("BookcaseOpen_Bush") as GameObject;
       _BookcaseBig = Resources.Load("BookcaseBig") as GameObject;
+      _BookcaseBig_Bush = Resources.Load("BookcaseBig_Bush") as GameObject;
+
       _RugRectangle = Resources.Load("RugRectangle") as GameObject;
 
       _Barrel = Resources.Load("Barrel") as GameObject;

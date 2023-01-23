@@ -613,23 +613,30 @@ public class TileManager
       PlayerspawnScript._PlayerSpawns[0].transform.GetChild(1).gameObject.SetActive(false);
     else
       PlayerspawnScript._PlayerSpawns[0].transform.GetChild(1).gameObject.SetActive(true);
+
     // Bake navmesh
     _navMeshSurface.BuildNavMesh();
     if (GameScript.IsSurvival())
       _navMeshSurface2.BuildNavMesh();
+
     // Combine meshes
-    foreach (Tile t in tiles_down)
+    foreach (var t in tiles_down)
       t._tile.transform.parent = _Map;
     CombineMeshes(true);
+
     // Set level time
     GameScript._LevelStartTime = Time.time;
+
     // Lerp cam distance
     GameScript._Singleton.StartCoroutine(LerpCam());
+
     // Init all enemies
     yield return EnemyScript.HardInitAllCo();
+
     // Spawn player
     if (!Menu2._InMenus)
       GameScript.SpawnPlayers();
+
     // Refill player ammo
     if (PlayerScript._Players != null)
       foreach (PlayerScript p in PlayerScript._Players) p._ragdoll.RefillAmmo();
@@ -659,7 +666,8 @@ public class TileManager
 
   static void CombineMeshes(bool combine_tiles)
   {
-    Transform objects = _Map.GetChild(1);
+    var objects = _Map.GetChild(1);
+
     // Gather objects to combine
     var meshes = new Dictionary<string, System.Tuple<List<GameObject>, bool>>();
     meshes.Add("Barrels", System.Tuple.Create(new List<GameObject>(), false));
@@ -668,13 +676,16 @@ public class TileManager
     meshes.Add("Tables", System.Tuple.Create(new List<GameObject>(), false));
     meshes.Add("Chairs", System.Tuple.Create(new List<GameObject>(), false));
     meshes.Add("Arches", System.Tuple.Create(new List<GameObject>(), false));
+
+    meshes.Add("Bushes", System.Tuple.Create(new List<GameObject>(), true));
     meshes.Add("Rocks", System.Tuple.Create(new List<GameObject>(), true));
+
     meshes.Add("Walls", System.Tuple.Create(new List<GameObject>(), false));
     meshes.Add("Outers", System.Tuple.Create(new List<GameObject>(), true));
 
-    for (int i = 0; i < objects.childCount; i++)
+    for (var i = 0; i < objects.childCount; i++)
     {
-      Transform obj = objects.GetChild(i);
+      var obj = objects.GetChild(i);
       switch (obj.name)
       {
         case ("Barrel"):
@@ -682,12 +693,12 @@ public class TileManager
           break;
         case ("BookcaseOpen"):
           meshes["Bookcases"].Item1.Add(obj.GetChild(0).GetChild(0).gameObject);
-          for (int u = 0; u < 3; u++)
+          for (var u = 0; u < 3; u++)
             meshes["Books"].Item1.Add(obj.GetChild(u + 1).GetChild(0).gameObject);
           break;
         case ("BookcaseBig"):
           meshes["Bookcases"].Item1.Add(obj.GetChild(0).GetChild(0).gameObject);
-          for (int u = 0; u < 3; u++)
+          for (var u = 0; u < 3; u++)
             meshes["Books"].Item1.Add(obj.GetChild(u + 1).GetChild(0).gameObject);
           break;
         case ("Table"):
@@ -704,7 +715,7 @@ public class TileManager
           break;
         case ("NavMeshBarrier"):
           var t = obj.GetChild(0);
-          for (int u = 0; u < t.childCount; u++)
+          for (var u = 0; u < t.childCount; u++)
             meshes["Rocks"].Item1.Add(t.GetChild(u).gameObject);
           break;
         case ("TileWall"):
@@ -712,6 +723,21 @@ public class TileManager
           t = obj.GetChild(1);
           for (int u = 0; u < t.childCount; u++)
             meshes["Outers"].Item1.Add(t.GetChild(u).gameObject);
+          break;
+
+        // Forest theme
+        case ("Barrel_Rock"):
+          meshes["Rocks"].Item1.Add(obj.GetChild(0).gameObject);
+          break;
+
+        case ("BookcaseOpen_Bush"):
+          meshes["Bushes"].Item1.Add(obj.GetChild(0).gameObject);
+          break;
+        case ("BookcaseBig_Bush"):
+          meshes["Bushes"].Item1.Add(obj.GetChild(0).gameObject);
+          break;
+        case ("Table_Bush"):
+          meshes["Bushes"].Item1.Add(obj.GetChild(0).gameObject);
           break;
       }
     }
@@ -1321,10 +1347,10 @@ public class TileManager
           resource = GameScript.GameResources._BookcaseClosed;
           break;
         case ("BookcaseOpen"):
-          resource = GameScript.GameResources._BookcaseOpen;
+          resource = SceneThemes._Theme._name == "Hedge" ? GameScript.GameResources._BookcaseOpen_Bush : GameScript.GameResources._BookcaseOpen;
           break;
         case ("BookcaseBig"):
-          resource = GameScript.GameResources._BookcaseBig;
+          resource = SceneThemes._Theme._name == "Hedge" ? GameScript.GameResources._BookcaseBig_Bush : GameScript.GameResources._BookcaseBig;
           break;
         case ("RugRectangle"):
           resource = GameScript.GameResources._RugRectangle;
@@ -1379,7 +1405,7 @@ public class TileManager
       }
       var new_gameobject = GameObject.Instantiate(resource);
       new_gameobject.transform.parent = parent;
-      new_gameobject.name = resourceName;
+      new_gameobject.name = resource.name;
 
       new_gameobject.transform.localScale = localScale;
       new_gameobject.transform.position = new Vector3(_x, 0f, _z);
