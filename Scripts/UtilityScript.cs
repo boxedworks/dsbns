@@ -163,7 +163,7 @@ public class UtilityScript : ItemScript
         if (_ragdoll._isPlayer && _ragdoll._playerScript.HasPerk(Shop.Perk.PerkType.EXPLOSIONS_UP))
           explosion_radius *= 1.25f;
 
-        Vector3 localscale = _ring.transform.localScale;
+        var localscale = _ring.transform.localScale;
         localscale *= explosion_radius * 1.1f;
         localscale.z = 2f;
         _ring.transform.localScale = localscale;

@@ -71,6 +71,9 @@ public class PlayerScript : MonoBehaviour
   static float _autouserate;
   static ActiveRagdoll.Side _autoside;
 
+  // Last time whistled
+  public float _last_whistle;
+
   // Use this for initialization
   void Start()
   {
@@ -1460,16 +1463,10 @@ public class PlayerScript : MonoBehaviour
     {
       // Up
       case (0):
-        //if (_id == 0)
-        //  if (_camHeight == 16f) _camHeight = 40f;
-        //  else _camHeight = 16f;
-        //ToggleFireModes();
-        /*if (EnemyScript._Enemies_alive == null) break;
-        _tauntIter++;
-        _tauntIter %= EnemyScript._Enemies_alive.Count;*/
         _ragdoll.SwapItemHands(_profile._equipmentIndex);
         _profile.UpdateIcons();
         break;
+
       // Down
       case (1):
         // If survival, throw money
@@ -1515,12 +1512,15 @@ public class PlayerScript : MonoBehaviour
           }
           ThrowMoney();
         }
+
         // If classic, whistle
         else
         {
           FunctionsC.PlaySound(ref _ragdoll._audioPlayer_steps, "Ragdoll/Whistle", 0.85f, 1.2f);
           EnemyScript.CheckSound(_ragdoll._hip.position + _ragdoll._hip.transform.forward * 3f, _ragdoll._hip.position, EnemyScript.Loudness.SOFT);
           _ragdoll.DisplayText("!");
+
+          _last_whistle = Time.time;
         }
 
         /*if (_tauntIter >= 0)

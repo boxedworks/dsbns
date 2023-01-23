@@ -454,7 +454,8 @@ public class ItemScript : MonoBehaviour
 
       // Recoil player
       _ragdoll._force += MathC.Get2DVector(-transform.forward) * _shoot_force;
-      if(_ragdoll._grappler != null){
+      if (_ragdoll._grappler != null)
+      {
         _ragdoll._grappler._force += MathC.Get2DVector(-transform.forward) * _shoot_force;
       }
       //_ragdoll._forwardForce += _shoot_forward_force;
@@ -526,15 +527,24 @@ public class ItemScript : MonoBehaviour
       else
       {
         _laserSight.SetActive(true);
-        RaycastHit hit = new RaycastHit();
-        var dist = 100f;
+
+        var dist = 0f;
         var forward = MathC.Get2DVector(transform.forward).normalized;
-        var start = _forward.position + forward * 0.2f;
+        var start = _forward.position + forward * -0.5f;
+
+        RaycastHit hit = new RaycastHit();
         if (Physics.Raycast(new Ray(start, forward), out hit))
           dist = hit.distance;
-        _laserSight.transform.position = start + (forward * dist / 2f);
+
+        if (dist <= 0.5f) dist = 0f;
+
+        start = _forward.position + forward * 0.1f;
+        dist -= 0.6f;
+
+        _laserSight.transform.position = start + (forward * (dist / 2f));
         _laserSight.transform.localScale = new Vector3(0.03f, 0.03f, dist);
         _laserSight.transform.LookAt(start + forward * dist * 1.2f);
+        _laserSight.transform.position += new Vector3(0f, -0.2f, 0f);
       }
     }
 

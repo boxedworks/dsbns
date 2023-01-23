@@ -61,7 +61,7 @@ public class ExplosiveScript : MonoBehaviour {
     _exploded = true;
     // Remove from explosion list
     _Explosives.Remove(this);
-    
+
     // Show explosion scar
     FunctionsC.SpawnExplosionScar(transform.position, _radius);
 
@@ -70,15 +70,17 @@ public class ExplosiveScript : MonoBehaviour {
 
     // Particles
     var particles = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.EXPLOSION);
-    var main = particles[0].main; 
+    var main = particles[0].main;
     main.startSpeed = new ParticleSystem.MinMaxCurve(2, Mathf.Lerp(5f, 10f, (_radius / 6f)));
     main = particles[1].main;
     main.startSpeed = new ParticleSystem.MinMaxCurve(2, Mathf.Lerp(5f, 10f, (_radius / 6f))); var shape = particles[2].shape;
     shape.radius = Mathf.Lerp(1f, 3f, (_radius / 6f));
+
     // Check for nearby ragdolls
     FunctionsC.ApplyExplosionRadius(transform.position, _radius, _explosionType, source);
+
     // Check for nearby explosives
-    foreach(ExplosiveScript e in _Explosives)
+    foreach(var e in _Explosives)
     {
       if (e == null) continue;
       if (e.name.Equals("Missle") || e.name.Equals("Grenade") || MathC.Get2DDistance(transform.position, e.transform.position) > _radius) continue;
@@ -86,9 +88,11 @@ public class ExplosiveScript : MonoBehaviour {
     }
     // Set sound alert
     EnemyScript.CheckSound(transform.position, EnemyScript.Loudness.LOUD);
+
     // Play sound
     if(playSound)
-      FunctionsC.PlaySound(ref _audio, "Ragdoll/Explode", 0.9f, 1.1f);
+      FunctionsC.PlaySound(ref _audio, "Ragdoll/Explode", 0.825f, 1.175f);
+
     // Try to remove RB
     Rigidbody rb = GetComponent<Rigidbody>();
     if (rb != null) Destroy(rb);

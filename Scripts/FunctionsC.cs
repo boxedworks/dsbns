@@ -398,9 +398,9 @@ public static class FunctionsC
     var rags = CheckRadius(position, radius);
     foreach (var r in rags)
       r.ToggleRaycasting(false);
-    int exploded = 0;
+    var exploded = 0;
     PlayComplexParticleSystemAt(ParticleSystemType.EXPLOSION, position + new Vector3(0f, 0.2f, 0f));
-    foreach (ActiveRagdoll r in rags)
+    foreach (var r in rags)
     {
       // Check for perk
       if (r._isPlayer && r._id == source._id && r._playerScript.HasPerk(Shop.Perk.PerkType.EXPLOSION_RESISTANCE)) continue;
@@ -411,8 +411,8 @@ public static class FunctionsC
       else
       {
         r.ToggleRaycasting(true);
-        RaycastHit hit = new RaycastHit();
-        Vector3 dir = -MathC.Get2DVector(position - r._hip.position).normalized;
+        var hit = new RaycastHit();
+        var dir = -MathC.Get2DVector(position - r._hip.position).normalized;
         if (!Physics.SphereCast(new Ray(new Vector3(position.x, -0.1f, position.z), dir), 0.1f, out hit, radius + 1f))
         {
           r.ToggleRaycasting(false);
@@ -436,11 +436,11 @@ public static class FunctionsC
 #endif
 
       // Explosion force type
-      Vector3 explosionForce = Vector3.zero;
+      var explosionForce = Vector3.zero;
       if (type == ExplosiveScript.ExplosionType.UPWARD) explosionForce = new Vector3(0f, 3000f, 0f);
       else if (type == ExplosiveScript.ExplosionType.AWAY)
       {
-        Vector3 away = -(position - r._hip.position).normalized;
+        var away = -(position - r._hip.position).normalized;
         away.y = 0.2f;
         explosionForce = away * 3000f;
       }

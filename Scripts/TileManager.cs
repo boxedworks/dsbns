@@ -142,13 +142,13 @@ public class TileManager
   public static string SaveMap(bool saveToClipboard = true)
   {
     Init();
-    string returnString = "";
+    var returnString = "";
     // Record min / max positions of tiles to calculate dimension
     float min_x = Mathf.Infinity, min_z = min_x, max_x = -min_x, max_z = max_x;
-    foreach (Tile t in _Tiles)
+    foreach (var t in _Tiles)
     {
       if (!t._toggled) continue;
-      Transform tile = t._tile.transform;
+      var tile = t._tile.transform;
       if (tile.position.x < min_x) min_x = tile.position.x;
       if (tile.position.x > max_x) max_x = tile.position.x;
       if (tile.position.z < min_z) min_z = tile.position.z;
@@ -677,11 +677,12 @@ public class TileManager
     meshes.Add("Chairs", System.Tuple.Create(new List<GameObject>(), false));
     meshes.Add("Arches", System.Tuple.Create(new List<GameObject>(), false));
 
-    meshes.Add("Bushes", System.Tuple.Create(new List<GameObject>(), true));
-    meshes.Add("Rocks", System.Tuple.Create(new List<GameObject>(), true));
+    meshes.Add("Bushes", System.Tuple.Create(new List<GameObject>(), false));
+    meshes.Add("Rocks", System.Tuple.Create(new List<GameObject>(), false));
 
     meshes.Add("Walls", System.Tuple.Create(new List<GameObject>(), false));
     meshes.Add("Outers", System.Tuple.Create(new List<GameObject>(), true));
+    meshes.Add("NavmeshBarriers", System.Tuple.Create(new List<GameObject>(), true));
 
     for (var i = 0; i < objects.childCount; i++)
     {
@@ -716,7 +717,7 @@ public class TileManager
         case ("NavMeshBarrier"):
           var t = obj.GetChild(0);
           for (var u = 0; u < t.childCount; u++)
-            meshes["Rocks"].Item1.Add(t.GetChild(u).gameObject);
+            meshes["NavmeshBarriers"].Item1.Add(t.GetChild(u).gameObject);
           break;
         case ("TileWall"):
           meshes["Walls"].Item1.Add(obj.GetChild(0).gameObject);
@@ -756,7 +757,7 @@ public class TileManager
       // Combine meshes
       var list = pair.Item1;
       var g = CombineAndPlace($"Meshes_{key}", list.ToArray());
-      if (g != null && key == "Rocks") g.GetComponent<MeshRenderer>().enabled = false;
+      if (g != null && key == "NavmeshBarriers") g.GetComponent<MeshRenderer>().enabled = false;
       // Clean up
       var delete_self = !pair.Item2;
       for (var i = list.Count - 1; i >= 0; i--)
@@ -1335,28 +1336,33 @@ public class TileManager
           resource = GameScript.GameResources._Barrel_Explosive;
           break;
         case ("Table"):
-          resource = SceneThemes._Theme._name == "Hedge" ? GameScript.GameResources._Table_Bush : GameScript.GameResources._Table;
+          resource = SceneThemes._Theme._name == "Hedge" && !GameScript._EditorEnabled ? GameScript.GameResources._Table_Bush : GameScript.GameResources._Table;
+          resourceName = SceneThemes._Theme._name == "Hedge" && !GameScript._EditorEnabled ? resourceName + "_Bush" : resourceName;
           break;
         case ("TableSmall"):
           resource = GameScript.GameResources._TableSmall;
           break;
         case ("Chair"):
-          resource = SceneThemes._Theme._name == "Hedge" ? GameScript.GameResources._Chair_Stump : GameScript.GameResources._Chair;
+          resource = SceneThemes._Theme._name == "Hedge" && !GameScript._EditorEnabled ? GameScript.GameResources._Chair_Stump : GameScript.GameResources._Chair;
+          resourceName = SceneThemes._Theme._name == "Hedge" && !GameScript._EditorEnabled ? resourceName + "_Stump" : resourceName;
           break;
         case ("BookcaseClosed"):
           resource = GameScript.GameResources._BookcaseClosed;
           break;
         case ("BookcaseOpen"):
-          resource = SceneThemes._Theme._name == "Hedge" ? GameScript.GameResources._BookcaseOpen_Bush : GameScript.GameResources._BookcaseOpen;
+          resource = SceneThemes._Theme._name == "Hedge" && !GameScript._EditorEnabled ? GameScript.GameResources._BookcaseOpen_Bush : GameScript.GameResources._BookcaseOpen;
+          resourceName = SceneThemes._Theme._name == "Hedge" && !GameScript._EditorEnabled ? resourceName + "_Bush" : resourceName;
           break;
         case ("BookcaseBig"):
-          resource = SceneThemes._Theme._name == "Hedge" ? GameScript.GameResources._BookcaseBig_Bush : GameScript.GameResources._BookcaseBig;
+          resource = SceneThemes._Theme._name == "Hedge" && !GameScript._EditorEnabled ? GameScript.GameResources._BookcaseBig_Bush : GameScript.GameResources._BookcaseBig;
+          resourceName = SceneThemes._Theme._name == "Hedge" && !GameScript._EditorEnabled ? resourceName + "_Bush" : resourceName;
           break;
         case ("RugRectangle"):
           resource = GameScript.GameResources._RugRectangle;
           break;
         case ("Barrel"):
-          resource = SceneThemes._Theme._name == "Hedge" ? GameScript.GameResources._Barrel_Rock : GameScript.GameResources._Barrel;
+          resource = SceneThemes._Theme._name == "Hedge" && !GameScript._EditorEnabled ? GameScript.GameResources._Barrel_Rock : GameScript.GameResources._Barrel;
+          resourceName = SceneThemes._Theme._name == "Hedge" && !GameScript._EditorEnabled ? resourceName + "_Rock" : resourceName;
           localScale.y *= 0.8f;
           break;
         case ("Column"):
@@ -1405,7 +1411,7 @@ public class TileManager
       }
       var new_gameobject = GameObject.Instantiate(resource);
       new_gameobject.transform.parent = parent;
-      new_gameobject.name = resource.name;
+      new_gameobject.name = resourceName;
 
       new_gameobject.transform.localScale = localScale;
       new_gameobject.transform.position = new Vector3(_x, 0f, _z);
@@ -1475,7 +1481,7 @@ public class TileManager
     var reloadObjects = new string[] { "e_", "door_", "p_", "button_", "playerspawn_", (GameScript._GameMode == GameScript.GameModes.SURVIVAL ? "candel" : "__") };
     foreach (var data in _LevelObjects)
     {
-      bool loaded = false;
+      var loaded = false;
       foreach (string s in reloadObjects)
       {
         if (data.Length <= s.Length || !data.Substring(0, s.Length).Equals(s)) continue;
