@@ -380,6 +380,13 @@ public class TileManager
     // Set tilemap size
     ResizeInit((int)((width + 2) * (doubleSizeInit ? 1.4f : 1f)), (int)((height + 2) * (doubleSizeInit ? 1.4f : 1f)));
 
+    // Remove stuff
+    ActiveRagdoll.Reset();
+    EnemyScript.Reset();
+    Powerup.Reset();
+    CustomEntityUI._ID = 0;
+    EnemyScript._ID = 0;
+
     // Set theme
     if (Levels._LevelPack_Playing)
     {
@@ -567,14 +574,9 @@ public class TileManager
       }
     }
     // Load objects
-    ActiveRagdoll.Reset();
-    EnemyScript.Reset();
-    Powerup.Reset();
-    CustomEntityUI._ID = 0;
-    EnemyScript._ID = 0;
-    for (int i = 0; i < _LevelObjects.Count;)
+    for (var i = 0; i < _LevelObjects.Count;)
     {
-      for (int u = 0; i < _LevelObjects.Count && u < 15; u++)
+      for (var u = 0; i < _LevelObjects.Count && u < 15; u++)
         if (LoadObject(_LevelObjects[i++]) == null)
         {
           GameScript._Coroutine_load = null;
@@ -1534,7 +1536,8 @@ public class TileManager
       particles.Add(GameObject.Find("Blood" + i).GetComponent<ParticleSystem>());
 
     // All other particles
-    foreach (var t in GetChildrenRecursive(GameObject.Find("Particles").transform)){
+    foreach (var t in GetChildrenRecursive(GameObject.Find("Particles").transform))
+    {
       particles.Add(t.GetComponent<ParticleSystem>());
     }
 

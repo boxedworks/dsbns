@@ -109,7 +109,7 @@ public class SceneThemes : MonoBehaviour
     var rain_sfx = GameScript._Singleton._Rain_Audio;
     if(_Theme._rain && !rain_sfx.isPlaying){
       Debug.Log("Play");
-      FunctionsC.PlayAudioSource(ref rain_sfx, 1f, 1f);
+      Debug.Log(FunctionsC.PlayAudioSource(ref rain_sfx, 1f, 1f));
     }else if(!_Theme._rain && rain_sfx.isPlaying){
       rain_sfx.Stop();
     }

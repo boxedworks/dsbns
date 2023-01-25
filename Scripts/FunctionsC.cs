@@ -133,12 +133,14 @@ public static class FunctionsC
     // Play
     s.PlayOneShot(c);
   }
-  public static void PlayAudioSource(ref AudioSource s, float min = 0.9f, float max = 1.1f)
+  public static bool PlayAudioSource(ref AudioSource s, float min = 0.9f, float max = 1.1f)
   {
-    if (s == null || GameScript.Settings._VolumeSFX == 0) return;
-    AddToAudioList(ref s);
+    if (s == null || GameScript.Settings._VolumeSFX == 0)
+      return false;
+
     ChangePitch(ref s, min, max);
     s.Play();
+    return AddToAudioList(ref s);
   }
 
   public enum ParticleSystemType
@@ -206,7 +208,7 @@ public static class FunctionsC
     }
     if (randomChild)
     {
-      int cn = particles.GetChild(index).childCount;
+      var cn = particles.GetChild(index).childCount;
       if (cn == 0) return null;
       ParticleSystem particle_return = null;
       int loops = cn, startIter = Mathf.RoundToInt(Random.value * (cn - 1));
@@ -256,12 +258,13 @@ public static class FunctionsC
   }
 
   static Dictionary<AudioSource, System.Tuple<float, float>> _PlayingAudio;
-  static void AddToAudioList(ref AudioSource s)
+  static bool AddToAudioList(ref AudioSource s)
   {
-    if (s == null) return;
+    if (s == null) return false;
     if (_PlayingAudio == null) _PlayingAudio = new Dictionary<AudioSource, System.Tuple<float, float>>();
-    if (_PlayingAudio.ContainsKey(s)) return;
+    if (_PlayingAudio.ContainsKey(s)) return false;
     _PlayingAudio.Add(s, System.Tuple.Create<float, float>(s.pitch, s.volume));
+    return true;
   }
 
   static public void PlaySound(ref AudioSource speaker, string soundPath, float min = 1f, float max = 1f)
@@ -314,8 +317,10 @@ public static class FunctionsC
     {
       // Check for null audio
       if (pair.Key == null) { _PlayingAudio.Remove(pair.Key); break; }
+
       // Get audio settings; pitch and volume
       System.Tuple<float, float> settings = pair.Value;
+
       // Remove audio that stopped playing; set defaults back
       if (!pair.Key.isPlaying)
       {
@@ -323,6 +328,7 @@ public static class FunctionsC
         pair.Key.volume = settings.Item2;
         _PlayingAudio.Remove(pair.Key); break;
       }
+
       // Update pitch
       pair.Key.pitch = settings.Item1 * pitch;
       // Update volume

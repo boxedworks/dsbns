@@ -207,21 +207,38 @@ public class PlayerScript : MonoBehaviour
 
     ControllerManager.GetPlayerGamepad(_id)?.SetMotorSpeeds(0f, 0f);
 
-    // Start rain
+    // Handle rain VFX
     if (_id == 0)
     {
+
+      // Clean up old light if exists
+      if (GameScript._Singleton._Thunder_Light != null)
+        GameObject.DestroyImmediate(GameScript._Singleton._Thunder_Light.gameObject);
+
+      // Handle creating rain SFX
       if (SceneThemes._Theme._rain)
       {
         var rain_prt = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.RAIN)[0];
         var rainFake_prt = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.RAIN_FAKE)[0];
         rain_prt.Play();
         rainFake_prt.Play();
+
+        var thunder_light = new GameObject("ThunderLight").AddComponent<Light>();
+
+        thunder_light.bounceIntensity = 0f;
+        thunder_light.color = new Color(0.7423906f, 0.7423906f, 0.7830189f);
+        thunder_light.range = 15f;
+        thunder_light.intensity = 0f;
+
+        thunder_light.shadowNearPlane = 7f;
+        //thunder_light.shadows = LightShadows.Soft;
+
+        GameScript._Singleton._Thunder_Light = thunder_light;
       }
 
-      // Reset lightning in case
+      // Clean up rain SFX
       else
       {
-        RenderSettings.ambientLight = new Color(0f, 0f, 0f);
 
       }
     }
@@ -773,8 +790,10 @@ public class PlayerScript : MonoBehaviour
       {
         var rain_prt = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.RAIN)[0];
         var rainFake_prt = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.RAIN_FAKE)[0];
+
         rain_prt.transform.position = new Vector3(_camPos.x, _camPos.y + 10f, _camPos.z);
         rainFake_prt.transform.position = new Vector3(_camPos.x, _camPos.y + 5f, _camPos.z);
+        //GameScript._Singleton._Thunder_Light.transform.position = new Vector3(_camPos.x, 0f, _camPos.z);
       }
     }
 

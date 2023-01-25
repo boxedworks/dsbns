@@ -640,14 +640,17 @@ public class GameScript : MonoBehaviour
           alive_player = p;
           break;
         }
+
         // Check for an alive player
         if (alive_player == null) return;
+
         // Count number of players to spawn.. only used if trying to stay persistant or players joined?
-        foreach (PlayerScript p in PlayerScript._Players) if (p != null && !p._ragdoll._dead) _PlayerIter++;
+        foreach (var p in PlayerScript._Players) if (p != null && !p._ragdoll._dead) _PlayerIter++;
+
         // Remove null / dead players
-        for (int i = PlayerScript._Players.Count - 1; i >= 0; i--)
+        for (var i = PlayerScript._Players.Count - 1; i >= 0; i--)
         {
-          PlayerScript p = PlayerScript._Players[i];
+          var p = PlayerScript._Players[i];
           if (p == null || p._ragdoll == null || p._ragdoll._dead)
           {
             ActiveRagdoll._Ragdolls.Remove(p._ragdoll);
@@ -659,8 +662,9 @@ public class GameScript : MonoBehaviour
             FunctionsC.PlaySound(ref _audioListenerSource, "Ragdoll/Pop", 0.9f, 1.05f);
           }
         }
+
         // Heal and reload all players
-        foreach (PlayerScript p in PlayerScript._Players)
+        foreach (var p in PlayerScript._Players)
           if (p != null && p._ragdoll != null)
             HealPlayer(p);
       }
@@ -1511,6 +1515,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
   [System.NonSerialized]
   public AudioSource _Rain_Audio, _Thunder_Audio;
   float _Thunder_Last, _Thunder_Samples_Last;
+  public Light _Thunder_Light;
 
   // Update is called once per frame
   void Update()
@@ -1582,14 +1587,18 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         // Check thunder sfx
         if (SceneThemes._Theme._rain)
         {
-          if (Time.time - _Thunder_Last > 10f && Random.value < 0.018f)
+          if (Time.time - _Thunder_Last > 10f && Random.value < 0.009f)
           {
             _Thunder_Last = Time.time;
 
             FunctionsC.PlayAudioSource(ref _Thunder_Audio, 0.6f, 1.05f);
           }
 
-          if (Settings._Toggle_Lightning._value && Time.time - _Thunder_Samples_Last > 0.05f)
+          if (
+            Settings._Toggle_Lightning._value &&
+            _Thunder_Light != null &&
+            Time.time - _Thunder_Samples_Last > 0.05f
+          )
           {
             var c = 0f;
 
@@ -1608,10 +1617,11 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
               }
               clipLoudness /= sample_length;
 
-              c = clipLoudness * 5f;
+              c = clipLoudness * 25f;
             }
 
-            RenderSettings.ambientLight = new Color(c, c, c);
+            //RenderSettings.ambientLight = new Color(c, c, c);
+            _Thunder_Light.intensity = c;
           }
         }
 
