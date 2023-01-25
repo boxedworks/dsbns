@@ -162,7 +162,7 @@ public class Powerup : MonoBehaviour
     }
 
     if (Time.time % 3 <= 0.1f) Rotate();
-    _l.intensity += (Mathf.Clamp(_rb.angularVelocity.magnitude / 3f, 0.5f, 2f) - _l.intensity) * Time.deltaTime * 2f;
+    _l.intensity += (Mathf.Clamp(_rb.angularVelocity.magnitude / 3f, 0.5f, 2f) * 3f - _l.intensity) * Time.deltaTime * 2f;
 
     if (_activated)
     {

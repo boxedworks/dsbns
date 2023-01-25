@@ -40,7 +40,8 @@ public class SceneThemes : MonoBehaviour
       _innerWallColor;
     public float _shadowStrength;
     public int _profile;
-    public bool _useFog;
+    public bool _useFog,
+      _rain;
   }
 
   public static void Init()
@@ -86,7 +87,7 @@ public class SceneThemes : MonoBehaviour
     if (_footstep == null) { _footstep = GameObject.Find("Footstep").GetComponent<AudioSource>(); }
   }
 
-  static readonly float FOG_START = 19f, FOG_END = 14f;
+  static readonly float FOG_START = 14f, FOG_END = 10f;
   public static bool _ChangingTheme;
   static IEnumerator ChangeMapThemeCo(Theme oldtheme)
   {
@@ -102,6 +103,15 @@ public class SceneThemes : MonoBehaviour
       fog_movement = 1;
       RenderSettings.fogStartDistance = FOG_START;
       RenderSettings.fog = true;
+    }
+
+    // Enable / disable rain
+    var rain_sfx = GameScript._Singleton._Rain_Audio;
+    if(_Theme._rain && !rain_sfx.isPlaying){
+      Debug.Log("Play");
+      FunctionsC.PlayAudioSource(ref rain_sfx, 1f, 1f);
+    }else if(!_Theme._rain && rain_sfx.isPlaying){
+      rain_sfx.Stop();
     }
 
     // Change map colors
@@ -153,6 +163,12 @@ public class SceneThemes : MonoBehaviour
           profiles.GetChild(oldtheme._profile).localPosition = Vector3.Lerp(profiles.GetChild(oldtheme._profile).localPosition, new Vector3(15f, 0f, 0f), normalized);
       }
     }
+
+          // Check fog movements
+      if (fog_movement == 1)
+        RenderSettings.fogStartDistance = FOG_END;
+      else if (fog_movement == -1)
+        RenderSettings.fogStartDistance = FOG_START;
 
     // Set profile
     profiles.GetChild(_Theme._profile).localPosition = Vector3.Lerp(profiles.GetChild(_Theme._profile).localPosition, new Vector3(0f, 0f, 0f), 1f);
@@ -256,6 +272,7 @@ new Theme(){
   _shadowStrength = 0.7f,
   _profile = 5,
   _useFog = false,
+  _rain = true
 },
 new Theme(){
   _name = "Wood",

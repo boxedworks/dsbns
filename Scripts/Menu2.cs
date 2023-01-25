@@ -4961,7 +4961,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
 
       // Add pause menu stats (?)
       var format_stats = "=<color={0}>{1,-15}</color>{2,-11}{3,-11}{4,-11}{5,-11}\n";
-      mPause.AddComponent((GameScript._GameMode == GameScript.GameModes.SURVIVAL ? "\n" : "") + $"\n\n<color={_COLOR_GRAY}>current session stats</color>\n\n")
+      mPause.AddComponent((GameScript._GameMode == GameScript.GameModes.SURVIVAL ? "\n" : "") + $"\n\n<color={_COLOR_GRAY}>current session stats</color>\n")
         .AddComponent(string.Format(format_stats, "white", "===", "kills", "deaths", GameScript.Settings._NumberPlayers > 1 ? "teamkills" : "", GameScript._GameMode == GameScript.GameModes.SURVIVAL ? "points" : "") + "\n");      // Gather player stats
       for (var i = 0; i < 4; i++)
       {
@@ -4985,7 +4985,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
         SpawnMenu_Pause();
       };
       // Tip
-      ModifyMenu_TipComponents(MenuType.PAUSE, (GameScript._GameMode == GameScript.GameModes.SURVIVAL ? 3 : 2));
+      ModifyMenu_TipComponents(MenuType.PAUSE, (GameScript._GameMode == GameScript.GameModes.SURVIVAL ? 4 : 3));
       ModifyMenu_TipSwitch(MenuType.PAUSE);
     }
     SpawnMenu_Pause();
@@ -5413,6 +5413,45 @@ go to the <color=yellow>SHOP</color> to buy something~1
         // Update dropdown data
         component.SetDropdownData("sfx volume\n\n", selections, actions, selection_match);
       })
+
+    // Toggle lightning
+    .AddComponent("lightning\n\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
+      .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+      {
+        // Set display text
+        var display_toggle = GameScript.Settings._Toggle_Lightning._value ? "on" : "off";
+        component.SetDisplayText(string.Format(format_options, "lightning:", $"{display_toggle}") + "\n");
+        // Set dropdown data
+        var selections = new List<string>();
+        var actions = new List<System.Action<MenuComponent>>();
+        var selection_match = display_toggle;
+        for (var i = 0; i < 2; i++)
+        {
+          // Toggle lightning
+          switch (i)
+          {
+            case 0:
+              selections.Add("on");
+              // Add action to update sfx volume
+              actions.Add((MenuComponent component0) =>
+              {
+                GameScript.Settings._Toggle_Lightning._value = true;
+              });
+              break;
+            case 1:
+              selections.Add("off");
+              // Add action to update sfx volume
+              actions.Add((MenuComponent component0) =>
+              {
+                GameScript.Settings._Toggle_Lightning._value = false;
+              });
+              break;
+          }
+        }
+        // Update dropdown data
+        component.SetDropdownData("lightning\n\n", selections, actions, selection_match);
+      })
+
     // Camera zoom dropdown
     .AddComponent("camera zoom\n\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
       .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>

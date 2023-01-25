@@ -216,8 +216,15 @@ public class GameScript : MonoBehaviour
   {
     _Singleton = this;
 
+    // Rain SFX
+    var rain_sfx = GameObject.Find("RainAudio").GetComponents<AudioSource>();
+    _Rain_Audio = rain_sfx[0];
+    _Thunder_Audio = rain_sfx[1];
+
+    //
     _debugText = GameObject.Find("DebugText").GetComponent<TextMesh>();
 
+    //
     GameResources.Init();
     FunctionsC.Init();
     TutorialInformation.Init();
@@ -1499,6 +1506,12 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
 
   static float _lastInputCheck;
   static int _HomePressed; // Used for cheat
+
+  // Rain sfx
+  [System.NonSerialized]
+  public AudioSource _Rain_Audio, _Thunder_Audio;
+  float _Thunder_Last, _Thunder_Samples_Last;
+
   // Update is called once per frame
   void Update()
   {
@@ -1565,6 +1578,42 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       {
         // Update ragdoll body sounds
         ActiveRagdoll.BodyPart_Handler.Update();
+
+        // Check thunder sfx
+        if (SceneThemes._Theme._rain)
+        {
+          if (Time.time - _Thunder_Last > 10f && Random.value < 0.018f)
+          {
+            _Thunder_Last = Time.time;
+
+            FunctionsC.PlayAudioSource(ref _Thunder_Audio, 0.6f, 1.05f);
+          }
+
+          if (Settings._Toggle_Lightning._value && Time.time - _Thunder_Samples_Last > 0.05f)
+          {
+            var c = 0f;
+
+            if (_Thunder_Audio.isPlaying)
+            {
+              _Thunder_Samples_Last = Time.time;
+
+              var sample_length = 1024;
+              var samples = new float[sample_length];
+              _Thunder_Audio.clip.GetData(samples, _Thunder_Audio.timeSamples);
+
+              var clipLoudness = 0f;
+              foreach (var sample in samples)
+              {
+                clipLoudness += Mathf.Abs(sample);
+              }
+              clipLoudness /= sample_length;
+
+              c = clipLoudness * 5f;
+            }
+
+            RenderSettings.ambientLight = new Color(c, c, c);
+          }
+        }
 
         // Check normal mode
         if (!IsSurvival() && !_EditorEnabled)
@@ -3613,6 +3662,10 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         PlayerPrefs.SetInt("VolumeSFX", VolumeSFX);
       }
     }
+
+
+    public static FunctionsC.SaveableStat_Bool _Toggle_Lightning;
+
     public static int _CameraZoom
     {
       get
@@ -3839,6 +3892,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       // Load audio settings
       _VolumeMusic = PlayerPrefs.GetInt("VolumeMusic", 3);
       _VolumeSFX = PlayerPrefs.GetInt("VolumeSFX", 3);
+      _Toggle_Lightning = new FunctionsC.SaveableStat_Bool("vfx_toggle_lightning", true);
 
       //Camera
       _CameraZoom = PlayerPrefs.GetInt("CameraZoom", 1);

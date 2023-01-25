@@ -207,6 +207,24 @@ public class PlayerScript : MonoBehaviour
 
     ControllerManager.GetPlayerGamepad(_id)?.SetMotorSpeeds(0f, 0f);
 
+    // Start rain
+    if (_id == 0)
+    {
+      if (SceneThemes._Theme._rain)
+      {
+        var rain_prt = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.RAIN)[0];
+        var rainFake_prt = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.RAIN_FAKE)[0];
+        rain_prt.Play();
+        rainFake_prt.Play();
+      }
+
+      // Reset lightning in case
+      else
+      {
+        RenderSettings.ambientLight = new Color(0f, 0f, 0f);
+
+      }
+    }
   }
 
   public void RegisterUtilities()
@@ -698,13 +716,13 @@ public class PlayerScript : MonoBehaviour
       //GameScript.GameResources._Camera_Main.transform.GetChild(2).GetComponent<Light>().spotAngle = Mathf.LerpUnclamped(131f, 86f, (CamYPos / 10f) - 1f);
       Vector3 sharedPos = Vector3.zero,
        sharedForward = Vector3.zero;
-      float forwardMagnitude = 3.5f;
+      var forwardMagnitude = 3.5f;
       PlayerScript lastPlayer = null;
-      bool followAlive = true; // Variable to follow any player. Will only follow alive players if false
-      int counter = 0;
+      var followAlive = true; // Variable to follow any player. Will only follow alive players if false
+      var counter = 0;
       while (true)
       {
-        foreach (PlayerScript p in _Players)
+        foreach (var p in _Players)
         {
           if (p._ragdoll._dead && followAlive) continue;
           sharedPos += new Vector3(p._ragdoll._hip.position.x, 0f, p._ragdoll._hip.position.z);
@@ -728,7 +746,7 @@ public class PlayerScript : MonoBehaviour
       else if (GameScript.Settings._CameraZoom == 0)
         sharedForward /= 1.4f;
 
-      Vector3 changePos = Vector3.zero;
+      var changePos = Vector3.zero;
       if (GameScript._Singleton._X) changePos.x = sharedPos.x + sharedForward.x;
       if (GameScript._Singleton._Y) changePos.y = sharedPos.y;
       if (GameScript._Singleton._Z) changePos.z = sharedPos.z + sharedForward.z;
@@ -749,6 +767,15 @@ public class PlayerScript : MonoBehaviour
       _camPos.y = camera_height;
 
       GameScript.GameResources._Camera_Main.transform.position = _camPos;
+
+      // Update rain
+      if (SceneThemes._Theme._rain)
+      {
+        var rain_prt = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.RAIN)[0];
+        var rainFake_prt = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.RAIN_FAKE)[0];
+        rain_prt.transform.position = new Vector3(_camPos.x, _camPos.y + 10f, _camPos.z);
+        rainFake_prt.transform.position = new Vector3(_camPos.x, _camPos.y + 5f, _camPos.z);
+      }
     }
 
     //if (ControllerManager.GetKey(ControllerManager.Key.SPACE))
@@ -1621,6 +1648,7 @@ public class PlayerScript : MonoBehaviour
     // Survival
     if (GameScript._GameMode == GameScript.GameModes.SURVIVAL)
       GameScript.SurvivalMode.OnPlayerDead(_id);
+
     // Remove ring
     IEnumerator fadeRing()
     {
@@ -1638,8 +1666,9 @@ public class PlayerScript : MonoBehaviour
       if (_ring != null) _ring[0].transform.parent.gameObject.SetActive(false);
     }
     GameScript._Singleton.StartCoroutine(fadeRing());
+
     // Slow motion on player death
-    bool lastplayer = true;
+    var lastplayer = true;
     foreach (PlayerScript p0 in _Players)
       if (p0._id != _id && !p0._ragdoll._dead)
       {
@@ -1647,12 +1676,15 @@ public class PlayerScript : MonoBehaviour
         break;
       }
     if (GameScript.Settings._Slowmo_on_death && lastplayer && !HasPerk(Shop.Perk.PerkType.NO_SLOWMO)) _SlowmoTimer += 2f;
+
     // Check for restart tutorial
     if (lastplayer)
     {
       _All_Dead = true;
+
       // Save setting before changing
-      bool saveinfo = GameScript.TutorialInformation._HasRestarted;
+      var saveinfo = GameScript.TutorialInformation._HasRestarted;
+
       // Coroutine to show controls
       IEnumerator FlashRestart()
       {

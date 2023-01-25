@@ -13,11 +13,11 @@ public static class FunctionsC
     _SoundLibrary = new Dictionary<string, Dictionary<string, AudioSource>>();
     // Populate audio library
     _Sounds = Camera.main.transform.parent.GetChild(2);
-    for (int i = 0; i < _Sounds.childCount; i++)
+    for (var i = 0; i < _Sounds.childCount; i++)
     {
-      Transform root = _Sounds.GetChild(i);
-      Dictionary<string, AudioSource> sublib = new Dictionary<string, AudioSource>();
-      for (int u = 0; u < root.childCount; u++)
+      var root = _Sounds.GetChild(i);
+      var sublib = new Dictionary<string, AudioSource>();
+      for (var u = 0; u < root.childCount; u++)
       {
         Transform sound = root.GetChild(u);
         sublib.Add(sound.name, sound.GetComponent<AudioSource>());
@@ -43,6 +43,7 @@ public static class FunctionsC
 
   public static void ChangePitch(ref AudioSource s, float min = 0.9f, float max = 1.1f)
   {
+    if (min == max) { s.pitch = min; return; }
     s.pitch = min + Random.value * (max - min);
   }
 
@@ -151,7 +152,8 @@ public static class FunctionsC
     FIREBALL,
     SMOKEBALL,
     FOOTPRINT,
-    SMOKE_WHITE,
+    RAIN,
+    RAIN_FAKE,
   }
   static int _ExplosionIter;
   public static ParticleSystem[] GetParticleSystem(ParticleSystemType particleType)
@@ -195,9 +197,11 @@ public static class FunctionsC
       case ParticleSystemType.FOOTPRINT:
         index = 8;
         break;
-      case ParticleSystemType.SMOKE_WHITE:
+      case ParticleSystemType.RAIN:
+        index = 9;
+        break;
+      case ParticleSystemType.RAIN_FAKE:
         index = 10;
-        randomChild = true;
         break;
     }
     if (randomChild)

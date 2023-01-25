@@ -1431,13 +1431,16 @@ public class TileManager
     // Check button spam
     if (!CanReloadMap()) return;
     _LastReloadTime = Time.unscaledTime;
+
     // Check AutoPlayer
     if (PlayerScript.AutoPlayer._Capturing)
       PlayerScript.AutoPlayer.Capture();
     if (PlayerScript.AutoPlayer._Playing)
       PlayerScript.AutoPlayer.Playback();
+
     // Check if map reloading
     if (_LoadingMap) return;
+
     // Reload assets
     GameScript.ToggleExit(false);
     foreach (ActiveRagdoll r in ActiveRagdoll._Ragdolls)
@@ -1531,8 +1534,9 @@ public class TileManager
       particles.Add(GameObject.Find("Blood" + i).GetComponent<ParticleSystem>());
 
     // All other particles
-    foreach (var t in GetChildrenRecursive(GameObject.Find("Particles").transform))
+    foreach (var t in GetChildrenRecursive(GameObject.Find("Particles").transform)){
       particles.Add(t.GetComponent<ParticleSystem>());
+    }
 
     foreach (var p in particles)
     {
@@ -1540,6 +1544,7 @@ public class TileManager
       p.Stop();
       p.Clear();
     }
+
     // Remove bullets and their particles
     BulletScript.HideAll();
   }
