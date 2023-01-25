@@ -1514,7 +1514,8 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
   // Rain sfx
   [System.NonSerialized]
   public AudioSource _Rain_Audio, _Thunder_Audio;
-  float _Thunder_Last, _Thunder_Samples_Last;
+  [System.NonSerialized]
+  public float _Thunder_Last, _Thunder_Samples_Last;
   public Light _Thunder_Light;
 
   // Update is called once per frame
@@ -1592,6 +1593,10 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
             _Thunder_Last = Time.time;
 
             FunctionsC.PlayAudioSource(ref _Thunder_Audio, 0.6f, 1.05f);
+
+            var cpos = GameResources._Camera_Main.transform.position;
+            cpos.y = 0f;
+            _Thunder_Light.transform.position = cpos;
           }
 
           if (

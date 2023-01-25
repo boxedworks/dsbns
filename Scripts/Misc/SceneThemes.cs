@@ -107,10 +107,13 @@ public class SceneThemes : MonoBehaviour
 
     // Enable / disable rain
     var rain_sfx = GameScript._Singleton._Rain_Audio;
-    if(_Theme._rain && !rain_sfx.isPlaying){
-      Debug.Log("Play");
-      Debug.Log(FunctionsC.PlayAudioSource(ref rain_sfx, 1f, 1f));
-    }else if(!_Theme._rain && rain_sfx.isPlaying){
+    if (_Theme._rain && !rain_sfx.isPlaying)
+    {
+      FunctionsC.PlayAudioSource(ref rain_sfx, 1f, 1f);
+      GameScript._Singleton._Thunder_Last = Time.time;
+    }
+    else if (!_Theme._rain && rain_sfx.isPlaying)
+    {
       rain_sfx.Stop();
     }
 
@@ -164,11 +167,11 @@ public class SceneThemes : MonoBehaviour
       }
     }
 
-          // Check fog movements
-      if (fog_movement == 1)
-        RenderSettings.fogStartDistance = FOG_END;
-      else if (fog_movement == -1)
-        RenderSettings.fogStartDistance = FOG_START;
+    // Check fog movements
+    if (fog_movement == 1)
+      RenderSettings.fogStartDistance = FOG_END;
+    else if (fog_movement == -1)
+      RenderSettings.fogStartDistance = FOG_START;
 
     // Set profile
     profiles.GetChild(_Theme._profile).localPosition = Vector3.Lerp(profiles.GetChild(_Theme._profile).localPosition, new Vector3(0f, 0f, 0f), 1f);

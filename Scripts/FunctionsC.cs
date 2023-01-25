@@ -133,14 +133,14 @@ public static class FunctionsC
     // Play
     s.PlayOneShot(c);
   }
-  public static bool PlayAudioSource(ref AudioSource s, float min = 0.9f, float max = 1.1f)
+  public static void PlayAudioSource(ref AudioSource s, float min = 0.9f, float max = 1.1f)
   {
     if (s == null || GameScript.Settings._VolumeSFX == 0)
-      return false;
+      return;
 
     ChangePitch(ref s, min, max);
     s.Play();
-    return AddToAudioList(ref s);
+    AddToAudioList(ref s);
   }
 
   public enum ParticleSystemType
@@ -258,13 +258,12 @@ public static class FunctionsC
   }
 
   static Dictionary<AudioSource, System.Tuple<float, float>> _PlayingAudio;
-  static bool AddToAudioList(ref AudioSource s)
+  static void AddToAudioList(ref AudioSource s)
   {
-    if (s == null) return false;
+    if (s == null) return;
     if (_PlayingAudio == null) _PlayingAudio = new Dictionary<AudioSource, System.Tuple<float, float>>();
-    if (_PlayingAudio.ContainsKey(s)) return false;
+    if (_PlayingAudio.ContainsKey(s)) return;
     _PlayingAudio.Add(s, System.Tuple.Create<float, float>(s.pitch, s.volume));
-    return true;
   }
 
   static public void PlaySound(ref AudioSource speaker, string soundPath, float min = 1f, float max = 1f)
