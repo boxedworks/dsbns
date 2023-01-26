@@ -205,7 +205,7 @@ public class CustomObstacle : MonoBehaviour
 
     // Set defaults
     _interactable = true;
-    transform.parent = GameScript.GameResources._Container_Objects;
+    transform.parent = GameResources._Container_Objects;
     _text = transform.GetChild(0).GetComponent<TextMesh>();
     if (use_type == InteractType.REMOVEBARRIER)
     {
@@ -332,7 +332,7 @@ public class CustomObstacle : MonoBehaviour
       _CustomBarriers = new List<CustomObstacle>();
     _CustomBarriers.Add(this);
     // Move to objects
-    transform.parent = GameScript.GameResources._Container_Objects;
+    transform.parent = GameResources._Container_Objects;
     // Add navmeshobstacle
     var navMesh = gameObject.AddComponent<UnityEngine.AI.NavMeshObstacle>();
     navMesh.size = new Vector3(1.2f, 2f, 0.4f);

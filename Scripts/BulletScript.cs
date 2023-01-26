@@ -181,7 +181,11 @@ public class BulletScript : MonoBehaviour
       var health = r._health;
       var max = Mathf.Clamp(pen - _hitAmount, 1f, 10f);
       var damage = Mathf.Clamp(health, 1f, max);
-      if (r.TakeDamage(_redirected ? _redirector : _source._ragdoll, (_source._type == GameScript.ItemManager.Items.FLAMETHROWER ? ActiveRagdoll.DamageSourceType.FIRE : ActiveRagdoll.DamageSourceType.BULLET), hitForce, _source.transform.position, (int)damage, _source._type != GameScript.ItemManager.Items.FLAMETHROWER))
+      ActiveRagdoll damageSource = null;
+      if (r._grappled) { damageSource = r._grappler; }
+      else if (_redirected) { damageSource = _redirector; }
+      else { damageSource = _source._ragdoll; }
+      if (r.TakeDamage(damageSource, (_source._type == GameScript.ItemManager.Items.FLAMETHROWER ? ActiveRagdoll.DamageSourceType.FIRE : ActiveRagdoll.DamageSourceType.BULLET), hitForce, _source.transform.position, (int)damage, _source._type != GameScript.ItemManager.Items.FLAMETHROWER))
       {
         if (_source._dismember && r._health <= 0) r.Dismember(r._spine, hitForce);
         _hitAmount += (int)damage;
@@ -210,7 +214,7 @@ public class BulletScript : MonoBehaviour
       {
         if (r._dead) return;
         if (r._id == _lastRagdollId) return;
-        if((r._grappler?._id ?? -1) == _source._ragdoll._id) return;
+        if ((r._grappler?._id ?? -1) == _source._ragdoll._id) return;
         _lastRagdollId = r._id;
         if (_source == null || (_source._ragdoll._id == r._id && !_redirected)) return;
         // If bullet hit is swinging and has a two-handed weapon (bat), reflect bullet

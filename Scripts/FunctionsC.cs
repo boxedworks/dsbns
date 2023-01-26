@@ -156,6 +156,7 @@ public static class FunctionsC
     FOOTPRINT,
     RAIN,
     RAIN_FAKE,
+    MAGAZINE,
   }
   static int _ExplosionIter;
   public static ParticleSystem[] GetParticleSystem(ParticleSystemType particleType)
@@ -204,6 +205,9 @@ public static class FunctionsC
         break;
       case ParticleSystemType.RAIN_FAKE:
         index = 10;
+        break;
+      case ParticleSystemType.MAGAZINE:
+        index = 12;
         break;
     }
     if (randomChild)
@@ -351,7 +355,7 @@ public static class FunctionsC
     GameObject powerup = GameObject.Instantiate(Resources.Load("Powerup") as GameObject);
     Powerup s = powerup.GetComponent<Powerup>();
     s._type = type;
-    powerup.transform.parent = GameScript.GameResources._Container_Objects;
+    powerup.transform.parent = GameResources._Container_Objects;
     return s;
   }
 
@@ -391,8 +395,8 @@ public static class FunctionsC
 
   public static void SpawnExplosionScar(Vector3 position, float scale = 1f)
   {
-    var explosion_scar = GameObject.Instantiate(GameScript.GameResources._Explosive_Scar as GameObject).transform;
-    explosion_scar.parent = GameScript.GameResources._Container_Objects;
+    var explosion_scar = GameObject.Instantiate(GameResources._Explosive_Scar as GameObject).transform;
+    explosion_scar.parent = GameResources._Container_Objects;
     explosion_scar.position = position;
     explosion_scar.localPosition = new Vector3(explosion_scar.localPosition.x, -1.29f, explosion_scar.localPosition.z);
     explosion_scar.localRotation = Quaternion.identity;
@@ -1075,6 +1079,10 @@ public static class FunctionsC
     {
       return !(a._value == b);
     }
-  }
+    public override bool Equals(object obj)
+    {
+      return _value == ((SaveableStat_Bool)obj)._value;
+    }
 
+  }
 }

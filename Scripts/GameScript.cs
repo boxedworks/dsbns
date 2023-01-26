@@ -103,114 +103,6 @@ public class GameScript : MonoBehaviour
     }
   }
 
-  public static class GameResources
-  {
-    public static GameObject _Player, _Enemy, _Ragdoll, _Bullet, _Door, _Button, _Laser, _Playerspawn,
-      _Barrel_Explosive,
-      _Explosive_Scar,
-      _Table, _Table_Bush,
-      _TableSmall,
-      _Chair, _Chair_Stump,
-      _BookcaseClosed,
-
-      _BookcaseOpen, _BookcaseOpen_Bush,
-      _BookcaseBig, _BookcaseBig_Bush,
-
-      _RugRectangle,
-
-
-      _Barrel, _Barrel_Rock,
-      _ColumnNormal, _ColumnBroken,
-      _Rock0, _Rock1,
-      _CandelBig, _CandelTable, _CandelBarrel,
-      _Powerup,
-      _Lock,
-      _LaserBeam,
-      _NavmeshBarrier,
-      _Interactable,
-      _Fake_Tile, _Tile_Wall,
-      _Arch,
-      _Money,
-      _Armor,
-      _PerkTypes;
-
-    public static bool _Loaded;
-
-    public static Transform _Container_Objects, _UI_Player;
-    public static Camera _Camera_Main, _Camera_Menu;
-
-    public static void Init()
-    {
-      _Player = Resources.Load("Player") as GameObject;
-      _Enemy = Resources.Load("Enemy") as GameObject;
-      _Ragdoll = Resources.Load("Ragdoll") as GameObject;
-      _Bullet = Resources.Load("Bullet") as GameObject;
-      _Door = Resources.Load("Door") as GameObject;
-      _Button = Resources.Load("Button") as GameObject;
-      _Laser = Resources.Load("Laser") as GameObject;
-      _Playerspawn = Resources.Load("PlayerSpawn") as GameObject;
-      _Barrel_Explosive = Resources.Load("ExplosiveBarrel") as GameObject;
-      _Explosive_Scar = Resources.Load("ExplosionMark") as GameObject;
-
-      _TableSmall = Resources.Load("TableSmall") as GameObject;
-      _BookcaseClosed = Resources.Load("BookcaseClosed") as GameObject;
-
-      _BookcaseOpen = Resources.Load("BookcaseOpen") as GameObject;
-      _BookcaseOpen_Bush = Resources.Load("BookcaseOpen_Bush") as GameObject;
-      _BookcaseBig = Resources.Load("BookcaseBig") as GameObject;
-      _BookcaseBig_Bush = Resources.Load("BookcaseBig_Bush") as GameObject;
-
-      _RugRectangle = Resources.Load("RugRectangle") as GameObject;
-
-      _Barrel = Resources.Load("Barrel") as GameObject;
-      _Barrel_Rock = Resources.Load("Barrel_Rock") as GameObject;
-
-      _Chair = Resources.Load("Chair") as GameObject;
-      _Chair_Stump = Resources.Load("Chair_Stump") as GameObject;
-
-      _Table = Resources.Load("Table") as GameObject;
-      _Table_Bush = Resources.Load("Table_Bush") as GameObject;
-
-      _ColumnNormal = Resources.Load("Column") as GameObject;
-      _ColumnBroken = Resources.Load("ColumnBroken") as GameObject;
-
-      _Rock0 = Resources.Load("Rock0") as GameObject;
-      _Rock1 = Resources.Load("Rock1") as GameObject;
-
-      _CandelBig = Resources.Load("Candel_Tall") as GameObject;
-      _CandelTable = Resources.Load("Candel_Table") as GameObject;
-      _CandelBarrel = Resources.Load("Candel_Barrel") as GameObject;
-
-      _Powerup = Resources.Load("Powerup") as GameObject;
-
-      _Lock = Resources.Load("Lock") as GameObject;
-
-      _LaserBeam = Resources.Load("LaserBeam") as GameObject;
-
-      _NavmeshBarrier = Resources.Load("NavMeshBarrier") as GameObject;
-      _Interactable = Resources.Load("Interactable") as GameObject;
-
-      _Fake_Tile = Resources.Load("FakeTile") as GameObject;
-      _Tile_Wall = Resources.Load("TileWall") as GameObject;
-
-      _Arch = Resources.Load("Arch") as GameObject;
-
-      _Money = Resources.Load("Money") as GameObject;
-
-      _PerkTypes = Resources.Load("PerkTypes") as GameObject;
-
-      _Camera_Main = GameObject.Find("Main Camera").GetComponent<Camera>();
-      _Camera_Menu = GameObject.Find("Menu Camera").GetComponent<Camera>();
-
-      _Container_Objects = GameObject.Find("Objects").transform;
-      _UI_Player = _Camera_Main.transform.GetChild(0).GetChild(2);
-
-      _Armor = Resources.Load("Armor") as GameObject;
-
-      _Loaded = true;
-    }
-  }
-
   // Use this for initialization
   void Start()
   {
@@ -688,13 +580,13 @@ public class GameScript : MonoBehaviour
         QueueEnemyType(type, number, waitForSize);
       }
 
-      void RandomSpecialWave()
+      /*void RandomSpecialWave()
       {
         var type = Random.value <= 0.5f ? EnemyType.GRENADE_JOG : EnemyType.PISTOL_WALK;
         var modifier = 0.6f;
         var waitFor = (modifier * _Wave) * 0.8f;
         QueueEnemyType(type, Mathf.RoundToInt(modifier * _Wave), Mathf.RoundToInt(waitFor));
-      }
+      }*/
 
       // Populate wave with enemies
       switch (_Wave)
@@ -972,7 +864,6 @@ public class GameScript : MonoBehaviour
       return PlayerPrefs.GetInt($"SURVIVAL_MAP_{levelIndex}", 0);
     }
 
-    static bool UnlockedNewMap = false;
     public static void OnWaveEnd()
     {
       _Time_wave_intermission = 4f;
@@ -1588,7 +1479,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         // Check thunder sfx
         if (SceneThemes._Theme._rain)
         {
-          if (Time.time - _Thunder_Last > 10f && Random.value < 0.009f)
+          if (Time.time - _Thunder_Last > 10f && Random.value < 0.004f)
           {
             _Thunder_Last = Time.time;
 
@@ -3094,6 +2985,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       Time.timeScale = 0f;
       Menu2.OnPause(afterUnlockMenu);
       System.GC.Collect();
+      TileManager._Text_LevelNum.gameObject.SetActive(false);
     }
     else
     {
@@ -3101,6 +2993,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       // Check player amount change
       if (_GameMode != GameModes.SURVIVAL)
         if (PlayerScript._Players != null && Settings._NumberPlayers != PlayerScript._Players.Count) TileManager.ReloadMap();
+      TileManager._Text_LevelNum.gameObject.SetActive(true);
     }
     // Toggle text bubbles
     TextBubbleScript.ToggleBubbles(!_Paused);

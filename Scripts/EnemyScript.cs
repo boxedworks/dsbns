@@ -234,7 +234,7 @@ public class EnemyScript : MonoBehaviour
       _agent.agentTypeID = TileManager._navMeshSurface.agentTypeID;
 
     // Setup ragdoll
-    GameObject ragdollObj = Instantiate(GameScript.GameResources._Ragdoll);
+    GameObject ragdollObj = Instantiate(GameResources._Ragdoll);
     ragdollObj.transform.parent = transform.parent;
     ragdollObj.transform.position = transform.position;
     ragdollObj.transform.LookAt(new Vector3(_waitLookPos.x, ragdollObj.transform.position.y, _waitLookPos.z));
@@ -1110,14 +1110,14 @@ public class EnemyScript : MonoBehaviour
     return false;
   }
 
-  Coroutine _delayedAbsorb;
+  /*Coroutine _delayedAbsorb;
   IEnumerator DelayedAbsorb(EnemyScript s, float waitTime, RaycastHit h)
   {
     yield return new WaitForSeconds(waitTime);
     if (!_ragdoll._dead)
       AbsorbInfo(s);
     _delayedAbsorb = null;
-  }
+  }*/
 
   #region Patrol Functions
   void SetCurrentPatrolPoint()
@@ -1430,7 +1430,7 @@ public class EnemyScript : MonoBehaviour
 
   public static EnemyScript LoadEnemy(Vector3 position)
   {
-    GameObject new_gameobject = GameObject.Instantiate(GameScript.GameResources._Enemy);
+    GameObject new_gameobject = GameObject.Instantiate(GameResources._Enemy);
     new_gameobject.transform.parent = GameObject.Find("Game").transform.GetChild(0);
     new_gameobject.transform.localScale = new Vector3(0.1f, 0.1f, 1f);
     new_gameobject.transform.position = position;
@@ -1439,7 +1439,7 @@ public class EnemyScript : MonoBehaviour
     return new_gameobject.transform.GetChild(0).GetComponent<EnemyScript>();
   }
 
-  public EnemyScript _absorbee;
+  /*public EnemyScript _absorbee;
   public List<EnemyScript> _bodies;
   void AbsorbInfo(EnemyScript other)
   {
@@ -1519,7 +1519,7 @@ public class EnemyScript : MonoBehaviour
         Run();
         break;
     }
-  }
+  }*/
 
   public void EquipStart()
   {

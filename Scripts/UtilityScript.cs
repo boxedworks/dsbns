@@ -615,7 +615,7 @@ public class UtilityScript : ItemScript
     var utilityName = type.ToString();
 
     var gameObject = GameObject.Instantiate(Resources.Load($"Items\\{utilityName}")) as GameObject;
-    gameObject.transform.parent = GameScript.GameResources._Container_Objects;
+    gameObject.transform.parent = GameResources._Container_Objects;
     gameObject.transform.position = new Vector3(1000, -100f, 0f);
     return gameObject.GetComponent<UtilityScript>();
   }

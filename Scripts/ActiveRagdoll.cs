@@ -19,9 +19,6 @@ public class ActiveRagdoll
   public EnemyScript _enemyScript;
   public PlayerScript _playerScript;
 
-  // Grabbed rd
-  ActiveRagdoll _ragdollGrappled;
-
   public bool _forceRun;
 
   public Vector3 _distance;
@@ -304,19 +301,19 @@ public class ActiveRagdoll
     var dt = (_playerScript != null ? Time.unscaledDeltaTime : Time.deltaTime);
 
     // Update grabbed rd
-    if (_ragdollGrappled != null)
+    if (_grapplee != null)
     {
-      if (_dead || _ragdollGrappled._dead)
+      if (_dead || _grapplee._dead)
       {
-        _ragdollGrappled = null;
+        _grapplee = null;
       }
       else
       {
         // Get melee side
         var left_weapon = _itemL != null && _itemL.IsMelee();
 
-        _ragdollGrappled._hip.position = _hip.position + _controller.forward * 0.4f + _controller.right * 0.18f * (left_weapon ? -1f : 1f);
-        _ragdollGrappled._hip.rotation = _hip.rotation;
+        _grapplee._hip.position = _hip.position + _controller.forward * 0.4f + _controller.right * 0.18f * (left_weapon ? -1f : 1f);
+        _grapplee._hip.rotation = _hip.rotation;
       }
     }
 
@@ -1085,30 +1082,32 @@ public class ActiveRagdoll
   }
 
   // Grab a ragdoll in front of
-  public bool _grappling { get { return _ragdollGrappled != null; } }
+  public bool _grappling { get { return _grapplee != null; } }
   public bool _grappled;
-  public ActiveRagdoll _grappler;
+  public ActiveRagdoll _grappler, _grapplee;
   public void Grapple()
   {
 
     // Throw grappled ragdoll
-    if (_ragdollGrappled != null)
+    if (_grapplee != null)
     {
 
-      if (!_ragdollGrappled._isPlayer)
+      if (!_grapplee._isPlayer)
       {
-        _ragdollGrappled.TakeDamage(this, DamageSourceType.MELEE, _hip.position, 100, false);
-        _ragdollGrappled._hip.AddForce(_controller.forward * (4000f + Random.value * 1500f));
-        _ragdollGrappled._hip.AddTorque(new Vector3(-1f + Random.value * 2f, -1f + Random.value * 2f, -1f + Random.value * 2f) * 10000f);
+        _grapplee.TakeDamage(this, DamageSourceType.MELEE, _hip.position, 100, false);
+        _grapplee._hip.AddForce(_controller.forward * (4000f + Random.value * 1500f));
+        _grapplee._hip.AddTorque(new Vector3(-1f + Random.value * 2f, -1f + Random.value * 2f, -1f + Random.value * 2f) * 10000f);
+
+        FunctionsC.PlaySound(ref _audioPlayer, "Ragdoll/Neck_snap", 0.85f, 1.2f);
       }
       else
       {
-        _ragdollGrappled._controller.position = _ragdollGrappled._hip.position;
-        _ragdollGrappled._controller.rotation = _controller.rotation;
+        _grapplee._controller.position = _grapplee._hip.position;
+        _grapplee._controller.rotation = _controller.rotation;
       }
-      _ragdollGrappled._grappled = false;
-      _ragdollGrappled._grappler = null;
-      _ragdollGrappled = null;
+      _grapplee._grappled = false;
+      _grapplee._grappler = null;
+      _grapplee = null;
 
     }
 
@@ -1137,9 +1136,9 @@ public class ActiveRagdoll
         }
 
         // Grab ragdoll
-        _ragdollGrappled = ragdoll;
-        _ragdollGrappled._grappled = true;
-        _ragdollGrappled._grappler = this;
+        _grapplee = ragdoll;
+        _grapplee._grappled = true;
+        _grapplee._grappler = this;
       }
       ToggleRaycasting(true);
 
@@ -1354,7 +1353,7 @@ public class ActiveRagdoll
   {
     if (_hasArmor) return;
 
-    var armor = GameObject.Instantiate(GameScript.GameResources._Armor);
+    var armor = GameObject.Instantiate(GameResources._Armor);
     var helmet = armor.transform.GetChild(0);
 
     // Equip helmet
@@ -1377,7 +1376,7 @@ public class ActiveRagdoll
 
     var helmet = _head.transform.GetChild(0).gameObject;
     helmet.transform.parent =
-      save_til_die ? _controller.parent : GameScript.GameResources._Container_Objects;
+      save_til_die ? _controller.parent : GameResources._Container_Objects;
 
     var rb = helmet.AddComponent<Rigidbody>();
     helmet.GetComponent<BoxCollider>().enabled = true;
@@ -1511,7 +1510,7 @@ public class ActiveRagdoll
     }
     // Create a new container for the text
     GameObject g = GameObject.Instantiate(Resources.Load("TextBubble") as GameObject);
-    g.transform.parent = GameScript.GameResources._Container_Objects;
+    g.transform.parent = GameResources._Container_Objects;
     g.transform.position = _head.transform.position;
     // Get the TextBubbleScript and init with text, position, and colot
     TextBubbleScript bubbleScript = g.GetComponent<TextBubbleScript>();

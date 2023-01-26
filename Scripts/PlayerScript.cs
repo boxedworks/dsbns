@@ -81,10 +81,10 @@ public class PlayerScript : MonoBehaviour
 
     _SlowmoTimer = 0f;
     Time.timeScale = 1f;
-    //_camHeight = Vector3.Distance(GameScript.GameResources._Camera_Main.transform.position, transform.position);
+    //_camHeight = Vector3.Distance(GameResources._Camera_Main.transform.position, transform.position);
 
     // Setup ragdoll
-    var ragdollObj = Instantiate(GameScript.GameResources._Ragdoll);
+    var ragdollObj = Instantiate(GameResources._Ragdoll);
     ragdollObj.transform.parent = transform.parent;
     ragdollObj.transform.Rotate(new Vector3(0f, 1f, 0f) * 90f);
     ragdollObj.transform.position = transform.position;
@@ -177,7 +177,7 @@ public class PlayerScript : MonoBehaviour
     _equipment_start = _equipment;
 
     // Set camera position
-    _camPos = GameScript.GameResources._Camera_Main.transform.position;
+    _camPos = GameResources._Camera_Main.transform.position;
 
     _spawnTimer = 0.25f;
     _canDetect = true;
@@ -389,7 +389,7 @@ public class PlayerScript : MonoBehaviour
 
   // Update is called once per frame
   float _rearrangeTime;
-  async void Update()
+  void Update()
   {
 #if DEBUG
     if (ControllerManager.GetKey(ControllerManager.Key.DELETE))
@@ -730,7 +730,7 @@ public class PlayerScript : MonoBehaviour
         camSpeed = (Time.time - GameScript._LevelStartTime < 1f ? 0.8f : 0.4f) * (22f / CamYPos),
         biggestDist = 0f;
       var camera_height = GameScript.Settings._CameraZoom == 1 ? 14f : GameScript.Settings._CameraZoom == 0 ? 10f : 18f;
-      //GameScript.GameResources._Camera_Main.transform.GetChild(2).GetComponent<Light>().spotAngle = Mathf.LerpUnclamped(131f, 86f, (CamYPos / 10f) - 1f);
+      //GameResources._Camera_Main.transform.GetChild(2).GetComponent<Light>().spotAngle = Mathf.LerpUnclamped(131f, 86f, (CamYPos / 10f) - 1f);
       Vector3 sharedPos = Vector3.zero,
        sharedForward = Vector3.zero;
       var forwardMagnitude = 3.5f;
@@ -783,7 +783,7 @@ public class PlayerScript : MonoBehaviour
 
       _camPos.y = camera_height;
 
-      GameScript.GameResources._Camera_Main.transform.position = _camPos;
+      GameResources._Camera_Main.transform.position = _camPos;
 
       // Update rain
       if (SceneThemes._Theme._rain)
@@ -917,7 +917,7 @@ public class PlayerScript : MonoBehaviour
         ControllerManager.GetKey(ControllerManager.Key.ARROW_R, ControllerManager.InputMode.HOLD))
         x += 1f;
       // Mouse look
-      Vector3 p = GameScript.GameResources._Camera_Main.ScreenPointToRay(ControllerManager.GetMousePosition()).GetPoint(Vector3.Distance(GameScript.GameResources._Camera_Main.transform.position, transform.position));
+      Vector3 p = GameResources._Camera_Main.ScreenPointToRay(ControllerManager.GetMousePosition()).GetPoint(Vector3.Distance(GameResources._Camera_Main.transform.position, transform.position));
       transform.LookAt(new Vector3(p.x, transform.position.y, p.z));
       // Throw money
       if (ControllerManager.GetKey(ControllerManager.Key.V))
@@ -1362,9 +1362,9 @@ public class PlayerScript : MonoBehaviour
   {
     if (_isauto) return;
     if (Mathf.Abs(input.x) > 0.1f || Mathf.Abs(input.y) > 0.1f)
-      transform.LookAt(transform.position + (new Vector3(GameScript.GameResources._Camera_Main.transform.right.x, 0f, GameScript.GameResources._Camera_Main.transform.right.z).normalized * input.x + new Vector3(GameScript.GameResources._Camera_Main.transform.forward.x, 0f, GameScript.GameResources._Camera_Main.transform.forward.z).normalized * input.y).normalized * 5f);
+      transform.LookAt(transform.position + (new Vector3(GameResources._Camera_Main.transform.right.x, 0f, GameResources._Camera_Main.transform.right.z).normalized * input.x + new Vector3(GameResources._Camera_Main.transform.forward.x, 0f, GameResources._Camera_Main.transform.forward.z).normalized * input.y).normalized * 5f);
     else if (_profile._faceMovement)
-      transform.LookAt(transform.position + (new Vector3(GameScript.GameResources._Camera_Main.transform.right.x, 0f, GameScript.GameResources._Camera_Main.transform.right.z).normalized * input2.x + new Vector3(GameScript.GameResources._Camera_Main.transform.forward.x, 0f, GameScript.GameResources._Camera_Main.transform.forward.z).normalized * input2.y).normalized * 5f);
+      transform.LookAt(transform.position + (new Vector3(GameResources._Camera_Main.transform.right.x, 0f, GameResources._Camera_Main.transform.right.z).normalized * input2.x + new Vector3(GameResources._Camera_Main.transform.forward.x, 0f, GameResources._Camera_Main.transform.forward.z).normalized * input2.y).normalized * 5f);
   }
 
   public void ToggleLaser()
@@ -1530,7 +1530,7 @@ public class PlayerScript : MonoBehaviour
             if (points == 0) return;
 
             GameScript.SurvivalMode.SpendPoints(_id, points);
-            var money = GameObject.Instantiate(GameScript.GameResources._Money) as GameObject;
+            var money = GameObject.Instantiate(GameResources._Money) as GameObject;
             GameScript.SurvivalMode.AddMoney(money);
             money.name = $"Money {points}";
             money.transform.parent = GameScript._Singleton.transform;
@@ -1707,7 +1707,7 @@ public class PlayerScript : MonoBehaviour
       // Coroutine to show controls
       IEnumerator FlashRestart()
       {
-        Vector3 offset = GameScript.GameResources._Camera_Main.transform.up * 4f;
+        Vector3 offset = GameResources._Camera_Main.transform.up * 4f;
         float pretimer = 0f, timer = 0f, supertimer = 0f, startpos = 5f;
         bool flicker = false;
 
@@ -1725,12 +1725,12 @@ public class PlayerScript : MonoBehaviour
           supertimer += 0.05f;
           tutorial_ui0.position =
             tutorial_ui1.position =
-            GameScript.GameResources._Camera_Main.transform.position + GameScript.GameResources._Camera_Main.transform.forward * 10f + offset +
-            GameScript.GameResources._Camera_Main.transform.up * (Easings.ElasticEaseIn(1f - (Mathf.Clamp(supertimer, 0f, startpos) / startpos)) * startpos);
-          tutorial_ui1.position += GameScript.GameResources._Camera_Main.transform.forward * 0.01f;
-          tutorial_ui0.LookAt(GameScript.GameResources._Camera_Main.transform, Vector3.forward);
+            GameResources._Camera_Main.transform.position + GameResources._Camera_Main.transform.forward * 10f + offset +
+            GameResources._Camera_Main.transform.up * (Easings.ElasticEaseIn(1f - (Mathf.Clamp(supertimer, 0f, startpos) / startpos)) * startpos);
+          tutorial_ui1.position += GameResources._Camera_Main.transform.forward * 0.01f;
+          tutorial_ui0.LookAt(GameResources._Camera_Main.transform, Vector3.forward);
           tutorial_ui0.Rotate(90f, 0f, 0f);
-          tutorial_ui1.LookAt(GameScript.GameResources._Camera_Main.transform, Vector3.forward);
+          tutorial_ui1.LookAt(GameResources._Camera_Main.transform, Vector3.forward);
           tutorial_ui1.Rotate(90f, 0f, 0f);
           // Flash controls
           timer = Mathf.Clamp(timer += 0.05f, 0f, 1f);

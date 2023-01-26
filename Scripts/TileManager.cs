@@ -21,8 +21,13 @@ public class TileManager
 
   static System.Tuple<Material, Material> _Materials_Tiles;
 
+  public static TextMesh _Text_LevelNum;
+
   public static void Init()
   {
+    if (_Text_LevelNum == null)
+      _Text_LevelNum = GameObject.Find("LevelNum").GetComponent<TextMesh>();
+
     if (_Tiles != null)
       foreach (Tile t in _Tiles)
         t._tile.transform.parent = _Map;
@@ -126,7 +131,7 @@ public class TileManager
     CustomObstacle.Reset();
     GameScript game = GameObject.Find("Game").GetComponent<GameScript>();
     Transform enemies = game.transform.GetChild(0),
-      objects = GameScript.GameResources._Container_Objects,
+      objects = GameResources._Container_Objects,
       navmesh_mods = _Map.GetChild(1),
       items = game.transform.GetChild(1);
     for (int i = enemies.childCount - 1; i >= 0; i--)
@@ -261,7 +266,7 @@ public class TileManager
 
     // Add object information
     var objects = new List<Transform>();
-    foreach (var t in new Transform[] { GameScript.GameResources._Container_Objects, _Map.GetChild(1) })
+    foreach (var t in new Transform[] { GameResources._Container_Objects, _Map.GetChild(1) })
       for (var i = 0; i < t.childCount; i++)
         objects.Add(t.GetChild(i));
     for (var i = 0; i < objects.Count; i++)
@@ -308,7 +313,7 @@ public class TileManager
     _CurrentData = data;
     _LevelObjects = new List<string>();
     var game = GameObject.Find("Game").GetComponent<GameScript>();
-    if (!GameScript.GameResources._Loaded) GameScript.GameResources.Init();
+    if (!GameResources._Loaded) GameResources.Init();
     return game.StartCoroutine(LoadMapCo(data, doubleSizeInit, appendToEditMaps));
   }
 
@@ -360,7 +365,7 @@ public class TileManager
     }
     // Lerp camera
     var time = 1f;
-    var main_camera = GameScript.GameResources._Camera_Main;
+    var main_camera = GameResources._Camera_Main;
     var start_clip = 15.5f;
     while (time > 0f)
     {
@@ -605,11 +610,11 @@ public class TileManager
     _Map.transform.GetChild(0).position = floorPos;
     _Map.transform.GetChild(0).localScale = new Vector3(_Width * 0.5f, 1f, _Height * 0.5f);
     // Set camera pos to playerspawn
-    var campos = GameScript.GameResources._Camera_Main.transform.position;
+    var campos = GameResources._Camera_Main.transform.position;
     var playerspawnpos = PlayerspawnScript._PlayerSpawns[0].transform.position;
     campos.x = playerspawnpos.x;
     campos.z = playerspawnpos.z + 3.6f;
-    GameScript.GameResources._Camera_Main.transform.position = campos;
+    GameResources._Camera_Main.transform.position = campos;
     // Hide playerspawn
     if (GameScript._GameMode == GameScript.GameModes.SURVIVAL && !GameScript._EditorEnabled)
       PlayerspawnScript._PlayerSpawns[0].transform.GetChild(1).gameObject.SetActive(false);
@@ -656,7 +661,7 @@ public class TileManager
   {
     // Lerp camera
     var time = 1f;
-    var main_camera = GameScript.GameResources._Camera_Main;
+    var main_camera = GameResources._Camera_Main;
     while (time > 0f)
     {
       main_camera.farClipPlane = Mathf.Lerp(35f, 10f, time / 1f);
@@ -811,6 +816,8 @@ public class TileManager
 
   static void OnMapLoad()
   {
+    _Text_LevelNum.text = "";
+
     // Check survival
     if (GameScript.IsSurvival()) GameScript.SurvivalMode.Init();
 
@@ -838,6 +845,17 @@ public class TileManager
       }
     }
 
+    // Display level #
+    if (GameScript._GameMode == GameScript.GameModes.CLASSIC && !GameScript._EditorTesting)
+    {
+      var hardmodeadd = GameScript.Settings._DIFFICULTY == 1 ? "*" : "";
+      _Text_LevelNum.text = $"{Levels._CurrentLevelIndex + 1}{hardmodeadd}";
+      if (Menu2._InMenus)
+      {
+        _Text_LevelNum.gameObject.SetActive(false);
+      }
+    }
+
     // Jobs
     ActiveRagdoll.Jobs_Init();
   }
@@ -860,7 +878,7 @@ public class TileManager
     if (object_data_split.Length < 3) return null;
     var object_base = new ObjectData(object_data_split[object_data_iter++], object_data_split[object_data_iter++], object_data_split[object_data_iter++]);
     Transform container_enemies = GameObject.Find("Game").transform.GetChild(0),
-      container_objects = GameScript.GameResources._Container_Objects;
+      container_objects = GameResources._Container_Objects;
     GameObject loadedObject = null;
 
     //Debug.Log($"= Loading object data => [{object_data}]\n=Parsed name: [{object_base._type}], pos: [{object_base._x}, {object_base._z}]");
@@ -1323,88 +1341,89 @@ public class TileManager
       switch (resourceName)
       {
         case ("Enemy"):
-          resource = GameScript.GameResources._Enemy;
+          resource = GameResources._Enemy;
           break;
         case ("Door"):
-          resource = GameScript.GameResources._Door;
+          resource = GameResources._Door;
           break;
         case ("Button"):
-          resource = GameScript.GameResources._Button;
+          resource = GameResources._Button;
           break;
         case ("Playerspawn"):
-          resource = GameScript.GameResources._Playerspawn;
+          resource = GameResources._Playerspawn;
           break;
         case ("ExplosiveBarrel"):
-          resource = GameScript.GameResources._Barrel_Explosive;
+          resource = GameResources._Barrel_Explosive;
           break;
         case ("Table"):
-          resource = SceneThemes._Theme._name == "Hedge" && !GameScript._EditorEnabled ? GameScript.GameResources._Table_Bush : GameScript.GameResources._Table;
+          resource = SceneThemes._Theme._name == "Hedge" && !GameScript._EditorEnabled ? GameResources._Table_Bush : GameResources._Table;
           resourceName = SceneThemes._Theme._name == "Hedge" && !GameScript._EditorEnabled ? resourceName + "_Bush" : resourceName;
           break;
         case ("TableSmall"):
-          resource = GameScript.GameResources._TableSmall;
+          resource = SceneThemes._Theme._name == "Hedge" && !GameScript._EditorEnabled ? GameResources._TableSmall_Bush : GameResources._TableSmall;
+          resourceName = SceneThemes._Theme._name == "Hedge" && !GameScript._EditorEnabled ? resourceName + "_Bush" : resourceName;
           break;
         case ("Chair"):
-          resource = SceneThemes._Theme._name == "Hedge" && !GameScript._EditorEnabled ? GameScript.GameResources._Chair_Stump : GameScript.GameResources._Chair;
+          resource = SceneThemes._Theme._name == "Hedge" && !GameScript._EditorEnabled ? GameResources._Chair_Stump : GameResources._Chair;
           resourceName = SceneThemes._Theme._name == "Hedge" && !GameScript._EditorEnabled ? resourceName + "_Stump" : resourceName;
           break;
         case ("BookcaseClosed"):
-          resource = GameScript.GameResources._BookcaseClosed;
+          resource = GameResources._BookcaseClosed;
           break;
         case ("BookcaseOpen"):
-          resource = SceneThemes._Theme._name == "Hedge" && !GameScript._EditorEnabled ? GameScript.GameResources._BookcaseOpen_Bush : GameScript.GameResources._BookcaseOpen;
+          resource = SceneThemes._Theme._name == "Hedge" && !GameScript._EditorEnabled ? GameResources._BookcaseOpen_Bush : GameResources._BookcaseOpen;
           resourceName = SceneThemes._Theme._name == "Hedge" && !GameScript._EditorEnabled ? resourceName + "_Bush" : resourceName;
           break;
         case ("BookcaseBig"):
-          resource = SceneThemes._Theme._name == "Hedge" && !GameScript._EditorEnabled ? GameScript.GameResources._BookcaseBig_Bush : GameScript.GameResources._BookcaseBig;
+          resource = SceneThemes._Theme._name == "Hedge" && !GameScript._EditorEnabled ? GameResources._BookcaseBig_Bush : GameResources._BookcaseBig;
           resourceName = SceneThemes._Theme._name == "Hedge" && !GameScript._EditorEnabled ? resourceName + "_Bush" : resourceName;
           break;
         case ("RugRectangle"):
-          resource = GameScript.GameResources._RugRectangle;
+          resource = GameResources._RugRectangle;
           break;
         case ("Barrel"):
-          resource = SceneThemes._Theme._name == "Hedge" && !GameScript._EditorEnabled ? GameScript.GameResources._Barrel_Rock : GameScript.GameResources._Barrel;
+          resource = SceneThemes._Theme._name == "Hedge" && !GameScript._EditorEnabled ? GameResources._Barrel_Rock : GameResources._Barrel;
           resourceName = SceneThemes._Theme._name == "Hedge" && !GameScript._EditorEnabled ? resourceName + "_Rock" : resourceName;
           localScale.y *= 0.8f;
           break;
         case ("Column"):
-          resource = GameScript.GameResources._ColumnNormal;
+          resource = GameResources._ColumnNormal;
           break;
         case ("ColumnBroken"):
-          resource = GameScript.GameResources._ColumnBroken;
+          resource = GameResources._ColumnBroken;
           break;
         case ("Rock0"):
-          resource = GameScript.GameResources._Rock0;
+          resource = GameResources._Rock0;
           break;
         case ("Rock1"):
-          resource = GameScript.GameResources._Rock1;
+          resource = GameResources._Rock1;
           break;
         case ("CandelBig"):
-          resource = GameScript.GameResources._CandelBig;
+          resource = GameResources._CandelBig;
           break;
         case ("CandelTable"):
-          resource = GameScript.GameResources._CandelTable;
+          resource = GameResources._CandelTable;
           break;
         case ("CandelBarrel"):
-          resource = GameScript.GameResources._CandelBarrel;
+          resource = GameResources._CandelBarrel;
           break;
         case ("Powerup"):
-          resource = GameScript.GameResources._Powerup;
+          resource = GameResources._Powerup;
           break;
         case ("NavMeshBarrier"):
-          resource = GameScript.GameResources._NavmeshBarrier;
+          resource = GameResources._NavmeshBarrier;
           break;
         case ("Interactable"):
-          resource = GameScript.GameResources._Interactable;
+          resource = GameResources._Interactable;
           break;
         case ("FakeTile"):
-          resource = GameScript.GameResources._Fake_Tile;
+          resource = GameResources._Fake_Tile;
           break;
         case ("TileWall"):
-          resource = GameScript.GameResources._Tile_Wall;
+          resource = GameResources._Tile_Wall;
           break;
         case ("Arch"):
-          resource = GameScript.GameResources._Arch;
+          resource = GameResources._Arch;
           break;
         default:
           Debug.Log("Loading resource <color=blue>" + resourceName + "</color> using Resources.Load()");
@@ -1455,7 +1474,7 @@ public class TileManager
     CustomEntityUI._ID = 0;
     ExplosiveScript.Reset();
     ResetParticles();
-    Transform objects = GameScript.GameResources._Container_Objects;
+    Transform objects = GameResources._Container_Objects;
     for (int i = objects.childCount - 1; i >= 0; i--)
     {
       GameObject child = objects.GetChild(i).gameObject;
@@ -1897,7 +1916,7 @@ public class TileManager
       GameObject.Destroy(p.transform.parent.gameObject);
     PlayerScript.Reset();
     // Reload map objects
-    Transform objects = GameScript.GameResources._Container_Objects,
+    Transform objects = GameResources._Container_Objects,
       navmesh_mods = _Map.GetChild(1);
     for (int i = objects.childCount - 1; i >= 0; i--)
       GameObject.Destroy(objects.GetChild(i).gameObject);
@@ -1924,7 +1943,7 @@ public class TileManager
       Powerup.OnEditorEnable();
     }
     // Get camera zoom
-    _CameraZoom = GameScript.GameResources._Camera_Main.transform.position.y;
+    _CameraZoom = GameResources._Camera_Main.transform.position.y;
     // Remove enemies and show paths
     if (!GameScript.IsSurvival())
     {
@@ -2276,7 +2295,7 @@ public class TileManager
         {
           // Get mouse pos
           RaycastHit h;
-          Physics.SphereCast(GameScript.GameResources._Camera_Main.ScreenPointToRay(ControllerManager.GetMousePosition()), 0.25f, out h);
+          Physics.SphereCast(GameResources._Camera_Main.ScreenPointToRay(ControllerManager.GetMousePosition()), 0.25f, out h);
           Vector3 mousePos = h.point;
           mousePos.y = -1f;
           _LineRenderers[1].positionCount = 2;
@@ -3279,7 +3298,7 @@ public class TileManager
       {
         // Get mouse pos
         RaycastHit h;
-        Physics.SphereCast(GameScript.GameResources._Camera_Main.ScreenPointToRay(ControllerManager.GetMousePosition()), 0.25f, out h);
+        Physics.SphereCast(GameResources._Camera_Main.ScreenPointToRay(ControllerManager.GetMousePosition()), 0.25f, out h);
         Vector3 mousePos = h.point;
         mousePos.y = -1f;
         _LineRenderers[1].positionCount = 2;
@@ -3424,10 +3443,10 @@ public class TileManager
     Vector2 mousepos = ControllerManager.GetMousePosition();
     /*if (mousepos.x > 0f && mousepos.x <= Screen.safeArea.width && mousepos.y > 0f && mousepos.y <= Screen.safeArea.height)
     {
-      Vector3 newPos = GameScript.GameResources._Camera_Main.ScreenPointToRay(mousepos).GetPoint(10f);
+      Vector3 newPos = GameResources._Camera_Main.ScreenPointToRay(mousepos).GetPoint(10f);
       newPos.y = 16f;// _CameraZoom;
 
-      Vector3 dis = (newPos - GameScript.GameResources._Camera_Main.transform.position);
+      Vector3 dis = (newPos - GameResources._Camera_Main.transform.position);
       Vector2 minDis = new Vector2(5f, 3f),
         intensity = new Vector2(0f, 0f);
       if (Mathf.Abs(dis.x) > minDis.x)
@@ -3437,42 +3456,42 @@ public class TileManager
       float maxDistance = _Width;
       // Get middle tile and check distances
       Vector3 middlePosition = Tile.GetTile(_Width / 2, _Height / 2)._tile.transform.position;
-      middlePosition.y = GameScript.GameResources._Camera_Main.transform.position.y;
+      middlePosition.y = GameResources._Camera_Main.transform.position.y;
       //if (Mathf.Abs(middlePosition.x - newPos.x) > maxDistance)
       //  newPos.x = middlePosition.x + maxDistance * Mathf.Sign(middlePosition.x + newPos.x);
       //if (Mathf.Abs(middlePosition.z - newPos.z) > maxDistance)
       //  newPos.z = middlePosition.z + maxDistance * Mathf.Sign(middlePosition.z + newPos.z);
-      Vector3 movePos = (newPos - GameScript.GameResources._Camera_Main.transform.position) * Time.deltaTime * 3f;
+      Vector3 movePos = (newPos - GameResources._Camera_Main.transform.position) * Time.deltaTime * 3f;
       movePos.x *= intensity.x;
       movePos.z *= intensity.y;
-      GameScript.GameResources._Camera_Main.transform.position += movePos;
+      GameResources._Camera_Main.transform.position += movePos;
     }*/
 
     // Move camera with arrows
     if (ControllerManager.GetKey(ControllerManager.Key.ARROW_U, ControllerManager.InputMode.HOLD))
     {
       var movePos = new Vector3(0f, 0f, 1f) * Time.deltaTime * 10f;
-      GameScript.GameResources._Camera_Main.transform.position += movePos;
+      GameResources._Camera_Main.transform.position += movePos;
     }
     if (ControllerManager.GetKey(ControllerManager.Key.ARROW_D, ControllerManager.InputMode.HOLD))
     {
       var movePos = -new Vector3(0f, 0f, 1f) * Time.deltaTime * 10f;
-      GameScript.GameResources._Camera_Main.transform.position += movePos;
+      GameResources._Camera_Main.transform.position += movePos;
     }
     if (ControllerManager.GetKey(ControllerManager.Key.ARROW_L, ControllerManager.InputMode.HOLD))
     {
       var movePos = -new Vector3(1f, 0f, 0f) * Time.deltaTime * 10f;
-      GameScript.GameResources._Camera_Main.transform.position += movePos;
+      GameResources._Camera_Main.transform.position += movePos;
     }
     if (ControllerManager.GetKey(ControllerManager.Key.ARROW_R, ControllerManager.InputMode.HOLD))
     {
       var movePos = new Vector3(1f, 0f, 0f) * Time.deltaTime * 10f;
-      GameScript.GameResources._Camera_Main.transform.position += movePos;
+      GameResources._Camera_Main.transform.position += movePos;
     }
 
     // Get raycast info
     RaycastHit raycast_info;
-    Ray r = GameScript.GameResources._Camera_Main.ScreenPointToRay(mousepos);
+    Ray r = GameResources._Camera_Main.ScreenPointToRay(mousepos);
     Physics.SphereCast(r, 0.2f, out raycast_info);
     if (raycast_info.collider == null) return;
 
@@ -3534,7 +3553,7 @@ public class TileManager
       }*/
       // Move camera to playerspawn
       if (ControllerManager.GetKey(ControllerManager.Key.PERIOD_NUMPAD) || ControllerManager.GetKey(ControllerManager.Key.PERIOD))
-        GameScript.GameResources._Camera_Main.transform.position = new Vector3(PlayerspawnScript._PlayerSpawns[0].transform.position.x, GameScript.GameResources._Camera_Main.transform.position.y, PlayerspawnScript._PlayerSpawns[0].transform.position.z);
+        GameResources._Camera_Main.transform.position = new Vector3(PlayerspawnScript._PlayerSpawns[0].transform.position.x, GameResources._Camera_Main.transform.position.y, PlayerspawnScript._PlayerSpawns[0].transform.position.z);
       // Snap to grid
       if (ControllerManager.GetKey(ControllerManager.Key.COMMA))
       {
@@ -4291,7 +4310,7 @@ public class TileManager
           if (split.Length < 7) break;
           var position2 = new Vector3(float.Parse(split[6], System.Globalization.CultureInfo.InvariantCulture), float.Parse(split[5], System.Globalization.CultureInfo.InvariantCulture), 0f);
           var object_new2 = GameObject.CreatePrimitive(PrimitiveType.Cube).transform;
-          ChangeColorAndDelete(object_new2, 1, GameScript.GameResources._Door.transform.GetChild(0).GetChild(0).GetComponent<Renderer>().sharedMaterial.color);
+          ChangeColorAndDelete(object_new2, 1, GameResources._Door.transform.GetChild(0).GetChild(0).GetComponent<Renderer>().sharedMaterial.color);
           object_new2.parent = container_objects;
           object_new2.localScale = new Vector3(scale.x * 4f, scale.y * 0.8f, scale.z * 0.9f);
           object_new2.position = position2;
@@ -4314,7 +4333,7 @@ public class TileManager
           // Door
           position2 = new Vector3(float.Parse(split[5], System.Globalization.CultureInfo.InvariantCulture), float.Parse(split[4], System.Globalization.CultureInfo.InvariantCulture), 0f);
           object_new2 = GameObject.CreatePrimitive(PrimitiveType.Cube).transform;
-          ChangeColorAndDelete(object_new2, 1, GameScript.GameResources._Door.transform.GetChild(0).GetChild(0).GetComponent<Renderer>().sharedMaterial.color);
+          ChangeColorAndDelete(object_new2, 1, GameResources._Door.transform.GetChild(0).GetChild(0).GetComponent<Renderer>().sharedMaterial.color);
           object_new2.parent = container_objects;
           object_new2.localScale = new Vector3(scale.x * 5f, scale.y * 0.8f, scale.z * 0.9f);
           object_new2.position = position2;

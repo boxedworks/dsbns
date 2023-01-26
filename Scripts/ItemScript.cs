@@ -20,6 +20,8 @@ public class ItemScript : MonoBehaviour
   int _customProjectileIter;
   float _customProjectileVelocityMod;
 
+  int _last_magazineDropId;
+
   // Custom components
   ParticleSystem[] _customParticles;
   Light[] _customLights;
@@ -183,7 +185,7 @@ public class ItemScript : MonoBehaviour
     if (_laserSight) return;
 
     // Spawn lasersight
-    _laserSight = GameObject.Instantiate(GameScript.GameResources._LaserBeam) as GameObject;
+    _laserSight = GameObject.Instantiate(GameResources._LaserBeam) as GameObject;
     _laserSight.name = "laser";
     _laserSight.layer = 2;
     GameObject.Destroy(_laserSight.GetComponent<Collider>());
@@ -218,7 +220,7 @@ public class ItemScript : MonoBehaviour
     // Spawn bullet pool
     if (_Bullet == null)
     {
-      _Bullet = Instantiate(GameScript.GameResources._Bullet);
+      _Bullet = Instantiate(GameResources._Bullet);
       _Bullet.SetActive(false);
     }
     if (_BulletPool == null)
@@ -229,7 +231,7 @@ public class ItemScript : MonoBehaviour
       var rbs = new List<Collider>();
       for (var i = 0; i < _BulletPool.Length; i++)
       {
-        var bullet = Instantiate(GameScript.GameResources._Bullet);
+        var bullet = Instantiate(GameResources._Bullet);
         bullet.name = "Bullet";
         bullet.SetActive(false);
         bullet.transform.parent = bullets.transform;
@@ -305,19 +307,34 @@ public class ItemScript : MonoBehaviour
             hit = false;
         }
 
+        var damageSource = _ragdoll;
         if (hit)
         {
           //bool hitEnemy = !raycastInfo._ragdoll._isPlayer;
           // If is enemy, and isn't two handed, don't kill friendlies
-          if (!_ragdoll._isPlayer && !_meleePenatrate && !raycastInfo._ragdoll._isPlayer) return;
+          if (!_ragdoll._isPlayer && !_meleePenatrate && !raycastInfo._ragdoll._isPlayer && !raycastInfo._ragdoll._grappled) return;
           // If is player v player, is two handed, and hit enemy before, dont hit
           if (_ragdoll._isPlayer && raycastInfo._ragdoll._isPlayer && _meleePenatrate && _hitEnemy) return;
           // If is enemy and target is player, and player is swinging, dont hit
           if (!_ragdoll._isPlayer && raycastInfo._ragdoll._isPlayer && raycastInfo._ragdoll._swinging)
           {
-            //Debug.Log("deflected");
             //FunctionsC.PlaySound(ref raycastInfo._ragdoll._audioPlayer_steps, "Ragdoll/Deflect");
             return;
+          }
+          // Check grappler
+          if (raycastInfo._ragdoll._grappling)
+          {
+
+            // Get dir from target to swinger; if hostage is held in front of knife, kill hostage
+            var dir = (raycastInfo._ragdoll._hip.position - _ragdoll._hip.position).normalized;
+            var target_frwd = raycastInfo._ragdoll._controller.forward;
+
+            if ((dir - target_frwd).magnitude > 1f)
+            {
+              damageSource = raycastInfo._ragdoll;
+              raycastInfo._ragdoll = raycastInfo._ragdoll._grapplee;
+              return;
+            }
           }
 
           _hitAnthing = true;
@@ -328,7 +345,7 @@ public class ItemScript : MonoBehaviour
 
           // Damage
           var force = MathC.Get2DVector(-(_ragdoll._hip.position - raycastInfo._raycastHit.point).normalized * (4000f + (Random.value * 2000f)) * _hit_force);
-          raycastInfo._ragdoll.TakeDamage(_ragdoll, ActiveRagdoll.DamageSourceType.MELEE, force, _ragdoll._hip.position, 1, true);
+          raycastInfo._ragdoll.TakeDamage(damageSource, ActiveRagdoll.DamageSourceType.MELEE, force, _ragdoll._hip.position, 1, true);
           if (raycastInfo._ragdoll._dead && _dismember)
           {
             var body_range = Mathf.RoundToInt(Random.value * 2f);
@@ -961,6 +978,21 @@ public class ItemScript : MonoBehaviour
       {
         if (_ragdoll._dead)
           instance._enabled = false;
+
+        /*/ Drop magazine
+        if (_last_magazineDropId != instance._id && instance._timer / instance._timer_start < 0.6f)
+        {
+          _last_magazineDropId = instance._id;
+
+          var magazine = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.MAGAZINE)[0];
+          var q = magazine.transform.rotation;
+          q.eulerAngles = new Vector3(q.eulerAngles.x, Random.value * 360f, q.eulerAngles.z);
+          magazine.transform.rotation = q;
+          var p = new ParticleSystem.EmitParams();
+          p.position = transform.position + Vector3.up * 0.5f;
+          p.rotation3D = q.eulerAngles;
+          magazine.Emit(p, 1);
+        }*/
       });
 
     // Charge weapon
@@ -1105,8 +1137,6 @@ public class ItemScript : MonoBehaviour
     _ragdoll.ToggleRaycasting(false);
     _ragdoll._grappler?.ToggleRaycasting(false);
 
-    var forward = _ragdoll._controller.forward;
-    forward.y = 0f;
     var add = Vector3.zero;
     switch (iter % 3)
     {
@@ -1117,7 +1147,10 @@ public class ItemScript : MonoBehaviour
         add = -_ragdoll._hip.transform.right;
         break;
     }
+
     // Cast ray from startPos to dir (cast a ray from the gun barrel forwards)
+    var forward = _ragdoll._controller.forward;
+    forward.y = 0f;
     var ray = new Ray(
       _ragdoll._hip.position - _ragdoll._hip.transform.forward * 0.1f + Vector3.up * 0.3f + add * 0.1f,
       forward + -add
@@ -1167,661 +1200,4 @@ public class ItemScript : MonoBehaviour
     var desiredRotEuler = startEulerRot + new Vector3(x, y, z);
     return AnimateTransformSimple(t, startEulerRot, desiredRotEuler, totalTime, totalTime / 5f, onEnd);
   }
-
-  /*AudioSource _sound_fire, _sound_empty, _sound_extra;
-
-  public float _useRate, _reloadTime, _bullet_spread, _bullet_hit_force, _dismember_rate;
-  public int _ammo, _clipSize, _clip, _penatrationAmount;
-  public bool _equiped, _auto, _silenced, _two_handed;
-  public int _ammo_save;
-
-  bool _useDown, _holding, _laserSight;
-
-  float _lastUsed, _holdingTimer;
-
-  public ActiveRagdoll _ragdoll;
-
-  // Tells which side the item is on: left / right
-  ActiveRagdoll.Side _side;
-
-  // Child transform tells where to shoot bullet from
-  Transform _firepoint;
-
-  Light _l;
-
-  public C4Script _C4;
-
-  bool _swinging;
-
-  public enum ItemType
-  {
-    GUN,
-    MELEE,
-    UTILITY,
-    THROWABLE,
-    LAUNCHER
-  }
-  public ItemType _type;
-
-  public GameScript.ItemManager.Items _itemType;
-
-  static GameObject _Bullet;
-  public static BulletScript[] _BulletPool;
-  static int _BulletPool_Iter;
-
-  // Use this for initialization
-  public void Init(GameScript.ItemManager.Items itemType)
-  {
-    _itemType = itemType;
-    if (gameObject.name.Equals("Hip"))
-    {
-      return;
-    }
-    _ammo_save = _ammo;
-
-    AudioSource[] audios = GetComponents<AudioSource>();
-    _sound_fire = audios[0];
-    _sound_empty = audios[1];
-
-    _firepoint = transform.GetChild(0);
-
-    if (IsShotgun(gameObject))
-      _sound_extra = GetComponents<AudioSource>()[2];
-
-    _l = _firepoint.gameObject.AddComponent<Light>();
-    _l.type = LightType.Point;
-    _l.enabled = false;
-    _l.color = Color.yellow;
-
-    // Spawn bullet pool
-    if (_Bullet == null)
-    {
-      _Bullet = Instantiate(GameScript.GameResources._Bullet);
-      _Bullet.SetActive(false);
-    }
-    if(_BulletPool == null)
-    {
-      _BulletPool = new BulletScript[30];
-      GameObject bullets = new GameObject();
-      bullets.name = "Bullets";
-      List<Collider> rbs = new List<Collider>();
-      for(int i = 0; i < _BulletPool.Length; i++)
-      {
-        GameObject bullet = Instantiate(GameScript.GameResources._Bullet);
-        bullet.name = "Bullet";
-        bullet.SetActive(false);
-        bullet.transform.parent = bullets.transform;
-        bullet.layer = 5;
-        _BulletPool[i] = bullet.GetComponent<BulletScript>();
-        rbs.Add(bullet.GetComponent<Collider>());
-      }
-      // Ignore bullet collisions
-      foreach (Collider c0 in rbs)
-        foreach (Collider c1 in rbs)
-          if (c0.GetInstanceID() == c1.GetInstanceID()) continue;
-          else Physics.IgnoreCollision(c0, c1, true);
-    }
-    IEnumerator localWait()
-    {
-      yield return new WaitForSeconds(0.1f);
-      // Used for rotating
-      Transform arm;
-      arm = _ragdoll._parts[_side == ActiveRagdoll.Side.LEFT ? 6 : 7].transform;
-      startRot = arm.localRotation;
-      endRot = startRot * Quaternion.Euler(new Vector3(1f, 0f, 0f) * -80f);
-    }
-    StartCoroutine(localWait());
-  }
-  Quaternion startRot,
-    endRot;
-
-  public void Refill()
-  {
-    if(_ammo_save > 0)
-      _ammo = _ammo_save;
-    Reload(false);
-  }
-
-  public void Reload(bool playSound = true)
-  {
-    // Check for missle
-    if (_type == ItemType.LAUNCHER)
-    {
-      if (transform.childCount < 3) return;
-      transform.GetChild(2).gameObject.GetComponent<Renderer>().enabled = true;
-    }
-    else if (_type == ItemType.UTILITY)
-    {
-      if (transform.childCount < 2) return;
-      transform.GetChild(1).gameObject.GetComponent<Renderer>().enabled = true;
-    }
-    // Set ammo ammounts
-    int availableAmmo = (int)Mathf.Clamp(_clipSize, 0f, _ammo),
-     ammoNeeded = _clipSize - _clip,
-     giveAmmo = Mathf.Clamp(ammoNeeded, 0, availableAmmo);
-    //_ammo -= giveAmmo;
-    _clip += giveAmmo;
-    if (_clip == 0)
-      return;
-    if (playSound)
-    {
-      FunctionsC.ChangePitch(ref _sound_empty);
-      FunctionsC.PlaySound(ref _sound_empty, "Ragdoll/Reload");
-      if (_ragdoll._isPlayer) EnemyScript.CheckSound(transform.position, EnemyScript.Loudness.SOFT);
-    }
-  }
-  public bool NeedsReload()
-  {
-    return (_clip <= 0);
-  }
-  public bool CanReload()
-  {
-    return (_clip < _clipSize && _clipSize > 0 && _ammo > 0);
-  }
-
-  float _lastEmptyNoise;
-  public void CanPlayEmptyNoise()
-  {
-    if (Time.time - _lastEmptyNoise < 0.2f) return;
-    _lastEmptyNoise = Time.time;
-    FunctionsC.ChangePitch(ref _sound_empty);
-    FunctionsC.PlayOneShot(_sound_empty);
-  }
-
-  public void Equip(ActiveRagdoll ragdoll, ActiveRagdoll.Side side)
-  {
-    _equiped = true;
-    _ragdoll = ragdoll;
-    _side = side;
-
-    //if (_ragdoll._enemyScript != null && _ragdoll._enemyScript._unlimitedAmmo) _ammo = 10000;
-  }
-
-  public void UseDown()
-  {
-    if (_useDown) return;
-    _useDown = true;
-  }
-  public void UseUp()
-  {
-    _useDown = false;
-  }
-
-  public void Update()
-  {
-    if (_ragdoll == null) return;
-
-    if((_type != ItemType.MELEE && _ragdoll._reloading) || _ragdoll._dead)
-    {
-      _useDown = false;
-      return;
-    }
-
-    if (_useDown)
-    {
-      // Check if hold throwable
-      if (_type == ItemType.THROWABLE)
-      {
-        if (_holding)
-        {
-        }
-        else Hold();
-      }
-      // Else, try to use
-      else if (Use() && !_auto) UseUp();
-    }
-    else if (_holding) Throw();
-    // Check laser sight
-    if (_laserSight)
-    {
-      if (_ragdoll._dead)
-      {
-        ToggleLaser(false);
-        return;
-      }
-      RaycastHit hit;
-      _ragdoll.ToggleRaycasting(false);
-      if (Physics.SphereCast(new Ray(_firepoint.position - transform.forward * 0.6f, MathC.Get2DVector(transform.forward)), 0.1f, out hit))
-      {
-        Vector3 distance = (hit.point - _firepoint.position);
-        _laserSightMesh.transform.position = _firepoint.position + transform.forward * distance.magnitude / 2f;
-        _laserSightMesh.transform.localScale = new Vector3(0.03f, 0.03f, distance.magnitude);
-        _laserSightMesh.transform.LookAt(_firepoint);
-      }
-      _ragdoll.ToggleRaycasting(true);
-      if (!_laserSightMesh.gameObject.activeSelf) _laserSightMesh.gameObject.SetActive(true);
-    }
-#if UNITY_EDITOR
-    //if((_type == ItemType.GUN || _type == ItemType.LAUNCHER)
-    //  Debug.DrawRay(transform.position, MathC.Get2DVector(transform.forward) * 100f, Color.red);
-#endif
-  }
-
-  private void OnDestroy()
-  {
-    if (_laserSightMesh == null) return;
-    GameObject.Destroy(_laserSightMesh.gameObject);
-  }
-
-  void Hold()
-  {
-    _holdingTimer = Time.time;
-    _holding = true;
-    // Trigger grenade
-    transform.GetChild(0).GetComponent<ExplosiveScript>().Trigger(3f);
-  }
-  void Throw()
-  {
-    _holding = false;
-    // Add RB
-    SphereCollider c = transform.GetChild(0).gameObject.AddComponent<SphereCollider>();
-    Rigidbody rb = c.gameObject.AddComponent<Rigidbody>();
-    transform.parent = GameScript._Instance.transform;
-    rb.AddForce(MathC.Get2DVector(_ragdoll._hip.transform.forward) * 500f);
-    // Unequip
-    //_ragdoll.EquipItem(GameScript.ItemManager.Items.NONE, _side);
-  }
-
-  public void OnDie()
-  {
-    if (_MeleeCourotine != null) StopCoroutine(_MeleeCourotine);
-  }
-
-  public void Explode()
-  {
-    IEnumerator DelayedExplode()
-    {
-      yield return new WaitForSeconds(0.2f);
-      if(!_ragdoll._dead)
-        transform.GetChild(0).GetComponent<ExplosiveScript>().Trigger(0f);
-    }
-    StartCoroutine(DelayedExplode());
-  }
-
-  public bool Use()
-  {
-    if (_ragdoll._dead) return false;
-    if (_type == ItemType.GUN || _type == ItemType.LAUNCHER)
-    {
-      // Check ammo
-      if (NeedsReload())
-      {
-        // Play noise
-        CanPlayEmptyNoise();
-        EnemyScript.CheckSound(transform.position, EnemyScript.Loudness.SOFT);
-        return false;
-      }
-    }
-    // Check C4
-    if (_type == ItemType.UTILITY && _C4 != null)
-    {
-      Debug.Log("Explode");
-      _C4.Explode();
-      _C4 = null;
-      return true;
-    }
-    // Check last time used
-    float useTime = (_ragdoll._playerScript != null ? Time.unscaledTime : Time.time);
-    if (useTime - _lastUsed < _useRate) return false;
-    _lastUsed = useTime;
-    // Check item type
-    if (_type == ItemType.GUN || _type == ItemType.LAUNCHER || _type == ItemType.UTILITY)
-    {
-      if (IsShotgun(gameObject))
-      {
-        Shoot(false, -2);
-        Shoot(false, -1);
-        Shoot(false, 1);
-        Shoot(false, 2);
-        _clip += 4;
-      }
-      Shoot();
-      // Out of ammo, color gun
-      //if (_clip == 0)
-      //  ColorItemUI(Color.gray);
-      return true;
-    }
-    else if (_type == ItemType.MELEE)
-      return Melee();
-    else if (_type == ItemType.THROWABLE)
-    {
-      Explode();
-      return true;
-    }
-    return false;
-  }
-
-  MeshRenderer _laserSightMesh;
-  public void ToggleLaser()
-  {
-    ToggleLaser(!_laserSight);
-  }
-  public void ToggleLaser(bool toggle)
-  {
-    _laserSight = toggle;
-    FunctionsC.PlaySound(ref (_ragdoll._audioPlayer), "Ragdoll/Tick");
-    if (toggle)
-    {
-      if(_laserSightMesh == null)
-      {
-        _laserSightMesh = GameObject.Instantiate(GameScript.GameResources._LaserBeam).GetComponent<MeshRenderer>();
-        _laserSightMesh.gameObject.GetComponent<Collider>().enabled = false;
-        _laserSightMesh.gameObject.SetActive(false);
-      }
-      return;
-    }
-    _laserSightMesh.gameObject.SetActive(false);
-  }
-
-  public class RayHitInfo
-  {
-    public RaycastHit _raycastHit;
-    public Vector3 _hitPoint;
-    public ActiveRagdoll _ragdoll;
-
-    public RayHitInfo()
-    {
-      _raycastHit = new RaycastHit();
-      _hitPoint = Vector3.zero;
-      _ragdoll = null;
-    }
-  }
-
-  void Shoot(bool muzzle_flash = true, int side = 0)
-  {
-    // Check lasersight
-    //if (_laserSight)
-    //  ToggleLaser();
-    // Iterate ammo
-    _clip--;
-    // Recoil arm
-    //(_side == ActiveRagdoll.Side.LEFT ? _ragdoll._arm_upper_l : _ragdoll._arm_upper_r).GetComponent<Rigidbody>().AddForce(new Vector3(0f, 100f, 0f));
-    // Play noise
-    FunctionsC.ChangePitch(ref _sound_fire);
-    FunctionsC.PlayOneShot(_sound_fire);
-    EnemyScript.Loudness loudness = (_silenced ? EnemyScript.Loudness.SUPERSOFT : EnemyScript.Loudness.NORMAL);
-    if (_type == ItemType.GUN)
-    {
-      // Spawn bullet
-      BulletScript bullet = _BulletPool[_BulletPool_Iter++ % _BulletPool.Length];
-      bullet.gameObject.SetActive(true);
-      //bullet.SetColor(_ragdoll._color, _ragdoll._color + Color.white);
-      bullet.Reset(this);
-      Rigidbody rb = bullet._rb;
-      rb.velocity = Vector3.zero;
-      rb.position = new Vector3(_firepoint.position.x, _ragdoll._spine.transform.position.y, _firepoint.position.z);
-      float recoil = _bullet_spread;
-      Vector3 f = (Quaternion.Euler(0f, 0f + (-recoil + Random.value * recoil * 2f), 0f) * MathC.Get2DVector(transform.forward)).normalized;
-      float speedMod = 0.5f * (_penatrationAmount > 0 ? 1.5f : 1f);// * (1f / Mathf.Clamp(Time.timeScale, 0.35f, 1f));
-      Vector3 addforce = Vector3.zero;
-      if (!muzzle_flash)
-      {
-        float multip = 0.045f * side;
-        addforce = transform.right * multip;
-      }
-      Vector3 force = MathC.Get2DVector(f + addforce) * 2100f * speedMod;
-      rb.transform.LookAt(rb.position + force);
-      rb.AddForce(force);
-      // Bullet casing
-      if (IsShotgun(gameObject)) StartCoroutine(Shotgun_DelayedBullet(0.5f)); else SpawnBulletCasing();
-      // Smoke
-      ParticleSystem[] ps = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.GUN_SMOKE);
-      foreach (ParticleSystem p in ps)
-      {
-        p.transform.position = _firepoint.position;
-        p.transform.LookAt(_firepoint.position + (_firepoint.position - _ragdoll._spine.transform.position).normalized);
-        p.Play();
-      }
-      // Flash
-      if (muzzle_flash)
-      {
-        if (_Coroutine_shoot != null)
-          StopCoroutine(_Coroutine_shoot);
-        _Coroutine_shoot = StartCoroutine(ShootCo2());
-      }
-    }else if(_type == ItemType.LAUNCHER)
-    {
-      if (gameObject.name.Equals("RocketLauncher"))
-      {
-        // Spawn rocket
-        MissleScript s = transform.GetChild(2).GetComponent<MissleScript>();
-        s.Activate(this);
-        // Change volume
-        loudness = EnemyScript.Loudness.SUPERSOFT;
-      }
-    }else if(_type == ItemType.UTILITY)
-    {
-      // Spawn c4
-      _C4 = transform.GetChild(1).GetComponent<C4Script>();
-      _C4.Activate(this);
-      // Change volume
-      loudness = EnemyScript.Loudness.SOFT;
-    }
-    // Alert nearby enemies
-    EnemyScript.CheckSound(transform.position, loudness);
-  }
-  Coroutine _Coroutine_shoot;
-  IEnumerator ShootCo2()
-  {
-    float intensity_start = 1.6f;
-    _l.intensity = intensity_start;
-    _l.enabled = true;
-    float t = 0.1f;
-    while(t > 0f)
-    {
-      t -= 0.02f;
-      _l.intensity = Mathf.Lerp(0f, intensity_start, t / 0.1f);
-      yield return new WaitForSeconds(0.01f);
-    }
-    _l.enabled = false;
-  }
-
-  Coroutine _MeleeCourotine;
-  bool Melee()
-  {
-    // Play noise
-    if (_sound_fire != null)
-    {
-      FunctionsC.ChangePitch(ref _sound_fire);
-      FunctionsC.PlayOneShot(_sound_fire);
-      EnemyScript.CheckSound(transform.position, EnemyScript.Loudness.SUPERSOFT);
-    }
-    if (_MeleeCourotine != null)
-      StopCoroutine(_MeleeCourotine);
-    _MeleeCourotine = StartCoroutine(MeleeCo());
-    return true;
-  }
-  IEnumerator SwingArm(float time)
-  {
-    Transform arm;
-    arm = _ragdoll._parts[_side == ActiveRagdoll.Side.LEFT ? 6 : 7].transform;
-    float saveTime = time;
-
-    while (time > 0f)
-    {
-      arm.localRotation = Quaternion.Lerp(startRot, endRot, 1f - time / saveTime);
-      yield return new WaitForSeconds(0.01f);
-      time -= 0.04f;
-    }
-    time = saveTime;
-    while (time > 0f)
-    {
-      arm.localRotation = Quaternion.Lerp(startRot, endRot, time / saveTime);
-      yield return new WaitForSeconds(0.015f);
-      time -= 0.04f;
-    }
-    // Set to resting
-    arm.localRotation = startRot;
-  }
-  IEnumerator MeleeCo()
-  {
-    if(!_ragdoll._isPlayer)
-      yield return new WaitForSeconds(0.2f);
-    // Recoil arm
-    if (!_two_handed)
-      StartCoroutine(SwingArm(0.2f));
-    //(_side == ActiveRagdoll.Side.LEFT ? _ragdoll._arm_lower_l : _ragdoll._arm_lower_r).GetComponent<Rigidbody>().AddForce((-Vector3.up + _ragdoll._hip.transform.forward * 0.7f).normalized * 1000f);
-    else
-      _ragdoll._spine.GetComponent<Rigidbody>().AddForce(_ragdoll._controller.forward * 2200f);
-
-    int numLoops = _ragdoll._isPlayer ? 5 : 3;
-
-    _ragdoll._swinging = true;
-    _swinging = true;
-
-    bool hitAnything = false,
-      hitEnemy = false;
-
-    for (int i = 0; i < numLoops; i++)
-    {
-      if (_ragdoll._dead) break;
-      // Melee!
-      RayHitInfo raycastInfo = new RayHitInfo();
-      bool hit = HasSights(raycastInfo, i);
-      // Hurt ragdoll
-      if (hit)
-      {
-        // If is enemy, and isn't two handed, don't kill friendlies
-        if (!_ragdoll._isPlayer && !_two_handed && !raycastInfo._ragdoll._isPlayer) continue;
-        // If is player v player, is two handed, and hit enemy before, dont hit
-        if (_ragdoll._isPlayer && raycastInfo._ragdoll._isPlayer && _two_handed && hitEnemy) continue;
-        hitAnything = true;
-        hitEnemy = !raycastInfo._ragdoll._isPlayer;
-        // Play noise
-        if (_sound_empty != null)
-        {
-          CanPlayEmptyNoise();
-          EnemyScript.CheckSound(transform.position, EnemyScript.Loudness.SUPERSOFT);
-        }
-        // Damage
-        raycastInfo._ragdoll.TakeDamage(_ragdoll, raycastInfo._raycastHit.point, MathC.Get2DVector(-(_ragdoll._hip.position - raycastInfo._raycastHit.point).normalized * (4000f + (Random.value * 2000f)) * _bullet_hit_force), _ragdoll._hip.position, 1f, true);
-        //Dismember
-        float chop = Random.value * _dismember_rate;
-        if (chop < 1f && chop > 0f)
-        {
-          int r = Mathf.RoundToInt(Random.value * 4f);
-          HingeJoint j = null;
-          if (r < 1) j = raycastInfo._ragdoll._arm_upper_l;
-          else if (r < 2) j = raycastInfo._ragdoll._arm_upper_r;
-          else if (r < 3) j = raycastInfo._ragdoll._head;
-          else if (r < 4) j = raycastInfo._ragdoll._spine;
-          if (j != null)
-          {
-            raycastInfo._ragdoll.Dismember(j);
-            j.gameObject.layer = 0;
-          }
-        }
-        // If has a two handed weapon, check for another enemy to kill. Else break
-        if(!_two_handed) break;
-      }
-      yield return new WaitForSeconds(0.03f);
-    }
-    // If hit something with twohanded weapon, allow to instantly use again
-    if (!hitAnything && _two_handed) _lastUsed += _useRate * 2f;
-    //if(hitAnything && !_two_handed) _lastUsed -= _useRate * 2f;
-
-    _swinging = false;
-    if (_two_handed)
-      _ragdoll._swinging = false;
-    else if (
-      (_side == ActiveRagdoll.Side.LEFT && _ragdoll._GrabItemR != null && _ragdoll._GrabItemR._swinging) ||
-      (_side == ActiveRagdoll.Side.RIGHT && _ragdoll._GrabItemL != null && _ragdoll._GrabItemL._swinging)
-      ) { }
-    else
-      _ragdoll._swinging = false;
-  }
-
-  void SpawnBulletCasing()
-  {
-    ParticleSystem bullet = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.BULLET_CASING)[0];
-    bullet.transform.position = transform.position + Vector3.up * 0.5f;
-    Quaternion q = bullet.transform.rotation;
-    q.eulerAngles = new Vector3(q.eulerAngles.x, Random.value * 360f, q.eulerAngles.z);
-    bullet.transform.rotation = q;
-    bullet.Play();
-  }
-
-  bool HasSights(RayHitInfo raycastInfo, int iter)
-  {
-    _ragdoll.ToggleRaycasting(false);
-    Vector3 f = _ragdoll._controller.forward;
-    f.y = 0f;
-    Vector3 add = Vector3.zero;
-    switch (iter % 3) {
-      case (1):
-        add = _ragdoll._hip.transform.right;
-        break;
-      case (2):
-        add = -_ragdoll._hip.transform.right;
-        break;
-  }
-    bool hit = HasSight(raycastInfo, _ragdoll._hip.position - _ragdoll._hip.transform.forward * 0.2f + Vector3.up * 0.3f + add * 0.15f, f + -add);
-    _ragdoll.ToggleRaycasting(true);
-    return hit;
-  }
-
-  public bool HasSight(RayHitInfo raycastInfo, Vector3 startPos, Vector3 dir)
-  {
-    bool hit = false,
-      isNone = gameObject.name.Equals("Hip");
-    // Cast ray from startPos to dir (cast a ray from the gun barrel forwards)
-    Ray ray = new Ray(startPos, dir * 100f);
-    float maxDistance = (_ragdoll._isPlayer ? 0.7f : 0.6f) * (_two_handed ? 1.4f : 1f) * (isNone ? 2f : 1f);
-    if (Physics.SphereCast(ray, (_ragdoll._isPlayer ? 0.6f : 0.5f), out raycastInfo._raycastHit, maxDistance))
-    {
-      //Debug.Log(raycastInfo._raycastHit.collider.name);
-      raycastInfo._ragdoll = ActiveRagdoll.GetRagdoll(raycastInfo._raycastHit.collider.gameObject);
-      if (raycastInfo._ragdoll != null && !raycastInfo._ragdoll._dead)
-        hit = true;
-      raycastInfo._hitPoint = raycastInfo._raycastHit.point;
-    }
-    return hit;
-  }
-
-  public bool Empty()
-  {
-    return _clip > 0;
-  }
-
-  // Show then hide bullet path (line renderer)
-  IEnumerator FadeBullet(LineRenderer lr)
-  {
-    float t = 0.05f;
-    lr.enabled = true;
-    while(t > 0f)
-    {
-      t -= 0.01f;
-      yield return new WaitForSeconds(0.01f);
-    }
-    lr.enabled = false;
-  }
-
-  IEnumerator Shotgun_DelayedBullet(float delay)
-  {
-    yield return new WaitForSeconds(delay);
-    FunctionsC.ChangePitch(ref _sound_extra);
-    FunctionsC.PlayOneShot(_sound_extra);
-    yield return new WaitForSeconds(0.5f);
-    SpawnBulletCasing();
-  }
-
-  public static bool IsShotgun(GameObject item)
-  {
-    return (item.name.Length >= 7 && item.name.Substring(0, 7).Equals("Shotgun"));
-  }
-  public static bool IsMachineGun(GameObject item)
-  {
-    return (item.name.Length >= 3 && item.name.Substring(0, 3).Equals("Uzi"));
-  }
-
-  public static void Reset()
-  {
-    _BulletPool = null;
-    _BulletPool_Iter = 0;
-  }
-
-  public void SetLastUsed(float t)
-  {
-    _lastUsed = t;
-  }*/
 }

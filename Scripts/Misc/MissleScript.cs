@@ -37,7 +37,7 @@ public class MissleScript : MonoBehaviour {
 
     _lastPos = transform.position;
     // Set parent to Objects
-    transform.parent = GameScript.GameResources._Container_Objects;
+    transform.parent = GameResources._Container_Objects;
     // Create a RigidBody so the missle can fly
     if (_rb == null)
     {
@@ -64,7 +64,7 @@ public class MissleScript : MonoBehaviour {
     // Rocket sound
     FunctionsC.PlayAudioSource(ref _audio);
   }
-	
+
 	// Update is called once per frame
 	void FixedUpdate () {
     if (_source == null || _triggered)
@@ -141,7 +141,7 @@ public class MissleScript : MonoBehaviour {
 
   IEnumerator DelayParticles(float time = 1f)
   {
-    _ps.transform.parent = GameScript.GameResources._Container_Objects;
+    _ps.transform.parent = GameResources._Container_Objects;
     yield return new WaitForSeconds(time);
     if (_ps != null)
     {

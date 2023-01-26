@@ -8,6 +8,9 @@ public static class ProgressBar
 
   public class instance
   {
+    public static int _ID;
+
+    public int _id;
     public Transform _transform, _slider, _parent;
     public float _timer, _timer_start;
     public System.Action _timerAction;
@@ -20,7 +23,8 @@ public static class ProgressBar
   {
     // Populate pool of instances
     _ProgressBars = new instance[10];
-    for (int i = 0; i < _ProgressBars.Length; i++)
+    instance._ID = 1;
+    for (var i = 0; i < _ProgressBars.Length; i++)
     {
       _ProgressBars[i] = new instance();
       _ProgressBars[i]._transform = (GameObject.Instantiate(Resources.Load("ProgressBar")) as GameObject).transform;
@@ -33,9 +37,9 @@ public static class ProgressBar
   public static void Update()
   {
     // Update each progress bar with it's parent's position
-    foreach(instance progress_bar in _ProgressBars)
+    foreach(var progress_bar in _ProgressBars)
     {
-      Transform p = progress_bar._parent;
+      var p = progress_bar._parent;
       // If no parent, move offscreen
       if (p == null || !progress_bar._enabled || GameScript._Paused)
       {
@@ -60,7 +64,9 @@ public static class ProgressBar
 
   public static void GetProgressBar(Transform parent, float time, System.Action timerAction, System.Action<instance> updateAction = null)
   {
-    instance set_progressbar = _ProgressBars[_PoolIter++ % _ProgressBars.Length];
+    var set_progressbar = _ProgressBars[_PoolIter++ % _ProgressBars.Length];
+
+    set_progressbar._id = instance._ID++;
     set_progressbar._parent = parent;
     set_progressbar._enabled = true;
     set_progressbar._timer_start = set_progressbar._timer = time;

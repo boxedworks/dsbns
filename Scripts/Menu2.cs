@@ -2934,7 +2934,7 @@ public class Menu2
           var color = Shop.Unlocked(unlock) ? "yellow" : "white";
 
           // Regex search for color change pattern
-          string tf(string input)
+          /*string tf(string input)
           {
             var match = System.Text.RegularExpressions.Regex.Match(input, @"\w*(ITEM_|UTILITY_|MOD_)\w*");
             if (match.Success)
@@ -2945,7 +2945,7 @@ public class Menu2
               input = input.Substring(0, match.Index) + $"</color>" + sub_name + $"<color=white>" + input.Substring(match.Index + match.Length);
             }
             return input;
-          }
+          }*/
 
           m.AddComponent(($"{string.Format(format_shop2, name, shop_details.Item1, cost, equip_cost_string, color, color, color)}\n"), MenuComponent.ComponentType.BUTTON_SIMPLE)
             .AddEvent((MenuComponent component) =>
@@ -3233,7 +3233,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
 
           GameScript.Settings.OnGamemodeChanged(GameScript.Settings.GamemodeChange.CLASSIC);
         }
-        //GameScript.GameResources._UI_Player.gameObject.SetActive(true);
+        //GameResources._UI_Player.gameObject.SetActive(true);
       })
     // Switch to survival mode menu
     .AddComponent(string.Format(format_mode, "survival", "waves of enemies\n"), MenuComponent.ComponentType.BUTTON_SIMPLE)
@@ -3371,6 +3371,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
                     // Remove menus
                     _Menu.gameObject.SetActive(false);
                     _InMenus = false;
+                    TileManager._Text_LevelNum.gameObject.SetActive(true);
                   });
                   // Add focus event
                   actions_onFocus.Add((MenuComponent component0) =>
@@ -3450,6 +3451,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
                 // Remove menus
                 _Menu.gameObject.SetActive(false);
                 _InMenus = false;
+                TileManager._Text_LevelNum.gameObject.SetActive(true);
               });
               // Set dropdown data
               component.SetDropdownData(prompt, selections, actions, "yes");
@@ -5088,7 +5090,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
     .AddBackButton((MenuComponent component) =>
     {
       SwitchMenu(MenuType.MODE_SELECTION);
-      //GameScript.GameResources._UI_Player.gameObject.SetActive(false);
+      //GameResources._UI_Player.gameObject.SetActive(false);
     })
     //
     ._onSwitchTo += () =>
@@ -5668,7 +5670,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
     };
     m_cred._onSwitchTo += () =>
     {
-      GameScript.GameResources._UI_Player.gameObject.SetActive(false);
+      GameResources._UI_Player.gameObject.SetActive(false);
 
       var credits = $@"definitely sneaky but not sneaky
 
@@ -5706,7 +5708,7 @@ www.reddit.com/u/quaterniusdev
     };
     m_cred._onSwitched += () =>
     {
-      GameScript.GameResources._UI_Player.gameObject.SetActive(true);
+      GameResources._UI_Player.gameObject.SetActive(true);
     };
 
     // Classic how to play
