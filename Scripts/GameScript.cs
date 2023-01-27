@@ -3677,7 +3677,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       }
     }
 
-    public static FunctionsC.SaveableStat_Bool
+    public static FunctionsC.SaveableStat_Int
       _Extra_RemoveBatGuy;
     public static float _VERSION = 1.25f;
 
@@ -3813,7 +3813,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       _Extra_Gravity = PlayerPrefs.GetInt("extra_gravity", 0);
       _Extra_Superhot = PlayerPrefs.GetInt("extra_superhot", 0) == 1;
       _Extra_CrazyZombies = PlayerPrefs.GetInt("extra_crazyzombies", 0) == 1;
-      _Extra_RemoveBatGuy = new FunctionsC.SaveableStat_Bool("extra_disablebatguy", false);
+      _Extra_RemoveBatGuy = new FunctionsC.SaveableStat_Int("extra_batguy", 0);
     }
 
     public enum GamemodeChange

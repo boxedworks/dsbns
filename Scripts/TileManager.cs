@@ -834,9 +834,10 @@ public class TileManager
           }
 
       // If difficulty is 0, never check for bat person
-      if (GameScript.Settings._DIFFICULTY == 0)
+      var chaser_extra = GameScript.Settings._Extra_RemoveBatGuy._value;
+      if (GameScript.Settings._DIFFICULTY == 0 && chaser_extra != 1)
         hasBat = true;
-      if (!hasBat && GameScript.Settings._Extra_RemoveBatGuy == false)
+      if (!hasBat && chaser_extra != 2)
       {
         var e = EnemyScript.LoadEnemy(PlayerspawnScript._PlayerSpawns[0].transform.position - PlayerspawnScript._PlayerSpawns[0].transform.forward);
         e._itemLeft = GameScript.ItemManager.Items.BAT;

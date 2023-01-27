@@ -312,12 +312,12 @@ public static class Shop
     _Unlocks_Descriptions.Add(Unlocks.MAX_EQUIPMENT_POINTS_8, new Tuple<string, int>("equipment-points, (+1)", 9));
     _Unlocks_Descriptions.Add(Unlocks.MAX_EQUIPMENT_POINTS_9, new Tuple<string, int>("equipment-points, (+1)", 9));
 
-    _Unlocks_Descriptions.Add(Unlocks.MODE_SURVIVAL, new Tuple<string, int>("purchase to unlock survival mode", 0));
+    _Unlocks_Descriptions.Add(Unlocks.MODE_SURVIVAL, new Tuple<string, int>("unlocks survival mode", 0));
 
-    _Unlocks_Descriptions.Add(Unlocks.EXTRA_TIME, new Tuple<string, int>("purchase to unlock the 'time' extra", 0));
-    _Unlocks_Descriptions.Add(Unlocks.EXTRA_GRAVITY, new Tuple<string, int>("purchase to unlock the 'gravity' extra", 0));
-    _Unlocks_Descriptions.Add(Unlocks.EXTRA_HORDE, new Tuple<string, int>("purchase to unlock the 'horde' extra", 0));
-    _Unlocks_Descriptions.Add(Unlocks.EXTRA_CHASER, new Tuple<string, int>("purchase to unlock the 'chaser' extra", 0));
+    _Unlocks_Descriptions.Add(Unlocks.EXTRA_TIME, new Tuple<string, int>("unlocks the 'time' extra", 0));
+    _Unlocks_Descriptions.Add(Unlocks.EXTRA_GRAVITY, new Tuple<string, int>("unlocks the 'gravity' extra", 0));
+    _Unlocks_Descriptions.Add(Unlocks.EXTRA_HORDE, new Tuple<string, int>("unlocks the 'horde' extra", 0));
+    _Unlocks_Descriptions.Add(Unlocks.EXTRA_CHASER, new Tuple<string, int>("unlocks the 'chaser' extra", 0));
 
     _Unlocks_Descriptions.Add(Unlocks.TUTORIAL_PART0, new Tuple<string, int>("", 0));
     _Unlocks_Descriptions.Add(Unlocks.TUTORIAL_PART1, new Tuple<string, int>("", 0));
