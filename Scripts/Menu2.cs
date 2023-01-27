@@ -6007,101 +6007,103 @@ a gampad if plugged in.~1
     //ModifyMenu_TipSwitch(MenuType.OPTIONS_CONTROLS);
 
     // Extras
-    var format_extras = "{0,-12}- {1,-50}";
-    var format_extras2 = "{0,-14}: {1,-50}";
-    var menu_extras = new Menu2(MenuType.EXTRAS)
+    void SpawnMenu_Extras()
     {
-
-    }
-    .AddComponent($"<color={_COLOR_GRAY}>extras</color>\n\n")
-    .AddComponent($"settings here affect the <color={_COLOR_GRAY}>CLASSIC</color> mode!\n\n");
-
-    // Wrapper function to add component to extras menu
-    void AddExtraSelection(
-      string prompt,
-      System.Func<string> prompt_value_logic,
-      DropdownSelectionComponent[] dropdown_selection_datas,
-      string dropdown_prompt,
-
-      string hint,
-      System.Func<bool> visibility_conditions,
-
-      string line_end = "\n")
-    {
-
-      // Check if component should be visible; add dropdown placeholder for later
-      if (visibility_conditions.Invoke())
+      var format_extras = "{0,-12}- {1,-50}";
+      var format_extras2 = "{0,-14}: {1,-50}";
+      var menu_extras = new Menu2(MenuType.EXTRAS)
       {
-        menu_extras.AddComponent($"placeholder{line_end}", MenuComponent.ComponentType.BUTTON_DROPDOWN)
-          .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
-          {
-            // Set display text
-            var selection = prompt_value_logic.Invoke();
-            component.SetDisplayText(string.Format(format_extras2 + "\n", $"{prompt}", selection));
 
-            // Set dropdown data
-            var selections = new List<string>();
-            var actions = new List<System.Action<MenuComponent>>();
-            var selection_match = $"{selection}";
+      }
+      .AddComponent($"<color={_COLOR_GRAY}>extras</color>\n\n")
+      .AddComponent($"settings here affect the <color={_COLOR_GRAY}>CLASSIC</color> mode!\n\n");
 
-            var index = 0;
-            foreach (var component_data in dropdown_selection_datas)
+      // Wrapper function to add component to extras menu
+      void AddExtraSelection(
+        string prompt,
+        System.Func<string> prompt_value_logic,
+        DropdownSelectionComponent[] dropdown_selection_datas,
+        string dropdown_prompt,
+
+        string hint,
+        System.Func<bool> visibility_conditions,
+
+        string line_end = "\n")
+      {
+
+        // Check if component should be visible; add dropdown placeholder for later
+        if (visibility_conditions.Invoke())
+        {
+          menu_extras.AddComponent($"placeholder{line_end}", MenuComponent.ComponentType.BUTTON_DROPDOWN)
+            .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
             {
-              selections.Add(string.Format(format_extras, $"{component_data._selectionPrompt}", $"{component_data._selectionDescription}" + (index++ == 0 ? " [DEFAULT]" : "")));
-              actions.Add((MenuComponent component0) =>
+              // Set display text
+              var selection = prompt_value_logic.Invoke();
+              component.SetDisplayText(string.Format(format_extras2 + "\n", $"{prompt}", selection));
+
+              // Set dropdown data
+              var selections = new List<string>();
+              var actions = new List<System.Action<MenuComponent>>();
+              var selection_match = $"{selection}";
+
+              var index = 0;
+              foreach (var component_data in dropdown_selection_datas)
               {
-                component_data.on_selected.Invoke(component0);
-              });
-            }
+                selections.Add(string.Format(format_extras, $"{component_data._selectionPrompt}", $"{component_data._selectionDescription}" + (index++ == 0 ? " [DEFAULT]" : "")));
+                actions.Add((MenuComponent component0) =>
+                {
+                  component_data.on_selected.Invoke(component0);
+                });
+              }
 
-            // Update dropdown data
-            component.SetDropdownData($"{dropdown_prompt}\n\n", selections, actions, selection_match);
-          });
+              // Update dropdown data
+              component.SetDropdownData($"{dropdown_prompt}\n\n", selections, actions, selection_match);
+            });
+        }
+
+        // Obfuscate component and show hint for unlock
+        else
+        {
+          menu_extras.AddComponent($"???{line_end}", MenuComponent.ComponentType.BUTTON_SIMPLE)
+            .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+            {
+              // Set hint text when focused
+              component._selectorType = MenuComponent.SelectorType.QUESTION;
+              if (component._focused)
+              {
+                component.SetDisplayText(string.Format(format_extras2 + line_end, "???", hint));
+              }
+              else
+              {
+                component.SetDisplayText($"???{line_end}");
+              }
+            });
+        }
       }
 
-      // Obfuscate component and show hint for unlock
-      else
-      {
-        menu_extras.AddComponent($"???{line_end}", MenuComponent.ComponentType.BUTTON_SIMPLE)
-          .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
-          {
-            // Set hint text when focused
-            component._selectorType = MenuComponent.SelectorType.QUESTION;
-            if (component._focused)
-            {
-              component.SetDisplayText(string.Format(format_extras2 + line_end, "???", hint));
-            }
-            else
-            {
-              component.SetDisplayText($"???{line_end}");
-            }
-          });
-      }
-    }
-
-    // Superhot
-    AddExtraSelection(
-      "time",
-      () => { return GameScript.Settings._Extra_Superhot ? "movement" : "normal"; },
-      new DropdownSelectionComponent[] {
+      // Superhot
+      AddExtraSelection(
+        "time",
+        () => { return GameScript.Settings._Extra_Superhot ? "movement" : "normal"; },
+        new DropdownSelectionComponent[] {
         new DropdownSelectionComponent("normal", "time is normal", (MenuComponent component) => {
             GameScript.Settings._Extra_Superhot = false;
         }),
         new DropdownSelectionComponent("movement", "time only moves when you move", (MenuComponent component) => {
             GameScript.Settings._Extra_Superhot = true;
         }),
-      },
-      "set the speed that time passes",
+        },
+        "set the speed that time passes",
 
-      "unlock by completing sneaky level 40, solo, with just a knife",
-      () => { return Shop.Unlocked(Shop.Unlocks.EXTRA_TIME); }
-    );
+        "unlock by completing sneaky level 40, solo, with just a knife",
+        () => { return Shop.Unlocked(Shop.Unlocks.EXTRA_TIME); }
+      );
 
-    // Gravity direction
-    AddExtraSelection(
-      "gravity",
-      () => { return GameScript.Settings._Extra_Gravity == 1 ? "inverted" : GameScript.Settings._Extra_Gravity == 2 ? "none" : "normal"; },
-      new DropdownSelectionComponent[] {
+      // Gravity direction
+      AddExtraSelection(
+        "gravity",
+        () => { return GameScript.Settings._Extra_Gravity == 1 ? "inverted" : GameScript.Settings._Extra_Gravity == 2 ? "none" : "normal"; },
+        new DropdownSelectionComponent[] {
         new DropdownSelectionComponent("normal", "normal gravity", (MenuComponent component) => {
           GameScript.Settings._Extra_Gravity = 0;
           Physics.gravity = new Vector3(0f, -9.81f, 0f);
@@ -6114,68 +6116,75 @@ a gampad if plugged in.~1
           GameScript.Settings._Extra_Gravity = 2;
           Physics.gravity = Vector3.zero;
         }),
-      },
-      "set gravity's direction",
+        },
+        "set gravity's direction",
 
-      "unlock by completing sneaky level 80, solo, with just a knife and silenced pistol",
-      () => { return Shop.Unlocked(Shop.Unlocks.EXTRA_GRAVITY); }
-    );
+        "unlock by completing sneaky level 80, solo, with just a knife and silenced pistol",
+        () => { return Shop.Unlocked(Shop.Unlocks.EXTRA_GRAVITY); }
+      );
 
-    // Crazy zombies
-    AddExtraSelection(
-      "horde",
-      () => { return GameScript.Settings._Extra_CrazyZombies ? "on" : "off"; },
-      new DropdownSelectionComponent[] {
+      // Crazy zombies
+      AddExtraSelection(
+        "horde",
+        () => { return GameScript.Settings._Extra_CrazyZombies ? "on" : "off"; },
+        new DropdownSelectionComponent[] {
         new DropdownSelectionComponent("off", "no horde", (MenuComponent component) => {
             GameScript.Settings._Extra_CrazyZombies = false;
         }),
         new DropdownSelectionComponent("on", "a horde spawns until you pick up the cube", (MenuComponent component) => {
             GameScript.Settings._Extra_CrazyZombies = true;
         }),
-      },
-      "toggle a horde mode",
+        },
+        "toggle a horde mode",
 
-      "unlock by...",
-      () => { return Shop.Unlocked(Shop.Unlocks.EXTRA_HORDE); }
-    );
+        "unlock by...",
+        () => { return Shop.Unlocked(Shop.Unlocks.EXTRA_HORDE); }
+      );
 
-    // Remove bat guy
-    AddExtraSelection(
-      "chaser",
-      () => { return GameScript.Settings._Extra_RemoveBatGuy == false ? "on" : "off"; },
-      new DropdownSelectionComponent[] {
+      // Remove bat guy
+      AddExtraSelection(
+        "chaser",
+        () => { return GameScript.Settings._Extra_RemoveBatGuy == false ? "on" : "off"; },
+        new DropdownSelectionComponent[] {
         new DropdownSelectionComponent("on", "in sneakier difficulty, a person with a bat will chase you", (MenuComponent component) => {
             GameScript.Settings._Extra_RemoveBatGuy._value = false;
         }),
         new DropdownSelectionComponent("off", "...that guy won't exist", (MenuComponent component) => {
             GameScript.Settings._Extra_RemoveBatGuy._value = true;
         }),
-      },
-      "toggle the removal of the chasing guy",
+        },
+        "toggle the removal of the chasing guy",
 
-      "unlock by...",
-      () => { return Shop.Unlocked(Shop.Unlocks.EXTRA_CHASER); },
+        "unlock by...",
+        () => { return Shop.Unlocked(Shop.Unlocks.EXTRA_CHASER); },
 
-      "\n\n"
-    );
+        "\n\n"
+      );
 
-    // Back button
-    menu_extras.AddBackButton((MenuComponent component) =>
-    {
-      if (_InPause)
+      // Back button
+      menu_extras.AddBackButton((MenuComponent component) =>
       {
-        _Menus[MenuType.PAUSE]._selectionIndex = 5;
-        SwitchMenu(MenuType.PAUSE);
-      }
-      else
+        if (_InPause)
+        {
+          _Menus[MenuType.PAUSE]._selectionIndex = 5;
+          SwitchMenu(MenuType.PAUSE);
+        }
+        else
+        {
+          _Menus[MenuType.GAMETYPE_CLASSIC]._selectionIndex = 3;
+          SwitchMenu(MenuType.GAMETYPE_CLASSIC);
+        }
+      });
+      // Spawn menu
+      _Menus[MenuType.EXTRAS]._onSwitchTo += () =>
       {
-        _Menus[MenuType.GAMETYPE_CLASSIC]._selectionIndex = 3;
-        SwitchMenu(MenuType.GAMETYPE_CLASSIC);
-      }
-    });
-    // Tip
-    //ModifyMenu_TipComponents(MenuType.EXTRAS, 14);
-    //ModifyMenu_TipSwitch(MenuType.EXTRAS);
+        SpawnMenu_Extras();
+      };
+      // Tip
+      //ModifyMenu_TipComponents(MenuType.EXTRAS, 14);
+      //ModifyMenu_TipSwitch(MenuType.EXTRAS);
+    }
+    SpawnMenu_Extras();
 
     // Controllers changed
     new Menu2(MenuType.CONTROLLERS_CHANGED)

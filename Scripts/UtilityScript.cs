@@ -127,7 +127,7 @@ public class UtilityScript : ItemScript
       case UtilityType.KUNAI_EXPLOSIVE:
       case UtilityType.KUNAI_STICKY:
         _throwSpeed = 5f;
-        explosion_radius = 4f;
+        explosion_radius = 3f;
         _spin = false;
         break;
       case UtilityType.STOP_WATCH:

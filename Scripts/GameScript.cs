@@ -1479,7 +1479,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         // Check thunder sfx
         if (SceneThemes._Theme._rain)
         {
-          if (Time.time - _Thunder_Last > 10f && Random.value < 0.004f)
+          if (Time.time - _Thunder_Last > 10f && Random.value < 0.001f)
           {
             _Thunder_Last = Time.time;
 
@@ -1513,7 +1513,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
               }
               clipLoudness /= sample_length;
 
-              c = clipLoudness * 25f;
+              c = clipLoudness * 18f;
             }
 
             //RenderSettings.ambientLight = new Color(c, c, c);
