@@ -2947,6 +2947,24 @@ public class Menu2
             return input;
           }*/
 
+          /*var name_spl = name.Split('_');
+          var name_colored = "";
+          for (var i = 0; i < name_spl.Length; i++)
+          {
+            var word = name_spl[i];
+            if (i == 0)
+            {
+              name_colored = $"<color={_COLOR_GRAY}>{word}_</color>";
+            }
+            else
+            {
+              name_colored += $"{word}";
+              if (i < name_spl.Length - 1)
+              {
+                name_colored += "_";
+              }
+            }
+          }*/
           m.AddComponent(($"{string.Format(format_shop2, name, shop_details.Item1, cost, equip_cost_string, color, color, color)}\n"), MenuComponent.ComponentType.BUTTON_SIMPLE)
             .AddEvent((MenuComponent component) =>
             {
@@ -6144,16 +6162,31 @@ a gampad if plugged in.~1
       // Remove bat guy
       AddExtraSelection(
         "chaser",
-        () => { return GameScript.Settings._Extra_RemoveBatGuy == false ? "on" : "off"; },
+        () =>
+        {
+          switch (GameScript.Settings._Extra_RemoveBatGuy._value)
+          {
+            case 0:
+              return "on";
+            case 1:
+              return "on - always";
+            case 2:
+              return "off";
+          }
+          return "N/A";
+        },
         new DropdownSelectionComponent[] {
         new DropdownSelectionComponent("on", "in sneakier difficulty, a person with a bat will chase you", (MenuComponent component) => {
-            GameScript.Settings._Extra_RemoveBatGuy._value = false;
+          GameScript.Settings._Extra_RemoveBatGuy._value = 0;
+        }),
+        new DropdownSelectionComponent("on - always", "a person with a bat will chase you in any difficulty", (MenuComponent component) => {
+          GameScript.Settings._Extra_RemoveBatGuy._value = 1;
         }),
         new DropdownSelectionComponent("off", "...that guy won't exist", (MenuComponent component) => {
-            GameScript.Settings._Extra_RemoveBatGuy._value = true;
+          GameScript.Settings._Extra_RemoveBatGuy._value = 2;
         }),
         },
-        "toggle the removal of the chasing guy",
+        "modify the chasing guy",
 
         "unlock by...",
         () => { return Shop.Unlocked(Shop.Unlocks.EXTRA_CHASER); },
