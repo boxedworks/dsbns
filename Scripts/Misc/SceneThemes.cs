@@ -146,21 +146,21 @@ public class SceneThemes : MonoBehaviour
         RenderSettings.fogStartDistance = Mathf.Lerp(FOG_END, FOG_START, (float)iter_tile++ / (float)TileManager._Tiles.Count);
 
       if (t._tile == null) continue;
-      int[] enabled = new int[4];
+      var enabled = new int[4];
       if (t._tile.transform.childCount > 0)
       {
-        for (int u = 0; u < 4; u++)
+        for (var u = 0; u < 4; u++)
           enabled[u] = t._tile.transform.GetChild(0).GetChild(u).gameObject.activeSelf ? 1 : 0;
         GameObject.DestroyImmediate(t._tile.transform.GetChild(0).gameObject);
       }
       var newinner = GameObject.Instantiate(inner.gameObject, t._tile.transform);
-      for (int u = 0; u < 4; u++)
+      for (var u = 0; u < 4; u++)
         newinner.transform.GetChild(u).gameObject.SetActive(enabled[u] == 1);
       newinner.transform.localPosition = Vector3.zero;
       if (i++ % 50 == 0)
       {
         yield return new WaitForSecondsRealtime(0.005f);
-        float normalized = ((float)i) / ((float)TileManager._Tiles.Count);
+        var normalized = ((float)i) / ((float)TileManager._Tiles.Count);
         profiles.GetChild(_Theme._profile).localPosition = Vector3.Lerp(profiles.GetChild(_Theme._profile).localPosition, new Vector3(0f, 0f, 0f), normalized);
         if (newprofile)
           profiles.GetChild(oldtheme._profile).localPosition = Vector3.Lerp(profiles.GetChild(oldtheme._profile).localPosition, new Vector3(15f, 0f, 0f), normalized);
@@ -222,13 +222,12 @@ public class SceneThemes : MonoBehaviour
     "Dungeon",
     "Castle White",
     "Stone",
-    "Wood_Fog",
-    "Dungeon blue",
     "Hedge",
-    "Stone",
     "Wood",
     "Dungeon",
     "Castle White",
+    "Stone",
+    "Hedge",
   };
   public static string[] _SceneOrder_LevelEditor = new string[]{
     "Black and White",
@@ -237,6 +236,7 @@ public class SceneThemes : MonoBehaviour
     "Castle White",
     "Dungeon",
     "Stone",
+    "Hedge"
   };
   public static Theme[] _Master_Themes = new Theme[]
   {

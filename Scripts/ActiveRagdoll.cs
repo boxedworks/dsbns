@@ -1096,7 +1096,7 @@ public class ActiveRagdoll
       {
         _grapplee.TakeDamage(this, DamageSourceType.MELEE, _hip.position, 100, false);
         _grapplee._hip.AddForce(_controller.forward * (1000f + Random.value * 250f));
-        _grapplee._hip.AddTorque(new Vector3(-1f + Random.value * 2f, -1f + Random.value * 2f, -1f + Random.value * 2f) * 10000f);
+        _grapplee._hip.AddTorque(new Vector3(Random.value < 0.5f ? -1f : 1f, 0f, 0f) * 10000000f);
 
         FunctionsC.PlaySound(ref _audioPlayer, "Ragdoll/Neck_snap", 0.85f, 1.2f);
       }
