@@ -616,7 +616,7 @@ public class PlayerScript : MonoBehaviour
       {
 
         // Update time via player speed
-        bool time_move = GameScript.Settings._Extra_Superhot && !GameScript.IsSurvival();
+        var time_move = GameScript.Settings._Extra_Superhot && !GameScript.IsSurvival();
         if (time_move)
         {
           if (_spawnTimer <= 0f)

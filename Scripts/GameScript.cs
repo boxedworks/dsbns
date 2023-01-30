@@ -3095,10 +3095,24 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       {
 
         // Check items equal
-        if (e0._item_left0 != e1._item_left0) { return false; }
-        if (e0._item_right0 != e1._item_right0) { return false; }
-        if (e0._item_left1 != e1._item_left1) { return false; }
-        if (e0._item_right1 != e1._item_right1) { return false; }
+        var equipment0_items = new List<ItemManager.Items>(){
+          e0._item_left0,
+          e0._item_right0,
+          e0._item_left1,
+          e0._item_right1
+        };
+        var equipment1_items = new List<ItemManager.Items>(){
+          e1._item_left0,
+          e1._item_right0,
+          e1._item_left1,
+          e1._item_right1
+        };
+        foreach (var item in equipment0_items)
+        {
+          if (!equipment1_items.Contains(item)) { return false; }
+          equipment1_items.Remove(item);
+        }
+        if (equipment0_items.Count != equipment1_items.Count) { return false; }
 
         // Check perks equal
         if (e0._perks.Count != e1._perks.Count) return false;
@@ -3122,13 +3136,50 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         return true;
       }
 
-      Debug.Log(PlayerScript._NumPlayers_Start);
-      Debug.Log(PlayerScript._Players.Count);
+      // Make sure # of players has not changed
       if (PlayerScript._NumPlayers_Start == 1 && PlayerScript._Players.Count > 0)
       {
 
+        // Make sure equipment has not changed
         var equipment_start = PlayerScript._Players[0]._equipment_start;
         if (EquipmentIsEqual(equipment_start, PlayerScript._Players[0]._equipment))
+        {
+
+          // Function to check for equipment matching
+          bool HasItemPair(PlayerProfile.Equipment equipment, params ItemManager.Items[] items)
+          {
+            // Check perks, utils
+            if (equipment._perks.Count > 0)
+            {
+              return false;
+            }
+            if (equipment._utilities_left.Length > 0)
+            {
+              return false;
+            }
+            if (equipment._utilities_right.Length > 0)
+            {
+              return false;
+            }
+
+            // Check item pair
+            var equipment_items = new List<ItemManager.Items>(){
+              equipment._item_left0,
+              equipment._item_right0,
+              equipment._item_left1,
+              equipment._item_right1
+            };
+            foreach (var item in items)
+            {
+              if (item == ItemManager.Items.NONE) { continue; }
+              if (!equipment_items.Contains(item)) { return false; }
+              equipment_items.Remove(item);
+            }
+
+            // Matches
+            return true;
+          }
+
           switch (Levels._CurrentLevelIndex + 1)
           {
 
@@ -3136,17 +3187,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
             // "unlock by completing sneaky level 40, solo, with just a knife",
             case 40:
 
-              if (
-                equipment_start._perks.Count == 0 &&
-                equipment_start._utilities_left.Length == 0 &&
-                equipment_start._utilities_right.Length == 0 &&
-                (
-                  (equipment_start._item_left0 == ItemManager.Items.KNIFE && equipment_start._item_right0 == ItemManager.Items.NONE && equipment_start._item_left1 == ItemManager.Items.NONE && equipment_start._item_right1 == ItemManager.Items.NONE) ||
-                  (equipment_start._item_left0 == ItemManager.Items.NONE && equipment_start._item_right0 == ItemManager.Items.KNIFE && equipment_start._item_left1 == ItemManager.Items.NONE && equipment_start._item_right1 == ItemManager.Items.NONE) ||
-                  (equipment_start._item_left0 == ItemManager.Items.NONE && equipment_start._item_right0 == ItemManager.Items.NONE && equipment_start._item_left1 == ItemManager.Items.KNIFE && equipment_start._item_right1 == ItemManager.Items.NONE) ||
-                  (equipment_start._item_left0 == ItemManager.Items.NONE && equipment_start._item_right0 == ItemManager.Items.NONE && equipment_start._item_left1 == ItemManager.Items.NONE && equipment_start._item_right1 == ItemManager.Items.KNIFE)
-                )
-              )
+              if (HasItemPair(equipment_start, ItemManager.Items.KNIFE))
               {
                 Debug.Log("Unlocked EXTRA_TIME");
                 Shop.AddAvailableUnlock(Shop.Unlocks.EXTRA_TIME, true);
@@ -3158,17 +3199,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
             // "unlock by completing sneaky level 80, solo, with just a knife and silenced pistol",
             case 80:
 
-              if (
-                equipment_start._perks.Count == 0 &&
-                equipment_start._utilities_left.Length == 0 &&
-                equipment_start._utilities_right.Length == 0 &&
-                (
-                  (equipment_start._item_left0 == ItemManager.Items.KNIFE && equipment_start._item_right0 == ItemManager.Items.PISTOL_SILENCED && equipment_start._item_left1 == ItemManager.Items.NONE && equipment_start._item_right1 == ItemManager.Items.NONE) ||
-                  (equipment_start._item_left0 == ItemManager.Items.PISTOL_SILENCED && equipment_start._item_right0 == ItemManager.Items.KNIFE && equipment_start._item_left1 == ItemManager.Items.NONE && equipment_start._item_right1 == ItemManager.Items.NONE) ||
-                  (equipment_start._item_left0 == ItemManager.Items.NONE && equipment_start._item_right0 == ItemManager.Items.NONE && equipment_start._item_left1 == ItemManager.Items.KNIFE && equipment_start._item_right1 == ItemManager.Items.PISTOL_SILENCED) ||
-                  (equipment_start._item_left0 == ItemManager.Items.NONE && equipment_start._item_right0 == ItemManager.Items.NONE && equipment_start._item_left1 == ItemManager.Items.PISTOL_SILENCED && equipment_start._item_right1 == ItemManager.Items.KNIFE)
-                )
-              )
+              if (HasItemPair(equipment_start, ItemManager.Items.KNIFE, ItemManager.Items.PISTOL_SILENCED))
               {
                 Debug.Log("Unlocked EXTRA_GRAVITY");
                 Shop.AddAvailableUnlock(Shop.Unlocks.EXTRA_GRAVITY, true);
@@ -3178,6 +3209,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
 
           }
 
+        }
       }
     }
 
@@ -3698,7 +3730,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     {
 
       // Load last version
-      float oldversion = PlayerPrefs.GetFloat("VERSION", -1f);
+      var oldversion = PlayerPrefs.GetFloat("VERSION", -1f);
       if (oldversion != -1f)
       {
         // Fix really old saves... by deleting them :)
@@ -3920,13 +3952,13 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       // set the desired aspect ratio (the values in this example are
       // hard-coded for 16:9, but you could make them into public
       // variables instead so you can set them at design time)
-      float targetaspect = 16.0f / 9.0f;
+      var targetaspect = 16.0f / 9.0f;
 
       // determine the game window's current aspect ratio
-      float windowaspect = (float)_ScreenResolution.width / (float)_ScreenResolution.height;
+      var windowaspect = (float)_ScreenResolution.width / (float)_ScreenResolution.height;
 
       // current viewport height should be scaled by this amount
-      float scaleheight = windowaspect / targetaspect;
+      var scaleheight = windowaspect / targetaspect;
 
       // obtain camera component so we can modify its viewport
       foreach (var camera in new Camera[] { GameResources._Camera_Main, GameResources._Camera_Menu })
@@ -3935,7 +3967,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         // if scaled height is less than current height, add letterbox
         if (scaleheight < 1.0f)
         {
-          Rect rect = camera.rect;
+          var rect = camera.rect;
 
           rect.width = 1.0f;
           rect.height = scaleheight;
@@ -3946,9 +3978,8 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         }
         else // add pillarbox
         {
-          float scalewidth = 1.0f / scaleheight;
-
-          Rect rect = camera.rect;
+          var scalewidth = 1.0f / scaleheight;
+          var rect = camera.rect;
 
           rect.width = scalewidth;
           rect.height = 1.0f;

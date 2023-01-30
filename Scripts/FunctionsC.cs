@@ -1070,7 +1070,7 @@ public static class FunctionsC
       value = PlayerPrefs.GetInt(name, initialValue ? 1 : 0) == 1;
     }
 
-    // Overload
+    // Overload operators
     public static bool operator ==(SaveableStat_Bool a, bool b)
     {
       return a._value == b;
@@ -1082,6 +1082,10 @@ public static class FunctionsC
     public override bool Equals(object obj)
     {
       return _value == ((SaveableStat_Bool)obj)._value;
+    }
+    public override int GetHashCode()
+    {
+      return _value.GetHashCode();
     }
 
   }

@@ -57,7 +57,7 @@ public class BulletScript : MonoBehaviour
 
   float _startTime;
 
-  Light light;
+  new Light light;
   Light _light
   {
     get
