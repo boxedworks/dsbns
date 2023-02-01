@@ -202,7 +202,7 @@ public class Powerup : MonoBehaviour
       if (pl_info != null && pl_info._ragdoll != null)
       {
         var dist = pl_info._distance;
-        _audio.volume += (((1f - dist / 5f) * 0.65f) - _audio.volume) * Time.deltaTime * 2f;
+        _audio.volume += (((1f - dist / 5f) * 0.35f) - _audio.volume) * Time.deltaTime * 2f;
       }
 
     }

@@ -16,7 +16,7 @@ public class DoorScript : CustomEntity
     get { return _button != null; }
   }
 
-  Vector3 _saveDoorPos, _saveDoorScale;
+  Vector3 _saveDoorPos;
 
   public bool _XScale, _opened;
   bool _original;
@@ -27,6 +27,7 @@ public class DoorScript : CustomEntity
   Light _l;
   Collider _collider0, _collider1;
   UnityEngine.AI.NavMeshObstacle _obstacle;
+  ParticleSystem _ps_dust;
 
   public List<int> _trigger_enemies;
   public List<EnemyScript> _registered_enemies;
@@ -37,7 +38,6 @@ public class DoorScript : CustomEntity
     _door = transform.GetChild(0).GetChild(0);
 
     _saveDoorPos = _door.position;
-    _saveDoorScale = _door.localScale;
 
     _audio_door = GetComponent<AudioSource>();
 
@@ -45,12 +45,14 @@ public class DoorScript : CustomEntity
     _collider1 = _door.GetComponents<Collider>()[1];
     _obstacle = _door.GetComponent<UnityEngine.AI.NavMeshObstacle>();
 
+    _ps_dust = transform.GetChild(0).GetChild(2).GetComponent<ParticleSystem>();
+
     _original = _opened;
     if (!_opened)
     {
       SetDoorScale(1f);
-      _door.gameObject.SetActive(false);
       _normalizedTime = 1f;
+      _obstacle.enabled = false;
     }
 
   }
@@ -105,21 +107,21 @@ public class DoorScript : CustomEntity
     if (!_opening) return;
 
     //_door.position = Vector3.Lerp(_saveDoorPos, _saveDoorPos - new Vector3(0f, 1f, 0f), _normalizedTime);
-    _normalizedTime = Mathf.Clamp(_normalizedTime + Time.deltaTime * _Speed * 4f * (_opened ? -1f : 1f), 0f, 1f);
+    _normalizedTime = Mathf.Clamp(_normalizedTime + Time.deltaTime * _Speed * 0.4f * (_opened ? -1f : 1f), 0f, 1f);
     SetDoorScale(_normalizedTime);
-
-    if (_normalizedTime > 1f && _opened) _door.gameObject.SetActive(false);
 
     if (_normalizedTime == 1f || _normalizedTime == 0f)
     {
       _opening = false;
-      if (!_opened) _door.gameObject.SetActive(false);
+      _audio_door.Stop();
+      _ps_dust.Stop();
+
     }
   }
 
   void SetDoorScale(float normalized)
   {
-    _door.localScale = Vector3.Lerp(_saveDoorScale, new Vector3(_XScale ? 0f : _saveDoorScale.x, 1f, _XScale ? _saveDoorScale.z : 0f), normalized);
+    _door.position = Vector3.Lerp(_saveDoorPos, _saveDoorPos + new Vector3(0f, -2.1f, 0f), normalized);
   }
 
   public void Toggle()
@@ -128,8 +130,6 @@ public class DoorScript : CustomEntity
 
     if (!GameScript._EditorEnabled)
       EnemyScript.CheckSound(_door.position, EnemyScript.Loudness.SOFT);
-
-    //_button.gameObject.SetActive(false);
 
     _opened = !_opened;
     Toggle(_opened);
@@ -141,9 +141,11 @@ public class DoorScript : CustomEntity
     _collider1.enabled = open;
     _obstacle.enabled = open;
 
-    _door.gameObject.SetActive(true);
     _opening = true;
+
     FunctionsC.PlaySound(ref _audio_door, "Etc/Door_open", 1.1f, 1.3f);
+    _audio_door.loop = true;
+    _ps_dust.Play();
   }
 
   public override void Activate(CustomEntityUI ui)

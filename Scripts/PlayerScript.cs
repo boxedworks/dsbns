@@ -60,7 +60,10 @@ public class PlayerScript : MonoBehaviour
   int _saveLoadoutIndex;
 
   //
+  [System.NonSerialized]
   public GameScript.PlayerProfile.Equipment _equipment_start;
+  [System.NonSerialized]
+  public bool _equipment_changed;
   public static int _NumPlayers_Start;
 
   // Colored ring under player
@@ -175,6 +178,7 @@ public class PlayerScript : MonoBehaviour
 
     // Save start loadout for challenges
     _equipment_start = _equipment;
+    _equipment_changed = false;
 
     // Set camera position
     _camPos = GameResources._Camera_Main.transform.position;
@@ -896,8 +900,8 @@ public class PlayerScript : MonoBehaviour
       y = 0f,
       x2 = 0f,
       y2 = 0f;
-    float movespeed = MOVESPEED;
-    bool runKeyDown = false;
+    var movespeed = MOVESPEED;
+    var runKeyDown = false;
     if (Time.timeScale < 0.8f)
       unscaled_dt = unscaled_dt * Time.timeScale * 2f;
 
@@ -917,7 +921,7 @@ public class PlayerScript : MonoBehaviour
         ControllerManager.GetKey(ControllerManager.Key.ARROW_R, ControllerManager.InputMode.HOLD))
         x += 1f;
       // Mouse look
-      Vector3 p = GameResources._Camera_Main.ScreenPointToRay(ControllerManager.GetMousePosition()).GetPoint(Vector3.Distance(GameResources._Camera_Main.transform.position, transform.position));
+      var p = GameResources._Camera_Main.ScreenPointToRay(ControllerManager.GetMousePosition()).GetPoint(Vector3.Distance(GameResources._Camera_Main.transform.position, transform.position));
       transform.LookAt(new Vector3(p.x, transform.position.y, p.z));
       // Throw money
       if (ControllerManager.GetKey(ControllerManager.Key.V))
@@ -1322,6 +1326,7 @@ public class PlayerScript : MonoBehaviour
       else
       {
         EquipLoadout(_profile._loadoutIndex);
+        _equipment_changed = true;
       }
     }
   }

@@ -1970,7 +1970,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         return;
       }
       // Check axis selections
-      float y = ControllerManager.GetControllerAxis(_id, ControllerManager.Axis.DPAD_X);
+      var y = ControllerManager.GetControllerAxis(_id, ControllerManager.Axis.DPAD_X);
       if (y > 0.75f)
       {
         if (_directionalAxis[2] <= 0f)
@@ -3142,7 +3142,9 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
 
         // Make sure equipment has not changed
         var equipment_start = PlayerScript._Players[0]._equipment_start;
-        if (EquipmentIsEqual(equipment_start, PlayerScript._Players[0]._equipment))
+        var equipment_changed = PlayerScript._Players[0]._equipment_changed;
+        Debug.Log(equipment_changed);
+        if (EquipmentIsEqual(equipment_start, PlayerScript._Players[0]._equipment) && !equipment_changed)
         {
 
           // Function to check for equipment matching

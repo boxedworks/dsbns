@@ -1068,6 +1068,10 @@ public class ItemScript : MonoBehaviour
   {
     return _melee;
   }
+  public bool IsEmpty()
+  {
+    return _type == ItemType.NONE;
+  }
 
   public bool IsThrowable()
   {

@@ -1415,6 +1415,10 @@ public class ActiveRagdoll
   {
     return (_itemL?.IsMelee() ?? false) || (_itemR?.IsMelee() ?? false);
   }
+  public bool HasEmpty()
+  {
+    return ((_itemL?.IsEmpty() ?? false) || (_itemR?.IsEmpty() ?? false));
+  }
 
   public bool Active()
   {

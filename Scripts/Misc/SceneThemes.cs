@@ -272,7 +272,7 @@ new Theme(){
   _furnatureColor = new Color(0.08245816f, 0.1603774f, 0.08245816f, 0f),
   _lightColor = new Color(1f, 1f, 1f, 0f),
   _innerWallColor = new Color(0.08245816f, 0.1603774f, 0.08245816f, 0f),
-  _shadowStrength = 0.7f,
+  _shadowStrength = 0.6f,
   _profile = 5,
   _useFog = false,
   _rain = true
