@@ -877,7 +877,8 @@ public class GameScript : MonoBehaviour
       if (Levels._CurrentLevelIndex == 0 && highest_wave < 11 && _Wave == 11)
       {
         TogglePause();
-        _audioListenerSource.PlayOneShot(Menu2.GetNoise(Menu2.Noise.PURCHASE).clip);
+        //_audioListenerSource.PlayOneShot(Menu2.GetNoise(Menu2.Noise.PURCHASE).Item1.clip);
+        Menu2.PlayNoise(Menu2.Noise.PURCHASE);
         Menu2.GenericMenu(new string[] {
 $@"<color={Menu2._COLOR_GRAY}>new survival map unlocked</color>
 

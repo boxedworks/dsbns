@@ -849,6 +849,14 @@ public class Menu2
     // Get menu text mesh
     _Text = GameObject.Find("Menu2").transform.GetChild(0).GetComponent<TextMesh>();
 
+    // Menu audio
+    _MenuAudio = new Dictionary<Noise, System.Tuple<AudioSource, float>>();
+    var index = 0;
+    foreach (var component in _Menu.gameObject.GetComponents<AudioSource>())
+    {
+      _MenuAudio.Add((Noise)(index++), System.Tuple.Create(component, component.volume));
+    }
+
     // Set starting menu
     _CurrentMenuType = MenuType.SPLASH;
 
@@ -6548,9 +6556,10 @@ a gampad if plugged in.~1
     BACK,
     PURCHASE
   }
-  public static AudioSource GetNoise(Noise noise)
+  static Dictionary<Noise, System.Tuple<AudioSource, float>> _MenuAudio;
+  public static System.Tuple<AudioSource, float> GetNoise(Noise noise)
   {
-    return _Menu.gameObject.GetComponents<AudioSource>()[(int)noise];
+    return _MenuAudio[noise];
   }
   static float _LastNoise;
   public static void PlayNoise(Noise noise)
@@ -6558,7 +6567,9 @@ a gampad if plugged in.~1
     if (!_Menu.gameObject.activeSelf) return;
     if (Time.unscaledTime - _LastNoise < 0.05f) return;
     _LastNoise = Time.unscaledTime;
-    var audioSource = GetNoise(noise);
+    var audioData = GetNoise(noise);
+    var audioSource = audioData.Item1;
+    audioSource.volume = audioData.Item2;
     audioSource.pitch = (0.9f + Random.value * 0.15f);
     FunctionsC.PlayOneShot(audioSource, false);
   }
@@ -6578,7 +6589,8 @@ a gampad if plugged in.~1
     {
       Shop.ShowUnlocks(afterUnlockMenu);
       CommonEvents._SwitchMenu(MenuType.GENERIC_MENU);
-      GameScript._audioListenerSource.PlayOneShot(GetNoise(Noise.PURCHASE).clip);
+      PlayNoise(Noise.PURCHASE);
+      //GameScript._audioListenerSource.PlayOneShot(GetNoise(Noise.PURCHASE).Item1.clip);
       return;
     }
 

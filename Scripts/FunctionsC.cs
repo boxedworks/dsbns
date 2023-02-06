@@ -346,6 +346,7 @@ public static class FunctionsC
     {
       if (pair.Key == null) continue;
       pair.Key.pitch = pair.Value.Item1;
+      pair.Key.volume = pair.Value.Item2;
     }
     _PlayingAudio = null;
   }
