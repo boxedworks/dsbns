@@ -228,6 +228,7 @@ public class SceneThemes : MonoBehaviour
     "Castle White",
     "Stone",
     "Hedge",
+    "Wood",
   };
   public static string[] _SceneOrder_LevelEditor = new string[]{
     "Black and White",

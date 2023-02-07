@@ -243,13 +243,37 @@ public class BulletScript : MonoBehaviour
       //  return;
       else
       {
-        var s = collider.transform.parent.GetComponent<ExplosiveScript>();
-        if (s != null)
+        if (collider.gameObject.name == "Books")
         {
-          s.Explode(_source._ragdoll);
+          FunctionsC.BookManager.ExplodeBooks(collider, _source.transform.position);
           if (++_hitAmount <= _penatrationAmount) return;
         }
-        else hit_wall = true;
+
+        else
+        {
+          var tv = collider.GetComponent<TVScript>();
+          if (tv != null)
+          {
+            var damageSource = _source._ragdoll;
+            if (_redirected) { damageSource = _redirector; }
+            tv.Explode(damageSource);
+            if (++_hitAmount <= _penatrationAmount) return;
+          }
+
+          else
+          {
+
+            var s = collider.transform.parent.GetComponent<ExplosiveScript>();
+            if (s != null)
+            {
+              s.Explode(_source._ragdoll);
+              if (++_hitAmount <= _penatrationAmount) return;
+            }
+
+            else
+              hit_wall = true;
+          }
+        }
       }
     }
     else

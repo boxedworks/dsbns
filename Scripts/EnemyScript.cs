@@ -1628,32 +1628,32 @@ public class EnemyScript : MonoBehaviour
     if (_Enemies_alive.Count == 0)
       GameScript._Singleton._goalPickupTime = Time.time;
 
+    // Sneaky difficulty
     if (GameScript.Settings._DIFFICULTY == 0)
     {
       if (_Enemies_alive.Count == 0)
         last_killed = true;
     }
-    else
+
+    // Sneakier difficulty
+    else if (!IsChaser())
     {
-      if (_Chaser != null && _Chaser._ragdoll != null && ((!_Chaser._ragdoll._dead && !IsChaser() && _Enemies_alive.Count == 1) ||
-      _Chaser._ragdoll._dead && _Enemies_alive.Count == 0))
+      if (
+        (_Enemies_alive.Count == 1 && _Enemies_alive[0].IsChaser()) ||
+        _Enemies_alive.Count == 0
+      )
       {
         last_killed = true;
-
-        //.Log("slowmo 0");
-      }
-      else if ((_Chaser == null || _Chaser._ragdoll == null) && _Enemies_alive.Count == 0)
-      {
-        last_killed = true;
-
-        //Debug.Log("slowmo 1");
       }
     }
+
+    // Slowmo
     if (last_killed)
     {
-      // Check for slowmo
+      // Check for slowmo setting
       if (GameScript.Settings._Slowmo_on_lastkill)
         PlayerScript._SlowmoTimer += 1.3f;
+
       // Check mode
       if (GameScript._GameMode == GameScript.GameModes.SURVIVAL)
       {

@@ -406,7 +406,7 @@ public class TileManager
       SceneThemes.ChangeMapTheme(SceneThemes._Instance._ThemeOrder[3]);
     else
     {
-      if (Levels._CurrentLevelIndex < 12 && Levels._CurrentLevelIndex > 7)
+      if (Levels._CurrentLevelIndex < 12 && Levels._CurrentLevelIndex > (GameScript.Settings._DIFFICULTY == 1 ? 8 : 7))
         SceneThemes.ChangeMapTheme(SceneThemes._Instance._ThemeOrder[1]);
       else
         SceneThemes.ChangeMapTheme(SceneThemes._Instance._ThemeOrder[(Levels._CurrentLevelIndex / 12) % 12]);
@@ -1206,6 +1206,11 @@ public class TileManager
           }
         }
 
+        // Check books
+        else if(leo._name == _LEO_Books._name){
+          FunctionsC.BookManager.RegisterBooks(loadedObject.transform);
+        }
+
         // Change layer per editor mode
         if (loadedObject.name == _LEO_Interactable._name || loadedObject.name == _LEO_NavMeshBarrier._name)
           loadedObject.layer = GameScript._EditorEnabled ? 0 : 2;
@@ -1419,12 +1424,18 @@ public class TileManager
           break;
         case ("FakeTile"):
           resource = GameResources._Fake_Tile;
-          break;
+        break;
         case ("TileWall"):
           resource = GameResources._Tile_Wall;
           break;
         case ("Arch"):
           resource = GameResources._Arch;
+          break;
+        case ("Television"):
+          resource = GameResources._Television;
+          break;
+        case ("Books"):
+          resource = GameResources._Books;
           break;
         default:
           Debug.Log("Loading resource <color=blue>" + resourceName + "</color> using Resources.Load()");
@@ -1465,7 +1476,7 @@ public class TileManager
 
     // Reload assets
     GameScript.ToggleExit(false);
-    foreach (ActiveRagdoll r in ActiveRagdoll._Ragdolls)
+    foreach (var r in ActiveRagdoll._Ragdolls)
       GameObject.DestroyImmediate(r._controller.parent.gameObject);
     ActiveRagdoll.Reset();
     EnemyScript.Reset();
@@ -1475,8 +1486,9 @@ public class TileManager
     CustomEntityUI._ID = 0;
     ExplosiveScript.Reset();
     ResetParticles();
-    Transform objects = GameResources._Container_Objects;
-    for (int i = objects.childCount - 1; i >= 0; i--)
+
+    var objects = GameResources._Container_Objects;
+    for (var i = objects.childCount - 1; i >= 0; i--)
     {
       GameObject child = objects.GetChild(i).gameObject;
       // Reset lasers
@@ -1543,6 +1555,9 @@ public class TileManager
 
   public static void ResetParticles()
   {
+    // Misc
+    FunctionsC._BookManager.Init();
+
     /// Gather particle systems to hide
     var particles = new List<ParticleSystem>();
 
@@ -1833,7 +1848,7 @@ public class TileManager
 
           button.onClick.AddListener(() =>
           {
-            SpawnObjectSimple(_LEO_Door);
+            SpawnObjectSimple(_LEO_Books);
           });
           break;
 
@@ -2498,10 +2513,11 @@ public class TileManager
       new LevelEditorObject.DeleteSettings(),
       (LevelEditorObject leo, GameObject g, Vector3 offset, Vector3 pos_use) =>
       {
-        string returnString = "";
+        var returnString = "";
+
         // Check for barrels
-        ExplosiveScript exp = g.GetComponent<ExplosiveScript>();
-        if (exp != null)
+        var exp = g.GetComponent<ExplosiveScript>();
+        if (exp != null && g.name == "ExplosiveBarrel")
         {
           returnString += LevelEditorObject._SaveFunction_Pos(leo, pos_use) + " ";
           return returnString;
@@ -3013,6 +3029,38 @@ public class TileManager
       LevelEditorObject._SaveFunction_PosRotCustom,
       null),
 
+    _LEO_TV = new LevelEditorObject("Television", LevelEditorObject._UpdateFunction_Object,
+      new LevelEditorObject.MovementSettings()
+      {
+        _localPos = -0.1f
+      },
+      new LevelEditorObject.RotationSettings(),
+      new LevelEditorObject.CopySettings(),
+      new LevelEditorObject.AddSettings()
+      {
+        _data = "television_0_0"
+      },
+      new LevelEditorObject.DeleteSettings(),
+      LevelEditorObject._SaveFunction_PosRotCustom,
+      null
+    ),
+
+    _LEO_Books = new LevelEditorObject("Books", LevelEditorObject._UpdateFunction_Object,
+      new LevelEditorObject.MovementSettings()
+      {
+        _localPos = -0.5f
+      },
+      new LevelEditorObject.RotationSettings(),
+      new LevelEditorObject.CopySettings(),
+      new LevelEditorObject.AddSettings()
+      {
+        _data = "books_0_0"
+      },
+      new LevelEditorObject.DeleteSettings(),
+      LevelEditorObject._SaveFunction_PosRotCustom,
+      null
+    ),
+
     _LEO_NavMeshBarrier = new LevelEditorObject("NavMeshBarrier", LevelEditorObject._UpdateFunction_Object,
       new LevelEditorObject.MovementSettings()
       {
@@ -3112,6 +3160,9 @@ public class TileManager
     _LEO_FakeTile,
     _LEO_TileWall,
     _LEO_Arch,
+
+    _LEO_TV,
+    _LEO_Books,
   };
 
   class LevelEditorObject

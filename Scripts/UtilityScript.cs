@@ -203,9 +203,11 @@ public class UtilityScript : ItemScript
               rag.TakeDamage(_ragdoll, ActiveRagdoll.DamageSourceType.THROW_MELEE, new Vector3(0f, 1f, 0f), _ragdoll._hip.position, 1, true);
               PlaySound(Audio.UTILITY_ACTION);
             }
+
             EnemyScript.CheckSound(transform.position, killed ? EnemyScript.Loudness.SUPERSOFT : EnemyScript.Loudness.SOFT);
             transform.GetChild(1).GetComponent<ParticleSystem>().Stop();
             GameObject.Destroy(_rb);
+
             // Stop ignoring holder's ragdoll
             _ragdoll.IgnoreCollision(_c, false);
             ((SphereCollider)_c).radius *= killed ? 10f : 4f;
@@ -246,13 +248,22 @@ public class UtilityScript : ItemScript
             }
             else
             {
-              transform.GetChild(1).GetComponent<ParticleSystem>().Stop();
-              GameObject.Destroy(_rb);
-              // Stop ignoring holder's ragdoll
-              _ragdoll.IgnoreCollision(_c, false);
-              ((SphereCollider)_c).radius *= 1.7f;
-              PlaySound(Audio.UTILITY_HIT_FLOOR);
-              EnemyScript.CheckSound(transform.position, EnemyScript.Loudness.SOFT);
+              if (c.name == "Books")
+              {
+                FunctionsC.BookManager.ExplodeBooks(c, _ragdoll.transform.position);
+                PlaySound(Audio.UTILITY_ACTION);
+              }
+
+              else
+              {
+                transform.GetChild(1).GetComponent<ParticleSystem>().Stop();
+                GameObject.Destroy(_rb);
+                // Stop ignoring holder's ragdoll
+                _ragdoll.IgnoreCollision(_c, false);
+                ((SphereCollider)_c).radius *= 1.7f;
+                PlaySound(Audio.UTILITY_HIT_FLOOR);
+                EnemyScript.CheckSound(transform.position, EnemyScript.Loudness.SOFT);
+              }
             }
           };
           // Throw and queue next

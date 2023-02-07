@@ -8,8 +8,10 @@ public static class FunctionsC
   //static List<ParticleSystem> _BloodParticles;
   public static Transform _Sounds;
 
+  public static BookManager _BookManager;
   public static void Init()
   {
+    _BookManager = new BookManager();
     _SoundLibrary = new Dictionary<string, Dictionary<string, AudioSource>>();
     // Populate audio library
     _Sounds = Camera.main.transform.parent.GetChild(2);
@@ -157,6 +159,8 @@ public static class FunctionsC
     RAIN,
     RAIN_FAKE,
     MAGAZINE,
+    SPARKS_ROBOT,
+    PAPER,
   }
   static int _ExplosionIter;
   public static ParticleSystem[] GetParticleSystem(ParticleSystemType particleType)
@@ -208,6 +212,13 @@ public static class FunctionsC
         break;
       case ParticleSystemType.MAGAZINE:
         index = 12;
+        break;
+      case ParticleSystemType.SPARKS_ROBOT:
+        index = 13;
+        break;
+      case ParticleSystemType.PAPER:
+        index = 14;
+        randomChild = true;
         break;
     }
     if (randomChild)
@@ -401,7 +412,7 @@ public static class FunctionsC
     explosion_scar.position = position;
     explosion_scar.localPosition = new Vector3(explosion_scar.localPosition.x, -1.29f, explosion_scar.localPosition.z);
     explosion_scar.localRotation = Quaternion.identity;
-    explosion_scar.localScale = new Vector3(scale * 0.15f, .2f, 1.6f * scale * 0.15f);
+    explosion_scar.localScale = new Vector3(scale * 0.12f, .2f, 1.6f * scale * 0.12f);
     explosion_scar.Rotate(new Vector3(0f, 1f, 0f) * Random.value * 360f);
     explosion_scar.gameObject.SetActive(true);
   }
@@ -557,6 +568,54 @@ public static class FunctionsC
     return master_gameObject;
   }
 
+  // BOOKS
+  public class BookManager
+  {
+
+    // Hold list of books in scene
+    List<Transform> _books;
+
+    // Reset list of books
+    public void Init()
+    {
+      _books = new List<Transform>();
+    }
+
+    // Apply book FX
+    public static void ExplodeBooks(Collider c, Vector3 source_pos)
+    {
+      if (!c.enabled) return;
+      _Books.Remove(c.transform);
+
+      c.enabled = false;
+      c.transform.GetChild(0).gameObject.SetActive(false);
+
+      var particles = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.PAPER);
+      if (particles == null || particles.Length == 0) return;
+      var paper = particles[0];
+      paper.transform.position = c.transform.position + new Vector3(0f, 0.3f, 0f);// + _hip.transform.forward * 0.2f;//point;
+      paper.transform.LookAt(source_pos);
+      paper.transform.Rotate(new Vector3(0f, 1f, 0f) * 180f);
+      var q = paper.transform.localRotation;
+      q.eulerAngles = new Vector3(0f, q.eulerAngles.y, q.eulerAngles.z);
+      paper.transform.localRotation = q;
+      paper.transform.Rotate(new Vector3(1f, 0f, 0f), UnityEngine.Random.value * -20f);
+      paper.Play();
+
+      var a = c.GetComponent<AudioSource>();
+      FunctionsC.PlayAudioSource(ref a);
+    }
+
+    public static void RegisterBooks(Transform books)
+    {
+      FunctionsC._BookManager._books.Add(books);
+    }
+
+    public static List<Transform> _Books { get { return FunctionsC._BookManager._books; } }
+
+  }
+
+  // MUSIC
   public static class MusicManager
   {
     public static int _CurrentTrack;

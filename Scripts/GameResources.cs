@@ -15,6 +15,9 @@ public static class GameResources
     _BookcaseOpen, _BookcaseOpen_Bush,
     _BookcaseBig, _BookcaseBig_Bush,
 
+    _Television,
+    _Books,
+
     _RugRectangle,
 
 
@@ -60,6 +63,9 @@ public static class GameResources
     _BookcaseOpen_Bush = Resources.Load("BookcaseOpen_Bush") as GameObject;
     _BookcaseBig = Resources.Load("BookcaseBig") as GameObject;
     _BookcaseBig_Bush = Resources.Load("BookcaseBig_Bush") as GameObject;
+
+    _Television = Resources.Load("Television") as GameObject;
+    _Books = Resources.Load("Books") as GameObject;
 
     _RugRectangle = Resources.Load("RugRectangle") as GameObject;
 

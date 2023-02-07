@@ -59,6 +59,7 @@ public class ExplosiveScript : MonoBehaviour {
 
     _triggered = false;
     _exploded = true;
+
     // Remove from explosion list
     _Explosives.Remove(this);
 
@@ -79,6 +80,13 @@ public class ExplosiveScript : MonoBehaviour {
     // Check for nearby ragdolls
     FunctionsC.ApplyExplosionRadius(transform.position, _radius, _explosionType, source);
 
+    // Check for books??
+    foreach(var b in FunctionsC.BookManager._Books){
+      if (b == null) continue;
+      if (MathC.Get2DDistance(transform.position, b.position) > _radius) continue;
+      FunctionsC.BookManager.ExplodeBooks(b.GetComponent<Collider>(), transform.position);
+    }
+
     // Check for nearby explosives
     foreach(var e in _Explosives)
     {
@@ -94,7 +102,7 @@ public class ExplosiveScript : MonoBehaviour {
       FunctionsC.PlaySound(ref _audio, "Ragdoll/Explode", 0.825f, 1.175f);
 
     // Try to remove RB
-    Rigidbody rb = GetComponent<Rigidbody>();
+    var rb = GetComponent<Rigidbody>();
     if (rb != null) Destroy(rb);
   }
 

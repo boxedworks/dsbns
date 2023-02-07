@@ -1214,8 +1214,38 @@ public class ActiveRagdoll
       //if(this != null)
       //  EnemyScript.CheckSound(system.transform.position, EnemyScript.Loudness.SOFT);
     }
+
+    // Check follower
+    if (_enemyScript?.IsChaser() ?? false)
+    {
+
+      void PlaySpark()
+      {
+        var particles_sparks = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.SPARKS_ROBOT)[0];
+        particles_sparks.transform.position = _hip.position;
+        particles_sparks.transform.Rotate(new Vector3(0f, 1f, 0f) * (Random.value * 360f));
+        particles_sparks.Play();
+
+        FunctionsC.PlaySound(ref _audioPlayer_steps, "Enemies/Electric_Spark", 0.9f, 1.1f);
+      }
+      IEnumerator PlaySparks()
+      {
+
+        while (_hip != null)
+        {
+          if (_hip != null)
+            PlaySpark();
+          yield return new WaitForSeconds(0.13f + Random.value * 0.7f);
+        }
+      }
+      FunctionsC.PlaySound(ref _audioPlayer_steps, "Enemies/Electric_Shock", 0.9f, 1.1f);
+      GameScript._Singleton.StartCoroutine(PlaySparks());
+      return;
+    }
+
     // Check global blood setting
     if (!GameScript.Settings._Blood) return;
+
     // Particles
     var particles = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.BLOOD);
     if (particles == null || particles.Length == 0) return;
@@ -1229,6 +1259,7 @@ public class ActiveRagdoll
     q.eulerAngles = new Vector3(0f, q.eulerAngles.y, q.eulerAngles.z);
     blood.transform.localRotation = q;
     blood.transform.Rotate(new Vector3(1f, 0f, 0f), UnityEngine.Random.value * -20f);
+
     // Audio
     var aSource = blood.GetComponent<AudioSource>();
     FunctionsC.PlaySound(ref aSource, "Ragdoll/Blood", 1.2f, 1.5f);
