@@ -2,7 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class ExplosiveScript : MonoBehaviour {
+public class ExplosiveScript : MonoBehaviour
+{
 
   public static List<ExplosiveScript> _Explosives;
 
@@ -81,14 +82,17 @@ public class ExplosiveScript : MonoBehaviour {
     FunctionsC.ApplyExplosionRadius(transform.position, _radius, _explosionType, source);
 
     // Check for books??
-    foreach(var b in FunctionsC.BookManager._Books){
+    var books = FunctionsC.BookManager._Books;
+    for (var i = books.Count - 1; i >= 0; i--)
+    {
+      var b = books[i];
       if (b == null) continue;
       if (MathC.Get2DDistance(transform.position, b.position) > _radius) continue;
       FunctionsC.BookManager.ExplodeBooks(b.GetComponent<Collider>(), transform.position);
     }
 
     // Check for nearby explosives
-    foreach(var e in _Explosives)
+    foreach (var e in _Explosives)
     {
       if (e == null) continue;
       if (e.name.Equals("Missle") || e.name.Equals("Grenade") || MathC.Get2DDistance(transform.position, e.transform.position) > _radius) continue;
@@ -98,7 +102,7 @@ public class ExplosiveScript : MonoBehaviour {
     EnemyScript.CheckSound(transform.position, EnemyScript.Loudness.LOUD);
 
     // Play sound
-    if(playSound)
+    if (playSound)
       FunctionsC.PlaySound(ref _audio, "Ragdoll/Explode", 0.825f, 1.175f);
 
     // Try to remove RB
