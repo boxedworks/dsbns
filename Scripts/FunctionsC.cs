@@ -281,20 +281,28 @@ public static class FunctionsC
     _PlayingAudio.Add(s, System.Tuple.Create<float, float>(s.pitch, s.volume));
   }
 
-  static public void PlaySound(ref AudioSource speaker, string soundPath, float min = 1f, float max = 1f)
+  // Find folder
+  static public AudioSource GetAudioClip(string soundPath)
   {
-    if (speaker == null || GameScript.Settings._VolumeSFX == 0) return;
-    if (_PlayingAudio == null) _PlayingAudio = new Dictionary<AudioSource, System.Tuple<float, float>>();
-
-    // Find folder
     var split = soundPath.Split('/');
     string folder = split[0], name = split[1];
     var sfx_source = _SoundLibrary[folder][name];
     if (sfx_source == null)
     {
       Debug.LogError("Need to implement random picker");
-      return;
+      return null;
     }
+
+    return sfx_source;
+  }
+
+  static public void PlaySound(ref AudioSource speaker, string soundPath, float min = 1f, float max = 1f)
+  {
+    if (speaker == null || GameScript.Settings._VolumeSFX == 0) return;
+    if (_PlayingAudio == null) _PlayingAudio = new Dictionary<AudioSource, System.Tuple<float, float>>();
+
+    // Find folder
+    var sfx_source = GetAudioClip(soundPath);
     speaker.volume = sfx_source.volume;
     speaker.pitch = sfx_source.pitch;
 
@@ -427,28 +435,32 @@ public static class FunctionsC
     PlayComplexParticleSystemAt(ParticleSystemType.EXPLOSION, position + new Vector3(0f, 0.2f, 0f));
     foreach (var r in rags)
     {
+
       // Check for perk
       if (r._isPlayer && r._id == source._id && r._playerScript.HasPerk(Shop.Perk.PerkType.EXPLOSION_RESISTANCE)) continue;
 
       // Check dist
       if (MathC.Get2DDistance(position, r._hip.position) < 0.3f) { }
+
       // Raycast to validate
       else
       {
-        r.ToggleRaycasting(true);
+        r.ToggleRaycasting(true, true);
         var hit = new RaycastHit();
-        var dir = -MathC.Get2DVector(position - r._hip.position).normalized;
-        if (!Physics.SphereCast(new Ray(new Vector3(position.x, -0.1f, position.z), dir), 0.1f, out hit, radius + 1f))
+        var dir = -(r._dead ? position - r._hip.position : MathC.Get2DVector(position - r._hip.position)).normalized;
+        var start_pos = new Vector3(position.x, -0.1f, position.z);
+        if (!Physics.Raycast(new Ray(start_pos, dir), out hit, radius + 5f))
         {
-          r.ToggleRaycasting(false);
+          r.ToggleRaycasting(false, true);
           continue;
         }
-        r.ToggleRaycasting(false);
+
+        r.ToggleRaycasting(false, true);
         if (!r.IsSelf(hit.collider.gameObject)) continue;
       }
 
       // Check for 3+ kills for slowmo
-      if (exploded++ == 3)
+      if (!r._dead && exploded++ == 3)
         PlayerScript._SlowmoTimer += 2f;
 
 #if UNITY_STANDALONE
@@ -469,6 +481,7 @@ public static class FunctionsC
         away.y = 0.2f;
         explosionForce = away * 3000f;
       }
+
       // Assign damage
       r.TakeDamage(source, ActiveRagdoll.DamageSourceType.EXPLOSION, Vector3.zero, explosionForce, 3, true);
       if (r._dead)
@@ -478,6 +491,7 @@ public static class FunctionsC
         r._hip.AddForce(explosionForce);
       }
     }
+
     foreach (var r in rags)
       if (!r._dead) r.ToggleRaycasting(true);
   }

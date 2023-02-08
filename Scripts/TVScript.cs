@@ -11,7 +11,7 @@ public class TVScript : MonoBehaviour
   public ExplosiveScript _explosion;
   ParticleSystem _ps_smoke, _ps_fire;
   GameObject _m0, _m1, _m2;
-  AudioSource _audio_fire;
+  AudioSource _audio_sfx;
   BoxCollider _collider;
 
   float _lastUpdate;
@@ -26,7 +26,11 @@ public class TVScript : MonoBehaviour
     _ps_smoke = transform.GetChild(4).GetComponent<ParticleSystem>();
     _ps_fire = transform.GetChild(5).GetComponent<ParticleSystem>();
 
-    _audio_fire = GetComponents<AudioSource>()[1];
+    _audio_sfx = GetComponents<AudioSource>()[1];
+
+    _audio_sfx.clip = FunctionsC.GetAudioClip("Etc/TV_static").clip;
+    _audio_sfx.volume = 0.11f;
+    FunctionsC.PlayAudioSource(ref _audio_sfx);
 
     _collider = GetComponent<BoxCollider>();
   }
@@ -47,10 +51,10 @@ public class TVScript : MonoBehaviour
       }
       else
       {
-        _lastUpdate = 0.4f + Random.value * 1f;
+        _lastUpdate = 0.2f + Random.value * 0.1f;
 
         //var color = colors[Mathf.RoundToInt((colors.Length - 1) * Random.value)];
-        var color = Random.ColorHSV();
+        var color = Color.white * (Random.Range(0.7f, 1.1f));
         _light.color = color;
         _screen.sharedMaterials[1].color = color;
       }
@@ -62,7 +66,8 @@ public class TVScript : MonoBehaviour
   {
     if (_explosion._exploded) return;
 
-    _explosion.Explode(source, false, true);
+    _explosion.Explode(source, false, false);
+    FunctionsC.PlayOneShot(_explosion._audio);
 
     _m0.SetActive(false);
     _m1.SetActive(false);
@@ -71,7 +76,9 @@ public class TVScript : MonoBehaviour
     _ps_smoke.Play();
     _ps_fire.Play();
 
-    FunctionsC.PlayAudioSource(ref _audio_fire);
+    _audio_sfx.clip = FunctionsC.GetAudioClip("Etc/Fire_loop").clip;
+    _audio_sfx.volume = 0.3f;
+    FunctionsC.PlayAudioSource(ref _audio_sfx);
 
     _light.range = 3f;
     _light.type = LightType.Point;

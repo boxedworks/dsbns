@@ -286,8 +286,6 @@ public class BulletScript : MonoBehaviour
       if (TakeDamage(_source._ragdoll)) return;
     }
 
-    Hide();
-
     // Wall hit sfx
     if (hit_wall)
     {
@@ -298,7 +296,13 @@ public class BulletScript : MonoBehaviour
 
       var s = _audioSource;
       FunctionsC.PlaySound(ref s, "Etc/Bullet_impact", 0.9f, 1.1f);
+
+      // Check ricochet
+      //var normal = collider.
     }
+
+    // Remove bullet
+    Hide();
   }
 
   public void Reset(ItemScript source, Vector3 position)

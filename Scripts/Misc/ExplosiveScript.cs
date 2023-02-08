@@ -26,6 +26,8 @@ public class ExplosiveScript : MonoBehaviour
   ActiveRagdoll _source;
   bool _disableGameObject, _playSound;
 
+  TVScript _script_tv;
+
   // Use this for initialization
   public void Start()
   {
@@ -33,13 +35,30 @@ public class ExplosiveScript : MonoBehaviour
     _Explosives.Add(this);
 
     _audio = GetComponent<AudioSource>();
+
+    if (gameObject.name == "Television")
+    {
+      _script_tv = GetComponent<TVScript>();
+    }
   }
 
   void Update()
   {
     if (!_triggered) return;
     _delay -= Time.deltaTime;
-    if (_delay <= 0f) Explode(_source, _disableGameObject, _playSound);
+    if (_delay <= 0f)
+    {
+
+      if (_script_tv != null)
+      {
+        _script_tv.Explode(_source);
+      }
+      else
+      {
+        Explode(_source, _disableGameObject, _playSound);
+      }
+    }
+
   }
 
   public void Trigger(ActiveRagdoll source, float delay = 0f, bool disableGameobject = true, bool playSound = true)

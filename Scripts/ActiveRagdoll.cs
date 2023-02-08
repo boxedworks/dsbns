@@ -1197,7 +1197,7 @@ public class ActiveRagdoll
       var emission2 = system.emission;
       emission2.enabled = true;
       system.Play();
-      float time = system.main.duration;
+      var time = system.main.duration;
       while (time > 0f)
       {
         time -= 0.05f;
@@ -1465,9 +1465,9 @@ public class ActiveRagdoll
     return false;
   }
 
-  public void ToggleRaycasting(bool toggle)
+  public void ToggleRaycasting(bool toggle, bool override_ = false)
   {
-    if (_ragdolled) return;
+    if (_ragdolled && !override_) return;
     foreach (var part in _parts)
     {
       if (part == null) continue;
