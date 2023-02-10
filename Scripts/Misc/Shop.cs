@@ -102,7 +102,7 @@ public static class Shop
         mode_string = "general";
       }
       // Format tip
-      return string.Format("*tip(<color=yellow>{0}</color>): {1}", mode_string, array[Mathf.RoundToInt(UnityEngine.Random.value * (array.Length - 1))]);
+      return string.Format("*tip(<color=yellow>{0}</color>): {1}", mode_string, array[UnityEngine.Random.Range(0, array.Length)]);
     }
 
   }

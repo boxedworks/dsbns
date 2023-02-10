@@ -988,9 +988,9 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
 
     public static void SetAllSpawn()
     {
-      var room_id = _EnabledSpawners[Mathf.RoundToInt((_EnabledSpawners.Count - 1) * Random.value)];
+      var room_id = _EnabledSpawners[Random.Range(0, _EnabledSpawners.Count)];
       var spawner_list = CustomObstacle._CustomSpawners[room_id];
-      _AllSpawn = spawner_list[Mathf.RoundToInt(spawner_list.Count * Random.value)].transform.position;
+      _AllSpawn = spawner_list[Random.Range(0, spawner_list.Count)].transform.position;
     }
     public static void RemoveAllSpawn()
     {
@@ -1110,7 +1110,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
 
         enemy_ragdoll.ToggleRaycasting(false);
 
-        if (Mathf.RoundToInt(Random.value * 15f) == 0f)
+        if (Random.Range(0, 16) == 0f)
           enemy_next.SetRandomStrafe();
 
         // Check if others in front
@@ -1281,18 +1281,18 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
             {
               survivalAttributes._WaitForEnemyHordeSizeStart = _Number_enemies_spawned;
               {
-                Vector3 dest = Vector3.zero;
+                var dest = Vector3.zero;
                 // Spawn using closest spawns
                 if (_ClosestSpawns.Count > 0 && Random.value < 0.6f)
                 {
-                  List<Vector3> closest_spawns = System.Linq.Enumerable.ToList(_ClosestSpawns.Keys);
-                  dest = closest_spawns[Mathf.RoundToInt(Random.value * (closest_spawns.Count - 1))];
+                  var closest_spawns = System.Linq.Enumerable.ToList(_ClosestSpawns.Keys);
+                  dest = closest_spawns[Random.Range(0, closest_spawns.Count)];
                 }
                 // Spawn using random spawn
                 else
-                  dest = _Spawn_Points[Mathf.RoundToInt(Random.value * (_Spawn_Points.Count - 1))];
+                  dest = _Spawn_Points[Random.Range(0, _Spawn_Points.Count)];
 
-                Vector2 startPos = new Vector2(dest.x - 0.5f + Random.value, dest.z - 0.5f + Random.value);
+                var startPos = new Vector2(dest.x - 0.5f + Random.value, dest.z - 0.5f + Random.value);
                 e = EnemyScript.SpawnEnemyAt(survivalAttributes, startPos);
               }
 
@@ -1300,8 +1300,8 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
             }
 
             // Change enemy per type
-            float movespeed = 0f;
-            int health = 1;
+            var movespeed = 0f;
+            var health = 1;
             switch (survivalAttributes._enemyType)
             {
               case (EnemyType.KNIFE_WALK_SLOW):
@@ -1491,6 +1491,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
             _Thunder_Light.transform.position = cpos;
           }
 
+          // Lightning timed with thunder volume
           if (
             Settings._Toggle_Lightning._value &&
             _Thunder_Light != null &&

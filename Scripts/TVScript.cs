@@ -53,7 +53,7 @@ public class TVScript : MonoBehaviour
       {
         _lastUpdate = 0.2f + Random.value * 0.1f;
 
-        //var color = colors[Mathf.RoundToInt((colors.Length - 1) * Random.value)];
+        //var color = colors[Random.Range(0, colors.Count)];
         var color = Color.white * (Random.Range(0.7f, 1.1f));
         _light.color = color;
         _screen.sharedMaterials[1].color = color;

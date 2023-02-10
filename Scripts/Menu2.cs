@@ -2241,8 +2241,18 @@ public class Menu2
         Levels._EditingLoadout = true;
       };
 
+      Debug.Log(Levels._LevelPack_Current);
+
       // Check for preload
-      if (Levels._LevelPack_Current == null) return;
+      if (Levels._LevelPack_Current == null)
+      {
+        menu_editpacks.AddComponent($"lol\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE);
+        return;
+      }
+
+      Debug.Log(Levels._IsOverwritingLevel);
+      Debug.Log(Levels._IsReorderingLevel);
+      Debug.Log(Levels._LevelPack_Current._leveldata.Length == Levels._LEVELPACK_MAX);
 
       // Start menu
       if (Levels._IsOverwritingLevel)
@@ -3129,6 +3139,12 @@ public class Menu2
       {
         if (component._collider.transform.childCount == 0)
           SpawnControlUI(component, FunctionsC.Control.Y);
+      })
+    .AddComponent($"{string.Format(format_controls, "grapple:", "", "middle mouse btn")} \n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
+      .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+      {
+        if (component._collider.transform.childCount == 0)
+          SpawnControlUI(component, FunctionsC.Control.R_STICK);
       })
     .AddComponent($"{string.Format(format_controls, "spread arms:", "", "space")} \n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
       .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>

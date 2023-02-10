@@ -83,8 +83,22 @@ public class SceneThemes : MonoBehaviour
     _CurrentTheme = iter;
     _Theme = GetLevelTheme(iter);
     _Instance.StartCoroutine(ChangeMapThemeCo(oldtheme));
+
+    // Set footstep sound per theme
     _footstep = GameObject.Find($"Footstep_{_Theme._tile}")?.GetComponent<AudioSource>();
     if (_footstep == null) { _footstep = GameObject.Find("Footstep").GetComponent<AudioSource>(); }
+
+    // Enable / disable rain
+    var rain_sfx = GameScript._Singleton._Rain_Audio;
+    if (_Theme._rain && !rain_sfx.isPlaying)
+    {
+      FunctionsC.PlayAudioSource(ref rain_sfx, 1f, 1f, true);
+      GameScript._Singleton._Thunder_Last = Time.time;
+    }
+    else if (!_Theme._rain && rain_sfx.isPlaying)
+    {
+      rain_sfx.Stop();
+    }
   }
 
   static readonly float FOG_START = 14f, FOG_END = 10f;
@@ -103,18 +117,6 @@ public class SceneThemes : MonoBehaviour
       fog_movement = 1;
       RenderSettings.fogStartDistance = FOG_START;
       RenderSettings.fog = true;
-    }
-
-    // Enable / disable rain
-    var rain_sfx = GameScript._Singleton._Rain_Audio;
-    if (_Theme._rain && !rain_sfx.isPlaying)
-    {
-      FunctionsC.PlayAudioSource(ref rain_sfx, 1f, 1f);
-      GameScript._Singleton._Thunder_Last = Time.time;
-    }
-    else if (!_Theme._rain && rain_sfx.isPlaying)
-    {
-      rain_sfx.Stop();
     }
 
     // Change map colors

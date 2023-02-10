@@ -238,6 +238,9 @@ public class PlayerScript : MonoBehaviour
         //thunder_light.shadows = LightShadows.Soft;
 
         GameScript._Singleton._Thunder_Light = thunder_light;
+
+        // Add to audio list
+        FunctionsC.AddToAudioList_Rain();
       }
 
       // Clean up rain SFX

@@ -2258,19 +2258,19 @@ public class TileManager
         // Normal select / deselect
         LevelEditorObject._UpdateFunction_Object(g);
         if (_SelectedObject == null) return;
-        EnemyScript s = (LevelEditorObject.GetCurrentObject()._name.Equals("Enemy") ? _SelectedObject.GetChild(0) : _SelectedObject.parent).GetComponent<EnemyScript>();
+        var script_enemy = (LevelEditorObject.GetCurrentObject()._name.Equals("Enemy") ? _SelectedObject.GetChild(0) : _SelectedObject.parent).GetComponent<EnemyScript>();
 
         // Check for change type
         if (ControllerManager.GetKey(ControllerManager.Key.T))
-          ChangeEnemyType(s, s.transform.GetChild(0).GetComponent<MeshRenderer>(), 1);
+          ChangeEnemyType(script_enemy, script_enemy.transform.GetChild(0).GetComponent<MeshRenderer>(), 1);
 
         // Change movement mode
         if (ControllerManager.GetKey(ControllerManager.Key.M))
-          s._canMove = !s._canMove;
+          script_enemy._canMove = !script_enemy._canMove;
 
         // Change hearing mode
         if (ControllerManager.GetKey(ControllerManager.Key.H))
-          s._reactToSound = !s._reactToSound;
+          script_enemy._reactToSound = !script_enemy._reactToSound;
 
         // Create new waypoint
         if (ControllerManager.GetKey(ControllerManager.Key.W))
@@ -2300,10 +2300,10 @@ public class TileManager
         {
           _IsLinking = false;
 
-          if (s._linkedDoor != null)
+          if (script_enemy._linkedDoor != null)
           {
-            s._linkedDoor._trigger_enemies.Remove(s._id);
-            s._linkedDoor = null;
+            script_enemy._linkedDoor._trigger_enemies.Remove(script_enemy._id);
+            script_enemy._linkedDoor = null;
           }
         }
 
@@ -2315,7 +2315,7 @@ public class TileManager
           Vector3 mousePos = h.point;
           mousePos.y = -1f;
           _LineRenderers[1].positionCount = 2;
-          _LineRenderers[1].SetPositions(new Vector3[] { s.transform.position, mousePos });
+          _LineRenderers[1].SetPositions(new Vector3[] { script_enemy.transform.position, mousePos });
           // Check for selection
           if (ControllerManager.GetMouseInput(0, ControllerManager.InputMode.DOWN))
           {
@@ -2323,14 +2323,14 @@ public class TileManager
             if (d != null)
             {
 
-              if (s._linkedDoor != null)
+              if (script_enemy._linkedDoor != null)
               {
-                s._linkedDoor._trigger_enemies.Remove(s._id);
-                s._linkedDoor = null;
+                script_enemy._linkedDoor._trigger_enemies.Remove(script_enemy._id);
+                script_enemy._linkedDoor = null;
               }
 
-              d.RegisterEnemy(s._id);
-              s._linkedDoor = d;
+              d.RegisterEnemy(script_enemy._id);
+              script_enemy._linkedDoor = d;
             }
             _IsLinking = false;
           }
@@ -2339,12 +2339,12 @@ public class TileManager
         // Display line renderer
         else
         {
-          if (s._linkedDoor == null)
+          if (script_enemy._linkedDoor == null)
             _LineRenderers[1].positionCount = 0;
           else
           {
             _LineRenderers[1].positionCount = 2;
-            _LineRenderers[1].SetPositions(new Vector3[] { s.transform.position, s._linkedDoor.transform.position });
+            _LineRenderers[1].SetPositions(new Vector3[] { script_enemy.transform.position, script_enemy._linkedDoor.transform.position });
           }
         }
       },

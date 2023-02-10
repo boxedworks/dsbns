@@ -1005,7 +1005,7 @@ public class ActiveRagdoll
     // If is robot, do not damage from bullet and play 'dink'
     if (_enemyScript != null && _enemyScript._enemyType == EnemyScript.EnemyType.ROBOT && damage <= 10f)
     {
-      if (Time.time - _lastMetalHit > 0.3f && damageSourceType == DamageSourceType.BULLET)
+      if (Time.time - _lastMetalHit > 0.05f && damageSourceType == DamageSourceType.BULLET)
       {
         _lastMetalHit = Time.time;
         FunctionsC.PlaySound(ref _audioPlayer, "Enemies/Metal_hit", 0.8f, 1.2f);
@@ -1149,24 +1149,6 @@ public class ActiveRagdoll
   public void Kill(ActiveRagdoll source, DamageSourceType damageSourceType, Vector3 hitForce)
   {
     if (_isPlayer && GameScript.Settings._PLAYER_INVINCIBLE) return;
-
-    /*/ Have a delayed death; bleed out
-    int r = Mathf.RoundToInt(Random.value * 2f);
-    if (_coroutine_dying == null)
-    {
-      if (r < 1 && hitForce.magnitude == 0f)
-      {
-        _coroutine_dying = GameScript._Instance.StartCoroutine(DelayedKill(0.5f + Random.value * 0.5f));
-        return;
-      }
-    }
-    // Kill if hit again when bleeding
-    else
-    {
-      GameScript._Instance.StopCoroutine(_coroutine_dying);
-      _coroutine_dying = null;
-      FunctionsC.PlaySound(ref _audioPlayer_steps, "Enemies/Ugh0", 0.9f, 1.1f);
-    }*/
 
     // Disintegrate
     if (damageSourceType == DamageSourceType.FIRE)
@@ -1635,6 +1617,47 @@ public class ActiveRagdoll
       rb.AddForce(force * 0.5f);
     }
     return true;
+  }
+  public bool DismemberRandom(Vector3 force)
+  {
+    return Dismember(GetRandomJoint(), force);
+  }
+  public void DismemberRandomTimes(Vector3 force, int n)
+  {
+    for (var i = 0; i < n; i++)
+    {
+      Dismember(GetRandomJoint(), force * (0.7f + Random.value * 0.4f));
+    }
+  }
+
+  public HingeJoint GetRandomJoint()
+  {
+    switch (Random.Range(0, 10))
+    {
+      case 0:
+        return _spine;
+      case 1:
+        return _arm_upper_l;
+      case 2:
+        return _head;
+      case 3:
+        return _arm_upper_r;
+      case 4:
+        return _arm_lower_l;
+      case 5:
+        return _arm_lower_r;
+      case 6:
+        return _leg_upper_l;
+      case 7:
+        return _leg_upper_r;
+      case 8:
+        return _leg_lower_l;
+      case 9:
+        return _leg_lower_r;
+
+      default:
+        return null;
+    }
   }
 
   public void PlaySound(string soundPath, float min = 1f, float max = 1f)

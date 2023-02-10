@@ -218,8 +218,8 @@ public class CustomObstacle : MonoBehaviour
     {
       if (random)
       {
-        var weapons = _BUYABLE_ITEM_TIERS[Mathf.RoundToInt(Random.value * (_BUYABLE_ITEM_TIERS.Count - 1))];
-        var weapon_index = Mathf.RoundToInt((weapons.Count - 1) * Random.value);
+        var weapons = _BUYABLE_ITEM_TIERS[Random.Range(0, _BUYABLE_ITEM_TIERS.Count)];
+        var weapon_index = Random.Range(0, weapons.Count);
         _weapon_info = weapons[weapon_index];
       }
       else
@@ -227,7 +227,7 @@ public class CustomObstacle : MonoBehaviour
         var weapons = _BUYABLE_ITEM_TIERS[_index];
         if (weapons.Count == 0) return;
         var iter = 0;
-        var weapon_index = Mathf.RoundToInt((weapons.Count - 1) * Random.value);
+        var weapon_index = Random.Range(0, weapons.Count);
         while (iter < weapons.Count)
         {
           weapon_index = (weapon_index + iter++) % weapons.Count;
@@ -252,8 +252,8 @@ public class CustomObstacle : MonoBehaviour
     {
       if (random)
       {
-        var utilities = _BUYABLE_UTILITY_TIERS[Mathf.RoundToInt(Random.value * (_BUYABLE_UTILITY_TIERS.Count - 1))];
-        var utility_index = Mathf.RoundToInt((utilities.Count - 1) * Random.value);
+        var utilities = _BUYABLE_UTILITY_TIERS[Random.Range(0, _BUYABLE_UTILITY_TIERS.Count)];
+        var utility_index = Random.Range(0, utilities.Count);
         _utility_info = utilities[utility_index];
       }
       else
@@ -261,7 +261,7 @@ public class CustomObstacle : MonoBehaviour
         var utilities = _BUYABLE_UTILITY_TIERS[_index];
         if (utilities.Count == 0) return;
         var iter = 0;
-        var utility_index = Mathf.RoundToInt((utilities.Count - 1) * Random.value);
+        var utility_index = Random.Range(0, utilities.Count);
         while (iter < utilities.Count)
         {
           utility_index = (utility_index + iter++) % utilities.Count;
@@ -286,8 +286,8 @@ public class CustomObstacle : MonoBehaviour
     {
       if (random)
       {
-        var perks = _BUYABLE_PERK_TIERS[Mathf.RoundToInt(Random.value * (_BUYABLE_PERK_TIERS.Count - 1))];
-        var perk_index = Mathf.RoundToInt((perks.Count - 1) * Random.value);
+        var perks = _BUYABLE_PERK_TIERS[Random.Range(0, _BUYABLE_PERK_TIERS.Count)];
+        var perk_index = Random.Range(0, perks.Count);
         _perk_info = perks[perk_index];
       }
       else
@@ -295,7 +295,7 @@ public class CustomObstacle : MonoBehaviour
         var perks = _BUYABLE_PERK_TIERS[_index];
         if (perks.Count == 0) return;
         var iter = 0;
-        var perk_index = Mathf.RoundToInt((perks.Count - 1) * Random.value);
+        var perk_index = Random.Range(0, perks.Count);
         while (iter < perks.Count)
         {
           perk_index = (perk_index + iter++) % perks.Count;

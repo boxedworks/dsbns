@@ -135,14 +135,18 @@ public static class FunctionsC
     // Play
     s.PlayOneShot(c);
   }
-  public static void PlayAudioSource(ref AudioSource s, float min = 0.9f, float max = 1.1f)
+  public static void PlayAudioSource(ref AudioSource s, float min = 0.9f, float max = 1.1f, bool always_play = false)
   {
-    if (s == null || GameScript.Settings._VolumeSFX == 0)
+    if (s == null || (!always_play && GameScript.Settings._VolumeSFX == 0))
       return;
 
-    ChangePitch(ref s, min, max);
-    s.Play();
     AddToAudioList(ref s);
+    if (!s.isPlaying)
+    {
+      ChangePitch(ref s, min, max);
+      s.volume *= GameScript.Settings._VolumeSFX / 5f;
+      s.Play();
+    }
   }
 
   public enum ParticleSystemType
@@ -273,12 +277,20 @@ public static class FunctionsC
   }
 
   static Dictionary<AudioSource, System.Tuple<float, float>> _PlayingAudio;
-  static void AddToAudioList(ref AudioSource s)
+  public static void AddToAudioList(ref AudioSource s)
   {
     if (s == null) return;
     if (_PlayingAudio == null) _PlayingAudio = new Dictionary<AudioSource, System.Tuple<float, float>>();
-    if (_PlayingAudio.ContainsKey(s)) return;
+    if (_PlayingAudio.ContainsKey(s)) { _PlayingAudio[s] = System.Tuple.Create<float, float>(s.pitch, _PlayingAudio[s].Item2); return; }
     _PlayingAudio.Add(s, System.Tuple.Create<float, float>(s.pitch, s.volume));
+  }
+  public static void AddToAudioList_Rain()
+  {
+    if (_Rain_Pair == null) return;
+    var rain_sfx = GameScript._Singleton._Rain_Audio;
+    if (_PlayingAudio == null) _PlayingAudio = new Dictionary<AudioSource, System.Tuple<float, float>>();
+    _PlayingAudio.Add(rain_sfx, _Rain_Pair);
+
   }
 
   // Find folder
@@ -358,14 +370,19 @@ public static class FunctionsC
     }
   }
 
+  static System.Tuple<float, float> _Rain_Pair;
   public static void Reset()
   {
     if (_PlayingAudio == null) return;
     foreach (var pair in _PlayingAudio)
     {
       if (pair.Key == null) continue;
+
+      if (pair.Key.clip != null && pair.Key.clip.name == "rain") { if (_Rain_Pair == null) _Rain_Pair = pair.Value; continue; }
+
       pair.Key.pitch = pair.Value.Item1;
       pair.Key.volume = pair.Value.Item2;
+      pair.Key.Stop();
     }
     _PlayingAudio = null;
   }
@@ -425,7 +442,7 @@ public static class FunctionsC
     explosion_scar.gameObject.SetActive(true);
   }
 
-  //
+  // Apply damage and force in a radius to Ragdolls
   public static void ApplyExplosionRadius(Vector3 position, float radius, ExplosiveScript.ExplosionType type, ActiveRagdoll source)
   {
     var rags = CheckRadius(position, radius);
@@ -447,9 +464,9 @@ public static class FunctionsC
       {
         r.ToggleRaycasting(true, true);
         var hit = new RaycastHit();
-        var dir = -(r._dead ? position - r._hip.position : MathC.Get2DVector(position - r._hip.position)).normalized;
         var start_pos = new Vector3(position.x, -0.1f, position.z);
-        if (!Physics.Raycast(new Ray(start_pos, dir), out hit, radius + 5f))
+        var dir = -(r._dead ? start_pos - r._hip.position : MathC.Get2DVector(start_pos - r._hip.position)).normalized;
+        if (!Physics.SphereCast(new Ray(start_pos, dir), 0.1f, out hit, radius + 5f))
         {
           r.ToggleRaycasting(false, true);
           continue;
@@ -459,18 +476,21 @@ public static class FunctionsC
         if (!r.IsSelf(hit.collider.gameObject)) continue;
       }
 
-      // Check for 3+ kills for slowmo
-      if (!r._dead && exploded++ == 3)
-        PlayerScript._SlowmoTimer += 2f;
+      if (!r._dead)
+      {
+        // Check for 3+ kills for slowmo
+        if (exploded++ == 3)
+          PlayerScript._SlowmoTimer += 2f;
 
 #if UNITY_STANDALONE
-      if (exploded == 5)
-        SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.DEMO_LEVEL_0);
-      else if (exploded == 10)
-        SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.DEMO_LEVEL_1);
-      else if (exploded == 25)
-        SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.DEMO_LEVEL_2);
+        if (exploded == 5)
+          SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.DEMO_LEVEL_0);
+        else if (exploded == 10)
+          SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.DEMO_LEVEL_1);
+        else if (exploded == 25)
+          SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.DEMO_LEVEL_2);
 #endif
+      }
 
       // Explosion force type
       var explosionForce = Vector3.zero;
@@ -486,8 +506,7 @@ public static class FunctionsC
       r.TakeDamage(source, ActiveRagdoll.DamageSourceType.EXPLOSION, Vector3.zero, explosionForce, 3, true);
       if (r._dead)
       {
-        r.Dismember(r._spine, explosionForce);
-        r.Dismember(r._leg_upper_l, explosionForce * 0.8f);
+        r.DismemberRandomTimes(explosionForce, Random.Range(1, 5));
         r._hip.AddForce(explosionForce);
       }
     }
@@ -814,8 +833,8 @@ public static class FunctionsC
         if (Levels._LevelPack_Playing || GameScript._EditorTesting)
         {
 
-          var songs_length = _TrackNames.Length - 1 - 3;
-          var song_index = Mathf.RoundToInt(UnityEngine.Random.value * songs_length);
+          var songs_length = _TrackNames.Length - 3;
+          var song_index = Random.Range(0, songs_length);
 
           return song_index + 3;
         }
@@ -829,7 +848,7 @@ public static class FunctionsC
           iter = ++_CurrentTrack;
         else
         {
-          iter = iter_base + Mathf.RoundToInt(Random.value * 2);
+          iter = iter_base + Random.Range(0, 3);
           if (iter == _CurrentTrack)
             iter++;
         }

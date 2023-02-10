@@ -348,26 +348,7 @@ public class ItemScript : MonoBehaviour
           raycastInfo._ragdoll.TakeDamage(damageSource, ActiveRagdoll.DamageSourceType.MELEE, force, _ragdoll._hip.position, 1, true);
           if (raycastInfo._ragdoll._dead && _dismember)
           {
-            var body_range = Mathf.RoundToInt(Random.value * 2f);
-            while (body_range-- >= 0)
-            {
-              HingeJoint joint = null;
-              var random_iter = Mathf.RoundToInt(Random.value * 10f);
-              if (random_iter <= 5)
-                joint = raycastInfo._ragdoll._spine;
-              else if (random_iter == 6)
-                joint = raycastInfo._ragdoll._head;
-              else if (random_iter == 7)
-                joint = raycastInfo._ragdoll._leg_upper_l;
-              else if (random_iter == 8)
-                joint = raycastInfo._ragdoll._leg_upper_r;
-              else if (random_iter == 9)
-                joint = raycastInfo._ragdoll._arm_upper_r;
-              else if (random_iter == 10)
-                joint = raycastInfo._ragdoll._arm_upper_l;
-              if (joint != null)
-                raycastInfo._ragdoll.Dismember(joint, force);
-            }
+            raycastInfo._ragdoll.DismemberRandomTimes(force, 3);
           }
 
           // Play noise

@@ -1239,7 +1239,7 @@ public class EnemyScript : MonoBehaviour
 
   public void SetRandomStrafe()
   {
-    _strafeRight = (Mathf.RoundToInt(Random.value) == 0 ? true : false);
+    _strafeRight = (Random.Range(0, 2) == 0 ? true : false);
   }
 
   bool CheckShouldPanic()
@@ -1389,7 +1389,7 @@ public class EnemyScript : MonoBehaviour
     return;
     if (Time.time - _lastScreamTime < 1f) return;
     _lastScreamTime = Time.time;
-    int r = Mathf.RoundToInt(Random.value * 4f);
+    var r = Random.Range(0, 5);
     _ragdoll.PlaySound("Enemies/Scream" + (r), 0.9f, 1.1f);
   }
 
