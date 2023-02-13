@@ -11,6 +11,7 @@ public class TileManager
 
   static Transform _Tile_begin, _Tile_end;
   public static Transform _Map, _Tile;
+  public static Transform _Floor { get { return _Map.transform.GetChild(0); } }
   public static UnityEngine.AI.NavMeshSurface _navMeshSurface, _navMeshSurface2;
   static List<string> _LevelObjects;
   public static string _CurrentLevel_Name,
@@ -499,14 +500,17 @@ public class TileManager
       GameObject old = GameObject.Find(name);
       if (old != null) GameObject.Destroy(old);
     }
+
     // Get List of tiles to toggle
     List<Tile> tiles_down = new List<Tile>(),
       tiles_up = new List<Tile>();
     data_iter = 2;
     _offset = new Vector2(1, 1);
+
     // Color tiles
     _Materials_Tiles.Item1.color = SceneThemes._Theme._tileColorUp;
     _Materials_Tiles.Item2.color = SceneThemes._Theme._tileColorDown;
+
     // Holds offsets for checking i a 3x3 around a tile
     Vector2Int[] tile_offsets = new Vector2Int[]
     {
@@ -578,6 +582,7 @@ public class TileManager
           tile._tile.transform.GetChild(0).GetChild(i).gameObject.SetActive(next_to_tiles.Contains(tile_offsets[i]));
       }
     }
+
     // Load objects
     for (var i = 0; i < _LevelObjects.Count;)
     {
@@ -591,30 +596,34 @@ public class TileManager
         }
       yield return new WaitForSeconds(0.01f);
     }
+
     // Make sure ragdolls are not null
     if (ActiveRagdoll._Ragdolls != null)
-      for (int i = ActiveRagdoll._Ragdolls.Count - 1; i >= 0; i--)
+      for (var i = ActiveRagdoll._Ragdolls.Count - 1; i >= 0; i--)
       {
-        ActiveRagdoll r = ActiveRagdoll._Ragdolls[i];
+        var r = ActiveRagdoll._Ragdolls[i];
         if (r == null || r._hip == null)
         {
           if (r._controller != null) GameObject.Destroy(r._controller);
           ActiveRagdoll._Ragdolls.Remove(r);
         }
       }
+
     // Set floor pos to center of map
-    Vector3 floorPos = _Map.transform.GetChild(0).position;
+    var floorPos = _Floor.position;
     var center = Tile.GetTile((int)(_Width * 0.4f), (int)(_Height * 0.4f))._tile.transform.position;
     floorPos.x = center.x;
     floorPos.z = center.z;
-    _Map.transform.GetChild(0).position = floorPos;
-    _Map.transform.GetChild(0).localScale = new Vector3(_Width * 0.5f, 1f, _Height * 0.5f);
+    _Floor.position = floorPos;
+    _Floor.localScale = new Vector3(_Width * 0.5f, 1f, _Height * 0.5f);
+
     // Set camera pos to playerspawn
     var campos = GameResources._Camera_Main.transform.position;
     var playerspawnpos = PlayerspawnScript._PlayerSpawns[0].transform.position;
     campos.x = playerspawnpos.x;
     campos.z = playerspawnpos.z + 3.6f;
     GameResources._Camera_Main.transform.position = campos;
+
     // Hide playerspawn
     if (GameScript._GameMode == GameScript.GameModes.SURVIVAL && !GameScript._EditorEnabled)
       PlayerspawnScript._PlayerSpawns[0].transform.GetChild(1).gameObject.SetActive(false);
@@ -1207,7 +1216,8 @@ public class TileManager
         }
 
         // Check books
-        else if(leo._name == _LEO_Books._name){
+        else if (leo._name == _LEO_Books._name)
+        {
           FunctionsC.BookManager.RegisterBooks(loadedObject.transform);
         }
 
@@ -1424,7 +1434,7 @@ public class TileManager
           break;
         case ("FakeTile"):
           resource = GameResources._Fake_Tile;
-        break;
+          break;
         case ("TileWall"):
           resource = GameResources._Tile_Wall;
           break;
@@ -3726,27 +3736,34 @@ public class TileManager
     if (_SelectedObject != null)
     {
       LevelEditorObject.MovementSettings movementSettings = obj._movementSettings;
+
       // Check move
       if (_CurrentMode == EditorMode.MOVE)
       {
+
         // Check leaving move mode
         if (ControllerManager.GetMouseInput(0, ControllerManager.InputMode.DOWN))
         {
           _CurrentMode = EditorMode.NONE;
           return;
         }
+
         // Select the transform to move
-        Transform move_target = LevelEditorObject.GetTransformTarget(movementSettings._target);
+        var move_target = LevelEditorObject.GetTransformTarget(movementSettings._target);
+
         // Set the position to move the object to the Pointer's position
-        Vector3 movePos = _Pointer.position;
+        var movePos = _Pointer.position;
+
         // Snap position to grid
-        float gridSize = 2.5f / (_SnapToGrid == SnapToGrid.SIMPLE ? 4f : _SnapToGrid == SnapToGrid.COMPLEX ? 20f : 50f);
+        var gridSize = 2.5f / (_SnapToGrid == SnapToGrid.SIMPLE ? 4f : _SnapToGrid == SnapToGrid.COMPLEX ? 20f : 50f);
         movePos.x = Mathf.RoundToInt(movePos.x / gridSize) * gridSize;
         movePos.z = Mathf.RoundToInt(movePos.z / gridSize) * gridSize;// + (Tile.GetTile(_Width / 2, _Height / 2 + 5)._tile.transform.position.z) + gridSize;
+
         // Set obj position
         move_target.position = movePos;
+
         // Set obj local pos per object's _axis and _localPos
-        Vector3 localPos = move_target.localPosition;
+        var localPos = move_target.localPosition;
         if (movementSettings._axis == LevelEditorObject.Axis.X)
           localPos.x = movementSettings._localPos;
         else if (movementSettings._axis == LevelEditorObject.Axis.Y)
@@ -3754,6 +3771,7 @@ public class TileManager
         else if (movementSettings._axis == LevelEditorObject.Axis.Z)
           localPos.z = movementSettings._localPos;
         move_target.localPosition = localPos;
+
         // Move ring for visual
         _Ring.position = move_target.position;
       }

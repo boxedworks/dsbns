@@ -733,63 +733,78 @@ public class PlayerScript : MonoBehaviour
 
     if (_id == 0 && GameScript._Singleton._UseCamera)
     {
-      float CamYPos = 16f,
-        camSpeed = (Time.time - GameScript._LevelStartTime < 1f ? 0.8f : 0.4f) * (22f / CamYPos),
-        biggestDist = 0f;
       var camera_height = GameScript.Settings._CameraZoom == 1 ? 14f : GameScript.Settings._CameraZoom == 0 ? 10f : 18f;
-      //GameResources._Camera_Main.transform.GetChild(2).GetComponent<Light>().spotAngle = Mathf.LerpUnclamped(131f, 86f, (CamYPos / 10f) - 1f);
-      Vector3 sharedPos = Vector3.zero,
-       sharedForward = Vector3.zero;
-      var forwardMagnitude = 3.5f;
-      PlayerScript lastPlayer = null;
-      var followAlive = true; // Variable to follow any player. Will only follow alive players if false
-      var counter = 0;
-      while (true)
+
+      /*/ Center camera on map if it does not need to move
+      var center_camera = true;
+      if (center_camera)
       {
-        foreach (var p in _Players)
+
+        _camPos = TileManager._Floor.position;
+        _camPos.z += 1.5f;
+
+      }
+
+      // Move camera normally
+      else*/
+      {
+
+        float CamYPos = 16f,
+          camSpeed = (Time.time - GameScript._LevelStartTime < 1f ? 0.8f : 0.4f) * (22f / CamYPos);//,
+          //biggestDist = 0f;
+        //GameResources._Camera_Main.transform.GetChild(2).GetComponent<Light>().spotAngle = Mathf.LerpUnclamped(131f, 86f, (CamYPos / 10f) - 1f);
+        Vector3 sharedPos = Vector3.zero,
+         sharedForward = Vector3.zero;
+        var forwardMagnitude = 3.5f;
+        PlayerScript lastPlayer = null;
+        var followAlive = true; // Variable to follow any player. Will only follow alive players if false
+        var counter = 0;
+        while (true)
         {
-          if (p._ragdoll._dead && followAlive) continue;
-          sharedPos += new Vector3(p._ragdoll._hip.position.x, 0f, p._ragdoll._hip.position.z);
-          sharedForward += MathC.Get2DVector(p._ragdoll._hip.transform.forward).normalized * forwardMagnitude;
-          if (lastPlayer == null) lastPlayer = p;
-          float distance = Vector3.Distance(p.transform.position, lastPlayer.transform.position);
-          if (distance > biggestDist) biggestDist = distance;
-          lastPlayer = this;
-          counter++;
+          foreach (var p in _Players)
+          {
+            if (p._ragdoll._dead && followAlive) continue;
+            sharedPos += new Vector3(p._ragdoll._hip.position.x, 0f, p._ragdoll._hip.position.z);
+            sharedForward += MathC.Get2DVector(p._ragdoll._hip.transform.forward).normalized * forwardMagnitude;
+            if (lastPlayer == null) lastPlayer = p;
+            var distance = Vector3.Distance(p.transform.position, lastPlayer.transform.position);
+            //if (distance > biggestDist) biggestDist = distance;
+            lastPlayer = this;
+            counter++;
+          }
+          if (counter == 0) followAlive = false;
+          else break;
         }
-        if (counter == 0) followAlive = false;
-        else break;
-      }
-      sharedPos /= Mathf.Clamp(counter, 1, counter);
-      //_camHeight = CamYPos;// Mathf.Clamp(CamYPos + biggestDist / 3f, 15f, 18f);
-      sharedPos.y = transform.position.y + camera_height;
-      sharedForward /= Mathf.Clamp(counter, 1, counter);
+        sharedPos /= Mathf.Clamp(counter, 1, counter);
+        sharedPos.y = transform.position.y + camera_height;
+        sharedForward /= Mathf.Clamp(counter, 1, counter);
 
-      if (GameScript.Settings._CameraZoom == 2)
-        sharedForward = Vector3.zero;
-      else if (GameScript.Settings._CameraZoom == 0)
-        sharedForward /= 1.4f;
+        if (GameScript.Settings._CameraZoom == 2)
+          sharedForward = Vector3.zero;
+        else if (GameScript.Settings._CameraZoom == 0)
+          sharedForward /= 1.4f;
 
-      var changePos = Vector3.zero;
-      if (GameScript._Singleton._X) changePos.x = sharedPos.x + sharedForward.x;
-      if (GameScript._Singleton._Y) changePos.y = sharedPos.y;
-      if (GameScript._Singleton._Z) changePos.z = sharedPos.z + sharedForward.z;
+        var changePos = Vector3.zero;
+        if (GameScript._Singleton._X) changePos.x = sharedPos.x + sharedForward.x;
+        if (GameScript._Singleton._Y) changePos.y = sharedPos.y;
+        if (GameScript._Singleton._Z) changePos.z = sharedPos.z + sharedForward.z;
 
-      if (_cycle_objects)
-      {
-        var map_objects = GameObject.Find("Map_Objects").transform;
-        var map_child = map_objects.GetChild((int)(Time.time * 2.5f) % map_objects.childCount);
-        _camPos = map_child.position;
-        GameScript.ToggleCameraLight(true);
-      }
-      else
-      {
-        _camPos += (changePos - _camPos) * Mathf.Clamp(unscaled_dt, 0f, 1f) * 1.5f * camSpeed;
-        GameScript.ToggleCameraLight(false);
+        /*if (_cycle_objects)
+        {
+          var map_objects = GameObject.Find("Map_Objects").transform;
+          var map_child = map_objects.GetChild((int)(Time.time * 2.5f) % map_objects.childCount);
+          _camPos = map_child.position;
+          GameScript.ToggleCameraLight(true);
+        }
+        else*/
+        {
+          _camPos += (changePos - _camPos) * Mathf.Clamp(unscaled_dt, 0f, 1f) * 1.5f * camSpeed;
+          //GameScript.ToggleCameraLight(false);
+        }
+
       }
 
       _camPos.y = camera_height;
-
       GameResources._Camera_Main.transform.position = _camPos;
 
       // Update rain
