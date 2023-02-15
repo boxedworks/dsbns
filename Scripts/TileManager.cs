@@ -22,12 +22,18 @@ public class TileManager
 
   static System.Tuple<Material, Material> _Materials_Tiles;
 
-  public static TextMesh _Text_LevelNum;
+  public static TextMesh
+    _Text_LevelNum,
+    _Text_LevelTimer;
+  public static float _LevelTimer;
+  public static bool _Level_Complete;
 
   public static void Init()
   {
     if (_Text_LevelNum == null)
       _Text_LevelNum = GameObject.Find("LevelNum").GetComponent<TextMesh>();
+    if (_Text_LevelTimer == null)
+      _Text_LevelTimer = GameObject.Find("LevelTimer").GetComponent<TextMesh>();
 
     if (_Tiles != null)
       foreach (Tile t in _Tiles)
@@ -826,6 +832,8 @@ public class TileManager
   static void OnMapLoad()
   {
     _Text_LevelNum.text = "";
+    _LevelTimer = 0f;
+    _Level_Complete = false;
 
     // Check survival
     if (GameScript.IsSurvival()) GameScript.SurvivalMode.Init();
@@ -863,6 +871,7 @@ public class TileManager
       if (Menu2._InMenus)
       {
         _Text_LevelNum.gameObject.SetActive(false);
+        _Text_LevelTimer.gameObject.SetActive(false);
       }
     }
 
@@ -1867,7 +1876,7 @@ public class TileManager
 
           button.onClick.AddListener(() =>
           {
-            SpawnObjectSimple(_LEO_TileWall);
+            SpawnObjectSimple(_LEO_Laser);
           });
           break;
 

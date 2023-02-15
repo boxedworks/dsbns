@@ -103,7 +103,7 @@ public class PlayerScript : MonoBehaviour
     if (!GameScript.IsSurvival())
       if (_equipment._perks != null && _equipment._perks.Contains(Shop.Perk.PerkType.ARMOR_UP))
       {
-        _ragdoll.GiveArmor();
+        _ragdoll.AddArmor();
         _ragdoll._health = 3;
       }
 
@@ -417,8 +417,43 @@ public class PlayerScript : MonoBehaviour
           pos = _ragdoll._hip.position;
           maxD = 6f;
         }
-        _agent.SetDestination(pos + new Vector3(-maxD + Random.value * maxD * 2f, 0f, -maxD + Random.value * maxD * 2f));
-        _rearrangeTime = 1.5f + Random.value * 4f;
+        if (GameScript._GameMode == GameScript.GameModes.CLASSIC)
+        {
+
+          if (!PlayerScript.HasExit())
+          {
+
+            var minDist = 5f;
+            var moved = false;
+            foreach (var bullet in ItemScript._BulletPool)
+            {
+              if (!bullet.gameObject.activeSelf || bullet.GetRagdollID() == _ragdoll._id) continue;
+              if (MathC.Get2DDistance(_ragdoll._hip.position, bullet.transform.position) < minDist)
+              {
+                //_SlowmoTimer = Mathf.Clamp(_SlowmoTimer + 1f, 0f, 2f);
+                var dir = Quaternion.AngleAxis(-90, Vector3.up) * bullet._rb.velocity;
+                _agent.SetDestination(_ragdoll.transform.position + dir * 10f);
+                moved = true;
+                break;
+              }
+            }
+
+            if (!moved)
+              _agent.SetDestination(Powerup._Powerups[0].transform.position);
+          }
+          else
+          {
+            _agent.SetDestination(PlayerspawnScript._PlayerSpawns[0].transform.position);
+          }
+
+          _rearrangeTime = 0.2f;
+
+        }
+        else
+        {
+          _agent.SetDestination(pos + new Vector3(-maxD + Random.value * maxD * 2f, 0f, -maxD + Random.value * maxD * 2f));
+          _rearrangeTime = 1.5f + Random.value * 4f;
+        }
       }
       if (_agent.pathStatus == UnityEngine.AI.NavMeshPathStatus.PathComplete)
       {
@@ -678,7 +713,7 @@ public class PlayerScript : MonoBehaviour
             {
               // Check if player dead
               if (p._ragdoll._dead || HasPerk(Shop.Perk.PerkType.NO_SLOWMO)) continue;
-              foreach (BulletScript bullet in ItemScript._BulletPool)
+              foreach (var bullet in ItemScript._BulletPool)
               {
                 if (!bullet.gameObject.activeSelf || bullet.GetRagdollID() == p._ragdoll._id) continue;
                 if (MathC.Get2DDistance(p._ragdoll._hip.position, bullet.transform.position) < minDist)
@@ -751,8 +786,8 @@ public class PlayerScript : MonoBehaviour
 
         float CamYPos = 16f,
           camSpeed = (Time.time - GameScript._LevelStartTime < 1f ? 0.8f : 0.4f) * (22f / CamYPos);//,
-          //biggestDist = 0f;
-        //GameResources._Camera_Main.transform.GetChild(2).GetComponent<Light>().spotAngle = Mathf.LerpUnclamped(131f, 86f, (CamYPos / 10f) - 1f);
+                                                                                                   //biggestDist = 0f;
+                                                                                                   //GameResources._Camera_Main.transform.GetChild(2).GetComponent<Light>().spotAngle = Mathf.LerpUnclamped(131f, 86f, (CamYPos / 10f) - 1f);
         Vector3 sharedPos = Vector3.zero,
          sharedForward = Vector3.zero;
         var forwardMagnitude = 3.5f;
@@ -1619,6 +1654,36 @@ public class PlayerScript : MonoBehaviour
           _currentInteractable.Interact(this, CustomObstacle.InteractSide.RIGHT);
         break;
     }
+  }
+
+  //
+  public static PlayerScript GetClosestPlayerTo(Vector2 position)
+  {
+
+    if (_Players.Count == 0)
+    {
+      return null;
+    }
+    if (_Players.Count == 1 && _Players[0]._ragdoll != null && !_Players[0]._ragdoll._dead)
+    {
+      return _Players[0];
+    }
+
+    var distance = 10000f;
+    PlayerScript closest_player = null;
+    foreach (var player in _Players)
+    {
+      if (player?._ragdoll._dead ?? true) continue;
+      var distance0 = Vector2.Distance(position, new Vector2(player._ragdoll._controller.position.x, player._ragdoll._controller.position.z));
+      if (distance0 < distance)
+      {
+        distance = distance0;
+        closest_player = player;
+      }
+    }
+
+    return closest_player;
+
   }
 
   // Cycles through all players to see if one has the exit

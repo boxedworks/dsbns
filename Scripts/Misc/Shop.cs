@@ -642,7 +642,7 @@ public static class Shop
               player._ragdoll._health += 2;
               player._profile.UpdateHealthUI();
               if (player._ragdoll._health > 3)
-                player._ragdoll.GiveArmor();
+                player._ragdoll.AddArmor();
               return;
             }
           }

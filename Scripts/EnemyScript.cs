@@ -327,7 +327,7 @@ public class EnemyScript : MonoBehaviour
       // Check armor
       if (_survivalAttributes._enemyType == GameScript.SurvivalMode.EnemyType.ARMORED)
       {
-        _ragdoll.GiveArmor();
+        _ragdoll.AddArmor();
         _ragdoll._health = 3;
       }
     }
@@ -841,7 +841,7 @@ public class EnemyScript : MonoBehaviour
   }
   void LookAt(Vector3 lookAtPos)
   {
-    if (_ragdoll._grappled) return;
+    if (_ragdoll?._grappled ?? true) return;
 
     var forward = transform.forward;
     transform.LookAt(lookAtPos == Vector3.zero ? new Vector3(_agent.steeringTarget.x, transform.position.y, _agent.steeringTarget.z) : lookAtPos);
@@ -1660,11 +1660,51 @@ public class EnemyScript : MonoBehaviour
         if (source._isPlayer)
           GameScript.SurvivalMode.GivePoints(source._playerScript._id, 5 * (GameScript.SurvivalMode._Wave), true);
       }
+
       else
       {
+        // Level timer
+        {
+          TileManager._Level_Complete = true;
+
+          // Check timer
+          var level_time = float.Parse(TileManager._LevelTimer.ToString("0.000"));
+          var level_time_best = float.Parse(PlayerPrefs.GetFloat($"{Levels._CurrentLevelCollection_Name}_{Levels._CurrentLevelIndex}_time", -1f).ToString("0.000"));
+
+          if (level_time_best == -1 || level_time < level_time_best)
+          {
+            PlayerPrefs.SetFloat($"{Levels._CurrentLevelCollection_Name}_{Levels._CurrentLevelIndex}_time", level_time);
+          }
+
+          if (level_time_best != -1f && level_time != level_time_best)
+          {
+            if (level_time < level_time_best)
+              TileManager._Text_LevelTimer.text = string.Format($"{{0:0.000}} (-<color=green>{{1:0.000}}</color>)", level_time, level_time_best - level_time);
+            else
+              TileManager._Text_LevelTimer.text = string.Format($"{{0:0.000}} (<color=red>+{{1:0.000}}</color>)", level_time, level_time - level_time_best);
+          }
+        }
+
+        // Teleport exit to player
+        if (!PlayerScript.HasExit())
+        {
+          if (source._isPlayer)
+          {
+            Powerup._Powerups[0].Activate(source);
+          }
+          else
+          {
+            var closest_player = PlayerScript.GetClosestPlayerTo(new Vector2(_ragdoll._controller.position.x, _ragdoll._controller.position.z));
+            if (closest_player != null)
+            {
+              Powerup._Powerups[0].Activate(closest_player._ragdoll);
+            }
+          }
+        }
+
         // Make goal bigger
-        if (!PlayerScript.HasExit() && Powerup._Powerups != null && Powerup._Powerups.Count > 0)
-          Powerup._Powerups[0].transform.GetChild(0).GetComponent<BoxCollider>().size *= 3f;
+        //else if (!PlayerScript.HasExit() && Powerup._Powerups != null && Powerup._Powerups.Count > 0)
+        //  Powerup._Powerups[0].transform.GetChild(0).GetComponent<BoxCollider>().size *= 3f;
       }
     }
 

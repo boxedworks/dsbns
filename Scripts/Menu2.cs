@@ -2241,8 +2241,6 @@ public class Menu2
         Levels._EditingLoadout = true;
       };
 
-      Debug.Log(Levels._LevelPack_Current);
-
       // Check for preload
       if (Levels._LevelPack_Current == null)
       {
@@ -3395,7 +3393,15 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
                 if (level_iter >= Levels._CurrentLevelCollection._leveldata.Length) continue;
 
                 //if (GameScript._Singleton._IsDemo) level_unlocked = true;
-                selections.Add(string.Format(f, $"\\{(level_iter + 1)}", "100MB", ""));
+                var level_time_best = float.Parse(PlayerPrefs.GetFloat($"{Levels._CurrentLevelCollection_Name}_{level_iter}_time", -1f).ToString("0.000"));
+                if (level_time_best == -1f)
+                {
+                  selections.Add(string.Format(f, $"\\{(level_iter + 1)}", "-", ""));
+                }
+                else
+                {
+                  selections.Add(string.Format(f, $"\\{(level_iter + 1)}", string.Format("{0:0.000}", level_time_best), ""));
+                }
                 // Check if unlocked
                 if (level_unlocked)
                 {
@@ -3403,17 +3409,21 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
                   {
                     // Save selected level iter
                     _SaveLevelSelected = component0._dropdownIndex;
+
                     // Load level
-                    int levelIter = int.Parse(component0.GetDisplayText().Split(' ')[2].Trim().Substring(1)) - 1;
+                    var levelIter = int.Parse(component0.GetDisplayText().Split(' ')[2].Trim().Substring(1)) - 1;
                     GameScript.NextLevel(levelIter);
                     CommonEvents._RemoveDropdownSelections(component0);
+
                     // Play music
                     if (FunctionsC.MusicManager._CurrentTrack <= 2)
                       FunctionsC.MusicManager.TransitionTo(FunctionsC.MusicManager.GetNextTrackIter());
+
                     // Remove menus
                     _Menu.gameObject.SetActive(false);
                     _InMenus = false;
                     TileManager._Text_LevelNum.gameObject.SetActive(true);
+                    TileManager._Text_LevelTimer.gameObject.SetActive(true);
                   });
                   // Add focus event
                   actions_onFocus.Add((MenuComponent component0) =>
@@ -3475,14 +3485,14 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
               if (Levels.LevelCompleted(143))
                 match = selections[0];
               // Set dropdown data
-              component.SetDropdownData($"=== {string.Format(f, "level", "size", "preview")}\n\n", selections, actions, match, actions_onCreated, null, actions_onFocus, actions_onUnfocus);
+              component.SetDropdownData($"=== {string.Format(f, "level", "time", "preview")}\n\n", selections, actions, match, actions_onCreated, null, actions_onFocus, actions_onUnfocus);
             }
 
             // CHALLENGE levels; WIP
             else if (GameScript._GameMode == GameScript.GameModes.CHALLENGE)
             {
               // Update dropdown data
-              var prompt = $"=== {string.Format(f, "level", "size", "preview")}\n\n";
+              var prompt = $"=== {string.Format(f, "level", "time", "preview")}\n\n";
               var selections = new List<string>();
               var actions = new List<System.Action<MenuComponent>>();
               selections.Add("yes");
@@ -3494,6 +3504,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
                 _Menu.gameObject.SetActive(false);
                 _InMenus = false;
                 TileManager._Text_LevelNum.gameObject.SetActive(true);
+                TileManager._Text_LevelTimer.gameObject.SetActive(true);
               });
               // Set dropdown data
               component.SetDropdownData(prompt, selections, actions, "yes");

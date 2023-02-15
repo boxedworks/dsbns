@@ -963,7 +963,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         if (p._ragdoll._health != 5)
         {
           p._ragdoll._health = 5;
-          p._ragdoll.GiveArmor();
+          p._ragdoll.AddArmor();
           //healed = true;
         }
       }
@@ -1413,19 +1413,45 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
   // Update is called once per frame
   void Update()
   {
+
+    if (!IsSurvival())
+    {
+      // Update level timer
+      if (!TileManager._Level_Complete)
+      {
+        TileManager._LevelTimer += (Menu2._InMenus ? Time.unscaledDeltaTime : Time.deltaTime);
+        if (!Menu2._InMenus)
+          TileManager._Text_LevelTimer.text = string.Format("{0:0.000}", TileManager._LevelTimer);
+      }
+
+    }
+
+    else
+    {
+      TileManager._LevelTimer += Time.deltaTime;
+      TileManager._Text_LevelTimer.text = string.Format("{0:0.000}", TileManager._LevelTimer);
+    }
+
+    // Update controllers
     ControllerManager.Update();
+
     // Update enemies
     EnemyScript.UpdateEnemies();
+
     // Update music
     FunctionsC.MusicManager.Update();
+
     // Update menus
     Menu2.UpdateMenus();
+
     // Update playerprofiles
     foreach (var profile in PlayerProfile._Profiles)
       profile.HandleInput();
+
     // Screenshot
     if (ControllerManager.GetKey(ControllerManager.Key.INSERT))
       ScreenCapture.CaptureScreenshot("Screenshot.png");
+
     if (Debug.isDebugBuild)
     {
       // Next track
@@ -2988,6 +3014,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       Menu2.OnPause(afterUnlockMenu);
       System.GC.Collect();
       TileManager._Text_LevelNum.gameObject.SetActive(false);
+      TileManager._Text_LevelTimer.gameObject.SetActive(false);
     }
     else
     {
@@ -2996,6 +3023,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       if (_GameMode != GameModes.SURVIVAL)
         if (PlayerScript._Players != null && Settings._NumberPlayers != PlayerScript._Players.Count) TileManager.ReloadMap();
       TileManager._Text_LevelNum.gameObject.SetActive(true);
+      TileManager._Text_LevelTimer.gameObject.SetActive(true);
     }
     // Toggle text bubbles
     TextBubbleScript.ToggleBubbles(!_Paused);
@@ -3020,6 +3048,8 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
   {
     // Check survival
     if (IsSurvival()) return;
+
+    Debug.Log($"Completed level with time: {TileManager._LevelTimer}");
 
     // Check level pack
     if (Levels._LevelPack_Playing)
@@ -3093,6 +3123,8 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     // Check for extras challenges
     if (_GameMode == GameModes.CLASSIC)
     {
+
+      //
       bool EquipmentIsEqual(PlayerProfile.Equipment e0, PlayerProfile.Equipment e1)
       {
 

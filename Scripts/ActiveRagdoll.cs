@@ -1362,7 +1362,7 @@ public class ActiveRagdoll
   }
 
   bool _hasArmor;
-  public void GiveArmor()
+  public void AddArmor()
   {
     if (_hasArmor) return;
 

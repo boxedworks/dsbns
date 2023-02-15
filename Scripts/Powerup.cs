@@ -100,10 +100,12 @@ public class Powerup : MonoBehaviour
   public void Activate(ActiveRagdoll r)
   {
     if (_activated) return;
+    if (r == null) return;
+
     _activator = r;
     _activated = true;
     _Powerups.Remove(this);
-    bool remove = true;
+    var remove = true;
     GetComponent<CustomEntityUI>().Activate();
     switch (_type)
     {
