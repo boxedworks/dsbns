@@ -33,7 +33,10 @@ public static class GameResources
     _Fake_Tile, _Tile_Wall,
     _Arch,
     _Money,
+
     _Armor,
+    _Crown,
+
     _PerkTypes;
 
   public static bool _Loaded;
@@ -113,6 +116,7 @@ public static class GameResources
     _UI_Player = _Camera_Main.transform.GetChild(0).GetChild(2);
 
     _Armor = Resources.Load("Armor") as GameObject;
+    _Crown = Resources.Load("Crown") as GameObject;
 
     _Loaded = true;
   }

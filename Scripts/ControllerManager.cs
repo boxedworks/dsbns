@@ -334,6 +334,7 @@ public static class ControllerManager
     INSERT,
     U,
     N,
+    K,
     M,
     B,
     H,
@@ -476,6 +477,9 @@ public static class ControllerManager
         break;
       case (Key.M):
         gotKey = keyboard.mKey;
+        break;
+      case (Key.K):
+        gotKey = keyboard.kKey;
         break;
       case (Key.H):
         gotKey = keyboard.hKey;

@@ -1361,6 +1361,29 @@ public class ActiveRagdoll
     _reviving = false;
   }
 
+  bool _hasCrown;
+  public void AddCrown()
+  {
+    if (_hasCrown) return;
+
+    var crown = GameObject.Instantiate(GameResources._Crown).transform;
+
+    crown.transform.parent = _head.transform;
+    crown.localScale = Vector3.one;
+    crown.localEulerAngles = new Vector3(-60f, 90f, 0f);
+    crown.localPosition = new Vector3(0.245f, 1.314f, 0.095f);
+
+    _hasCrown = true;
+  }
+  public void RemoveCrown()
+  {
+    if (!_hasCrown) return;
+
+    GameObject.Destroy(_head.transform.GetChild(0).gameObject);
+
+    _hasCrown = false;
+  }
+
   bool _hasArmor;
   public void AddArmor()
   {

@@ -934,6 +934,13 @@ public class PlayerScript : MonoBehaviour
         }
       }
 
+#if UNITY_EDITOR
+    if (ControllerManager.GetKey(ControllerManager.Key.K))
+    {
+      _ragdoll.AddCrown();
+    }
+#endif
+
     var saveInput = Vector2.zero;
 
     if ((_id == 0 && GameScript.Settings._ForceKeyboard) || ControllerManager._NumberGamepads == 0)
