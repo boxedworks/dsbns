@@ -48,7 +48,7 @@ public static class ProgressBar
       }
       progress_bar._updateAction?.Invoke(progress_bar);
       // Else, update to parent's pos
-      progress_bar._transform.position = progress_bar._parent.position + new Vector3(0f, 1f, 0.55f);
+      progress_bar._transform.position = progress_bar._parent.position + new Vector3(0f, 1f, 0.2f);
       // Increment timer and update slider position
       progress_bar._timer -= Time.deltaTime;
       progress_bar._slider.localPosition = new Vector3(0.47f + (-0.47f * 2f * (progress_bar._timer / progress_bar._timer_start)), 0f, 0f);

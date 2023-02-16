@@ -116,11 +116,11 @@ public class PlayerScript : MonoBehaviour
     // Give unique _PlayerID and decide input based upon _PlayerID
     _id = _PLAYERID++ % GameScript.Settings._NumberPlayers;
     // Check all players to make sure no duplicate _PlayerID
-    int loops = 0;
+    var loops = 0;
     while (true && loops++ < 5)
     {
-      bool breakLoop = true;
-      foreach (PlayerScript p in _Players)
+      var breakLoop = true;
+      foreach (var p in _Players)
       {
         if (p == null) continue;
         // If self, skip
@@ -344,7 +344,7 @@ public class PlayerScript : MonoBehaviour
   }
   static public void AddLights()
   {
-    foreach (PlayerScript p in _Players)
+    foreach (var p in _Players)
     {
       if (p == null || p._ragdoll == null || p._ragdoll._dead) continue;
       p.AddLight();
@@ -354,7 +354,7 @@ public class PlayerScript : MonoBehaviour
   public static void Reset()
   {
     if (_Players != null)
-      foreach (PlayerScript p in _Players)
+      foreach (var p in _Players)
       {
         p._hasExit = false;
         if (p != null && p.gameObject != null) Destroy(p.gameObject);
@@ -726,7 +726,7 @@ public class PlayerScript : MonoBehaviour
               }
               if (speedMod != 4f && MissleScript._Missles != null)
               {
-                foreach (MissleScript m in MissleScript._Missles)
+                foreach (var m in MissleScript._Missles)
                 {
                   if (!m.gameObject.activeSelf || m._source._ragdoll._id == p._ragdoll._id) continue;
                   if (MathC.Get2DDistance(p._ragdoll._hip.position, m.transform.position) < minDist * 1.5f)
@@ -741,7 +741,7 @@ public class PlayerScript : MonoBehaviour
             }
           if (Time.timeScale > desiredTimeScale) speedMod *= 0.5f;
 
-          bool onealive = false;
+          var onealive = false;
           foreach (var player in _Players)
             if (player._ragdoll != null && !player._ragdoll._dead) { onealive = true; break; }
           if (!onealive) desiredTimeScale = 0f;
@@ -937,8 +937,10 @@ public class PlayerScript : MonoBehaviour
 #if UNITY_EDITOR
     if (ControllerManager.GetKey(ControllerManager.Key.K))
     {
-      _ragdoll.AddCrown();
+      //_ragdoll.AddCrown();
+      FunctionsC.MusicManager.PlayNextTrack();
     }
+
 #endif
 
     var saveInput = Vector2.zero;
@@ -1327,7 +1329,7 @@ public class PlayerScript : MonoBehaviour
     // Check for player capture
     if (AutoPlayer._Capturing)
     {
-      List<KeyValuePair<string, float>> actions = new List<KeyValuePair<string, float>>();
+      var actions = new List<KeyValuePair<string, float>>();
       if (saveInput.x != 0f)
         actions.Add(new KeyValuePair<string, float>("left", saveInput.x));
       if (saveInput.y != 0f)
@@ -1498,7 +1500,7 @@ public class PlayerScript : MonoBehaviour
   }
   public void ReloadMap()
   {
-    bool reset = true;
+    var reset = true;
     if (GameScript.IsSurvival() && !_ragdoll._dead)
     {
 
@@ -1507,7 +1509,7 @@ public class PlayerScript : MonoBehaviour
     // If dead, check if all other players dead
     if (_ragdoll._dead)
     {
-      foreach (PlayerScript p in _Players)
+      foreach (var p in _Players)
         if (!p._ragdoll._dead)
         {
           reset = false;
@@ -1783,7 +1785,7 @@ public class PlayerScript : MonoBehaviour
 
     // Slow motion on player death
     var lastplayer = true;
-    foreach (PlayerScript p0 in _Players)
+    foreach (var p0 in _Players)
       if (p0._id != _id && !p0._ragdoll._dead)
       {
         lastplayer = false;
@@ -1799,12 +1801,15 @@ public class PlayerScript : MonoBehaviour
       // Save setting before changing
       var saveinfo = GameScript.TutorialInformation._HasRestarted;
 
+      // Embarass player ultimately leading to the return of the title
+      TileManager.ShowGameOverText("NOT SNEAKY.", "white", "red");
+
       // Coroutine to show controls
       IEnumerator FlashRestart()
       {
-        Vector3 offset = GameResources._Camera_Main.transform.up * 4f;
+        var offset = GameResources._Camera_Main.transform.up * 4f;
         float pretimer = 0f, timer = 0f, supertimer = 0f, startpos = 5f;
-        bool flicker = false;
+        var flicker = false;
 
         var tutorial_keyboard = ControllerManager._Gamepads.Count == 0;
         var tutorial_ui0 = tutorial_keyboard ? GameScript.TutorialInformation._Tutorial_Restart_Keyboard0 : GameScript.TutorialInformation._Tutorial_Restart_Controller0;

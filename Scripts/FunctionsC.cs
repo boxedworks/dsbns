@@ -686,7 +686,6 @@ public static class FunctionsC
       "Mining by Moonlight",
       "AcidJazz",
       "Faster Does It",
-      //"Local Forecast",
     };
     static bool _Transitioning;
 
@@ -733,8 +732,10 @@ public static class FunctionsC
       _Transitioning = true;
       IEnumerator TransitionToCo()
       {
+
         // Load next track
         ResourceRequest musicRequest = LoadAudioClipAsync(trackIndex);
+
         // Fade out
         float t = 1f;
         while (t > 0f)
@@ -744,9 +745,11 @@ public static class FunctionsC
           _TrackSource.volume = t * (GameScript.Settings._VolumeMusic / 5f);
         }
         UnloadCurrentTrack();
+
         // Wait for music to load
         while (!musicRequest.isDone) yield return new WaitForSecondsRealtime(0.05f);
         _TrackSource.Stop();
+
         // Play new song
         _TrackSource.clip = musicRequest.asset as AudioClip;
         _TrackSource.Play();
@@ -854,6 +857,7 @@ public static class FunctionsC
         }
         if (iter > iter_base + 2)
           iter = iter_base;
+
         return iter;
       }
     }

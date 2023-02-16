@@ -24,9 +24,32 @@ public class TileManager
 
   public static TextMesh
     _Text_LevelNum,
-    _Text_LevelTimer;
+    _Text_LevelTimer,
+    _Text_GameOver;
   public static float _LevelTimer;
   public static bool _Level_Complete;
+
+  public static void ShowGameOverText(string text, string color_base, string color_flash, int flashes = 8)
+  {
+    IEnumerator ShowTextCo()
+    {
+      for (var i = 0; i < flashes; i++)
+      {
+        _Text_GameOver.text = $"<color={color_base}>{text}</color>";
+        yield return new WaitForSecondsRealtime(0.2f);
+        _Text_GameOver.text = $"<color={color_flash}>{text}</color>";
+        yield return new WaitForSecondsRealtime(0.2f);
+      }
+      _Text_GameOver.text = $"<color={color_base}>{text}</color>";
+
+    }
+    GameScript._Singleton.StartCoroutine(ShowTextCo());
+    _Text_GameOver.gameObject.SetActive(true);
+  }
+  public static void HideGameOverText()
+  {
+    _Text_GameOver.gameObject.SetActive(false);
+  }
 
   public static void Init()
   {
@@ -34,6 +57,8 @@ public class TileManager
       _Text_LevelNum = GameObject.Find("LevelNum").GetComponent<TextMesh>();
     if (_Text_LevelTimer == null)
       _Text_LevelTimer = GameObject.Find("LevelTimer").GetComponent<TextMesh>();
+    if (_Text_GameOver == null)
+      _Text_GameOver = GameObject.Find("Game_Over").GetComponent<TextMesh>();
 
     if (_Tiles != null)
       foreach (Tile t in _Tiles)
@@ -321,6 +346,7 @@ public class TileManager
     _LevelObjects = new List<string>();
     var game = GameObject.Find("Game").GetComponent<GameScript>();
     if (!GameResources._Loaded) GameResources.Init();
+    HideGameOverText();
     return game.StartCoroutine(LoadMapCo(data, doubleSizeInit, appendToEditMaps));
   }
 
@@ -1492,6 +1518,9 @@ public class TileManager
 
     // Check if map reloading
     if (_LoadingMap) return;
+
+    // Hide text
+    HideGameOverText();
 
     // Reload assets
     GameScript.ToggleExit(false);
@@ -3080,6 +3109,22 @@ public class TileManager
       null
     ),
 
+    _LEO_Placeable_Middle = new LevelEditorObject("Placeable", LevelEditorObject._UpdateFunction_Object,
+      new LevelEditorObject.MovementSettings()
+      {
+        _localPos = -0.5f
+      },
+      new LevelEditorObject.RotationSettings(),
+      new LevelEditorObject.CopySettings(),
+      new LevelEditorObject.AddSettings()
+      {
+        _data = "placeablemiddle_0_0"
+      },
+      new LevelEditorObject.DeleteSettings(),
+      LevelEditorObject._SaveFunction_PosRotCustom,
+      null
+    ),
+
     _LEO_NavMeshBarrier = new LevelEditorObject("NavMeshBarrier", LevelEditorObject._UpdateFunction_Object,
       new LevelEditorObject.MovementSettings()
       {
@@ -3511,7 +3556,7 @@ public class TileManager
     if (LevelEditorObject.GetCurrentObject()._textDisplayFunction != null)
       LevelEditorObject.GetCurrentObject()._textDisplayFunction(_SelectedObject != null ? _SelectedObject.gameObject : null);
     // Move Camera with mouse
-    Vector2 mousepos = ControllerManager.GetMousePosition();
+    var mousepos = ControllerManager.GetMousePosition();
     /*if (mousepos.x > 0f && mousepos.x <= Screen.safeArea.width && mousepos.y > 0f && mousepos.y <= Screen.safeArea.height)
     {
       Vector3 newPos = GameResources._Camera_Main.ScreenPointToRay(mousepos).GetPoint(10f);
@@ -3562,7 +3607,7 @@ public class TileManager
 
     // Get raycast info
     RaycastHit raycast_info;
-    Ray r = GameResources._Camera_Main.ScreenPointToRay(mousepos);
+    var r = GameResources._Camera_Main.ScreenPointToRay(mousepos);
     Physics.SphereCast(r, 0.2f, out raycast_info);
     if (raycast_info.collider == null) return;
 
@@ -3658,11 +3703,11 @@ public class TileManager
         // Make sure not in move mode when selecting a new object
         //_CurrentMode = EditorMode.NONE;
         //
-        LevelEditorObject currentObj = LevelEditorObject.GetCurrentObject();
-        bool found = false;
-        List<KeyValuePair<GameObject, int>> hiddenLayer = new List<KeyValuePair<GameObject, int>>();
+        var currentObj = LevelEditorObject.GetCurrentObject();
+        var found = false;
+        var hiddenLayer = new List<KeyValuePair<GameObject, int>>();
         // Loop until hits the floor or finds a new mode
-        int loops = 0;
+        var loops = 0;
         GameObject got_obj = null;
         while (true)
         {
@@ -3732,7 +3777,7 @@ public class TileManager
     // Move pointer
     if (_Pointer != null)
     {
-      Vector3 pos = raycast_info.point;
+      var pos = raycast_info.point;
       _Pointer.position = pos;
     }
 
@@ -3984,18 +4029,6 @@ public class TileManager
     _CurrentMode = EditorMode.MOVE;
   }
 
-  static LevelEditorObject[] _Shortcurts = new LevelEditorObject[]
-  {
-    _LEO_Enemy,
-    _LEO_Barrel,
-    _LEO_BookcaseBig,
-    _LEO_Table,
-    _LEO_Door,
-    _LEO_CandelBig
-  };
-
-  static string[] _ObjectNames;
-
   static List<Tile> _Selected_Tiles;
 
   static bool TileIsSelected(Tile tile)
@@ -4075,7 +4108,7 @@ public class TileManager
 
   static GameObject GiveEnemyVisual(ref Transform controller)
   {
-    GameObject controller_visual = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+    var controller_visual = GameObject.CreatePrimitive(PrimitiveType.Sphere);
     controller_visual.GetComponent<Collider>().isTrigger = true;
     controller_visual.name = "Enemy_visual";
     controller_visual.transform.parent = controller;
@@ -4083,16 +4116,16 @@ public class TileManager
     controller_visual.transform.localScale = new Vector3(0.5f, 0.5f, 0.5f);
     controller_visual.transform.localPosition = Vector3.zero + new Vector3(0f, 1.5f, 0f);
     // Enable waypoint renderers
-    Transform path = controller.parent.GetChild(1);
-    for (int i = 0; i < path.childCount; i++)
+    var path = controller.parent.GetChild(1);
+    for (var i = 0; i < path.childCount; i++)
     {
-      Transform waypoint = path.GetChild(i);
+      var waypoint = path.GetChild(i);
       waypoint.gameObject.SetActive(true);
       waypoint.gameObject.GetComponent<MeshRenderer>().enabled = true;
       // Enable lookpoint renderers
-      for (int u = 0; u < waypoint.childCount; u++)
+      for (var u = 0; u < waypoint.childCount; u++)
       {
-        Transform lookPoint = waypoint.GetChild(u);
+        var lookPoint = waypoint.GetChild(u);
         lookPoint.gameObject.SetActive(true);
         lookPoint.gameObject.GetComponent<MeshRenderer>().enabled = true;
       }

@@ -949,7 +949,7 @@ public class ItemScript : MonoBehaviour
     // Show progress bar
     var reloadTime = _reloadTime / reload_speed_mod;
     _reloading = true;
-    ProgressBar.GetProgressBar(_ragdoll._hip.transform, reloadTime,
+    ProgressBar.GetProgressBar(transform, reloadTime,
       () =>
       {
         _reloading = false;
