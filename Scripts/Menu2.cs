@@ -3424,6 +3424,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
                     _InMenus = false;
                     TileManager._Text_LevelNum.gameObject.SetActive(true);
                     TileManager._Text_LevelTimer.gameObject.SetActive(true);
+                    TileManager._Text_LevelTimer_Best.gameObject.SetActive(true);
                   });
                   // Add focus event
                   actions_onFocus.Add((MenuComponent component0) =>
@@ -3505,6 +3506,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
                 _InMenus = false;
                 TileManager._Text_LevelNum.gameObject.SetActive(true);
                 TileManager._Text_LevelTimer.gameObject.SetActive(true);
+                TileManager._Text_LevelTimer_Best.gameObject.SetActive(true);
               });
               // Set dropdown data
               component.SetDropdownData(prompt, selections, actions, "yes");
@@ -5507,6 +5509,32 @@ go to the <color=yellow>SHOP</color> to buy something~1
         component.SetDropdownData("lightning\n\n", selections, actions, selection_match);
       })
 
+      // Camera type
+    .AddComponent("camera type\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
+      .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+      {
+
+        // Set display text
+        var type_text = GameScript.Settings._CameraType._value ? "2D" : "3D";
+        component.SetDisplayText(string.Format(format_options, "camera type:", $"{type_text}"));
+
+        // Set dropdown data
+        var selections = new List<string>();
+        var actions = new List<System.Action<MenuComponent>>();
+        var selection_match = type_text;
+        for (var i = 0; i < 2; i++)
+        {
+          selections.Add(i == 0 ? "3D" : "2D");
+          actions.Add((MenuComponent component0) =>
+          {
+            GameScript.Settings._CameraType._value = component0._dropdownIndex == 1;
+            GameScript.Settings.SetPostProcessing();
+          });
+        }
+
+        // Update dropdown data
+        component.SetDropdownData("camera type\n\n", selections, actions, selection_match);
+      })
     // Camera zoom dropdown
     .AddComponent("camera zoom\n\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
       .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
@@ -5533,6 +5561,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
         // Update dropdown data
         component.SetDropdownData("camera zoom\n\n", selections, actions, selection_match);
       })
+
     // Blood toggle
     .AddComponent("blood\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
       .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
@@ -6325,7 +6354,7 @@ a gampad if plugged in.~1
         {
           // Check mouse highlight
           RaycastHit h;
-          Ray r = Camera.main.ScreenPointToRay(ControllerManager.GetMousePosition());
+          var r = GameResources._Camera_Menu.ScreenPointToRay(ControllerManager.GetMousePosition());
           if (Physics.SphereCast(r, 0.1f, out h))
           {
             foreach (var component in _CurrentMenu._menuComponents)

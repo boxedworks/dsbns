@@ -84,9 +84,12 @@ public class SceneThemes : MonoBehaviour
     _Theme = GetLevelTheme(iter);
     _Instance.StartCoroutine(ChangeMapThemeCo(oldtheme));
 
-    // Set footstep sound per theme
+    // Set footstep FX per theme
     _footstep = GameObject.Find($"Footstep_{_Theme._tile}")?.GetComponent<AudioSource>();
     if (_footstep == null) { _footstep = GameObject.Find("Footstep").GetComponent<AudioSource>(); }
+    var color = _Theme._tileColorDown * 1.5f;
+    color.a = 1f;
+    FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.FOOTPRINT)[0].GetComponent<ParticleSystemRenderer>().sharedMaterial.color = color;
 
     // Enable / disable rain
     var rain_sfx = GameScript._Singleton._Rain_Audio;

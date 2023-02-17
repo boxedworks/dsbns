@@ -6,6 +6,7 @@ public class TileManager
 {
   public static List<Tile> _Tiles;
   static int _MouseID, _Width = 50, _Height = 50;
+  public static int _Map_Size_X, _Map_Size_Y;
   static float _Tile_spacing = 2.5f;
   static Vector2 _offset;
 
@@ -24,7 +25,7 @@ public class TileManager
 
   public static TextMesh
     _Text_LevelNum,
-    _Text_LevelTimer,
+    _Text_LevelTimer, _Text_LevelTimer_Best,
     _Text_GameOver;
   public static float _LevelTimer;
   public static bool _Level_Complete;
@@ -49,6 +50,9 @@ public class TileManager
   public static void HideGameOverText()
   {
     _Text_GameOver.gameObject.SetActive(false);
+
+    var best_time = PlayerPrefs.GetFloat($"{Levels._CurrentLevelCollection_Name}_{Levels._CurrentLevelIndex}_time");
+    TileManager._Text_LevelTimer_Best.text = string.Format("{0:0.000}", best_time);
   }
 
   public static void Init()
@@ -57,6 +61,8 @@ public class TileManager
       _Text_LevelNum = GameObject.Find("LevelNum").GetComponent<TextMesh>();
     if (_Text_LevelTimer == null)
       _Text_LevelTimer = GameObject.Find("LevelTimer").GetComponent<TextMesh>();
+    if (_Text_LevelTimer_Best == null)
+      _Text_LevelTimer_Best = GameObject.Find("LevelTimer_Best").GetComponent<TextMesh>();
     if (_Text_GameOver == null)
       _Text_GameOver = GameObject.Find("Game_Over").GetComponent<TextMesh>();
 
@@ -339,14 +345,14 @@ public class TileManager
 
   public static bool _LoadingMap, _HasLocalLighting, _EnableEditorAfterLoad;
   static string _CurrentData;
-  public static Coroutine LoadMap(string data, bool doubleSizeInit = false, bool appendToEditMaps = false)
+  public static Coroutine LoadMap(string data, bool doubleSizeInit = false, bool appendToEditMaps = false, bool first_load = false)
   {
     _LoadingMap = true;
     _CurrentData = data;
     _LevelObjects = new List<string>();
     var game = GameObject.Find("Game").GetComponent<GameScript>();
     if (!GameResources._Loaded) GameResources.Init();
-    HideGameOverText();
+    if (!first_load) HideGameOverText();
     return game.StartCoroutine(LoadMapCo(data, doubleSizeInit, appendToEditMaps));
   }
 
@@ -416,6 +422,8 @@ public class TileManager
     ResetParticles();
 
     // Set tilemap size
+    _Map_Size_X = width;
+    _Map_Size_Y = height;
     ResizeInit((int)((width + 2) * (doubleSizeInit ? 1.4f : 1f)), (int)((height + 2) * (doubleSizeInit ? 1.4f : 1f)));
 
     // Remove stuff
@@ -643,7 +651,8 @@ public class TileManager
 
     // Set floor pos to center of map
     var floorPos = _Floor.position;
-    var center = Tile.GetTile((int)(_Width * 0.4f), (int)(_Height * 0.4f))._tile.transform.position;
+    var center = _Tiles[0]._tile.transform.position + (_Tiles[_Width * _Height - 1]._tile.transform.position - _Tiles[0]._tile.transform.position) * 0.5f;
+
     floorPos.x = center.x;
     floorPos.z = center.z;
     _Floor.position = floorPos;
@@ -898,6 +907,7 @@ public class TileManager
       {
         _Text_LevelNum.gameObject.SetActive(false);
         _Text_LevelTimer.gameObject.SetActive(false);
+        _Text_LevelTimer_Best.gameObject.SetActive(false);
       }
     }
 
@@ -1097,7 +1107,7 @@ public class TileManager
       // Load button
       case ("button"):
         loadedObject = object_base.LoadResource("Button", container_objects, new Vector3(0.6f, 0.1f, 0.6f), -1.28f);
-        CustomEntityUI button_script = loadedObject.GetComponent<CustomEntityUI>();
+        var button_script = loadedObject.GetComponent<CustomEntityUI>();
         button_script.gameObject.layer = GameScript._EditorEnabled ? 0 : 2;
         // Check for attached objects
         while (object_data_iter < object_data_split.Length)
@@ -1106,10 +1116,10 @@ public class TileManager
           {
             // Check for doors
             case ("door"):
-              GameObject door_new = LoadObject(string.Format("{0}_{1}_{2}_rot_{3}_open_{4}", object_data_split[object_data_iter++], object_data_split[object_data_iter++], object_data_split[object_data_iter++], object_data_split[++object_data_iter], object_data_split[++object_data_iter + 1]));
+              var door_new = LoadObject(string.Format("{0}_{1}_{2}_rot_{3}_open_{4}", object_data_split[object_data_iter++], object_data_split[object_data_iter++], object_data_split[object_data_iter++], object_data_split[++object_data_iter], object_data_split[++object_data_iter + 1]));
               object_data_iter++;
               object_data_iter++;
-              DoorScript door_script = door_new.GetComponent<DoorScript>();
+              var door_script = door_new.GetComponent<DoorScript>();
               door_script.RegisterButton(ref button_script);
               door_script.transform.GetChild(0).GetChild(1).GetComponent<BoxCollider>().enabled = GameScript._EditorEnabled;
               break;
@@ -1118,7 +1128,7 @@ public class TileManager
       // Check for doors
       case ("door"):
         loadedObject = object_base.LoadResource("Door", container_objects, 0.15f);
-        DoorScript door_script0 = loadedObject.GetComponent<DoorScript>();
+        var door_script0 = loadedObject.GetComponent<DoorScript>();
         door_script0.enabled = false;
         door_script0.enabled = true;
         door_script0.transform.GetChild(0).GetChild(1).GetComponent<BoxCollider>().enabled = GameScript._EditorEnabled;

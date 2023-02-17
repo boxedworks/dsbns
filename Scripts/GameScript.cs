@@ -28,7 +28,7 @@ public class GameScript : MonoBehaviour
 
   public Material[] _item_materials;
 
-  public static float _LevelStartTime, _endLightIntensity;
+  public static float _LevelStartTime;
 
   public static bool _EditorEnabled, _EditorTesting;
 
@@ -150,7 +150,7 @@ public class GameScript : MonoBehaviour
     TileManager._navMeshSurface = TileManager._Map.GetComponent<UnityEngine.AI.NavMeshSurface>();
     TileManager._navMeshSurface2 = TileManager._Map.GetComponents<UnityEngine.AI.NavMeshSurface>()[1];
     TileManager.Init();
-    TileManager.LoadMap("5 6 1 1 1 0 1 1 1 1 0 0 0 0 0 0 0 0 0 0 1 1 0 0 0 0 1 1 1 0 1 1 playerspawn_-37.5_-55.62_rot_0 e_-42.5_-48.1_li_knife_w_-42.5_-48.1_l_-41.4_-48.1_canmove_true_canhear_true_ e_-32.5_-48.1_li_knife_w_-32.5_-48.1_l_-33.6_-48.1_canmove_true_canhear_true_ e_-40_-50.6_li_knife_w_-40_-50.6_l_-39.7_-49.4_canmove_true_canhear_true_ e_-35_-44.4_li_knife_w_-35_-44.4_l_-36.1_-44.4_canmove_true_canhear_true_ p_-37.5_-44.38_end_ barrel_-40.66_-42.61_rot_0 barrel_-39.79_-42.62_rot_0 barrel_-38.9_-42.59_rot_0 barrel_-37.96_-42.62_rot_0 barrel_-37.02_-42.55_rot_0 barrel_-40.72_-46.53_rot_0 barrel_-40.73_-45.68_rot_0 barrel_-34.44_-46.61_rot_0 bookcasebig_-35.16_-42.79_rot_15 bookcaseopen_-40.47_-51.45_rot_0 bookcaseopen_-34.37_-51.19_rot_90.00001 bookcaseopen_-34.39_-50_rot_90.00001 bookcaseopen_-40.67_-44.71_rot_90.00001 bookcaseopen_-37.5_-46.88_rot_0 bookcaseopen_-37.5_-47.67_rot_0 barrel_-34.39_-45.78_rot_0 barrel_-31.86_-47.48_rot_0 barrel_-31.84_-48.37_rot_0 barrel_-35.15_-51.47_rot_0 tablesmall_-43.08_-48.95_rot_0 chair_-42.68_-49.08_rot_45 chair_-31.83_-49.12_rot_1.692939E-06 chair_-40.71_-43.66_rot_135 bookcasebig_-38.42_-50.79_rot_285 bookcaseopen_-36.42_-47.9_rot_75 barrel_-39.44_-51.42_rot_0 barrel_-39.25_-50.49_rot_0 candelbig_-36.55_-46.97_rot_90.00001 bookcaseopen_-43.24_-47.83_rot_105");
+    TileManager.LoadMap("5 6 1 1 1 0 1 1 1 1 0 0 0 0 0 0 0 0 0 0 1 1 0 0 0 0 1 1 1 0 1 1 playerspawn_-37.5_-55.62_rot_0 e_-42.5_-48.1_li_knife_w_-42.5_-48.1_l_-41.4_-48.1_canmove_true_canhear_true_ e_-32.5_-48.1_li_knife_w_-32.5_-48.1_l_-33.6_-48.1_canmove_true_canhear_true_ e_-40_-50.6_li_knife_w_-40_-50.6_l_-39.7_-49.4_canmove_true_canhear_true_ e_-35_-44.4_li_knife_w_-35_-44.4_l_-36.1_-44.4_canmove_true_canhear_true_ p_-37.5_-44.38_end_ barrel_-40.66_-42.61_rot_0 barrel_-39.79_-42.62_rot_0 barrel_-38.9_-42.59_rot_0 barrel_-37.96_-42.62_rot_0 barrel_-37.02_-42.55_rot_0 barrel_-40.72_-46.53_rot_0 barrel_-40.73_-45.68_rot_0 barrel_-34.44_-46.61_rot_0 bookcasebig_-35.16_-42.79_rot_15 bookcaseopen_-40.47_-51.45_rot_0 bookcaseopen_-34.37_-51.19_rot_90.00001 bookcaseopen_-34.39_-50_rot_90.00001 bookcaseopen_-40.67_-44.71_rot_90.00001 bookcaseopen_-37.5_-46.88_rot_0 bookcaseopen_-37.5_-47.67_rot_0 barrel_-34.39_-45.78_rot_0 barrel_-31.86_-47.48_rot_0 barrel_-31.84_-48.37_rot_0 barrel_-35.15_-51.47_rot_0 tablesmall_-43.08_-48.95_rot_0 chair_-42.68_-49.08_rot_45 chair_-31.83_-49.12_rot_1.692939E-06 chair_-40.71_-43.66_rot_135 bookcasebig_-38.42_-50.79_rot_285 bookcaseopen_-36.42_-47.9_rot_75 barrel_-39.44_-51.42_rot_0 barrel_-39.25_-50.49_rot_0 candelbig_-36.55_-46.97_rot_90.00001 bookcaseopen_-43.24_-47.83_rot_105", false, false, true);
 
     TileManager.EditorMenus.Init();
     TileManager.EditorMenus.HideMenus();
@@ -1557,6 +1557,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
           if (_inLevelEnd && !_GameEnded)
           {
             _levelEndTimer = Mathf.Clamp(_levelEndTimer + Time.deltaTime, 0f, timeToEnd);
+
             // Check time
             if (_levelEndTimer >= timeToEnd || (EnemyScript.NumberAlive() == 0 && Time.time - _goalPickupTime > 0.8f))
             {
@@ -3015,6 +3016,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       System.GC.Collect();
       TileManager._Text_LevelNum.gameObject.SetActive(false);
       TileManager._Text_LevelTimer.gameObject.SetActive(false);
+      TileManager._Text_LevelTimer_Best.gameObject.SetActive(false);
     }
     else
     {
@@ -3024,6 +3026,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         if (PlayerScript._Players != null && Settings._NumberPlayers != PlayerScript._Players.Count) TileManager.ReloadMap();
       TileManager._Text_LevelNum.gameObject.SetActive(true);
       TileManager._Text_LevelTimer.gameObject.SetActive(true);
+      TileManager._Text_LevelTimer_Best.gameObject.SetActive(true);
     }
     // Toggle text bubbles
     TextBubbleScript.ToggleBubbles(!_Paused);
@@ -3415,12 +3418,8 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     _Singleton._ExitOpen = toggle;
     if (toggle)
     {
-      _endLightIntensity = 4f;
-
       _Singleton._goalPickupTime = Time.time;
     }
-    else
-      _endLightIntensity = 0f;
   }
 
   public static void FadeIn()
@@ -3557,6 +3556,8 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         return UseDefaultTargetFramerate;
       }
     }
+
+    public static FunctionsC.SaveableStat_Bool _CameraType;
 
     static bool ControllerRumble;
     public static bool _ControllerRumble
@@ -3872,6 +3873,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
 
       //Camera
       _CameraZoom = PlayerPrefs.GetInt("CameraZoom", 1);
+      _CameraType = new FunctionsC.SaveableStat_Bool("CameraType_ortho", false);
       SetPostProcessing();
 
       // Controller
@@ -3921,6 +3923,18 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
 
     public static void SetPostProcessing()
     {
+      // Camera settings
+      if (_CameraType._value)
+      {
+        GameResources._Camera_Main.orthographic = true;
+        GameResources._Camera_Main.orthographicSize = _CameraZoom == 1 ? 7.6f : _CameraZoom == 0 ? 5.9f : 10.8f;
+      }
+      else
+      {
+        GameResources._Camera_Main.orthographic = false;
+      }
+
+      // PP
       var profiles = GameObject.Find("PProfiles").transform;
       for (var u = 0; u < 7; u++)
       {
@@ -3928,7 +3942,16 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         UnityEngine.Rendering.PostProcessing.DepthOfField depthOfField = null;
         profile.profile.TryGetSettings(out depthOfField);
         if (depthOfField != null)
-          depthOfField.focusDistance.value = _CameraZoom == 1 ? 16f : _CameraZoom == 0 ? 10.35f : 22.4f;
+        {
+          if (_CameraType._value)
+          {
+            depthOfField.focusDistance.value = 6f;
+          }
+          else
+          {
+            depthOfField.focusDistance.value = _CameraZoom == 1 ? 16f : _CameraZoom == 0 ? 10.35f : 22.4f;
+          }
+        }
       }
     }
 

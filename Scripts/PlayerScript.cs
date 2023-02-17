@@ -769,19 +769,42 @@ public class PlayerScript : MonoBehaviour
     if (_id == 0 && GameScript._Singleton._UseCamera)
     {
       var camera_height = GameScript.Settings._CameraZoom == 1 ? 14f : GameScript.Settings._CameraZoom == 0 ? 10f : 18f;
+      if (GameScript.Settings._CameraType._value)
+      {
+        camera_height = 14f;
+      }
 
-      /*/ Center camera on map if it does not need to move
-      var center_camera = true;
+      // Center camera on map if it does not need to move
+      var center_camera = GameScript.Settings._CameraType._value;
+      var map_x = TileManager._Map_Size_X;
+      var map_y = TileManager._Map_Size_Y;
+      Debug.Log($"{map_x} {map_y}");
       if (center_camera)
       {
-
+        if (GameScript.Settings._CameraZoom == 0)
+        {
+          if (map_x > 7 || map_y > 4)
+            center_camera = false;
+        }
+        else if (GameScript.Settings._CameraZoom == 1)
+        {
+          if (map_x > 9 || map_y > 6)
+            center_camera = false;
+        }
+        if (GameScript.Settings._CameraZoom == 2)
+        {
+          if (map_x > 14 || map_y > 8)
+            center_camera = false;
+        }
+      }
+      if (center_camera)
+      {
         _camPos = TileManager._Floor.position;
-        _camPos.z += 1.5f;
-
+        //_camPos.z += 1.25f;
       }
 
       // Move camera normally
-      else*/
+      else
       {
 
         float CamYPos = 16f,

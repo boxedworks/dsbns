@@ -1608,7 +1608,7 @@ public class EnemyScript : MonoBehaviour
     _Enemies_dead.Add(this);
     if (_Enemies_dead.Count > _MAX_RAGDOLLS_DEAD)
     {
-      EnemyScript e = _Enemies_dead[0];
+      var e = _Enemies_dead[0];
       ActiveRagdoll._Ragdolls.Remove(e._ragdoll);
       _Enemies_dead.Remove(e);
       GameObject.Destroy(e.transform.parent.gameObject);
@@ -1674,6 +1674,8 @@ public class EnemyScript : MonoBehaviour
           if (level_time_best == -1 || level_time < level_time_best)
           {
             PlayerPrefs.SetFloat($"{Levels._CurrentLevelCollection_Name}_{Levels._CurrentLevelIndex}_time", level_time);
+
+            TileManager._Text_LevelTimer_Best.text += string.Format(" -> {0:0.000}", level_time);
           }
 
           if (level_time_best != -1f && level_time != level_time_best)
