@@ -18,6 +18,7 @@ public class PlayerScript : MonoBehaviour
   float _camRotX;
 
   Vector2 _saveInput;
+  bool _spawnRunCheck;
 
   public GameScript.ItemManager.Items _itemLeft, _itemRight;
 
@@ -29,7 +30,7 @@ public class PlayerScript : MonoBehaviour
 #endif
     ,
   MOVESPEED = 4.5f * MOD,
-    RUNSPEED = 1.35f,
+    RUNSPEED = 1.15f,
     ROTATIONSPEED = 2f / MOD;
 
   bool mouseEnabled, _runToggle;
@@ -84,6 +85,7 @@ public class PlayerScript : MonoBehaviour
 
     _SlowmoTimer = 0f;
     Time.timeScale = 1f;
+    _spawnRunCheck = true;
     //_camHeight = Vector3.Distance(GameResources._Camera_Main.transform.position, transform.position);
 
     // Setup ragdoll
@@ -609,8 +611,10 @@ public class PlayerScript : MonoBehaviour
 #endif
     // Try to spawn ragdoll
     if (!_ragdoll.IsActive() && Time.time - GameScript._LevelStartTime > 0.2f)
+    {
       // Enable ragdoll
       _ragdoll.SetActive(true);
+    }
 
     float unscaled_dt = Time.unscaledDeltaTime,
       dt = Time.deltaTime;
@@ -778,7 +782,7 @@ public class PlayerScript : MonoBehaviour
       var center_camera = GameScript.Settings._CameraType._value;
       var map_x = TileManager._Map_Size_X;
       var map_y = TileManager._Map_Size_Y;
-      Debug.Log($"{map_x} {map_y}");
+      //Debug.Log($"{map_x} {map_y}");
       if (center_camera)
       {
         if (GameScript.Settings._CameraZoom == 0)
@@ -1313,7 +1317,11 @@ public class PlayerScript : MonoBehaviour
     x2 = Mathf.Clamp(x2, -1f, 1f);
     y2 = Mathf.Clamp(y2, -1f, 1f);
     if (_spawnTimer > 0f)
+    {
       x = y = x2 = y2 = 0f;
+    }
+    var xy = new Vector2(x, y);
+
     /// Run
     {
       // Check run option; option is not toggle run
@@ -1326,7 +1334,7 @@ public class PlayerScript : MonoBehaviour
             _runToggle = true;
         }
         // If run key is not down and is not moving, stop running
-        else if (_runToggle && new Vector2(x, y).magnitude < 0.5f)
+        else if (_runToggle && xy.magnitude < 0.5f)
           _runToggle = false;
       }
 
@@ -1334,7 +1342,23 @@ public class PlayerScript : MonoBehaviour
       else
         if (runKeyDown)
         _runToggle = !_runToggle;
-      // Check run toggle
+
+      // Check initial spawn run
+      if (!_spawnRunCheck)
+      {
+        if (xy.magnitude > 0.75f)
+        {
+          _runToggle = true;
+          _spawnRunCheck = true;
+        }
+
+        else if (Time.time - GameScript._LevelStartTime > 0.4f)
+        {
+          _spawnRunCheck = true;
+        }
+      }
+
+      // Apply run speed
       if (_runToggle || _ragdoll._forceRun)
         movespeed *= RUNSPEED;
     }
@@ -1342,11 +1366,11 @@ public class PlayerScript : MonoBehaviour
     // Move player
     if (!_ragdoll._grappled)
     {
-      _saveInput = new Vector2(x, y);
+      _saveInput = xy;
       MovePlayer(unscaled_dt, movespeed, _saveInput);
       // Rotate player
       if (!mouseEnabled)
-        RotatePlayer(new Vector2(x2, y2), new Vector2(x, y));
+        RotatePlayer(new Vector2(x2, y2), xy);
     }
 
     // Check for player capture
@@ -1367,12 +1391,13 @@ public class PlayerScript : MonoBehaviour
 
       AutoPlayer.UpdateCapture(data);
     }
+
   }
 
   public void MovePlayer(float deltaTime, float moveSpeed, Vector2 input)
   {
     // Decrease movespead
-    if (_ragdoll._grappling) { moveSpeed *= 0.45f; }
+    if (_ragdoll._grappling) { moveSpeed *= 0.7f; }
 
     // Move player
     if (_ragdoll.Active() && _agent != null)

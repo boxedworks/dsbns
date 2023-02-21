@@ -76,11 +76,11 @@ public static class FunctionsC
   public static DistanceInfo GetClosestEnemyTo(Vector3 pos)
   {
     if (EnemyScript._Enemies_alive == null) return null;
-    DistanceInfo info = new DistanceInfo();
+    var info = new DistanceInfo();
     info._distance = 1000f;
     foreach (var enemy in EnemyScript._Enemies_alive)
     {
-      float dist = MathC.Get2DDistance(enemy.GetRagdoll()._hip.position, pos);
+      var dist = MathC.Get2DDistance(enemy.GetRagdoll()._hip.position, pos);
       if (dist < info._distance)
       {
         info._distance = dist;
@@ -98,7 +98,7 @@ public static class FunctionsC
     foreach (var p in PlayerScript._Players)
     {
       if (p._ragdoll._dead) continue;
-      float dist = MathC.Get2DDistance(p._ragdoll._hip.position, pos);
+      var dist = MathC.Get2DDistance(p._ragdoll._hip.position, pos);
       if (dist > info._distance)
       {
         info._distance = dist;

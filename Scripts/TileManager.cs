@@ -1915,7 +1915,7 @@ public class TileManager
 
           button.onClick.AddListener(() =>
           {
-            SpawnObjectSimple(_LEO_Laser);
+            SpawnObjectSimple(_LEO_TV);
           });
           break;
 

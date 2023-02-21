@@ -248,7 +248,7 @@ public class ItemScript : MonoBehaviour
 
     // Get item sounds
     _audioSources = new AudioSource[_sfx_clip.Length];
-    for (int i = 0; i < _audioSources.Length; i++)
+    for (var i = 0; i < _audioSources.Length; i++)
     {
       _audioSources[i] = gameObject.AddComponent<AudioSource>();
       _audioSources[i].playOnAwake = false;
@@ -378,7 +378,6 @@ public class ItemScript : MonoBehaviour
           var spawn_pos = _forward.position;
           if (_type == ItemType.ROCKET_FIST) spawn_pos = _ragdoll._hip.position;
           var new_position = new Vector3(spawn_pos.x, _ragdoll._spine.transform.position.y, spawn_pos.z);
-          bullet.OnShot(use_penatrationAmount);
           bullet.gameObject.SetActive(true);
           var use_size = use_penatrationAmount > 0 ? use_penatrationAmount > 3 ? 3.5f : 1.2f : 1f;
           if (_type == ItemType.FLAMETHROWER) use_size = 2.1f;
@@ -402,6 +401,8 @@ public class ItemScript : MonoBehaviour
           var force = MathC.Get2DVector(f + addforce) * 2100f * speedMod;
           rb.transform.LookAt(rb.position + force);
           rb.AddForce(force);
+
+          bullet.OnShot(use_penatrationAmount, force.magnitude);
 
           // Bullet case
           if ((_type != ItemType.CROSSBOW && _type != ItemType.FLAMETHROWER && _type != ItemType.ROCKET_FIST) && (_projectilesPerShot <= 2 || i == 0))

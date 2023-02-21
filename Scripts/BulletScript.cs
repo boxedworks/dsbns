@@ -162,9 +162,11 @@ public class BulletScript : MonoBehaviour
   }
 
   int _penatrationAmount;
-  public void OnShot(int penatrationAmount)
+  float _initialForce;
+  public void OnShot(int penatrationAmount, float force)
   {
     _penatrationAmount = penatrationAmount;
+    _initialForce = force;
   }
 
   int _delayStart;
@@ -189,9 +191,26 @@ public class BulletScript : MonoBehaviour
       {
         if (_source._dismember && r._health <= 0) r.Dismember(r._spine, hitForce);
         _hitAmount += (int)damage;
-        if (_hitAmount <= _penatrationAmount) return true;
+        if (_hitAmount <= _penatrationAmount)
+        {
+          //RedirectToOther();
+          return true;
+        }
       }
       return false;
+    }
+
+    void RedirectToOther()
+    {
+      if (_source._ragdoll._isPlayer)
+      {
+        var enemy = FunctionsC.GetClosestEnemyTo(transform.position);
+        if (enemy != null && enemy._ragdoll != null)
+        {
+          var new_vel = (enemy._ragdoll._hip.transform.position - _rb.position).normalized * _rb.velocity.magnitude;
+          _rb.velocity = new_vel;
+        }
+      }
     }
 
     var hit_wall = false;

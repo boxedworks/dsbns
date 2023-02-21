@@ -356,7 +356,7 @@ public class EnemyScript : MonoBehaviour
       // Complete all spherecasts
       SpherecastHandler.ScheduleAllSpherecasts();
       // Update with spherecast data
-      foreach (EnemyScript e in _Enemies_alive)
+      foreach (var e in _Enemies_alive)
       {
         e.Handle();
         SpherecastHandler._EnemyOrderIter++;
@@ -364,7 +364,7 @@ public class EnemyScript : MonoBehaviour
       // Clean up data
       SpherecastHandler.Clean();
     }
-    else foreach (EnemyScript e in _Enemies_alive)
+    else foreach (var e in _Enemies_alive)
         e.Handle();
   }
 
@@ -1661,7 +1661,7 @@ public class EnemyScript : MonoBehaviour
           GameScript.SurvivalMode.GivePoints(source._playerScript._id, 5 * (GameScript.SurvivalMode._Wave), true);
       }
 
-      else
+      else if (!PlayerScript._All_Dead)
       {
         // Level timer
         {
