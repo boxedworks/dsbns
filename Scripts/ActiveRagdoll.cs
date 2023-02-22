@@ -1092,6 +1092,7 @@ public class ActiveRagdoll
     if (_grapplee != null)
     {
 
+      // If not player, throw
       if (!_grapplee._isPlayer)
       {
         _grapplee.TakeDamage(this, DamageSourceType.MELEE, _hip.position, 100, false);
@@ -1100,8 +1101,16 @@ public class ActiveRagdoll
 
         FunctionsC.PlaySound(ref _audioPlayer, "Ragdoll/Neck_snap", 0.85f, 1.2f);
       }
+
+      // Else, gently let go (?)
       else
       {
+        var agent = _grapplee._isPlayer ? (_grapplee._playerScript?._agent) : (_grapplee._enemyScript?._agent);
+        if (agent != null)
+        {
+          agent.enabled = true;
+        }
+
         _grapplee._controller.position = _grapplee._hip.position;
         _grapplee._controller.rotation = _controller.rotation;
       }
@@ -1139,6 +1148,11 @@ public class ActiveRagdoll
         _grapplee = ragdoll;
         _grapplee._grappled = true;
         _grapplee._grappler = this;
+        var agent = _grapplee._isPlayer ? (_grapplee._playerScript?._agent) : (_grapplee._enemyScript?._agent);
+        if (agent != null)
+        {
+          agent.enabled = false;
+        }
       }
       ToggleRaycasting(true);
 

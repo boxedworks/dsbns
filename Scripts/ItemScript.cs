@@ -901,6 +901,13 @@ public class ItemScript : MonoBehaviour
     _hitAnthing = false;
     _hitEnemy = false;
 
+    // Check timer
+    if (!PlayerScript._TimerStarted && (_ragdoll?._isPlayer ?? false))
+    {
+      PlayerScript._TimerStarted = true;
+    }
+
+    //
     Update();
   }
   public void UseUp()
