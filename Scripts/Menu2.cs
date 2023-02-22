@@ -3303,6 +3303,8 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
     ModifyMenu_TipSwitch(MenuType.MODE_SELECTION);
 
     // Level display menu
+    var dirs = 12;
+    var levels_per_dir = 12;
     void SpawnMenu_Levels()
     {
       var f = GameScript._GameMode == GameScript.GameModes.CLASSIC ? "{0,-10}{1,20}{2,40}" : "{0,-20}{1,20}{2,40}";
@@ -3315,10 +3317,13 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
         $"<color={_COLOR_GRAY}>level directories</color>\n\n" :
         string.Format($"<color={_COLOR_GRAY}>{f}</color>", "levels", "highest wave", "") + "\n\n");
       // Set level directory options
-      var dirs = 12;
-      if (GameScript._GameMode == GameScript.GameModes.CHALLENGE || GameScript._GameMode == GameScript.GameModes.SURVIVAL)
+      if (GameScript._GameMode == GameScript.GameModes.CLASSIC)
+      {
+        dirs = Mathf.CeilToInt(Levels._CurrentLevelCollection._leveldata.Length / levels_per_dir);
+      }
+      else if (GameScript._GameMode == GameScript.GameModes.CHALLENGE || GameScript._GameMode == GameScript.GameModes.SURVIVAL)
         dirs = Levels._CurrentLevelCollection._leveldata.Length;
-      for (int i = 0; i < dirs; i++)
+      for (var i = 0; i < dirs; i++)
       {
         var wave = "-";
         if (GameScript._GameMode == GameScript.GameModes.SURVIVAL)
@@ -3349,7 +3354,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
             // Obscur dir if first level not unlocked
             if (GameScript._GameMode != GameScript.GameModes.SURVIVAL)
             {
-              var first_level_iter = (component._buttonIndex) * 12;
+              var first_level_iter = (component._buttonIndex) * levels_per_dir;
               if (first_level_iter > 0 && !Levels.LevelCompleted(first_level_iter - 1))
               {
                 component._obscured = true;
@@ -3385,9 +3390,9 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
               var actions_onUnfocus = new List<System.Action<MenuComponent>>();
               var actions_onCreated = new List<System.Action<MenuComponent>>();
               // Load level on select
-              for (int u = 0; u < 12; u++)
+              for (var u = 0; u < levels_per_dir; u++)
               {
-                var level_iter = (component._buttonIndex) * 12 + u;
+                var level_iter = (component._buttonIndex) * levels_per_dir + u;
                 var level_unlocked = (level_iter == 0 ? true : Levels.LevelCompleted(level_iter - 1));
 
                 if (level_iter >= Levels._CurrentLevelCollection._leveldata.Length) continue;
@@ -3475,9 +3480,9 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
                 // Set match
                 match = selections[lastIter - 1];
                 // Check for all completed
-                if (lastIter == 12)
+                if (lastIter == levels_per_dir)
                 {
-                  var level_unlocked = Levels.LevelCompleted(int.Parse(selections[11].Split(' ')[0].Substring(1)) - 1);
+                  var level_unlocked = Levels.LevelCompleted(int.Parse(selections[levels_per_dir - 1].Split(' ')[0].Substring(1)) - 1);
                   if (level_unlocked)
                     match = selections[0];
                 }
@@ -3601,6 +3606,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
       m._onSwitchTo += () =>
       {
         SpawnMenu_Levels();
+
         // Check for saved dirs
         if (_SaveMenuDir == -1)
         {
@@ -3608,17 +3614,17 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
           foreach (var component0 in _CurrentMenu._menuComponentsSelectable)
           {
             if (saveIndex0 == 0) { saveIndex0++; continue; }
-            var first_level_iter = (component0._buttonIndex) * 12;
-            var last_level_iter = (component0._buttonIndex) * 12 + 11;
+            var first_level_iter = (component0._buttonIndex) * levels_per_dir;
+            var last_level_iter = (component0._buttonIndex) * levels_per_dir + (levels_per_dir - 1);
             if (!Levels.LevelCompleted(first_level_iter - 1)) break;
-            if (component0.GetDisplayText(false).Contains("dir11") && Levels.LevelCompleted(last_level_iter - 1))
+            if (component0.GetDisplayText(false).Contains($"dir{dirs - 1}") && Levels.LevelCompleted(last_level_iter - 1))
             {
               saveIndex0 = -1;
               break;
             }
             saveIndex0++;
           }
-          _CurrentMenu._selectionIndex = saveIndex0 <= 0 ? 0 : Mathf.Clamp(saveIndex0 - 1, 0, 11);
+          _CurrentMenu._selectionIndex = saveIndex0 <= 0 ? 0 : Mathf.Clamp(saveIndex0 - 1, 0, dirs - 1);
           return;
         }
         var component = _Menus[MenuType.LEVELS]._menuComponentsSelectable[_SaveMenuDir];
@@ -5509,7 +5515,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
         component.SetDropdownData("lightning\n\n", selections, actions, selection_match);
       })
 
-      // Camera type
+    // Camera type
     .AddComponent("camera type\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
       .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
       {

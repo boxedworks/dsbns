@@ -90,7 +90,7 @@ public static class FunctionsC
     return info;
   }
   // Return the farthest player from a point
-  public static DistanceInfo GetFatherstPlayerFrom(Vector3 pos)
+  public static DistanceInfo GetFarthestPlayerFrom(Vector3 pos)
   {
     if (PlayerScript._Players == null) return null;
     DistanceInfo info = new DistanceInfo();

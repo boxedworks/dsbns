@@ -396,10 +396,24 @@ public class PlayerScript : MonoBehaviour
   ActiveRagdoll _targetRagdoll;
   int _targetIter;
 
+  public static bool _TimerStarted;
+
   // Update is called once per frame
   float _rearrangeTime;
   void Update()
   {
+
+    // Timer
+    if (!_TimerStarted && _id == 0)
+    {
+
+      var player_farthest = FunctionsC.GetFarthestPlayerFrom(PlayerspawnScript._PlayerSpawns[0].transform.position);
+      if (player_farthest._distance > 0.5f)
+      {
+        _TimerStarted = true;
+      }
+    }
+
 #if DEBUG
     if (ControllerManager.GetKey(ControllerManager.Key.DELETE))
     {
@@ -804,7 +818,7 @@ public class PlayerScript : MonoBehaviour
       if (center_camera)
       {
         _camPos = TileManager._Floor.position;
-        //_camPos.z += 1.25f;
+        _camPos.z += -0.5f;
       }
 
       // Move camera normally
@@ -867,6 +881,10 @@ public class PlayerScript : MonoBehaviour
       }
 
       _camPos.y = camera_height;
+      if (GameScript.Settings._CameraType._value)
+      {
+        //_camPos.z -= 1.9f;
+      }
       GameResources._Camera_Main.transform.position = _camPos;
 
       // Update rain

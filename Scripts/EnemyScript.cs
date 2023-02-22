@@ -429,7 +429,7 @@ public class EnemyScript : MonoBehaviour
       {
         if (Time.time - GameScript._LevelStartTime > 0.5f)
         {
-          var info = FunctionsC.GetFatherstPlayerFrom(transform.position);
+          var info = FunctionsC.GetFarthestPlayerFrom(transform.position);
           if (info != null && info._distance > 3f + (GameScript.Settings._NumberPlayers > 1 ? (1.5f * Mathf.Clamp(GameScript.Settings._NumberPlayers, 0, 2) - 1) : 0f))
           {
             _canAttack = true;
@@ -1681,7 +1681,7 @@ public class EnemyScript : MonoBehaviour
           if (level_time_best != -1f && level_time != level_time_best)
           {
             if (level_time < level_time_best)
-              TileManager._Text_LevelTimer.text = string.Format($"{{0:0.000}} (-<color=green>{{1:0.000}}</color>)", level_time, level_time_best - level_time);
+              TileManager._Text_LevelTimer.text = string.Format($"{{0:0.000}} (<color=green>-{{1:0.000}}</color>)", level_time, level_time_best - level_time);
             else
               TileManager._Text_LevelTimer.text = string.Format($"{{0:0.000}} (<color=red>+{{1:0.000}}</color>)", level_time, level_time - level_time_best);
           }
@@ -1707,6 +1707,16 @@ public class EnemyScript : MonoBehaviour
         // Make goal bigger
         //else if (!PlayerScript.HasExit() && Powerup._Powerups != null && Powerup._Powerups.Count > 0)
         //  Powerup._Powerups[0].transform.GetChild(0).GetComponent<BoxCollider>().size *= 3f;
+      }
+    }
+
+    else
+    {
+
+      // If timer hasn't started, start if killed
+      if (!PlayerScript._TimerStarted)
+      {
+        PlayerScript._TimerStarted = true;
       }
     }
 

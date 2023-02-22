@@ -51,8 +51,8 @@ public class TileManager
   {
     _Text_GameOver.gameObject.SetActive(false);
 
-    var best_time = PlayerPrefs.GetFloat($"{Levels._CurrentLevelCollection_Name}_{Levels._CurrentLevelIndex}_time");
-    TileManager._Text_LevelTimer_Best.text = string.Format("{0:0.000}", best_time);
+    var best_time = PlayerPrefs.GetFloat($"{Levels._CurrentLevelCollection_Name}_{Levels._CurrentLevelIndex}_time", -1f);
+    TileManager._Text_LevelTimer_Best.text = best_time == -1f ? "-" : string.Format("{0:0.000}", best_time);
   }
 
   public static void Init()
@@ -869,6 +869,9 @@ public class TileManager
     _Text_LevelNum.text = "";
     _LevelTimer = 0f;
     _Level_Complete = false;
+    PlayerScript._TimerStarted = false;
+
+    _Text_LevelTimer.text = string.Format("{0:0.000}", _LevelTimer);
 
     // Check survival
     if (GameScript.IsSurvival()) GameScript.SurvivalMode.Init();

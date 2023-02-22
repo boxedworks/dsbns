@@ -1417,7 +1417,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     if (!IsSurvival())
     {
       // Update level timer
-      if (!TileManager._Level_Complete)
+      if (!TileManager._Level_Complete && PlayerScript._TimerStarted)
       {
         TileManager._LevelTimer += (Menu2._InMenus ? Time.unscaledDeltaTime : Time.deltaTime);
         if (!Menu2._InMenus)
@@ -3928,10 +3928,12 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       {
         GameResources._Camera_Main.orthographic = true;
         GameResources._Camera_Main.orthographicSize = _CameraZoom == 1 ? 7.6f : _CameraZoom == 0 ? 5.9f : 10.8f;
+        GameResources._Camera_Main.transform.eulerAngles = new Vector3(88f, 0f, 0f);
       }
       else
       {
         GameResources._Camera_Main.orthographic = false;
+        GameResources._Camera_Main.transform.eulerAngles = new Vector3(89.9f, 0f, 0f);
       }
 
       // PP
