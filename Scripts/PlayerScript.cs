@@ -243,6 +243,7 @@ public class PlayerScript : MonoBehaviour
 
         // Add to audio list
         FunctionsC.AddToAudioList_Rain();
+        Debug.Log("add");
       }
 
       // Clean up rain SFX
@@ -962,7 +963,7 @@ public class PlayerScript : MonoBehaviour
               _goalTotal = 0f;
               if (EnemyScript._Enemies_alive.Count > 0)
               {
-                for (int i = 0; i < 1; i++)
+                for (var i = 0; i < 1; i++)
                 {
                   var enemy = EnemyScript.SpawnEnemyAt(new EnemyScript.SurvivalAttributes()
                   {

@@ -926,7 +926,7 @@ public class TileManager
     return new Vector2((int)Mathf.Floor(distance.x / _Tile_spacing + width / 1.5f), (int)Mathf.Floor(distance.z / _Tile_spacing + width / 1.5f));
   }
 
-  public static GameObject LoadObject(string object_data)
+  public static GameObject LoadObject(string object_data, bool enemy_original = false)
   {
     // Load enemy / object data
     if (object_data.Trim().Equals("")) return null;
@@ -946,10 +946,41 @@ public class TileManager
     {
       // Load enemy
       case ("e"):
+
+        if (!enemy_original)
+        {
+          var setting = GameScript.Settings._Extra_EnemyMultiplier._value;
+
+          // None
+          if (setting == 2)
+          {
+            var dummy = new GameObject("dummy enemy");
+            dummy.transform.parent = _Map.GetChild(1);
+            return dummy;
+          }
+          else if (setting == 1)
+          {
+            var posx = float.Parse(object_data_split[1]);
+            var posy = float.Parse(object_data_split[2]);
+
+            object_data_split[0] = "";
+            object_data_split[1] = "";
+            object_data_split[2] = "";
+
+            var new_enemy = $"e_{posx + Random.Range(-0.5f, 0.5f)}_{posy + Random.Range(-0.5f, 0.5f)}_{string.Join('_', object_data_split)}";
+
+            object_data_split[0] = "e";
+            object_data_split[1] = $"{posx}";
+            object_data_split[2] = $"{posy}";
+
+            LoadObject(new_enemy, true);
+          }
+        }
+
         loadedObject = object_base.LoadResource("Enemy", container_enemies, new Vector3(0.1f, 0.1f, 1f), -1.32f);
-        Transform controller = loadedObject.transform.GetChild(0);
+        var controller = loadedObject.transform.GetChild(0);
         controller.position = new Vector3(object_base._x, controller.position.y, object_base._z);
-        EnemyScript script = controller.GetComponent<EnemyScript>();
+        var script = controller.GetComponent<EnemyScript>();
         script._itemLeft = script._itemRight = GameScript.ItemManager.Items.NONE;
         // Load path info
         Transform path = loadedObject.transform.GetChild(1),
@@ -959,7 +990,7 @@ public class TileManager
         Transform current_waypoint = null;
         for (; object_data_iter < object_data_split.Length;)
         {
-          string object_type = object_data_split[object_data_iter++];
+          var object_type = object_data_split[object_data_iter++];
           if (object_type.Equals("")) continue;
           ObjectData subobject_base;
           if (object_type.Equals("w") || object_type.Equals("l"))
@@ -975,7 +1006,7 @@ public class TileManager
               current_waypoint.name = "Waypoint";
               current_waypoint.parent = default_waypoint.parent;
               current_waypoint.localScale = new Vector3(0.3f, 0.3f, 0.2f);
-              Quaternion rotation = current_waypoint.localRotation;
+              var rotation = current_waypoint.localRotation;
               rotation.eulerAngles = new Vector3(0f, 0f, 90f);
               current_waypoint.localRotation = rotation;
               current_waypoint.position = new Vector3(subobject_base._x, current_waypoint.position.y, subobject_base._z);

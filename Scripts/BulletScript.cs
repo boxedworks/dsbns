@@ -15,6 +15,7 @@ public class BulletScript : MonoBehaviour
   public static int _ID;
 
   int _hitAmount, _lastRagdollId;
+  Vector3 _lastRagdollPosition;
 
   float _distanceTraveled;
   public float _maxDistance;
@@ -175,20 +176,25 @@ public class BulletScript : MonoBehaviour
     // Local function to apply ragdoll damage
     bool TakeDamage(ActiveRagdoll r)
     {
-      // Hurt ragdoll
+
+      var use_position = (_lastRagdollPosition == Vector3.zero ? _source.transform.position : _lastRagdollPosition);
       var hitForce = MathC.Get2DVector(
-        -(_source.transform.position - collider.transform.position).normalized * (4000f + (Random.value * 2000f)) * (_redirected ? Mathf.Clamp(_source._hit_force * 1.5f, 0.5f, 2f) : _source._hit_force)
+        -(use_position - collider.transform.position).normalized * (4000f + (Random.value * 2000f)) * (_redirected ? Mathf.Clamp(_source._hit_force * 1.5f, 0.5f, 2f) : _source._hit_force)
       );
       var pen = _penatrationAmount + 1;
       var health = r._health;
       var max = Mathf.Clamp(pen - _hitAmount, 1f, 10f);
       var damage = Mathf.Clamp(health, 1f, max);
       ActiveRagdoll damageSource = null;
+
       if (r._grappled) { damageSource = r._grappler; }
       else if (_redirected) { damageSource = _redirector; }
       else { damageSource = _source._ragdoll; }
-      if (r.TakeDamage(damageSource, (_source._type == GameScript.ItemManager.Items.FLAMETHROWER ? ActiveRagdoll.DamageSourceType.FIRE : ActiveRagdoll.DamageSourceType.BULLET), hitForce, _source.transform.position, (int)damage, _source._type != GameScript.ItemManager.Items.FLAMETHROWER))
+
+      // Hurt ragdoll
+      if (r.TakeDamage(damageSource, (_source._type == GameScript.ItemManager.Items.FLAMETHROWER ? ActiveRagdoll.DamageSourceType.FIRE : ActiveRagdoll.DamageSourceType.BULLET), hitForce, use_position, (int)damage, _source._type != GameScript.ItemManager.Items.FLAMETHROWER))
       {
+        _lastRagdollPosition = r._hip.position;
         if (_source._dismember && r._health <= 0) r.Dismember(r._spine, hitForce);
         _hitAmount += (int)damage;
         if (_hitAmount <= _penatrationAmount)
@@ -197,9 +203,11 @@ public class BulletScript : MonoBehaviour
           return true;
         }
       }
+
       return false;
     }
 
+    // Local function to redirect to next enemy
     void RedirectToOther()
     {
       if (_source._ragdoll._isPlayer)

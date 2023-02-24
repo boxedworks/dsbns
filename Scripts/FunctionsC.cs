@@ -289,6 +289,7 @@ public static class FunctionsC
     if (_Rain_Pair == null) return;
     var rain_sfx = GameScript._Singleton._Rain_Audio;
     if (_PlayingAudio == null) _PlayingAudio = new Dictionary<AudioSource, System.Tuple<float, float>>();
+    if (_PlayingAudio.ContainsKey(rain_sfx)) return;
     _PlayingAudio.Add(rain_sfx, _Rain_Pair);
 
   }

@@ -71,16 +71,16 @@ public class EnemyScript : MonoBehaviour
     SpherecastHandler.Register(this);
 
     // Cast at ragdolltarget
-    Vector3 target = transform.forward;
+    var target = transform.forward;
     if (_ragdollTarget != null) target = _ragdollTarget._hip.transform.position;
-    Vector3 origin = _ragdoll._head.transform.position,
-      dir = -MathC.Get2DVector(_ragdoll._hip.transform.position - target).normalized;
-    float radius = 0.2f;
+    var origin = _ragdoll._head.transform.position;
+    var dir = -MathC.Get2DVector(_ragdoll._hip.transform.position - target).normalized;
+    var radius = 0.2f;
     SpherecastHandler.QueueSpherecast(origin, dir, radius);
 
     // Cast two directions
-    Vector3 forward = MathC.Get2DVector(_ragdoll._head.transform.forward).normalized,
-      right = MathC.Get2DVector(_ragdoll._head.transform.right).normalized;
+    var forward = MathC.Get2DVector(_ragdoll._head.transform.forward).normalized;
+    var right = MathC.Get2DVector(_ragdoll._head.transform.right).normalized;
 
     // 1; left
     dir = (forward + right * (0.025f + Mathf.PingPong(Time.time * 4f, 0.9f))).normalized;
@@ -345,26 +345,31 @@ public class EnemyScript : MonoBehaviour
     // Check null
     if (_Enemies_alive == null || _Enemies_alive.Count == 0 || GameScript._EditorEnabled) return;
     if (Menu2._InMenus || TileManager._LoadingMap || PlayerScript._Players == null || PlayerScript._Players.Count == 0) return;
-    if (GameScript._GameMode != GameScript.GameModes.SURVIVAL || (GameScript._GameMode == GameScript.GameModes.SURVIVAL && GameScript.SurvivalMode._Wave % 5 == 0))
+    if (GameScript._GameMode != GameScript.GameModes.SURVIVAL)
     {
       // Set up handler
-      int count = (_Enemies_alive.Count) * SpherecastHandler._NumSpherecasts;
+      var count = (_Enemies_alive.Count) * SpherecastHandler._NumSpherecasts;
       SpherecastHandler.Init(count);
+
       // Queury spherecasts
-      foreach (EnemyScript e in _Enemies_alive)
+      foreach (var e in _Enemies_alive)
         e.ScheduleSpherecasts();
+
       // Complete all spherecasts
       SpherecastHandler.ScheduleAllSpherecasts();
+
       // Update with spherecast data
       foreach (var e in _Enemies_alive)
       {
         e.Handle();
         SpherecastHandler._EnemyOrderIter++;
       }
+
       // Clean up data
       SpherecastHandler.Clean();
     }
-    else foreach (var e in _Enemies_alive)
+    else
+      foreach (var e in _Enemies_alive)
         e.Handle();
   }
 
@@ -391,13 +396,14 @@ public class EnemyScript : MonoBehaviour
 
       _beganPatrolling = true;
       _agent.enabled = true;
+
       // Set state and begin patrolling
       _state = State.NEUTRAL;
       _lookAroundT = Time.time;// - 20f;
       _waitTimer = Time.time - 20f;
       BeginPatrol();
     }
-    if (!_agent.enabled) return;
+
     // Update line renderer under enemy
     if (!_ragdoll._dead)
     {
@@ -405,20 +411,23 @@ public class EnemyScript : MonoBehaviour
 
       _lr_pos0 = _ragdoll._head.gameObject.transform.position;
       _lr_pos1 = _lr_pos0 + _ragdoll._hip.transform.forward * 3f;
-      Vector3 cPos1 = _lr.GetPosition(1);
+      var cPos1 = _lr.GetPosition(1);
       cPos1 += (_lr_pos1 - cPos1) * Time.deltaTime * 5f;
-      Vector3 offset = -new Vector3(0f, 1f, 0f);
+      var offset = -new Vector3(0f, 1f, 0f);
       cPos1 = new Vector3(cPos1.x, _lr_pos0.y, cPos1.z);
       if (Mathf.Abs((_lr_pos1 - _lr_pos0).magnitude) > 2f)
       {
-        Vector3 dir = (cPos1 - _lr_pos0);
+        var dir = (cPos1 - _lr_pos0);
         cPos1 = _lr_pos0 + dir.normalized * 2f;
       }
       _lr.SetPositions(new Vector3[] { _lr_pos0 + offset, cPos1 + offset });
     }
+
+    if (!_agent.enabled) return;
+
     var _lookAtPos = Vector3.zero;
 
-    bool saveWait = waiting;
+    var saveWait = waiting;
 
     if (_ragdoll.Active())
     {

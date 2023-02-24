@@ -1653,6 +1653,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
           }
 
         }
+
         // Check for scene reset
         if (ControllerManager.GetKey(ControllerManager.Key.BACKSPACE) || ControllerManager.GetKey(ControllerManager.Key.CONTROL_LEFT) || ControllerManager.GetKey(ControllerManager.Key.CONTROL_RIGHT))
         {
@@ -1661,6 +1662,13 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
             if (ReloadMap(true, true) && !TutorialInformation._HasRestarted)
               TutorialInformation._HasRestarted = true;
           }
+        }
+
+        // Check camera change
+        if (ControllerManager.GetKey(ControllerManager.Key.F3))
+        {
+          Settings._CameraType._value = !Settings._CameraType._value;
+          Settings.SetPostProcessing();
         }
 
         if (_EditorEnabled)
@@ -3052,7 +3060,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     // Check survival
     if (IsSurvival()) return;
 
-    Debug.Log($"Completed level with time: {TileManager._LevelTimer}");
+    //Debug.Log($"Completed level with time: {TileManager._LevelTimer}");
 
     // Check level pack
     if (Levels._LevelPack_Playing)
@@ -3180,7 +3188,6 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         // Make sure equipment has not changed
         var equipment_start = PlayerScript._Players[0]._equipment_start;
         var equipment_changed = PlayerScript._Players[0]._equipment_changed;
-        Debug.Log(equipment_changed);
         if (EquipmentIsEqual(equipment_start, PlayerScript._Players[0]._equipment) && !equipment_changed)
         {
 
@@ -3747,7 +3754,8 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     }
 
     public static FunctionsC.SaveableStat_Int
-      _Extra_RemoveBatGuy;
+      _Extra_RemoveBatGuy,
+      _Extra_EnemyMultiplier;
     public static float _VERSION = 1.25f;
 
     // Struct holding info what item pair gets unlocked at what level
@@ -3884,6 +3892,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       _Extra_Superhot = PlayerPrefs.GetInt("extra_superhot", 0) == 1;
       _Extra_CrazyZombies = PlayerPrefs.GetInt("extra_crazyzombies", 0) == 1;
       _Extra_RemoveBatGuy = new FunctionsC.SaveableStat_Int("extra_batguy", 0);
+      _Extra_EnemyMultiplier = new FunctionsC.SaveableStat_Int("extra_emulti", 0);
     }
 
     public enum GamemodeChange
@@ -3902,7 +3911,8 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
           {
             case 0: Physics.gravity = new Vector3(0f, -9.81f, 0f); break;
             case 1: Physics.gravity = new Vector3(0f, 9.81f, 0f); break;
-            case 2: Physics.gravity = Vector3.zero; break;
+            case 2: Physics.gravity = new Vector3(0f, 0f, 9.81f); break;
+            case 3: Physics.gravity = Vector3.zero; break;
           }
           break;
 
@@ -3915,7 +3925,8 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
           {
             case 0: Physics.gravity = new Vector3(0f, -9.81f, 0f); break;
             case 1: Physics.gravity = new Vector3(0f, 9.81f, 0f); break;
-            case 2: Physics.gravity = Vector3.zero; break;
+            case 2: Physics.gravity = new Vector3(0f, 0f, 9.81f); break;
+            case 3: Physics.gravity = Vector3.zero; break;
           }
           break;
       }

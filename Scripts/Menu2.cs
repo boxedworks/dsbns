@@ -6190,7 +6190,7 @@ a gampad if plugged in.~1
       // Gravity direction
       AddExtraSelection(
         "gravity",
-        () => { return GameScript.Settings._Extra_Gravity == 1 ? "inverted" : GameScript.Settings._Extra_Gravity == 2 ? "none" : "normal"; },
+        () => { return GameScript.Settings._Extra_Gravity == 1 ? "inverted" : GameScript.Settings._Extra_Gravity == 2 ? "north" : GameScript.Settings._Extra_Gravity == 4 ? "none" : "normal"; },
         new DropdownSelectionComponent[] {
         new DropdownSelectionComponent("normal", "normal gravity", (MenuComponent component) => {
           GameScript.Settings._Extra_Gravity = 0;
@@ -6200,8 +6200,12 @@ a gampad if plugged in.~1
           GameScript.Settings._Extra_Gravity = 1;
           Physics.gravity = new Vector3(0f, 9.81f, 0f);
         }),
-        new DropdownSelectionComponent("none", "no gravity...", (MenuComponent component) => {
+        new DropdownSelectionComponent("north", "gravity go... up?", (MenuComponent component) => {
           GameScript.Settings._Extra_Gravity = 2;
+          Physics.gravity = new Vector3(0f, 0f, 9.81f);
+        }),
+        new DropdownSelectionComponent("none", "no gravity...", (MenuComponent component) => {
+          GameScript.Settings._Extra_Gravity = 3;
           Physics.gravity = Vector3.zero;
         }),
         },
@@ -6259,7 +6263,40 @@ a gampad if plugged in.~1
         "modify the chasing guy",
 
         "unlock by...",
-        () => { return Shop.Unlocked(Shop.Unlocks.EXTRA_CHASER); },
+        () => { return Shop.Unlocked(Shop.Unlocks.EXTRA_CHASER); }
+      );
+
+      // Remove bat guy
+      AddExtraSelection(
+        "enemy multiplier",
+        () =>
+        {
+          switch (GameScript.Settings._Extra_EnemyMultiplier._value)
+          {
+            case 0:
+              return "1x";
+            case 1:
+              return "2x";
+            case 2:
+              return "0x";
+          }
+          return "N/A";
+        },
+        new DropdownSelectionComponent[] {
+        new DropdownSelectionComponent("1x", "normal amount of enemies", (MenuComponent component) => {
+          GameScript.Settings._Extra_EnemyMultiplier._value = 0;
+        }),
+        /*new DropdownSelectionComponent("2x", "double the amount of enemies...", (MenuComponent component) => {
+          GameScript.Settings._Extra_EnemyMultiplier._value = 1;
+        }),*/
+        new DropdownSelectionComponent("0x", "no enemies", (MenuComponent component) => {
+          GameScript.Settings._Extra_EnemyMultiplier._value = 2;
+        }),
+        },
+        "modify the number of enemies initially spawned",
+
+        "unlock by...",
+        () => { return true; return Shop.Unlocked(Shop.Unlocks.EXTRA_CHASER); },
 
         "\n\n"
       );

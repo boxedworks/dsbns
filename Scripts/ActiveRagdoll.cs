@@ -446,6 +446,7 @@ public class ActiveRagdoll
     if (f > 180.0f)
       f -= 360.0f;
     rot.eulerAngles = new Vector3(rot.eulerAngles.x, f, rot.eulerAngles.z);
+
     // Don't move to ragdoll if is not active
     if (Active())
     {
@@ -463,16 +464,85 @@ public class ActiveRagdoll
       _movementIter += (_distance.magnitude / 10f) * Time.deltaTime * 50f;
     }
 
+    // Kick
+    if (_kicking)
+    {
+      if (Time.time - _kickTimer_start >= 1f)
+      {
+
+        if (Time.time - _kickTimer_start >= 1.2f)
+        {
+          _kicking = false;
+        }
+
+        else if (Time.time - _kickTimer >= 0.05f)
+        {
+
+          _kickTimer = Time.time;
+
+          RaycastHit hit;
+          var layermask = 1 << LayerMask.NameToLayer("Ragdoll");
+          ToggleRaycasting(false);
+          if (Physics.SphereCast(_controller.position, 0.25f, _controller.forward, out hit, 0.5f, layermask))
+          {
+            var ragdoll = ActiveRagdoll.GetRagdoll(hit.collider.gameObject);
+            if (ragdoll != null)
+            {
+              var hitForce = MathC.Get2DVector(
+                -(_hip.transform.position - ragdoll._hip.transform.position).normalized * (4000f + (Random.value * 2000f)) * 1f
+              );
+              if (ragdoll.TakeDamage(this, DamageSourceType.MELEE, hitForce, _hip.position, 1, true))
+              {
+                _kicking = false;
+              }
+            }
+          }
+          ToggleRaycasting(true);
+
+        }
+      }
+    }
+
     // Animate joints; walking
     var joints = new HingeJoint[] { _leg_upper_l, _leg_upper_r, _arm_lower_l, _arm_lower_r };
-    bool opposite = false;
-    foreach (HingeJoint joint in joints)
+    var opposite = false;
+    var first = true;
+    foreach (var joint in joints)
     {
       if (joint == null) continue;
-      JointSpring j = joint.spring;
-      j.targetPosition = (opposite ?
-        joint.limits.min + (joint.limits.max - joint.limits.min) * _movementIter2 :
-        joint.limits.max - (joint.limits.max - joint.limits.min) * _movementIter2);
+      var j = joint.spring;
+
+      // Kick with leg
+      if (first && _kicking)
+      {
+        first = false;
+
+        var movementIter = 0f;
+        if (Time.time - _kickTimer_start < 1f)
+        {
+          movementIter = -(Time.time - _kickTimer_start) * 1.4f;
+        }
+
+        else if (Time.time - _kickTimer_start < 1.2f)
+        {
+          movementIter = (Time.time - _kickTimer_start - 1f) * 1f;
+        }
+
+        else
+        {
+          movementIter = _movementIter2;
+        }
+
+        j.targetPosition = (opposite ?
+          joint.limits.min + (joint.limits.max - joint.limits.min) * movementIter :
+          joint.limits.max - (joint.limits.max - joint.limits.min) * movementIter);
+      }
+
+      // Normal walking
+      else
+        j.targetPosition = (opposite ?
+          joint.limits.min + (joint.limits.max - joint.limits.min) * _movementIter2 :
+          joint.limits.max - (joint.limits.max - joint.limits.min) * _movementIter2);
       joint.spring = j;
       opposite = !opposite;
     }
@@ -1085,6 +1155,8 @@ public class ActiveRagdoll
   public bool _grappling { get { return _grapplee != null; } }
   public bool _grappled;
   public ActiveRagdoll _grappler, _grapplee;
+  float _kickTimer, _kickTimer_start;
+  bool _kicking;
   public void Grapple()
   {
 
@@ -1154,8 +1226,17 @@ public class ActiveRagdoll
           agent.enabled = false;
         }
       }
-      ToggleRaycasting(true);
 
+      /*/ Kick
+      else if (!_kicking && Time.time - _kickTimer_start >= 2f)
+      {
+        _kickTimer = Time.time - 1f;
+        _kickTimer_start = Time.time;
+        _kicking = true;
+      }*/
+
+      // Clean up
+      ToggleRaycasting(true);
     }
 
   }
