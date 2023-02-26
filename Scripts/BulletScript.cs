@@ -344,6 +344,7 @@ public class BulletScript : MonoBehaviour
     _redirector = null;
     _p.transform.parent = transform;
     _p.transform.localPosition = new Vector3(0f, 0f, 0.5f);
+    _lastRagdollPosition = Vector3.zero;
 
     if (source._type != GameScript.ItemManager.Items.FLAMETHROWER && source._type != GameScript.ItemManager.Items.ROCKET_FIST)
     {

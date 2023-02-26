@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+using Key = ControllerManager.Key;
+
 public class TileManager
 {
   public static List<Tile> _Tiles;
@@ -1859,7 +1861,10 @@ public class TileManager
 
           button.onClick.AddListener(() =>
           {
-            SpawnObjectSimple(_LEO_Enemy);
+            if (ControllerManager.ShiftHeld())
+              SpawnObjectSimple(_LEO_Books);
+            else
+              SpawnObjectSimple(_LEO_Enemy);
           });
           break;
 
@@ -1868,7 +1873,10 @@ public class TileManager
 
           button.onClick.AddListener(() =>
           {
-            SpawnObjectSimple(_LEO_Barrel);
+            if (ControllerManager.ShiftHeld())
+              SpawnObjectSimple(_LEO_TV);
+            else
+              SpawnObjectSimple(_LEO_Barrel);
           });
           break;
 
@@ -1940,7 +1948,7 @@ public class TileManager
 
           button.onClick.AddListener(() =>
           {
-            SpawnObjectSimple(_LEO_Books);
+            SpawnObjectSimple(_LEO_Door);
           });
           break;
 
@@ -1949,7 +1957,7 @@ public class TileManager
 
           button.onClick.AddListener(() =>
           {
-            SpawnObjectSimple(_LEO_TV);
+            SpawnObjectSimple(_LEO_TileWall);
           });
           break;
 
@@ -2353,19 +2361,19 @@ public class TileManager
         var script_enemy = (LevelEditorObject.GetCurrentObject()._name.Equals("Enemy") ? _SelectedObject.GetChild(0) : _SelectedObject.parent).GetComponent<EnemyScript>();
 
         // Check for change type
-        if (ControllerManager.GetKey(ControllerManager.Key.T))
+        if (ControllerManager.GetKey(Key.T))
           ChangeEnemyType(script_enemy, script_enemy.transform.GetChild(0).GetComponent<MeshRenderer>(), 1);
 
         // Change movement mode
-        if (ControllerManager.GetKey(ControllerManager.Key.M))
+        if (ControllerManager.GetKey(Key.M))
           script_enemy._canMove = !script_enemy._canMove;
 
         // Change hearing mode
-        if (ControllerManager.GetKey(ControllerManager.Key.H))
+        if (ControllerManager.GetKey(Key.H))
           script_enemy._reactToSound = !script_enemy._reactToSound;
 
         // Create new waypoint
-        if (ControllerManager.GetKey(ControllerManager.Key.W))
+        if (ControllerManager.GetKey(Key.W))
         {
           _Ring.position = new Vector3(0f, -100f, 0f);
           LevelEditorObject.Select(_SelectedObject.GetChild(1).GetChild(0).gameObject);
@@ -2373,7 +2381,7 @@ public class TileManager
         }
 
         // Move spawn point
-        if (ControllerManager.GetKey(ControllerManager.Key.V))
+        if (ControllerManager.GetKey(Key.V))
         {
           LevelEditorObject.Select(_SelectedObject.GetChild(0).GetChild(0).gameObject);
           LevelEditorObject.SetIterOnName(_SelectedObject.name);
@@ -2382,13 +2390,13 @@ public class TileManager
         }
 
         // Link EnemyScript with DoorScript
-        if (ControllerManager.GetKey(ControllerManager.Key.L))
+        if (ControllerManager.GetKey(Key.L))
         {
           _IsLinking = !_IsLinking;
 
           _CurrentMode = EditorMode.NONE;
         }
-        if (ControllerManager.GetKey(ControllerManager.Key.U))
+        if (ControllerManager.GetKey(Key.U))
         {
           _IsLinking = false;
 
@@ -2551,7 +2559,7 @@ public class TileManager
       {
         LevelEditorObject._UpdateFunction_Object(g);
         /*/ Teleport controller to position
-        if (ControllerManager.GetKey(ControllerManager.Key.L))
+        if (ControllerManager.GetKey(Key.L))
         {
           _SelectedObject = _SelectedObject.parent.parent.GetChild(0).GetChild(0);
           _CurrentMode = EditorMode.MOVE;
@@ -2703,7 +2711,7 @@ public class TileManager
       {
         LevelEditorObject._UpdateFunction_Object(g);
         // Check toggle
-        if (ControllerManager.GetKey(ControllerManager.Key.T))
+        if (ControllerManager.GetKey(Key.T))
         {
           DoorScript script = null;
           if (_SelectedObject.name.Equals("Door")) script = _SelectedObject.GetComponent<DoorScript>();
@@ -2802,18 +2810,17 @@ public class TileManager
         if (target == null) return;
         LaserScript ls = target.GetComponent<LaserScript>();
         // Change laser type
-        if (ControllerManager.GetKey(ControllerManager.Key.T))
+        if (ControllerManager.GetKey(Key.T))
         {
           ls._type = ls._type == LaserScript.LaserType.ALARM ? LaserScript.LaserType.KILL : LaserScript.LaserType.ALARM;
           ls.Init();
         }
         // Change laser rotation speed
-        if (ControllerManager.GetKey(ControllerManager.Key.M))
+        if (ControllerManager.GetKey(Key.M))
         {
           float rotAdd = 25f;
-          if (ControllerManager.GetKey(ControllerManager.Key.SPACE, ControllerManager.InputMode.HOLD)) rotAdd = 10f;
-          if (ControllerManager.GetKey(ControllerManager.Key.SHIFT_L, ControllerManager.InputMode.HOLD) ||
-          ControllerManager.GetKey(ControllerManager.Key.SHIFT_R, ControllerManager.InputMode.HOLD)) rotAdd *= -1f;
+          if (ControllerManager.GetKey(Key.SPACE, ControllerManager.InputMode.HOLD)) rotAdd = 10f;
+          if (ControllerManager.ShiftHeld()) rotAdd *= -1f;
           ls._rotationSpeed += rotAdd;
         }
       },
@@ -3439,7 +3446,7 @@ public class TileManager
     {
       if (_SelectedObject == null) return;
       // Remove connections
-      if (ControllerManager.GetKey(ControllerManager.Key.U))
+      if (ControllerManager.GetKey(Key.U))
       {
         var cui = selection.GetComponent<CustomEntityUI>();
         foreach (var activate in cui._activate)
@@ -3448,7 +3455,7 @@ public class TileManager
         cui._activate = new CustomEntity[0];
       }
       // Link CustomEntityUI with CustomEntity
-      if (ControllerManager.GetKey(ControllerManager.Key.L))
+      if (ControllerManager.GetKey(Key.L))
       {
         _IsLinking = !_IsLinking;
 
@@ -3628,22 +3635,22 @@ public class TileManager
     }*/
 
     // Move camera with arrows
-    if (ControllerManager.GetKey(ControllerManager.Key.ARROW_U, ControllerManager.InputMode.HOLD))
+    if (ControllerManager.GetKey(Key.ARROW_U, ControllerManager.InputMode.HOLD))
     {
       var movePos = new Vector3(0f, 0f, 1f) * Time.deltaTime * 10f;
       GameResources._Camera_Main.transform.position += movePos;
     }
-    if (ControllerManager.GetKey(ControllerManager.Key.ARROW_D, ControllerManager.InputMode.HOLD))
+    if (ControllerManager.GetKey(Key.ARROW_D, ControllerManager.InputMode.HOLD))
     {
       var movePos = -new Vector3(0f, 0f, 1f) * Time.deltaTime * 10f;
       GameResources._Camera_Main.transform.position += movePos;
     }
-    if (ControllerManager.GetKey(ControllerManager.Key.ARROW_L, ControllerManager.InputMode.HOLD))
+    if (ControllerManager.GetKey(Key.ARROW_L, ControllerManager.InputMode.HOLD))
     {
       var movePos = -new Vector3(1f, 0f, 0f) * Time.deltaTime * 10f;
       GameResources._Camera_Main.transform.position += movePos;
     }
-    if (ControllerManager.GetKey(ControllerManager.Key.ARROW_R, ControllerManager.InputMode.HOLD))
+    if (ControllerManager.GetKey(Key.ARROW_R, ControllerManager.InputMode.HOLD))
     {
       var movePos = new Vector3(1f, 0f, 0f) * Time.deltaTime * 10f;
       GameResources._Camera_Main.transform.position += movePos;
@@ -3656,12 +3663,12 @@ public class TileManager
     if (raycast_info.collider == null) return;
 
     // Save map
-    if (ControllerManager.GetKey(ControllerManager.Key.SPACE, ControllerManager.InputMode.HOLD))
-      if (ControllerManager.GetKey(ControllerManager.Key.S))
+    if (ControllerManager.GetKey(Key.SPACE, ControllerManager.InputMode.HOLD))
+      if (ControllerManager.GetKey(Key.S))
         SaveFileOverwrite(SaveMap());
 
     // Test and save map
-    if (ControllerManager.GetKey(ControllerManager.Key.F1) && Time.unscaledTime - _EditorSwitchTime > 0.5f)
+    if (ControllerManager.GetKey(Key.F1) && Time.unscaledTime - _EditorSwitchTime > 0.5f)
     {
       GameScript._EditorEnabled = false;
       //if (_EditorEnabled) StartCoroutine(TileManager.EditorEnabled());
@@ -3676,14 +3683,14 @@ public class TileManager
     // Basic editor shortcuts
     {
       // Switch mode
-      //if (ControllerManager.GetKey(ControllerManager.Key.Q)) LevelEditorObject.IncrementIter(-1, true);
-      //if (ControllerManager.GetKey(ControllerManager.Key.W)) LevelEditorObject.IncrementIter(1, true);
-      /*if (ControllerManager.GetKey(ControllerManager.Key.SPACE, ControllerManager.InputMode.HOLD))
+      //if (ControllerManager.GetKey(Key.Q)) LevelEditorObject.IncrementIter(-1, true);
+      //if (ControllerManager.GetKey(Key.W)) LevelEditorObject.IncrementIter(1, true);
+      /*if (ControllerManager.GetKey(Key.SPACE, ControllerManager.InputMode.HOLD))
       {
       // Save
-      if (ControllerManager.GetKey(ControllerManager.Key.S)) SaveFileOverwrite(SaveMap());
+      if (ControllerManager.GetKey(Key.S)) SaveFileOverwrite(SaveMap());
       // Save as new map
-      if (ControllerManager.GetKey(ControllerManager.Key.INSERT))
+      if (ControllerManager.GetKey(Key.INSERT))
       {
         string mapdata = SaveMap();
         // Copy the map to the end of the maps array
@@ -3695,7 +3702,7 @@ public class TileManager
         GameScript._EditorEnabled = false;
       }
       // Delete map
-      if (ControllerManager.GetKey(ControllerManager.Key.DELETE))
+      if (ControllerManager.GetKey(Key.DELETE))
       {
         // Save to clipboard in case
         string olddata = SaveMap();
@@ -3712,10 +3719,10 @@ public class TileManager
       }
       }*/
       // Move camera to playerspawn
-      if (ControllerManager.GetKey(ControllerManager.Key.PERIOD_NUMPAD) || ControllerManager.GetKey(ControllerManager.Key.PERIOD))
+      if (ControllerManager.GetKey(Key.PERIOD_NUMPAD) || ControllerManager.GetKey(Key.PERIOD))
         GameResources._Camera_Main.transform.position = new Vector3(PlayerspawnScript._PlayerSpawns[0].transform.position.x, GameResources._Camera_Main.transform.position.y, PlayerspawnScript._PlayerSpawns[0].transform.position.z);
       // Snap to grid
-      if (ControllerManager.GetKey(ControllerManager.Key.COMMA))
+      if (ControllerManager.GetKey(Key.COMMA))
       {
         var textmesh = GameObject.Find("Snap_Precision").transform.GetChild(0).GetComponent<TMPro.TextMeshProUGUI>();
 
@@ -3877,14 +3884,14 @@ public class TileManager
       else
       {
         // Check for key and if current object can move
-        if (ControllerManager.GetKey(ControllerManager.Key.G) && movementSettings != null)
+        if (ControllerManager.GetKey(Key.G) && movementSettings != null)
           _CurrentMode = EditorMode.MOVE;
         /*/ Check for custom obstacles
         if (CanCustomObject())
         {
           var co = _SelectedObject.GetComponent<CustomObstacle>();
           // Add / remove
-          if (ControllerManager.GetKey(ControllerManager.Key.B))
+          if (ControllerManager.GetKey(Key.B))
           {
             if (co == null)
               _SelectedObject.gameObject.AddComponent<CustomObstacle>();
@@ -3894,23 +3901,23 @@ public class TileManager
             UpdateText();
           }
           var mod = 1;
-          if (ControllerManager.GetKey(ControllerManager.Key.CONTROL_LEFT, ControllerManager.InputMode.HOLD)) mod = -1;
+          if (ControllerManager.GetKey(Key.CONTROL_LEFT, ControllerManager.InputMode.HOLD)) mod = -1;
           // Change index
-          if (ControllerManager.GetKey(ControllerManager.Key.N) && co != null)
+          if (ControllerManager.GetKey(Key.N) && co != null)
           {
             co._index += mod;
             ClearText();
             UpdateText();
           }
           // Change index2
-          if (ControllerManager.GetKey(ControllerManager.Key.M) && co != null)
+          if (ControllerManager.GetKey(Key.M) && co != null)
           {
             co._index2 += mod;
             ClearText();
             UpdateText();
           }
           // Change type
-          if (ControllerManager.GetKey(ControllerManager.Key.COMMA) && co != null)
+          if (ControllerManager.GetKey(Key.COMMA) && co != null)
           {
             co._type = (CustomObstacle.InteractType)((((int)co._type) + 1) % 5);
             co._index = co._index;
@@ -3920,16 +3927,20 @@ public class TileManager
         }*/
       }
       LevelEditorObject.RotationSettings rotationSettings = obj._rotationSettings;
+
       // Check rotate
       if (rotationSettings != null)
       {
+
         // Set amount to rotate
         float rotate_degree = Mathf.RoundToInt(UnityEngine.InputSystem.Mouse.current.scroll.y.ReadValue() * 0.085f);
-        if (ControllerManager.GetKey(ControllerManager.Key.R))
+        if (ControllerManager.GetKey(Key.R))
           rotate_degree = 45f;
-        if (ControllerManager.GetKey(ControllerManager.Key.SHIFT_L, ControllerManager.InputMode.HOLD)) rotate_degree /= 3f;
+        if (ControllerManager.ShiftHeld()) rotate_degree /= 3f;
+
         // Select the transform to rotate
         Transform rotate_target = LevelEditorObject.GetTransformTarget(rotationSettings._target);
+
         // Rotate the appropriate axis
         Vector3 rotate_axis = Vector3.zero;
         if (rotationSettings._axis == LevelEditorObject.Axis.X)
@@ -3938,18 +3949,19 @@ public class TileManager
           rotate_axis.y = 1f;
         else if (rotationSettings._axis == LevelEditorObject.Axis.Z)
           rotate_axis.z = 1f;
+
         // Rotate
         rotate_target.Rotate(rotate_axis * rotate_degree);
       }
 
       // Check copy
       var copySettings = obj._copySettings;
-      if (copySettings != null && ControllerManager.GetKey(ControllerManager.Key.C))
+      if (copySettings != null && ControllerManager.GetKey(Key.C))
         LevelEditor_Copy(copySettings);
 
       // Check delete
       LevelEditorObject.DeleteSettings deleteSettings = obj._deleteSettings;
-      if (deleteSettings != null && ControllerManager.GetKey(ControllerManager.Key.DELETE))
+      if (deleteSettings != null && ControllerManager.GetKey(Key.DELETE))
       {
         // Select the transform to delete
         Transform delete_target = LevelEditorObject.GetTransformTarget(deleteSettings._target);
@@ -3962,7 +3974,7 @@ public class TileManager
     }
     // Check add
     /*LevelEditorObject.AddSettings addSettings = obj._addSettings;
-    if (addSettings != null && ControllerManager.GetKey(ControllerManager.Key.A))
+    if (addSettings != null && ControllerManager.GetKey(Key.A))
     {
       GameObject loaded = LoadObject(addSettings._data);
       // Fire onAdd function
@@ -3978,74 +3990,74 @@ public class TileManager
       switch (i + 1)
       {
         case (1):
-          if (ControllerManager.GetKey(ControllerManager.Key.ONE))
+          if (ControllerManager.GetKey(Key.ONE))
             LevelEditorObject.SetIterOnName(_Shortcurts[i]._name);
           break;
         case (2):
-          if (ControllerManager.GetKey(ControllerManager.Key.TWO))
+          if (ControllerManager.GetKey(Key.TWO))
             LevelEditorObject.SetIterOnName(_Shortcurts[i]._name);
           break;
         case (3):
-          if (ControllerManager.GetKey(ControllerManager.Key.THREE))
+          if (ControllerManager.GetKey(Key.THREE))
             LevelEditorObject.SetIterOnName(_Shortcurts[i]._name);
           break;
         case (4):
-          if (ControllerManager.GetKey(ControllerManager.Key.FOUR))
+          if (ControllerManager.GetKey(Key.FOUR))
             LevelEditorObject.SetIterOnName(_Shortcurts[i]._name);
           break;
         case (5):
-          if (ControllerManager.GetKey(ControllerManager.Key.FIVE))
+          if (ControllerManager.GetKey(Key.FIVE))
             LevelEditorObject.SetIterOnName(_Shortcurts[i]._name);
           break;
         case (6):
-          if (ControllerManager.GetKey(ControllerManager.Key.SIX))
+          if (ControllerManager.GetKey(Key.SIX))
             LevelEditorObject.SetIterOnName(_Shortcurts[i]._name);
           break;
         case (7):
-          if (ControllerManager.GetKey(ControllerManager.Key.SEVEN))
+          if (ControllerManager.GetKey(Key.SEVEN))
             LevelEditorObject.SetIterOnName(_Shortcurts[i]._name);
           break;
         case (8):
-          if (ControllerManager.GetKey(ControllerManager.Key.EIGHT))
+          if (ControllerManager.GetKey(Key.EIGHT))
             LevelEditorObject.SetIterOnName(_Shortcurts[i]._name);
           break;
         case (9):
-          if (ControllerManager.GetKey(ControllerManager.Key.NINE))
+          if (ControllerManager.GetKey(Key.NINE))
             LevelEditorObject.SetIterOnName(_Shortcurts[i]._name);
           break;
       }
 
     }*/
 
-    if (ControllerManager.GetKey(ControllerManager.Key.ONE))
+    if (ControllerManager.GetKey(Key.ONE))
       EditorMenus._Menu_Object_Select.GetChild(1).GetComponent<UnityEngine.UI.Button>().onClick?.Invoke();
-    if (ControllerManager.GetKey(ControllerManager.Key.TWO))
+    if (ControllerManager.GetKey(Key.TWO))
       EditorMenus._Menu_Object_Select.GetChild(2).GetComponent<UnityEngine.UI.Button>().onClick?.Invoke();
-    if (ControllerManager.GetKey(ControllerManager.Key.THREE))
+    if (ControllerManager.GetKey(Key.THREE))
       EditorMenus._Menu_Object_Select.GetChild(3).GetComponent<UnityEngine.UI.Button>().onClick?.Invoke();
-    if (ControllerManager.GetKey(ControllerManager.Key.FOUR))
+    if (ControllerManager.GetKey(Key.FOUR))
       EditorMenus._Menu_Object_Select.GetChild(4).GetComponent<UnityEngine.UI.Button>().onClick?.Invoke();
-    if (ControllerManager.GetKey(ControllerManager.Key.FIVE))
+    if (ControllerManager.GetKey(Key.FIVE))
       EditorMenus._Menu_Object_Select.GetChild(5).GetComponent<UnityEngine.UI.Button>().onClick?.Invoke();
-    if (ControllerManager.GetKey(ControllerManager.Key.SIX))
+    if (ControllerManager.GetKey(Key.SIX))
       EditorMenus._Menu_Object_Select.GetChild(6).GetComponent<UnityEngine.UI.Button>().onClick?.Invoke();
-    if (ControllerManager.GetKey(ControllerManager.Key.SEVEN))
+    if (ControllerManager.GetKey(Key.SEVEN))
       EditorMenus._Menu_Object_Select.GetChild(7).GetComponent<UnityEngine.UI.Button>().onClick?.Invoke();
-    if (ControllerManager.GetKey(ControllerManager.Key.EIGHT))
+    if (ControllerManager.GetKey(Key.EIGHT))
       EditorMenus._Menu_Object_Select.GetChild(8).GetComponent<UnityEngine.UI.Button>().onClick?.Invoke();
-    if (ControllerManager.GetKey(ControllerManager.Key.NINE))
+    if (ControllerManager.GetKey(Key.NINE))
       EditorMenus._Menu_Object_Select.GetChild(9).GetComponent<UnityEngine.UI.Button>().onClick?.Invoke();
-    if (ControllerManager.GetKey(ControllerManager.Key.ZERO))
+    if (ControllerManager.GetKey(Key.ZERO))
       EditorMenus._Menu_Object_Select.GetChild(10).GetComponent<UnityEngine.UI.Button>().onClick?.Invoke();
-    if (ControllerManager.GetKey(ControllerManager.Key.O))
+    if (ControllerManager.GetKey(Key.O))
       EditorMenus._Menu_Object_Select.GetChild(11).GetComponent<UnityEngine.UI.Button>().onClick?.Invoke();
-    if (ControllerManager.GetKey(ControllerManager.Key.MINUS))
+    if (ControllerManager.GetKey(Key.MINUS))
       EditorMenus._Menu_Object_Select.GetChild(12).GetComponent<UnityEngine.UI.Button>().onClick?.Invoke();
-    if (ControllerManager.GetKey(ControllerManager.Key.EQUALS))
+    if (ControllerManager.GetKey(Key.EQUALS))
       EditorMenus._Menu_Object_Select.GetChild(13).GetComponent<UnityEngine.UI.Button>().onClick?.Invoke();
-    if (ControllerManager.GetKey(ControllerManager.Key.BACKSLASH))
+    if (ControllerManager.GetKey(Key.BACKSLASH))
       EditorMenus._Menu_Object_Select.GetChild(14).GetComponent<UnityEngine.UI.Button>().onClick?.Invoke();
-    //if (ControllerManager.GetKey(ControllerManager.Key.BACKSPACE))
+    //if (ControllerManager.GetKey(Key.BACKSPACE))
     //  EditorMenus._Menu_Object_Select.GetChild(14).GetComponent<UnityEngine.UI.Button>().onClick?.Invoke();
   }
 

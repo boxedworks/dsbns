@@ -567,6 +567,30 @@ public static class ControllerManager
     return false;
   }
 
+  public static bool ShiftHeld()
+  {
+    return GetAnyKeysHeld(Key.SHIFT_L, Key.SHIFT_R);
+  }
+
+  public static bool GetAnyKeysHeld(params Key[] key)
+  {
+    return GetAnyKey(InputMode.HOLD, key);
+  }
+
+  public static bool GetAnyKey(InputMode mode, params Key[] key)
+  {
+
+    foreach (var key_ in key)
+    {
+      if (GetKey(key_, mode))
+      {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
   public static bool GetAnyButton()
   {
     // Check for keyboard skips

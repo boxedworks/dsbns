@@ -1103,13 +1103,11 @@ public class PlayerScript : MonoBehaviour
       // Check runkey
       if (_profile._holdRun)
       {
-        runKeyDown = (ControllerManager.GetKey(ControllerManager.Key.SHIFT_L, ControllerManager.InputMode.HOLD) ||
-          ControllerManager.GetKey(ControllerManager.Key.SHIFT_R, ControllerManager.InputMode.HOLD));
+        runKeyDown = (ControllerManager.ShiftHeld());
       }
       else
       {
-        runKeyDown = (ControllerManager.GetKey(ControllerManager.Key.SHIFT_L) ||
-          ControllerManager.GetKey(ControllerManager.Key.SHIFT_R));
+        runKeyDown = ControllerManager.ShiftHeld();
       }
       // Check utility
       if (ControllerManager.GetKey(ControllerManager.Key.Q))

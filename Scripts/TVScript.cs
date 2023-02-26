@@ -29,7 +29,7 @@ public class TVScript : MonoBehaviour
     _audio_sfx = GetComponents<AudioSource>()[1];
 
     _audio_sfx.clip = FunctionsC.GetAudioClip("Etc/TV_static").clip;
-    _audio_sfx.volume = 0.11f;
+    _audio_sfx.volume = 0.06f;
     FunctionsC.PlayAudioSource(ref _audio_sfx);
 
     _collider = GetComponent<BoxCollider>();
@@ -77,7 +77,7 @@ public class TVScript : MonoBehaviour
     _ps_fire.Play();
 
     _audio_sfx.clip = FunctionsC.GetAudioClip("Etc/Fire_loop").clip;
-    _audio_sfx.volume = 0.3f;
+    _audio_sfx.volume = 0.15f;
     FunctionsC.PlayAudioSource(ref _audio_sfx);
 
     _light.range = 3f;

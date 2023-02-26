@@ -829,6 +829,11 @@ public class EnemyScript : MonoBehaviour
     return (_enemyType == EnemyType.ROBOT);
   }
 
+  public void OnGrappled()
+  {
+    _linkedDoor?.OnEnemyDie(this);
+  }
+
   void Move()
   {
     if (!_canMove || _ragdoll._grappled) return;

@@ -312,7 +312,7 @@ public class ActiveRagdoll
         // Get melee side
         var left_weapon = _itemL != null && _itemL.IsMelee();
 
-        _grapplee._hip.position = _hip.position + _controller.forward * 0.4f + _controller.right * 0.18f * (left_weapon ? -1f : 1f);
+        _grapplee._hip.position = _hip.position + _controller.forward * 0.45f + _controller.right * 0.09f * (left_weapon ? -1f : 1f);
         _grapplee._hip.rotation = _hip.rotation;
       }
     }
@@ -1225,6 +1225,8 @@ public class ActiveRagdoll
         {
           agent.enabled = false;
         }
+
+        _grapplee._enemyScript?.OnGrappled();
       }
 
       /*/ Kick
