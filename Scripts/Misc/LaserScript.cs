@@ -26,7 +26,7 @@ public class LaserScript : CustomEntity {
 
   float _saveRot;
   bool _saveOn, _canRotate;
-  
+
 	public void Init () {
     _machine = transform.GetChild(0);
     _laser = transform.GetChild(1);
@@ -45,7 +45,7 @@ public class LaserScript : CustomEntity {
     _saveOn = _on;
     if(!GameScript._EditorEnabled) _canRotate = true;
 	}
-	
+
 	// Update is called once per frame
 	void Update () {
     if (_audio_buzz == null) Init();

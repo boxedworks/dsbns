@@ -467,7 +467,7 @@ public static class FunctionsC
         var hit = new RaycastHit();
         var start_pos = new Vector3(position.x, -0.1f, position.z);
         var dir = -(r._dead ? start_pos - r._hip.position : MathC.Get2DVector(start_pos - r._hip.position)).normalized;
-        if (!Physics.SphereCast(new Ray(start_pos, dir), 0.1f, out hit, radius + 5f))
+        if (!Physics.SphereCast(new Ray(start_pos, dir), 0.1f, out hit, radius + 5f, EnemyScript._Layermask_Ragdoll))
         {
           r.ToggleRaycasting(false, true);
           continue;
@@ -1085,6 +1085,24 @@ public static class FunctionsC
     {
       a._value++;
       return a;
+    }
+
+    // Overload operators
+    public static bool operator ==(SaveableStat_Int a, int b)
+    {
+      return a._value == b;
+    }
+    public static bool operator !=(SaveableStat_Int a, int b)
+    {
+      return !(a._value == b);
+    }
+    public override bool Equals(object obj)
+    {
+      return _value == ((SaveableStat_Int)obj)._value;
+    }
+    public override int GetHashCode()
+    {
+      return _value.GetHashCode();
     }
   }
 

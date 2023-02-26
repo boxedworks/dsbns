@@ -192,6 +192,19 @@ public class UtilityScript : ItemScript
           {
             if (!_c.enabled) return;
             if (_rb == null) return;
+
+            // Bullet
+            if (c.gameObject.name == "Bullet")
+            {
+              return;
+            }
+
+            // other..
+            else if (c.gameObject.layer == 3)
+            {
+              return;
+            }
+
             var rag = ActiveRagdoll.GetRagdoll(c.collider.gameObject);
             var killed = false;
             if (rag != null)
@@ -226,14 +239,40 @@ public class UtilityScript : ItemScript
           Unregister();
           break;
         case UtilityType.SHURIKEN_BIG:
+
           // Add kill on impact event
           _onTriggerEnter += (Collider c) =>
           {
             if (!_c.enabled || _rb == null) return;
+
+            // Books
+            if (c.name == "Books")
+            {
+              FunctionsC.BookManager.ExplodeBooks(c, _ragdoll.transform.position);
+              PlaySound(Audio.UTILITY_ACTION);
+              return;
+            }
+
+            // Bullet
+            else if (c.name == "Bullet")
+            {
+              var bullet = c.gameObject.GetComponent<BulletScript>();
+              bullet.Hide();
+              bullet.PlaySparks();
+              return;
+            }
+
+            // other..
+            else if (c.gameObject.layer == 3)
+            {
+              return;
+            }
+
             var rag = ActiveRagdoll.GetRagdoll(c.gameObject);
             if (rag != null)
             {
               if (rag._id == _ragdoll._id) return;
+              if (rag._id == (_ragdoll._grapplee?._id ?? -1)) return;
               if (!rag._dead)
               {
                 // Check for same ragdoll
@@ -248,22 +287,13 @@ public class UtilityScript : ItemScript
             }
             else
             {
-              if (c.name == "Books")
-              {
-                FunctionsC.BookManager.ExplodeBooks(c, _ragdoll.transform.position);
-                PlaySound(Audio.UTILITY_ACTION);
-              }
-
-              else
-              {
-                transform.GetChild(1).GetComponent<ParticleSystem>().Stop();
-                GameObject.Destroy(_rb);
-                // Stop ignoring holder's ragdoll
-                _ragdoll.IgnoreCollision(_c, false);
-                ((SphereCollider)_c).radius *= 1.7f;
-                PlaySound(Audio.UTILITY_HIT_FLOOR);
-                EnemyScript.CheckSound(transform.position, EnemyScript.Loudness.SOFT);
-              }
+              transform.GetChild(1).GetComponent<ParticleSystem>().Stop();
+              GameObject.Destroy(_rb);
+              // Stop ignoring holder's ragdoll
+              _ragdoll.IgnoreCollision(_c, false);
+              ((SphereCollider)_c).radius *= 1.7f;
+              PlaySound(Audio.UTILITY_HIT_FLOOR);
+              EnemyScript.CheckSound(transform.position, EnemyScript.Loudness.SOFT);
             }
           };
           // Throw and queue next
@@ -284,12 +314,25 @@ public class UtilityScript : ItemScript
           Unregister();
           break;
         case UtilityType.KUNAI_STICKY:
+
           // Stick to enemy and delayed explode
           _onCollisionEnter += (Collision c) =>
           {
+
+            Debug.Log($"{_stuck} {c.gameObject.name}");
+
             if (!_stuck)
             {
               _stuck = true;
+
+              // Bullet
+              /*if (c.gameObject.name == "Bullet")
+              {
+                _exploded = false;
+                Explode();
+                return;
+              }*/
+
               var rag = ActiveRagdoll.GetRagdoll(c.collider.gameObject);
               if (rag != null)
               {
@@ -301,7 +344,9 @@ public class UtilityScript : ItemScript
                 PlaySound(Audio.UTILITY_HIT_FLOOR);
               transform.GetChild(1).GetComponent<ParticleSystem>().Stop();
               GameObject.Destroy(_rb);
-              // Stop ignoring holder's ragdoll
+              //_rb.isKinematic = true;
+
+              // Trigger explosion
               EnemyScript.CheckSound(transform.position, EnemyScript.Loudness.SOFT);
               Explode(1f);
             }
@@ -337,6 +382,14 @@ public class UtilityScript : ItemScript
             // Add stick on impact event
             _onCollisionEnter += (Collision c) =>
             {
+
+              // Bullet
+              if (c.gameObject.name == "Bullet")
+              {
+                Explode();
+                return;
+              }
+
               if (!_stuck)
               {
                 _stuck = true;
@@ -502,11 +555,18 @@ public class UtilityScript : ItemScript
     else if (mode == 2) forward = -_ragdoll._hip.transform.right;
 
     _rb.position = _spawnLocation != Vector3.zero ? _spawnLocation :
-      _ragdoll._spine.transform.position + forward * 0.5f + _ragdoll._hip.transform.up * 0.2f;
+      _ragdoll._spine.transform.position + forward * 0.5f;
 
     // Configure Rigidbody
     _rb.isKinematic = false;
     _rb.collisionDetectionMode = CollisionDetectionMode.Continuous;
+
+    // Check grapple
+    if (_utility_type != UtilityType.C4)
+    {
+      _ragdoll._grapplee?.IgnoreCollision(_c);
+    }
+
     // Add force
     _rb.AddForce(
       MathC.Get2DVector(forward * 250f * (_throwSpeed + Mathf.Clamp(_downTime, 0f, 4f)) +
@@ -574,10 +634,11 @@ public class UtilityScript : ItemScript
   }
 
   bool _exploded;
-  void Explode(float delay = 0f)
+  public void Explode(float delay = 0f)
   {
     if (_exploded) return;
     _exploded = true;
+    if (_explosion == null) return;
 
     // Explode effect
     if (delay > 0f)
@@ -626,6 +687,7 @@ public class UtilityScript : ItemScript
     var utilityName = type.ToString();
 
     var gameObject = GameObject.Instantiate(Resources.Load($"Items\\{utilityName}")) as GameObject;
+    gameObject.name = utilityName;
     gameObject.transform.parent = GameResources._Container_Objects;
     gameObject.transform.position = new Vector3(1000, -100f, 0f);
     return gameObject.GetComponent<UtilityScript>();

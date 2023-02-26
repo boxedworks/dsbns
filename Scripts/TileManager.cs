@@ -12,6 +12,8 @@ public class TileManager
   static float _Tile_spacing = 2.5f;
   static Vector2 _offset;
 
+  static List<PlayerScript> Players { get { return PlayerScript._Players; } }
+
   static Transform _Tile_begin, _Tile_end;
   public static Transform _Map, _Tile;
   public static Transform _Floor { get { return _Map.transform.GetChild(0); } }
@@ -389,6 +391,7 @@ public class TileManager
     // Load map
     int width = 0,
       height = 0;
+    //var reversed = data.Contains("__reversed_");
     try
     {
       width = int.Parse(data_split[data_iter++]);
@@ -404,6 +407,7 @@ public class TileManager
 
       throw new System.FormatException("Cannot load level with data: " + data + "\n" + e.StackTrace);
     }
+
     // Lerp camera
     var time = 1f;
     var main_camera = GameResources._Camera_Main;
@@ -415,6 +419,7 @@ public class TileManager
       time -= 0.06f;
     }
     main_camera.farClipPlane = 10f;
+
     // Show unlocks
     if (!Menu2._InMenus && Shop._UnlockString != string.Empty)
       GameScript.TogglePause(Menu2.MenuType.NONE);
@@ -459,11 +464,11 @@ public class TileManager
     // Find the desired offset of the map based off of the player spawn point and the desiredStartPos
     string spawnpoint_data = null;
     _HasLocalLighting = false;
-    bool endofobjects = false;
+    var endofobjects = false;
     for (; data_iter < data_split.Length;)
     {
 
-      for (int i = 0; i < 30 && data_iter < data_split.Length; i++)
+      for (var i = 0; i < 30 && data_iter < data_split.Length; i++)
       {
         // Check if data is valid
         var data0 = data_split[data_iter++].Trim();
@@ -498,18 +503,21 @@ public class TileManager
       difference = Vector2.zero;
     if (spawnpoint_data != null)
     {
+
       // Find the local start position of the new map
-      string[] splitData = spawnpoint_data.Split('_');
-      Vector2 spawnpos_tilepos = TransformPositionOntoTiles(float.Parse(splitData[1], System.Globalization.CultureInfo.InvariantCulture), float.Parse(splitData[2], System.Globalization.CultureInfo.InvariantCulture));
+      var splitData = spawnpoint_data.Split('_');
+      var spawnpos_tilepos = TransformPositionOntoTiles(float.Parse(splitData[1], System.Globalization.CultureInfo.InvariantCulture), float.Parse(splitData[2], System.Globalization.CultureInfo.InvariantCulture));
+
       // Check for null players
-      if (PlayerScript._Players != null)
-        for (int i = PlayerScript._Players.Count - 1; i >= 0; i--)
-          if (PlayerScript._Players[i] == null) PlayerScript._Players.Remove(PlayerScript._Players[i]);
+      if (Players != null)
+        for (var i = Players.Count - 1; i >= 0; i--)
+          if (Players[i] == null) Players.Remove(Players[i]);
+
       // Find the local end position of the new map
-      Vector3 usePos = Vector3.zero;
-      if (PlayerScript._Players != null && PlayerScript._Players.Count > 0)
+      var usePos = Vector3.zero;
+      if (Players != null && Players.Count > 0)
       {
-        foreach (PlayerScript p in PlayerScript._Players)
+        foreach (var p in Players)
         {
           if (p._ragdoll._dead) continue;
           usePos = p.transform.position;
@@ -565,6 +573,7 @@ public class TileManager
       new Vector2Int(-1, 1),
       new Vector2Int(1, -1),
     };
+
     // Holds positions for down and up
     Vector3 pos_up = new Vector3(0f, Tile._StartY + Tile._AddY, 0f),
      pos_down = new Vector3(0f, Tile._StartY, 0f);
@@ -697,8 +706,8 @@ public class TileManager
       GameScript.SpawnPlayers();
 
     // Refill player ammo
-    if (PlayerScript._Players != null)
-      foreach (PlayerScript p in PlayerScript._Players) p._ragdoll.RefillAmmo();
+    if (Players != null)
+      foreach (PlayerScript p in Players) p._ragdoll.RefillAmmo();
     OnMapLoad();
 
     // Append to maps
@@ -2028,7 +2037,7 @@ public class TileManager
     while (_LoadingMap) yield return new WaitForSecondsRealtime(0.05f);
 
     // Remove player
-    foreach (PlayerScript p in PlayerScript._Players)
+    foreach (PlayerScript p in Players)
       GameObject.Destroy(p.transform.parent.gameObject);
     PlayerScript.Reset();
     // Reload map objects

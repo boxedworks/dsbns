@@ -7,6 +7,7 @@ using Unity.Collections;
 public class EnemyScript : MonoBehaviour
 {
 
+  public static int _Layermask_Ragdoll;
   static class SpherecastHandler
   {
 
@@ -25,6 +26,11 @@ public class EnemyScript : MonoBehaviour
       _EnemyOrder = new int[count];
       _EnemyOrderIter = 0;
       _Commands_Iter = 0;
+
+      _Layermask_Ragdoll = ~0;
+      _Layermask_Ragdoll &= ~(1 << LayerMask.NameToLayer("UI"));
+      _Layermask_Ragdoll &= ~(1 << LayerMask.NameToLayer("Bullet"));
+      _Layermask_Ragdoll &= ~(1 << LayerMask.NameToLayer("Ignore Raycast"));
     }
 
     public static void Clean()
@@ -36,7 +42,7 @@ public class EnemyScript : MonoBehaviour
 
     public static void QueueSpherecast(Vector3 origin, Vector3 direction, float radius)
     {
-      _Commands[_Commands_Iter++] = new SpherecastCommand(origin, radius, direction);
+      _Commands[_Commands_Iter++] = new SpherecastCommand(origin, radius, direction, 100f, _Layermask_Ragdoll);
     }
 
     public static void ScheduleAllSpherecasts()

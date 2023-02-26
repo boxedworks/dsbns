@@ -481,9 +481,8 @@ public class ActiveRagdoll
           _kickTimer = Time.time;
 
           RaycastHit hit;
-          var layermask = 1 << LayerMask.NameToLayer("Ragdoll");
           ToggleRaycasting(false);
-          if (Physics.SphereCast(_controller.position, 0.25f, _controller.forward, out hit, 0.5f, layermask))
+          if (Physics.SphereCast(_controller.position, 0.25f, _controller.forward, out hit, 0.5f, EnemyScript._Layermask_Ragdoll))
           {
             var ragdoll = ActiveRagdoll.GetRagdoll(hit.collider.gameObject);
             if (ragdoll != null)
@@ -1157,7 +1156,7 @@ public class ActiveRagdoll
   public ActiveRagdoll _grappler, _grapplee;
   float _kickTimer, _kickTimer_start;
   bool _kicking;
-  public void Grapple()
+  public void Grapple(bool gentle)
   {
 
     // Throw grappled ragdoll
@@ -1165,7 +1164,7 @@ public class ActiveRagdoll
     {
 
       // If not player, throw
-      if (!_grapplee._isPlayer)
+      if (!gentle)
       {
         _grapplee.TakeDamage(this, DamageSourceType.MELEE, _hip.position, 100, false);
         _grapplee._hip.AddForce(_controller.forward * (1000f + Random.value * 250f));
@@ -1198,9 +1197,8 @@ public class ActiveRagdoll
 
       // Raycast for ragdoll
       RaycastHit hit;
-      var layermask = 1 << LayerMask.NameToLayer("Ragdoll");
       ToggleRaycasting(false);
-      if (Physics.SphereCast(_controller.position, 0.25f, _controller.forward, out hit, 0.5f, layermask))
+      if (Physics.SphereCast(_controller.position, 0.25f, _controller.forward, out hit, 0.5f, EnemyScript._Layermask_Ragdoll))
       {
         var ragdoll = ActiveRagdoll.GetRagdoll(hit.collider.gameObject);
         if (ragdoll == null)

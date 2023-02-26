@@ -110,6 +110,16 @@ public class ExplosiveScript : MonoBehaviour
       FunctionsC.BookManager.ExplodeBooks(b.GetComponent<Collider>(), transform.position);
     }
 
+    // Bullets
+    var bullets = ItemScript._BulletPool;
+    for (var i = bullets.Length - 1; i >= 0; i--)
+    {
+      var b = bullets[i];
+      if (b == null) continue;
+      if (MathC.Get2DDistance(transform.position, b.transform.position) > _radius) continue;
+      b.Hide();
+    }
+
     // Check for nearby explosives
     foreach (var e in _Explosives)
     {

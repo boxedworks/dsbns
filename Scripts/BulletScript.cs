@@ -232,9 +232,45 @@ public class BulletScript : MonoBehaviour
         return;
       else if (collider.name.Equals("Bullet"))
       {
-        Debug.Log("Hit bullet");
+        // Check bullet damage
+        var bullet_other = collider.GetComponent<BulletScript>();
+        if (bullet_other._triggered) return;
+        if (bullet_other._source._ragdoll._id == _source._ragdoll._id) return;
+
+        var damage_self = _penatrationAmount;
+        var damage_othe = bullet_other._penatrationAmount;
+
+        if (damage_self == damage_othe)
+        {
+          Hide();
+          bullet_other.Hide();
+        }
+
+        else if (damage_self > damage_othe)
+        {
+          _penatrationAmount -= damage_othe;
+          bullet_other.Hide();
+        }
+
+        else
+        {
+          bullet_other._penatrationAmount -= damage_self;
+          Hide();
+        }
+
+        // Sparks
+        PlaySparks();
+
         return;
       }
+
+      // other..
+      else if (collider.gameObject.layer == 3)
+      {
+        collider.gameObject.GetComponent<UtilityScript>()?.Explode();
+        return;
+      }
+
       // Hurt ragdoll
       var r = ActiveRagdoll.GetRagdoll(collider.gameObject);
       if (r != null)
@@ -290,7 +326,8 @@ public class BulletScript : MonoBehaviour
           else
           {
 
-            var s = collider.transform.parent.GetComponent<ExplosiveScript>();
+            Debug.Log(collider.gameObject.name);
+            var s = collider.transform?.parent.GetComponent<ExplosiveScript>() ?? null;
             if (s != null)
             {
               s.Explode(_source._ragdoll);
@@ -316,20 +353,22 @@ public class BulletScript : MonoBehaviour
     // Wall hit sfx
     if (hit_wall)
     {
-      var parts = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.SPARKS)[0];
-      parts.transform.position = transform.position;
-      parts.transform.LookAt(transform.position + -transform.forward);
-      parts.Play();
-
-      var s = _audioSource;
-      FunctionsC.PlaySound(ref s, "Etc/Bullet_impact", 0.9f, 1.1f);
-
-      // Check ricochet
-      //var normal = collider.
+      PlaySparks();
     }
 
     // Remove bullet
     Hide();
+  }
+
+  public void PlaySparks()
+  {
+    var parts = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.SPARKS)[0];
+    parts.transform.position = transform.position;
+    parts.transform.LookAt(transform.position + -transform.forward);
+    parts.Play();
+
+    var s = _audioSource;
+    FunctionsC.PlaySound(ref s, "Etc/Bullet_ricochet", 0.9f, 1.1f);
   }
 
   public void Reset(ItemScript source, Vector3 position)
@@ -377,10 +416,10 @@ public class BulletScript : MonoBehaviour
 
   public void SetColor(Color start, Color end)
   {
-    Gradient g = new Gradient();
-    GradientColorKey[] colors = _p.colorOverLifetime.color.gradient.colorKeys;
-    GradientAlphaKey[] alphas_original = _p.colorOverLifetime.color.gradient.alphaKeys,
-      alphas = new GradientAlphaKey[alphas_original.Length];
+    var g = new Gradient();
+    var colors = _p.colorOverLifetime.color.gradient.colorKeys;
+    var alphas_original = _p.colorOverLifetime.color.gradient.alphaKeys;
+    var alphas = new GradientAlphaKey[alphas_original.Length];
     System.Array.Copy(alphas_original, 0, alphas, 0, alphas_original.Length);
     g.SetKeys(new GradientColorKey[] { new GradientColorKey(start, 0f), new GradientColorKey(end, 1f) }, alphas);
 
@@ -390,7 +429,7 @@ public class BulletScript : MonoBehaviour
     _light.color = start;
   }
 
-  void Hide()
+  public void Hide()
   {
     _triggered = true;
     _delayStart = 0;
@@ -401,7 +440,7 @@ public class BulletScript : MonoBehaviour
   public static void HideAll()
   {
     if (ItemScript._BulletPool == null) return;
-    foreach (BulletScript b in ItemScript._BulletPool)
+    foreach (var b in ItemScript._BulletPool)
     {
       b.Hide();
     }

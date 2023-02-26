@@ -1115,7 +1115,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
 
         // Check if others in front
         var hit = new RaycastHit();
-        if (Physics.SphereCast(new Ray(enemy_ragdoll._hip.transform.position, MathC.Get2DVector(enemy_ragdoll._hip.transform.forward) * 100f), 0.5f, out hit))
+        if (Physics.SphereCast(new Ray(enemy_ragdoll._hip.transform.position, MathC.Get2DVector(enemy_ragdoll._hip.transform.forward) * 100f), 0.5f, out hit, 100f, EnemyScript._Layermask_Ragdoll))
         {
           enemy_ragdoll.ToggleRaycasting(true);
           if (hit.distance > 10f) return;
@@ -1455,7 +1455,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     if (Debug.isDebugBuild)
     {
       // Next track
-      if (ControllerManager.GetKey(ControllerManager.Key.PAGE_DOWN))
+      if (ControllerManager.GetKey(ControllerManager.Key.END))
         FunctionsC.MusicManager.TransitionTo(FunctionsC.MusicManager.GetNextTrackIter());
       // Unlock all levels
       if (ControllerManager.GetKey(ControllerManager.Key.HOME))
@@ -1612,10 +1612,28 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
               if ((ControllerManager.GetKey(ControllerManager.Key.PAGE_UP, ControllerManager.InputMode.DOWN)) && IsSurvival()) SurvivalMode._Wave++;
               else
               {
-                if (ControllerManager.GetKey(ControllerManager.Key.PAGE_UP, ControllerManager.InputMode.DOWN) && !TileManager._LoadingMap) OnLevelComplete();
                 if (ControllerManager.GetKey(ControllerManager.Key.MULTIPLY_NUMPAD, ControllerManager.InputMode.HOLD)) OnLevelComplete();
               }
               // Fast skip
+            }
+          }
+
+          if (!_EditorEnabled)
+          {
+            if (!TileManager._LoadingMap)
+            {
+              if (ControllerManager.GetKey(ControllerManager.Key.PAGE_UP, ControllerManager.InputMode.DOWN))
+              {
+                if (Levels._CurrentLevelIndex < (Levels._CurrentLevelCollection?._leveldata.Length ?? 0) && Levels.LevelCompleted(Levels._CurrentLevelIndex + 1))
+                {
+                  NextLevel(Levels._CurrentLevelIndex + 1);
+                }
+              }
+              else if (ControllerManager.GetKey(ControllerManager.Key.PAGE_DOWN, ControllerManager.InputMode.DOWN))
+              {
+                if (Levels._CurrentLevelIndex > 0)
+                  NextLevel(Levels._CurrentLevelIndex - 1);
+              }
             }
           }
         }
@@ -3589,7 +3607,6 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     static int VolumeMusic = 5,
       VolumeSFX = 5,
       QualityLevel = -1,
-      CameraZoom,
       DIFFICULTY;
     public static int _DifficultyUnlocked
     {
@@ -3649,22 +3666,8 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
 
 
     public static FunctionsC.SaveableStat_Bool _Toggle_Lightning;
+    public static FunctionsC.SaveableStat_Int _CameraZoom;
 
-    public static int _CameraZoom
-    {
-      get
-      {
-        return CameraZoom;
-      }
-      set
-      {
-        CameraZoom = value % 3;
-        if (CameraZoom < 0)
-          CameraZoom = 2;
-        // Save value
-        PlayerPrefs.SetInt("CameraZoom", CameraZoom);
-      }
-    }
     public static int _QualityLevel
     {
       get
@@ -3880,7 +3883,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       _Toggle_Lightning = new FunctionsC.SaveableStat_Bool("vfx_toggle_lightning", true);
 
       //Camera
-      _CameraZoom = PlayerPrefs.GetInt("CameraZoom", 1);
+      _CameraZoom = new FunctionsC.SaveableStat_Int("CameraZoom", 1);
       _CameraType = new FunctionsC.SaveableStat_Bool("CameraType_ortho", false);
       SetPostProcessing();
 

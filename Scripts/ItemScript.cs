@@ -235,15 +235,17 @@ public class ItemScript : MonoBehaviour
         bullet.name = "Bullet";
         bullet.SetActive(false);
         bullet.transform.parent = bullets.transform;
-        bullet.layer = 2;
+        bullet.layer = 3;
         _BulletPool[i] = bullet.GetComponent<BulletScript>();
         rbs.Add(bullet.GetComponent<Collider>());
       }
-      // Ignore bullet collisions
+      /*/ Ignore bullet collisions
       foreach (var c0 in rbs)
         foreach (var c1 in rbs)
-          if (c0.GetInstanceID() == c1.GetInstanceID()) continue;
-          else Physics.IgnoreCollision(c0, c1, true);
+          if (c0.GetInstanceID() == c1.GetInstanceID())
+            continue;
+          else
+            Physics.IgnoreCollision(c0, c1, true);*/
     }
 
     // Get item sounds
@@ -294,6 +296,7 @@ public class ItemScript : MonoBehaviour
       // Melee
       if (_melee)
       {
+
         var raycastInfo = new RaycastInfo();
         var hit = MeleeCast(raycastInfo, _meleeIter++);
 
@@ -586,6 +589,33 @@ public class ItemScript : MonoBehaviour
 
     void Local_Use(bool playSound = true)
     {
+
+      // Check grapple release
+      if (_melee)
+      {
+        if (_ragdoll._grappling)
+        {
+          var snap_neck = false;
+          if (_side == ActiveRagdoll.Side.RIGHT)
+          {
+            if (!(_ragdoll._itemL?.IsMelee() ?? false))
+            {
+              snap_neck = true;
+            }
+          }
+          else if (_side == ActiveRagdoll.Side.LEFT)
+          {
+            snap_neck = true;
+          }
+          if (snap_neck)
+          {
+            _ragdoll.Grapple(false);
+            return;
+          }
+        }
+      }
+
+      //
       _onUse?.Invoke();
       _useTime = _time;
       if (_melee)
@@ -1150,7 +1180,7 @@ public class ItemScript : MonoBehaviour
     );
     var hit = false;
     var maxDistance = 0.4f * (_meleePenatrate ? 1.3f : 1f) * (_ragdoll._isPlayer ? 1f : _meleePenatrate ? 0.75f : 0.65f);
-    if (Physics.SphereCast(ray, (0.4f), out raycastInfo._raycastHit, maxDistance))
+    if (Physics.SphereCast(ray, (0.4f), out raycastInfo._raycastHit, maxDistance, EnemyScript._Layermask_Ragdoll))
     {
       raycastInfo._ragdoll = ActiveRagdoll.GetRagdoll(raycastInfo._raycastHit.collider.gameObject);
       if (raycastInfo._ragdoll != null && !raycastInfo._ragdoll._dead)

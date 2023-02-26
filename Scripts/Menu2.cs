@@ -404,7 +404,8 @@ public class Menu2
         {
           component._textColor = color;
         };
-        selections_final[iter++] = $"{selection}";
+        var last_char = iter == selections.Count - 1 ? "\n" : "";
+        selections_final[iter++] = $"{selection}{last_char}";
       }
       // Add a back button
       selections_final[iter] = "back";
@@ -3166,6 +3167,8 @@ public class Menu2
           t.localPosition += lp;
         }
       })
+    .AddComponent($"{string.Format(format_controls, "next level:", "", "page up")} \n", MenuComponent.ComponentType.BUTTON_SIMPLE)
+    .AddComponent($"{string.Format(format_controls, "previous level:", "", "page down")} \n", MenuComponent.ComponentType.BUTTON_SIMPLE)
     .AddComponent($"\n<color={_COLOR_GRAY}>mode - </color><color=yellow>CLASSIC</color>\n")
     .AddComponent($"{string.Format(format_controls, "cycle loadout left:", "", "z")} \n", MenuComponent.ComponentType.BUTTON_SIMPLE)
       .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
@@ -5533,7 +5536,13 @@ go to the <color=yellow>SHOP</color> to buy something~1
           selections.Add(i == 0 ? "3D" : "2D");
           actions.Add((MenuComponent component0) =>
           {
-            GameScript.Settings._CameraType._value = component0._dropdownIndex == 1;
+            var is_ortho = component0._dropdownIndex == 1;
+            if (GameScript.Settings._CameraZoom == 3 && is_ortho)
+            {
+              GameScript.Settings._CameraZoom._value = 1;
+            }
+
+            GameScript.Settings._CameraType._value = is_ortho;
             GameScript.Settings.SetPostProcessing();
           });
         }
@@ -5545,25 +5554,44 @@ go to the <color=yellow>SHOP</color> to buy something~1
     .AddComponent("camera zoom\n\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
       .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
       {
+
         // Set display text
-        var zoom_text = GameScript.Settings._CameraZoom == 0 ? "close" : GameScript.Settings._CameraZoom == 1 ? "normal" : "far";
+        var zoom_text = GameScript.Settings._CameraZoom == 0 ? "close" : GameScript.Settings._CameraZoom == 1 ? "normal" : GameScript.Settings._CameraZoom == 2 ? "far" : "auto [2D mode only]";
         component.SetDisplayText(string.Format(format_options, "camera zoom:", $"{zoom_text}") + "\n");
+
         // Set dropdown data
         var selections = new List<string>();
         var actions = new List<System.Action<MenuComponent>>();
         var selection_match = zoom_text;
-        for (int i = 0; i < 3; i++)
+        for (int i = 0; i < 4; i++)
         {
-          // Add volume level
-          selections.Add(i == 0 ? "close" : i == 1 ? "normal" : "far");
-          // Add action to update sfx volume
-          actions.Add((MenuComponent component0) =>
-          {
-            GameScript.Settings._CameraZoom = component0._dropdownIndex;
+          // Add selection titles
+          selections.Add(i == 0 ? "close" : i == 1 ? "normal" : i == 2 ? "far" : "auto [2D mode only]");
 
-            GameScript.Settings.SetPostProcessing();
-          });
+          //
+          if (i == 3)
+          {
+            actions.Add((MenuComponent component0) =>
+            {
+              if (!GameScript.Settings._CameraType._value)
+              {
+                GameScript.Settings._CameraType._value = true;
+              }
+
+              GameScript.Settings._CameraZoom._value = component0._dropdownIndex;
+              GameScript.Settings.SetPostProcessing();
+            });
+          }
+
+          //
+          else
+            actions.Add((MenuComponent component0) =>
+            {
+              GameScript.Settings._CameraZoom._value = component0._dropdownIndex;
+              GameScript.Settings.SetPostProcessing();
+            });
         }
+
         // Update dropdown data
         component.SetDropdownData("camera zoom\n\n", selections, actions, selection_match);
       })

@@ -510,7 +510,7 @@ public class PlayerScript : MonoBehaviour
 
           _ragdoll.ToggleRaycasting(false);
           var hit = new RaycastHit();
-          if (Physics.SphereCast(new Ray(_ragdoll._transform_parts._head.transform.position, _ragdoll._hip.transform.forward * 100f + Vector3.up * 0.3f), 0.1f, out hit))
+          if (Physics.SphereCast(new Ray(_ragdoll._transform_parts._head.transform.position, _ragdoll._hip.transform.forward * 100f + Vector3.up * 0.3f), 0.1f, out hit, EnemyScript._Layermask_Ragdoll))
           {
             if (_targetRagdoll.IsSelf(hit.collider.gameObject))
             {
@@ -800,20 +800,51 @@ public class PlayerScript : MonoBehaviour
       //Debug.Log($"{map_x} {map_y}");
       if (center_camera)
       {
-        if (GameScript.Settings._CameraZoom == 0)
+        var zoom = GameScript.Settings._CameraZoom;
+        if (zoom == 0)
         {
           if (map_x > 7 || map_y > 4)
             center_camera = false;
         }
-        else if (GameScript.Settings._CameraZoom == 1)
+        else if (zoom == 1)
         {
           if (map_x > 9 || map_y > 6)
             center_camera = false;
         }
-        if (GameScript.Settings._CameraZoom == 2)
+        else if (zoom == 2)
         {
           if (map_x > 14 || map_y > 8)
             center_camera = false;
+        }
+        else if (zoom == 3)
+        {
+          var zoom_ = -1;
+          if (map_x <= 7 && map_y <= 4)
+          {
+            zoom_ = 0;
+          }
+          else if (map_x <= 9 && map_y <= 6)
+          {
+            zoom_ = 1;
+          }
+          else if (map_x <= 14 && map_y <= 8)
+          {
+            zoom_ = 2;
+          }
+          if (zoom_ > -1)
+          {
+            GameScript.Settings._CameraZoom._value = zoom_;
+            GameScript.Settings.SetPostProcessing();
+            GameScript.Settings._CameraZoom._value = 3;
+          }
+          else
+          {
+            GameScript.Settings._CameraZoom._value = 2;
+            GameScript.Settings.SetPostProcessing();
+            GameScript.Settings._CameraZoom._value = 3;
+
+            center_camera = false;
+          }
         }
       }
       if (center_camera)
@@ -1092,7 +1123,7 @@ public class PlayerScript : MonoBehaviour
         ControllerManager.GetMouseInput(2, ControllerManager.InputMode.UP)
         )
       {
-        _ragdoll.Grapple();
+        _ragdoll.Grapple(true);
       }
 
       // Move arms
@@ -1187,6 +1218,7 @@ public class PlayerScript : MonoBehaviour
         _cX = Mathf.Clamp(_cX + controllerInput1.x / 2f, -1f, 1f);
         _cY = Mathf.Clamp(_cY + controllerInput1.y / 2f, -1f, 1f);
       }
+
       // Move arms
       var gamepad = ControllerManager.GetPlayerGamepad(_id);
       if (gamepad != null)
@@ -1195,6 +1227,7 @@ public class PlayerScript : MonoBehaviour
           ExtendArms();
         else
           _ragdoll.ArmsDown();
+
         // Use items
         Vector2 input = new Vector2(ControllerManager.GetControllerAxis(_id, ControllerManager.Axis.L2),
           ControllerManager.GetControllerAxis(_id, ControllerManager.Axis.R2));
@@ -1253,6 +1286,7 @@ public class PlayerScript : MonoBehaviour
             saveInput.y = -1f;
           }
         _lastInputTriggers = input;
+
         // DPad - taunts
         input = new Vector2(ControllerManager.GetControllerAxis(_id, ControllerManager.Axis.DPAD_X),
           ControllerManager.GetControllerAxis(_id, ControllerManager.Axis.DPAD_Y));
@@ -1280,7 +1314,7 @@ public class PlayerScript : MonoBehaviour
           gamepad.rightStickButton.wasPressedThisFrame
           )
         {
-          _ragdoll.Grapple();
+          _ragdoll.Grapple(true);
         }
 
         // Check utilities
