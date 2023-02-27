@@ -3758,7 +3758,8 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
 
     public static FunctionsC.SaveableStat_Int
       _Extra_RemoveBatGuy,
-      _Extra_EnemyMultiplier;
+      _Extra_EnemyMultiplier,
+      _Extra_PlayerAmmo, _Extra_EnemyAmmo;
     public static float _VERSION = 1.25f;
 
     // Struct holding info what item pair gets unlocked at what level
@@ -3896,6 +3897,8 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       _Extra_CrazyZombies = PlayerPrefs.GetInt("extra_crazyzombies", 0) == 1;
       _Extra_RemoveBatGuy = new FunctionsC.SaveableStat_Int("extra_batguy", 0);
       _Extra_EnemyMultiplier = new FunctionsC.SaveableStat_Int("extra_emulti", 0);
+      _Extra_PlayerAmmo = new FunctionsC.SaveableStat_Int("extra_playerammo", 0);
+      _Extra_EnemyAmmo = new FunctionsC.SaveableStat_Int("extra_enemymmo", 0);
     }
 
     public enum GamemodeChange

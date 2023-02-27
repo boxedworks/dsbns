@@ -319,7 +319,7 @@ public class UtilityScript : ItemScript
           _onCollisionEnter += (Collision c) =>
           {
 
-            Debug.Log($"{_stuck} {c.gameObject.name}");
+            //Debug.Log($"{_stuck} {c.gameObject.name}");
 
             if (!_stuck)
             {
@@ -555,7 +555,7 @@ public class UtilityScript : ItemScript
     else if (mode == 2) forward = -_ragdoll._hip.transform.right;
 
     _rb.position = _spawnLocation != Vector3.zero ? _spawnLocation :
-      _ragdoll._spine.transform.position + forward * 0.5f;
+      _ragdoll._spine.transform.position + forward * 0.5f + new Vector3(0f, 0.2f, 0f);
 
     // Configure Rigidbody
     _rb.isKinematic = false;

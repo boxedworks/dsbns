@@ -76,7 +76,7 @@ public class EnemyScript : MonoBehaviour
     // Register to handler to index this._id
     SpherecastHandler.Register(this);
 
-    // Cast at ragdolltarget
+    // 0; Cast at ragdolltarget
     var target = transform.forward;
     if (_ragdollTarget != null) target = _ragdollTarget._hip.transform.position;
     var origin = _ragdoll._head.transform.position;
@@ -97,7 +97,7 @@ public class EnemyScript : MonoBehaviour
     dir = (forward - right * (1f - (0.025f + Mathf.PingPong(Time.time * 4f, 0.9f)))).normalized;
     SpherecastHandler.QueueSpherecast(origin, dir, radius);
 
-    // Cast towards lastknownpos
+    // 3; Cast towards lastknownpos
     dir = -MathC.Get2DVector(_ragdoll._head.transform.position - _lastKnownPos).normalized + right * (0.1f + (Mathf.PingPong(Time.time * 1.5f + _id, 2f) - 1f));
     SpherecastHandler.QueueSpherecast(origin, dir, radius);
 
@@ -439,6 +439,7 @@ public class EnemyScript : MonoBehaviour
     {
       if (!_isZombie)
         _ragdoll._rotSpeed = (_state == State.PURSUIT ? _targetDirectlyInFront ? 1.3f : 1f : 0.8f) * PlayerScript.ROTATIONSPEED;
+
       // If chaser, check if enabled
       if (!_canAttack && IsChaser() && !_isZombie)
       {
@@ -583,6 +584,7 @@ public class EnemyScript : MonoBehaviour
             _agent.SetDestination(_lastKnownPos);
           }
         }
+
         // Pursuing something
         else if (_state == State.PURSUIT)
         {
@@ -591,7 +593,9 @@ public class EnemyScript : MonoBehaviour
           if (GameScript._Singleton._GameEnded)
           {
           }
-          else if (_ragdollTarget != null && _ragdollTarget._invisible && !IsChaser() && _targetInLOS)
+
+          // Check target turned invisible
+          else if ((_ragdollTarget?._invisible ?? false) && !IsChaser() && _targetInLOS)
           {
             ChangeState(State.SEARCHING);
             _lastKnownPos = _ragdollTarget._hip.position;
@@ -600,11 +604,17 @@ public class EnemyScript : MonoBehaviour
             _time_lost = 0f;
             _searchDir = -MathC.Get2DVector((transform.position - _lastKnownPos)).normalized * 3f;
           }
-          // Check for weapons
+
+          //
           else if (_ragdollTarget != null)
           {
+
+            // Check for weapons
             if (CheckShouldPanic())
+            {
               Panic();
+            }
+
             // Chase player
             else
             {
@@ -630,27 +640,40 @@ public class EnemyScript : MonoBehaviour
                   //Debug.DrawLine(transform.position, _lastKnownPos, Color.blue);
                 }
               }
+
               if (_targetInLOS)
               {
-                float dis = MathC.Get2DDistance(_ragdoll._hip.position, _ragdollTarget._hip.position);
+                var dis = MathC.Get2DDistance(_ragdoll._hip.position, _ragdollTarget._hip.position);
+
                 // If can't move, has gun, and player gets too close, start to chase
                 if (!_canMove)
                 {
-                  if (_ragdoll.HasGun() && _targetInLOS && dis < 1.5f)
+                  if (_ragdoll.HasGun() && dis < 1.5f)
+                  {
                     _canMove = true;
+                    if (!_agent.hasPath)
+                      _agent.SetDestination(_lastKnownPos);
+                  }
                 }
+
                 // Check to chase player if has exit
                 if (!_canMove && _ragdollTarget._playerScript._hasExit)
                 {
                   _sawWithGoal = true;
                   if (dis > 13f)
+                  {
                     _canMove = true;
+                  }
                 }
+
                 // If has gun, keep distance to shoot
                 if (_ragdoll.HasGun())
                 {
                   if (_targetInFront)
                     _lookAtPos = new Vector3(_ragdollTarget._hip.position.x, transform.position.y, _ragdollTarget._hip.position.z);
+                  else
+                    _lookAtPos = _lastKnownPos;
+
                   // Check if the enemy is at the right distance to shoot
                   if (_canMove)
                   {
@@ -696,8 +719,11 @@ public class EnemyScript : MonoBehaviour
                     }
                   }
                 }
+
                 // If has no gun, chase player
-                else ChaseTarget();
+                else
+                  ChaseTarget();
+
                 // Try attacking
                 if (Time.time - _attackTime > 0f && _canAttack)
                 {
@@ -743,6 +769,7 @@ public class EnemyScript : MonoBehaviour
             Walk();
           }
         }
+
         // Searching
         else if (_state == State.SEARCHING)
         {
@@ -759,6 +786,7 @@ public class EnemyScript : MonoBehaviour
             _suspiciousTimer = 20f;
           }
         }
+
         // Run away!
         else if (_state == State.PANICKED)
         {
@@ -771,13 +799,16 @@ public class EnemyScript : MonoBehaviour
             Wait(100f);
           }
         }
+
         // No idea what to do
         else
         {
           Wait();
         }
+
         // Update controller
         MoveRotateTransform(_lookAtPos);
+
         // Check if stuck and attempt to fix
         if (_ragdoll.HasGun() && _targetInLOS) { }
         else if (!_agent.hasPath && _state != State.NEUTRAL && _canMove)
@@ -954,7 +985,7 @@ public class EnemyScript : MonoBehaviour
             found = true;
           else
           {
-            h = SpherecastHandler.GetSpherecastHit(this, 0);
+            h = SpherecastHandler.GetSpherecastHit(this, _targetInLOS || Time.time - _lastSeenTime < 1.5f ? 0 : 3);
             if (h.collider != null)
               found = CheckRay(h);
           }
@@ -1009,6 +1040,7 @@ public class EnemyScript : MonoBehaviour
         else if (found)
         {
           _lastSeenTime = Time.time;
+          _lastKnownPos = _ragdollTarget._controller.position;
           _time_seen += Time.deltaTime;
           _time_lost = 0f;
           _targetInLOS = true;
@@ -1232,6 +1264,7 @@ public class EnemyScript : MonoBehaviour
   {
     _lastKnownPos = _ragdollTarget._controller.position;
     _lastSeenTime = Time.time;
+
     // Make sure not already pursuing
     if (_state == State.PURSUIT || _state == State.PANICKED) return;
     if (_ragdoll._itemL != null && (_ragdoll._itemL.IsThrowable() && _canMove)) Scream();
@@ -1339,15 +1372,6 @@ public class EnemyScript : MonoBehaviour
       _lastSuspiciousLoudness = loudness;
     }
     _suspiciousCoroutine = null;
-  }
-
-  void Alert(Vector3 lastKnownPos, float lostTime = 0f)
-  {
-    _lastKnownPos = lastKnownPos;
-    _time_lost = lostTime;
-    _waitAmount = 0f;
-    _waitTimer = Time.time - 2f;
-    _patroling = false;
   }
 
   // Change movement speed
@@ -1806,8 +1830,10 @@ public class EnemyScript : MonoBehaviour
   public static EnemyScript[] CheckSound(Vector3 noisePosition, Vector3 sourcePosition, Loudness loudness, int bulletID = -1, bool setSuspicious = true)
   {
     if (_Enemies_alive == null || GameScript.IsSurvival()) return new EnemyScript[0];
+
     // Decide distance
-    float minDistance = (loudness == Loudness.SUPERSOFT ? 1.5f : (loudness == Loudness.SOFT ? 3.5f : (loudness == Loudness.NORMAL ? 7f : 10f)));
+    var minDistance = (loudness == Loudness.SUPERSOFT ? 1.5f : (loudness == Loudness.SOFT ? 3.5f : (loudness == Loudness.NORMAL ? 7f : 10f)));
+
     // Check each enemy
     var enemies = new List<EnemyScript>();
     foreach (var e in _Enemies_alive)
@@ -1815,22 +1841,58 @@ public class EnemyScript : MonoBehaviour
       // If the ragdoll is dead continue
       if (e._ragdoll._dead || !e._reactToSound || e._isZombie) continue;
 
+      //Debug.Log($"{e._state} .. {e._canMove} .. {MathC.Get2DDistance(noisePosition, e.transform.position)} < {minDistance} .. id:{bulletID}");
+
       // If ragdoll is chasing, continue
-      if (e._state == State.PURSUIT) continue;
+      if (e._state == State.PURSUIT)
+      {
+
+        if (Time.time - e._lastSeenTime > 1f || !e._canMove)
+        {
+
+          // Check distance
+          var dis0 = MathC.Get2DDistance(noisePosition, e.transform.position);
+          if (dis0 < minDistance)
+          {
+            Debug.Log("dis");
+            if (Time.time - e._lastHeardTimer > 0.1f)
+            {
+              Debug.Log("time");
+
+              // Make sure wasn't too soon or same bullet
+              if (bulletID != -1)
+              {
+                if (e.lastBulletID == bulletID) continue;
+                e.lastBulletID = bulletID;
+                e._waitTimer = 0f;
+              }
+
+              e._lastHeardTimer = Time.time;
+              if (!e._targetInFront && !e._canMove)
+                e._lastKnownPos = noisePosition;
+
+              Debug.Log("set");
+            }
+          }
+        }
+
+        continue;
+      }
 
       // Check distance
-      float dis = MathC.Get2DDistance(noisePosition, e.transform.position);
+      var dis = MathC.Get2DDistance(noisePosition, e.transform.position);
       if (dis < minDistance)
       {
-        // Make sure wasn't too soon or same bullet
-        if (bulletID != -1)
-        {
-          if (e.lastBulletID == bulletID) continue;
-          e.lastBulletID = bulletID;
-          e._waitTimer = 0f;
-        }
         if (Time.time - e._lastHeardTimer > 0.1f || EnemyScript.IsLouder(loudness, e._lastLoudness))
         {
+          // Make sure wasn't too soon or same bullet
+          if (bulletID != -1)
+          {
+            if (e.lastBulletID == bulletID) continue;
+            e.lastBulletID = bulletID;
+            e._waitTimer = 0f;
+          }
+
           e._lastLoudness = loudness;
           e._lastHeardTimer = Time.time;
           if (setSuspicious)

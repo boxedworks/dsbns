@@ -31,10 +31,26 @@ public class ItemScript : MonoBehaviour
   public int ClipSize()
   {
     if (_melee && !IsChargeWeapon()) return 1;
+
+    var clip_size = _clipSize;
+
     // Check perk
     if (_ragdoll != null && _ragdoll._isPlayer && _ragdoll._playerScript.HasPerk(Shop.Perk.PerkType.MAX_AMMO_UP))
-      return Mathf.RoundToInt(_clipSize * 1.5f);
-    return _clipSize;
+      clip_size = Mathf.RoundToInt(_clipSize * 1.5f);
+
+    // Check extra
+    if (_ragdoll._isPlayer)
+      switch (GameScript.Settings._Extra_PlayerAmmo._value)
+      {
+        case 1:
+          clip_size = Mathf.RoundToInt(_clipSize * 2f);
+          break;
+        case 2:
+          clip_size = Mathf.RoundToInt(_clipSize * 0.5f);
+          break;
+      }
+
+    return clip_size;
   }
   public float UseRate()
   {

@@ -240,26 +240,34 @@ public class BulletScript : MonoBehaviour
         var damage_self = _penatrationAmount;
         var damage_othe = bullet_other._penatrationAmount;
 
+        var hit_bullet = false;
+
         if (damage_self == damage_othe)
         {
           Hide();
           bullet_other.Hide();
+
+          hit_bullet = true;
         }
 
         else if (damage_self > damage_othe)
         {
           _penatrationAmount -= damage_othe;
           bullet_other.Hide();
+
+          hit_bullet = true;
         }
 
         else
         {
           bullet_other._penatrationAmount -= damage_self;
           Hide();
+
+          hit_bullet = true;
         }
 
         // Sparks
-        PlaySparks();
+        PlaySparks(hit_bullet);
 
         return;
       }
@@ -326,7 +334,7 @@ public class BulletScript : MonoBehaviour
           else
           {
 
-            Debug.Log(collider.gameObject.name);
+            //Debug.Log(collider.gameObject.name);
             var s = collider.transform?.parent.GetComponent<ExplosiveScript>() ?? null;
             if (s != null)
             {
@@ -360,7 +368,7 @@ public class BulletScript : MonoBehaviour
     Hide();
   }
 
-  public void PlaySparks()
+  public void PlaySparks(bool other_bullet = false)
   {
     var parts = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.SPARKS)[0];
     parts.transform.position = transform.position;
@@ -368,7 +376,16 @@ public class BulletScript : MonoBehaviour
     parts.Play();
 
     var s = _audioSource;
-    FunctionsC.PlaySound(ref s, "Etc/Bullet_ricochet", 0.9f, 1.1f);
+    if (other_bullet)
+    {
+      s.volume = 0.8f;
+      FunctionsC.PlaySound(ref s, "Etc/Bullet_ricochet", 0.9f, 1.1f);
+    }
+    else
+    {
+      s.volume = 0.5f;
+      FunctionsC.PlaySound(ref s, "Etc/Bullet_impact", 0.9f, 1.1f);
+    }
   }
 
   public void Reset(ItemScript source, Vector3 position)

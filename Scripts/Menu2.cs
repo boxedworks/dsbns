@@ -6294,7 +6294,7 @@ a gampad if plugged in.~1
         () => { return Shop.Unlocked(Shop.Unlocks.EXTRA_CHASER); }
       );
 
-      // Remove bat guy
+      // Enemy multiplier
       AddExtraSelection(
         "enemy multiplier",
         () =>
@@ -6322,6 +6322,44 @@ a gampad if plugged in.~1
         }),
         },
         "modify the number of enemies initially spawned",
+
+        "unlock by...",
+        () => { return true; return Shop.Unlocked(Shop.Unlocks.EXTRA_CHASER); }
+      );
+
+      // Ammo
+      AddExtraSelection(
+        "player ammo",
+        () =>
+        {
+          switch (GameScript.Settings._Extra_PlayerAmmo._value)
+          {
+            case 0:
+              return "1x";
+            case 1:
+              return "2x";
+            case 2:
+              return "0.5x";
+            case 3:
+              return "infinite";
+          }
+          return "N/A";
+        },
+        new DropdownSelectionComponent[] {
+          new DropdownSelectionComponent("1x", "", (MenuComponent component) => {
+            GameScript.Settings._Extra_PlayerAmmo._value = 0;
+          }),
+          new DropdownSelectionComponent("2x", "", (MenuComponent component) => {
+            GameScript.Settings._Extra_PlayerAmmo._value = 1;
+          }),
+                    new DropdownSelectionComponent("0.5x", "", (MenuComponent component) => {
+            GameScript.Settings._Extra_PlayerAmmo._value = 2;
+          }),
+                    new DropdownSelectionComponent("infinite", "", (MenuComponent component) => {
+            GameScript.Settings._Extra_PlayerAmmo._value = 3;
+          }),
+        },
+        "change the max ammo of your weapons / utilities",
 
         "unlock by...",
         () => { return true; return Shop.Unlocked(Shop.Unlocks.EXTRA_CHASER); },
