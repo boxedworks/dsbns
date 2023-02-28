@@ -1708,45 +1708,84 @@ public class EnemyScript : MonoBehaviour
       else if (!PlayerScript._All_Dead)
       {
         // Level timer
+
+        TileManager._Level_Complete = true;
+
+        // Check timer
+        var level_time = float.Parse(TileManager._LevelTimer.ToString("0.000"));
+        var level_time_best = float.Parse(PlayerPrefs.GetFloat($"{Levels._CurrentLevelCollection_Name}_{Levels._CurrentLevelIndex}_time", -1f).ToString("0.000"));
+
+        if (level_time_best == -1 || level_time < level_time_best)
         {
-          TileManager._Level_Complete = true;
 
-          // Check timer
-          var level_time = float.Parse(TileManager._LevelTimer.ToString("0.000"));
-          var level_time_best = float.Parse(PlayerPrefs.GetFloat($"{Levels._CurrentLevelCollection_Name}_{Levels._CurrentLevelIndex}_time", -1f).ToString("0.000"));
-
-          if (level_time_best == -1 || level_time < level_time_best)
+          // Show new best score
+          if (!GameScript.Settings._Extras_UsingAny)
           {
             PlayerPrefs.SetFloat($"{Levels._CurrentLevelCollection_Name}_{Levels._CurrentLevelIndex}_time", level_time);
-
             TileManager._Text_LevelTimer_Best.text += string.Format(" -> {0:0.000}", level_time);
           }
 
-          if (level_time_best != -1f && level_time != level_time_best)
+          // Cannot save score
+          else
           {
-            if (level_time < level_time_best)
-              TileManager._Text_LevelTimer.text = string.Format($"{{0:0.000}} (<color=green>-{{1:0.000}}</color>)", level_time, level_time_best - level_time);
-            else
-              TileManager._Text_LevelTimer.text = string.Format($"{{0:0.000}} (<color=red>+{{1:0.000}}</color>)", level_time, level_time - level_time_best);
+            TileManager._Text_LevelTimer_Best.text += string.Format(" -> <s>{0:0.000}</s>", level_time);
           }
         }
 
-        // Teleport exit to player
-        if (!PlayerScript.HasExit())
+        if (level_time_best != -1f && level_time != level_time_best)
         {
-          if (source._isPlayer)
-          {
-            Powerup._Powerups[0].Activate(source);
-          }
+          if (level_time < level_time_best)
+            TileManager._Text_LevelTimer.text = string.Format($"{{0:0.000}} (<color=green>-{{1:0.000}}</color>)", level_time, level_time_best - level_time);
           else
+            TileManager._Text_LevelTimer.text = string.Format($"{{0:0.000}} (<color=red>+{{1:0.000}}</color>)", level_time, level_time - level_time_best);
+        }
+
+        // Save best dev time
+        if (Debug.isDebugBuild)
+        {
+
+          if (TileManager._LevelTime_Dev == -1 || level_time < TileManager._LevelTime_Dev)
           {
-            var closest_player = PlayerScript.GetClosestPlayerTo(new Vector2(_ragdoll._controller.position.x, _ragdoll._controller.position.z));
-            if (closest_player != null)
+            TileManager._LevelTime_Dev = level_time;
+
+            // Set level data
+            var level_data_split = Levels._CurrentLevelData.Split(' ');
+            var level_data_new = new List<string>();
+            foreach (var d in level_data_split)
             {
-              Powerup._Powerups[0].Activate(closest_player._ragdoll);
+              if (d.StartsWith("bdt_"))
+              {
+                continue;
+              }
+              level_data_new.Add(d);
+            }
+            level_data_new.Add($"btd_{level_time}");
+
+            Levels._LevelPack_Current._leveldata[Levels._CurrentLevelIndex] = string.Join(" ", level_data_new);
+            Levels.SaveLevels();
+
+            Debug.Log($"Set best dev time: {level_time}");
+          }
+
+        }
+
+        // Teleport exit to player
+        if (level_time_best != -1f)
+          if (!PlayerScript.HasExit())
+          {
+            if (source._isPlayer)
+            {
+              Powerup._Powerups[0].Activate(source);
+            }
+            else
+            {
+              var closest_player = PlayerScript.GetClosestPlayerTo(new Vector2(_ragdoll._controller.position.x, _ragdoll._controller.position.z));
+              if (closest_player != null)
+              {
+                Powerup._Powerups[0].Activate(closest_player._ragdoll);
+              }
             }
           }
-        }
 
         // Make goal bigger
         //else if (!PlayerScript.HasExit() && Powerup._Powerups != null && Powerup._Powerups.Count > 0)
@@ -1854,10 +1893,8 @@ public class EnemyScript : MonoBehaviour
           var dis0 = MathC.Get2DDistance(noisePosition, e.transform.position);
           if (dis0 < minDistance)
           {
-            Debug.Log("dis");
             if (Time.time - e._lastHeardTimer > 0.1f)
             {
-              Debug.Log("time");
 
               // Make sure wasn't too soon or same bullet
               if (bulletID != -1)
@@ -1870,8 +1907,6 @@ public class EnemyScript : MonoBehaviour
               e._lastHeardTimer = Time.time;
               if (!e._targetInFront && !e._canMove)
                 e._lastKnownPos = noisePosition;
-
-              Debug.Log("set");
             }
           }
         }

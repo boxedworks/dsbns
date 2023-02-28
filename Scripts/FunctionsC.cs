@@ -165,6 +165,7 @@ public static class FunctionsC
     MAGAZINE,
     SPARKS_ROBOT,
     PAPER,
+    BULLET_COLLIDE,
   }
   static int _ExplosionIter;
   public static ParticleSystem[] GetParticleSystem(ParticleSystemType particleType)
@@ -222,6 +223,10 @@ public static class FunctionsC
         break;
       case ParticleSystemType.PAPER:
         index = 14;
+        randomChild = true;
+        break;
+              case ParticleSystemType.BULLET_COLLIDE:
+        index = 15;
         randomChild = true;
         break;
     }

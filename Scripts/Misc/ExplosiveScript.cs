@@ -63,7 +63,7 @@ public class ExplosiveScript : MonoBehaviour
 
   public void Trigger(ActiveRagdoll source, float delay = 0f, bool disableGameobject = true, bool playSound = true)
   {
-    if (_triggered || !transform.GetChild(0).gameObject.activeSelf) return;
+    if (_triggered || (disableGameobject && !transform.GetChild(0).gameObject.activeSelf)) return;
     _delay = delay;
     _triggered = true;
     _source = source;
@@ -73,7 +73,7 @@ public class ExplosiveScript : MonoBehaviour
 
   public void Explode(ActiveRagdoll source, bool disableGameobject = true, bool playSound = true)
   {
-    if (_Explosives == null || this == null || !transform.GetChild(0).gameObject.activeSelf) return;
+    if (_Explosives == null || this == null || (disableGameobject && !transform.GetChild(0).gameObject.activeSelf)) return;
 
     _onExplode?.Invoke();
 
@@ -135,8 +135,11 @@ public class ExplosiveScript : MonoBehaviour
       FunctionsC.PlaySound(ref _audio, "Ragdoll/Explode", 0.825f, 1.175f);
 
     // Try to remove RB
-    var rb = GetComponent<Rigidbody>();
-    if (rb != null) Destroy(rb);
+    if (disableGameobject)
+    {
+      var rb = GetComponent<Rigidbody>();
+      if (rb != null) Destroy(rb);
+    }
   }
 
   public void Reset2()

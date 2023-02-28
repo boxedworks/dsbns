@@ -1367,13 +1367,14 @@ public class ActiveRagdoll
     _ragdolled = !_ragdolled;
     if (!_ragdolled)
     {
-      Ragdoll(false);
+      /*Ragdoll(false);
       _controller.GetComponent<UnityEngine.AI.NavMeshAgent>().enabled = true;
 
       // If not dead anymore, rise
       _reviving = true;
       GameScript._Singleton.StartCoroutine(Rise());
-      if (changeColor) ChangeColor(_color, 2f);
+      if (changeColor) ChangeColor(_color, 2f);*/
+      Debug.LogWarning("Res");
     }
 
     else
@@ -1392,9 +1393,50 @@ public class ActiveRagdoll
         Stats.RecordKill(source._playerScript._id);
         if (_isPlayer) Stats.RecordTeamkill(source._playerScript._id);
       }
+
       // Fire function per script type
       _enemyScript?.OnToggle(source, damageSourceType);
       _playerScript?.OnToggle(source, damageSourceType);
+
+      // Check extras
+      if (GameScript.Settings._Extras_CanUse)
+      {
+        var explode_self = false;
+        switch (GameScript.Settings._Extra_BodyExplode._value)
+        {
+
+          // All
+          case 1:
+            explode_self = true;
+            break;
+
+          // Enemies
+          case 2:
+            explode_self = !_isPlayer;
+            break;
+
+          // Players
+          case 3:
+            explode_self = _isPlayer;
+            break;
+        }
+        if (explode_self)
+        {
+          var explode_script = _hip.gameObject.AddComponent<ExplosiveScript>();
+          explode_script._explosionType = ExplosiveScript.ExplosionType.AWAY;
+          explode_script._radius = 3 * 0.8f;
+          explode_script.Trigger(source, (damageSourceType == DamageSourceType.MELEE ? 1f : 0.1f), false, true);
+
+          var explode_audio = _hip.gameObject.AddComponent<AudioSource>();
+          explode_audio.playOnAwake = false;
+          explode_audio.spatialBlend = 0.65f;
+
+          explode_script._audio = explode_audio;
+
+          //FunctionsC.PlaySound(ref explode_audio, "Ragdoll/Explode", 0.825f, 1.175f);
+        }
+      }
+
       // Fire item functions
       _itemL?.OnToggle();
       _itemR?.OnToggle();
@@ -1803,6 +1845,7 @@ public class ActiveRagdoll
     BodyPart_Handler.Reset();
     Jobs_Clean();
     FunctionsC.Reset();
+    UtilityScript.Reset();
   }
   public static void SoftReset()
   {

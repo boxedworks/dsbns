@@ -42,6 +42,17 @@ public class UtilityScript : ItemScript
 
   List<int> _hitRagdolls;
 
+  static Dictionary<UtilityType, List<UtilityScript>> _Utilities_Thrown;
+  public static void Reset()
+  {
+    _Utilities_Thrown = new Dictionary<UtilityType, List<UtilityScript>>();
+    foreach (var enum_ in System.Enum.GetValues(typeof(UtilityType)))
+    {
+      var t = (UtilityType)enum_;
+      _Utilities_Thrown[t] = new List<UtilityScript>();
+    }
+  }
+
   // Start is called before the first frame update
   new void Start()
   {
@@ -198,6 +209,12 @@ public class UtilityScript : ItemScript
             {
               return;
             }
+
+            // Books
+            /*else if (c.gameObject.name == "Books")
+            {
+              FunctionsC.BookManager.ExplodeBooks(c.collider, _ragdoll.transform.position);
+            }*/
 
             // other..
             else if (c.gameObject.layer == 3)
@@ -446,6 +463,13 @@ public class UtilityScript : ItemScript
       // Increment clip
       _clip--;
       if (incrementClip && _unregister) _ragdoll._playerScript?._profile.UtilityUse(_side);
+
+      // Extra; infinite ammo
+      if (_ragdoll._isPlayer && GameScript.Settings._Extras_CanUse && GameScript.Settings._Extra_PlayerAmmo._value == 3)
+      {
+        _clip++;
+        _ragdoll._playerScript.AddUtility(_utility_type, _side);
+      }
     };
 
     _onUpdate = () =>
@@ -550,12 +574,24 @@ public class UtilityScript : ItemScript
     if (_thrown) return;
     _thrown = true;
 
+    // Check for max utils
+    var utils_thrown = _Utilities_Thrown[_utility_type];
+    var maxed = utils_thrown.Count > 25;
+    if (maxed)
+    {
+      var util = utils_thrown[0];
+      utils_thrown.Remove(util);
+      GameObject.Destroy(util.gameObject);
+    }
+    utils_thrown.Add(this);
+
+    //
     var forward = _ragdoll._hip.transform.forward;
     if (mode == 1) forward = _ragdoll._hip.transform.right;
     else if (mode == 2) forward = -_ragdoll._hip.transform.right;
 
     _rb.position = _spawnLocation != Vector3.zero ? _spawnLocation :
-      _ragdoll._spine.transform.position + forward * 0.5f + new Vector3(0f, 0.2f, 0f);
+      _ragdoll._spine.transform.position + forward * 0.5f + new Vector3(0f, (_explosion != null ? 0.25f : 0.1f), 0f);
 
     // Configure Rigidbody
     _rb.isKinematic = false;

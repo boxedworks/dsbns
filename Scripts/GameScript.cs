@@ -3759,7 +3759,20 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     public static FunctionsC.SaveableStat_Int
       _Extra_RemoveBatGuy,
       _Extra_EnemyMultiplier,
-      _Extra_PlayerAmmo, _Extra_EnemyAmmo;
+      _Extra_PlayerAmmo, _Extra_EnemyAmmo,
+      _Extra_BodyExplode;
+    public static bool _Extras_CanUse { get { return _GameMode == GameModes.CLASSIC && !_LevelEditorEnabled; } }
+  public static  bool _Extras_UsingAny { get { return
+    _Extra_Superhot ||
+    _Extra_CrazyZombies ||
+    _Extra_RemoveBatGuy._value != 0 ||
+    _Extra_EnemyMultiplier._value != 0 ||
+    _Extra_PlayerAmmo._value != 0 ||
+    _Extra_EnemyAmmo._value != 0 ||
+    _Extra_BodyExplode._value != 0
+    ;
+  }}
+
     public static float _VERSION = 1.25f;
 
     // Struct holding info what item pair gets unlocked at what level
@@ -3898,7 +3911,8 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       _Extra_RemoveBatGuy = new FunctionsC.SaveableStat_Int("extra_batguy", 0);
       _Extra_EnemyMultiplier = new FunctionsC.SaveableStat_Int("extra_emulti", 0);
       _Extra_PlayerAmmo = new FunctionsC.SaveableStat_Int("extra_playerammo", 0);
-      _Extra_EnemyAmmo = new FunctionsC.SaveableStat_Int("extra_enemymmo", 0);
+      _Extra_EnemyAmmo = new FunctionsC.SaveableStat_Int("extra_enemyammo", 0);
+      _Extra_BodyExplode = new FunctionsC.SaveableStat_Int("extra_bodyexplode", 0);
     }
 
     public enum GamemodeChange
@@ -3908,6 +3922,8 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
 
       LEVEL_EDITOR
     }
+
+    public static bool _LevelEditorEnabled;
     public static void OnGamemodeChanged(GamemodeChange gamemode)
     {
       switch (gamemode)
@@ -3923,19 +3939,13 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
           break;
 
         case GamemodeChange.SURVIVAL:
+        case GamemodeChange.LEVEL_EDITOR:
+
           Physics.gravity = new Vector3(0f, -9.81f, 0f);
           break;
-
-        case GamemodeChange.LEVEL_EDITOR:
-          switch (GameScript.Settings._Extra_Gravity)
-          {
-            case 0: Physics.gravity = new Vector3(0f, -9.81f, 0f); break;
-            case 1: Physics.gravity = new Vector3(0f, 9.81f, 0f); break;
-            case 2: Physics.gravity = new Vector3(0f, 0f, 9.81f); break;
-            case 3: Physics.gravity = Vector3.zero; break;
-          }
-          break;
       }
+
+      _LevelEditorEnabled = gamemode == GamemodeChange.LEVEL_EDITOR;
     }
 
     public static void SetPostProcessing()

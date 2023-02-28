@@ -27,11 +27,11 @@ public class TileManager
 
   static System.Tuple<Material, Material> _Materials_Tiles;
 
-  public static TextMesh
+  public static TMPro.TextMeshPro
     _Text_LevelNum,
-    _Text_LevelTimer, _Text_LevelTimer_Best,
-    _Text_GameOver;
-  public static float _LevelTimer;
+    _Text_LevelTimer, _Text_LevelTimer_Best;
+  public static TextMesh _Text_GameOver;
+  public static float _LevelTimer, _LevelTime_Dev;
   public static bool _Level_Complete;
 
   public static void ShowGameOverText(string text, string color_base, string color_flash, int flashes = 8)
@@ -62,11 +62,11 @@ public class TileManager
   public static void Init()
   {
     if (_Text_LevelNum == null)
-      _Text_LevelNum = GameObject.Find("LevelNum").GetComponent<TextMesh>();
+      _Text_LevelNum = GameObject.Find("LevelNum").GetComponent<TMPro.TextMeshPro>();
     if (_Text_LevelTimer == null)
-      _Text_LevelTimer = GameObject.Find("LevelTimer").GetComponent<TextMesh>();
+      _Text_LevelTimer = GameObject.Find("LevelTimer").GetComponent<TMPro.TextMeshPro>();
     if (_Text_LevelTimer_Best == null)
-      _Text_LevelTimer_Best = GameObject.Find("LevelTimer_Best").GetComponent<TextMesh>();
+      _Text_LevelTimer_Best = GameObject.Find("LevelTimer_Best").GetComponent<TMPro.TextMeshPro>();
     if (_Text_GameOver == null)
       _Text_GameOver = GameObject.Find("Game_Over").GetComponent<TextMesh>();
 
@@ -465,29 +465,36 @@ public class TileManager
     string spawnpoint_data = null;
     _HasLocalLighting = false;
     var endofobjects = false;
+    string best_time = null;
     for (; data_iter < data_split.Length;)
     {
 
       for (var i = 0; i < 30 && data_iter < data_split.Length; i++)
       {
+
         // Check if data is valid
-        var data0 = data_split[data_iter++].Trim();
-        if (data0.Length <= 1) continue;
+        var data_ = data_split[data_iter++].Trim();
+        if (data_.Length <= 1) continue;
 
         // Check for name of map
-        if (data0.Contains("+"))
+        if (data_.Contains("+"))
         {
           endofobjects = true;
           break;
         }
 
         // Add to level data for reloading
-        _LevelObjects.Add(data0);
+        _LevelObjects.Add(data_);
+
         // Check if data is the spawnpoint data; save it for later
-        if (data0.Contains("playerspawn_"))
-          spawnpoint_data = data0;
-        else if (data0.Contains("candel"))
+        if (data_.Contains("playerspawn_"))
+          spawnpoint_data = data_;
+        else if (data_.Contains("candel"))
           _HasLocalLighting = true;
+        else if (data_.Contains("bdt_"))
+        {
+          best_time = data_;
+        }
       }
 
       if (endofobjects)
@@ -543,8 +550,23 @@ public class TileManager
       _last_objectoffset = _objectoffset;
     }
 
+    // Set best time
+    if (!GameScript.Settings._LevelEditorEnabled)
+    {
+      if (best_time != null)
+      {
+        TileManager._LevelTime_Dev = float.Parse(best_time.Split('_')[1]);
+        Debug.Log("Loaded best time: " + TileManager._LevelTime_Dev);
+      }
+      else
+      {
+        Debug.Log("No best time set for classic level!");
+      }
+    }
+
+
     // Clean up old meshes
-    string[] names = { "Meshes_Tiles_Up", "Meshes_Tiles_Down", "Meshes_Tiles_Sides" };
+    var names = new string[] { "Meshes_Tiles_Up", "Meshes_Tiles_Down", "Meshes_Tiles_Sides" };
     foreach (var name in names)
     {
       GameObject old = GameObject.Find(name);
@@ -900,7 +922,7 @@ public class TileManager
           }
 
       // If difficulty is 0, never check for bat person
-      var chaser_extra = GameScript.Settings._Extra_RemoveBatGuy._value;
+      var chaser_extra = GameScript.Settings._Extras_CanUse ? GameScript.Settings._Extra_RemoveBatGuy._value : 0;
       if (GameScript.Settings._DIFFICULTY == 0 && chaser_extra != 1)
         hasBat = true;
       if (!hasBat && chaser_extra != 2)
@@ -960,7 +982,7 @@ public class TileManager
 
         if (!enemy_original)
         {
-          var setting = GameScript.Settings._Extra_EnemyMultiplier._value;
+          var setting = GameScript.Settings._Extras_CanUse ? GameScript.Settings._Extra_EnemyMultiplier._value : 0;
 
           // None
           if (setting == 2)

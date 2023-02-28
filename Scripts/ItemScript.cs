@@ -36,19 +36,22 @@ public class ItemScript : MonoBehaviour
 
     // Check perk
     if (_ragdoll != null && _ragdoll._isPlayer && _ragdoll._playerScript.HasPerk(Shop.Perk.PerkType.MAX_AMMO_UP))
-      clip_size = Mathf.RoundToInt(_clipSize * 1.5f);
+      clip_size = Mathf.CeilToInt(_clipSize * 1.5f);
 
     // Check extra
-    if (_ragdoll._isPlayer)
-      switch (GameScript.Settings._Extra_PlayerAmmo._value)
-      {
-        case 1:
-          clip_size = Mathf.RoundToInt(_clipSize * 2f);
-          break;
-        case 2:
-          clip_size = Mathf.RoundToInt(_clipSize * 0.5f);
-          break;
-      }
+    if (GameScript.Settings._Extras_CanUse)
+    {
+      if (_ragdoll?._isPlayer ?? false)
+        switch (GameScript.Settings._Extra_PlayerAmmo._value)
+        {
+          case 1:
+            clip_size = Mathf.CeilToInt(_clipSize * 2f);
+            break;
+          case 2:
+            clip_size = Mathf.CeilToInt(_clipSize * 0.5f);
+            break;
+        }
+    }
 
     return clip_size;
   }
@@ -488,6 +491,13 @@ public class ItemScript : MonoBehaviour
 
       // Deincrement ammo
       _clip--;
+
+      // Extra; infinite ammo
+      if (_ragdoll._isPlayer && GameScript.Settings._Extras_CanUse && GameScript.Settings._Extra_PlayerAmmo._value == 3)
+      {
+        _clip++;
+      }
+
       _ragdoll._playerScript?._profile.ItemUse(_side);
 
       if (_clip == 0) OnClipEmpty();

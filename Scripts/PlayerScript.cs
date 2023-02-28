@@ -263,6 +263,22 @@ public class PlayerScript : MonoBehaviour
 
   public void RegisterUtility(ActiveRagdoll.Side side, int amount = -1)
   {
+    // Check extra
+    if (GameScript.Settings._Extras_CanUse)
+    {
+      if (_ragdoll?._isPlayer ?? false)
+        switch (GameScript.Settings._Extra_PlayerAmmo._value)
+        {
+          case 1:
+            amount = Mathf.CeilToInt(amount * 2f);
+            break;
+          case 2:
+            amount = Mathf.CeilToInt(amount * 0.5f);
+            break;
+        }
+    }
+
+    // Equip
     var max = amount == -1 ? 100 : amount;
     if (side == ActiveRagdoll.Side.LEFT)
     {
@@ -677,7 +693,7 @@ public class PlayerScript : MonoBehaviour
       {
 
         // Update time via player speed
-        var time_move = GameScript.Settings._Extra_Superhot && !GameScript.IsSurvival();
+        var time_move = GameScript.Settings._Extra_Superhot && GameScript.Settings._Extras_CanUse;
         if (time_move)
         {
           if (_spawnTimer <= 0f)
@@ -966,7 +982,7 @@ public class PlayerScript : MonoBehaviour
 
     // Spawn enemies as player gets closer to goal; 3rd difficulty / game mode ?
     if (!GameScript.IsSurvival())
-      if (_id == 0 && GameScript.Settings._Extra_CrazyZombies && Powerup._Powerups.Count > 0)
+      if (_id == 0 && (GameScript.Settings._Extra_CrazyZombies && GameScript.Settings._Extras_CanUse) && Powerup._Powerups.Count > 0)
       {
         var dis_spawn = MathC.Get2DDistance(transform.position, PlayerspawnScript._PlayerSpawns[0].transform.position);
         //Debug.Log("| " + dis_spawn + " " + (EnemyScript._Enemies_alive.Count < EnemyScript._MAX_RAGDOLLS_ALIVE));

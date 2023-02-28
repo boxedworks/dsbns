@@ -756,7 +756,8 @@ public class Menu2
         _CurrentMenuType = type;
         _CurrentMenu.ToggleColliders(true);
         _CurrentMenu._timeDisplayed = 0f;
-        _CurrentMenu._selectedComponent._focused = true;
+        if (_CurrentMenu._type != MenuType.CREDITS)
+          _CurrentMenu._selectedComponent._focused = true;
         _CurrentMenu._onSwitchTo?.Invoke();
         // Render new menu
         if (_CurrentMenu._type == MenuType.CREDITS) return;
@@ -6132,7 +6133,7 @@ a gampad if plugged in.~1
 
       }
       .AddComponent($"<color={_COLOR_GRAY}>extras</color>\n\n")
-      .AddComponent($"settings here affect the <color={_COLOR_GRAY}>CLASSIC</color> mode!\n\n");
+      .AddComponent($"settings here affect the <color={_COLOR_GRAY}>CLASSIC</color> mode!\nyou cannot save best time with extras on\n\n");
 
       // Wrapper function to add component to extras menu
       void AddExtraSelection(
@@ -6322,6 +6323,44 @@ a gampad if plugged in.~1
         }),
         },
         "modify the number of enemies initially spawned",
+
+        "unlock by...",
+        () => { return true; return Shop.Unlocked(Shop.Unlocks.EXTRA_CHASER); }
+      );
+
+      // Body explode
+      AddExtraSelection(
+        "explode on death",
+        () =>
+        {
+          switch (GameScript.Settings._Extra_BodyExplode._value)
+          {
+            case 0:
+              return "off";
+            case 1:
+              return "all";
+            case 2:
+              return "enemies";
+            case 3:
+              return "players";
+          }
+          return "N/A";
+        },
+        new DropdownSelectionComponent[] {
+        new DropdownSelectionComponent("off", "", (MenuComponent component) => {
+          GameScript.Settings._Extra_BodyExplode._value = 0;
+        }),
+        new DropdownSelectionComponent("all", "", (MenuComponent component) => {
+          GameScript.Settings._Extra_BodyExplode._value = 1;
+        }),
+        new DropdownSelectionComponent("enemies", "", (MenuComponent component) => {
+          GameScript.Settings._Extra_BodyExplode._value = 2;
+        }),
+        new DropdownSelectionComponent("players", "", (MenuComponent component) => {
+          GameScript.Settings._Extra_BodyExplode._value = 3;
+        }),
+        },
+        "explode on death",
 
         "unlock by...",
         () => { return true; return Shop.Unlocked(Shop.Unlocks.EXTRA_CHASER); }

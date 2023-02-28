@@ -370,21 +370,29 @@ public class BulletScript : MonoBehaviour
 
   public void PlaySparks(bool other_bullet = false)
   {
-    var parts = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.SPARKS)[0];
-    parts.transform.position = transform.position;
-    parts.transform.LookAt(transform.position + -transform.forward);
-    parts.Play();
-
     var s = _audioSource;
     if (other_bullet)
     {
       s.volume = 0.8f;
       FunctionsC.PlaySound(ref s, "Etc/Bullet_ricochet", 0.9f, 1.1f);
+
+      /*var parts = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.BULLET_COLLIDE)[0];
+      parts.transform.position = transform.position;
+      parts.Play();*/
+      var parts = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.SPARKS)[0];
+      parts.transform.position = transform.position;
+      parts.transform.LookAt(transform.position + -transform.forward);
+      parts.Play();
     }
     else
     {
       s.volume = 0.5f;
       FunctionsC.PlaySound(ref s, "Etc/Bullet_impact", 0.9f, 1.1f);
+
+      var parts = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.SPARKS)[0];
+      parts.transform.position = transform.position;
+      parts.transform.LookAt(transform.position + -transform.forward);
+      parts.Play();
     }
   }
 

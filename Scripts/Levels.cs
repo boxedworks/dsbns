@@ -1,5 +1,8 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+
+using System.IO;
+
 using UnityEngine;
 
 public class Levels : MonoBehaviour
@@ -25,10 +28,10 @@ public class Levels : MonoBehaviour
   public static void WriteToFile(string path, params string[] data)
   {
     // Open writer stream
-    using (System.IO.StreamWriter writer = new System.IO.StreamWriter(path))
+    using (var writer = new StreamWriter(path))
     {
       // Write data line-by-line
-      foreach (string s in data)
+      foreach (var s in data)
       {
         // Check empty string
         //if (s.Trim().Equals("")) continue;
@@ -43,7 +46,7 @@ public class Levels : MonoBehaviour
   public static string ReadFromFile(string path)
   {
     string data = null;
-    using (System.IO.StreamReader reader = new System.IO.StreamReader(path))
+    using (var reader = new StreamReader(path))
     {
       data = reader.ReadToEnd();
       reader.Close();
@@ -62,8 +65,8 @@ public class Levels : MonoBehaviour
       if (_CurrentLevelCollection._name == "levels_editor_local")
       {
 #if UNITY_STANDALONE
-        if (!System.IO.File.Exists("levels_editor_local.txt"))
-          System.IO.File.CreateText("levels_editor_local.txt");
+        if (!File.Exists("levels_editor_local.txt"))
+          File.CreateText("levels_editor_local.txt");
         else
           leveldata = ReadFromFile("levels_editor_local.txt");
 #endif
@@ -73,11 +76,11 @@ public class Levels : MonoBehaviour
         var loadPath = "Maps/" + _CurrentLevelCollection._name;
 
         // Check if developmental build; load from editor
-        //if (Debug.isDebugBuild && System.IO.Directory.Exists("C:/Users/thoma/Desktop/Projects/Unity/PolySneak/Assets/Resources/"))
+        //if (Debug.isDebugBuild && Directory.Exists("C:/Users/thoma/Desktop/Projects/Unity/PolySneak/Assets/Resources/"))
         //  loadPath = "C:/Users/thoma/Desktop/Projects/Unity/PolySneak/Assets/Resources/" + loadPath + ".txt";
 
         // Load map data
-        leveldata = /*Debug.isDebugBuild && System.IO.Directory.Exists("C:/Users/thoma/Desktop/Projects/Unity/PolySneak/Assets/Resources/") ?
+        leveldata = /*Debug.isDebugBuild && Directory.Exists("C:/Users/thoma/Desktop/Projects/Unity/PolySneak/Assets/Resources/") ?
         ReadFromFile(loadPath) :*/
           Resources.Load<TextAsset>(loadPath).text;
       }
@@ -138,15 +141,18 @@ public class Levels : MonoBehaviour
     else if (Debug.isDebugBuild)
     {
       // Save each map as a new line in file
-      string writePath = "Assets/Resources/Maps/";
-      // Check if developmental build; write to editor and return
-      /*if (Debug.isDebugBuild && System.IO.Directory.Exists("C:/Users/thoma/Desktop/Projects/Unity/PolySneak/Assets/Resources/"))
-      {
-        WriteToFile("C:/Users/thoma/Desktop/Projects/Unity/PolySneak/" + writePath + _LevelCollections[_CurrentLevelCollectionIndex]._name + ".txt", _LevelCollections[_CurrentLevelCollectionIndex]._leveldata);
-        return;
-      }*/
+      var write_path = "Assets/Resources/Maps/";
+      var file_name = write_path + _CurrentLevelCollection._name + ".txt";
+      var save_data = _CurrentLevelCollection._leveldata;
 
-      WriteToFile(writePath + _CurrentLevelCollection._name + ".txt", _CurrentLevelCollection._leveldata);
+      // Check if developmental build; write to editor and return
+      if (Debug.isDebugBuild && Directory.Exists("C:/Users/thoma/Desktop/Projects/Unity/PolySneak/Assets/Resources/"))
+      {
+        WriteToFile("C:/Users/thoma/Desktop/Projects/Unity/PolySneak/" + file_name, save_data);
+        return;
+      }
+
+      WriteToFile(file_name, save_data);
       //Debug.Log($"Saved levels to {"Assets/Resources/Maps/" + _LevelCollections[_CurrentLevelCollection]._name + ".txt"}");
     }
   }
@@ -245,19 +251,19 @@ public class Levels : MonoBehaviour
   {
 
     // Level pack dir
-    if (!System.IO.Directory.Exists("Levelpacks"))
-      System.IO.Directory.CreateDirectory("Levelpacks");
+    if (!Directory.Exists("Levelpacks"))
+      Directory.CreateDirectory("Levelpacks");
 
     // Local levelpacks dir
-    if (!System.IO.Directory.Exists("Levelpacks/Local"))
-      System.IO.Directory.CreateDirectory("Levelpacks/Local");
+    if (!Directory.Exists("Levelpacks/Local"))
+      Directory.CreateDirectory("Levelpacks/Local");
 
-    if (!System.IO.Directory.Exists("Levelpacks/Local/trashed"))
-      System.IO.Directory.CreateDirectory("Levelpacks/Local/trashed");
+    if (!Directory.Exists("Levelpacks/Local/trashed"))
+      Directory.CreateDirectory("Levelpacks/Local/trashed");
 
     // Steam Workshop content dir
-    if (!System.IO.Directory.Exists("Levelpacks/WorkshopContent"))
-      System.IO.Directory.CreateDirectory("Levelpacks/WorkshopContent");
+    if (!Directory.Exists("Levelpacks/WorkshopContent"))
+      Directory.CreateDirectory("Levelpacks/WorkshopContent");
   }
 
   public static void LevelPacks_NewLocal()
@@ -270,7 +276,7 @@ public class Levels : MonoBehaviour
     var new_name = "unnamed_levelpack";
     var number = 0;
 
-    while (System.IO.File.Exists($"{filestructure}{new_name}{number}.levelpack"))
+    while (File.Exists($"{filestructure}{new_name}{number}.levelpack"))
       number++;
 
     WriteToFile($"{filestructure}{new_name}{number}.levelpack", "");
