@@ -556,11 +556,12 @@ public class TileManager
       if (best_time != null)
       {
         TileManager._LevelTime_Dev = float.Parse(best_time.Split('_')[1]);
-        Debug.Log("Loaded best time: " + TileManager._LevelTime_Dev);
+        Debug.Log("Loaded best dev time: " + TileManager._LevelTime_Dev);
       }
       else
       {
-        Debug.Log("No best time set for classic level!");
+        TileManager._LevelTime_Dev = -1f;
+        Debug.LogWarning("No best time set for classic level");
       }
     }
 

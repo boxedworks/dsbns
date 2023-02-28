@@ -1761,7 +1761,7 @@ public class EnemyScript : MonoBehaviour
             }
             level_data_new.Add($"btd_{level_time}");
 
-            Levels._LevelPack_Current._leveldata[Levels._CurrentLevelIndex] = string.Join(" ", level_data_new);
+            Levels._CurrentLevelCollection._leveldata[Levels._CurrentLevelIndex] = string.Join(" ", level_data_new);
             Levels.SaveLevels();
 
             Debug.Log($"Set best dev time: {level_time}");
