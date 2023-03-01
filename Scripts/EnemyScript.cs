@@ -1708,7 +1708,6 @@ public class EnemyScript : MonoBehaviour
       else if (!PlayerScript._All_Dead)
       {
         // Level timer
-
         TileManager._Level_Complete = true;
 
         // Check timer
@@ -1732,6 +1731,7 @@ public class EnemyScript : MonoBehaviour
           }
         }
 
+        // Show time difference between best time
         if (level_time_best != -1f && level_time != level_time_best)
         {
           if (level_time < level_time_best)
@@ -1751,15 +1751,37 @@ public class EnemyScript : MonoBehaviour
             // Set level data
             var level_data_split = Levels._CurrentLevelData.Split(' ');
             var level_data_new = new List<string>();
+            var index = -1;
+            var levelname_index = -1;
             foreach (var d in level_data_split)
             {
+
+              index++;
+
               if (d.StartsWith("bdt_"))
               {
+                index--;
                 continue;
               }
+
               level_data_new.Add(d);
+
+              if (d.StartsWith("+"))
+              {
+                levelname_index = index;
+              }
             }
-            level_data_new.Add($"btd_{level_time}");
+
+            var add_data = $"bdt_{level_time}";
+
+            if (levelname_index == -1)
+            {
+              level_data_new.Add(add_data);
+            }
+            else
+            {
+              level_data_new.Insert(levelname_index - 1, add_data);
+            }
 
             Levels._CurrentLevelCollection._leveldata[Levels._CurrentLevelIndex] = string.Join(" ", level_data_new);
             Levels.SaveLevels();
@@ -1767,6 +1789,45 @@ public class EnemyScript : MonoBehaviour
             Debug.Log($"Set best dev time: {level_time}");
           }
 
+        }
+
+        // Medal time
+        {
+          var best_dev_time = TileManager._LevelTime_Dev;
+
+          var medal_diamond = best_dev_time + 0.1f;
+          var medal_times = new float[]{
+            medal_diamond,  // Diamond
+            medal_diamond * 1.1f,  // Gold
+            medal_diamond * 1.5f,   // Silver
+            medal_diamond * 2f,   // Bronze
+          };
+          var medals = new System.Tuple<string, string>[]{
+            System.Tuple.Create("diamond", "#65E7E5"),
+            System.Tuple.Create("gold", "#DCE461"),
+            System.Tuple.Create("silver", "#8F8686"),
+            System.Tuple.Create("bronze", "#6F4646"),
+          };
+
+          var index = 0;
+          var medal_index = -1;
+          TileManager._Text_LevelTimer_Best.text += "\n\n";
+          var medal_format = "<color={0}>{1,-7}: {2,-6}</color>\n";
+          foreach (var time in medal_times)
+          {
+
+            var time_ = float.Parse(string.Format("{0:0.000}", time));
+            //Debug.Log($"{medal_index} ... {time_}");
+
+            if (level_time <= time_ && medal_index == -1)
+            {
+              medal_index = index;
+            }
+
+            TileManager._Text_LevelTimer_Best.text += string.Format(medal_format, medals[index].Item2, medals[index].Item1, string.Format("{0:0.000}", time_) + (medal_index == index ? " <--" : ""));
+
+            index++;
+          }
         }
 
         // Teleport exit to player
@@ -1820,6 +1881,58 @@ public class EnemyScript : MonoBehaviour
     if (GameScript._GameMode == GameScript.GameModes.SURVIVAL && source._isPlayer)
       GameScript.SurvivalMode.IncrementScore(source._playerScript._id);
   }
+
+  //
+  // Check medal
+  public static string GetFormattedMedalColor(float medalTime)
+  {
+
+    var best_dev_time = TileManager._LevelTime_Dev;
+
+    var medal_diamond = best_dev_time + 0.5f;
+    var medal_times = new float[]{
+      medal_diamond,  // Diamond
+      medal_diamond * 1.1f,  // Gold
+      medal_diamond * 1.5f,   // Silver
+      medal_diamond * 2f,   // Bronze
+    };
+    var medals = new System.Tuple<string, string>[]{
+      System.Tuple.Create("diamond", "lightblue"),
+      System.Tuple.Create("gold", "yellow"),
+      System.Tuple.Create("silver", "grey"),
+      System.Tuple.Create("bronze", "brown"),
+    };
+
+    var index = 0;
+    var medal_index = 0;
+    //TileManager._Text_LevelTimer_Best.text += "\n\n";
+    foreach (var time in medal_times)
+    {
+
+      var time_ = float.Parse(string.Format("{0:0.000}", time));
+      Debug.Log($"{medal_index} ... {time_}");
+
+      if (medalTime <= time_)
+      {
+        medal_index = index;
+      }
+
+      //TileManager._Text_LevelTimer_Best.text += $"{medals[index].Item1} - {time_}\n";
+
+      index++;
+    }
+
+    // Award medal
+    if (medal_index < medal_times.Length)
+    {
+      //TileManager._Text_LevelTimer.text += $" {medals[medal_index]}";
+      //return $"<color={medals[medal_index].Item2}>{medalTime}</color>";
+      return medals[medal_index].Item2;
+    }
+    //return medalTime + "";
+    return "white";
+  }
+
 
   // Wrapper to see if has weapon
   bool HasWeapon()

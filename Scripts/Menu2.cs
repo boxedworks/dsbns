@@ -3311,7 +3311,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
     var levels_per_dir = 12;
     void SpawnMenu_Levels()
     {
-      var f = GameScript._GameMode == GameScript.GameModes.CLASSIC ? "{0,-10}{1,20}{2,40}" : "{0,-20}{1,20}{2,40}";
+      var f = GameScript._GameMode == GameScript.GameModes.CLASSIC ? "{0,-7}{1,15}{2,15}{3,35}" : "{0,-20}{1,20}{2,40}";
       // Create new menu
       var m = new Menu2(MenuType.LEVELS)
       {
@@ -3405,11 +3405,11 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
                 var level_time_best = float.Parse(PlayerPrefs.GetFloat($"{Levels._CurrentLevelCollection_Name}_{level_iter}_time", -1f).ToString("0.000"));
                 if (level_time_best == -1f)
                 {
-                  selections.Add(string.Format(f, $"\\{(level_iter + 1)}", "-", ""));
+                  selections.Add(string.Format(f, $"\\{(level_iter + 1)}", "-", "", ""));
                 }
                 else
                 {
-                  selections.Add(string.Format(f, $"\\{(level_iter + 1)}", string.Format("{0:0.000}", level_time_best), ""));
+                  selections.Add(string.Format(f, $"\\{(level_iter + 1)}", string.Format("{0:0.000}", level_time_best), "", ""));
                 }
                 // Check if unlocked
                 if (level_unlocked)
@@ -3495,7 +3495,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
               if (Levels.LevelCompleted(143))
                 match = selections[0];
               // Set dropdown data
-              component.SetDropdownData($"=== {string.Format(f, "level", "time", "preview")}\n\n", selections, actions, match, actions_onCreated, null, actions_onFocus, actions_onUnfocus);
+              component.SetDropdownData($"=== {string.Format(f, "level", "time", "rating", "preview")}\n\n", selections, actions, match, actions_onCreated, null, actions_onFocus, actions_onUnfocus);
             }
 
             // CHALLENGE levels; WIP

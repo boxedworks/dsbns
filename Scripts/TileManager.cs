@@ -661,13 +661,21 @@ public class TileManager
     for (var i = 0; i < _LevelObjects.Count;)
     {
       for (var u = 0; i < _LevelObjects.Count && u < 15; u++)
-        if (LoadObject(_LevelObjects[i++]) == null)
+      {
+        var obj_load = _LevelObjects[i++];
+        if (LoadObject(obj_load) == null)
         {
+          if (obj_load.StartsWith("bdt_"))
+          {
+            continue;
+          }
+
           GameScript._Coroutine_load = null;
           _LoadingMap = false;
 
-          throw new System.NullReferenceException("Error loading object: " + _LevelObjects[i - 1]);
+          throw new System.NullReferenceException("Error loading object: " + obj_load);
         }
+      }
       yield return new WaitForSeconds(0.01f);
     }
 
@@ -978,6 +986,7 @@ public class TileManager
     // Load specific object data
     switch (object_base._type)
     {
+
       // Load enemy
       case ("e"):
 
@@ -4455,7 +4464,7 @@ public class TileManager
 
       var split = data_split[data_iter].Split('_');
       var type = split[0];
-      if (type.Trim().Length == 0)
+      if (type.Trim().Length == 0 || type == "bdt")
         continue;
 
       Vector3 position = new Vector3(float.Parse(split[2], System.Globalization.CultureInfo.InvariantCulture), float.Parse(split[1], System.Globalization.CultureInfo.InvariantCulture), 0f),

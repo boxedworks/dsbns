@@ -173,6 +173,7 @@ public static class Shop
 
     ITEM_FLAMETHROWER,
     ITEM_ROCKET_FIST,
+    ITEM_STICKY_GUN,
 
     ITEM_GRENADE_LAUNCHER,
 
@@ -279,6 +280,7 @@ public static class Shop
 
     _Unlocks_Descriptions.Add(Unlocks.ITEM_FLAMETHROWER, new Tuple<string, int>("charge-shot, incendiary, slow-reload", 0));
     //_Unlocks_Descriptions.Add(Unlocks.ITEM_ROCKET_FIST, new Tuple<string, int>("charge-shot, melee, slow-reload", 0));
+    _Unlocks_Descriptions.Add(Unlocks.ITEM_STICKY_GUN, new Tuple<string, int>("stealthy, chain, slow-reload", 0));
 
     _Unlocks_Descriptions.Add(Unlocks.UTILITY_SHURIKEN, new Tuple<string, int>("throwable, pick-up, small", 3));
     _Unlocks_Descriptions.Add(Unlocks.UTILITY_SHURIKEN_BIG, new Tuple<string, int>("throwable, pick-up, large", 8));
@@ -352,6 +354,8 @@ public static class Shop
     AddAvailableUnlock(Unlocks.MAX_EQUIPMENT_POINTS_0);
     AddAvailableUnlock(Unlocks.MAX_EQUIPMENT_POINTS_1);
     AddAvailableUnlock(Unlocks.ITEM_PISTOL_SILENCED);
+
+    AddAvailableUnlock(Unlocks.ITEM_STICKY_GUN);
 
     //AddAvailableUnlock(Unlocks.ITEM_ROCKET_FIST);
 

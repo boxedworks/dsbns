@@ -229,8 +229,12 @@ public class ItemScript : MonoBehaviour
     if (_laserSight) GameObject.Destroy(_laserSight);
   }
 
+  static int _ID;
+  public int _id;
   public void Start()
   {
+    _id = _ID++;
+
     _disableOnRagdollDeath = true;
 
     if (_twoHanded)
@@ -455,12 +459,14 @@ public class ItemScript : MonoBehaviour
           // Spawn projectiles
           if (_customProjectileIter >= _customProjectiles.Length || _customProjectiles[_customProjectileIter] == null)
             ReloadCustom();
+
           // Spawn utility
-          UtilityScript utility = _customProjectiles[_customProjectileIter++];
+          var utility = _customProjectiles[_customProjectileIter++];
           utility._side = _side;
           utility.SetSpawnLocation(new Vector3(_forward.position.x, _ragdoll._spine.transform.position.y, _forward.position.z) - _ragdoll._spine.transform.forward * 0.5f);
           utility.UseDown();
           utility.UseUp();
+
           // Set custom velocity
           _customProjectileVelocityMod = 1f;
           if (_type == ItemType.GRENADE_LAUNCHER) _customProjectileVelocityMod = 2f;
@@ -633,9 +639,16 @@ public class ItemScript : MonoBehaviour
           {
             snap_neck = true;
           }
+
           if (snap_neck)
           {
             _ragdoll.Grapple(false);
+
+            /*_swinging = false;
+            _bursts = 0;
+            _used = false;
+            _triggerDown = false;
+            _useTime = _time;*/
             return;
           }
         }
@@ -676,10 +689,10 @@ public class ItemScript : MonoBehaviour
           Local_Use(_melee && _bursts > 0 ? false : true);
           if ((_clip == 0 && (!_melee)) || _bursts++ >= _burstPerShot - 1)
           {
+            // If melee, stop swinging
             _bursts = 0;
             _used = false;
             if (!IsChargeWeapon()) _triggerDown = false;
-            // If melee, stop swinging
             if (_melee)
             {
               _swinging = false;
@@ -1002,14 +1015,23 @@ public class ItemScript : MonoBehaviour
   {
     // If melee, do nothing
     if (_melee && !IsChargeWeapon()) return;
+
     // Check perk
     var reload_speed_mod = 1f;
     if (_ragdoll._isPlayer && _ragdoll._playerScript.HasPerk(Shop.Perk.PerkType.FASTER_RELOAD))
       reload_speed_mod = 1.4f;
+
     // Play noise and set clip
     PlaySound(Audio.GUN_RELOAD, reload_speed_mod - 0.1f, reload_speed_mod + 0.1f);
     if (_ragdoll._isPlayer) EnemyScript.CheckSound(_ragdoll._hip.transform.position, EnemyScript.Loudness.SUPERSOFT);
     _clip = (_reloadOneAtTime ? _clip + 1 : ClipSize());
+
+    // Check special
+    if (_type == ItemType.STICKY_GUN)
+    {
+      UtilityScript.Detonate_StickyBullets(this);
+    }
+
     // Show progress bar
     var reloadTime = _reloadTime / reload_speed_mod;
     _reloading = true;
@@ -1099,6 +1121,7 @@ public class ItemScript : MonoBehaviour
       {
         _customProjectiles[i] = UtilityScript.GetUtility(_customProjetile);
         _customProjectiles[i].RegisterUtility(_ragdoll, false);
+        _customProjectiles[i].RegisterCustomProjectile(this);
       }
       _customProjectileIter = 0;
     }

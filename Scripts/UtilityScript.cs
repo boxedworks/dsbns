@@ -18,6 +18,8 @@ public class UtilityScript : ItemScript
     STOP_WATCH,
     INVISIBILITY,
     DASH,
+
+    STICKY_GUN_BULLET,
   }
 
   public UtilityType _utility_type;
@@ -42,6 +44,12 @@ public class UtilityScript : ItemScript
 
   List<int> _hitRagdolls;
 
+  int _customProjectileId;
+  public void RegisterCustomProjectile(ItemScript source)
+  {
+    _customProjectileId = source._id;
+  }
+
   static Dictionary<UtilityType, List<UtilityScript>> _Utilities_Thrown;
   public static void Reset()
   {
@@ -50,6 +58,17 @@ public class UtilityScript : ItemScript
     {
       var t = (UtilityType)enum_;
       _Utilities_Thrown[t] = new List<UtilityScript>();
+    }
+  }
+
+  public static void Detonate_StickyBullets(ItemScript source)
+  {
+    foreach (var bullet in _Utilities_Thrown[UtilityType.STICKY_GUN_BULLET])
+    {
+      if (bullet._customProjectileId == source._id)
+      {
+        bullet.Explode(Random.Range(0.05f, 0.15f));
+      }
     }
   }
 
@@ -119,28 +138,40 @@ public class UtilityScript : ItemScript
         explosion_radius = 4f;
         _throwSpeed = 1.5f;
         break;
+
       case UtilityType.GRENADE_IMPACT:
         explosion_radius = 3f;
         _throwSpeed = 2f;
         break;
+
       case UtilityType.C4:
         explosion_radius = 3f;
         _expirationTimer = 90f;
         break;
+
       case UtilityType.SHURIKEN:
         _throwSpeed = 4f;
         _spinYAxis = true;
         break;
+
       case UtilityType.SHURIKEN_BIG:
         _throwSpeed = 2.5f;
         _spinYAxis = true;
         break;
+
       case UtilityType.KUNAI_EXPLOSIVE:
       case UtilityType.KUNAI_STICKY:
         _throwSpeed = 5f;
         explosion_radius = 3f;
         _spin = false;
         break;
+
+      case UtilityType.STICKY_GUN_BULLET:
+        _throwSpeed = 5f;
+        explosion_radius = 1.5f;
+        _spin = false;
+        break;
+
       case UtilityType.STOP_WATCH:
         _useOnRelease = false;
         break;
@@ -159,6 +190,10 @@ public class UtilityScript : ItemScript
 
       _explosion = gameObject.AddComponent<ExplosiveScript>();
       _explosion._explosionType = ExplosiveScript.ExplosionType.AWAY;
+      _explosion._onExplode += () =>
+      {
+        _c.enabled = false;
+      };
     }
 
     // Gather components
@@ -343,12 +378,12 @@ public class UtilityScript : ItemScript
               _stuck = true;
 
               // Bullet
-              /*if (c.gameObject.name == "Bullet")
+              if (c.gameObject.name == "Bullet")
               {
                 _exploded = false;
                 Explode();
                 return;
-              }*/
+              }
 
               var rag = ActiveRagdoll.GetRagdoll(c.collider.gameObject);
               if (rag != null)
@@ -379,6 +414,57 @@ public class UtilityScript : ItemScript
           Throw();
           Unregister();
           break;
+
+        case UtilityType.STICKY_GUN_BULLET:
+
+          // Stick to enemy and delayed explode
+          _onCollisionEnter += (Collision c) =>
+          {
+
+            //Debug.Log($"{_stuck} {c.gameObject.name}");
+
+            if (!_stuck)
+            {
+              _stuck = true;
+
+              // Bullet
+              if (c.gameObject.name == "Bullet")
+              {
+                _exploded = false;
+                Explode();
+                return;
+              }
+
+              var rag = ActiveRagdoll.GetRagdoll(c.collider.gameObject);
+              if (rag != null)
+              {
+                if (rag._id == _ragdoll._id) return;
+                transform.parent = c.transform;
+                PlaySound(Audio.UTILITY_ACTION);
+              }
+              else
+                PlaySound(Audio.UTILITY_HIT_FLOOR);
+              transform.GetChild(1).GetComponent<ParticleSystem>().Stop();
+              GameObject.Destroy(_rb);
+              //_rb.isKinematic = true;
+
+              // Stick on surface
+              //EnemyScript.CheckSound(transform.position, EnemyScript.Loudness.SOFT);
+              //Explode(1f);
+            }
+          };
+          _explosion._onExplode += () =>
+          {
+            // Hide ring
+            if (_ring != null)
+              _ring.enabled = false;
+          };
+          // Throw and queue next
+          transform.GetChild(1).GetComponent<ParticleSystem>().Play();
+          Throw();
+          Unregister();
+          break;
+
         case UtilityType.GRENADE_IMPACT:
           // Add explode on impact event
           _onCollisionEnter += (Collision c) =>
@@ -389,6 +475,7 @@ public class UtilityScript : ItemScript
           Throw();
           Unregister();
           break;
+
         case UtilityType.C4:
 
           incrementClip = false;
@@ -550,6 +637,7 @@ public class UtilityScript : ItemScript
 
     // Register ragdoll
     _ragdoll = source;
+
     // Ignore holder's ragdoll
     if (_c != null)
       source.IgnoreCollision(_c);
@@ -581,9 +669,16 @@ public class UtilityScript : ItemScript
     {
       var util = utils_thrown[0];
       utils_thrown.Remove(util);
-      GameObject.Destroy(util.gameObject);
+      if (util != null)
+        GameObject.Destroy(util.gameObject);
     }
     utils_thrown.Add(this);
+
+    // Ignore collisions
+    if (_utility_type != UtilityType.C4)
+    {
+      _ragdoll._grapplee?.IgnoreCollision(_c);
+    }
 
     //
     var forward = _ragdoll._hip.transform.forward;
@@ -596,12 +691,6 @@ public class UtilityScript : ItemScript
     // Configure Rigidbody
     _rb.isKinematic = false;
     _rb.collisionDetectionMode = CollisionDetectionMode.Continuous;
-
-    // Check grapple
-    if (_utility_type != UtilityType.C4)
-    {
-      _ragdoll._grapplee?.IgnoreCollision(_c);
-    }
 
     // Add force
     _rb.AddForce(
@@ -675,6 +764,8 @@ public class UtilityScript : ItemScript
     if (_exploded) return;
     _exploded = true;
     if (_explosion == null) return;
+
+    _explosion._audio = _audioSources[1];
 
     // Explode effect
     if (delay > 0f)

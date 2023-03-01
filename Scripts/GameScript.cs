@@ -2829,6 +2829,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       GRENADE_LAUNCHER,
       FLAMETHROWER,
       ROCKET_FIST,
+      STICKY_GUN,
     }
 
     // Spawn a single item
@@ -2933,6 +2934,8 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
           break;
         case Items.SWORD:
           return 4;
+        case Items.STICKY_GUN:
+          return 3;
       }
       return -1;
     }
@@ -3762,16 +3765,21 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       _Extra_PlayerAmmo, _Extra_EnemyAmmo,
       _Extra_BodyExplode;
     public static bool _Extras_CanUse { get { return _GameMode == GameModes.CLASSIC && !_LevelEditorEnabled; } }
-  public static  bool _Extras_UsingAny { get { return
-    _Extra_Superhot ||
-    _Extra_CrazyZombies ||
-    _Extra_RemoveBatGuy._value != 0 ||
-    _Extra_EnemyMultiplier._value != 0 ||
-    _Extra_PlayerAmmo._value != 0 ||
-    _Extra_EnemyAmmo._value != 0 ||
-    _Extra_BodyExplode._value != 0
-    ;
-  }}
+    public static bool _Extras_UsingAny
+    {
+      get
+      {
+        return
+      _Extra_Superhot ||
+      _Extra_CrazyZombies ||
+      _Extra_RemoveBatGuy._value != 0 ||
+      _Extra_EnemyMultiplier._value != 0 ||
+      _Extra_PlayerAmmo._value != 0 ||
+      _Extra_EnemyAmmo._value != 0 ||
+      _Extra_BodyExplode._value != 0
+      ;
+      }
+    }
 
     public static float _VERSION = 1.25f;
 
