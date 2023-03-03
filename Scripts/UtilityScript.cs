@@ -103,11 +103,15 @@ public class UtilityScript : ItemScript
   }
 
   bool _unregister;
-  Vector3 _spawnLocation;
+  Vector3 _spawnLocation, _spawnDirection;
   float _forceModifier;
   public void SetSpawnLocation(Vector3 location)
   {
     _spawnLocation = location;
+  }
+    public void SetSpawnDirection(Vector3 direction)
+  {
+    _spawnDirection = direction;
   }
   public void SetForceModifier(float mod)
   {
@@ -124,6 +128,7 @@ public class UtilityScript : ItemScript
 
     //  Set other defaults
     _spawnLocation = Vector3.zero;
+    _spawnDirection = Vector3.zero;
     _forceModifier = 1f;
     _expirationTimer = 30f;
 
@@ -684,6 +689,11 @@ public class UtilityScript : ItemScript
     var forward = _ragdoll._hip.transform.forward;
     if (mode == 1) forward = _ragdoll._hip.transform.right;
     else if (mode == 2) forward = -_ragdoll._hip.transform.right;
+
+    // Rotation
+    if(_spawnDirection != Vector3.zero){
+      forward = _spawnDirection;
+    }
 
     _rb.position = _spawnLocation != Vector3.zero ? _spawnLocation :
       _ragdoll._spine.transform.position + forward * 0.5f + new Vector3(0f, (_explosion != null ? 0.25f : 0.1f), 0f);

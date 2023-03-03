@@ -2501,6 +2501,10 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
             t.localEulerAngles = new Vector3(0f, 90f, -90f);
             t.localScale = new Vector3(0.6f, 0.6f, 0.6f);
             break;
+          case ("STICKY_GUN"):
+            t.localPosition += new Vector3(0f, 0.01f, 0f);
+            t.localScale = new Vector3(0.15f, 0.15f, 0.15f);
+            break;
         }
         // Color
         var meshes = new List<Renderer>();

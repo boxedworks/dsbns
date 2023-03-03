@@ -453,6 +453,7 @@ public class ItemScript : MonoBehaviour
             }
           }
         }
+
         // Custom projectile
         else
         {
@@ -461,9 +462,14 @@ public class ItemScript : MonoBehaviour
             ReloadCustom();
 
           // Spawn utility
+          var spawn_pos = _forward.position;
+          var new_position = new Vector3(spawn_pos.x, _ragdoll._spine.transform.position.y, spawn_pos.z);
+          var forward = MathC.Get2DVector(transform.forward).normalized;
+
           var utility = _customProjectiles[_customProjectileIter++];
           utility._side = _side;
-          utility.SetSpawnLocation(new Vector3(_forward.position.x, _ragdoll._spine.transform.position.y, _forward.position.z) - _ragdoll._spine.transform.forward * 0.5f);
+          utility.SetSpawnLocation(spawn_pos);
+          utility.SetSpawnDirection(forward);
           utility.UseDown();
           utility.UseUp();
 

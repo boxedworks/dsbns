@@ -2,7 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class RagdollTriggerScript : MonoBehaviour {
+public class RagdollTriggerScript : MonoBehaviour
+{
 
   ActiveRagdoll _ragdoll;
 
@@ -11,9 +12,11 @@ public class RagdollTriggerScript : MonoBehaviour {
     if (_ragdoll == null)
     {
       _ragdoll = ActiveRagdoll.GetRagdoll(transform.gameObject);
-      if(_ragdoll == null) return;
+      if (_ragdoll == null) return;
     }
     _ragdoll.OnTriggerEnter(other);
+    if (_ragdoll._isPlayer)
+      Debug.Log(other.name);
   }
 
   private void OnTriggerExit(Collider other)

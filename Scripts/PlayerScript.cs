@@ -99,7 +99,7 @@ public class PlayerScript : MonoBehaviour
       _isPlayer = true,
       _health = health
     };
-    _ragdoll._hip.gameObject.AddComponent<RagdollTriggerScript>();
+    //_ragdoll._hip.gameObject.AddComponent<RagdollTriggerScript>();
 
     // Check armor for editor maps
     if (!GameScript.IsSurvival())
@@ -1989,8 +1989,8 @@ public class PlayerScript : MonoBehaviour
     if (_ragdoll == null || _ragdoll._dead) return;
     switch (other.name)
     {
-      case ("Shuriken(Clone)"):
-      case ("Shuriken_big(Clone)"):
+      case ("SHURIKEN"):
+      case ("SHURIKEN_BIG"):
         other.GetComponent<UtilityScript>().PickUp(this);
         break;
       default:

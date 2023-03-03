@@ -843,6 +843,22 @@ public class Menu2
     if (switchTo) SwitchMenu(MenuType.GENERIC_MENU);
   }
 
+  public static void GenericMenu(string[] prompts, System.Action<MenuComponent> beforeSwitch = null, bool switchTo = false, System.Action<MenuComponent> afterSwitch = null)
+  {
+    var menu = new Menu2(MenuType.GENERIC_MENU)
+    {
+
+    };
+    foreach (var s in prompts)
+      menu.AddComponent(s);
+    if (afterSwitch != null)
+      menu.AddEvent(afterSwitch);
+    if (beforeSwitch != null)
+      menu.AddEventFront(beforeSwitch);
+    // Switch
+    if (switchTo) SwitchMenu(MenuType.GENERIC_MENU);
+  }
+
   // Initialize all menus
   public static void Init()
   {
@@ -3256,28 +3272,29 @@ public class Menu2
         GameScript._GameMode = GameScript.GameModes.CLASSIC;
         GameScript.Settings._DIFFICULTY = PlayerPrefs.GetInt($"{GameScript._GameMode}_SavedDifficulty", 0);
         Levels._CurrentLevelCollectionIndex = GameScript.Settings._DIFFICULTY;
+        GameScript.Settings.OnGamemodeChanged(GameScript.Settings.GamemodeChange.CLASSIC);
+
         if (Shop.Unlocked(Shop.Unlocks.TUTORIAL_PART1))
           CommonEvents._SwitchMenu(MenuType.GAMETYPE_CLASSIC);
+
         // Tutorial
         else
         {
           GenericMenu(
             new string[] {
-              @"you are new here~1
+              @"~1
 
 if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' menu~2
 
 "
             },
-            "ok",
+            "cool",
             MenuType.GAMETYPE_CLASSIC,
             null,
             true
           );
-
-          GameScript.Settings.OnGamemodeChanged(GameScript.Settings.GamemodeChange.CLASSIC);
         }
-        //GameResources._UI_Player.gameObject.SetActive(true);
+
       })
     // Switch to survival mode menu
     .AddComponent(string.Format(format_mode, "survival", "waves of enemies\n"), MenuComponent.ComponentType.BUTTON_SIMPLE)
@@ -6213,7 +6230,7 @@ a gampad if plugged in.~1
         "set the speed that time passes",
 
         "unlock by completing sneaky level 40, solo, with just a knife",
-        () => { return Shop.Unlocked(Shop.Unlocks.EXTRA_TIME); }
+        () => { return true; Shop.Unlocked(Shop.Unlocks.EXTRA_TIME); }
       );
 
       // Gravity direction
@@ -6241,7 +6258,7 @@ a gampad if plugged in.~1
         "set gravity's direction",
 
         "unlock by completing sneaky level 80, solo, with just a knife and silenced pistol",
-        () => { return Shop.Unlocked(Shop.Unlocks.EXTRA_GRAVITY); }
+        () => { return true; Shop.Unlocked(Shop.Unlocks.EXTRA_GRAVITY); }
       );
 
       // Crazy zombies
@@ -6259,7 +6276,7 @@ a gampad if plugged in.~1
         "toggle a horde mode",
 
         "unlock by...",
-        () => { return Shop.Unlocked(Shop.Unlocks.EXTRA_HORDE); }
+        () => { return true; Shop.Unlocked(Shop.Unlocks.EXTRA_HORDE); }
       );
 
       // Remove bat guy
@@ -6292,7 +6309,7 @@ a gampad if plugged in.~1
         "modify the chasing guy",
 
         "unlock by...",
-        () => { return Shop.Unlocked(Shop.Unlocks.EXTRA_CHASER); }
+        () => { return true; Shop.Unlocked(Shop.Unlocks.EXTRA_CHASER); }
       );
 
       // Enemy multiplier
