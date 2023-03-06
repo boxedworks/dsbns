@@ -199,6 +199,7 @@ public static class Shop
     MOD_NO_SLOWMO,
     MOD_ARMOR_UP,
     MOD_PENETRATION_UP,
+    MOD_SMART_BULLETS,
 
     MAX_EQUIPMENT_POINTS_0,
     MAX_EQUIPMENT_POINTS_1,
@@ -303,6 +304,8 @@ public static class Shop
     _Unlocks_Descriptions.Add(Unlocks.MOD_ARMOR_UP, new Tuple<string, int>("-", 0));
     _Unlocks_Descriptions.Add(Unlocks.MOD_PENETRATION_UP, new Tuple<string, int>("-", 0));
 
+    _Unlocks_Descriptions.Add(Unlocks.MOD_SMART_BULLETS, new Tuple<string, int>("-", 0));
+
     _Unlocks_Descriptions.Add(Unlocks.MAX_EQUIPMENT_POINTS_0, new Tuple<string, int>("equipment-points, (+1)", 4));
     _Unlocks_Descriptions.Add(Unlocks.MAX_EQUIPMENT_POINTS_1, new Tuple<string, int>("equipment-points, (+1)", 5));
     _Unlocks_Descriptions.Add(Unlocks.MAX_EQUIPMENT_POINTS_2, new Tuple<string, int>("equipment-points, (+1)", 5));
@@ -356,6 +359,7 @@ public static class Shop
     AddAvailableUnlock(Unlocks.ITEM_PISTOL_SILENCED);
 
     AddAvailableUnlock(Unlocks.ITEM_STICKY_GUN);
+    AddAvailableUnlock(Unlocks.MOD_SMART_BULLETS);
 
     //AddAvailableUnlock(Unlocks.ITEM_ROCKET_FIST);
 
@@ -567,6 +571,8 @@ public static class Shop
       LASER_SIGHTS,
       AKIMBO,
       NO_SLOWMO,
+      SMART_BULLETS,
+
       NONE
     }
 
@@ -587,6 +593,7 @@ public static class Shop
       _PERK_DESCRIPTIONS.Add(PerkType.LASER_SIGHTS, "guns have laser sights");
       _PERK_DESCRIPTIONS.Add(PerkType.FIRE_RATE_UP, "guns shoot faster");
       _PERK_DESCRIPTIONS.Add(PerkType.NO_SLOWMO, "no slowmo; harder");
+      _PERK_DESCRIPTIONS.Add(PerkType.SMART_BULLETS, "strong gun = smart bullet");
     }
 
     public static bool HasPerk(int playerId, PerkType perk)

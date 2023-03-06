@@ -166,6 +166,7 @@ public static class FunctionsC
     SPARKS_ROBOT,
     PAPER,
     BULLET_COLLIDE,
+    EXPLOSION_MARK, EXPLOSION_MARK_SMALL,
   }
   static int _ExplosionIter;
   public static ParticleSystem[] GetParticleSystem(ParticleSystemType particleType)
@@ -225,9 +226,15 @@ public static class FunctionsC
         index = 14;
         randomChild = true;
         break;
-              case ParticleSystemType.BULLET_COLLIDE:
+      case ParticleSystemType.BULLET_COLLIDE:
         index = 15;
         randomChild = true;
+        break;
+      case ParticleSystemType.EXPLOSION_MARK:
+        index = 16;
+        break;
+      case ParticleSystemType.EXPLOSION_MARK_SMALL:
+        index = 17;
         break;
     }
     if (randomChild)
@@ -264,12 +271,17 @@ public static class FunctionsC
 
   public static void PlayComplexParticleSystemAt(ParticleSystem[] particles, Vector3 position)
   {
+
+    // Set position
     if (particles.Length > 1)
       particles[0].transform.parent.position = position;
-    else particles[0].transform.position = position;
-    for (int i = 0; i < particles.Length; i++)
+    else
+      particles[0].transform.position = position;
+
+    // Play
+    for (var i = 0; i < particles.Length; i++)
     {
-      ParticleSystem particle = particles[i];
+      var particle = particles[i];
       //particle.transform.Rotate(new Vector3(0f, 1f, 0f) * 360f * Random.value);
       particle.Play();
     }
@@ -314,7 +326,7 @@ public static class FunctionsC
     return sfx_source;
   }
 
-  static public void PlaySound(ref AudioSource speaker, string soundPath, float min = 1f, float max = 1f)
+  static public void PlaySound(ref AudioSource speaker, string soundPath, float pitch_min = 1f, float pitch_max = 1f)
   {
     if (speaker == null || GameScript.Settings._VolumeSFX == 0) return;
     if (_PlayingAudio == null) _PlayingAudio = new Dictionary<AudioSource, System.Tuple<float, float>>();
@@ -325,7 +337,7 @@ public static class FunctionsC
     speaker.pitch = sfx_source.pitch;
 
     // Change pitch
-    if (min != 1f || max != 1f) ChangePitch(ref speaker, min, max);
+    if (pitch_min != 1f || pitch_max != 1f) ChangePitch(ref speaker, pitch_min, pitch_max);
 
     // PlayOneShot
     PlayOneShot(speaker, sfx_source.clip);
@@ -438,14 +450,8 @@ public static class FunctionsC
 
   public static void SpawnExplosionScar(Vector3 position, float scale = 1f)
   {
-    var explosion_scar = GameObject.Instantiate(GameResources._Explosive_Scar as GameObject).transform;
-    explosion_scar.parent = GameResources._Container_Objects;
-    explosion_scar.position = position;
-    explosion_scar.localPosition = new Vector3(explosion_scar.localPosition.x, -1.29f, explosion_scar.localPosition.z);
-    explosion_scar.localRotation = Quaternion.identity;
-    explosion_scar.localScale = new Vector3(scale * 0.12f, .2f, 1.6f * scale * 0.12f);
-    explosion_scar.Rotate(new Vector3(0f, 1f, 0f) * Random.value * 360f);
-    explosion_scar.gameObject.SetActive(true);
+    var particle_system_type = scale < 2.3f ? ParticleSystemType.EXPLOSION_MARK_SMALL : ParticleSystemType.EXPLOSION_MARK;
+    FunctionsC.PlayComplexParticleSystemAt(particle_system_type, position);
   }
 
   // Apply damage and force in a radius to Ragdolls

@@ -1607,17 +1607,27 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
                 TileManager.SaveFileOverwrite(mapdata);
               }
             }
+
             if (!_EditorEnabled)
             {
-              if ((ControllerManager.GetKey(ControllerManager.Key.PAGE_UP, ControllerManager.InputMode.DOWN)) && IsSurvival()) SurvivalMode._Wave++;
-              else
+              // Increment survival wave
+              if (IsSurvival() && (ControllerManager.GetKey(ControllerManager.Key.PAGE_UP, ControllerManager.InputMode.DOWN)))
               {
-                if (ControllerManager.GetKey(ControllerManager.Key.MULTIPLY_NUMPAD, ControllerManager.InputMode.HOLD)) OnLevelComplete();
+                SurvivalMode._Wave++;
+                Debug.Log($"Survival wave incremented to: {SurvivalMode._Wave}");
               }
-              // Fast skip
+
+              // Reset dev level time
+              if (ControllerManager.GetKey(ControllerManager.Key.BACKQUOTE))
+              {
+                TileManager._LevelTime_Dev = -1f;
+                Debug.Log("Reset dev level time");
+              }
             }
+
           }
 
+          // Next / previous level
           if (!_EditorEnabled)
           {
             if (!TileManager._LoadingMap)
@@ -1636,7 +1646,9 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
               }
             }
           }
+
         }
+
         else
         {
 
@@ -2999,6 +3011,9 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
           break;
         case Shop.Perk.PerkType.NO_SLOWMO:
           return 0;
+
+        case Shop.Perk.PerkType.SMART_BULLETS:
+          return 3;
       }
       return 100;
     }
@@ -3050,6 +3065,8 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       TileManager._Text_LevelNum.gameObject.SetActive(false);
       TileManager._Text_LevelTimer.gameObject.SetActive(false);
       TileManager._Text_LevelTimer_Best.gameObject.SetActive(false);
+      TileManager._Text_GameOver.gameObject.SetActive(false);
+
     }
     else
     {
@@ -3060,6 +3077,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       TileManager._Text_LevelNum.gameObject.SetActive(true);
       TileManager._Text_LevelTimer.gameObject.SetActive(true);
       TileManager._Text_LevelTimer_Best.gameObject.SetActive(true);
+      TileManager._Text_GameOver.gameObject.SetActive(true);
     }
     // Toggle text bubbles
     TextBubbleScript.ToggleBubbles(!_Paused);

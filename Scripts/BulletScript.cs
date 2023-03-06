@@ -199,7 +199,10 @@ public class BulletScript : MonoBehaviour
         _hitAmount += (int)damage;
         if (_hitAmount <= _penatrationAmount)
         {
-          //RedirectToOther();
+          if (_source._ragdoll._playerScript?.HasPerk(Shop.Perk.PerkType.SMART_BULLETS) ?? false)
+          {
+            RedirectToOther();
+          }
           return true;
         }
       }

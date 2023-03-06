@@ -364,7 +364,12 @@ public static class ControllerManager
 
     F1,
     F2,
-    F3
+    F3,
+    F4,
+    F5,
+    F6,
+
+    BACKQUOTE
   }
   public static bool GetKey(Key key, InputMode mode = InputMode.DOWN)
   {
@@ -553,6 +558,16 @@ public static class ControllerManager
         break;
       case (Key.F3):
         gotKey = keyboard.f3Key;
+        break;
+      case (Key.F4):
+        gotKey = keyboard.f4Key;
+        break;
+      case (Key.F5):
+        gotKey = keyboard.f5Key;
+        break;
+
+      case Key.BACKQUOTE:
+        gotKey = keyboard.backquoteKey;
         break;
     }
     switch (mode)

@@ -3337,6 +3337,13 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
       .AddComponent(GameScript._GameMode == GameScript.GameModes.CLASSIC ?
         $"<color={_COLOR_GRAY}>level directories</color>\n\n" :
         string.Format($"<color={_COLOR_GRAY}>{f}</color>", "levels", "highest wave", "") + "\n\n");
+
+      // Load level times
+      m._onSwitchTo += () =>
+      {
+        Levels.BufferLevelTimeDatas();
+      };
+
       // Set level directory options
       if (GameScript._GameMode == GameScript.GameModes.CLASSIC)
       {
@@ -3419,15 +3426,15 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
                 if (level_iter >= Levels._CurrentLevelCollection._leveldata.Length) continue;
 
                 //if (GameScript._Singleton._IsDemo) level_unlocked = true;
-                var level_time_best = float.Parse(PlayerPrefs.GetFloat($"{Levels._CurrentLevelCollection_Name}_{level_iter}_time", -1f).ToString("0.000"));
-                if (level_time_best == -1f)
-                {
-                  selections.Add(string.Format(f, $"\\{(level_iter + 1)}", "-", "", ""));
-                }
-                else
-                {
-                  selections.Add(string.Format(f, $"\\{(level_iter + 1)}", string.Format("{0:0.000}", level_time_best), "", ""));
-                }
+                var dev_time = Levels._CurrentLevel_LevelTimesData[level_iter].Item1;
+                var level_time_best = Levels._CurrentLevel_LevelTimesData[level_iter].Item2;
+                var text_levelTimeBest = level_time_best == -1f ? "-" : string.Format("{0:0.000}", level_time_best);
+
+                var level_rating = Levels.GetLevelRating(dev_time, level_time_best);
+                var text_rating = level_time_best == -1f ? "-" : level_rating == null ? "" : level_rating.Item1;
+
+                selections.Add(string.Format(f, $"\\{(level_iter + 1)}", text_levelTimeBest, text_rating, ""));
+
                 // Check if unlocked
                 if (level_unlocked)
                 {
@@ -3580,6 +3587,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
               Levels._CurrentLevelCollectionIndex = (GameScript._GameMode == GameScript.GameModes.SURVIVAL ? 2 : 0 + difficulty);
               _SaveMenuDir = -1;
               _CanRender = false;
+              Levels.BufferLevelTimeDatas();
               RenderMenu();
             }
             selections.Add("sneaky - base difficulty");
@@ -5085,7 +5093,9 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
       .AddEvent((MenuComponent component) =>
       {
         if (component._textColor == "")
+        {
           CommonEvents._SwitchMenu(MenuType.LEVELS);
+        }
         else
         {
           if (!Shop.Unlocked(Shop.Unlocks.TUTORIAL_PART0))
@@ -5997,9 +6007,10 @@ a gampad if plugged in.~1
         // Normal pause
         else
         {
-          CommonEvents._SwitchMenu(_Menus[MenuType.PAUSE]._selectionIndex == (GameScript._GameMode == GameScript.GameModes.CLASSIC ? 6 : 3) ? MenuType.LEVELS : MenuType.MAIN);
+          var switchMenu = _Menus[MenuType.PAUSE]._selectionIndex == (GameScript._GameMode == GameScript.GameModes.CLASSIC ? 6 : 3) ? MenuType.LEVELS : MenuType.MAIN;
+          CommonEvents._SwitchMenu(switchMenu);
+          _InPause = false;
         }
-        _InPause = false;
       })
     .AddBackButton(MenuType.PAUSE, "no")
       .AddEvent((MenuComponent c) =>
@@ -6144,7 +6155,7 @@ a gampad if plugged in.~1
     void SpawnMenu_Extras()
     {
       var format_extras = "{0,-12}- {1,-50}";
-      var format_extras2 = "{0,-14}: {1,-50}";
+      var format_extras2 = "{0,-20}: {1,-50}";
       var menu_extras = new Menu2(MenuType.EXTRAS)
       {
 
@@ -6173,7 +6184,7 @@ a gampad if plugged in.~1
             {
               // Set display text
               var selection = prompt_value_logic.Invoke();
-              component.SetDisplayText(string.Format(format_extras2 + "\n", $"{prompt}", selection));
+              component.SetDisplayText(string.Format(format_extras2 + line_end, $"{prompt}", selection));
 
               // Set dropdown data
               var selections = new List<string>();

@@ -124,9 +124,80 @@ public class Levels : MonoBehaviour
     _LevelCollections[_CurrentLevelCollectionIndex]._leveldata = levels.ToArray();
   }
 
+  public static Dictionary<int, System.Tuple<float, float>> _CurrentLevel_LevelTimesData;
+  public static void BufferLevelTimeDatas()
+  {
+
+    // Get directory to loop through
+    var level_datas = _CurrentLevelCollection._leveldata;
+
+    // Init new dictionary
+    _CurrentLevel_LevelTimesData = new Dictionary<int, System.Tuple<float, float>>();
+
+    // Load data
+    for (var i = 0; i < level_datas.Length; i++)
+    {
+
+      var dev_time = -1f;
+      foreach (var d in level_datas[i].Split(" "))
+      {
+        if (d.StartsWith("bdt_"))
+        {
+          dev_time = float.Parse(d.Split("_")[1]);
+          break;
+        }
+      }
+
+      var level_time_best = float.Parse(PlayerPrefs.GetFloat($"{_CurrentLevelCollection_Name}_{i}_time", -1f).ToString("0.000"));
+
+      _CurrentLevel_LevelTimesData.Add(i, System.Tuple.Create(dev_time, level_time_best));
+    }
+
+  }
+
   public static bool LevelCompleted(int leveliter)
   {
     return GameScript.Settings._LevelsCompleted[_CurrentLevelCollection_Name].Contains(leveliter);
+  }
+
+  public static System.Tuple<string, string>[] GetLevelRatings()
+  {
+    return new System.Tuple<string, string>[]{
+      System.Tuple.Create("****", "#65E7E5"),
+      System.Tuple.Create("***", "#DCE461"),
+      System.Tuple.Create("**", "#8F8686"),
+      System.Tuple.Create("*", "#6F4646"),
+    };
+  }
+  public static float[] GetLevelRatingTimings(float dev_time)
+  {
+    var medal_diamond = dev_time + 0.1f;
+    return new float[]{
+      medal_diamond,  // Diamond
+      medal_diamond * 1.1f,  // Gold
+      medal_diamond * 1.5f,   // Silver
+      medal_diamond * 2f,   // Bronze
+    };
+  }
+  public static System.Tuple<string, string> GetLevelRating(float dev_time, float player_time)
+  {
+    var ratings = GetLevelRatings();
+    var rating_times = GetLevelRatingTimings(dev_time);
+
+    var index = 0;
+    var medal_index = -1;
+    foreach (var time in rating_times)
+    {
+      var time_ = float.Parse(string.Format("{0:0.000}", time));
+      if (player_time <= time_ && medal_index == -1)
+      {
+        return ratings[index];
+
+      }
+      index++;
+    }
+
+    return null;
   }
 
   public static void SaveLevels()

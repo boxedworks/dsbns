@@ -15,8 +15,6 @@ public class RagdollTriggerScript : MonoBehaviour
       if (_ragdoll == null) return;
     }
     _ragdoll.OnTriggerEnter(other);
-    if (_ragdoll._isPlayer)
-      Debug.Log(other.name);
   }
 
   private void OnTriggerExit(Collider other)

@@ -409,11 +409,22 @@ public class PlayerScript : MonoBehaviour
     _ring[0].sharedMaterial.color = c;
   }
 
+  public static void StartLevelTimer()
+  {
+    _TimerStarted = true;
+
+    if (PlayerScript._Players[0]._level_ratings_shown)
+    {
+      TileManager._Text_LevelTimer_Best.text = TileManager._Text_LevelTimer_Best.text.Split("\n")[0];
+    }
+  }
+
   float _lastDistance;
   ActiveRagdoll _targetRagdoll;
   int _targetIter;
 
   public static bool _TimerStarted;
+  bool _level_ratings_shown;
 
   // Update is called once per frame
   float _rearrangeTime;
@@ -427,8 +438,44 @@ public class PlayerScript : MonoBehaviour
       var player_farthest = FunctionsC.GetFarthestPlayerFrom(PlayerspawnScript._PlayerSpawns[0].transform.position);
       if (player_farthest._distance > 0.5f)
       {
-        _TimerStarted = true;
+        StartLevelTimer();
       }
+    }
+
+    // Ratings
+    if (
+      _id == 0 && !_level_ratings_shown && !TileManager._Level_Complete && !GameScript._Paused &&
+      (
+        (!_TimerStarted && Time.time - GameScript._LevelStartTime > 2f) ||
+        (_ragdoll._dead && Time.unscaledTime - _ragdoll._time_dead > 2f)
+      )
+    )
+    {
+      _level_ratings_shown = true;
+
+      // Rating times
+      var best_dev_time = TileManager._LevelTime_Dev;
+      var level_time_best = float.Parse(PlayerPrefs.GetFloat($"{Levels._CurrentLevelCollection_Name}_{Levels._CurrentLevelIndex}_time", -1f).ToString("0.000"));
+
+      var medal_times = Levels.GetLevelRatingTimings(best_dev_time);
+      var ratings = Levels.GetLevelRatings();
+
+      var index = 0;
+      var medal_index = -1;
+      TileManager._Text_LevelTimer_Best.text += "\n\n";
+      var medal_format = "<color={0}>{1,-5}: {2,-6}</color>\n";
+      foreach (var time in medal_times)
+      {
+
+        var time_ = float.Parse(string.Format("{0:0.000}", time));
+        if (level_time_best != -1f && level_time_best <= time_ && medal_index == -1)
+        {
+          medal_index = index;
+        }
+        TileManager._Text_LevelTimer_Best.text += string.Format(medal_format, ratings[index].Item2, ratings[index].Item1, string.Format("{0:0.000}", time_) + (medal_index == index ? "*" : ""));
+        index++;
+      }
+
     }
 
 #if DEBUG

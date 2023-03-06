@@ -198,10 +198,12 @@ public class EnemyScript : MonoBehaviour
   // Use this for initialization
   public void Init(SurvivalAttributes survivalAttributes)
   {
+
     // Set unique ID
+    if (_id != 0) return;
     _id = _ID++;
+
     // Add to list of enemies
-    if (_Enemies_alive == null) _Enemies_alive = new List<EnemyScript>();
     _Enemies_alive.Add(this);
 
     _canAttack = true;
@@ -240,7 +242,7 @@ public class EnemyScript : MonoBehaviour
       _agent.agentTypeID = TileManager._navMeshSurface.agentTypeID;
 
     // Setup ragdoll
-    GameObject ragdollObj = Instantiate(GameResources._Ragdoll);
+    var ragdollObj = Instantiate(GameResources._Ragdoll);
     ragdollObj.transform.parent = transform.parent;
     ragdollObj.transform.position = transform.position;
     ragdollObj.transform.LookAt(new Vector3(_waitLookPos.x, ragdollObj.transform.position.y, _waitLookPos.z));
@@ -262,6 +264,7 @@ public class EnemyScript : MonoBehaviour
           break;
         case (GameScript.ItemManager.Items.PISTOL_SILENCED):
           _ragdoll.ChangeColor(Color.magenta / 3f);
+          _itemRight = GameScript.ItemManager.Items.KNIFE;
           break;
         case (GameScript.ItemManager.Items.REVOLVER):
           _ragdoll.ChangeColor((Color.red + Color.yellow) / 3f);
@@ -315,20 +318,24 @@ public class EnemyScript : MonoBehaviour
     // Check zombie configs
     if (isZombie)
     {
+      // Disable line renderer
+      _lr.enabled = false;
+
+      // Agent stuff
+      _beganPatrolling = true;
+      _ragdoll.SetActive(true);
+      _patroling = false;
+
       // Set target to nearest player
       var data = FunctionsC.GetClosestPlayerTo(transform.position);
       if (data == null || data._ragdoll == null) return;
-      ActiveRagdoll closestPlayer = data._ragdoll;
+      var closestPlayer = data._ragdoll;
       SetRagdollTarget(closestPlayer);
+
       SetRandomStrafe();
-      _patroling = false;
-      _ragdoll.SetActive(true);
       _agent.enabled = true;
       _ragdoll._rotSpeed = PlayerScript.ROTATIONSPEED * (0.8f + Random.value * 0.3f);
-      _beganPatrolling = true;
       TargetFound(false, false);
-      // Disable line renderer
-      _lr.enabled = false;
 
       // Check armor
       if (_survivalAttributes._enemyType == GameScript.SurvivalMode.EnemyType.ARMORED)
@@ -401,7 +408,10 @@ public class EnemyScript : MonoBehaviour
       _ragdoll._hip.transform.parent.rotation = rot;*/
 
       _beganPatrolling = true;
-      _agent.enabled = true;
+      if (!_ragdoll._grappled)
+      {
+        _agent.enabled = true;
+      }
 
       // Set state and begin patrolling
       _state = State.NEUTRAL;
@@ -415,18 +425,21 @@ public class EnemyScript : MonoBehaviour
     {
       _ragdoll.ToggleRaycasting(true);
 
-      _lr_pos0 = _ragdoll._head.gameObject.transform.position;
-      _lr_pos1 = _lr_pos0 + _ragdoll._hip.transform.forward * 3f;
-      var cPos1 = _lr.GetPosition(1);
-      cPos1 += (_lr_pos1 - cPos1) * Time.deltaTime * 5f;
-      var offset = -new Vector3(0f, 1f, 0f);
-      cPos1 = new Vector3(cPos1.x, _lr_pos0.y, cPos1.z);
-      if (Mathf.Abs((_lr_pos1 - _lr_pos0).magnitude) > 2f)
+      if (_lr.positionCount > 1)
       {
-        var dir = (cPos1 - _lr_pos0);
-        cPos1 = _lr_pos0 + dir.normalized * 2f;
+        _lr_pos0 = _ragdoll._head.gameObject.transform.position;
+        _lr_pos1 = _lr_pos0 + _ragdoll._hip.transform.forward * 3f;
+        var cPos1 = _lr.GetPosition(1);
+        cPos1 += (_lr_pos1 - cPos1) * Time.deltaTime * 5f;
+        var offset = -new Vector3(0f, 1f, 0f);
+        cPos1 = new Vector3(cPos1.x, _lr_pos0.y, cPos1.z);
+        if (Mathf.Abs((_lr_pos1 - _lr_pos0).magnitude) > 2f)
+        {
+          var dir = (cPos1 - _lr_pos0);
+          cPos1 = _lr_pos0 + dir.normalized * 2f;
+        }
+        _lr.SetPositions(new Vector3[] { _lr_pos0 + offset, cPos1 + offset });
       }
-      _lr.SetPositions(new Vector3[] { _lr_pos0 + offset, cPos1 + offset });
     }
 
     if (!_agent.enabled) return;
@@ -743,7 +756,7 @@ public class EnemyScript : MonoBehaviour
                     // Attack if close enough or pointed at target
                     else if ((_ragdoll.HasGun()) || (!_ragdoll.HasGun() && dis < (_itemLeft == GameScript.ItemManager.Items.GRENADE_HOLD ? 1f : _itemLeft == GameScript.ItemManager.Items.BAT ? 1.2f : 1.4f)))
                     {
-                      UseItem();
+                      UseItem(dis < 1.4f);
                       if (HasMachineGun())
                         _attackTime = Time.time + useitem.UseRate();
                       else
@@ -838,19 +851,38 @@ public class EnemyScript : MonoBehaviour
 
   bool _leftweaponuse = true;
   // Alternate weapons if has multiple
-  void UseItem()
+  void UseItem(bool close_to_targ)
   {
     _leftweaponuse = !_leftweaponuse;
+
     if (_ragdoll._itemL == null && _ragdoll._itemR == null) { return; }
+
     else if (_ragdoll._itemL == null && _ragdoll._itemR != null) { _ragdoll.UseRight(); }
     else if (_ragdoll._itemL != null && _ragdoll._itemR == null) { _ragdoll.UseLeft(); }
-    else if (_leftweaponuse)
-    {
-      _ragdoll.UseLeft();
-    }
+
     else
     {
-      _ragdoll.UseRight();
+
+      // If same type of weapon or close to, alternate
+      if ((_ragdoll._itemL.IsGun() && _ragdoll._itemR.IsGun()) || (!_ragdoll._itemL.IsGun() && !_ragdoll._itemR.IsGun()) || close_to_targ)
+      {
+        if (_leftweaponuse)
+        {
+          _ragdoll.UseLeft();
+        }
+        else
+        {
+          _ragdoll.UseRight();
+        }
+      }
+
+      // Else, check how close
+      else
+      {
+        //var melee = _ragdoll._itemL.IsGun() ? _ragdoll._itemR : _ragdoll._itemL;
+        var gun = !_ragdoll._itemL.IsGun() ? _ragdoll._itemR : _ragdoll._itemL;
+        gun.UseDown();
+      }
     }
   }
 
@@ -1174,8 +1206,10 @@ public class EnemyScript : MonoBehaviour
   #region Patrol Functions
   void SetCurrentPatrolPoint()
   {
-    Vector3 p = _path.GetPatrolPoint().position;
+    var p = _path.GetPatrolPoint().position;
     if (MathC.Get2DDistance(p, transform.position) == 0f) return;
+    if (_survivalAttributes != null)
+      Debug.Log(_agent.enabled);
     _agent.SetDestination(p);
   }
   void SetNextPatrolPoint()
@@ -1216,7 +1250,7 @@ public class EnemyScript : MonoBehaviour
         var filter = new UnityEngine.AI.NavMeshQueryFilter();
         filter.areaMask = 1;
         filter.agentTypeID = (_isZombie && GameScript.IsSurvival() ? TileManager._navMeshSurface2.agentTypeID : TileManager._navMeshSurface.agentTypeID);
-        if (!UnityEngine.AI.NavMesh.CalculatePath(transform.position, _lastKnownPos, filter, path_new)) Debug.LogError("Failed to find path");
+        if (!UnityEngine.AI.NavMesh.CalculatePath(transform.position, _lastKnownPos, filter, path_new)) Debug.LogError("Failed to find path. (agent enabled): " + _agent.enabled);
         int useIter = 2;
         // Check if the enemy is about to redirect
         if (!_targetInFront)
@@ -1463,11 +1497,13 @@ public class EnemyScript : MonoBehaviour
       //.LogError("Beginning to patrol with no path");
       return;
     }
+
     // Patrol
     _patroling = true;
     SetCurrentPatrolPoint();
+
     // Look at new pos
-    Transform p = _path.GetLookPoint(false);
+    var p = _path.GetLookPoint(false);
     _waitLookPos = MathC.Get2DVector(p.position) + new Vector3(0f, transform.position.y, 0f);
   }
   #endregion
@@ -1582,6 +1618,28 @@ public class EnemyScript : MonoBehaviour
     }
     else
       _ragdoll.AddArmJoint(ActiveRagdoll.Side.RIGHT);
+
+    // Special
+    if (_itemLeft == GameScript.ItemManager.Items.PISTOL_SILENCED)
+    {
+      _ragdoll.AddGrappler();
+    }
+  }
+
+  public void OnGrapplerRemoved()
+  {
+    _survivalAttributes = null;
+
+    // Set target to nearest player
+    var data = FunctionsC.GetClosestPlayerTo(transform.position);
+    if (data == null || data._ragdoll == null) return;
+    var closestPlayer = data._ragdoll;
+    SetRagdollTarget(closestPlayer);
+
+    SetRandomStrafe();
+    _agent.enabled = true;
+    _ragdoll._rotSpeed = PlayerScript.ROTATIONSPEED * (0.8f + Random.value * 0.3f);
+    TargetFound(true, false);
   }
 
   public static bool AllDead()
@@ -1741,7 +1799,7 @@ public class EnemyScript : MonoBehaviour
         }
 
         // Save best dev time
-        if (Debug.isDebugBuild)
+        if (Debug.isDebugBuild && !GameScript.Settings._Extras_UsingAny)
         {
 
           if (TileManager._LevelTime_Dev == -1 || level_time < TileManager._LevelTime_Dev)
@@ -1783,7 +1841,9 @@ public class EnemyScript : MonoBehaviour
               level_data_new.Insert(levelname_index - 1, add_data);
             }
 
-            Levels._CurrentLevelCollection._leveldata[Levels._CurrentLevelIndex] = string.Join(" ", level_data_new);
+            var mapdata_new = string.Join(" ", level_data_new);
+
+            Levels._CurrentLevelCollection._leveldata[Levels._CurrentLevelIndex] = TileManager._CurrentMapData = mapdata_new;
             Levels.SaveLevels();
 
             Debug.Log($"Set best dev time: {level_time}");
@@ -1791,41 +1851,26 @@ public class EnemyScript : MonoBehaviour
 
         }
 
-        // Medal time
+        // Rating times
         {
           var best_dev_time = TileManager._LevelTime_Dev;
 
-          var medal_diamond = best_dev_time + 0.1f;
-          var medal_times = new float[]{
-            medal_diamond,  // Diamond
-            medal_diamond * 1.1f,  // Gold
-            medal_diamond * 1.5f,   // Silver
-            medal_diamond * 2f,   // Bronze
-          };
-          var medals = new System.Tuple<string, string>[]{
-            System.Tuple.Create("diamond", "#65E7E5"),
-            System.Tuple.Create("gold", "#DCE461"),
-            System.Tuple.Create("silver", "#8F8686"),
-            System.Tuple.Create("bronze", "#6F4646"),
-          };
+          var medal_times = Levels.GetLevelRatingTimings(best_dev_time);
+          var ratings = Levels.GetLevelRatings();
 
           var index = 0;
           var medal_index = -1;
           TileManager._Text_LevelTimer_Best.text += "\n\n";
-          var medal_format = "<color={0}>{1,-7}: {2,-6}</color>\n";
+          var medal_format = "<color={0}>{1,-5}: {2,-6}</color>\n";
           foreach (var time in medal_times)
           {
 
             var time_ = float.Parse(string.Format("{0:0.000}", time));
-            //Debug.Log($"{medal_index} ... {time_}");
-
             if (level_time <= time_ && medal_index == -1)
             {
               medal_index = index;
             }
-
-            TileManager._Text_LevelTimer_Best.text += string.Format(medal_format, medals[index].Item2, medals[index].Item1, string.Format("{0:0.000}", time_) + (medal_index == index ? " <--" : ""));
-
+            TileManager._Text_LevelTimer_Best.text += string.Format(medal_format, ratings[index].Item2, ratings[index].Item1, string.Format("{0:0.000}", time_) + (medal_index == index ? "*" : ""));
             index++;
           }
         }
@@ -1860,7 +1905,7 @@ public class EnemyScript : MonoBehaviour
       // If timer hasn't started, start if killed
       if (!PlayerScript._TimerStarted)
       {
-        PlayerScript._TimerStarted = true;
+        PlayerScript.StartLevelTimer();
       }
     }
 
@@ -1946,17 +1991,20 @@ public class EnemyScript : MonoBehaviour
 
   public static EnemyScript SpawnEnemyAt(SurvivalAttributes survivalAttributes, Vector2 location)
   {
+
     var weapon = "knife";
     if (survivalAttributes._enemyType == GameScript.SurvivalMode.EnemyType.GRENADE_JOG)
       weapon = "grenade";
     else if (survivalAttributes._enemyType == GameScript.SurvivalMode.EnemyType.PISTOL_WALK)
       weapon = "pistol";
-    GameObject enemy = TileManager.LoadObject($"e_0_0_li_{weapon}_");
-    EnemyScript e = enemy.transform.GetChild(0).GetComponent<EnemyScript>();
+
+    var enemy = TileManager.LoadObject($"e_0_0_li_{weapon}_");
+    var e = enemy.transform.GetChild(0).GetComponent<EnemyScript>();
     e.transform.position = new Vector3(location.x, enemy.transform.position.y, location.y);
-    e.LookAt(PlayerScript._Players[0].transform.position);
+    if (PlayerScript._Players != null && PlayerScript._Players.Count > 0 && PlayerScript._Players[0] != null) e.LookAt(PlayerScript._Players[0].transform.position);
     e.Init(survivalAttributes);
     e.EquipStart();
+
     return e;
   }
 
@@ -2102,8 +2150,8 @@ public class EnemyScript : MonoBehaviour
   public static void Reset()
   {
     _ID = 0;
-    _Enemies_alive = null;
-    _Enemies_dead = null;
+    _Enemies_alive = new List<EnemyScript>();
+    _Enemies_dead = new List<EnemyScript>();
     _Targets = null;
   }
 }

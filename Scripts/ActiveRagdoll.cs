@@ -31,7 +31,7 @@ public class ActiveRagdoll
 
   // What frame the hinge 'animations' are on
   float _movementIter, _movementIter2;
-  public float _rotSpeed;
+  public float _rotSpeed, _time_dead;
 
   bool _footprint;
 
@@ -155,13 +155,17 @@ public class ActiveRagdoll
   {
     // Assign unique ID
     _id = _ID++;
+
     // Add to static _Ragdolls list
     if (_Ragdolls == null) _Ragdolls = new List<ActiveRagdoll>();
     _Ragdolls.Add(this);
+
     // Defaults
     _controller = follow;
     ragdoll.name = "Ragdoll";
     transform = ragdoll.transform;
+    _time_dead = -1f;
+
     // Set materials
     if (_Materials_Ragdoll == null) _Materials_Ragdoll = new List<System.Tuple<Material, Material>>();
     _renderer = transform.GetChild(0).GetComponent<SkinnedMeshRenderer>();
@@ -303,7 +307,7 @@ public class ActiveRagdoll
     // Update grabbed rd
     if (_grapplee != null)
     {
-      if (_dead || _grapplee._dead)
+      if (_grapplee._dead)
       {
         _grapplee = null;
       }
@@ -1215,16 +1219,7 @@ public class ActiveRagdoll
         }
 
         // Grab ragdoll
-        _grapplee = ragdoll;
-        _grapplee._grappled = true;
-        _grapplee._grappler = this;
-        var agent = _grapplee._isPlayer ? (_grapplee._playerScript?._agent) : (_grapplee._enemyScript?._agent);
-        if (agent != null)
-        {
-          agent.enabled = false;
-        }
-
-        _grapplee._enemyScript?.OnGrappled();
+        Grapple(ragdoll);
       }
 
       /*/ Kick
@@ -1239,6 +1234,22 @@ public class ActiveRagdoll
       ToggleRaycasting(true);
     }
 
+  }
+
+  void Grapple(ActiveRagdoll other)
+  {
+    if (_grappling) return;
+
+    _grapplee = other;
+    other._grappled = true;
+    other._grappler = this;
+    var agent = other._isPlayer ? (other._playerScript?._agent) : (other._enemyScript?._agent);
+    if (agent != null)
+    {
+      agent.enabled = false;
+    }
+
+    other._enemyScript?.OnGrappled();
   }
 
   public void Kill(ActiveRagdoll source, DamageSourceType damageSourceType, Vector3 hitForce)
@@ -1260,6 +1271,19 @@ public class ActiveRagdoll
     if (!_canDie) return;
     Toggle(source, damageSourceType, hitForce);
     _dead = true;
+    _time_dead = Time.unscaledTime;
+
+    // Check grappler
+    if (_grapplee != null)
+      if (!_grapplee._dead)
+      {
+        _grapplee._grappled = false;
+
+        _grapplee._controller.position = _grapplee._hip.position;
+        _grapplee._controller.rotation = _controller.rotation;
+
+        _grapplee?._enemyScript?.OnGrapplerRemoved();
+      }
   }
 
   public void SpawnBlood(Vector3 damageSource)
@@ -1374,7 +1398,6 @@ public class ActiveRagdoll
       _reviving = true;
       GameScript._Singleton.StartCoroutine(Rise());
       if (changeColor) ChangeColor(_color, 2f);*/
-      Debug.LogWarning("Res");
     }
 
     else
@@ -1562,6 +1585,33 @@ public class ActiveRagdoll
     _head.transform.localScale = new Vector3(1f, 1f, 1f);
 
     _hasArmor = false;
+  }
+
+  // Add a grappler
+  public void AddGrappler()
+  {
+
+    // Checks
+    if (!HasMelee()) return;
+    if (_dead) return;
+    if (_grappling) return;
+
+    // Spawn enemy
+    var spawn_pos = _hip.position + transform.forward * 0.3f;
+    var enemy = EnemyScript.SpawnEnemyAt(
+      new EnemyScript.SurvivalAttributes()
+      {
+        _enemyType = GameScript.SurvivalMode.EnemyType.KNIFE_RUN
+      },
+      new Vector2(spawn_pos.x, spawn_pos.y)
+    );
+
+    // Set grapplee
+    Grapple(enemy.GetRagdoll());
+
+    // FX
+    FunctionsC.PlaySound(ref _audioPlayer, "Ragdoll/Combust", 0.9f, 1.1f);
+    FunctionsC.PlayComplexParticleSystemAt(FunctionsC.ParticleSystemType.SMOKEBALL, spawn_pos);
   }
 
   public bool HasWeapon()

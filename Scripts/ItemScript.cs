@@ -979,7 +979,7 @@ public class ItemScript : MonoBehaviour
     // Check timer
     if (!PlayerScript._TimerStarted && (_ragdoll?._isPlayer ?? false))
     {
-      PlayerScript._TimerStarted = true;
+      PlayerScript.StartLevelTimer();
     }
 
     //

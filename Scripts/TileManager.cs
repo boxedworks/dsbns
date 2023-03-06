@@ -38,22 +38,25 @@ public class TileManager
   {
     IEnumerator ShowTextCo()
     {
+      _Text_GameOver.text = $"<color={color_base}>{text}</color>";
       for (var i = 0; i < flashes; i++)
       {
+        if (_Text_GameOver.text == "") break;
         _Text_GameOver.text = $"<color={color_base}>{text}</color>";
         yield return new WaitForSecondsRealtime(0.2f);
+        if (_Text_GameOver.text == "") break;
         _Text_GameOver.text = $"<color={color_flash}>{text}</color>";
         yield return new WaitForSecondsRealtime(0.2f);
       }
-      _Text_GameOver.text = $"<color={color_base}>{text}</color>";
-
+      if (_Text_GameOver.text != "")
+        _Text_GameOver.text = $"<color={color_base}>{text}</color>";
     }
     GameScript._Singleton.StartCoroutine(ShowTextCo());
     _Text_GameOver.gameObject.SetActive(true);
   }
   public static void HideGameOverText()
   {
-    _Text_GameOver.gameObject.SetActive(false);
+    _Text_GameOver.text = "";
 
     var best_time = PlayerPrefs.GetFloat($"{Levels._CurrentLevelCollection_Name}_{Levels._CurrentLevelIndex}_time", -1f);
     TileManager._Text_LevelTimer_Best.text = best_time == -1f ? "-" : string.Format("{0:0.000}", best_time);
@@ -348,11 +351,11 @@ public class TileManager
   }
 
   public static bool _LoadingMap, _HasLocalLighting, _EnableEditorAfterLoad;
-  static string _CurrentData;
+  public static string _CurrentMapData;
   public static Coroutine LoadMap(string data, bool doubleSizeInit = false, bool appendToEditMaps = false, bool first_load = false)
   {
     _LoadingMap = true;
-    _CurrentData = data;
+    _CurrentMapData = data;
     _LevelObjects = new List<string>();
     var game = GameObject.Find("Game").GetComponent<GameScript>();
     if (!GameResources._Loaded) GameResources.Init();
@@ -730,7 +733,7 @@ public class TileManager
     GameScript._Singleton.StartCoroutine(LerpCam());
 
     // Init all enemies
-    yield return EnemyScript.HardInitAllCo();
+    EnemyScript.HardInitAll();
 
     // Spawn player
     if (!Menu2._InMenus)
@@ -1611,8 +1614,12 @@ public class TileManager
 
     // Reload assets
     GameScript.ToggleExit(false);
-    foreach (var r in ActiveRagdoll._Ragdolls)
-      GameObject.DestroyImmediate(r._controller.parent.gameObject);
+    for (var i = ActiveRagdoll._Ragdolls.Count - 1; i > -1; i--)
+    {
+      var rag = ActiveRagdoll._Ragdolls[i];
+      if (rag._controller == null) continue;
+      GameObject.DestroyImmediate(rag._controller.parent.gameObject);
+    }
     ActiveRagdoll.Reset();
     EnemyScript.Reset();
     PlayerScript.Reset();
@@ -1883,7 +1890,7 @@ public class TileManager
     _EditorSwitchTime = Time.unscaledTime;
 
     // Reload current map
-    LoadMap(_CurrentData, true);
+    LoadMap(_CurrentMapData, true);
 
     // Show menus
     EditorMenus.ShowMenus();
@@ -2107,6 +2114,11 @@ public class TileManager
       if (EnemyScript._Enemies_alive != null)
         foreach (EnemyScript e in EnemyScript._Enemies_alive)
         {
+          if (e._isZombie)
+          {
+            GameObject.Destroy(e.transform.parent.gameObject);
+            continue;
+          }
           e.enabled = false;
           Transform controller = e.transform.parent.GetChild(0);
           controller.position = e._startPosition;
@@ -2118,6 +2130,11 @@ public class TileManager
       if (EnemyScript._Enemies_dead != null)
         foreach (EnemyScript e in EnemyScript._Enemies_dead)
         {
+          if (e._isZombie)
+          {
+            GameObject.Destroy(e.transform.parent.gameObject);
+            continue;
+          }
           e.enabled = false;
           Transform controller = e.transform.parent.GetChild(0);
           controller.position = e._startPosition;

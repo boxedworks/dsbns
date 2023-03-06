@@ -84,7 +84,7 @@ public class ExplosiveScript : MonoBehaviour
     _Explosives.Remove(this);
 
     // Show explosion scar
-    FunctionsC.SpawnExplosionScar(transform.position, _radius);
+    FunctionsC.SpawnExplosionScar(new Vector3(transform.position.x, -1.23f, transform.position.z), _radius);
 
     // Hide mesh
     if (disableGameobject) transform.GetChild(0).gameObject.SetActive(false);
