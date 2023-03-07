@@ -174,7 +174,7 @@ public class Levels : MonoBehaviour
     var medal_diamond = dev_time + 0.1f;
     return new float[]{
       medal_diamond,  // Diamond
-      medal_diamond * 1.1f,  // Gold
+      medal_diamond * 1.2f,  // Gold
       medal_diamond * 1.5f,   // Silver
       medal_diamond * 2f,   // Bronze
     };

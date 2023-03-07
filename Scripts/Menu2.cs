@@ -4798,10 +4798,12 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
       {
         foreach (var loadout in GameScript.ItemManager.Loadout._Loadouts)
           loadout.Save();
+
         // Check empty loadout
         foreach (var profile in GameScript.PlayerProfile._Profiles)
           profile.ChangeLoadoutIfEmpty();
       };
+
       // Reload menu on switch
       _Menus[MenuType.EDIT_LOADOUT]._onSwitchTo += () =>
       {
@@ -4844,6 +4846,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
       })
       .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
       {
+
         // Set dropdown data
         var selections = new List<string>();
         var actions = new List<System.Action<MenuComponent>>();
@@ -4852,12 +4855,15 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
         {
           if (GameScript.Settings._DeleteStatsIter-- <= 0)
           {
+
             // Reset overall stats
             Stats.OverallStats.Reset();
+
             // Press back button
             component0._menu._menuComponent_last._onSelected?.Invoke(component0._menu._menuComponent_last);
           }
         });
+
         // Update dropdown data
         component.SetDropdownData("reset overall stats\n*this <color=red>cannot</color> be undone\n\n", selections, actions, "");
       })
@@ -5628,10 +5634,12 @@ go to the <color=yellow>SHOP</color> to buy something~1
     .AddComponent("blood\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
       .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
       {
+
         // Set display text
         var selection = GameScript.Settings._Blood ? "on" : "off";
         component.SetDisplayText(string.Format(format_options, "blood:", selection) + '\n');
       })
+
       // Toggle blood
       .AddEvent((MenuComponent component) =>
       {
@@ -5639,13 +5647,16 @@ go to the <color=yellow>SHOP</color> to buy something~1
         _CanRender = false;
         RenderMenu();
       })
+
     // Force keyboard toggle
     .AddComponent("force keyboard\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
       .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
       {
+
         // Set display text
         var selection = GameScript.Settings._ForceKeyboard ? "on" : "off";
         component.SetDisplayText(string.Format(format_options, "force keyboard:", selection));
+
         // Set dropdown data
         var selections = new List<string>();
         var actions = new List<System.Action<MenuComponent>>();
@@ -5670,16 +5681,20 @@ go to the <color=yellow>SHOP</color> to buy something~1
             GameScript.PlayerProfile._Profiles[1]._directionalAxis = new float[3];
           }
         });
+
         // Update dropdown data
         component.SetDropdownData("force keyboard as controller - REMEMBER this setting\n\n", selections, actions, selection_match);
       })
+
     // Controller rumble
     .AddComponent("controller vibration\n\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
       .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
       {
+
         // Set display text
         var selection = GameScript.Settings._ControllerRumble ? "on" : "off";
         component.SetDisplayText(string.Format(format_options, "controller vibration:", selection) + '\n');
+
         // Set dropdown data
         var selections = new List<string>();
         var actions = new List<System.Action<MenuComponent>>();
@@ -5694,9 +5709,11 @@ go to the <color=yellow>SHOP</color> to buy something~1
         {
           GameScript.Settings._ControllerRumble = false;
         });
+
         // Update dropdown data
         component.SetDropdownData("controller vibration\n\n", selections, actions, selection_match);
       })
+
     // Show tips
     .AddComponent("show tips\n\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
       .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>

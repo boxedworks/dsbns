@@ -232,7 +232,7 @@ public class SceneThemes : MonoBehaviour
     "Dungeon",
     "Castle White",
     "Stone",
-    "Hedge",
+    "Dungeon",//"Hedge",
     "Wood",
   };
   public static string[] _SceneOrder_LevelEditor = new string[]{
