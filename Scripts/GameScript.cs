@@ -224,7 +224,6 @@ public class GameScript : MonoBehaviour
   {
     IEnumerator tutorialfunction()
     {
-      //Debug.Log("Starting tut");
       TutorialInformation._TutorialArrow.position = new Vector3(-100f, 0f, 0f);
       var goal = GameObject.Find("Powerup").GetComponent<Powerup>();
       yield return new WaitForSecondsRealtime(1f);
@@ -979,7 +978,6 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         var particles = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.HEAL)[0];
         particles.transform.position = p._ragdoll._transform_parts._hip.position;
         particles.Play();
-        Debug.Log("Healed");
       }*/
 
       // Update UI
@@ -1611,17 +1609,33 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
             if (!_EditorEnabled)
             {
               // Increment survival wave
-              if (IsSurvival() && (ControllerManager.GetKey(ControllerManager.Key.PAGE_UP, ControllerManager.InputMode.DOWN)))
+              if (IsSurvival())
               {
-                SurvivalMode._Wave++;
-                Debug.Log($"Survival wave incremented to: {SurvivalMode._Wave}");
+                if (ControllerManager.GetKey(ControllerManager.Key.PAGE_UP, ControllerManager.InputMode.DOWN))
+                {
+                  SurvivalMode._Wave++;
+                  Debug.Log($"Survival wave incremented to: {SurvivalMode._Wave}");
+                }
               }
 
-              // Reset dev level time
-              if (ControllerManager.GetKey(ControllerManager.Key.BACKQUOTE))
+              else
               {
-                TileManager._LevelTime_Dev = -1f;
-                Debug.Log("Reset dev level time");
+                if (ControllerManager.GetKey(ControllerManager.Key.BACKQUOTE))
+                {
+                  // Reset dev level time
+                  if (ControllerManager.GetKey(ControllerManager.Key.SHIFT_L, ControllerManager.InputMode.HOLD))
+                  {
+                    TileManager._LevelTime_Dev = -1f;
+                    Debug.Log("Reset dev level time");
+                  }
+
+                  // Reset local time
+                  else
+                  {
+                    PlayerPrefs.DeleteKey($"{Levels._CurrentLevelCollection_Name}_{Levels._CurrentLevelIndex}_time");
+                    Debug.Log("Reset best level time");
+                  }
+                }
               }
             }
 
@@ -3098,87 +3112,17 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         Shop.AddAvailableUnlockVault($"classic_{12 + i}");
   }
 
-  static void OnLevelComplete()
+  // Fired on last enemy killed
+  public static void OnLastEnemyKilled()
   {
-    // Check survival
-    if (IsSurvival()) return;
-
-    //Debug.Log($"Completed level with time: {TileManager._LevelTimer}");
-
-    // Check level pack
-    if (Levels._LevelPack_Playing)
-    {
-
-      // Check last level
-      if (Levels._CurrentLevelIndex + 1 == Levels._CurrentLevelCollection._leveldata.Length)
-      {
-        Levels._LevelPack_Playing = false;
-
-        TogglePause(Menu2.MenuType.EDITOR_PACKS);
-        Menu2.SwitchMenu(Menu2.MenuType.EDITOR_PACKS);
-        Menu2._CurrentMenu._selectionIndex = Levels._LevelPacks_Play_SaveIndex;
-        Menu2._CanRender = false;
-        Menu2.RenderMenu();
-        _LastPause = Time.unscaledTime - 0.2f;
-        Menu2.SendInput(Menu2.Input.SPACE);
-        Menu2.SendInput(Menu2.Input.SPACE);
-        Menu2.SendInput(Menu2.Input.SPACE);
-        _LastPause = Time.unscaledTime;
-        return;
-      }
-
-      // Load next level
-      NextLevel(Levels._CurrentLevelIndex + 1);
-      return;
-    }
-
-    // Check level editor levels
-    if (_EditorTesting)
-    {
-      ReloadMap();
-      return;
-    }
-
-    // Stat
-    Stats.OverallStats._Levels_Completed++;
-
-    // Save level status
-    if (!Levels.LevelCompleted(Levels._CurrentLevelIndex))
-    {
-      Settings._LevelsCompleted_Current.Add(Levels._CurrentLevelIndex);
-      PlayerPrefs.SetInt($"{Levels._CurrentLevelCollection_Name}_{Levels._CurrentLevelIndex}", 1);
-      //Debug.Log($"SET: {Levels._CurrentLevelCollection_Name}_{Levels._CurrentLevelIndex}... 1");
-      // Check mode-specific unlocks
-      if (_GameMode == GameModes.CLASSIC)
-      {
-        // Award shop point
-        Shop._AvailablePoints++;
-
-        /*/ Check unlocks at end of level packs
-        if ((Levels._CurrentLevelIndex + 1) % 12 == 0)
-        {
-          var iter = ((Levels._CurrentLevelIndex + 1) / 12) - 1;
-          if (Settings._DIFFICULTY == 1) iter += 12;
-          Shop.AddAvailableUnlockVault($"{_GameMode.ToString().ToLower()}_{iter}");
-        }*/
-
-        UpdateLevelVault();
-
-#if UNITY_STANDALONE
-        // Check for achievements
-        if (Levels._CurrentLevelIndex == 0 && Settings._DIFFICULTY == 0)
-        {
-          SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.LEVEL_0_COMPLETED);
-        }
-#endif
-      }
-    }
 
     // Check for extras challenges
     if (_GameMode == GameModes.CLASSIC)
     {
 
-      //
+
+
+      /*/
       bool EquipmentIsEqual(PlayerProfile.Equipment e0, PlayerProfile.Equipment e1)
       {
 
@@ -3299,6 +3243,82 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
           }
 
         }
+      }*/
+
+    }
+  }
+
+  //
+  static void OnLevelComplete()
+  {
+    // Check survival
+    if (IsSurvival()) return;
+
+    // Check level pack
+    if (Levels._LevelPack_Playing)
+    {
+
+      // Check last level
+      if (Levels._CurrentLevelIndex + 1 == Levels._CurrentLevelCollection._leveldata.Length)
+      {
+        Levels._LevelPack_Playing = false;
+
+        TogglePause(Menu2.MenuType.EDITOR_PACKS);
+        Menu2.SwitchMenu(Menu2.MenuType.EDITOR_PACKS);
+        Menu2._CurrentMenu._selectionIndex = Levels._LevelPacks_Play_SaveIndex;
+        Menu2._CanRender = false;
+        Menu2.RenderMenu();
+        _LastPause = Time.unscaledTime - 0.2f;
+        Menu2.SendInput(Menu2.Input.SPACE);
+        Menu2.SendInput(Menu2.Input.SPACE);
+        Menu2.SendInput(Menu2.Input.SPACE);
+        _LastPause = Time.unscaledTime;
+        return;
+      }
+
+      // Load next level
+      NextLevel(Levels._CurrentLevelIndex + 1);
+      return;
+    }
+
+    // Check level editor levels
+    if (_EditorTesting)
+    {
+      ReloadMap();
+      return;
+    }
+
+    // Stat
+    Stats.OverallStats._Levels_Completed++;
+
+    // Save level status
+    if (!Levels.LevelCompleted(Levels._CurrentLevelIndex))
+    {
+      Settings._LevelsCompleted_Current.Add(Levels._CurrentLevelIndex);
+      PlayerPrefs.SetInt($"{Levels._CurrentLevelCollection_Name}_{Levels._CurrentLevelIndex}", 1);
+      // Check mode-specific unlocks
+      if (_GameMode == GameModes.CLASSIC)
+      {
+        // Award shop point
+        Shop._AvailablePoints++;
+
+        /*/ Check unlocks at end of level packs
+        if ((Levels._CurrentLevelIndex + 1) % 12 == 0)
+        {
+          var iter = ((Levels._CurrentLevelIndex + 1) / 12) - 1;
+          if (Settings._DIFFICULTY == 1) iter += 12;
+          Shop.AddAvailableUnlockVault($"{_GameMode.ToString().ToLower()}_{iter}");
+        }*/
+
+        UpdateLevelVault();
+
+#if UNITY_STANDALONE
+        // Check for achievements
+        if (Levels._CurrentLevelIndex == 0 && Settings._DIFFICULTY == 0)
+        {
+          SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.LEVEL_0_COMPLETED);
+        }
+#endif
       }
     }
 

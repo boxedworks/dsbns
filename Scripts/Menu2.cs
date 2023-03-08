@@ -1029,7 +1029,7 @@ public class Menu2
 
     }
     .AddComponent("~1")
-    .AddComponent("splash.load\n~1........\n\n")
+    .AddComponent("system booting~1\n...\n...\n")
     .AddComponent(string.Format("{0,-10}<color=yellow>{1,-25}</color>........\n", "", "[boxedworks]"))
     .AddComponent(string.Format("{0,-10}<color=yellow>{1,-25}</color>........\n", "", "[boxedworks]"))
     .AddComponent(string.Format("{0,-10}<color=yellow>{1,-25}</color>........\n", "", "[boxedworks]"))
@@ -1051,6 +1051,7 @@ public class Menu2
     .AddComponent(string.Format("{0,-10}<color=yellow>{1,-25}</color>........\n", "", "[boxedworks]\n\n"))
     .AddComponent(string.Format("{0,-10}<color=yellow>{1,-25}</color>........\n", "", "[boxedworks]\n\n"))
     .AddComponent(string.Format("{0,-10}<color=yellow>{1,-25}</color>........\n", "", "[boxedworks]\n\n"));
+
     // Switch to main menu after splash screen
     _Menus[MenuType.SPLASH]._onRendered += () =>
     {
@@ -1074,6 +1075,7 @@ public class Menu2
       .AddEvent((MenuComponent component) =>
       {
         CommonEvents._SwitchMenu(MenuType.MODE_SELECTION);
+        SteamManager.Achievements.LoadAchievements();
 
         TileManager._CurrentLevel_Name = "";
         TileManager._CurrentLevel_Loadout = null;
@@ -6178,7 +6180,7 @@ a gampad if plugged in.~1
 
       }
       .AddComponent($"<color={_COLOR_GRAY}>extras</color>\n\n")
-      .AddComponent($"settings here affect the <color={_COLOR_GRAY}>CLASSIC</color> mode!\nyou cannot save best time with extras on\n\n");
+      .AddComponent($"settings here affect the <color={_COLOR_GRAY}>CLASSIC</color> mode!\n*you cannot save best time with extras on\n\n");
 
       // Wrapper function to add component to extras menu
       void AddExtraSelection(
@@ -6243,24 +6245,6 @@ a gampad if plugged in.~1
         }
       }
 
-      // Superhot
-      AddExtraSelection(
-        "time",
-        () => { return GameScript.Settings._Extra_Superhot ? "movement" : "normal"; },
-        new DropdownSelectionComponent[] {
-        new DropdownSelectionComponent("normal", "time is normal", (MenuComponent component) => {
-            GameScript.Settings._Extra_Superhot = false;
-        }),
-        new DropdownSelectionComponent("movement", "time only moves when you move", (MenuComponent component) => {
-            GameScript.Settings._Extra_Superhot = true;
-        }),
-        },
-        "set the speed that time passes",
-
-        "unlock by completing sneaky level 40, solo, with just a knife",
-        () => { return true; Shop.Unlocked(Shop.Unlocks.EXTRA_TIME); }
-      );
-
       // Gravity direction
       AddExtraSelection(
         "gravity",
@@ -6287,24 +6271,6 @@ a gampad if plugged in.~1
 
         "unlock by completing sneaky level 80, solo, with just a knife and silenced pistol",
         () => { return true; Shop.Unlocked(Shop.Unlocks.EXTRA_GRAVITY); }
-      );
-
-      // Crazy zombies
-      AddExtraSelection(
-        "horde",
-        () => { return GameScript.Settings._Extra_CrazyZombies ? "on" : "off"; },
-        new DropdownSelectionComponent[] {
-        new DropdownSelectionComponent("off", "no horde", (MenuComponent component) => {
-            GameScript.Settings._Extra_CrazyZombies = false;
-        }),
-        new DropdownSelectionComponent("on", "a horde spawns until you pick up the cube", (MenuComponent component) => {
-            GameScript.Settings._Extra_CrazyZombies = true;
-        }),
-        },
-        "toggle a horde mode",
-
-        "unlock by...",
-        () => { return true; Shop.Unlocked(Shop.Unlocks.EXTRA_HORDE); }
       );
 
       // Remove bat guy
@@ -6338,6 +6304,83 @@ a gampad if plugged in.~1
 
         "unlock by...",
         () => { return true; Shop.Unlocked(Shop.Unlocks.EXTRA_CHASER); }
+      );
+
+
+      // Ammo
+      AddExtraSelection(
+        "player ammo",
+        () =>
+        {
+          switch (GameScript.Settings._Extra_PlayerAmmo._value)
+          {
+            case 0:
+              return "1x";
+            case 1:
+              return "2x";
+            case 2:
+              return "0.5x";
+            case 3:
+              return "infinite";
+          }
+          return "N/A";
+        },
+        new DropdownSelectionComponent[] {
+          new DropdownSelectionComponent("1x", "", (MenuComponent component) => {
+            GameScript.Settings._Extra_PlayerAmmo._value = 0;
+          }),
+          new DropdownSelectionComponent("2x", "", (MenuComponent component) => {
+            GameScript.Settings._Extra_PlayerAmmo._value = 1;
+          }),
+                    new DropdownSelectionComponent("0.5x", "", (MenuComponent component) => {
+            GameScript.Settings._Extra_PlayerAmmo._value = 2;
+          }),
+                    new DropdownSelectionComponent("infinite", "", (MenuComponent component) => {
+            GameScript.Settings._Extra_PlayerAmmo._value = 3;
+          }),
+        },
+        "change the max ammo of your weapons / utilities",
+
+        "unlock by...",
+        () => { return true; return Shop.Unlocked(Shop.Unlocks.EXTRA_CHASER); },
+
+        "\n\n"
+      );
+
+      // Superhot
+      AddExtraSelection(
+        "time",
+        () => { return GameScript.Settings._Extra_Superhot ? "movement" : "normal"; },
+        new DropdownSelectionComponent[] {
+        new DropdownSelectionComponent("normal", "time is normal", (MenuComponent component) => {
+            GameScript.Settings._Extra_Superhot = false;
+        }),
+        new DropdownSelectionComponent("movement", "time only moves when you move", (MenuComponent component) => {
+            GameScript.Settings._Extra_Superhot = true;
+        }),
+        },
+        "set the speed that time passes",
+
+        "unlock by completing sneaky level 40, solo, with just a knife",
+        () => { return true; Shop.Unlocked(Shop.Unlocks.EXTRA_TIME); }
+      );
+
+      // Crazy zombies
+      AddExtraSelection(
+        "horde",
+        () => { return GameScript.Settings._Extra_CrazyZombies ? "on" : "off"; },
+        new DropdownSelectionComponent[] {
+        new DropdownSelectionComponent("off", "no horde", (MenuComponent component) => {
+            GameScript.Settings._Extra_CrazyZombies = false;
+        }),
+        new DropdownSelectionComponent("on", "a horde spawns until you pick up the cube", (MenuComponent component) => {
+            GameScript.Settings._Extra_CrazyZombies = true;
+        }),
+        },
+        "toggle a horde mode",
+
+        "unlock by...",
+        () => { return true; Shop.Unlocked(Shop.Unlocks.EXTRA_HORDE); }
       );
 
       // Enemy multiplier
@@ -6409,46 +6452,6 @@ a gampad if plugged in.~1
 
         "unlock by...",
         () => { return true; return Shop.Unlocked(Shop.Unlocks.EXTRA_CHASER); }
-      );
-
-      // Ammo
-      AddExtraSelection(
-        "player ammo",
-        () =>
-        {
-          switch (GameScript.Settings._Extra_PlayerAmmo._value)
-          {
-            case 0:
-              return "1x";
-            case 1:
-              return "2x";
-            case 2:
-              return "0.5x";
-            case 3:
-              return "infinite";
-          }
-          return "N/A";
-        },
-        new DropdownSelectionComponent[] {
-          new DropdownSelectionComponent("1x", "", (MenuComponent component) => {
-            GameScript.Settings._Extra_PlayerAmmo._value = 0;
-          }),
-          new DropdownSelectionComponent("2x", "", (MenuComponent component) => {
-            GameScript.Settings._Extra_PlayerAmmo._value = 1;
-          }),
-                    new DropdownSelectionComponent("0.5x", "", (MenuComponent component) => {
-            GameScript.Settings._Extra_PlayerAmmo._value = 2;
-          }),
-                    new DropdownSelectionComponent("infinite", "", (MenuComponent component) => {
-            GameScript.Settings._Extra_PlayerAmmo._value = 3;
-          }),
-        },
-        "change the max ammo of your weapons / utilities",
-
-        "unlock by...",
-        () => { return true; return Shop.Unlocked(Shop.Unlocks.EXTRA_CHASER); },
-
-        "\n\n"
       );
 
       // Back button

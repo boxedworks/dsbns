@@ -1752,6 +1752,9 @@ public class EnemyScript : MonoBehaviour
     // Slowmo
     if (last_killed)
     {
+
+      GameScript.OnLastEnemyKilled();
+
       // Check for slowmo setting
       if (GameScript.Settings._Slowmo_on_lastkill)
         PlayerScript._SlowmoTimer += 1.3f;
@@ -1768,7 +1771,8 @@ public class EnemyScript : MonoBehaviour
         // Level timer
         TileManager._Level_Complete = true;
 
-        // Check timer
+        // Check timers
+        var can_save_timers = !GameScript.Settings._Extras_UsingAny;
         var level_time = float.Parse(TileManager._LevelTimer.ToString("0.000"));
         var level_time_best = float.Parse(PlayerPrefs.GetFloat($"{Levels._CurrentLevelCollection_Name}_{Levels._CurrentLevelIndex}_time", -1f).ToString("0.000"));
 
@@ -1776,7 +1780,7 @@ public class EnemyScript : MonoBehaviour
         {
 
           // Show new best score
-          if (!GameScript.Settings._Extras_UsingAny)
+          if (can_save_timers)
           {
             PlayerPrefs.SetFloat($"{Levels._CurrentLevelCollection_Name}_{Levels._CurrentLevelIndex}_time", level_time);
             TileManager._Text_LevelTimer_Best.text += string.Format(" -> {0:0.000}", level_time);
@@ -1798,56 +1802,61 @@ public class EnemyScript : MonoBehaviour
             TileManager._Text_LevelTimer.text = string.Format($"{{0:0.000}} (<color=red>+{{1:0.000}}</color>)", level_time, level_time - level_time_best);
         }
 
-        // Save best dev time
-        if (Debug.isDebugBuild && !GameScript.Settings._Extras_UsingAny)
+        if (can_save_timers)
         {
 
-          if (TileManager._LevelTime_Dev == -1 || level_time < TileManager._LevelTime_Dev)
+          // Save best dev time
+          if (Debug.isDebugBuild)
           {
-            TileManager._LevelTime_Dev = level_time;
 
-            // Set level data
-            var level_data_split = Levels._CurrentLevelData.Split(' ');
-            var level_data_new = new List<string>();
-            var index = -1;
-            var levelname_index = -1;
-            foreach (var d in level_data_split)
+            if (TileManager._LevelTime_Dev == -1 || level_time < TileManager._LevelTime_Dev)
             {
+              TileManager._LevelTime_Dev = level_time;
 
-              index++;
-
-              if (d.StartsWith("bdt_"))
+              // Set level data
+              var level_data_split = Levels._CurrentLevelData.Split(' ');
+              var level_data_new = new List<string>();
+              var index = -1;
+              var levelname_index = -1;
+              foreach (var d in level_data_split)
               {
-                index--;
-                continue;
+
+                index++;
+
+                if (d.StartsWith("bdt_"))
+                {
+                  index--;
+                  continue;
+                }
+
+                level_data_new.Add(d);
+
+                if (d.StartsWith("+"))
+                {
+                  levelname_index = index;
+                }
               }
 
-              level_data_new.Add(d);
+              var add_data = $"bdt_{level_time}";
 
-              if (d.StartsWith("+"))
+              if (levelname_index == -1)
               {
-                levelname_index = index;
+                level_data_new.Add(add_data);
               }
+              else
+              {
+                level_data_new.Insert(levelname_index - 1, add_data);
+              }
+
+              Levels._CurrentLevelCollection._leveldata[Levels._CurrentLevelIndex] = TileManager._CurrentMapData = string.Join(" ", level_data_new);
+              Levels.SaveLevels();
+
+              Debug.Log($"Set best dev time: {level_time}");
             }
 
-            var add_data = $"bdt_{level_time}";
-
-            if (levelname_index == -1)
-            {
-              level_data_new.Add(add_data);
-            }
-            else
-            {
-              level_data_new.Insert(levelname_index - 1, add_data);
-            }
-
-            var mapdata_new = string.Join(" ", level_data_new);
-
-            Levels._CurrentLevelCollection._leveldata[Levels._CurrentLevelIndex] = TileManager._CurrentMapData = mapdata_new;
-            Levels.SaveLevels();
-
-            Debug.Log($"Set best dev time: {level_time}");
           }
+
+
 
         }
 
@@ -1862,16 +1871,37 @@ public class EnemyScript : MonoBehaviour
           var medal_index = -1;
           TileManager._Text_LevelTimer_Best.text += "\n\n";
           var medal_format = "<color={0}>{1,-5}: {2,-6}</color>\n";
+          var points_awarded = 0;
           foreach (var time in medal_times)
           {
 
             var time_ = float.Parse(string.Format("{0:0.000}", time));
-            if (level_time <= time_ && medal_index == -1)
+            if (level_time <= time_)
             {
-              medal_index = index;
+
+              if (medal_index == -1)
+                medal_index = index;
+
+              // Check new medal
+              if (level_time_best > time || level_time_best == -1f)
+              {
+                points_awarded++;
+              }
+
             }
             TileManager._Text_LevelTimer_Best.text += string.Format(medal_format, ratings[index].Item2, ratings[index].Item1, string.Format("{0:0.000}", time_) + (medal_index == index ? "*" : ""));
             index++;
+          }
+
+          // Give points based on medals
+          if (points_awarded > 0)
+          {
+            if (can_save_timers)
+            {
+              Shop._AvailablePoints += points_awarded;
+              Debug.Log($"Awarded {points_awarded} points");
+            }
+            else Debug.Log($"Fake awarded {points_awarded} points");
           }
         }
 

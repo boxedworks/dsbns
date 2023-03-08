@@ -174,9 +174,9 @@ public class Levels : MonoBehaviour
     var medal_diamond = dev_time + 0.1f;
     return new float[]{
       medal_diamond,  // Diamond
-      medal_diamond * 1.2f,  // Gold
-      medal_diamond * 1.5f,   // Silver
-      medal_diamond * 2f,   // Bronze
+      medal_diamond * 1.25f,  // Gold
+      medal_diamond * 2f,   // Silver
+      medal_diamond * 5f,   // Bronze
     };
   }
   public static System.Tuple<string, string> GetLevelRating(float dev_time, float player_time)
