@@ -31,6 +31,7 @@ public class EnemyScript : MonoBehaviour
       _Layermask_Ragdoll &= ~(1 << LayerMask.NameToLayer("UI"));
       _Layermask_Ragdoll &= ~(1 << LayerMask.NameToLayer("Bullet"));
       _Layermask_Ragdoll &= ~(1 << LayerMask.NameToLayer("Ignore Raycast"));
+      _Layermask_Ragdoll &= ~(1 << LayerMask.NameToLayer("CAMERA2"));
     }
 
     public static void Clean()

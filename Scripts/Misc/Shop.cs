@@ -348,7 +348,7 @@ public static class Shop
 
       total_point += pair.Value.Item2;
     }
-    Debug.Log($"Total points: ({_AvailablePoints}) {total_point} / {((11*2)*12)*4}");
+    Debug.Log($"Total points: ({_AvailablePoints}) {total_point} / {((11-1)*12 + (12-1)*12 + (1)*12)*4}");
 
     // Set starter unlocks
     AddAvailableUnlock(Unlocks.ITEM_KNIFE);

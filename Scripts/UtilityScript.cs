@@ -433,7 +433,7 @@ public class UtilityScript : ItemScript
               _stuck = true;
 
               // Bullet
-              if (c.gameObject.name == "Bullet")
+              if (c.gameObject.name == "Bullet" || c.gameObject.name == "STICKY_GUN_BULLET")
               {
                 _exploded = false;
                 Explode();

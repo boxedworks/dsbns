@@ -446,8 +446,8 @@ public class PlayerScript : MonoBehaviour
     if (
       _id == 0 && !_level_ratings_shown && !TileManager._Level_Complete && !GameScript._Paused &&
       (
-        (!_TimerStarted && Time.time - GameScript._LevelStartTime > 2f) ||
-        (_ragdoll._dead && Time.unscaledTime - _ragdoll._time_dead > 2f)
+        (!_TimerStarted && Time.time - GameScript._LevelStartTime > 3f) ||
+        (_ragdoll._dead && Time.unscaledTime - _ragdoll._time_dead > 3f)
       )
     )
     {

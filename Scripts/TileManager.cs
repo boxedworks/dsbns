@@ -2079,6 +2079,7 @@ public class TileManager
     foreach (PlayerScript p in Players)
       GameObject.Destroy(p.transform.parent.gameObject);
     PlayerScript.Reset();
+
     // Reload map objects
     Transform objects = GameResources._Container_Objects,
       navmesh_mods = _Map.GetChild(1);
@@ -2099,15 +2100,18 @@ public class TileManager
       if (found) continue;
       GameObject new_object = LoadObject(data);
       if (new_object == null) continue;
+
       // Laser script
       LaserScript ls = new_object.GetComponent<LaserScript>();
       ls?.OnEditorEnable();
+
       // Button
-      if (new_object.name == "Button") new_object.layer = 5;
+      if (new_object.name == "Button") new_object.layer = 0;
       Powerup.OnEditorEnable();
     }
     // Get camera zoom
     _CameraZoom = GameResources._Camera_Main.transform.position.y;
+
     // Remove enemies and show paths
     if (!GameScript.IsSurvival())
     {
@@ -2469,7 +2473,7 @@ public class TileManager
         {
           // Get mouse pos
           RaycastHit h;
-          Physics.SphereCast(GameResources._Camera_Main.ScreenPointToRay(ControllerManager.GetMousePosition()), 0.25f, out h);
+          Physics.SphereCast(GameResources._Camera_Main.ScreenPointToRay(ControllerManager.GetMousePosition()), 0.25f, out h, 100f, EnemyScript._Layermask_Ragdoll);
           Vector3 mousePos = h.point;
           mousePos.y = -1f;
           _LineRenderers[1].positionCount = 2;
@@ -3523,7 +3527,7 @@ public class TileManager
       {
         // Get mouse pos
         RaycastHit h;
-        Physics.SphereCast(GameResources._Camera_Main.ScreenPointToRay(ControllerManager.GetMousePosition()), 0.25f, out h);
+        Physics.SphereCast(GameResources._Camera_Main.ScreenPointToRay(ControllerManager.GetMousePosition()), 0.25f, out h, 100f, EnemyScript._Layermask_Ragdoll);
         Vector3 mousePos = h.point;
         mousePos.y = -1f;
         _LineRenderers[1].positionCount = 2;
@@ -3717,7 +3721,7 @@ public class TileManager
     // Get raycast info
     RaycastHit raycast_info;
     var r = GameResources._Camera_Main.ScreenPointToRay(mousepos);
-    Physics.SphereCast(r, 0.2f, out raycast_info);
+    Physics.SphereCast(r, 0.2f, out raycast_info, 100f, EnemyScript._Layermask_Ragdoll);
     if (raycast_info.collider == null) return;
 
     // Save map
@@ -3815,15 +3819,17 @@ public class TileManager
         var currentObj = LevelEditorObject.GetCurrentObject();
         var found = false;
         var hiddenLayer = new List<KeyValuePair<GameObject, int>>();
+
         // Loop until hits the floor or finds a new mode
         var loops = 0;
         GameObject got_obj = null;
         while (true)
         {
           if (++loops > 50) break;
+
           // Try to find objects
           var save_collider = raycast_info.collider;
-          Physics.SphereCast(r, 0.2f, out raycast_info);
+          Physics.SphereCast(r, 0.2f, out raycast_info, 100f, EnemyScript._Layermask_Ragdoll);
           got_obj = raycast_info.collider.gameObject;
 
           // If did not find collider or finds the floor, end
@@ -3838,6 +3844,7 @@ public class TileManager
 
           if (_LEO_Tile._name.Equals(raycast_info.collider.name))
             continue;
+
           // If finds same mode object, hide it and try again
           if (currentObj._name.Equals(raycast_info.collider.name))
           {

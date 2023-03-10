@@ -161,9 +161,11 @@ public class Menu2
     public enum SelectorType
     {
       NORMAL,
-      QUESTION
+      QUESTION,
+      X,
     }
     public SelectorType _selectorType;
+    public string _selectorColor;
 
     public string GetSelectorTypeString()
     {
@@ -171,14 +173,22 @@ public class Menu2
       {
         case SelectorType.QUESTION:
           return "?";
+        case SelectorType.X:
+          return "x";
         default:
           return "*";
       }
     }
 
+    public bool _useEmptySelector;
     public string GetEmptySelector()
     {
-      return _selectorType == SelectorType.NORMAL ? "[ ]" : $"[{GetSelectorTypeString()}]";
+      if (_selectorType == SelectorType.NORMAL)
+      {
+        return "[ ]";
+      }
+      var selector_string = GetSelectorTypeString();
+      return '[' + (_selectorColor != null ? $"<color={_selectorColor}>{selector_string}</color>" : selector_string) + ']';
     }
 
     public MenuComponent(Menu2 menu, string text, ComponentType componentType = ComponentType.DISPLAY)
@@ -577,9 +587,16 @@ public class Menu2
       // Check selection
       if (component._type != MenuComponent.ComponentType.DISPLAY)
       {
-        var selector = component._buttonIndex == _selectionIndex ||
-          (_dropdownCount > 0 && component._buttonIndex == _dropdownParentIndex) ?
-          $"[<color=yellow>*</color>]" : component.GetEmptySelector();
+        var selector = "";
+
+        if (component._useEmptySelector)
+        {
+          selector = component.GetEmptySelector();
+        }
+        else
+          selector = component._buttonIndex == _selectionIndex ||
+            (_dropdownCount > 0 && component._buttonIndex == _dropdownParentIndex) ?
+            $"[<color=yellow>*</color>]" : component.GetEmptySelector();
         if (component._textColor != "white" && component._textColor != "")
           displayText = $"{selector} <color={component._textColor}>{displayText.Substring(4)}</color>";
         else
@@ -1064,6 +1081,21 @@ public class Menu2
     };
 
     // Main menu
+    System.Action<MenuComponent> func_exit = (MenuComponent component) =>
+    {
+      // Set hint text when focused
+      component._selectorType = MenuComponent.SelectorType.X;
+      component._useEmptySelector = true;
+      if (component._focused)
+      {
+        component._selectorColor = "red";
+      }
+      else
+      {
+        component._selectorColor = _COLOR_GRAY;
+      }
+    };
+
     var demoText = GameScript._Singleton._IsDemo ? $" <color={_COLOR_GRAY}>[</color><color=red>demo</color><color={_COLOR_GRAY}>]</color>" : "";
     var main_menu = new Menu2(MenuType.MAIN)
     {
@@ -1115,7 +1147,8 @@ public class Menu2
         return;
 #endif
         GameScript.OnApplicationQuitS();
-      });
+      })
+      .AddEvent(EventType.ON_RENDER, func_exit);
     // Tip
 #if UNITY_STANDALONE
     ModifyMenu_TipComponents(MenuType.MAIN, 12, 1);
@@ -5001,63 +5034,73 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
           });
       }
 
+      //
       if (Levels._LevelPack_Playing)
       {
         // Switch to level select
-        mPause.AddComponent("exit to level pack select\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-          .AddEvent((MenuComponent component) =>
-          {
-            // Exit to level select
-            _SaveIndex = 5;
-            CommonEvents._SwitchMenu(MenuType.MODE_EXIT_CONFIRM);
-          })
-        // Switch to main menu
-        .AddComponent("exit to main menu\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-          .AddEvent((MenuComponent component) =>
-          {
+        mPause
+          .AddComponent("exit to level pack select\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
+            .AddEvent((MenuComponent component) =>
+            {
+              // Exit to level select
+              _SaveIndex = 5;
+              CommonEvents._SwitchMenu(MenuType.MODE_EXIT_CONFIRM);
+            })
+            .AddEvent(EventType.ON_RENDER, func_exit)
+          // Switch to main menu
+          .AddComponent("exit to main menu\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
+            .AddEvent((MenuComponent component) =>
+            {
 
-            // Exit to main menu
-            _SaveIndex = 6;
-            CommonEvents._SwitchMenu(MenuType.MODE_EXIT_CONFIRM);
-          });
+              // Exit to main menu
+              _SaveIndex = 6;
+              CommonEvents._SwitchMenu(MenuType.MODE_EXIT_CONFIRM);
+            })
+            .AddEvent(EventType.ON_RENDER, func_exit);
       }
 
       else if (GameScript._EditorTesting)
       {
         // Switch to level select
-        mPause.AddComponent("save and exit to level editor select\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-          .AddEvent((MenuComponent component) =>
-          {
-            // Exit to level select
-            _SaveIndex = 5;
-            CommonEvents._SwitchMenu(MenuType.MODE_EXIT_CONFIRM);
-          })
-        // Switch to main menu
-        .AddComponent("save and exit to main menu\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-          .AddEvent((MenuComponent component) =>
-          {
+        mPause
+          .AddComponent("save and exit to level editor select\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
+            .AddEvent((MenuComponent component) =>
+            {
+              // Exit to level select
+              _SaveIndex = 5;
+              CommonEvents._SwitchMenu(MenuType.MODE_EXIT_CONFIRM);
+            })
+            .AddEvent(EventType.ON_RENDER, func_exit)
+          // Switch to main menu
+          .AddComponent("save and exit to main menu\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
+            .AddEvent((MenuComponent component) =>
+            {
 
-            // Exit to main menu
-            _SaveIndex = 6;
-            CommonEvents._SwitchMenu(MenuType.MODE_EXIT_CONFIRM);
-          });
+              // Exit to main menu
+              _SaveIndex = 6;
+              CommonEvents._SwitchMenu(MenuType.MODE_EXIT_CONFIRM);
+            })
+            .AddEvent(EventType.ON_RENDER, func_exit);
       }
 
       else
         // Switch to level select
-        mPause.AddComponent("exit to level select\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-          .AddEvent((MenuComponent component) =>
-          {
-            _SaveIndex = 5;
-            CommonEvents._SwitchMenu(MenuType.MODE_EXIT_CONFIRM);
-          })
-        // Switch to main menu
-        .AddComponent("exit to main menu\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-          .AddEvent((MenuComponent component) =>
-          {
-            _SaveIndex = 6;
-            CommonEvents._SwitchMenu(MenuType.MODE_EXIT_CONFIRM);
-          });
+        mPause
+          .AddComponent("exit to level select\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
+            .AddEvent((MenuComponent component) =>
+            {
+              _SaveIndex = 5;
+              CommonEvents._SwitchMenu(MenuType.MODE_EXIT_CONFIRM);
+            })
+            .AddEvent(EventType.ON_RENDER, func_exit)
+          // Switch to main menu
+          .AddComponent("exit to main menu\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
+            .AddEvent((MenuComponent component) =>
+            {
+              _SaveIndex = 6;
+              CommonEvents._SwitchMenu(MenuType.MODE_EXIT_CONFIRM);
+            })
+            .AddEvent(EventType.ON_RENDER, func_exit);
 
       // Add pause menu stats (?)
       var format_stats = "=<color={0}>{1,-15}</color>{2,-11}{3,-11}{4,-11}{5,-11}\n";
