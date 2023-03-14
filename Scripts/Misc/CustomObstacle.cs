@@ -114,6 +114,7 @@ public class CustomObstacle : MonoBehaviour
       _BUYABLE_ITEM_TIERS[4].Add(System.Tuple.Create(GameScript.ItemManager.Items.SHOTGUN_DOUBLE, 275));
       _BUYABLE_ITEM_TIERS[4].Add(System.Tuple.Create(GameScript.ItemManager.Items.DMR, 200));
       _BUYABLE_ITEM_TIERS[4].Add(System.Tuple.Create(GameScript.ItemManager.Items.RIFLE_LEVER, 200));
+      _BUYABLE_ITEM_TIERS[4].Add(System.Tuple.Create(GameScript.ItemManager.Items.STICKY_GUN, 175));
 
       _BUYABLE_ITEM_TIERS.Add(5, new List<System.Tuple<GameScript.ItemManager.Items, int>>());
       _BUYABLE_ITEM_TIERS[5].Add(System.Tuple.Create(GameScript.ItemManager.Items.AK47, 325));
@@ -140,6 +141,7 @@ public class CustomObstacle : MonoBehaviour
       _BUYABLE_PERK_TIERS[2].Add(System.Tuple.Create(Shop.Perk.PerkType.ARMOR_UP, 300));
       _BUYABLE_PERK_TIERS[2].Add(System.Tuple.Create(Shop.Perk.PerkType.MAX_AMMO_UP, 350));
       _BUYABLE_PERK_TIERS[2].Add(System.Tuple.Create(Shop.Perk.PerkType.FASTER_RELOAD, 400));
+      _BUYABLE_PERK_TIERS[2].Add(System.Tuple.Create(Shop.Perk.PerkType.SMART_BULLETS, 450));
     }
     if (_BUYABLE_UTILITY_TIERS == null)
     {

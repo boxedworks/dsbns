@@ -182,6 +182,15 @@ public class Levels : MonoBehaviour
   public static System.Tuple<string, string> GetLevelRating(float dev_time, float player_time)
   {
     var ratings = GetLevelRatings();
+    if (dev_time < 0f)
+    {
+      return ratings[0];
+    }
+    if (player_time == -1f)
+    {
+      return null;
+    }
+
     var rating_times = GetLevelRatingTimings(dev_time);
 
     var index = 0;
@@ -198,6 +207,11 @@ public class Levels : MonoBehaviour
     }
 
     return null;
+  }
+  public static System.Tuple<string, string> GetLevelRating(int level_index)
+  {
+    var time_data = Levels._CurrentLevel_LevelTimesData[level_index];
+    return GetLevelRating(time_data.Item1, time_data.Item2);
   }
 
   public static void SaveLevels()

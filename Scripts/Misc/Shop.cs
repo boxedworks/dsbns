@@ -53,8 +53,9 @@ public static class Shop
     };
     static string[] _Tips_Classic = new string[]
     {
-      "beat classic levels to get more money for the shop",
-      "beat classic levels to add more unlocks to the shop",
+      "complete classic levels quickly and beat the fastest times to get the highest rank",
+      "each new level rank gives money for the shop (up to $4 per level)",
+      "complete classic level directories to add more unlocks to the shop",
       "purchase 'MAX_EQUIPMENT_POINTS' in the shop to equip more items in your loadouts",
       "for loadouts, you can only equip as many items as you have equipment points",
       "use filters in the shop or unlock menus to make them easier to read",

@@ -527,9 +527,14 @@ public class Menu2
       // If main menu, highlight last selection. Do not select
       if (_type == MenuType.MAIN && _dropdownCount == 0)
       {
-        _selectionIndex = _menuComponentsSelectable[_menuComponentsSelectable.Count - 1]._buttonIndex;
+        var component_last = _menuComponentsSelectable[_menuComponentsSelectable.Count - 1];
+
+        _selectionIndex = component_last._buttonIndex;
+        component_last._onFocus?.Invoke(component_last);
+
         _CanRender = false;
         RenderMenu();
+
         return;
       }
       // Select last option
@@ -2947,20 +2952,36 @@ public class Menu2
 
         // Gather unlock info
         var display_mode = (Shop.DisplayModes)Shop._DisplayMode;
-        var name = unlock.ToString();
+        var unlock_s = unlock.ToString();
+        var name = unlock_s;
         var shop_details = Shop._Unlocks_Descriptions[unlock];
 
         var cost = shop_details.Item2;
         var equip_cost = 0;
         if (name.StartsWith("ITEM_"))
-          equip_cost = GameScript.ItemManager.GetItemValue((GameScript.ItemManager.Items)System.Enum.Parse(typeof(GameScript.ItemManager.Items), name.Substring(5), true));
+        {
+          name = string.Format("{0,-20}{1,6}", name.Substring(5), "[item]");
+          equip_cost = GameScript.ItemManager.GetItemValue((GameScript.ItemManager.Items)System.Enum.Parse(typeof(GameScript.ItemManager.Items), unlock_s.Substring(5), true));
+        }
         else if (name.StartsWith("UTILITY_"))
-          equip_cost = GameScript.ItemManager.GetUtilityValue((UtilityScript.UtilityType)System.Enum.Parse(typeof(UtilityScript.UtilityType), name.Substring(8), true));
+        {
+          name = string.Format("{0,-17}{1,9}", name.Substring(8), "[utility]");
+          equip_cost = GameScript.ItemManager.GetUtilityValue((UtilityScript.UtilityType)System.Enum.Parse(typeof(UtilityScript.UtilityType), unlock_s.Substring(8), true));
+        }
         else if (name.StartsWith("MOD_"))
         {
-          var perk = (Shop.Perk.PerkType)System.Enum.Parse(typeof(Shop.Perk.PerkType), name.Substring(4), true);
+          name = string.Format("{0,-21}{1,5}", name.Substring(4), "[mod]");
+          var perk = (Shop.Perk.PerkType)System.Enum.Parse(typeof(Shop.Perk.PerkType), unlock_s.Substring(4), true);
           equip_cost = GameScript.ItemManager.GetPerkValue(perk);
           shop_details = System.Tuple.Create(Shop.Perk._PERK_DESCRIPTIONS[perk], shop_details.Item2);
+        }
+        else if (name.StartsWith("EXTRA_"))
+        {
+          name = string.Format("{0,-19}{1,7}", name.Substring(6), "[extra]");
+        }
+        else if (name.StartsWith("MODE_"))
+        {
+          name = string.Format("{0,-20}{1,6}", name.Substring(5), "[mode]");
         }
 
         if (!Shop._Unlocks_Available.Contains(unlock))
@@ -3037,7 +3058,25 @@ public class Menu2
           m.AddComponent(($"{string.Format(format_shop2, name, shop_details.Item1, cost, equip_cost_string, color, color, color)}\n"), MenuComponent.ComponentType.BUTTON_SIMPLE)
             .AddEvent((MenuComponent component) =>
             {
-              var unlock0 = (Shop.Unlocks)System.Enum.Parse(typeof(Shop.Unlocks), component.GetDisplayText(false).Split('>')[2].Split('<')[0].Split(' ')[0].Trim(), true);
+              var c_text = component.GetDisplayText(false).Split('>')[2].Split('<')[0].Trim();//.Split(' ')[0].Trim();
+              var prefix =
+                c_text.Contains("[item]") ? "ITEM" :
+                c_text.Contains("[mod]") ? "MOD" :
+                c_text.Contains("[utility]") ? "UTILITY" :
+                c_text.Contains("[extra]") ? "extra" :
+                c_text.Contains("[mode]") ? "mode" :
+                null;
+              var c_split = c_text.Split(' ');
+              if (prefix == null)
+              {
+                c_text = c_split[0];
+              }
+              else
+              {
+                c_text = $"{prefix}_{c_split[0]}";
+              }
+              //Debug.Log(c_text);
+              var unlock0 = (Shop.Unlocks)System.Enum.Parse(typeof(Shop.Unlocks), c_text, true);
               var shop_info = Shop._Unlocks_Descriptions[unlock0];
               //var equip_cost = GameScript.ItemManager.GetItemValue(unlock0);
               if (shop_info.Item2 <= Shop._AvailablePoints && !Shop.Unlocked(unlock0))
@@ -3363,15 +3402,17 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
     var levels_per_dir = 12;
     void SpawnMenu_Levels()
     {
-      var f = GameScript._GameMode == GameScript.GameModes.CLASSIC ? "{0,-7}{1,15}{2,15}{3,35}" : "{0,-20}{1,20}{2,40}";
+      var f = GameScript._GameMode == GameScript.GameModes.CLASSIC ? "{0,-7}{1,15}{2,15}{3,33}" : "{0,-20}{1,20}{2,40}";
       // Create new menu
       var m = new Menu2(MenuType.LEVELS)
       {
 
       }
       .AddComponent(GameScript._GameMode == GameScript.GameModes.CLASSIC ?
-        $"<color={_COLOR_GRAY}>level directories</color>\n\n" :
-        string.Format($"<color={_COLOR_GRAY}>{f}</color>", "levels", "highest wave", "") + "\n\n");
+          string.Format($"<color={_COLOR_GRAY}>{f}</color>", "levels", "rank", "", "") + "\n\n"
+        :
+          string.Format($"<color={_COLOR_GRAY}>{f}</color>", "levels", "highest wave", "") + "\n\n"
+        );
 
       // Load level times
       m._onSwitchTo += () =>
@@ -3389,15 +3430,43 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
       for (var i = 0; i < dirs; i++)
       {
         var wave = "-";
+        var rank_lowest = "";
         if (GameScript._GameMode == GameScript.GameModes.SURVIVAL)
         {
           wave = GameScript.SurvivalMode.GetHighestWave(i) + "";
           if (wave == "0")
             wave = "-";
         }
-        _Menus[MenuType.LEVELS].AddComponent(GameScript._GameMode == GameScript.GameModes.CLASSIC ?
-          $"\\dir{i}\n" :
-          string.Format(f, $"\\dir{i}", $"{wave}    ", "") + '\n',
+        else if (GameScript._GameMode == GameScript.GameModes.CLASSIC)
+        {
+          // Get lowest rank from all levels in dir
+          for (var u = 0; u < 12; u++)
+          {
+            var level_rating_data = Levels.GetLevelRating(u + (i * 12));
+            if (level_rating_data == null)
+            {
+              rank_lowest = "-";
+              break;
+            }
+            var level_rating = level_rating_data.Item1;
+
+            if (rank_lowest == "")
+            {
+              rank_lowest = level_rating;
+            }
+            else if (level_rating.Length < rank_lowest.Length)
+            {
+              rank_lowest = level_rating;
+            }
+          }
+        }
+
+        var display_text =
+          GameScript._GameMode == GameScript.GameModes.CLASSIC ?
+            string.Format(f, $"\\dir{i}", $"{rank_lowest}    ", "", "") + '\n'
+          :
+            string.Format(f, $"\\dir{i}", $"{wave}    ", "") + '\n';
+        _Menus[MenuType.LEVELS].AddComponent(display_text,
           MenuComponent.ComponentType.BUTTON_DROPDOWN)
           .AddEvent(EventType.ON_UNFOCUS, (MenuComponent component) =>
           {
@@ -3420,7 +3489,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
               var first_level_iter = (component._buttonIndex) * levels_per_dir;
               if (first_level_iter > 0 && !Levels.LevelCompleted(first_level_iter - 1))
               {
-                component._obscured = true;
+                component.SetDisplayText(string.Format(f, $"****", $"-    ", "", "") + '\n');
                 return;
               }
             }
@@ -5089,7 +5158,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
           .AddComponent("exit to level select\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
             .AddEvent((MenuComponent component) =>
             {
-              _SaveIndex = 5;
+              _SaveIndex = 6;
               CommonEvents._SwitchMenu(MenuType.MODE_EXIT_CONFIRM);
             })
             .AddEvent(EventType.ON_RENDER, func_exit)
@@ -5097,7 +5166,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
           .AddComponent("exit to main menu\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
             .AddEvent((MenuComponent component) =>
             {
-              _SaveIndex = 6;
+              _SaveIndex = 7;
               CommonEvents._SwitchMenu(MenuType.MODE_EXIT_CONFIRM);
             })
             .AddEvent(EventType.ON_RENDER, func_exit);
@@ -5928,9 +5997,9 @@ www.reddit.com/u/quaterniusdev
 
 <color={_COLOR_GRAY}>overview</color>~2
 in this mode, you will complete levels.~2 collect the <color=yellow>CUBE</color>~1 and bring
-it back to the start of the level.~2 each new level you complete
-gives you <color=yellow>money ($$$)</color> to spend at the SHOP.~2 customize your loadouts
-in the EDIT_LOADOUT menu.~2
+it back to the start of the level.~2 complete levels quickly
+to earn ranks and earn <color=yellow>money ($$$)</color> to spend at the SHOP.~2 customize
+your loadouts in the EDIT_LOADOUT menu.~2
 
 
 <color={_COLOR_GRAY}>special controls</color>~2
@@ -6018,7 +6087,7 @@ a gampad if plugged in.~1
     }
     .AddComponent("are you sure you want to exit this level?\n\n")
     // Exit to level selection or main menu
-    .AddComponent("yes\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
+    .AddComponent("exit level\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
       .AddEvent((MenuComponent component) =>
       {
 
@@ -6074,10 +6143,12 @@ a gampad if plugged in.~1
           _InPause = false;
         }
       })
-    .AddBackButton(MenuType.PAUSE, "no")
+      .AddEvent(EventType.ON_RENDER, func_exit)
+    .AddBackButton(MenuType.PAUSE, "back")
       .AddEvent((MenuComponent c) =>
       {
         _CurrentMenu._selectionIndex = _SaveIndex;
+        _CurrentMenu._selectedComponent._onFocus?.Invoke(_CurrentMenu._selectedComponent);
         _CanRender = true;
         RenderMenu();
       });
