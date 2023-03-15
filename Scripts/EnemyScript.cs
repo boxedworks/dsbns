@@ -551,9 +551,9 @@ public class EnemyScript : MonoBehaviour
             // Update patrol
             if (_patroling && !IsChaser())
             {
-              float dis = MathC.Get2DDistance(transform.position, _path.GetPatrolPoint().position);
+              var dis = MathC.Get2DDistance(transform.position, _path.GetPatrolPoint().position);
               _atd = dis;
-              if (dis < 0.5f)
+              if (dis < 0.1f)
               {
                 if (_path.GetPathLength() > 1)
                 {
@@ -916,8 +916,8 @@ public class EnemyScript : MonoBehaviour
       { }
       else return;
     }
-    var movePos = (_agent.steeringTarget - transform.position).normalized * PlayerScript.MOVESPEED * Time.deltaTime * _moveSpeed_lerped;
-    //Debug.Log(MathC.Get2DVector(movePos).magnitude + " : " + (Vector3.Equals(_agent.destination, transform.position)));
+    var moveDir =  (_agent.steeringTarget - transform.position);
+    var movePos = (moveDir.magnitude > 1f ? moveDir.normalized : moveDir) * PlayerScript.MOVESPEED * Time.deltaTime * _moveSpeed_lerped;
 
     if (Vector3.Equals(_agent.destination, transform.position))
       movePos = Vector3.zero;
