@@ -1648,7 +1648,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
             {
               if (ControllerManager.GetKey(ControllerManager.Key.PAGE_UP, ControllerManager.InputMode.DOWN))
               {
-                if (Levels._CurrentLevelIndex < (Levels._CurrentLevelCollection?._leveldata.Length ?? 0) && Levels.LevelCompleted(Levels._CurrentLevelIndex + 1))
+                if (Levels._CurrentLevelIndex < (Levels._CurrentLevelCollection?._leveldata.Length ?? 0) && Levels.LevelCompleted(Levels._CurrentLevelIndex))
                 {
                   NextLevel(Levels._CurrentLevelIndex + 1);
                 }

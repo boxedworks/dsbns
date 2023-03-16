@@ -543,6 +543,7 @@ public class EnemyScript : MonoBehaviour
                 SetCurrentPatrolPoint();
           }
         }
+
         // Doing its job
         if (_state == State.NEUTRAL)
         {
@@ -632,18 +633,19 @@ public class EnemyScript : MonoBehaviour
             // Chase player
             else
             {
+
               // Check if close to steering pos; try to look around corner before going around corner
               if (_canMove)
               {
                 if (MathC.Get2DDistance(_ragdoll._hip.position, _agent.steeringTarget) < 3f)
                 {
-                  int iter = 0;
+                  var iter = 0;
                   if (_agent.path.corners.Length > 0 && !_agent.path.corners[_agent.path.corners.Length - 1].Equals(_agent.steeringTarget))
-                    foreach (Vector3 p in _agent.path.corners)
+                    foreach (var p in _agent.path.corners)
                     {
                       if (p.Equals(_agent.steeringTarget))
                       {
-                        Vector3 nextPos = _agent.path.corners[iter + 1];
+                        var nextPos = _agent.path.corners[iter + 1];
                         if (Vector3.Distance(nextPos, _agent.steeringTarget) < 2.5f && iter + 2 < _agent.path.corners.Length - 1)
                           nextPos = _agent.path.corners[iter + 2];
                         _lookAtPos = nextPos;
@@ -906,7 +908,9 @@ public class EnemyScript : MonoBehaviour
 
   void Move()
   {
+
     if (!_canMove || _ragdoll._grappled) return;
+
     // Check survial
     if (GameScript.IsSurvival())
     {
@@ -916,12 +920,13 @@ public class EnemyScript : MonoBehaviour
       { }
       else return;
     }
-    var moveDir =  (_agent.steeringTarget - transform.position);
-    var movePos = (moveDir.magnitude > 1f ? moveDir.normalized : moveDir) * PlayerScript.MOVESPEED * Time.deltaTime * _moveSpeed_lerped;
 
-    if (Vector3.Equals(_agent.destination, transform.position))
-      movePos = Vector3.zero;
-    _agent.Move(movePos);
+    var moveDir = (_agent.steeringTarget - transform.position);
+    var movePos = moveDir.normalized * PlayerScript.MOVESPEED * Time.deltaTime * _moveSpeed_lerped;
+    if (!Vector3.Equals(_agent.destination, transform.position))
+    {
+      _agent.Move(movePos);
+    }
   }
   void LookAt(Vector3 lookAtPos)
   {

@@ -3010,7 +3010,14 @@ public class Menu2
         var max_equip = GameScript.ItemManager.Loadout._POINTS_MAX;
         if (display_mode == Shop.DisplayModes.ALL && Shop.Unlocked(unlock))
         {
-          m.AddComponent($"{string.Format(format_shop2, name, shop_details.Item1, cost, equip_cost_string, "yellow", "yellow", "yellow")}\n", MenuComponent.ComponentType.BUTTON_SIMPLE);
+          var ct = string.Format(format_shop2, name, shop_details.Item1, cost, equip_cost_string, "yellow", "yellow", "yellow");
+          if (ct.Contains('['))
+          {
+            var cts0 = ct.Split('[');
+            var cts1 = cts0[1].Split(']');
+            ct = $"{cts0[0]}<color={_COLOR_GRAY}>[{cts1[0]}]</color>{cts1[1]}";
+          }
+          m.AddComponent($"{ct}\n", MenuComponent.ComponentType.BUTTON_SIMPLE);
         }
         else if (equip_cost > max_equip && Shop._AvailablePoints < cost)
           m.AddComponent($"{string.Format(format_shop2, name, shop_details.Item1, cost, equip_cost_string, _COLOR_GRAY, "red", "red")}\n", MenuComponent.ComponentType.BUTTON_SIMPLE);
@@ -3055,7 +3062,14 @@ public class Menu2
               }
             }
           }*/
-          m.AddComponent(($"{string.Format(format_shop2, name, shop_details.Item1, cost, equip_cost_string, color, color, color)}\n"), MenuComponent.ComponentType.BUTTON_SIMPLE)
+          var ct = string.Format(format_shop2, name, shop_details.Item1, cost, equip_cost_string, color, color, color);
+          if (ct.Contains('['))
+          {
+            var cts0 = ct.Split('[');
+            var cts1 = cts0[1].Split(']');
+            ct = $"{cts0[0]}<color={_COLOR_GRAY}>[{cts1[0]}]</color>{cts1[1]}";
+          }
+          m.AddComponent(($"{ct}\n"), MenuComponent.ComponentType.BUTTON_SIMPLE)
             .AddEvent((MenuComponent component) =>
             {
               var c_text = component.GetDisplayText(false).Split('>')[2].Split('<')[0].Trim();//.Split(' ')[0].Trim();
@@ -3113,9 +3127,9 @@ public class Menu2
             GenericMenu(new string[]
             {
             Shop._AvailablePoints < cost ?
-            "cannot afford item\n\n- you do not have enough <color=yellow>($$$)</color> to buy this item\n\n- try beating more classic levels to get more <color=yellow>($$$)</color>\n\n"
+            "cannot afford item\n\n- you do not have enough <color=yellow>($$$)</color> to buy this item\n\n- complete classic mode ranks to get more <color=yellow>($$$)</color>\n\n"
             :
-            "cannot equip / purchase item\n\n- you do not have enough <color=yellow>equipment_points</color> to equip / purchase this item\n\n- buy more <color=yellow>MAX_EQUIP_POINTS</color> in the SHOP to equip / buy this\n\n"
+            "cannot equip / purchase item\n\n- you do not have enough <color=yellow>equipment_points</color> to equip this item if you purchased it\n\n- buy more <color=yellow>MAX_EQUIP_POINTS</color> in the SHOP to equip / buy this\n\n"
             },
             "ok",
             MenuType.SHOP,
