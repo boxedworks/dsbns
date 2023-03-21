@@ -116,7 +116,7 @@ public class PlayerScript : MonoBehaviour
       _Players = new List<PlayerScript>();
     _Players.Add(this);
     // Give unique _PlayerID and decide input based upon _PlayerID
-    _id = _PLAYERID++ % GameScript.Settings._NumberPlayers;
+    _id = _PLAYERID++ % Settings._NumberPlayers;
     // Check all players to make sure no duplicate _PlayerID
     var loops = 0;
     while (true && loops++ < 5)
@@ -130,7 +130,7 @@ public class PlayerScript : MonoBehaviour
         // If has same _PlayerID, increment id and set do not break while loop
         if (p._id == _id)
         {
-          _id = _PLAYERID++ % GameScript.Settings._NumberPlayers;
+          _id = _PLAYERID++ % Settings._NumberPlayers;
           breakLoop = false;
           break;
         }
@@ -264,10 +264,10 @@ public class PlayerScript : MonoBehaviour
   public void RegisterUtility(ActiveRagdoll.Side side, int amount = -1)
   {
     // Check extra
-    if (GameScript.Settings._Extras_CanUse)
+    if (Settings._Extras_CanUse)
     {
       if (_ragdoll?._isPlayer ?? false)
-        switch (GameScript.Settings._Extra_PlayerAmmo._value)
+        switch (Settings._Extra_PlayerAmmo._value)
         {
           case 1:
             amount = Mathf.CeilToInt(amount * 2f);
@@ -740,7 +740,7 @@ public class PlayerScript : MonoBehaviour
       {
 
         // Update time via player speed
-        var time_move = GameScript.Settings._Extra_Superhot && GameScript.Settings._Extras_CanUse;
+        var time_move = Settings._Extra_Superhot && Settings._Extras_CanUse;
         if (time_move)
         {
           if (_spawnTimer <= 0f)
@@ -850,20 +850,20 @@ public class PlayerScript : MonoBehaviour
 
     if (_id == 0 && GameScript._Singleton._UseCamera)
     {
-      var camera_height = GameScript.Settings._CameraZoom == 1 ? 14f : GameScript.Settings._CameraZoom == 0 ? 10f : 18f;
-      if (GameScript.Settings._CameraType._value)
+      var camera_height = Settings._CameraZoom == 1 ? 14f : Settings._CameraZoom == 0 ? 10f : 18f;
+      if (Settings._CameraType._value)
       {
         camera_height = 14f;
       }
 
       // Center camera on map if it does not need to move
-      var center_camera = GameScript.Settings._CameraType._value;
+      var center_camera = Settings._CameraType._value;
       var map_x = TileManager._Map_Size_X;
       var map_y = TileManager._Map_Size_Y;
       //Debug.Log($"{map_x} {map_y}");
       if (center_camera)
       {
-        var zoom = GameScript.Settings._CameraZoom;
+        var zoom = Settings._CameraZoom;
         if (zoom == 0)
         {
           if (map_x > 7 || map_y > 4)
@@ -896,15 +896,15 @@ public class PlayerScript : MonoBehaviour
           }
           if (zoom_ > -1)
           {
-            GameScript.Settings._CameraZoom._value = zoom_;
-            GameScript.Settings.SetPostProcessing();
-            GameScript.Settings._CameraZoom._value = 3;
+            Settings._CameraZoom._value = zoom_;
+            Settings.SetPostProcessing();
+            Settings._CameraZoom._value = 3;
           }
           else
           {
-            GameScript.Settings._CameraZoom._value = 2;
-            GameScript.Settings.SetPostProcessing();
-            GameScript.Settings._CameraZoom._value = 3;
+            Settings._CameraZoom._value = 2;
+            Settings.SetPostProcessing();
+            Settings._CameraZoom._value = 3;
 
             center_camera = false;
           }
@@ -950,9 +950,9 @@ public class PlayerScript : MonoBehaviour
         sharedPos.y = transform.position.y + camera_height;
         sharedForward /= Mathf.Clamp(counter, 1, counter);
 
-        if (GameScript.Settings._CameraZoom == 2)
+        if (Settings._CameraZoom == 2)
           sharedForward = Vector3.zero;
-        else if (GameScript.Settings._CameraZoom == 0)
+        else if (Settings._CameraZoom == 0)
           sharedForward /= 1.4f;
 
         var changePos = Vector3.zero;
@@ -976,7 +976,7 @@ public class PlayerScript : MonoBehaviour
       }
 
       _camPos.y = camera_height;
-      if (GameScript.Settings._CameraType._value)
+      if (Settings._CameraType._value)
       {
         //_camPos.z -= 1.9f;
       }
@@ -1029,7 +1029,7 @@ public class PlayerScript : MonoBehaviour
 
     // Spawn enemies as player gets closer to goal; 3rd difficulty / game mode ?
     if (!GameScript.IsSurvival())
-      if (_id == 0 && (GameScript.Settings._Extra_CrazyZombies && GameScript.Settings._Extras_CanUse) && Powerup._Powerups.Count > 0)
+      if (_id == 0 && (Settings._Extra_CrazyZombies && Settings._Extras_CanUse) && Powerup._Powerups.Count > 0)
       {
         var dis_spawn = MathC.Get2DDistance(transform.position, PlayerspawnScript._PlayerSpawns[0].transform.position);
         //Debug.Log("| " + dis_spawn + " " + (EnemyScript._Enemies_alive.Count < EnemyScript._MAX_RAGDOLLS_ALIVE));
@@ -1085,7 +1085,7 @@ public class PlayerScript : MonoBehaviour
 
     var saveInput = Vector2.zero;
 
-    if ((_id == 0 && GameScript.Settings._ForceKeyboard) || ControllerManager._NumberGamepads == 0)
+    if ((_id == 0 && Settings._ForceKeyboard) || ControllerManager._NumberGamepads == 0)
       mouseEnabled = true;
     else if (ControllerManager._NumberGamepads > 0)
       mouseEnabled = false;
@@ -1872,7 +1872,7 @@ public class PlayerScript : MonoBehaviour
     _profile.UpdateHealthUI();
 
     // Controller rumble
-    if (!mouseEnabled && GameScript.Settings._ControllerRumble)
+    if (!mouseEnabled && Settings._ControllerRumble)
     {
       IEnumerator rumble()
       {
@@ -1894,7 +1894,7 @@ public class PlayerScript : MonoBehaviour
     Stats.RecordDeath(_id);
 
     // Controller rumble
-    if (!mouseEnabled && GameScript.Settings._ControllerRumble)
+    if (!mouseEnabled && Settings._ControllerRumble)
     {
       IEnumerator rumble()
       {
@@ -1953,7 +1953,7 @@ public class PlayerScript : MonoBehaviour
         lastplayer = false;
         break;
       }
-    if (GameScript.Settings._Slowmo_on_death && lastplayer && !HasPerk(Shop.Perk.PerkType.NO_SLOWMO)) _SlowmoTimer += 2f;
+    if (Settings._Slowmo_on_death && lastplayer && !HasPerk(Shop.Perk.PerkType.NO_SLOWMO)) _SlowmoTimer += 2f;
 
     // Check for restart tutorial
     if (lastplayer)
@@ -2194,17 +2194,17 @@ public class PlayerScript : MonoBehaviour
 
       if (_Data.Count > 1)
       {
-        GameScript.Settings._NumberPlayers = 2;
+        Settings._NumberPlayers = 2;
         PlayerspawnScript._PlayerSpawns[0].SpawnPlayer();
       }
       if (_Data.Count > 2)
       {
-        GameScript.Settings._NumberPlayers = 3;
+        Settings._NumberPlayers = 3;
         PlayerspawnScript._PlayerSpawns[0].SpawnPlayer();
       }
       if (_Data.Count > 3)
       {
-        GameScript.Settings._NumberPlayers = 4;
+        Settings._NumberPlayers = 4;
         PlayerspawnScript._PlayerSpawns[0].SpawnPlayer();
       }
 

@@ -111,7 +111,12 @@ public static class Shop
   static int AvailablePoints;
   public static int _AvailablePoints
   {
-    get { return AvailablePoints; }
+    get
+    {
+      if (Settings._Classic_0_TopRated._value && Settings._Classic_1_TopRated._value)
+        return 999;
+      return AvailablePoints;
+    }
     set
     {
       AvailablePoints = value;
@@ -349,7 +354,7 @@ public static class Shop
 
       total_point += pair.Value.Item2;
     }
-    Debug.Log($"Total points: ({_AvailablePoints}) {total_point} / {((11-1)*12 + (12-1)*12 + (1)*12)*4}");
+    Debug.Log($"Total points: ({_AvailablePoints}) {total_point} / {((11 - 1) * 12 + (12 - 1) * 12 + (1) * 12) * 4}");
 
     // Set starter unlocks
     AddAvailableUnlock(Unlocks.ITEM_KNIFE);

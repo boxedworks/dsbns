@@ -1254,7 +1254,7 @@ public class ActiveRagdoll
 
   public void Kill(ActiveRagdoll source, DamageSourceType damageSourceType, Vector3 hitForce)
   {
-    if (_isPlayer && GameScript.Settings._PLAYER_INVINCIBLE) return;
+    if (_isPlayer && Settings._PLAYER_INVINCIBLE) return;
 
     // Disintegrate
     if (damageSourceType == DamageSourceType.FIRE)
@@ -1345,7 +1345,7 @@ public class ActiveRagdoll
     }
 
     // Check global blood setting
-    if (!GameScript.Settings._Blood) return;
+    if (!Settings._Blood) return;
 
     // Particles
     var particles = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.BLOOD);
@@ -1422,10 +1422,10 @@ public class ActiveRagdoll
       _playerScript?.OnToggle(source, damageSourceType);
 
       // Check extras
-      if (GameScript.Settings._Extras_CanUse)
+      if (Settings._Extras_CanUse)
       {
         var explode_self = false;
-        switch (GameScript.Settings._Extra_BodyExplode._value)
+        switch (Settings._Extra_BodyExplode._value)
         {
 
           // All

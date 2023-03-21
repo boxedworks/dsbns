@@ -124,40 +124,88 @@ public class Levels : MonoBehaviour
     _LevelCollections[_CurrentLevelCollectionIndex]._leveldata = levels.ToArray();
   }
 
-  public static Dictionary<int, System.Tuple<float, float>> _CurrentLevel_LevelTimesData;
+  public static Dictionary<int, Dictionary<int, System.Tuple<float, float>>> _CurrentLevel_LevelTimesData;
+  public static Dictionary<int, Dictionary<int, bool>> _Levels_All_TopRatings;
+  public static Dictionary<int, string> _Ranks_Lowest;
   public static void BufferLevelTimeDatas()
   {
 
-    // Get directory to loop through
-    var level_datas = _CurrentLevelCollection._leveldata;
+    // Init new dictionaries
+    _CurrentLevel_LevelTimesData = new Dictionary<int, Dictionary<int, System.Tuple<float, float>>>();
+    _CurrentLevel_LevelTimesData.Add(0, new Dictionary<int, System.Tuple<float, float>>());
+    _CurrentLevel_LevelTimesData.Add(1, new Dictionary<int, System.Tuple<float, float>>());
 
-    // Init new dictionary
-    _CurrentLevel_LevelTimesData = new Dictionary<int, System.Tuple<float, float>>();
-
-    // Load data
-    for (var i = 0; i < level_datas.Length; i++)
+    if (_Ranks_Lowest == null)
     {
+      _Ranks_Lowest = new Dictionary<int, string>();
+      _Ranks_Lowest.Add(0, "****");
+      _Ranks_Lowest.Add(1, "****");
+    }
 
-      var dev_time = -1f;
-      foreach (var d in level_datas[i].Split(" "))
+    // Loop through level collections
+    var difficulty_save = Settings._DIFFICULTY;
+    for (var difficulty = 0; difficulty < 2; difficulty++)
+    {
+      Levels._CurrentLevelIndex = Settings._DIFFICULTY = difficulty;
+
+      // Get directory to loop through
+      var level_datas = _CurrentLevelCollection._leveldata;
+
+      // Init per-difficulty dicts
+      if (Settings._CurrentDifficulty_NotTopRated)
       {
-        if (d.StartsWith("bdt_"))
+        if (_Levels_All_TopRatings == null)
+          _Levels_All_TopRatings = new Dictionary<int, Dictionary<int, bool>>();
+        if (_Levels_All_TopRatings.ContainsKey(difficulty))
+          _Levels_All_TopRatings[difficulty] = new Dictionary<int, bool>();
+        else
+          _Levels_All_TopRatings.Add(difficulty, new Dictionary<int, bool>());
+      }
+
+      // Gather data
+      for (var i = 0; i < level_datas.Length; i++)
+      {
+
+        var dev_time = -1f;
+        foreach (var d in level_datas[i].Split(" "))
         {
-          dev_time = float.Parse(d.Split("_")[1]);
-          break;
+          if (d.StartsWith("bdt_"))
+          {
+            dev_time = float.Parse(d.Split("_")[1]);
+            break;
+          }
+        }
+        var level_time_best = float.Parse(PlayerPrefs.GetFloat($"{_CurrentLevelCollection_Name}_{i}_time", -1f).ToString("0.000"));
+
+        // Save data
+        _CurrentLevel_LevelTimesData[difficulty].Add(i, System.Tuple.Create(dev_time, level_time_best));
+        if (Settings._CurrentDifficulty_NotTopRated)
+          _Levels_All_TopRatings[difficulty].Add(i, LevelHasTopRating(i));
+
+        if (Settings._CurrentDifficulty_NotTopRated)
+        {
+          if (dev_time == -1f || level_time_best < 0f)
+          {
+            _Ranks_Lowest[difficulty] = "";
+          }
+          else
+          {
+            var rating_stars = GetLevelRating(dev_time, level_time_best).Item1;
+            if (_Ranks_Lowest[difficulty].Length > rating_stars.Length)
+            {
+              _Ranks_Lowest[difficulty] = rating_stars;
+            }
+          }
         }
       }
 
-      var level_time_best = float.Parse(PlayerPrefs.GetFloat($"{_CurrentLevelCollection_Name}_{i}_time", -1f).ToString("0.000"));
-
-      _CurrentLevel_LevelTimesData.Add(i, System.Tuple.Create(dev_time, level_time_best));
     }
-
+    Levels._CurrentLevelIndex = Settings._DIFFICULTY = difficulty_save;
   }
 
   public static bool LevelCompleted(int leveliter)
   {
-    return GameScript.Settings._LevelsCompleted[_CurrentLevelCollection_Name].Contains(leveliter);
+    return Settings._LevelsCompleted[_CurrentLevelCollection_Name].Contains(leveliter);
   }
 
   public static System.Tuple<string, string>[] GetLevelRatings()
@@ -182,11 +230,7 @@ public class Levels : MonoBehaviour
   public static System.Tuple<string, string> GetLevelRating(float dev_time, float player_time)
   {
     var ratings = GetLevelRatings();
-    if (dev_time < 0f)
-    {
-      return ratings[0];
-    }
-    if (player_time == -1f)
+    if (player_time == -1f || dev_time < 0f)
     {
       return null;
     }
@@ -210,8 +254,13 @@ public class Levels : MonoBehaviour
   }
   public static System.Tuple<string, string> GetLevelRating(int level_index)
   {
-    var time_data = Levels._CurrentLevel_LevelTimesData[level_index];
+    var time_data = Levels._CurrentLevel_LevelTimesData[Settings._DIFFICULTY][level_index];
     return GetLevelRating(time_data.Item1, time_data.Item2);
+  }
+  public static bool LevelHasTopRating(int level_index)
+  {
+    var level_rating = GetLevelRating(level_index);
+    return level_rating == null ? false : level_rating.Item1.Length == 4;
   }
 
   public static void SaveLevels()
@@ -419,6 +468,9 @@ public class Levels : MonoBehaviour
   {
 
     return $"{level_meta[0].Trim()} " +
+
+      // Add level best dev time
+      (TileManager._LevelTime_Dev != -1f ? $"bdt_{TileManager._LevelTime_Dev} " : "") +
 
       // Add level name
       (level_meta.Length > 1 && level_meta[1] != null ? $"+{level_meta[1]} " : "") +

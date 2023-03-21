@@ -911,7 +911,7 @@ public class Menu2
         .AddComponent(Shop.Tip.GetTip(GameScript._GameMode) + after_lines)
         .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
         {
-          component._visible = GameScript.Settings._ShowTips;
+          component._visible = Settings._ShowTips;
         });
       return _Menus[type]._menuComponent_last;
     }
@@ -919,7 +919,7 @@ public class Menu2
     {
       var onSwitch = new System.Action(() =>
       {
-        if (!GameScript.Settings._ShowTips) return;
+        if (!Settings._ShowTips) return;
         var last_c = _Menus[type]._menuComponents.Where(component => component.GetDisplayText(false).Contains("*tip")).Single();
         var afterNewLineCount = System.Text.RegularExpressions.Regex.Matches(last_c.GetDisplayText(false), "\n").Count;
         var tip = Shop.Tip.GetTip(GameScript._GameMode);
@@ -1019,7 +1019,7 @@ public class Menu2
           var parent = _Menu.GetChild(0);
           if (parent.childCount == 0) return;
           for (var i = parent.childCount - 1; i >= 0; i--)
-            if (!GameScript.Settings._ShowTips)
+            if (!Settings._ShowTips)
               parent.GetChild(i).gameObject.SetActive(false);
             else
             {
@@ -1125,7 +1125,7 @@ public class Menu2
       {
         CommonEvents._SwitchMenu(MenuType.EDITOR_MAIN);
 
-        GameScript.Settings.OnGamemodeChanged(GameScript.Settings.GamemodeChange.LEVEL_EDITOR);
+        Settings.OnGamemodeChanged(Settings.GamemodeChange.LEVEL_EDITOR);
       });
 #endif
     // Show options menu
@@ -3358,9 +3358,9 @@ public class Menu2
       .AddEvent((MenuComponent component) =>
       {
         GameScript._GameMode = GameScript.GameModes.CLASSIC;
-        GameScript.Settings._DIFFICULTY = PlayerPrefs.GetInt($"{GameScript._GameMode}_SavedDifficulty", 0);
-        Levels._CurrentLevelCollectionIndex = GameScript.Settings._DIFFICULTY;
-        GameScript.Settings.OnGamemodeChanged(GameScript.Settings.GamemodeChange.CLASSIC);
+        Settings._DIFFICULTY = PlayerPrefs.GetInt($"{GameScript._GameMode}_SavedDifficulty", 0);
+        Levels._CurrentLevelCollectionIndex = Settings._DIFFICULTY;
+        Settings.OnGamemodeChanged(Settings.GamemodeChange.CLASSIC);
 
         if (Shop.Unlocked(Shop.Unlocks.TUTORIAL_PART1))
           CommonEvents._SwitchMenu(MenuType.GAMETYPE_CLASSIC);
@@ -3390,10 +3390,10 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
       {
         Levels._CurrentLevelCollectionIndex = 2;
         GameScript._GameMode = GameScript.GameModes.SURVIVAL;
-        GameScript.Settings._DIFFICULTY = PlayerPrefs.GetInt($"{GameScript._GameMode}_SavedDifficulty", 0);
+        Settings._DIFFICULTY = PlayerPrefs.GetInt($"{GameScript._GameMode}_SavedDifficulty", 0);
         CommonEvents._SwitchMenu(MenuType.GAMETYPE_SURVIVAL);
 
-        GameScript.Settings.OnGamemodeChanged(GameScript.Settings.GamemodeChange.SURVIVAL);
+        Settings.OnGamemodeChanged(Settings.GamemodeChange.SURVIVAL);
       })
       .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
       {
@@ -3416,16 +3416,16 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
     var levels_per_dir = 12;
     void SpawnMenu_Levels()
     {
-      var f = GameScript._GameMode == GameScript.GameModes.CLASSIC ? "{0,-7}{1,15}{2,15}{3,33}" : "{0,-20}{1,20}{2,40}";
+      var format_subdirs = GameScript._GameMode == GameScript.GameModes.CLASSIC ? "{0,-7}{1,15}{2,15}{3,33}" : "{0,-20}{1,20}{2,40}";
       // Create new menu
       var m = new Menu2(MenuType.LEVELS)
       {
 
       }
       .AddComponent(GameScript._GameMode == GameScript.GameModes.CLASSIC ?
-          string.Format($"<color={_COLOR_GRAY}>{f}</color>", "levels", "rank", "", "") + "\n\n"
+          string.Format($"<color={_COLOR_GRAY}>{format_subdirs}</color>", "levels", "rank", "", "") + "\n\n"
         :
-          string.Format($"<color={_COLOR_GRAY}>{f}</color>", "levels", "highest wave", "") + "\n\n"
+          string.Format($"<color={_COLOR_GRAY}>{format_subdirs}</color>", "levels", "highest wave", "") + "\n\n"
         );
 
       // Load level times
@@ -3441,6 +3441,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
       }
       else if (GameScript._GameMode == GameScript.GameModes.CHALLENGE || GameScript._GameMode == GameScript.GameModes.SURVIVAL)
         dirs = Levels._CurrentLevelCollection._leveldata.Length;
+
       for (var i = 0; i < dirs; i++)
       {
         var wave = "-";
@@ -3454,7 +3455,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
         else if (GameScript._GameMode == GameScript.GameModes.CLASSIC)
         {
           // Get lowest rank from all levels in dir
-          for (var u = 0; u < 12; u++)
+          for (var u = i == 0 ? 1 : 0; u < 12; u++)
           {
             var level_rating_data = Levels.GetLevelRating(u + (i * 12));
             if (level_rating_data == null)
@@ -3477,9 +3478,9 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
 
         var display_text =
           GameScript._GameMode == GameScript.GameModes.CLASSIC ?
-            string.Format(f, $"\\dir{i}", $"{rank_lowest}    ", "", "") + '\n'
+            string.Format(format_subdirs, $"\\dir{i}", $"{rank_lowest}    ", "", "") + '\n'
           :
-            string.Format(f, $"\\dir{i}", $"{wave}    ", "") + '\n';
+            string.Format(format_subdirs, $"\\dir{i}", $"{wave}    ", "") + '\n';
         _Menus[MenuType.LEVELS].AddComponent(display_text,
           MenuComponent.ComponentType.BUTTON_DROPDOWN)
           .AddEvent(EventType.ON_UNFOCUS, (MenuComponent component) =>
@@ -3503,7 +3504,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
               var first_level_iter = (component._buttonIndex) * levels_per_dir;
               if (first_level_iter > 0 && !Levels.LevelCompleted(first_level_iter - 1))
               {
-                component.SetDisplayText(string.Format(f, $"****", $"-    ", "", "") + '\n');
+                component.SetDisplayText(string.Format(format_subdirs, $"****", $"-    ", "", "") + '\n');
                 return;
               }
             }
@@ -3535,6 +3536,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
               var actions_onFocus = new List<System.Action<MenuComponent>>();
               var actions_onUnfocus = new List<System.Action<MenuComponent>>();
               var actions_onCreated = new List<System.Action<MenuComponent>>();
+
               // Load level on select
               for (var u = 0; u < levels_per_dir; u++)
               {
@@ -3544,14 +3546,14 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
                 if (level_iter >= Levels._CurrentLevelCollection._leveldata.Length) continue;
 
                 //if (GameScript._Singleton._IsDemo) level_unlocked = true;
-                var dev_time = Levels._CurrentLevel_LevelTimesData[level_iter].Item1;
-                var level_time_best = Levels._CurrentLevel_LevelTimesData[level_iter].Item2;
+                var dev_time = Levels._CurrentLevel_LevelTimesData[Settings._DIFFICULTY][level_iter].Item1;
+                var level_time_best = Levels._CurrentLevel_LevelTimesData[Settings._DIFFICULTY][level_iter].Item2;
                 var text_levelTimeBest = level_time_best == -1f ? "-" : string.Format("{0:0.000}", level_time_best);
 
                 var level_rating = Levels.GetLevelRating(dev_time, level_time_best);
-                var text_rating = level_time_best == -1f ? "-" : level_rating == null ? "" : level_rating.Item1;
+                var text_rating = level_time_best == -1f ? "-" : level_rating == null ? "?" : level_rating.Item1;
 
-                selections.Add(string.Format(f, $"\\{(level_iter + 1)}", text_levelTimeBest, text_rating, ""));
+                selections.Add(string.Format(format_subdirs, $"\\{(level_iter + 1)}", text_levelTimeBest, text_rating, ""));
 
                 // Check if unlocked
                 if (level_unlocked)
@@ -3623,8 +3625,10 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
                   if (!level_unlocked) break;
                   lastIter++;
                 }
+
                 // Set match
                 match = selections[lastIter - 1];
+
                 // Check for all completed
                 if (lastIter == levels_per_dir)
                 {
@@ -3637,14 +3641,14 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
               if (Levels.LevelCompleted(143))
                 match = selections[0];
               // Set dropdown data
-              component.SetDropdownData($"=== {string.Format(f, "level", "time", "rating", "preview")}\n\n", selections, actions, match, actions_onCreated, null, actions_onFocus, actions_onUnfocus);
+              component.SetDropdownData($"=== {string.Format(format_subdirs, "level", "time", "rating", "preview")}\n\n", selections, actions, match, actions_onCreated, null, actions_onFocus, actions_onUnfocus);
             }
 
             // CHALLENGE levels; WIP
             else if (GameScript._GameMode == GameScript.GameModes.CHALLENGE)
             {
               // Update dropdown data
-              var prompt = $"=== {string.Format(f, "level", "time", "preview")}\n\n";
+              var prompt = $"=== {string.Format(format_subdirs, "level", "time", "preview")}\n\n";
               var selections = new List<string>();
               var actions = new List<System.Action<MenuComponent>>();
               selections.Add("yes");
@@ -3667,7 +3671,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
             else if (GameScript._GameMode == GameScript.GameModes.SURVIVAL)
             {
               // Update dropdown data
-              var prompt = $"=== {string.Format(f, "", "", "")}\n\n";
+              var prompt = $"=== {string.Format(format_subdirs, "", "", "")}\n\n";
               var selections = new List<string>();
               var actions = new List<System.Action<MenuComponent>>();
               selections.Add("select");
@@ -3691,9 +3695,12 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
         .AddComponent("difficulty\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
           .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
           {
-            var selection = GameScript.Settings._DIFFICULTY == 0 ? "sneaky" : "sneakier";
-            var color = selection == "sneaky" ? "white" : "cyan";
-            component.SetDisplayText($"difficulty: </color><color={color}>{selection}</color><color=white>\n");
+            var selection = Settings._DIFFICULTY == 0 ? "sneaky" : "sneakier";
+            var color = selection == "sneaky" ? _COLOR_GRAY : "cyan";
+            var ratings_lowest = Levels._Ranks_Lowest;
+            var rating_lowest = ratings_lowest[Settings._DIFFICULTY];
+            component.SetDisplayText($"difficulty: </color><color={color}>{selection} {rating_lowest}</color><color=white>\n");
+
             // Update dropdown data
             var selections = new List<string>();
             var actions = new List<System.Action<MenuComponent>>();
@@ -3701,27 +3708,38 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
             // Set difficulty options
             void Local_SetDifficulty(int difficulty)
             {
-              GameScript.Settings._DIFFICULTY = difficulty;
+              Settings._DIFFICULTY = difficulty;
               Levels._CurrentLevelCollectionIndex = (GameScript._GameMode == GameScript.GameModes.SURVIVAL ? 2 : 0 + difficulty);
               _SaveMenuDir = -1;
               _CanRender = false;
               Levels.BufferLevelTimeDatas();
+
+              SpawnMenu_Levels();
+              _CurrentMenu._selectionIndex = _CurrentMenu._menuComponentsSelectable.Count - 2;
+              _CanRender = false;
+              RenderMenu();
+              SendInput(Input.SPACE);
+              _CanRender = false;
               RenderMenu();
             }
-            selections.Add("sneaky - base difficulty");
+
+            var format_ds = "{0,-9}{1,-4} - {2,-30}";
+            selections.Add(string.Format(format_ds, $"sneaky", ratings_lowest[0], "base difficulty"));
             actions.Add((MenuComponent component0) =>
             {
-              Local_SetDifficulty(0);
+              if (Settings._DIFFICULTY != 0)
+                Local_SetDifficulty(0);
             });
             actions_onCreated.Add((MenuComponent component0) => { });
-            bool difficultyLoaded = GameScript.Settings._DifficultyUnlocked > 0;
+            bool difficultyLoaded = Settings._DifficultyUnlocked > 0;
 
-            selections.Add("sneakier - more enemies, harder levels, pressure");
+            selections.Add(string.Format(format_ds, $"sneakier", ratings_lowest[1], "more enemies, harder levels, pressure"));
             if (difficultyLoaded)
             {
               actions.Add((MenuComponent component0) =>
               {
-                Local_SetDifficulty(1);
+                if (Settings._DIFFICULTY != 1)
+                  Local_SetDifficulty(1);
               });
               actions_onCreated.Add((MenuComponent component0) => { });
             }
@@ -3732,7 +3750,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
             }
 
             // Set dropdown data
-            component.SetDropdownData("difficulty level\n\n", selections, actions, GameScript.Settings._DIFFICULTY == 0 ? "sneaky" : "sneakier", actions_onCreated);
+            component.SetDropdownData("difficulty level\n\n", selections, actions, Settings._DIFFICULTY == 0 ? "sneaky" : "sneakier", actions_onCreated);
           });
       }
       m.AddComponent("\n");
@@ -3898,7 +3916,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
         if (equipment1.Trim().Length == 0) equipment1 = "-";
         var color = "white";
         if (GameScript.PlayerProfile._Profiles != null)
-          for (var u = 0; u < GameScript.Settings._NumberPlayers; u++)
+          for (var u = 0; u < Settings._NumberPlayers; u++)
             if (u < GameScript.PlayerProfile._Profiles.Length &&
             GameScript.PlayerProfile._Profiles[u]._loadoutIndex == i)
             {
@@ -4960,7 +4978,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
     .AddComponent("reset\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
       .AddEventFront((MenuComponent component) =>
       {
-        GameScript.Settings._DeleteStatsIter = 4;
+        Settings._DeleteStatsIter = 4;
       })
       .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
       {
@@ -4968,10 +4986,10 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
         // Set dropdown data
         var selections = new List<string>();
         var actions = new List<System.Action<MenuComponent>>();
-        selections.Add($"yes - press {GameScript.Settings._DeleteStatsIter + 1} more times");
+        selections.Add($"yes - press {Settings._DeleteStatsIter + 1} more times");
         actions.Add((MenuComponent component0) =>
         {
-          if (GameScript.Settings._DeleteStatsIter-- <= 0)
+          if (Settings._DeleteStatsIter-- <= 0)
           {
 
             // Reset overall stats
@@ -5188,16 +5206,16 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
       // Add pause menu stats (?)
       var format_stats = "=<color={0}>{1,-15}</color>{2,-11}{3,-11}{4,-11}{5,-11}\n";
       mPause.AddComponent((GameScript._GameMode == GameScript.GameModes.SURVIVAL ? "\n" : "") + $"\n\n<color={_COLOR_GRAY}>current session stats</color>\n")
-        .AddComponent(string.Format(format_stats, "white", "===", "kills", "deaths", GameScript.Settings._NumberPlayers > 1 ? "teamkills" : "", GameScript._GameMode == GameScript.GameModes.SURVIVAL ? "points" : "") + "\n");      // Gather player stats
+        .AddComponent(string.Format(format_stats, "white", "===", "kills", "deaths", Settings._NumberPlayers > 1 ? "teamkills" : "", GameScript._GameMode == GameScript.GameModes.SURVIVAL ? "points" : "") + "\n");      // Gather player stats
       for (var i = 0; i < 4; i++)
       {
-        if (i >= GameScript.Settings._NumberPlayers)
+        if (i >= Settings._NumberPlayers)
         {
           mPause.AddComponent("=\n");
           continue;
         }
         var stat = Stats._Stats[i];
-        mPause.AddComponent(string.Format(format_stats, GameScript.PlayerProfile._Profiles[i].GetColorName(), $"P{i + 1}/", $"{stat._kills}", $"{stat._deaths}", GameScript.Settings._NumberPlayers > 1 ? $"{stat._teamkills}" : "", GameScript._GameMode == GameScript.GameModes.SURVIVAL ? $"{stat._points}" : ""));
+        mPause.AddComponent(string.Format(format_stats, GameScript.PlayerProfile._Profiles[i].GetColorName(), $"P{i + 1}/", $"{stat._kills}", $"{stat._deaths}", Settings._NumberPlayers > 1 ? $"{stat._teamkills}" : "", GameScript._GameMode == GameScript.GameModes.SURVIVAL ? $"{stat._points}" : ""));
       };
       // Set the onback function to be resume
       _Menus[MenuType.PAUSE]._onBack = () =>
@@ -5399,24 +5417,24 @@ go to the <color=yellow>SHOP</color> to buy something~1
         .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
           {
             // Set display text to current resolution
-            component.SetDisplayText(string.Format(format_options, "resolution:", "" + GameScript.Settings._ScreenResolution.ToString().Split('@')[0].Trim()));
+            component.SetDisplayText(string.Format(format_options, "resolution:", "" + Settings._ScreenResolution.ToString().Split('@')[0].Trim()));
 
             // Check if resolution exits; IE monitor may have been changed
             var res_found = false;
             for (var i = 0; i < Screen.resolutions.Length; i++)
             {
               var local_res = Screen.resolutions[i];
-              if (local_res.width == GameScript.Settings._ScreenResolution.width && local_res.height == GameScript.Settings._ScreenResolution.height && local_res.refreshRate == GameScript.Settings._ScreenResolution.refreshRate)
+              if (local_res.width == Settings._ScreenResolution.width && local_res.height == Settings._ScreenResolution.height && local_res.refreshRate == Settings._ScreenResolution.refreshRate)
               {
                 res_found = true;
                 break;
               }
             }
 
-            var selection_match = GameScript.Settings._ScreenResolution.ToString().Split('@')[0].Trim();
+            var selection_match = Settings._ScreenResolution.ToString().Split('@')[0].Trim();
             if (!res_found)
             {
-              var max = GameScript.Settings.GetSafeMaxResolution();
+              var max = Settings.GetSafeMaxResolution();
               selection_match = $"{max.width} x {max.height}";
             }
 
@@ -5436,7 +5454,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
                 var resolutionText = component0.GetDisplayText().Substring(4).Trim();
                 if (System.Text.RegularExpressions.Regex.Match(resolutionText, "<color=").Success)
                   resolutionText = resolutionText.Split('>')[1].Split('<')[0];
-                var refresh_rate = GameScript.Settings._ScreenResolution.refreshRate;
+                var refresh_rate = Settings._ScreenResolution.refreshRate;
 
                 // Check if current refresh rate is available for this resolution
                 var found_refresh = false;
@@ -5458,7 +5476,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
                   }
 
                 Debug.LogError($"{resolutionText} @ {refresh_rate}Hz");
-                GameScript.Settings.SetResolution($"{resolutionText} @ {refresh_rate}Hz");
+                Settings.SetResolution($"{resolutionText} @ {refresh_rate}Hz");
               });
             }
             // Update dropdown data
@@ -5469,7 +5487,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
         .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
         {
           // Set display text to current resolution
-          var selection_match = Application.targetFrameRate == -1 ? "max" : GameScript.Settings._ScreenResolution.ToString().Split('@')[1].Trim();
+          var selection_match = Application.targetFrameRate == -1 ? "max" : Settings._ScreenResolution.ToString().Split('@')[1].Trim();
           component.SetDisplayText(string.Format(format_options, "refresh rate:", selection_match));
           // Set the dropdown selections to available resolutions
           var selections = new List<string>();
@@ -5477,7 +5495,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
           foreach (var res in Screen.resolutions)
           {
             //if (res.refreshRate == 29 || res.refreshRate == 30 || res.refreshRate == 59 || res.refreshRate == 60 || res.refreshRate == 120 || res.refreshRate == 144)
-            if (res.width == GameScript.Settings._ScreenResolution.width && res.height == GameScript.Settings._ScreenResolution.height)
+            if (res.width == Settings._ScreenResolution.width && res.height == Settings._ScreenResolution.height)
             {
               var res_split = res.ToString().Split('@')[1].Trim();
               if (selections.Contains(res_split)) continue;
@@ -5490,9 +5508,9 @@ go to the <color=yellow>SHOP</color> to buy something~1
           if (System.Text.RegularExpressions.Regex.Match(refreshText, "<color=").Success)
             refreshText = refreshText.Split('>')[1].Split('<')[0];
           var resolutionText = component0._menu._menuComponentsSelectable[component._buttonIndex - 1].GetDisplayText(false).Split(':')[1].Trim();
-          GameScript.Settings._UseDefaultTargetFramerate = false;
+          Settings._UseDefaultTargetFramerate = false;
           Application.targetFrameRate = int.Parse(refreshText.Split('H')[0]);
-          GameScript.Settings.SetResolution(resolutionText + " @ " + refreshText);
+          Settings.SetResolution(resolutionText + " @ " + refreshText);
         });
             }
           }
@@ -5501,7 +5519,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
           actions.Add((MenuComponent component0) =>
           {
             Application.targetFrameRate = -1;
-            GameScript.Settings._UseDefaultTargetFramerate = true;
+            Settings._UseDefaultTargetFramerate = true;
           });
           // Update dropdown data
           component.SetDropdownData("refresh rate\n*if having performance issues; change to a lower number than 'max'\n\n", selections, actions, selection_match);
@@ -5511,7 +5529,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
         .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
         {
           // Set display text
-          string selection = GameScript.Settings._Fullscreen ? "fullscreen" : "windowed";
+          string selection = Settings._Fullscreen ? "fullscreen" : "windowed";
           component.SetDisplayText(string.Format(format_options, "window type:", selection));
 
           // Set dropdown data
@@ -5523,7 +5541,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
           {
 
             // Change to windowed mode
-            GameScript.Settings._Fullscreen = false;
+            Settings._Fullscreen = false;
           });
           selections.Add("fullscreen");
           actions.Add((MenuComponent component0) =>
@@ -5534,7 +5552,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
             for (var i = 0; i < Screen.resolutions.Length; i++)
             {
               var local_res = Screen.resolutions[i];
-              if (local_res.width == GameScript.Settings._ScreenResolution.width && local_res.height == GameScript.Settings._ScreenResolution.height && local_res.refreshRate == GameScript.Settings._ScreenResolution.refreshRate)
+              if (local_res.width == Settings._ScreenResolution.width && local_res.height == Settings._ScreenResolution.height && local_res.refreshRate == Settings._ScreenResolution.refreshRate)
               {
                 res_found = true;
                 break;
@@ -5543,13 +5561,13 @@ go to the <color=yellow>SHOP</color> to buy something~1
             if (!res_found)
             {
               Debug.LogError($"Could not find current resolution when setting fullscreen, setting to safemax");
-              GameScript.Settings.SetResolution($"{GameScript.Settings.GetSafeMaxResolution()}");
+              Settings.SetResolution($"{Settings.GetSafeMaxResolution()}");
             }
             else
               Debug.LogError($"Changing to fullscreen mode with supported resolution");
 
             // Change to fullscreen
-            GameScript.Settings._Fullscreen = true;
+            Settings._Fullscreen = true;
           });
           // Update dropdown data
           component.SetDropdownData("window type\n\n", selections, actions, selection_match);
@@ -5559,11 +5577,11 @@ go to the <color=yellow>SHOP</color> to buy something~1
         .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
         {
           // Set display text
-          component.SetDisplayText(string.Format(format_options, "quality level:", GameScript.Settings._QualityLevel + ""));
+          component.SetDisplayText(string.Format(format_options, "quality level:", Settings._QualityLevel + ""));
           // Set dropdown data
           var selections = new List<string>();
           var actions = new List<System.Action<MenuComponent>>();
-          var selection_match = "" + GameScript.Settings._QualityLevel;
+          var selection_match = "" + Settings._QualityLevel;
           for (int i = 0; i < 6; i++)
           {
             // Add quality level
@@ -5571,7 +5589,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
             // Add action to update quality
             actions.Add((MenuComponent component0) =>
               {
-                GameScript.Settings._QualityLevel = component0._dropdownIndex;
+                Settings._QualityLevel = component0._dropdownIndex;
               });
           }
           // Update dropdown data
@@ -5582,13 +5600,13 @@ go to the <color=yellow>SHOP</color> to buy something~1
         .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
         {
           // Set display text
-          var selection = GameScript.Settings._VSync ? "on" : "off";
+          var selection = Settings._VSync ? "on" : "off";
           component.SetDisplayText(string.Format(format_options, "vsync:", selection) + "\n");
         })
         // Toggle blood
         .AddEvent((MenuComponent component) =>
         {
-          GameScript.Settings._VSync = !GameScript.Settings._VSync;
+          Settings._VSync = !Settings._VSync;
           _CanRender = false;
           RenderMenu();
         });
@@ -5600,11 +5618,11 @@ go to the <color=yellow>SHOP</color> to buy something~1
       .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
       {
         // Set display text
-        component.SetDisplayText(string.Format(format_options, "music volume:", $"{GameScript.Settings._VolumeMusic}/5"));
+        component.SetDisplayText(string.Format(format_options, "music volume:", $"{Settings._VolumeMusic}/5"));
         // Set dropdown data
         var selections = new List<string>();
         var actions = new List<System.Action<MenuComponent>>();
-        var selection_match = "" + GameScript.Settings._VolumeMusic;
+        var selection_match = "" + Settings._VolumeMusic;
         for (int i = 0; i < 6; i++)
         {
           // Add volume level
@@ -5612,7 +5630,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
           // Add action to update music volume
           actions.Add((MenuComponent component0) =>
     {
-      GameScript.Settings._VolumeMusic = component0._dropdownIndex;
+      Settings._VolumeMusic = component0._dropdownIndex;
     });
         }
         // Update dropdown data
@@ -5623,11 +5641,11 @@ go to the <color=yellow>SHOP</color> to buy something~1
       .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
       {
         // Set display text
-        component.SetDisplayText(string.Format(format_options, "sfx volume:", $"{GameScript.Settings._VolumeSFX}/5") + "\n");
+        component.SetDisplayText(string.Format(format_options, "sfx volume:", $"{Settings._VolumeSFX}/5") + "\n");
         // Set dropdown data
         var selections = new List<string>();
         var actions = new List<System.Action<MenuComponent>>();
-        var selection_match = "" + GameScript.Settings._VolumeSFX;
+        var selection_match = "" + Settings._VolumeSFX;
         for (int i = 0; i < 6; i++)
         {
           // Add volume level
@@ -5635,7 +5653,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
           // Add action to update sfx volume
           actions.Add((MenuComponent component0) =>
           {
-            GameScript.Settings._VolumeSFX = component0._dropdownIndex;
+            Settings._VolumeSFX = component0._dropdownIndex;
           });
         }
         // Update dropdown data
@@ -5647,7 +5665,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
       .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
       {
         // Set display text
-        var display_toggle = GameScript.Settings._Toggle_Lightning._value ? "on" : "off";
+        var display_toggle = Settings._Toggle_Lightning._value ? "on" : "off";
         component.SetDisplayText(string.Format(format_options, "lightning:", $"{display_toggle}") + "\n");
         // Set dropdown data
         var selections = new List<string>();
@@ -5663,7 +5681,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
               // Add action to update sfx volume
               actions.Add((MenuComponent component0) =>
               {
-                GameScript.Settings._Toggle_Lightning._value = true;
+                Settings._Toggle_Lightning._value = true;
               });
               break;
             case 1:
@@ -5671,7 +5689,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
               // Add action to update sfx volume
               actions.Add((MenuComponent component0) =>
               {
-                GameScript.Settings._Toggle_Lightning._value = false;
+                Settings._Toggle_Lightning._value = false;
               });
               break;
           }
@@ -5686,7 +5704,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
       {
 
         // Set display text
-        var type_text = GameScript.Settings._CameraType._value ? "2D" : "3D";
+        var type_text = Settings._CameraType._value ? "2D" : "3D";
         component.SetDisplayText(string.Format(format_options, "camera type:", $"{type_text}"));
 
         // Set dropdown data
@@ -5699,13 +5717,13 @@ go to the <color=yellow>SHOP</color> to buy something~1
           actions.Add((MenuComponent component0) =>
           {
             var is_ortho = component0._dropdownIndex == 1;
-            if (GameScript.Settings._CameraZoom == 3 && is_ortho)
+            if (Settings._CameraZoom == 3 && is_ortho)
             {
-              GameScript.Settings._CameraZoom._value = 1;
+              Settings._CameraZoom._value = 1;
             }
 
-            GameScript.Settings._CameraType._value = is_ortho;
-            GameScript.Settings.SetPostProcessing();
+            Settings._CameraType._value = is_ortho;
+            Settings.SetPostProcessing();
           });
         }
 
@@ -5718,7 +5736,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
       {
 
         // Set display text
-        var zoom_text = GameScript.Settings._CameraZoom == 0 ? "close" : GameScript.Settings._CameraZoom == 1 ? "normal" : GameScript.Settings._CameraZoom == 2 ? "far" : "auto [2D mode only]";
+        var zoom_text = Settings._CameraZoom == 0 ? "close" : Settings._CameraZoom == 1 ? "normal" : Settings._CameraZoom == 2 ? "far" : "auto [2D mode only]";
         component.SetDisplayText(string.Format(format_options, "camera zoom:", $"{zoom_text}") + "\n");
 
         // Set dropdown data
@@ -5735,13 +5753,13 @@ go to the <color=yellow>SHOP</color> to buy something~1
           {
             actions.Add((MenuComponent component0) =>
             {
-              if (!GameScript.Settings._CameraType._value)
+              if (!Settings._CameraType._value)
               {
-                GameScript.Settings._CameraType._value = true;
+                Settings._CameraType._value = true;
               }
 
-              GameScript.Settings._CameraZoom._value = component0._dropdownIndex;
-              GameScript.Settings.SetPostProcessing();
+              Settings._CameraZoom._value = component0._dropdownIndex;
+              Settings.SetPostProcessing();
             });
           }
 
@@ -5749,8 +5767,8 @@ go to the <color=yellow>SHOP</color> to buy something~1
           else
             actions.Add((MenuComponent component0) =>
             {
-              GameScript.Settings._CameraZoom._value = component0._dropdownIndex;
-              GameScript.Settings.SetPostProcessing();
+              Settings._CameraZoom._value = component0._dropdownIndex;
+              Settings.SetPostProcessing();
             });
         }
 
@@ -5764,14 +5782,14 @@ go to the <color=yellow>SHOP</color> to buy something~1
       {
 
         // Set display text
-        var selection = GameScript.Settings._Blood ? "on" : "off";
+        var selection = Settings._Blood ? "on" : "off";
         component.SetDisplayText(string.Format(format_options, "blood:", selection) + '\n');
       })
 
       // Toggle blood
       .AddEvent((MenuComponent component) =>
       {
-        GameScript.Settings._Blood = !GameScript.Settings._Blood;
+        Settings._Blood = !Settings._Blood;
         _CanRender = false;
         RenderMenu();
       })
@@ -5782,7 +5800,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
       {
 
         // Set display text
-        var selection = GameScript.Settings._ForceKeyboard ? "on" : "off";
+        var selection = Settings._ForceKeyboard ? "on" : "off";
         component.SetDisplayText(string.Format(format_options, "force keyboard:", selection));
 
         // Set dropdown data
@@ -5792,7 +5810,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
         selections.Add("on - use this if you want to play with controllers and the keyboard");
         actions.Add((MenuComponent component0) =>
         {
-          GameScript.Settings._ForceKeyboard = true;
+          Settings._ForceKeyboard = true;
           if (ControllerManager._NumberGamepads > 0)
           {
             GameScript.PlayerProfile._Profiles[1]._directionalAxis = GameScript.PlayerProfile._Profiles[0]._directionalAxis;
@@ -5802,7 +5820,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
         selections.Add("off - use this if you want to play with controllers, ignoring the keyboard [DEFAULT]");
         actions.Add((MenuComponent component0) =>
         {
-          GameScript.Settings._ForceKeyboard = false;
+          Settings._ForceKeyboard = false;
           if (ControllerManager._NumberGamepads > 0)
           {
             GameScript.PlayerProfile._Profiles[0]._directionalAxis = GameScript.PlayerProfile._Profiles[1]._directionalAxis;
@@ -5820,7 +5838,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
       {
 
         // Set display text
-        var selection = GameScript.Settings._ControllerRumble ? "on" : "off";
+        var selection = Settings._ControllerRumble ? "on" : "off";
         component.SetDisplayText(string.Format(format_options, "controller vibration:", selection) + '\n');
 
         // Set dropdown data
@@ -5830,12 +5848,12 @@ go to the <color=yellow>SHOP</color> to buy something~1
         selections.Add("on - the controller will vibrate when you die [DEFAULT]");
         actions.Add((MenuComponent component0) =>
         {
-          GameScript.Settings._ControllerRumble = true;
+          Settings._ControllerRumble = true;
         });
         selections.Add("off - the controller will never vibrate");
         actions.Add((MenuComponent component0) =>
         {
-          GameScript.Settings._ControllerRumble = false;
+          Settings._ControllerRumble = false;
         });
 
         // Update dropdown data
@@ -5847,7 +5865,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
       .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
       {
         // Set display text
-        var selection = GameScript.Settings._ShowTips ? "on" : "off";
+        var selection = Settings._ShowTips ? "on" : "off";
         component.SetDisplayText(string.Format(format_options, "show tips:", selection) + "\n");
         // Set dropdown data
         var selections = new List<string>();
@@ -5856,14 +5874,14 @@ go to the <color=yellow>SHOP</color> to buy something~1
         selections.Add("on - show game tips in some of the menus [DEFAULT]");
         actions.Add((MenuComponent component0) =>
         {
-          GameScript.Settings._ShowTips = true;
+          Settings._ShowTips = true;
           _CanRender = false;
           RenderMenu();
         });
         selections.Add("off - do not display tips in menus");
         actions.Add((MenuComponent component0) =>
         {
-          GameScript.Settings._ShowTips = false;
+          Settings._ShowTips = false;
           _CanRender = false;
           RenderMenu();
         });
@@ -5874,28 +5892,28 @@ go to the <color=yellow>SHOP</color> to buy something~1
     .AddComponent("delete save data\n\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
       .AddEventFront((MenuComponent component) =>
       {
-        GameScript.Settings._DeleteSaveDataIter = 4;
+        Settings._DeleteSaveDataIter = 4;
       })
       .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
       {
         // Set dropdown data
         var selections = new List<string>();
         var actions = new List<System.Action<MenuComponent>>();
-        selections.Add($"yes - press {GameScript.Settings._DeleteSaveDataIter + 1} more times");
+        selections.Add($"yes - press {Settings._DeleteSaveDataIter + 1} more times");
         actions.Add((MenuComponent component0) =>
         {
-          if (GameScript.Settings._DeleteSaveDataIter-- <= 0)
+          if (Settings._DeleteSaveDataIter-- <= 0)
           {
             // Save some settings
-            var save_music = GameScript.Settings._VolumeMusic;
-            var save_sfx = GameScript.Settings._VolumeSFX;
-            var save_res = GameScript.Settings._ScreenResolution;
-            var save_fullscreen = GameScript.Settings._Fullscreen;
-            var save_quality = GameScript.Settings._QualityLevel;
-            var save_vsync = GameScript.Settings._VSync;
-            var save_blood = GameScript.Settings._Blood;
-            var save_forcekeyboard = GameScript.Settings._ForceKeyboard;
-            var save_rumble = GameScript.Settings._ControllerRumble;
+            var save_music = Settings._VolumeMusic;
+            var save_sfx = Settings._VolumeSFX;
+            var save_res = Settings._ScreenResolution;
+            var save_fullscreen = Settings._Fullscreen;
+            var save_quality = Settings._QualityLevel;
+            var save_vsync = Settings._VSync;
+            var save_blood = Settings._Blood;
+            var save_forcekeyboard = Settings._ForceKeyboard;
+            var save_rumble = Settings._ControllerRumble;
             // Erase save data
             PlayerPrefs.DeleteAll();
             // Do not pause
@@ -5904,16 +5922,16 @@ go to the <color=yellow>SHOP</color> to buy something~1
             // Reload tutorial
             GameScript.TutorialInformation._HasRestarted = false;
             // Reload settings
-            GameScript.Settings.Init();
-            GameScript.Settings._VolumeMusic = save_music;
-            GameScript.Settings._VolumeSFX = save_sfx;
-            GameScript.Settings.SetResolution("" + save_res);
-            GameScript.Settings._Fullscreen = save_fullscreen;
-            GameScript.Settings._QualityLevel = save_quality;
-            GameScript.Settings._VSync = save_vsync;
-            GameScript.Settings._Blood = save_blood;
-            GameScript.Settings._ForceKeyboard = save_forcekeyboard;
-            GameScript.Settings._ControllerRumble = save_rumble;
+            Settings.Init();
+            Settings._VolumeMusic = save_music;
+            Settings._VolumeSFX = save_sfx;
+            Settings.SetResolution("" + save_res);
+            Settings._Fullscreen = save_fullscreen;
+            Settings._QualityLevel = save_quality;
+            Settings._VSync = save_vsync;
+            Settings._Blood = save_blood;
+            Settings._ForceKeyboard = save_forcekeyboard;
+            Settings._ControllerRumble = save_rumble;
             Shop.Init();
             foreach (var loadout in GameScript.ItemManager.Loadout._Loadouts)
             {
@@ -5926,8 +5944,8 @@ go to the <color=yellow>SHOP</color> to buy something~1
               profile.UpdateIcons();
             }
             // Erase level data
-            for (int i = 0; i < GameScript.Settings._LevelsCompleted.Count; i++)
-              GameScript.Settings._LevelsCompleted[Levels._LevelCollections[i]._name] = new List<int>();
+            for (int i = 0; i < Settings._LevelsCompleted.Count; i++)
+              Settings._LevelsCompleted[Levels._LevelCollections[i]._name] = new List<int>();
             // Erase achievement saves
             //SteamManager.Achievements.Reset();
             // Press back button
@@ -5948,7 +5966,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
 
     _Menus[MenuType.OPTIONS_GAME]._onSwitched += () =>
     {
-      if (!GameScript.Settings._Blood)
+      if (!Settings._Blood)
         TileManager.ResetParticles();
     };
 
@@ -6376,22 +6394,22 @@ a gampad if plugged in.~1
       // Gravity direction
       AddExtraSelection(
         "gravity",
-        () => { return GameScript.Settings._Extra_Gravity == 1 ? "inverted" : GameScript.Settings._Extra_Gravity == 2 ? "north" : GameScript.Settings._Extra_Gravity == 4 ? "none" : "normal"; },
+        () => { return Settings._Extra_Gravity == 1 ? "inverted" : Settings._Extra_Gravity == 2 ? "north" : Settings._Extra_Gravity == 4 ? "none" : "normal"; },
         new DropdownSelectionComponent[] {
         new DropdownSelectionComponent("normal", "normal gravity", (MenuComponent component) => {
-          GameScript.Settings._Extra_Gravity = 0;
+          Settings._Extra_Gravity = 0;
           Physics.gravity = new Vector3(0f, -9.81f, 0f);
         }),
         new DropdownSelectionComponent("inverted", "gravity go up!", (MenuComponent component) => {
-          GameScript.Settings._Extra_Gravity = 1;
+          Settings._Extra_Gravity = 1;
           Physics.gravity = new Vector3(0f, 9.81f, 0f);
         }),
         new DropdownSelectionComponent("north", "gravity go... up?", (MenuComponent component) => {
-          GameScript.Settings._Extra_Gravity = 2;
+          Settings._Extra_Gravity = 2;
           Physics.gravity = new Vector3(0f, 0f, 9.81f);
         }),
         new DropdownSelectionComponent("none", "no gravity...", (MenuComponent component) => {
-          GameScript.Settings._Extra_Gravity = 3;
+          Settings._Extra_Gravity = 3;
           Physics.gravity = Vector3.zero;
         }),
         },
@@ -6406,7 +6424,7 @@ a gampad if plugged in.~1
         "chaser",
         () =>
         {
-          switch (GameScript.Settings._Extra_RemoveBatGuy._value)
+          switch (Settings._Extra_RemoveBatGuy._value)
           {
             case 0:
               return "on";
@@ -6419,13 +6437,13 @@ a gampad if plugged in.~1
         },
         new DropdownSelectionComponent[] {
         new DropdownSelectionComponent("on", "in sneakier difficulty, a person with a bat will chase you", (MenuComponent component) => {
-          GameScript.Settings._Extra_RemoveBatGuy._value = 0;
+          Settings._Extra_RemoveBatGuy._value = 0;
         }),
         new DropdownSelectionComponent("on - always", "a person with a bat will chase you in any difficulty", (MenuComponent component) => {
-          GameScript.Settings._Extra_RemoveBatGuy._value = 1;
+          Settings._Extra_RemoveBatGuy._value = 1;
         }),
         new DropdownSelectionComponent("off", "...that guy won't exist", (MenuComponent component) => {
-          GameScript.Settings._Extra_RemoveBatGuy._value = 2;
+          Settings._Extra_RemoveBatGuy._value = 2;
         }),
         },
         "modify the chasing guy",
@@ -6440,7 +6458,7 @@ a gampad if plugged in.~1
         "player ammo",
         () =>
         {
-          switch (GameScript.Settings._Extra_PlayerAmmo._value)
+          switch (Settings._Extra_PlayerAmmo._value)
           {
             case 0:
               return "1x";
@@ -6455,16 +6473,16 @@ a gampad if plugged in.~1
         },
         new DropdownSelectionComponent[] {
           new DropdownSelectionComponent("1x", "", (MenuComponent component) => {
-            GameScript.Settings._Extra_PlayerAmmo._value = 0;
+            Settings._Extra_PlayerAmmo._value = 0;
           }),
           new DropdownSelectionComponent("2x", "", (MenuComponent component) => {
-            GameScript.Settings._Extra_PlayerAmmo._value = 1;
+            Settings._Extra_PlayerAmmo._value = 1;
           }),
                     new DropdownSelectionComponent("0.5x", "", (MenuComponent component) => {
-            GameScript.Settings._Extra_PlayerAmmo._value = 2;
+            Settings._Extra_PlayerAmmo._value = 2;
           }),
                     new DropdownSelectionComponent("infinite", "", (MenuComponent component) => {
-            GameScript.Settings._Extra_PlayerAmmo._value = 3;
+            Settings._Extra_PlayerAmmo._value = 3;
           }),
         },
         "change the max ammo of your weapons / utilities",
@@ -6478,13 +6496,13 @@ a gampad if plugged in.~1
       // Superhot
       AddExtraSelection(
         "time",
-        () => { return GameScript.Settings._Extra_Superhot ? "movement" : "normal"; },
+        () => { return Settings._Extra_Superhot ? "movement" : "normal"; },
         new DropdownSelectionComponent[] {
         new DropdownSelectionComponent("normal", "time is normal", (MenuComponent component) => {
-            GameScript.Settings._Extra_Superhot = false;
+            Settings._Extra_Superhot = false;
         }),
         new DropdownSelectionComponent("movement", "time only moves when you move", (MenuComponent component) => {
-            GameScript.Settings._Extra_Superhot = true;
+            Settings._Extra_Superhot = true;
         }),
         },
         "set the speed that time passes",
@@ -6496,13 +6514,13 @@ a gampad if plugged in.~1
       // Crazy zombies
       AddExtraSelection(
         "horde",
-        () => { return GameScript.Settings._Extra_CrazyZombies ? "on" : "off"; },
+        () => { return Settings._Extra_CrazyZombies ? "on" : "off"; },
         new DropdownSelectionComponent[] {
         new DropdownSelectionComponent("off", "no horde", (MenuComponent component) => {
-            GameScript.Settings._Extra_CrazyZombies = false;
+            Settings._Extra_CrazyZombies = false;
         }),
         new DropdownSelectionComponent("on", "a horde spawns until you pick up the cube", (MenuComponent component) => {
-            GameScript.Settings._Extra_CrazyZombies = true;
+            Settings._Extra_CrazyZombies = true;
         }),
         },
         "toggle a horde mode",
@@ -6516,7 +6534,7 @@ a gampad if plugged in.~1
         "enemy multiplier",
         () =>
         {
-          switch (GameScript.Settings._Extra_EnemyMultiplier._value)
+          switch (Settings._Extra_EnemyMultiplier._value)
           {
             case 0:
               return "1x";
@@ -6529,13 +6547,13 @@ a gampad if plugged in.~1
         },
         new DropdownSelectionComponent[] {
         new DropdownSelectionComponent("1x", "normal amount of enemies", (MenuComponent component) => {
-          GameScript.Settings._Extra_EnemyMultiplier._value = 0;
+          Settings._Extra_EnemyMultiplier._value = 0;
         }),
         /*new DropdownSelectionComponent("2x", "double the amount of enemies...", (MenuComponent component) => {
-          GameScript.Settings._Extra_EnemyMultiplier._value = 1;
+          Settings._Extra_EnemyMultiplier._value = 1;
         }),*/
         new DropdownSelectionComponent("0x", "no enemies", (MenuComponent component) => {
-          GameScript.Settings._Extra_EnemyMultiplier._value = 2;
+          Settings._Extra_EnemyMultiplier._value = 2;
         }),
         },
         "modify the number of enemies initially spawned",
@@ -6549,7 +6567,7 @@ a gampad if plugged in.~1
         "explode on death",
         () =>
         {
-          switch (GameScript.Settings._Extra_BodyExplode._value)
+          switch (Settings._Extra_BodyExplode._value)
           {
             case 0:
               return "off";
@@ -6564,16 +6582,16 @@ a gampad if plugged in.~1
         },
         new DropdownSelectionComponent[] {
         new DropdownSelectionComponent("off", "", (MenuComponent component) => {
-          GameScript.Settings._Extra_BodyExplode._value = 0;
+          Settings._Extra_BodyExplode._value = 0;
         }),
         new DropdownSelectionComponent("all", "", (MenuComponent component) => {
-          GameScript.Settings._Extra_BodyExplode._value = 1;
+          Settings._Extra_BodyExplode._value = 1;
         }),
         new DropdownSelectionComponent("enemies", "", (MenuComponent component) => {
-          GameScript.Settings._Extra_BodyExplode._value = 2;
+          Settings._Extra_BodyExplode._value = 2;
         }),
         new DropdownSelectionComponent("players", "", (MenuComponent component) => {
-          GameScript.Settings._Extra_BodyExplode._value = 3;
+          Settings._Extra_BodyExplode._value = 3;
         }),
         },
         "explode on death",
@@ -7006,7 +7024,7 @@ a gampad if plugged in.~1
     _Save_NumPlayers = saveamount;
 
     // Set menu prompt
-    if (GameScript.Settings._NumberPlayers == 0)
+    if (Settings._NumberPlayers == 0)
       _Menus[MenuType.CONTROLLERS_CHANGED]._menuComponents[1].SetDisplayText("looks like your controller got unplugged! plug it back in to resume or\npress 'ok' to play with keyboard instead\n\n");
     else
       if (GameScript._GameMode == GameScript.GameModes.SURVIVAL)

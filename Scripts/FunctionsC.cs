@@ -123,28 +123,28 @@ public static class FunctionsC
   public static void PlayOneShot(AudioSource s, AudioClip c, bool addToAudioList = true)
   {
     // Check for null
-    if (s == null || c == null || GameScript.Settings._VolumeSFX == 0) return;
+    if (s == null || c == null || Settings._VolumeSFX == 0) return;
 
     // Add to audio list
     if (addToAudioList)
       AddToAudioList(ref s);
 
     // Set volume
-    s.volume *= GameScript.Settings._VolumeSFX / 5f;
+    s.volume *= Settings._VolumeSFX / 5f;
 
     // Play
     s.PlayOneShot(c);
   }
   public static void PlayAudioSource(ref AudioSource s, float min = 0.9f, float max = 1.1f, bool always_play = false)
   {
-    if (s == null || (!always_play && GameScript.Settings._VolumeSFX == 0))
+    if (s == null || (!always_play && Settings._VolumeSFX == 0))
       return;
 
     AddToAudioList(ref s);
     if (!s.isPlaying)
     {
       ChangePitch(ref s, min, max);
-      s.volume *= GameScript.Settings._VolumeSFX / 5f;
+      s.volume *= Settings._VolumeSFX / 5f;
       s.Play();
     }
   }
@@ -328,7 +328,7 @@ public static class FunctionsC
 
   static public void PlaySound(ref AudioSource speaker, string soundPath, float pitch_min = 1f, float pitch_max = 1f)
   {
-    if (speaker == null || GameScript.Settings._VolumeSFX == 0) return;
+    if (speaker == null || Settings._VolumeSFX == 0) return;
     if (_PlayingAudio == null) _PlayingAudio = new Dictionary<AudioSource, System.Tuple<float, float>>();
 
     // Find folder
@@ -345,7 +345,7 @@ public static class FunctionsC
 
   static public void PlaySound(ref AudioSource speaker, AudioSource sfx_source, float min = 1f, float max = 1f)
   {
-    if (speaker == null || GameScript.Settings._VolumeSFX == 0) return;
+    if (speaker == null || Settings._VolumeSFX == 0) return;
     if (_PlayingAudio == null) _PlayingAudio = new Dictionary<AudioSource, System.Tuple<float, float>>();
 
     if (sfx_source == null)
@@ -384,7 +384,7 @@ public static class FunctionsC
       // Update pitch
       pair.Key.pitch = settings.Item1 * pitch;
       // Update volume
-      pair.Key.volume = settings.Item2 * GameScript.Settings._VolumeSFX / 5f;
+      pair.Key.volume = settings.Item2 * Settings._VolumeSFX / 5f;
     }
   }
 
@@ -754,7 +754,7 @@ public static class FunctionsC
         {
           t = Mathf.Clamp(t - 0.05f, 0f, 1f);
           yield return new WaitForSecondsRealtime(0.05f);
-          _TrackSource.volume = t * (GameScript.Settings._VolumeMusic / 5f);
+          _TrackSource.volume = t * (Settings._VolumeMusic / 5f);
         }
         UnloadCurrentTrack();
 
@@ -765,7 +765,7 @@ public static class FunctionsC
         // Play new song
         _TrackSource.clip = musicRequest.asset as AudioClip;
         _TrackSource.Play();
-        _TrackSource.volume = (GameScript.Settings._VolumeMusic / 5f);
+        _TrackSource.volume = (Settings._VolumeMusic / 5f);
         _CurrentTrack = trackIndex;
         _Transitioning = false;
       }
@@ -790,7 +790,7 @@ public static class FunctionsC
           if (_CurrentTrack < _TrackOffset)
           {
             // If unlocked difficulty 1, play faster track
-            if (GameScript.Settings._DifficultyUnlocked > 0)
+            if (Settings._DifficultyUnlocked > 0)
             {
               if (_CurrentTrack != 1)
               {
@@ -908,7 +908,7 @@ public static class FunctionsC
 
   public static void OnControllerInput()
   {
-    if (GameScript.Settings._ForceKeyboard || ControllerManager._NumberGamepads == 0) return;
+    if (Settings._ForceKeyboard || ControllerManager._NumberGamepads == 0) return;
     Cursor.visible = false;
     Menu2._CheckMouse = false;
   }

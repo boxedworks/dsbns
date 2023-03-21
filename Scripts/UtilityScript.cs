@@ -557,7 +557,7 @@ public class UtilityScript : ItemScript
       if (incrementClip && _unregister) _ragdoll._playerScript?._profile.UtilityUse(_side);
 
       // Extra; infinite ammo
-      if (_ragdoll._isPlayer && GameScript.Settings._Extras_CanUse && GameScript.Settings._Extra_PlayerAmmo._value == 3)
+      if (_ragdoll._isPlayer && Settings._Extras_CanUse && Settings._Extra_PlayerAmmo._value == 3)
       {
         _clip++;
         _ragdoll._playerScript.AddUtility(_utility_type, _side);

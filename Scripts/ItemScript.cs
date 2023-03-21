@@ -39,10 +39,10 @@ public class ItemScript : MonoBehaviour
       clip_size = Mathf.CeilToInt(_clipSize * 1.5f);
 
     // Check extra
-    if (GameScript.Settings._Extras_CanUse)
+    if (Settings._Extras_CanUse)
     {
       if (_ragdoll?._isPlayer ?? false)
-        switch (GameScript.Settings._Extra_PlayerAmmo._value)
+        switch (Settings._Extra_PlayerAmmo._value)
         {
           case 1:
             clip_size = Mathf.CeilToInt(_clipSize * 2f);
@@ -505,7 +505,7 @@ public class ItemScript : MonoBehaviour
       _clip--;
 
       // Extra; infinite ammo
-      if (_ragdoll._isPlayer && GameScript.Settings._Extras_CanUse && GameScript.Settings._Extra_PlayerAmmo._value == 3)
+      if (_ragdoll._isPlayer && Settings._Extras_CanUse && Settings._Extra_PlayerAmmo._value == 3)
       {
         _clip++;
       }

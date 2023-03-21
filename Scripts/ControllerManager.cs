@@ -184,8 +184,8 @@ public static class ControllerManager
   public static Gamepad GetPlayerGamepad(int playerID)
   {
     if (_NumberGamepads == 0) return null;
-    if (GameScript.Settings._ForceKeyboard && playerID == 0) return null;
-    if (GameScript.Settings._ForceKeyboard)
+    if (Settings._ForceKeyboard && playerID == 0) return null;
+    if (Settings._ForceKeyboard)
       playerID--;
     if (playerID >= _Gamepads.Count)
       return null;
@@ -195,7 +195,7 @@ public static class ControllerManager
   {
     if (PlayerScript._Players == null || PlayerScript._Players.Count == 0) return null;
     // Check keyboard
-    if (obj.control.device.name.Equals("Keyboard") && (_NumberGamepads == 0 || GameScript.Settings._ForceKeyboard))
+    if (obj.control.device.name.Equals("Keyboard") && (_NumberGamepads == 0 || Settings._ForceKeyboard))
       return PlayerScript._Players[0];
     // Check controllers
     foreach (var player in PlayerScript._Players)
@@ -615,7 +615,7 @@ public static class ControllerManager
     if (_NumberGamepads == 0) return false;
 
     // If _ForceKeyboard, start at player index 1; player index 0 is the keyboard
-    int offset = GameScript.Settings._ForceKeyboard ? 1 : 0;
+    int offset = Settings._ForceKeyboard ? 1 : 0;
     for (int i = offset; i < _NumberGamepads + offset; i++)
     {
       var gamepad = GetPlayerGamepad(i);

@@ -242,7 +242,7 @@ public class TileManager
       {
         var e = enemies.GetChild(i).GetChild(0).GetComponent<EnemyScript>();
         // Don't save bat enemy if not level editor
-        /*if (GameScript.Settings._DIFFICULTY > 0)*/
+        /*if (Settings._DIFFICULTY > 0)*/
         if (!GameScript._EditorTesting)
           if (e._itemLeft == GameScript.ItemManager.Items.BAT || e._itemRight == GameScript.ItemManager.Items.BAT) continue;
         // Basic position info
@@ -457,7 +457,7 @@ public class TileManager
       SceneThemes.ChangeMapTheme(SceneThemes._Instance._ThemeOrder[3]);
     else
     {
-      if (Levels._CurrentLevelIndex < 12 && Levels._CurrentLevelIndex > (GameScript.Settings._DIFFICULTY == 1 ? 8 : 7))
+      if (Levels._CurrentLevelIndex < 12 && Levels._CurrentLevelIndex > (Settings._DIFFICULTY == 1 ? 8 : 7))
         SceneThemes.ChangeMapTheme(SceneThemes._Instance._ThemeOrder[1]);
       else
         SceneThemes.ChangeMapTheme(SceneThemes._Instance._ThemeOrder[(Levels._CurrentLevelIndex / 12) % 12]);
@@ -554,7 +554,13 @@ public class TileManager
     }
 
     // Set best time
-    if (!GameScript.Settings._LevelEditorEnabled)
+    if (_Dev_Time_Save != -1f)
+    {
+      TileManager._LevelTime_Dev = _Dev_Time_Save;
+      _Dev_Time_Save = -1f;
+      Debug.Log("Brought over best dev time: " + TileManager._LevelTime_Dev);
+    }
+    else if (!Settings._LevelEditorEnabled)
     {
       if (best_time != null)
       {
@@ -934,8 +940,8 @@ public class TileManager
           }
 
       // If difficulty is 0, never check for bat person
-      var chaser_extra = GameScript.Settings._Extras_CanUse ? GameScript.Settings._Extra_RemoveBatGuy._value : 0;
-      if (GameScript.Settings._DIFFICULTY == 0 && chaser_extra != 1)
+      var chaser_extra = Settings._Extras_CanUse ? Settings._Extra_RemoveBatGuy._value : 0;
+      if (Settings._DIFFICULTY == 0 && chaser_extra != 1)
         hasBat = true;
       if (!hasBat && chaser_extra != 2)
       {
@@ -949,7 +955,7 @@ public class TileManager
     // Display level #
     if (GameScript._GameMode == GameScript.GameModes.CLASSIC && !GameScript._EditorTesting)
     {
-      var hardmodeadd = GameScript.Settings._DIFFICULTY == 1 ? "*" : "";
+      var hardmodeadd = Settings._DIFFICULTY == 1 ? "*" : "";
       _Text_LevelNum.text = $"{Levels._CurrentLevelIndex + 1}{hardmodeadd}";
       if (Menu2._InMenus)
       {
@@ -995,7 +1001,7 @@ public class TileManager
 
         if (!enemy_original)
         {
-          var setting = GameScript.Settings._Extras_CanUse ? GameScript.Settings._Extra_EnemyMultiplier._value : 0;
+          var setting = Settings._Extras_CanUse ? Settings._Extra_EnemyMultiplier._value : 0;
 
           // None
           if (setting == 2)
@@ -1107,7 +1113,7 @@ public class TileManager
               break;
             // Move mode; if difficulty 2; always can move
             case ("canmove"):
-              if (GameScript.Settings._DIFFICULTY > 1)
+              if (Settings._DIFFICULTY > 1)
                 script._canMove = true;
               else
                 script._canMove = (subobject_base._modifier0.Equals("true") ? true : false);
@@ -1885,11 +1891,14 @@ public class TileManager
     }
   }
 
+  static float _Dev_Time_Save = -1f;
   public static IEnumerator EditorEnabled()
   {
     _EditorSwitchTime = Time.unscaledTime;
 
     // Reload current map
+    _Dev_Time_Save = TileManager._LevelTime_Dev;
+    Debug.Log("saved dev time: " + _Dev_Time_Save);
     LoadMap(_CurrentMapData, true);
 
     // Show menus
@@ -2245,9 +2254,12 @@ public class TileManager
     // Remove enemies
     EnemyScript.Reset();
     CustomObstacle.Reset();
+
     // Load new map
     if (mapData != null)
+    {
       LoadMap(mapData);
+    }
 
     // Disable display ring
     _Pointer.gameObject.SetActive(false);

@@ -460,7 +460,7 @@ public class EnemyScript : MonoBehaviour
         if (Time.time - GameScript._LevelStartTime > 0.5f)
         {
           var info = FunctionsC.GetFarthestPlayerFrom(transform.position);
-          if (info != null && info._distance > 3f + (GameScript.Settings._NumberPlayers > 1 ? (1.5f * Mathf.Clamp(GameScript.Settings._NumberPlayers, 0, 2) - 1) : 0f))
+          if (info != null && info._distance > 3f + (Settings._NumberPlayers > 1 ? (1.5f * Mathf.Clamp(Settings._NumberPlayers, 0, 2) - 1) : 0f))
           {
             _canAttack = true;
             _canMove = true;
@@ -1179,7 +1179,7 @@ public class EnemyScript : MonoBehaviour
     {
       var e = rag._controller.GetComponent<EnemyScript>();
       // Delayed absorb
-      if (GameScript.Settings._DIFFICULTY > 0)
+      if (Settings._DIFFICULTY > 0)
       {
         /*if (_delayedAbsorb == null && (e._state != State.NEUTRAL || e.GetRagdoll()._dead))
           _delayedAbsorb = StartCoroutine(DelayedAbsorb(e, 0.4f + Random.value * 0.9f, h));
@@ -1737,7 +1737,7 @@ public class EnemyScript : MonoBehaviour
       GameScript._Singleton._goalPickupTime = Time.time;
 
     // Sneaky difficulty
-    if (GameScript.Settings._DIFFICULTY == 0)
+    if (Settings._DIFFICULTY == 0)
     {
       if (_Enemies_alive.Count == 0)
         last_killed = true;
@@ -1762,7 +1762,7 @@ public class EnemyScript : MonoBehaviour
       GameScript.OnLastEnemyKilled();
 
       // Check for slowmo setting
-      if (GameScript.Settings._Slowmo_on_lastkill)
+      if (Settings._Slowmo_on_lastkill)
         PlayerScript._SlowmoTimer += 1.3f;
 
       // Check mode
@@ -1778,7 +1778,7 @@ public class EnemyScript : MonoBehaviour
         TileManager._Level_Complete = true;
 
         // Check timers
-        var can_save_timers = !GameScript.Settings._Extras_UsingAny;
+        var can_save_timers = !Settings._Extras_UsingAny;
         var level_time = float.Parse(TileManager._LevelTimer.ToString("0.000"));
         var level_time_best = float.Parse(PlayerPrefs.GetFloat($"{Levels._CurrentLevelCollection_Name}_{Levels._CurrentLevelIndex}_time", -1f).ToString("0.000"));
 
@@ -1861,12 +1861,9 @@ public class EnemyScript : MonoBehaviour
             }
 
           }
-
-
-
         }
 
-        // Rating times
+        // Time ratings
         {
           var best_dev_time = TileManager._LevelTime_Dev;
 
@@ -1906,8 +1903,35 @@ public class EnemyScript : MonoBehaviour
             {
               Shop._AvailablePoints += points_awarded;
               Debug.Log($"Awarded {points_awarded} points");
+
+              // Check all levels in difficulty completed
+              if (Settings._CurrentDifficulty_NotTopRated)
+              {
+                var levelratings_difficulty = Levels._Levels_All_TopRatings[Settings._DIFFICULTY];
+                levelratings_difficulty[Levels._CurrentLevelIndex] = medal_index == 0;
+
+                var all_top_rated = true;
+                for (var i = 1; i < Levels._CurrentLevelCollection._leveldata.Length; i++)
+                {
+                  var top_rated = levelratings_difficulty[i];
+                  if (!top_rated)
+                  {
+                    all_top_rated = false;
+                    break;
+                  }
+                }
+                Debug.Log($"All top rated: {all_top_rated}");
+                if (all_top_rated)
+                {
+                  if (Settings._DIFFICULTY == 0)
+                    Settings._Classic_0_TopRated._value = true;
+                  else
+                    Settings._Classic_1_TopRated._value = true;
+                }
+              }
             }
-            else Debug.Log($"Fake awarded {points_awarded} points");
+            else
+              Debug.Log($"Fake awarded {points_awarded} points");
           }
         }
 
