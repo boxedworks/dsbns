@@ -243,7 +243,6 @@ public class PlayerScript : MonoBehaviour
 
         // Add to audio list
         FunctionsC.AddToAudioList_Rain();
-        Debug.Log("add");
       }
 
       // Clean up rain SFX
