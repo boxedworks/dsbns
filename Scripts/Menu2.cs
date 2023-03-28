@@ -1272,7 +1272,7 @@ public class Menu2
       Levels._CurrentLevelCollectionIndex = 3;
       GameScript._GameMode = GameScript.GameModes.CLASSIC;
 
-      var leveldata = Levels._LevelPack_SelectingLevelsFromPack ? Levels._LevelPack_Current._leveldata : Levels._CurrentLevelCollection._leveldata;
+      var leveldata = Levels._LevelPack_SelectingLevelsFromPack ? Levels._LevelPack_Current._levelData : Levels._CurrentLevelCollection._levelData;
 
       for (var i = 0; i < leveldata.Length; i++)
       {
@@ -1392,7 +1392,7 @@ public class Menu2
                 var save_index = _CurrentMenu._dropdownParentIndex;
 
                 // Get current name
-                var level_data = Levels._CurrentLevelCollection._leveldata[Menu2._CurrentMenu._dropdownParentIndex - 1];
+                var level_data = Levels._CurrentLevelCollection._levelData[Menu2._CurrentMenu._dropdownParentIndex - 1];
                 var level_meta = Levels.GetLevelMeta(level_data);
                 var level_name = level_meta[1];
 
@@ -1420,7 +1420,7 @@ public class Menu2
                   }
 
                   // Save levels
-                  Levels._CurrentLevelCollection._leveldata[Menu2._CurrentMenu._dropdownParentIndex - 1] = $"{level_meta[0]} +{gottext}" + (level_meta[2] != null ? $"!{level_meta[2]}" : "");
+                  Levels._CurrentLevelCollection._levelData[Menu2._CurrentMenu._dropdownParentIndex - 1] = $"{level_meta[0]} +{gottext}" + (level_meta[2] != null ? $"!{level_meta[2]}" : "");
                   Levels.SaveLevels();
 
                   // Reload menu
@@ -1451,12 +1451,12 @@ public class Menu2
               {
                 Levels.LevelEditor_NewMap("not matter");
 
-                var level_data = Levels._CurrentLevelCollection._leveldata[Menu2._CurrentMenu._dropdownParentIndex - 1];
+                var level_data = Levels._CurrentLevelCollection._levelData[Menu2._CurrentMenu._dropdownParentIndex - 1];
                 var level_meta = Levels.GetLevelMeta(level_data);
                 var level_name = level_meta[1] == null ? "unnamed map" : level_meta[1];
                 var level_load = level_meta[2];
 
-                Levels._CurrentLevelCollection._leveldata[Levels._CurrentLevelCollection._leveldata.Length - 1] = Levels.ParseLevelMeta(level_meta[0], $"{level_name} copy", level_meta[2], level_meta[3]);
+                Levels._CurrentLevelCollection._levelData[Levels._CurrentLevelCollection._levelData.Length - 1] = Levels.ParseLevelMeta(level_meta[0], $"{level_name} copy", level_meta[2], level_meta[3]);
                 Levels.SaveLevels();
 
                 // Kelly is awesome
@@ -1478,8 +1478,8 @@ public class Menu2
                 {
                   // Delete and level
                   var save_index = _CurrentMenu._dropdownParentIndex;
-                  var data_delete = Levels._CurrentLevelCollection._leveldata[save_index - 1];
-                  Levels._CurrentLevelCollection._leveldata = Levels._CurrentLevelCollection._leveldata.Where((val, index) => index != save_index - 1).ToArray();
+                  var data_delete = Levels._CurrentLevelCollection._levelData[save_index - 1];
+                  Levels._CurrentLevelCollection._levelData = Levels._CurrentLevelCollection._levelData.Where((val, index) => index != save_index - 1).ToArray();
                   Levels.SaveLevels();
 
                   // Get current name
@@ -1538,7 +1538,7 @@ public class Menu2
               actions.Add((MenuComponent component0) =>
               {
 
-                var level_data = Levels._LevelPack_Current._leveldata[Menu2._CurrentMenu._dropdownParentIndex];
+                var level_data = Levels._LevelPack_Current._levelData[Menu2._CurrentMenu._dropdownParentIndex];
 
                 var savelevelcollection = Levels._CurrentLevelCollectionIndex;
                 Levels._CurrentLevelCollectionIndex = 3;
@@ -1548,8 +1548,8 @@ public class Menu2
                   return;
                 }
 
-                System.Array.Resize(ref Levels._CurrentLevelCollection._leveldata, Levels._CurrentLevelCollection._leveldata.Length + 1);
-                Levels._CurrentLevelCollection._leveldata[Levels._CurrentLevelCollection._leveldata.Length - 1] = level_data;
+                System.Array.Resize(ref Levels._CurrentLevelCollection._levelData, Levels._CurrentLevelCollection._levelData.Length + 1);
+                Levels._CurrentLevelCollection._levelData[Levels._CurrentLevelCollection._levelData.Length - 1] = level_data;
                 Levels.SaveLevels();
 
                 Levels._CurrentLevelCollectionIndex = savelevelcollection;
@@ -1712,7 +1712,7 @@ public class Menu2
               Levels._LevelPack_Current = new Levels.LevelCollection()
               {
                 _name = filename,
-                _leveldata = Levels.ReadFromFile(filename_full).Split('\n')
+                _levelData = Levels.ReadFromFile(filename_full).Split('\n')
               };
 
               return true;
@@ -1863,7 +1863,7 @@ public class Menu2
             });
 
             // Upload level pack
-            if (Levels._LevelPack_Current != null && Levels._LevelPack_Current._leveldata.Length == 0)
+            if (Levels._LevelPack_Current != null && Levels._LevelPack_Current._levelData.Length == 0)
             {
               selections.Add("upload to workshop - cannot upload empty level pack\n");
               actions.Add((MenuComponent component0) => { });
@@ -2092,7 +2092,7 @@ public class Menu2
                     Levels._LevelPack_Current = new Levels.LevelCollection()
                     {
                       _name = filename,
-                      _leveldata = Levels.ReadFromFile(filename_full).Split('\n')
+                      _levelData = Levels.ReadFromFile(filename_full).Split('\n')
                     };
 
                     // Load map
@@ -2179,7 +2179,7 @@ public class Menu2
                     Levels._LevelPack_Current = new Levels.LevelCollection()
                     {
                       _name = filename,
-                      _leveldata = Levels.ReadFromFile(filename_full).Split('\n')
+                      _levelData = Levels.ReadFromFile(filename_full).Split('\n')
                     };
 
                     // Load map
@@ -2308,7 +2308,7 @@ public class Menu2
 
       Debug.Log(Levels._IsOverwritingLevel);
       Debug.Log(Levels._IsReorderingLevel);
-      Debug.Log(Levels._LevelPack_Current._leveldata.Length == Levels._LEVELPACK_MAX);
+      Debug.Log(Levels._LevelPack_Current._levelData.Length == Levels._LEVELPACK_MAX);
 
       // Start menu
       if (Levels._IsOverwritingLevel)
@@ -2325,7 +2325,7 @@ public class Menu2
         .AddComponent($"<color={_COLOR_GRAY}>level pack - {Levels._LevelPack_Current._name.Split('.')[0]}</color>\n<color={_COLOR_GRAY}>level pack - edit options</color>\n\n");
 
         // Add level to pack
-        if (Levels._LevelPack_Current._leveldata.Length == Levels._LEVELPACK_MAX)
+        if (Levels._LevelPack_Current._levelData.Length == Levels._LEVELPACK_MAX)
           menu_editpacks.AddComponent($"add level to pack - MAX LEVELS PER PACK REACHED\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE);
         else
           menu_editpacks.AddComponent($"add level to pack\n\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
@@ -2341,7 +2341,7 @@ public class Menu2
 
               var firstselection = "";
 
-              if (Levels._CurrentLevelCollection._leveldata.Length == 0)
+              if (Levels._CurrentLevelCollection._levelData.Length == 0)
               {
 
                 firstselection = "no levels to add - switch to level creator";
@@ -2356,12 +2356,12 @@ public class Menu2
               {
 
                 // Add dropdown action per level to select
-                for (var i = 0; i < Levels._CurrentLevelCollection._leveldata.Length; i++)
+                for (var i = 0; i < Levels._CurrentLevelCollection._levelData.Length; i++)
                 {
 
-                  var lastline = i == Levels._CurrentLevelCollection._leveldata.Length - 1 ? "\n" : "";
+                  var lastline = i == Levels._CurrentLevelCollection._levelData.Length - 1 ? "\n" : "";
 
-                  var level_data = Levels._CurrentLevelCollection._leveldata[i];
+                  var level_data = Levels._CurrentLevelCollection._levelData[i];
                   var level_meta = Levels.GetLevelMeta(level_data);
                   var level_name = level_meta[1];
 
@@ -2391,19 +2391,19 @@ public class Menu2
                     var save_selection = _CurrentMenu._selectionIndex;
                     var leveldata_save = level_data;
 
-                    if (Levels._LevelPack_Current._leveldata == null || Levels._LevelPack_Current._leveldata.Length == 0 || (Levels._LevelPack_Current._leveldata.Length == 1 && Levels._LevelPack_Current._leveldata[0].Trim() == ""))
-                      Levels._LevelPack_Current._leveldata = new string[] { leveldata_save };
+                    if (Levels._LevelPack_Current._levelData == null || Levels._LevelPack_Current._levelData.Length == 0 || (Levels._LevelPack_Current._levelData.Length == 1 && Levels._LevelPack_Current._levelData[0].Trim() == ""))
+                      Levels._LevelPack_Current._levelData = new string[] { leveldata_save };
                     else
                     {
-                      System.Array.Resize(ref Levels._LevelPack_Current._leveldata, Levels._LevelPack_Current._leveldata.Length + 1);
-                      Levels._LevelPack_Current._leveldata[Levels._LevelPack_Current._leveldata.Length - 1] = level_data;
+                      System.Array.Resize(ref Levels._LevelPack_Current._levelData, Levels._LevelPack_Current._levelData.Length + 1);
+                      Levels._LevelPack_Current._levelData[Levels._LevelPack_Current._levelData.Length - 1] = level_data;
                     }
 
                     // Write to file
                     Levels.LevelPack_Save();
 
                     // Reload menu
-                    if (Levels._LevelPack_Current._leveldata.Length < Levels._LEVELPACK_MAX)
+                    if (Levels._LevelPack_Current._levelData.Length < Levels._LEVELPACK_MAX)
                     {
                       var save_index = _CurrentMenu._selectionIndex;
                       CommonEvents._RemoveDropdownSelections(component0);
@@ -2454,7 +2454,7 @@ public class Menu2
       {
 
         // Show levels
-        var levelpack_length = Levels._CurrentLevelCollection._leveldata.Length;
+        var levelpack_length = Levels._CurrentLevelCollection._levelData.Length;
 
         if (levelpack_length == 0)
         {
@@ -2469,7 +2469,7 @@ public class Menu2
 
             var lineend = i == levelpack_length - 1 ? "\n" : "";
 
-            var level_data = Levels._CurrentLevelCollection._leveldata[i];
+            var level_data = Levels._CurrentLevelCollection._levelData[i];
             var level_meta = Levels.GetLevelMeta(level_data);
             var level_name = level_meta[1];
 
@@ -2483,7 +2483,7 @@ public class Menu2
                 {
                   if (GameScript._lp0 != null && _CurrentMenu._dropdownCount == 0)
                     GameObject.Destroy(GameScript._lp0.gameObject);
-                  level_data = Levels._CurrentLevelCollection._leveldata[component._buttonIndex];
+                  level_data = Levels._CurrentLevelCollection._levelData[component._buttonIndex];
                   GameScript._lp0 = TileManager.GetMapPreview(level_data).transform;
 
                   level_meta = Levels.GetLevelMeta(level_data);
@@ -2494,10 +2494,10 @@ public class Menu2
                 Levels._IsOverwritingLevel = false;
 
                 //Debug.Log($"Replacing in level pack index {Levels._LevelPack_SaveReorderIndex} with level editor map index {component._buttonIndex}");
-                var levelmeta_old = Levels.GetLevelMeta(Levels._LevelPack_Current._leveldata[Levels._LevelPack_SaveReorderIndex]);
-                var levelmeta_new = Levels.GetLevelMeta(Levels._CurrentLevelCollection._leveldata[component._buttonIndex]);
+                var levelmeta_old = Levels.GetLevelMeta(Levels._LevelPack_Current._levelData[Levels._LevelPack_SaveReorderIndex]);
+                var levelmeta_new = Levels.GetLevelMeta(Levels._CurrentLevelCollection._levelData[component._buttonIndex]);
                 levelmeta_new[2] = levelmeta_old[2];
-                Levels._LevelPack_Current._leveldata[Levels._LevelPack_SaveReorderIndex] = Levels.ParseLevelMeta(levelmeta_new);
+                Levels._LevelPack_Current._levelData[Levels._LevelPack_SaveReorderIndex] = Levels.ParseLevelMeta(levelmeta_new);
                 Levels.LevelPack_Save();
 
                 // Render menu
@@ -2524,7 +2524,7 @@ public class Menu2
                 {
                   if (GameScript._lp0 != null && _CurrentMenu._dropdownCount == 0)
                     GameObject.Destroy(GameScript._lp0.gameObject);
-                  level_data = Levels._CurrentLevelCollection._leveldata[component._buttonIndex];
+                  level_data = Levels._CurrentLevelCollection._levelData[component._buttonIndex];
                   GameScript._lp0 = TileManager.GetMapPreview(level_data).transform;
 
                   level_meta = Levels.GetLevelMeta(level_data);
@@ -2545,7 +2545,7 @@ public class Menu2
       {
 
         // Show levels
-        var levelpack_length = Levels._LevelPack_Current._leveldata.Length;
+        var levelpack_length = Levels._LevelPack_Current._levelData.Length;
         levelpack_length = levelpack_length < Levels._LEVELPACK_MAX ? levelpack_length : Levels._LEVELPACK_MAX;
         var added_levels = 0;
         for (var i = 0; i < levelpack_length; i++)
@@ -2553,7 +2553,7 @@ public class Menu2
 
           var lineend = i == levelpack_length - 1 ? "\n" : "";
 
-          var level_data = Levels._LevelPack_Current._leveldata[i];
+          var level_data = Levels._LevelPack_Current._levelData[i];
           var level_meta = Levels.GetLevelMeta(level_data);
           var level_name = level_meta[1];
 
@@ -2582,11 +2582,11 @@ public class Menu2
                 if (reorderindex != Levels._LevelPack_SaveReorderIndex)
                 {
 
-                  var leveldata0 = Levels._LevelPack_Current._leveldata[Levels._LevelPack_SaveReorderIndex];
-                  var leveldata1 = Levels._LevelPack_Current._leveldata[reorderindex];
+                  var leveldata0 = Levels._LevelPack_Current._levelData[Levels._LevelPack_SaveReorderIndex];
+                  var leveldata1 = Levels._LevelPack_Current._levelData[reorderindex];
 
                   var newleveldata = new List<string>();
-                  for (var u = 0; u < Levels._LevelPack_Current._leveldata.Length; u++)
+                  for (var u = 0; u < Levels._LevelPack_Current._levelData.Length; u++)
                   {
 
                     if (u == reorderindex)
@@ -2594,10 +2594,10 @@ public class Menu2
                     else if (u == Levels._LevelPack_SaveReorderIndex)
                       continue;
 
-                    newleveldata.Add(Levels._LevelPack_Current._leveldata[u]);
+                    newleveldata.Add(Levels._LevelPack_Current._levelData[u]);
 
                   }
-                  Levels._LevelPack_Current._leveldata = newleveldata.ToArray();
+                  Levels._LevelPack_Current._levelData = newleveldata.ToArray();
                   Levels.LevelPack_Save();
                 }
 
@@ -2621,7 +2621,7 @@ public class Menu2
                 {
                   if (GameScript._lp0 != null && _CurrentMenu._dropdownCount == 0)
                     GameObject.Destroy(GameScript._lp0.gameObject);
-                  level_data = Levels._LevelPack_Current._leveldata[component._buttonIndex - 1];
+                  level_data = Levels._LevelPack_Current._levelData[component._buttonIndex - 1];
                   GameScript._lp0 = TileManager.GetMapPreview(level_data).transform;
 
                   level_meta = Levels.GetLevelMeta(level_data);
@@ -2643,14 +2643,14 @@ public class Menu2
 
                   var saveindex = _CurrentMenu._dropdownParentIndex - 1;
 
-                  if (Levels._LevelPack_Current._leveldata.Length == 1)
-                    Levels._LevelPack_Current._leveldata = new string[] { };
+                  if (Levels._LevelPack_Current._levelData.Length == 1)
+                    Levels._LevelPack_Current._levelData = new string[] { };
                   else
                   {
-                    var leveldata_new = new string[Levels._LevelPack_Current._leveldata.Length - 1];
-                    System.Array.Copy(Levels._LevelPack_Current._leveldata, leveldata_new, saveindex);
-                    System.Array.Copy(Levels._LevelPack_Current._leveldata, saveindex + 1, leveldata_new, saveindex, Levels._LevelPack_Current._leveldata.Length - (saveindex + 1));
-                    Levels._LevelPack_Current._leveldata = leveldata_new;
+                    var leveldata_new = new string[Levels._LevelPack_Current._levelData.Length - 1];
+                    System.Array.Copy(Levels._LevelPack_Current._levelData, leveldata_new, saveindex);
+                    System.Array.Copy(Levels._LevelPack_Current._levelData, saveindex + 1, leveldata_new, saveindex, Levels._LevelPack_Current._levelData.Length - (saveindex + 1));
+                    Levels._LevelPack_Current._levelData = leveldata_new;
                   }
 
                   // Write to file
@@ -2706,7 +2706,7 @@ public class Menu2
                   else
                     level_meta[3] = ((int.Parse(level_meta[3]) + 1) % SceneThemes._SceneOrder_LevelEditor.Length) + "";
 
-                  Levels._LevelPack_Current._leveldata[_CurrentMenu._dropdownParentIndex - 1] = Levels.ParseLevelMeta(level_meta);
+                  Levels._LevelPack_Current._levelData[_CurrentMenu._dropdownParentIndex - 1] = Levels.ParseLevelMeta(level_meta);
                   Levels.LevelPack_Save();
 
                   var saveindex = _CurrentMenu._dropdownParentIndex;
@@ -2757,7 +2757,7 @@ public class Menu2
                 actions.Add((MenuComponent component0) =>
                 {
 
-                  var level_data = Levels._LevelPack_Current._leveldata[Menu2._CurrentMenu._dropdownParentIndex - 1];
+                  var level_data = Levels._LevelPack_Current._levelData[Menu2._CurrentMenu._dropdownParentIndex - 1];
 
                   var savelevelcollection = Levels._CurrentLevelCollectionIndex;
                   Levels._CurrentLevelCollectionIndex = 3;
@@ -2767,8 +2767,8 @@ public class Menu2
                     return;
                   }
 
-                  System.Array.Resize(ref Levels._CurrentLevelCollection._leveldata, Levels._CurrentLevelCollection._leveldata.Length + 1);
-                  Levels._CurrentLevelCollection._leveldata[Levels._CurrentLevelCollection._leveldata.Length - 1] = level_data;
+                  System.Array.Resize(ref Levels._CurrentLevelCollection._levelData, Levels._CurrentLevelCollection._levelData.Length + 1);
+                  Levels._CurrentLevelCollection._levelData[Levels._CurrentLevelCollection._levelData.Length - 1] = level_data;
                   Levels.SaveLevels();
 
                   Levels._CurrentLevelCollectionIndex = savelevelcollection;
@@ -2798,7 +2798,7 @@ public class Menu2
                 {
                   if (GameScript._lp0 != null && _CurrentMenu._dropdownCount == 0)
                     GameObject.Destroy(GameScript._lp0.gameObject);
-                  level_data = Levels._LevelPack_Current._leveldata[component._buttonIndex - 1];
+                  level_data = Levels._LevelPack_Current._levelData[component._buttonIndex - 1];
                   GameScript._lp0 = TileManager.GetMapPreview(level_data).transform;
 
                   level_meta = Levels.GetLevelMeta(level_data);
@@ -3437,10 +3437,10 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
       // Set level directory options
       if (GameScript._GameMode == GameScript.GameModes.CLASSIC)
       {
-        dirs = Mathf.CeilToInt(Levels._CurrentLevelCollection._leveldata.Length / levels_per_dir);
+        dirs = Mathf.CeilToInt(Levels._CurrentLevelCollection._levelData.Length / levels_per_dir);
       }
       else if (GameScript._GameMode == GameScript.GameModes.CHALLENGE || GameScript._GameMode == GameScript.GameModes.SURVIVAL)
-        dirs = Levels._CurrentLevelCollection._leveldata.Length;
+        dirs = Levels._CurrentLevelCollection._levelData.Length;
 
       for (var i = 0; i < dirs; i++)
       {
@@ -3543,7 +3543,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
                 var level_iter = (component._buttonIndex) * levels_per_dir + u;
                 var level_unlocked = (level_iter == 0 ? true : Levels.LevelCompleted(level_iter - 1));
 
-                if (level_iter >= Levels._CurrentLevelCollection._leveldata.Length) continue;
+                if (level_iter >= Levels._CurrentLevelCollection._levelData.Length) continue;
 
                 //if (GameScript._Singleton._IsDemo) level_unlocked = true;
                 var dev_time = Levels._CurrentLevel_LevelTimesData[Settings._DIFFICULTY][level_iter].Item1;
@@ -3586,7 +3586,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
                       component0._menu._menuComponent_lastFocused._textColor = _COLOR_GRAY;
                     component0._textColor = "white";
                     int levelIter = int.Parse(component0.GetDisplayText().Split(' ')[2].Trim().Substring(1)) - 1;
-                    GameScript._lp0 = TileManager.GetMapPreview(Levels._CurrentLevelCollection._leveldata[levelIter]).transform;
+                    GameScript._lp0 = TileManager.GetMapPreview(Levels._CurrentLevelCollection._levelData[levelIter]).transform;
                   });
                   actions_onCreated.Add((MenuComponent component0) => { });
                 }
@@ -3641,7 +3641,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
               if (Levels.LevelCompleted(143))
                 match = selections[0];
               // Set dropdown data
-              component.SetDropdownData($"=== {string.Format(format_subdirs, "level", "time", "rating", "preview")}\n\n", selections, actions, match, actions_onCreated, null, actions_onFocus, actions_onUnfocus);
+              component.SetDropdownData($"=== {string.Format(format_subdirs, "level", "time", "rank", "preview")}\n\n", selections, actions, match, actions_onCreated, null, actions_onFocus, actions_onUnfocus);
             }
 
             // CHALLENGE levels; WIP
@@ -4863,7 +4863,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
           .AddEvent((MenuComponent component) =>
           {
             var leveliter = Levels._LoadoutEdit_SaveIndex;
-            var leveldata = Levels._LevelPack_Current._leveldata[leveliter];
+            var leveldata = Levels._LevelPack_Current._levelData[leveliter];
 
             _CurrentMenu._selectionIndex = leveliter + 1;
             RenderMenu();
@@ -4886,7 +4886,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
               // Check for removing forced loadout
               if (has_forced_load)
               {
-                Levels._LevelPack_Current._leveldata[leveliter] = leveldata;
+                Levels._LevelPack_Current._levelData[leveliter] = leveldata;
                 Levels.LevelPack_Save();
               }
 
@@ -4907,7 +4907,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
               foreach (var perk in equipment._perks)
                 perkstring += $"{perk}:";
 
-            Levels._LevelPack_Current._leveldata[leveliter] = leveldata +
+            Levels._LevelPack_Current._levelData[leveliter] = leveldata +
               $"!{equipment._item_left0},{equipment._item_right0},{equipment._item_left1},{equipment._item_right1},{utilsleft_string},{utilsright_string},{perkstring}";
             Levels.LevelPack_Save();
 
@@ -7071,7 +7071,7 @@ a gampad if plugged in.~1
   {
     // Create new entry in levels
     Levels.LevelEditor_NewMap("pasted map");
-    Levels._CurrentLevelCollection._leveldata[Levels._CurrentLevelCollection._leveldata.Length - 1] = map_data;
+    Levels._CurrentLevelCollection._levelData[Levels._CurrentLevelCollection._levelData.Length - 1] = map_data;
 
     // Reload menu
     CommonEvents._RemoveDropdownSelections(_CurrentMenu._menuComponentsSelectable[0]);

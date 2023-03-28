@@ -371,7 +371,20 @@ public class ItemScript : MonoBehaviour
 
           // Damage
           var force = MathC.Get2DVector(-(_ragdoll._hip.position - raycastInfo._raycastHit.point).normalized * (4000f + (Random.value * 2000f)) * _hit_force);
-          raycastInfo._ragdoll.TakeDamage(damageSource, ActiveRagdoll.DamageSourceType.MELEE, force, _ragdoll._hip.position, 1, true);
+          raycastInfo._ragdoll.TakeDamage(
+             new ActiveRagdoll.RagdollDamageSource()
+             {
+               Source = damageSource,
+
+               HitForce = force,
+
+               Damage = 1,
+               DamageSource = _ragdoll._hip.position,
+               DamageSourceType = ActiveRagdoll.DamageSourceType.MELEE,
+
+               SpawnBlood = true,
+               SpawnGiblets = _dismember
+             });
           if (raycastInfo._ragdoll._dead && _dismember)
           {
             raycastInfo._ragdoll.DismemberRandomTimes(force, 3);

@@ -387,7 +387,7 @@ public static class Settings
     {
       var levels_loaded = new List<int>();
       int threes = 0;
-      for (int i = 0; i < Levels._LevelCollections[u]._leveldata.Length; i++)
+      for (int i = 0; i < Levels._LevelCollections[u]._levelData.Length; i++)
       {
         threes++;
         var data = PlayerPrefs.GetInt(Levels._LevelCollections[u]._name + "_" + i, 0);

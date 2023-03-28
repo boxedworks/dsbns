@@ -77,12 +77,12 @@ public class EnemyScript : MonoBehaviour
     // Register to handler to index this._id
     SpherecastHandler.Register(this);
 
-    // 0; Cast at ragdolltarget
-    var target = transform.forward;
-    if (_ragdollTarget != null) target = _ragdollTarget._hip.transform.position;
     var origin = _ragdoll._head.transform.position;
-    var dir = -MathC.Get2DVector(_ragdoll._hip.transform.position - target).normalized;
     var radius = 0.2f;
+
+    // 0; Cast at ragdolltarget
+    var target = _ragdollTarget != null ? _ragdollTarget._hip.transform.position : transform.forward;
+    var dir = -MathC.Get2DVector(_ragdoll._hip.transform.position - target).normalized;
     SpherecastHandler.QueueSpherecast(origin, dir, radius);
 
     // Cast two directions
@@ -304,7 +304,7 @@ public class EnemyScript : MonoBehaviour
     _lr.startWidth = 0.3f;
     _lr.endWidth = 0f;
     Resources.UnloadAsset(_lr.sharedMaterial);
-    _lr.sharedMaterial = GameObject.Find("Blood0").GetComponent<Renderer>().sharedMaterial;
+    _lr.sharedMaterial = GameObject.Find("Blood_0").GetComponent<Renderer>().sharedMaterial;
     _lr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
     Gradient gradient = new Gradient();
     gradient.SetKeys(
@@ -949,17 +949,6 @@ public class EnemyScript : MonoBehaviour
       var e = enemies.GetChild(i).GetChild(0).GetComponent<EnemyScript>();
       e.Init(null);
       e.EquipStart();
-    }
-  }
-  public static IEnumerator HardInitAllCo()
-  {
-    var enemies = GameScript._Singleton.transform.GetChild(0);
-    for (var i = 0; i < enemies.childCount; i++)
-    {
-      var e = enemies.GetChild(i).GetChild(0).GetComponent<EnemyScript>();
-      e.Init(null);
-      e.EquipStart();
-      if (i % 3 == 0) yield return new WaitForSeconds(0.01f);
     }
   }
 
@@ -1628,7 +1617,13 @@ public class EnemyScript : MonoBehaviour
     // Special
     if (_itemLeft == GameScript.ItemManager.Items.PISTOL_SILENCED)
     {
-      _ragdoll.AddGrappler();
+      IEnumerator delay_grappler()
+      {
+        yield return new WaitForSeconds(0.1f);
+        if (!(_ragdoll?._dead ?? true))
+          _ragdoll.AddGrappler();
+      }
+      StartCoroutine(delay_grappler());
     }
   }
 
@@ -1795,7 +1790,7 @@ public class EnemyScript : MonoBehaviour
           // Cannot save score
           else
           {
-            TileManager._Text_LevelTimer_Best.text += string.Format(" -> <s>{0:0.000}</s>", level_time);
+            TileManager._Text_LevelTimer_Best.text += string.Format(" -> <s>{0:0.000}</s> (extras on)", level_time);
           }
         }
 
@@ -1854,7 +1849,7 @@ public class EnemyScript : MonoBehaviour
                 level_data_new.Insert(levelname_index - 1, add_data);
               }
 
-              Levels._CurrentLevelCollection._leveldata[Levels._CurrentLevelIndex] = TileManager._CurrentMapData = string.Join(" ", level_data_new);
+              Levels._CurrentLevelCollection._levelData[Levels._CurrentLevelIndex] = TileManager._CurrentMapData = string.Join(" ", level_data_new);
               Levels.SaveLevels();
 
               Debug.Log($"Set best dev time: {level_time}");
@@ -1911,7 +1906,7 @@ public class EnemyScript : MonoBehaviour
                 levelratings_difficulty[Levels._CurrentLevelIndex] = medal_index == 0;
 
                 var all_top_rated = true;
-                for (var i = 1; i < Levels._CurrentLevelCollection._leveldata.Length; i++)
+                for (var i = 1; i < Levels._CurrentLevelCollection._levelData.Length; i++)
                 {
                   var top_rated = levelratings_difficulty[i];
                   if (!top_rated)

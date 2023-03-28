@@ -2,7 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class MissleScript : MonoBehaviour {
+public class MissleScript : MonoBehaviour
+{
 
   int _id;
 
@@ -25,7 +26,7 @@ public class MissleScript : MonoBehaviour {
 
   public void Activate(ItemScript source)
   {
-    if(_Missles == null) _Missles = new List<MissleScript>();
+    if (_Missles == null) _Missles = new List<MissleScript>();
     _Missles.Add(this);
 
     _id = BulletScript._ID++;
@@ -47,13 +48,13 @@ public class MissleScript : MonoBehaviour {
       _rb.constraints = RigidbodyConstraints.FreezePositionY;
     }
     // Create an explosion script so the missle can explode
-    if(_exp == null)
+    if (_exp == null)
     {
       _exp = gameObject.AddComponent<ExplosiveScript>();
       _exp._explosionType = ExplosiveScript.ExplosionType.AWAY;
       _exp._radius = 2.5f;
     }
-    if(_light == null)
+    if (_light == null)
       _light = GetComponent<Light>();
     _light.enabled = true;
     // Start the smoke particle system behind the rocket
@@ -65,8 +66,9 @@ public class MissleScript : MonoBehaviour {
     FunctionsC.PlayAudioSource(ref _audio);
   }
 
-	// Update is called once per frame
-	void FixedUpdate () {
+  // Update is called once per frame
+  void FixedUpdate()
+  {
     if (_source == null || _triggered)
     {
       return;
@@ -87,7 +89,7 @@ public class MissleScript : MonoBehaviour {
   {
     if (_source == null || _triggered || _rb == null) return;
     ActiveRagdoll r = ActiveRagdoll.GetRagdoll(other.gameObject);
-    if(r != null)
+    if (r != null)
     {
       // Make sure ragdoll is not the one who shot and is not dead
       if (r._id == _source._ragdoll._id || r._dead) return;
@@ -106,7 +108,20 @@ public class MissleScript : MonoBehaviour {
         return;
       }
       // If the enemy took damage, dismember them
-      if (r.TakeDamage(_redirector != null ? _redirector : _source._ragdoll, ActiveRagdoll.DamageSourceType.LARGE_FAST_OBJECT, MathC.Get2DVector(-(_source.transform.position - other.transform.position).normalized * (4000f + (Random.value * 2000f)) * _source._hit_force), _source.transform.position, 1))
+      if (r.TakeDamage(
+        new ActiveRagdoll.RagdollDamageSource()
+        {
+          Source = _redirector != null ? _redirector : _source._ragdoll,
+
+          HitForce = MathC.Get2DVector(-(_source.transform.position - other.transform.position).normalized * (4000f + (Random.value * 2000f)) * _source._hit_force),
+
+          Damage = 1,
+          DamageSource = _source.transform.position,
+          DamageSourceType = ActiveRagdoll.DamageSourceType.LARGE_FAST_OBJECT,
+
+          SpawnBlood = true,
+          SpawnGiblets = true
+        }))
       {
         r.Dismember(r._spine);
         return;

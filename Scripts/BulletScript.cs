@@ -192,7 +192,21 @@ public class BulletScript : MonoBehaviour
       else { damageSource = _source._ragdoll; }
 
       // Hurt ragdoll
-      if (r.TakeDamage(damageSource, (_source._type == GameScript.ItemManager.Items.FLAMETHROWER ? ActiveRagdoll.DamageSourceType.FIRE : ActiveRagdoll.DamageSourceType.BULLET), hitForce, use_position, (int)damage, _source._type != GameScript.ItemManager.Items.FLAMETHROWER))
+      if (r.TakeDamage(
+        new ActiveRagdoll.RagdollDamageSource()
+        {
+          Source = damageSource,
+
+          HitForce = hitForce,
+
+          Damage = (int)damage,
+          DamageSource = use_position,
+          DamageSourceType = (_source._type == GameScript.ItemManager.Items.FLAMETHROWER ? ActiveRagdoll.DamageSourceType.FIRE : ActiveRagdoll.DamageSourceType.BULLET),
+
+          SpawnBlood = _source._type != GameScript.ItemManager.Items.FLAMETHROWER,
+          SpawnGiblets = _source._penatrationAmount > 1
+        }
+        ))
       {
         _lastRagdollPosition = r._hip.position;
         if (_source._dismember && r._health <= 0) r.Dismember(r._spine, hitForce);

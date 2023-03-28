@@ -1241,6 +1241,8 @@ public class TileManager
               {
                 if (id.Trim() == "") continue;
                 var idP = int.Parse(id);
+                Debug.Log(GameScript._Singleton.transform.GetChild(0).childCount);
+                Debug.Log(idP);
                 door_script0.RegisterEnemy(idP);
                 door_script0.RegisterEnemyReal(GameScript._Singleton.transform.GetChild(0).GetChild(idP).GetChild(0).GetComponent<EnemyScript>());
               }
@@ -1706,24 +1708,8 @@ public class TileManager
     // Misc
     FunctionsC._BookManager.Init();
 
-    /// Gather particle systems to hide
-    var particles = new List<ParticleSystem>();
-
-    // Player spawn
-    if (PlayerspawnScript._PlayerSpawns != null)
-      foreach (var playerspawn in PlayerspawnScript._PlayerSpawns)
-        particles.Add(playerspawn.gameObject.GetComponent<ParticleSystem>());
-
-    // Blood
-    for (var i = 0; i < 7; i++)
-      particles.Add(GameObject.Find("Blood" + i).GetComponent<ParticleSystem>());
-
-    // All other particles
-    foreach (var t in GetChildrenRecursive(GameObject.Find("Particles").transform))
-    {
-      particles.Add(t.GetComponent<ParticleSystem>());
-    }
-
+    // Gather particle systems to hide
+    var particles = Object.FindObjectsOfType<ParticleSystem>();
     foreach (var p in particles)
     {
       if (p == null) continue;
@@ -1734,30 +1720,15 @@ public class TileManager
     // Remove bullets and their particles
     BulletScript.HideAll();
   }
-  static Transform[] GetChildrenRecursive(Transform start)
-  {
-    List<Transform> returns = new List<Transform>();
-    for (int i = 0; i < start.childCount; i++)
-    {
-      Transform child = start.GetChild(i);
-      if (child.childCount > 0)
-      {
-        Transform[] childReturns = GetChildrenRecursive(child);
-        foreach (Transform t in childReturns) returns.Add(t);
-        continue;
-      }
-      returns.Add(child);
-    }
-    return returns.ToArray();
-  }
 
   static Tile SpawnTile(int width, int height)
   {
-    Transform t = GameObject.Instantiate(_Tile.gameObject as GameObject).transform;
-    t.gameObject.name = "Tile";
-    t.parent = _Map;
-    t.localPosition = new Vector3(width * _Tile_spacing, _Tile.localPosition.y, height * _Tile_spacing);
-    return new Tile(t.gameObject);
+    var tile = GameObject.Instantiate(_Tile.gameObject as GameObject).transform;
+    tile.gameObject.name = "Tile";
+    tile.parent = _Map;
+    tile.localPosition = new Vector3(width * _Tile_spacing, _Tile.localPosition.y, height * _Tile_spacing);
+
+    return new Tile(tile.gameObject);
   }
 
   enum EditorMode
@@ -1776,8 +1747,10 @@ public class TileManager
     LevelEditorObject.SetIterOnName(leoobj._name);
     var addSettings = leoobj._addSettings;
     var loaded = LoadObject(addSettings._data);
+
     // Fire onAdd function
     addSettings._onAdd?.Invoke(loaded);
+
     // Set move mode
     _SelectedObject = loaded.transform;
     _CurrentMode = EditorMode.MOVE;
@@ -2285,7 +2258,7 @@ public class TileManager
 
   public static void SaveFileOverwrite(string mapdata, int mapindex)
   {
-    Levels._LevelCollections[Levels._CurrentLevelCollectionIndex]._leveldata[mapindex] = mapdata;
+    Levels._LevelCollections[Levels._CurrentLevelCollectionIndex]._levelData[mapindex] = mapdata;
     Levels.SaveLevels();
   }
   public static void SaveFileOverwrite(string mapdata)

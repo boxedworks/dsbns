@@ -1652,7 +1652,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
             {
               if (ControllerManager.GetKey(ControllerManager.Key.PAGE_UP, ControllerManager.InputMode.DOWN))
               {
-                if (Levels._CurrentLevelIndex < (Levels._CurrentLevelCollection?._leveldata.Length ?? 0) && Levels.LevelCompleted(Levels._CurrentLevelIndex))
+                if (Levels._CurrentLevelIndex < (Levels._CurrentLevelCollection?._levelData.Length ?? 0) && Levels.LevelCompleted(Levels._CurrentLevelIndex))
                 {
                   NextLevel(Levels._CurrentLevelIndex + 1);
                 }
@@ -3263,7 +3263,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     {
 
       // Check last level
-      if (Levels._CurrentLevelIndex + 1 == Levels._CurrentLevelCollection._leveldata.Length)
+      if (Levels._CurrentLevelIndex + 1 == Levels._CurrentLevelCollection._levelData.Length)
       {
         Levels._LevelPack_Playing = false;
 
@@ -3342,7 +3342,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     }
 
     // Check last level completed
-    else if (Levels._CurrentLevelIndex + 1 == Levels._CurrentLevelCollection._leveldata.Length)
+    else if (Levels._CurrentLevelIndex + 1 == Levels._CurrentLevelCollection._levelData.Length)
     {
       if (Settings._DIFFICULTY == 0)
       {

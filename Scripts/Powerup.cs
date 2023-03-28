@@ -133,7 +133,20 @@ public class Powerup : MonoBehaviour
             for (int i = EnemyScript._Enemies_alive.Count - 1; i >= 0; i--)
             {
               EnemyScript e = EnemyScript._Enemies_alive[i];
-              if (e.IsChaser()) e.GetRagdoll().TakeDamage(r, ActiveRagdoll.DamageSourceType.MELEE, Vector3.zero, 100);
+              if (e.IsChaser()) e.GetRagdoll().TakeDamage(
+                new ActiveRagdoll.RagdollDamageSource()
+                {
+                  Source = r,
+
+                  HitForce = Vector3.zero,
+
+                  Damage = 100,
+                  DamageSource = Vector3.zero,
+                  DamageSourceType = ActiveRagdoll.DamageSourceType.MELEE,
+
+                  SpawnBlood = false,
+                  SpawnGiblets = false
+                });
             }
 
 

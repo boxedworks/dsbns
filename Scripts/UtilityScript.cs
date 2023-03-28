@@ -109,7 +109,7 @@ public class UtilityScript : ItemScript
   {
     _spawnLocation = location;
   }
-    public void SetSpawnDirection(Vector3 direction)
+  public void SetSpawnDirection(Vector3 direction)
   {
     _spawnDirection = direction;
   }
@@ -270,7 +270,20 @@ public class UtilityScript : ItemScript
               if (rag._dead) return;
               killed = true;
               transform.parent = c.transform;
-              rag.TakeDamage(_ragdoll, ActiveRagdoll.DamageSourceType.THROW_MELEE, new Vector3(0f, 1f, 0f), _ragdoll._hip.position, 1, true);
+              rag.TakeDamage(
+                new ActiveRagdoll.RagdollDamageSource()
+                {
+                  Source = _ragdoll,
+
+                  HitForce = new Vector3(0f, 1f, 0f),
+
+                  Damage = 1,
+                  DamageSource = _ragdoll._hip.position,
+                  DamageSourceType = ActiveRagdoll.DamageSourceType.THROW_MELEE,
+
+                  SpawnBlood = true,
+                  SpawnGiblets = false
+                });
               PlaySound(Audio.UTILITY_ACTION);
             }
 
@@ -336,7 +349,20 @@ public class UtilityScript : ItemScript
                 if (_hitRagdolls.Contains(rag._id)) return;
                 _hitRagdolls.Add(rag._id);
 
-                rag.TakeDamage(_ragdoll, ActiveRagdoll.DamageSourceType.THROW_MELEE, new Vector3(0f, 1f, 0f), _ragdoll._hip.position, 1, true);
+                rag.TakeDamage(
+                  new ActiveRagdoll.RagdollDamageSource()
+                  {
+                    Source = _ragdoll,
+
+                    HitForce = new Vector3(0f, 1f, 0f),
+
+                    Damage = 1,
+                    DamageSource = _ragdoll._hip.position,
+                    DamageSourceType = ActiveRagdoll.DamageSourceType.THROW_MELEE,
+
+                    SpawnBlood = true,
+                    SpawnGiblets = true
+                  });
                 rag.Dismember(rag._spine);
                 EnemyScript.CheckSound(transform.position, EnemyScript.Loudness.SUPERSOFT);
                 PlaySound(Audio.UTILITY_ACTION);
@@ -691,7 +717,8 @@ public class UtilityScript : ItemScript
     else if (mode == 2) forward = -_ragdoll._hip.transform.right;
 
     // Rotation
-    if(_spawnDirection != Vector3.zero){
+    if (_spawnDirection != Vector3.zero)
+    {
       forward = _spawnDirection;
     }
 

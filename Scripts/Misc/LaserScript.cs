@@ -2,7 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class LaserScript : CustomEntity {
+public class LaserScript : CustomEntity
+{
 
   Transform _machine, _emitter, _laser;
 
@@ -27,12 +28,13 @@ public class LaserScript : CustomEntity {
   float _saveRot;
   bool _saveOn, _canRotate;
 
-	public void Init () {
+  public void Init()
+  {
     _machine = transform.GetChild(0);
     _laser = transform.GetChild(1);
     _emitter = _machine.GetChild(0);
 
-    if(_type== LaserType.ALARM)
+    if (_type == LaserType.ALARM)
       _laser.GetComponent<MeshRenderer>().sharedMaterial.SetColor("_EmissionColor", Color.blue);
     else
       _laser.GetComponent<MeshRenderer>().sharedMaterial.SetColor("_EmissionColor", Color.red);
@@ -43,11 +45,12 @@ public class LaserScript : CustomEntity {
 
     _saveRot = _machine.rotation.eulerAngles.y;
     _saveOn = _on;
-    if(!GameScript._EditorEnabled) _canRotate = true;
-	}
+    if (!GameScript._EditorEnabled) _canRotate = true;
+  }
 
-	// Update is called once per frame
-	void Update () {
+  // Update is called once per frame
+  void Update()
+  {
     if (_audio_buzz == null) Init();
     // Rotate laser
     if (_canRotate && _rotationSpeed != 0f)
@@ -75,7 +78,21 @@ public class LaserScript : CustomEntity {
             case (LaserType.KILL):
               if (r._dead) break;
               // If ragdoll does not take damage, dismember
-              if(!r.TakeDamage(null, ActiveRagdoll.DamageSourceType.LASER, new Vector3(0f, 1f, 0f), 100)) break;
+              if (!r.TakeDamage(
+                new ActiveRagdoll.RagdollDamageSource()
+                {
+                  Source = null,
+
+                  HitForce = Vector3.zero,
+
+                  Damage = 1,
+                  DamageSource = new Vector3(0f, 1f, 0f),
+                  DamageSourceType = ActiveRagdoll.DamageSourceType.LASER,
+
+                  SpawnBlood = false,
+                  SpawnGiblets = false
+                }))
+                break;
               HingeJoint j = null;// h.collider.GetComponent<HingeJoint>();
               if (j == null) j = r._spine;
               r.Dismember(j);
@@ -106,13 +123,13 @@ public class LaserScript : CustomEntity {
 
     _timer -= Time.fixedDeltaTime;
     if (_onPattern == null || _onPattern.Length == 0) return;
-    if(_timer  < 0f)
+    if (_timer < 0f)
     {
       _on = !_on;
       _timer = _onPattern[_onIter++ % _onPattern.Length];
       _laser.gameObject.SetActive(_on);
     }
-	}
+  }
 
   public void Reset()
   {

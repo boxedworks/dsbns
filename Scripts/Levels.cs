@@ -12,14 +12,14 @@ public class Levels : MonoBehaviour
   public class LevelCollection
   {
     public string _name;
-    public string[] _leveldata;
+    public string[] _levelData;
   }
   public static LevelCollection _CurrentLevelCollection { get { if (Levels._LevelPack_Playing) return Levels._LevelPack_Current; return _LevelCollections[_CurrentLevelCollectionIndex]; } }
   public static int _CurrentLevelCollectionIndex;
   public static string _CurrentLevelCollection_Name { get { return _CurrentLevelCollection._name; } }
 
   public static int _CurrentLevelIndex;
-  public static string _CurrentLevelData { get { return _CurrentLevelCollection._leveldata[_CurrentLevelIndex]; } }
+  public static string _CurrentLevelData { get { return _CurrentLevelCollection._levelData[_CurrentLevelIndex]; } }
 
   // If true, will unlock all levels in the level selector
   public static bool _UnlockAllLevels;
@@ -121,7 +121,7 @@ public class Levels : MonoBehaviour
     }
 
     // Convert list to array
-    _LevelCollections[_CurrentLevelCollectionIndex]._leveldata = levels.ToArray();
+    _LevelCollections[_CurrentLevelCollectionIndex]._levelData = levels.ToArray();
   }
 
   public static Dictionary<int, Dictionary<int, System.Tuple<float, float>>> _CurrentLevel_LevelTimesData;
@@ -149,7 +149,7 @@ public class Levels : MonoBehaviour
       Levels._CurrentLevelIndex = Settings._DIFFICULTY = difficulty;
 
       // Get directory to loop through
-      var level_datas = _CurrentLevelCollection._leveldata;
+      var level_datas = _CurrentLevelCollection._levelData;
 
       // Init per-difficulty dicts
       if (Settings._CurrentDifficulty_NotTopRated)
@@ -263,46 +263,47 @@ public class Levels : MonoBehaviour
     return level_rating == null ? false : level_rating.Item1.Length == 4;
   }
 
+  // Save levels to file
   public static void SaveLevels()
   {
-
     if (_CurrentLevelCollection._name == "levels_editor_local")
     {
 #if UNITY_STANDALONE
-      WriteToFile("levels_editor_local.txt", _CurrentLevelCollection._leveldata);
+      WriteToFile("levels_editor_local.txt", _CurrentLevelCollection._levelData);
 #endif
     }
     else if (Debug.isDebugBuild)
     {
       // Save each map as a new line in file
-      var write_path = "Assets/Resources/Maps/";
-      var file_name = write_path + _CurrentLevelCollection._name + ".txt";
-      var save_data = _CurrentLevelCollection._leveldata;
+      var write_path = "Assets/Resources/Maps";
+      var file_name = $"{_CurrentLevelCollection._name}.txt";
+      var save_data = _CurrentLevelCollection._levelData;
 
       // Check if developmental build; write to editor and return
-      if (Debug.isDebugBuild && Directory.Exists("C:/Users/thoma/Desktop/Projects/Unity/PolySneak/Assets/Resources/"))
+      var desktopPath = @"C:\Users\thoma\Desktop\Projects\Unity\PolySneak\Assets\Resources";
+      if (Directory.Exists(desktopPath))
       {
-        WriteToFile("C:/Users/thoma/Desktop/Projects/Unity/PolySneak/" + file_name, save_data);
+        WriteToFile(Path.Combine(desktopPath, file_name), save_data);
         return;
       }
 
-      WriteToFile(file_name, save_data);
+      WriteToFile(Path.Combine(write_path, file_name), save_data);
       //Debug.Log($"Saved levels to {"Assets/Resources/Maps/" + _LevelCollections[_CurrentLevelCollection]._name + ".txt"}");
     }
   }
 
-  public static void DeleteLevel(int mapiter)
+  // Delete a level from level list and save
+  public static void DeleteLevel(int mapIter)
   {
     // Resize array to size - 1 and remove current map
-    string[] leveldata = _CurrentLevelCollection._leveldata;
-    string[] newmaps = new string[leveldata.Length - 1];
-    int index = 0;
-    for (int i = 0; i < newmaps.Length + 1; i++)
-    {
-      if (i == mapiter) continue;
-      newmaps[index++] = leveldata[i];
-    }
-    _LevelCollections[Levels._CurrentLevelCollectionIndex]._leveldata = newmaps;
+    var levelData = _CurrentLevelCollection._levelData;
+    var newMaps = new string[levelData.Length - 1];
+
+    System.Array.Copy(levelData, 0, newMaps, 0, mapIter);
+    System.Array.Copy(levelData, mapIter + 1, newMaps, mapIter, levelData.Length - mapIter - 1);
+
+    _LevelCollections[Levels._CurrentLevelCollectionIndex]._levelData = newMaps;
+
     // Save to file
     SaveLevels();
   }
@@ -314,18 +315,18 @@ public class Levels : MonoBehaviour
   /// <param name="posIter"></param>
   public static void InsertLevelAt(int mapIter, int posIter)
   {
-    string mapdata = _LevelCollections[_CurrentLevelCollectionIndex]._leveldata[mapIter];
+    string mapdata = _LevelCollections[_CurrentLevelCollectionIndex]._levelData[mapIter];
     // Create a list of rearranged levels
     List<string> leveldata_new = new List<string>();
-    for (int i = 0; i < _LevelCollections[_CurrentLevelCollectionIndex]._leveldata.Length; i++)
+    for (int i = 0; i < _LevelCollections[_CurrentLevelCollectionIndex]._levelData.Length; i++)
     {
       if (i == mapIter) continue;
       if (i == posIter) leveldata_new.Add(mapdata);
-      string data = _LevelCollections[_CurrentLevelCollectionIndex]._leveldata[i];
+      string data = _LevelCollections[_CurrentLevelCollectionIndex]._levelData[i];
       leveldata_new.Add(data);
     }
     // Overwrite and save new map data
-    _LevelCollections[_CurrentLevelCollectionIndex]._leveldata = leveldata_new.ToArray();
+    _LevelCollections[_CurrentLevelCollectionIndex]._levelData = leveldata_new.ToArray();
     SaveLevels();
   }
 
@@ -335,13 +336,13 @@ public class Levels : MonoBehaviour
   /// <param name="mapIter">The index of the map to copy</param>
   public static void CopyMap(int mapIter)
   {
-    string mapdata = _LevelCollections[_CurrentLevelCollectionIndex]._leveldata[mapIter];
+    string mapdata = _LevelCollections[_CurrentLevelCollectionIndex]._levelData[mapIter];
     // Resize levels
-    string[] leveldata = _LevelCollections[_CurrentLevelCollectionIndex]._leveldata;
+    string[] leveldata = _LevelCollections[_CurrentLevelCollectionIndex]._levelData;
     System.Array.Resize<string>(ref leveldata, leveldata.Length + 1);
-    _LevelCollections[_CurrentLevelCollectionIndex]._leveldata = leveldata;
+    _LevelCollections[_CurrentLevelCollectionIndex]._levelData = leveldata;
     // Add map to end of selection
-    _LevelCollections[_CurrentLevelCollectionIndex]._leveldata[leveldata.Length - 1] = mapdata;
+    _LevelCollections[_CurrentLevelCollectionIndex]._levelData[leveldata.Length - 1] = mapdata;
     // Save to file
     SaveLevels();
   }
@@ -349,15 +350,15 @@ public class Levels : MonoBehaviour
   public static int _Delete_Iter;
   public static void LevelEditor_NewMap(string map_name)
   {
-    string mapdata = _LevelCollections[0]._leveldata[0];
+    string mapdata = _LevelCollections[0]._levelData[0];
 
     // Resize levels
-    string[] leveldata = _LevelCollections[_CurrentLevelCollectionIndex]._leveldata;
+    string[] leveldata = _LevelCollections[_CurrentLevelCollectionIndex]._levelData;
     System.Array.Resize<string>(ref leveldata, leveldata.Length + 1);
-    _LevelCollections[_CurrentLevelCollectionIndex]._leveldata = leveldata;
+    _LevelCollections[_CurrentLevelCollectionIndex]._levelData = leveldata;
 
     // Add map template to end of selection
-    _LevelCollections[_CurrentLevelCollectionIndex]._leveldata[leveldata.Length - 1] = $"{mapdata.Trim().Replace("\n", string.Empty)} +{map_name} \n";
+    _LevelCollections[_CurrentLevelCollectionIndex]._levelData[leveldata.Length - 1] = $"{mapdata.Trim().Replace("\n", string.Empty)} +{map_name} \n";
 
     // Save to file
     SaveLevels();
@@ -420,7 +421,7 @@ public class Levels : MonoBehaviour
   public static void LevelPack_Save()
   {
     var filestructure = "Levelpacks/Local/";
-    WriteToFile($"{filestructure}{_LevelPack_Current._name}", _LevelPack_Current._leveldata);
+    WriteToFile($"{filestructure}{_LevelPack_Current._name}", _LevelPack_Current._levelData);
   }
 
   public static string[] GetLevelMeta(string leveldata)

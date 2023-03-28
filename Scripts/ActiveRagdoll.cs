@@ -494,7 +494,20 @@ public class ActiveRagdoll
               var hitForce = MathC.Get2DVector(
                 -(_hip.transform.position - ragdoll._hip.transform.position).normalized * (4000f + (Random.value * 2000f)) * 1f
               );
-              if (ragdoll.TakeDamage(this, DamageSourceType.MELEE, hitForce, _hip.position, 1, true))
+              if (ragdoll.TakeDamage(
+                new RagdollDamageSource()
+                {
+                  Source = this,
+
+                  HitForce = hitForce,
+
+                  Damage = 1,
+                  DamageSource = _hip.position,
+                  DamageSourceType = DamageSourceType.MELEE,
+
+                  SpawnBlood = true,
+                  SpawnGiblets = true
+                }))
               {
                 _kicking = false;
               }
@@ -1068,13 +1081,26 @@ public class ActiveRagdoll
     _color_Coroutine = null;
   }
 
-  public bool TakeDamage(ActiveRagdoll source, DamageSourceType damageSourceType, Vector3 damageSource, int damage = 1, bool spawnBlood = true)
+  public struct RagdollDamageSource
   {
-    return TakeDamage(source, damageSourceType, Vector3.zero, damageSource, damage, spawnBlood);
+    public ActiveRagdoll Source;
+    public DamageSourceType DamageSourceType;
+    public Vector3 HitForce, DamageSource;
+    public int Damage;
+    public bool SpawnBlood, SpawnGiblets;
   }
   float _lastMetalHit;
-  public bool TakeDamage(ActiveRagdoll source, DamageSourceType damageSourceType, Vector3 hitForce, Vector3 damageSource, int damage = 1, bool spawnBlood = true)
+  public bool TakeDamage(RagdollDamageSource ragdollDamageSource)
   {
+
+    var source = ragdollDamageSource.Source;
+    var hitForce = ragdollDamageSource.HitForce;
+    var damage = ragdollDamageSource.Damage;
+    var damageSource = ragdollDamageSource.DamageSource;
+    var damageSourceType = ragdollDamageSource.DamageSourceType;
+    var spawnBlood = ragdollDamageSource.SpawnBlood;
+    var spawnGiblets = ragdollDamageSource.SpawnGiblets;
+
     // If is robot, do not damage from bullet and play 'dink'
     if (_enemyScript != null && _enemyScript._enemyType == EnemyScript.EnemyType.ROBOT && damage <= 10f)
     {
@@ -1149,7 +1175,7 @@ public class ActiveRagdoll
         }
       }
 
-      if (spawnBlood) SpawnBlood(damageSource);
+      if (spawnBlood) SpawnBlood(damageSource, spawnGiblets);
     }
     return true;
   }
@@ -1170,7 +1196,20 @@ public class ActiveRagdoll
       // If not player, throw
       if (!gentle)
       {
-        _grapplee.TakeDamage(this, DamageSourceType.MELEE, _hip.position, 100, false);
+        _grapplee.TakeDamage(
+          new RagdollDamageSource()
+          {
+            Source = this,
+
+            HitForce = Vector3.zero,
+
+            Damage = 100,
+            DamageSource = _hip.position,
+            DamageSourceType = DamageSourceType.MELEE,
+
+            SpawnBlood = false,
+            SpawnGiblets = false
+          });
         _grapplee._hip.AddForce(_controller.forward * (1000f + Random.value * 250f));
         _grapplee._hip.AddTorque(new Vector3(Random.value < 0.5f ? -1f : 1f, 0f, 0f) * 10000000f);
 
@@ -1286,7 +1325,7 @@ public class ActiveRagdoll
       }
   }
 
-  public void SpawnBlood(Vector3 damageSource)
+  public void SpawnBlood(Vector3 damageSource, bool spawnGiblets)
   {
     IEnumerator BloodFollow(ParticleSystem system)
     {
@@ -1347,19 +1386,68 @@ public class ActiveRagdoll
     // Check global blood setting
     if (!Settings._Blood) return;
 
-    // Particles
-    var particles = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.BLOOD);
-    if (particles == null || particles.Length == 0) return;
-    var blood = particles[0];
-    var emission = blood.emission;
-    emission.enabled = false;
+    /// Particles
+    // Blood
+    var particlesBlood = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.BLOOD);
+    if (particlesBlood == null || particlesBlood.Length == 0) return;
+
+    var blood = particlesBlood[0];
+    var emissionBlood = blood.emission;
+    emissionBlood.enabled = false;
     blood.transform.position = _hip.position;// + _hip.transform.forward * 0.2f;//point;
     blood.transform.LookAt(damageSource);
     blood.transform.Rotate(new Vector3(0f, 1f, 0f) * 180f);
-    var q = blood.transform.localRotation;
-    q.eulerAngles = new Vector3(0f, q.eulerAngles.y, q.eulerAngles.z);
-    blood.transform.localRotation = q;
+    var rotationBlood = blood.transform.localRotation;
+    rotationBlood.eulerAngles = new Vector3(0f, rotationBlood.eulerAngles.y, rotationBlood.eulerAngles.z);
+    blood.transform.localRotation = rotationBlood;
     blood.transform.Rotate(new Vector3(1f, 0f, 0f), UnityEngine.Random.value * -20f);
+    rotationBlood = blood.transform.localRotation;
+
+    // Giblets
+    if (spawnGiblets)
+    {
+      var bloodIndex = int.Parse(blood.name.Split('_')[1]);
+      var gibletIndex = -1;
+      switch (bloodIndex)
+      {
+        case 0:
+        case 8:
+        case 9:
+        case 11:
+        case 12:
+        case 13:
+        case 14:
+
+          gibletIndex = 0;
+          break;
+
+        case 3:
+        case 6:
+        case 10:
+
+          gibletIndex = 1;
+          break;
+
+        case 1:
+        case 2:
+        case 4:
+        case 5:
+        case 7:
+
+          gibletIndex = 2;
+          break;
+      }
+
+      var particlesGiblet = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.GIBLETS, gibletIndex);
+      if (particlesGiblet == null || particlesGiblet.Length == 0) return;
+
+      var giblets = particlesGiblet[0];
+      giblets.transform.position = _hip.position;
+      giblets.transform.LookAt(damageSource);
+      giblets.transform.localRotation = rotationBlood;
+
+      giblets.Play();
+    }
 
     // Audio
     var aSource = blood.GetComponent<AudioSource>();
@@ -1595,6 +1683,7 @@ public class ActiveRagdoll
     if (!HasMelee()) return;
     if (_dead) return;
     if (_grappling) return;
+    if (GameScript._EditorEnabled) return;
 
     // Spawn enemy
     var spawn_pos = _hip.position + transform.forward * 0.3f;

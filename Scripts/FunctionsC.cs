@@ -93,8 +93,10 @@ public static class FunctionsC
   public static DistanceInfo GetFarthestPlayerFrom(Vector3 pos)
   {
     if (PlayerScript._Players == null) return null;
-    DistanceInfo info = new DistanceInfo();
+
+    var info = new DistanceInfo();
     info._distance = -1000f;
+
     foreach (var p in PlayerScript._Players)
     {
       if (p._ragdoll._dead) continue;
@@ -105,6 +107,7 @@ public static class FunctionsC
         info._ragdoll = p._ragdoll;
       }
     }
+
     return info;
   }
 
@@ -167,9 +170,10 @@ public static class FunctionsC
     PAPER,
     BULLET_COLLIDE,
     EXPLOSION_MARK, EXPLOSION_MARK_SMALL,
+    GIBLETS,
   }
   static int _ExplosionIter;
-  public static ParticleSystem[] GetParticleSystem(ParticleSystemType particleType)
+  public static ParticleSystem[] GetParticleSystem(ParticleSystemType particleType, int forceParticleIndex = -1)
   {
     var particles = GameObject.Find("Particles").transform;
     int index = -1;
@@ -236,7 +240,17 @@ public static class FunctionsC
       case ParticleSystemType.EXPLOSION_MARK_SMALL:
         index = 17;
         break;
+      case ParticleSystemType.GIBLETS:
+        index = 18;
+        break;
+
     }
+
+    if (forceParticleIndex != -1)
+    {
+      return new ParticleSystem[] { particles.GetChild(index).GetChild(forceParticleIndex).GetComponent<ParticleSystem>() };
+    }
+
     if (randomChild)
     {
       var cn = particles.GetChild(index).childCount;
@@ -250,6 +264,7 @@ public static class FunctionsC
       }
       return new ParticleSystem[] { particle_return };
     }
+
     else if (isContainer)
     {
       var container = particles.GetChild(index);
@@ -260,13 +275,16 @@ public static class FunctionsC
         )
         container = particles.GetChild(index).GetChild(_ExplosionIter++ % container.childCount);
       var returnList = new List<ParticleSystem>();
-      for (int i = 0; i < container.childCount; i++)
+      for (var i = 0; i < container.childCount; i++)
       {
         returnList.Add(container.GetChild(i).GetComponent<ParticleSystem>());
       }
+
       return returnList.ToArray();
     }
-    else return new ParticleSystem[] { particles.GetChild(index).GetComponent<ParticleSystem>() };
+
+    else
+      return new ParticleSystem[] { particles.GetChild(index).GetComponent<ParticleSystem>() };
   }
 
   public static void PlayComplexParticleSystemAt(ParticleSystem[] particles, Vector3 position)
@@ -371,7 +389,7 @@ public static class FunctionsC
       if (pair.Key == null) { _PlayingAudio.Remove(pair.Key); break; }
 
       // Get audio settings; pitch and volume
-      System.Tuple<float, float> settings = pair.Value;
+      var settings = pair.Value;
 
       // Remove audio that stopped playing; set defaults back
       if (!pair.Key.isPlaying)
@@ -407,8 +425,8 @@ public static class FunctionsC
 
   public static Powerup SpawnPowerup(Powerup.PowerupType type)
   {
-    GameObject powerup = GameObject.Instantiate(Resources.Load("Powerup") as GameObject);
-    Powerup s = powerup.GetComponent<Powerup>();
+    var powerup = GameObject.Instantiate(Resources.Load("Powerup") as GameObject);
+    var s = powerup.GetComponent<Powerup>();
     s._type = type;
     powerup.transform.parent = GameResources._Container_Objects;
     return s;
@@ -515,7 +533,20 @@ public static class FunctionsC
       }
 
       // Assign damage
-      r.TakeDamage(source, ActiveRagdoll.DamageSourceType.EXPLOSION, Vector3.zero, explosionForce, 3, true);
+      r.TakeDamage(
+        new ActiveRagdoll.RagdollDamageSource()
+        {
+          Source = source,
+
+          HitForce = explosionForce,
+
+          Damage = 3,
+          DamageSource = Vector3.zero,
+          DamageSourceType = ActiveRagdoll.DamageSourceType.EXPLOSION,
+
+          SpawnBlood = true,
+          SpawnGiblets = true
+        });
       if (r._dead)
       {
         r.DismemberRandomTimes(explosionForce, Random.Range(1, 5));
