@@ -6597,7 +6597,9 @@ a gampad if plugged in.~1
         "explode on death",
 
         "unlock by...",
-        () => { return true; return Shop.Unlocked(Shop.Unlocks.EXTRA_CHASER); }
+        () => { return true; return Shop.Unlocked(Shop.Unlocks.EXTRA_CHASER); },
+
+        "\n\n"
       );
 
       // Back button
