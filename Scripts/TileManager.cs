@@ -60,6 +60,8 @@ public class TileManager
 
     var best_time = PlayerPrefs.GetFloat($"{Levels._CurrentLevelCollection_Name}_{Levels._CurrentLevelIndex}_time", -1f);
     TileManager._Text_LevelTimer_Best.text = best_time == -1f ? "-" : string.Format("{0:0.000}", best_time);
+
+    GameScript._GameId++;
   }
 
   public static void Init()
@@ -541,10 +543,10 @@ public class TileManager
         usePos = _lastUsePos;
       }
       _lastSpawnPos = spawnpos_tilepos;
-      Vector2 endpoint_tilepos = TransformPositionOntoTiles(usePos.x, usePos.z);
+      var endpoint_tilepos = TransformPositionOntoTiles(usePos.x, usePos.z);
       endpoint_tilepos = new Vector2(Mathf.Abs(endpoint_tilepos.x), Mathf.Abs(endpoint_tilepos.y));
 
-      Vector2 newStartPos = (endpoint_tilepos + new Vector2(1, 1));
+      var newStartPos = (endpoint_tilepos + new Vector2(1, 1));
       difference = newStartPos - new Vector2(_Width / 2, _Height / 2);
 
       // Offset the map so the start position is always in the center

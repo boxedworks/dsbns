@@ -1806,128 +1806,146 @@ public class EnemyScript : MonoBehaviour
         if (can_save_timers)
         {
 
-          // Save best dev time
-          if (Debug.isDebugBuild)
+          IEnumerator AwardPlayer()
           {
 
-            if (TileManager._LevelTime_Dev == -1 || level_time < TileManager._LevelTime_Dev)
-            {
-              TileManager._LevelTime_Dev = level_time;
-
-              // Set level data
-              var level_data_split = Levels._CurrentLevelData.Split(' ');
-              var level_data_new = new List<string>();
-              var index = -1;
-              var levelname_index = -1;
-              foreach (var d in level_data_split)
-              {
-
-                index++;
-
-                if (d.StartsWith("bdt_"))
-                {
-                  index--;
-                  continue;
-                }
-
-                level_data_new.Add(d);
-
-                if (d.StartsWith("+"))
-                {
-                  levelname_index = index;
-                }
-              }
-
-              var add_data = $"bdt_{level_time}";
-
-              if (levelname_index == -1)
-              {
-                level_data_new.Add(add_data);
-              }
-              else
-              {
-                level_data_new.Insert(levelname_index - 1, add_data);
-              }
-
-              Levels._CurrentLevelCollection._levelData[Levels._CurrentLevelIndex] = TileManager._CurrentMapData = string.Join(" ", level_data_new);
-              Levels.SaveLevels();
-
-              Debug.Log($"Set best dev time: {level_time}");
-            }
-
-          }
-        }
-
-        // Time ratings
-        {
-          var best_dev_time = TileManager._LevelTime_Dev;
-
-          var medal_times = Levels.GetLevelRatingTimings(best_dev_time);
-          var ratings = Levels.GetLevelRatings();
-
-          var index = 0;
-          var medal_index = -1;
-          TileManager._Text_LevelTimer_Best.text += "\n\n";
-          var medal_format = "<color={0}>{1,-5}: {2,-6}</color>\n";
-          var points_awarded = 0;
-          foreach (var time in medal_times)
-          {
-
-            var time_ = float.Parse(string.Format("{0:0.000}", time));
-            if (level_time <= time_)
+            // Save best dev time
+            if (Debug.isDebugBuild)
             {
 
-              if (medal_index == -1)
-                medal_index = index;
-
-              // Check new medal
-              if (level_time_best > time || level_time_best == -1f)
+              if (TileManager._LevelTime_Dev == -1 || level_time < TileManager._LevelTime_Dev)
               {
-                points_awarded++;
-              }
+                TileManager._LevelTime_Dev = level_time;
 
-            }
-            TileManager._Text_LevelTimer_Best.text += string.Format(medal_format, ratings[index].Item2, ratings[index].Item1, string.Format("{0:0.000}", time_) + (medal_index == index ? "*" : ""));
-            index++;
-          }
-
-          // Give points based on medals
-          if (points_awarded > 0)
-          {
-            if (can_save_timers)
-            {
-              Shop._AvailablePoints += points_awarded;
-              Debug.Log($"Awarded {points_awarded} points");
-
-              // Check all levels in difficulty completed
-              if (Settings._CurrentDifficulty_NotTopRated)
-              {
-                var levelratings_difficulty = Levels._Levels_All_TopRatings[Settings._DIFFICULTY];
-                levelratings_difficulty[Levels._CurrentLevelIndex] = medal_index == 0;
-
-                var all_top_rated = true;
-                for (var i = 1; i < Levels._CurrentLevelCollection._levelData.Length; i++)
+                // Set level data
+                var level_data_split = Levels._CurrentLevelData.Split(' ');
+                var level_data_new = new List<string>();
+                var index = -1;
+                var levelname_index = -1;
+                foreach (var d in level_data_split)
                 {
-                  var top_rated = levelratings_difficulty[i];
-                  if (!top_rated)
+
+                  index++;
+
+                  if (d.StartsWith("bdt_"))
                   {
-                    all_top_rated = false;
-                    break;
+                    index--;
+                    continue;
+                  }
+
+                  level_data_new.Add(d);
+
+                  if (d.StartsWith("+"))
+                  {
+                    levelname_index = index;
                   }
                 }
-                Debug.Log($"All top rated: {all_top_rated}");
-                if (all_top_rated)
+
+                var add_data = $"bdt_{level_time}";
+
+                if (levelname_index == -1)
                 {
-                  if (Settings._DIFFICULTY == 0)
-                    Settings._Classic_0_TopRated._value = true;
+                  level_data_new.Add(add_data);
+                }
+                else
+                {
+                  level_data_new.Insert(levelname_index - 1, add_data);
+                }
+
+                Levels._CurrentLevelCollection._levelData[Levels._CurrentLevelIndex] = TileManager._CurrentMapData = string.Join(" ", level_data_new);
+                Levels.SaveLevels();
+
+                Debug.Log($"Set best dev time: {level_time}");
+              }
+
+            }
+
+
+            // Time ratings
+            {
+
+              var gameid = GameScript._GameId;
+
+              yield return new WaitForSeconds(0.1f);
+
+              var gameid_now = GameScript._GameId;
+              if (PlayerScript._All_Dead || gameid != gameid_now) { }
+              else
+              {
+
+                var best_dev_time = TileManager._LevelTime_Dev;
+
+                var medal_times = Levels.GetLevelRatingTimings(best_dev_time);
+                var ratings = Levels.GetLevelRatings();
+
+                var index = 0;
+                var medal_index = -1;
+                TileManager._Text_LevelTimer_Best.text += "\n\n";
+                var medal_format = "<color={0}>{1,-5}: {2,-6}</color>\n";
+                var points_awarded = 0;
+                foreach (var time in medal_times)
+                {
+
+                  var time_ = float.Parse(string.Format("{0:0.000}", time));
+                  if (level_time <= time_)
+                  {
+
+                    if (medal_index == -1)
+                      medal_index = index;
+
+                    // Check new medal
+                    if (level_time_best > time || level_time_best == -1f)
+                    {
+                      points_awarded++;
+                    }
+
+                  }
+                  TileManager._Text_LevelTimer_Best.text += string.Format(medal_format, ratings[index].Item2, ratings[index].Item1, string.Format("{0:0.000}", time_) + (medal_index == index ? "*" : ""));
+                  index++;
+                }
+
+                // Give points based on medals
+                if (points_awarded > 0)
+                {
+                  if (can_save_timers)
+                  {
+                    Shop._AvailablePoints += points_awarded;
+                    Debug.Log($"Awarded {points_awarded} points");
+
+                    // Check all levels in difficulty completed
+                    if (Settings._CurrentDifficulty_NotTopRated)
+                    {
+                      var levelratings_difficulty = Levels._Levels_All_TopRatings[Settings._DIFFICULTY];
+                      levelratings_difficulty[Levels._CurrentLevelIndex] = medal_index == 0;
+
+                      var all_top_rated = true;
+                      for (var i = 1; i < Levels._CurrentLevelCollection._levelData.Length; i++)
+                      {
+                        var top_rated = levelratings_difficulty[i];
+                        if (!top_rated)
+                        {
+                          all_top_rated = false;
+                          break;
+                        }
+                      }
+                      Debug.Log($"All top rated: {all_top_rated}");
+                      if (all_top_rated)
+                      {
+                        if (Settings._DIFFICULTY == 0)
+                          Settings._Classic_0_TopRated._value = true;
+                        else
+                          Settings._Classic_1_TopRated._value = true;
+                      }
+                    }
+                  }
                   else
-                    Settings._Classic_1_TopRated._value = true;
+                    Debug.Log($"Fake awarded {points_awarded} points");
                 }
               }
             }
-            else
-              Debug.Log($"Fake awarded {points_awarded} points");
           }
+
+          StartCoroutine(AwardPlayer());
         }
 
         // Teleport exit to player

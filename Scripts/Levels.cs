@@ -266,6 +266,7 @@ public class Levels : MonoBehaviour
   // Save levels to file
   public static void SaveLevels()
   {
+
     if (_CurrentLevelCollection._name == "levels_editor_local")
     {
 #if UNITY_STANDALONE
@@ -275,19 +276,18 @@ public class Levels : MonoBehaviour
     else if (Debug.isDebugBuild)
     {
       // Save each map as a new line in file
-      var write_path = "Assets/Resources/Maps";
-      var file_name = $"{_CurrentLevelCollection._name}.txt";
+      var write_path = "Assets/Resources/Maps/";
+      var file_name = write_path + _CurrentLevelCollection._name + ".txt";
       var save_data = _CurrentLevelCollection._levelData;
 
       // Check if developmental build; write to editor and return
-      var desktopPath = @"C:\Users\thoma\Desktop\Projects\Unity\PolySneak\Assets\Resources";
-      if (Directory.Exists(desktopPath))
+      if (Debug.isDebugBuild && Directory.Exists("C:/Users/thoma/Desktop/Projects/Unity/PolySneak/Assets/Resources/"))
       {
-        WriteToFile(Path.Combine(desktopPath, file_name), save_data);
+        WriteToFile("C:/Users/thoma/Desktop/Projects/Unity/PolySneak/" + file_name, save_data);
         return;
       }
 
-      WriteToFile(Path.Combine(write_path, file_name), save_data);
+      WriteToFile(file_name, save_data);
       //Debug.Log($"Saved levels to {"Assets/Resources/Maps/" + _LevelCollections[_CurrentLevelCollection]._name + ".txt"}");
     }
   }

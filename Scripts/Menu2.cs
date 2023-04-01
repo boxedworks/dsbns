@@ -3072,25 +3072,25 @@ public class Menu2
           m.AddComponent(($"{ct}\n"), MenuComponent.ComponentType.BUTTON_SIMPLE)
             .AddEvent((MenuComponent component) =>
             {
-              var c_text = component.GetDisplayText(false).Split('>')[2].Split('<')[0].Trim();//.Split(' ')[0].Trim();
+              var displayText = component.GetDisplayText(false);
+              var unlockText = displayText.Split('>')[2].Split('<')[0].Trim();//.Split(' ')[0].Trim();
               var prefix =
-                c_text.Contains("[item]") ? "ITEM" :
-                c_text.Contains("[mod]") ? "MOD" :
-                c_text.Contains("[utility]") ? "UTILITY" :
-                c_text.Contains("[extra]") ? "extra" :
-                c_text.Contains("[mode]") ? "mode" :
+                displayText.Contains("[item]") ? "ITEM" :
+                displayText.Contains("[mod]") ? "MOD" :
+                displayText.Contains("[utility]") ? "UTILITY" :
+                displayText.Contains("[extra]") ? "extra" :
+                displayText.Contains("[mode]") ? "mode" :
                 null;
-              var c_split = c_text.Split(' ');
+              var c_split = unlockText.Split(' ');
               if (prefix == null)
               {
-                c_text = c_split[0];
+                unlockText = c_split[0];
               }
               else
               {
-                c_text = $"{prefix}_{c_split[0]}";
+                unlockText = $"{prefix}_{c_split[0]}";
               }
-              //Debug.Log(c_text);
-              var unlock0 = (Shop.Unlocks)System.Enum.Parse(typeof(Shop.Unlocks), c_text, true);
+              var unlock0 = (Shop.Unlocks)System.Enum.Parse(typeof(Shop.Unlocks), unlockText, true);
               var shop_info = Shop._Unlocks_Descriptions[unlock0];
               //var equip_cost = GameScript.ItemManager.GetItemValue(unlock0);
               if (shop_info.Item2 <= Shop._AvailablePoints && !Shop.Unlocked(unlock0))

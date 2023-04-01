@@ -41,6 +41,8 @@ public class GameScript : MonoBehaviour
     }
   }
 
+  public static int _GameId;
+
   public void OnApplicationQuit()
   {
 
