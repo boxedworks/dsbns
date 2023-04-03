@@ -1809,68 +1809,68 @@ public class EnemyScript : MonoBehaviour
           IEnumerator AwardPlayer()
           {
 
-            // Save best dev time
-            if (Debug.isDebugBuild)
+            var gameid = GameScript._GameId;
+
+            yield return new WaitForSeconds(0.1f);
+
+            var gameid_now = GameScript._GameId;
+            if (PlayerScript._All_Dead || gameid != gameid_now) { }
+            else
             {
 
-              if (TileManager._LevelTime_Dev == -1 || level_time < TileManager._LevelTime_Dev)
+              // Save best dev time
+              if (Debug.isDebugBuild)
               {
-                TileManager._LevelTime_Dev = level_time;
 
-                // Set level data
-                var level_data_split = Levels._CurrentLevelData.Split(' ');
-                var level_data_new = new List<string>();
-                var index = -1;
-                var levelname_index = -1;
-                foreach (var d in level_data_split)
+                if (TileManager._LevelTime_Dev == -1 || level_time < TileManager._LevelTime_Dev)
                 {
+                  TileManager._LevelTime_Dev = level_time;
 
-                  index++;
-
-                  if (d.StartsWith("bdt_"))
+                  // Set level data
+                  var level_data_split = Levels._CurrentLevelData.Split(' ');
+                  var level_data_new = new List<string>();
+                  var index = -1;
+                  var levelname_index = -1;
+                  foreach (var d in level_data_split)
                   {
-                    index--;
-                    continue;
+
+                    index++;
+
+                    if (d.StartsWith("bdt_"))
+                    {
+                      index--;
+                      continue;
+                    }
+
+                    level_data_new.Add(d);
+
+                    if (d.StartsWith("+"))
+                    {
+                      levelname_index = index;
+                    }
                   }
 
-                  level_data_new.Add(d);
+                  var add_data = $"bdt_{level_time}";
 
-                  if (d.StartsWith("+"))
+                  if (levelname_index == -1)
                   {
-                    levelname_index = index;
+                    level_data_new.Add(add_data);
                   }
+                  else
+                  {
+                    level_data_new.Insert(levelname_index - 1, add_data);
+                  }
+
+                  Levels._CurrentLevelCollection._levelData[Levels._CurrentLevelIndex] = TileManager._CurrentMapData = string.Join(" ", level_data_new);
+                  Levels.SaveLevels();
+
+                  Debug.Log($"Set best dev time: {level_time}");
                 }
 
-                var add_data = $"bdt_{level_time}";
-
-                if (levelname_index == -1)
-                {
-                  level_data_new.Add(add_data);
-                }
-                else
-                {
-                  level_data_new.Insert(levelname_index - 1, add_data);
-                }
-
-                Levels._CurrentLevelCollection._levelData[Levels._CurrentLevelIndex] = TileManager._CurrentMapData = string.Join(" ", level_data_new);
-                Levels.SaveLevels();
-
-                Debug.Log($"Set best dev time: {level_time}");
               }
 
-            }
 
-
-            // Time ratings
-            {
-
-              var gameid = GameScript._GameId;
-
-              yield return new WaitForSeconds(0.1f);
-
-              var gameid_now = GameScript._GameId;
-              if (PlayerScript._All_Dead || gameid != gameid_now) { }
-              else
+              // Time ratings
               {
 
                 var best_dev_time = TileManager._LevelTime_Dev;

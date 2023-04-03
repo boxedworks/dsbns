@@ -6321,6 +6321,7 @@ a gampad if plugged in.~1
     {
       var format_extras = "{0,-12}- {1,-50}";
       var format_extras2 = "{0,-20}: {1,-50}";
+      var format_extras3 = "<color={2}>{0,-20}</color>: {1,-50}";
       var menu_extras = new Menu2(MenuType.EXTRAS)
       {
 
@@ -6347,9 +6348,7 @@ a gampad if plugged in.~1
           menu_extras.AddComponent($"placeholder{line_end}", MenuComponent.ComponentType.BUTTON_DROPDOWN)
             .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
             {
-              // Set display text
               var selection = prompt_value_logic.Invoke();
-              component.SetDisplayText(string.Format(format_extras2 + line_end, $"{prompt}", selection));
 
               // Set dropdown data
               var selections = new List<string>();
@@ -6357,8 +6356,10 @@ a gampad if plugged in.~1
               var selection_match = $"{selection}";
 
               var index = 0;
+              var defaultSelection = false;
               foreach (var component_data in dropdown_selection_datas)
               {
+                if (index == 0 && component_data._selectionPrompt == selection) { defaultSelection = true; }
                 selections.Add(string.Format(format_extras, $"{component_data._selectionPrompt}", $"{component_data._selectionDescription}" + (index++ == 0 ? " [DEFAULT]" : "")));
                 actions.Add((MenuComponent component0) =>
                 {
@@ -6368,6 +6369,16 @@ a gampad if plugged in.~1
 
               // Update dropdown data
               component.SetDropdownData($"{dropdown_prompt}\n\n", selections, actions, selection_match);
+
+              // Set display text
+              if (defaultSelection)
+              {
+                component.SetDisplayText(string.Format(format_extras3 + line_end, $"{prompt}", selection, _COLOR_GRAY));
+              }
+              else
+              {
+                component.SetDisplayText(string.Format(format_extras3 + line_end, $"{prompt}*", selection, "magenta"));
+              }
             });
         }
 
@@ -6396,22 +6407,22 @@ a gampad if plugged in.~1
         "gravity",
         () => { return Settings._Extra_Gravity == 1 ? "inverted" : Settings._Extra_Gravity == 2 ? "north" : Settings._Extra_Gravity == 4 ? "none" : "normal"; },
         new DropdownSelectionComponent[] {
-        new DropdownSelectionComponent("normal", "normal gravity", (MenuComponent component) => {
-          Settings._Extra_Gravity = 0;
-          Physics.gravity = new Vector3(0f, -9.81f, 0f);
-        }),
-        new DropdownSelectionComponent("inverted", "gravity go up!", (MenuComponent component) => {
-          Settings._Extra_Gravity = 1;
-          Physics.gravity = new Vector3(0f, 9.81f, 0f);
-        }),
-        new DropdownSelectionComponent("north", "gravity go... up?", (MenuComponent component) => {
-          Settings._Extra_Gravity = 2;
-          Physics.gravity = new Vector3(0f, 0f, 9.81f);
-        }),
-        new DropdownSelectionComponent("none", "no gravity...", (MenuComponent component) => {
-          Settings._Extra_Gravity = 3;
-          Physics.gravity = Vector3.zero;
-        }),
+          new DropdownSelectionComponent("normal", "normal gravity", (MenuComponent component) => {
+            Settings._Extra_Gravity = 0;
+            Physics.gravity = new Vector3(0f, -9.81f, 0f);
+          }),
+          new DropdownSelectionComponent("inverted", "gravity go up!", (MenuComponent component) => {
+            Settings._Extra_Gravity = 1;
+            Physics.gravity = new Vector3(0f, 9.81f, 0f);
+          }),
+          new DropdownSelectionComponent("north", "gravity go... up?", (MenuComponent component) => {
+            Settings._Extra_Gravity = 2;
+            Physics.gravity = new Vector3(0f, 0f, 9.81f);
+          }),
+          new DropdownSelectionComponent("none", "no gravity...", (MenuComponent component) => {
+            Settings._Extra_Gravity = 3;
+            Physics.gravity = Vector3.zero;
+          }),
         },
         "set gravity's direction",
 
