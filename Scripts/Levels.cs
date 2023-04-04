@@ -190,7 +190,8 @@ public class Levels : MonoBehaviour
           }
           else
           {
-            var rating_stars = GetLevelRating(dev_time, level_time_best).Item1;
+            var rating = GetLevelRating(dev_time, level_time_best);
+            var rating_stars = rating == null ? "" : rating.Item1;
             if (_Ranks_Lowest[difficulty].Length > rating_stars.Length)
             {
               _Ranks_Lowest[difficulty] = rating_stars;

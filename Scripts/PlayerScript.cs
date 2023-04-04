@@ -704,7 +704,12 @@ public class PlayerScript : MonoBehaviour
     {
       var hippos = _ragdoll._hip.position;
       hippos.y = -1.38f;
-      _ring[0].transform.parent.position = hippos;
+      //if (Time.timeScale < 0.9f)
+      //{
+        _ring[0].transform.parent.position += (hippos - _ring[0].transform.parent.position) * Time.deltaTime * 15f;
+      //}
+      //else
+      //  _ring[0].transform.parent.position = hippos;
       var lookpos = _ragdoll._transform_parts._hip.position + _ragdoll._transform_parts._hip.forward * 10f;
       lookpos.y = _ring[0].transform.parent.position.y;
       _ring[0].transform.parent.LookAt(lookpos);

@@ -1811,7 +1811,7 @@ public class EnemyScript : MonoBehaviour
 
             var gameid = GameScript._GameId;
 
-            yield return new WaitForSeconds(0.1f);
+            yield return new WaitForSeconds(0.5f);
 
             var gameid_now = GameScript._GameId;
             if (PlayerScript._All_Dead || gameid != gameid_now) { }
@@ -1950,6 +1950,7 @@ public class EnemyScript : MonoBehaviour
 
         // Teleport exit to player
         if (level_time_best != -1f)
+        {
           if (!PlayerScript.HasExit())
           {
             if (source._isPlayer)
@@ -1965,10 +1966,12 @@ public class EnemyScript : MonoBehaviour
               }
             }
           }
-
+        }
         // Make goal bigger
-        //else if (!PlayerScript.HasExit() && Powerup._Powerups != null && Powerup._Powerups.Count > 0)
-        //  Powerup._Powerups[0].transform.GetChild(0).GetComponent<BoxCollider>().size *= 3f;
+        else if (!PlayerScript.HasExit() && Powerup._Powerups != null && Powerup._Powerups.Count > 0)
+        {
+          Powerup._Powerups[0].transform.GetChild(0).GetComponent<BoxCollider>().size *= 3f;
+        }
       }
     }
 
