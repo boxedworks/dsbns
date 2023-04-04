@@ -5629,9 +5629,9 @@ go to the <color=yellow>SHOP</color> to buy something~1
           selections.Add((i).ToString());
           // Add action to update music volume
           actions.Add((MenuComponent component0) =>
-    {
-      Settings._VolumeMusic = component0._dropdownIndex;
-    });
+          {
+            Settings._VolumeMusic = component0._dropdownIndex;
+          });
         }
         // Update dropdown data
         component.SetDropdownData("music volume\n\n", selections, actions, selection_match);
@@ -5858,6 +5858,63 @@ go to the <color=yellow>SHOP</color> to buy something~1
 
         // Update dropdown data
         component.SetDropdownData("controller vibration\n\n", selections, actions, selection_match);
+      })
+
+    // Level end behavior
+    .AddComponent("level completion\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
+      .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+      {
+        // Set display text
+        var selection = "next level";
+        switch (Settings._LevelCompletion._value)
+        {
+          case 1:
+            selection = "reload level";
+            break;
+          case 2:
+            selection = "nothing";
+            break;
+          case 3:
+            selection = "previous level";
+            break;
+        }
+        component.SetDisplayText(string.Format(format_options, "level completion:", selection));
+
+        // Set dropdown data
+        var selections = new List<string>();
+        var actions = new List<System.Action<MenuComponent>>();
+
+        selections.Add("next level - load the next level [DEFAULT]");
+        actions.Add((MenuComponent component0) =>
+        {
+          Settings._LevelCompletion._value = 0;
+          _CanRender = false;
+          RenderMenu();
+        });
+        selections.Add("reload level - replay the same level");
+        actions.Add((MenuComponent component0) =>
+        {
+          Settings._LevelCompletion._value = 1;
+          _CanRender = false;
+          RenderMenu();
+        });
+        selections.Add("nothing - nothing is loaded or happens");
+        actions.Add((MenuComponent component0) =>
+        {
+          Settings._LevelCompletion._value = 2;
+          _CanRender = false;
+          RenderMenu();
+        });
+        selections.Add("previous level - load the previous level");
+        actions.Add((MenuComponent component0) =>
+        {
+          Settings._LevelCompletion._value = 3;
+          _CanRender = false;
+          RenderMenu();
+        });
+
+        // Update dropdown data
+        component.SetDropdownData("when you beat a level, what should happen?\n\n", selections, actions, selection);
       })
 
     // Show tips

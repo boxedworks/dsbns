@@ -200,7 +200,7 @@ public static class Settings
 
 
   public static FunctionsC.SaveableStat_Bool _Toggle_Lightning;
-  public static FunctionsC.SaveableStat_Int _CameraZoom;
+  public static FunctionsC.SaveableStat_Int _CameraZoom, _LevelCompletion;
 
   public static int _QualityLevel
   {
@@ -434,6 +434,9 @@ public static class Settings
     _VolumeMusic = PlayerPrefs.GetInt("VolumeMusic", 3);
     _VolumeSFX = PlayerPrefs.GetInt("VolumeSFX", 3);
     _Toggle_Lightning = new FunctionsC.SaveableStat_Bool("vfx_toggle_lightning", true);
+
+    // Level settings
+    _LevelCompletion = new FunctionsC.SaveableStat_Int("LevelCompletion", 0);
 
     //Camera
     _CameraZoom = new FunctionsC.SaveableStat_Int("CameraZoom", 1);

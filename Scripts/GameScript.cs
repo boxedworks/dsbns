@@ -3264,26 +3264,75 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     if (Levels._LevelPack_Playing)
     {
 
-      // Check last level
-      if (Levels._CurrentLevelIndex + 1 == Levels._CurrentLevelCollection._levelData.Length)
+      // Check level completion behavior
+      switch (Settings._LevelCompletion._value)
       {
-        Levels._LevelPack_Playing = false;
 
-        TogglePause(Menu2.MenuType.EDITOR_PACKS);
-        Menu2.SwitchMenu(Menu2.MenuType.EDITOR_PACKS);
-        Menu2._CurrentMenu._selectionIndex = Levels._LevelPacks_Play_SaveIndex;
-        Menu2._CanRender = false;
-        Menu2.RenderMenu();
-        _LastPause = Time.unscaledTime - 0.2f;
-        Menu2.SendInput(Menu2.Input.SPACE);
-        Menu2.SendInput(Menu2.Input.SPACE);
-        Menu2.SendInput(Menu2.Input.SPACE);
-        _LastPause = Time.unscaledTime;
-        return;
+        // Next level
+        case 0:
+
+          // Check last level
+          if (Levels._CurrentLevelIndex + 1 == Levels._CurrentLevelCollection._levelData.Length)
+          {
+            Levels._LevelPack_Playing = false;
+
+            TogglePause(Menu2.MenuType.EDITOR_PACKS);
+            Menu2.SwitchMenu(Menu2.MenuType.EDITOR_PACKS);
+            Menu2._CurrentMenu._selectionIndex = Levels._LevelPacks_Play_SaveIndex;
+            Menu2._CanRender = false;
+            Menu2.RenderMenu();
+            _LastPause = Time.unscaledTime - 0.2f;
+            Menu2.SendInput(Menu2.Input.SPACE);
+            Menu2.SendInput(Menu2.Input.SPACE);
+            Menu2.SendInput(Menu2.Input.SPACE);
+            _LastPause = Time.unscaledTime;
+            return;
+          }
+
+          // Load next level
+          NextLevel(Levels._CurrentLevelIndex + 1);
+          break;
+
+        // Restart level
+        case 1:
+
+          NextLevel(Levels._CurrentLevelIndex);
+          break;
+
+        // Nothing
+        case 2:
+
+          break;
+
+        // Previous level
+        case 3:
+
+          // Check last level
+          if (Levels._CurrentLevelIndex == 0)
+          {
+            Levels._LevelPack_Playing = false;
+
+            TogglePause(Menu2.MenuType.EDITOR_PACKS);
+            Menu2.SwitchMenu(Menu2.MenuType.EDITOR_PACKS);
+            Menu2._CurrentMenu._selectionIndex = Levels._LevelPacks_Play_SaveIndex;
+            Menu2._CanRender = false;
+            Menu2.RenderMenu();
+            _LastPause = Time.unscaledTime - 0.2f;
+            Menu2.SendInput(Menu2.Input.SPACE);
+            Menu2.SendInput(Menu2.Input.SPACE);
+            Menu2.SendInput(Menu2.Input.SPACE);
+            _LastPause = Time.unscaledTime;
+            return;
+          }
+
+          // Load previous level
+          NextLevel(Levels._CurrentLevelIndex - 1);
+          break;
+
+          break;
+
       }
 
-      // Load next level
-      NextLevel(Levels._CurrentLevelIndex + 1);
       return;
     }
 
@@ -3343,63 +3392,96 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       return;
     }
 
-    // Check last level completed
-    else if (Levels._CurrentLevelIndex + 1 == Levels._CurrentLevelCollection._levelData.Length)
+    // Classic mode
+    else
     {
-      if (Settings._DIFFICULTY == 0)
+
+      // Check last level completed
+      if (Levels._CurrentLevelIndex + 1 == Levels._CurrentLevelCollection._levelData.Length)
       {
-        if (Settings._DifficultyUnlocked == 0)
+        if (Settings._DIFFICULTY == 0)
         {
-          Settings._DIFFICULTY = 1;
-          Levels._CurrentLevelCollectionIndex = 1;
-          Menu2._SaveMenuDir = -1;
-          Settings._DifficultyUnlocked = 1;
-          Shop._UnlockString += $"- new difficulty unlocked: <color=cyan>sneakier</color>\n";
+          if (Settings._DifficultyUnlocked == 0)
+          {
+            Settings._DIFFICULTY = 1;
+            Levels._CurrentLevelCollectionIndex = 1;
+            Menu2._SaveMenuDir = -1;
+            Settings._DifficultyUnlocked = 1;
+            Shop._UnlockString += $"- new difficulty unlocked: <color=cyan>sneakier</color>\n";
 
+            // Achievement
 #if UNITY_STANDALONE
-          // Achievement
-          SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.DIFFICULTY_1);
+                SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.DIFFICULTY_1);
 #endif
 
-          TogglePause(Menu2.MenuType.LEVELS);
-          return;
+            TogglePause(Menu2.MenuType.LEVELS);
+            return;
+          }
         }
-        //Menu2.sw
-      }
-      else if (Settings._DIFFICULTY == 1)
-      {
+        else if (Settings._DIFFICULTY == 1)
+        {
+
+          // Achievement
 #if UNITY_STANDALONE
-        // Achievement
-        SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.DIFFICULTY_2);
+              SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.DIFFICULTY_2);
 #endif
 
-        Shop._UnlockString += $"- you have beaten the classic mode!\n- try out the survival mode?\n";
+          Shop._UnlockString += $"- you have beaten the classic mode!\n- try out the survival mode?\n";
+        }
 
-        // Check for shop point bug
-
+        // Display unlock messages
+        if (Shop._UnlockString != string.Empty)
+        {
+          TogglePause(Menu2.MenuType.LEVELS);
+        }
       }
 
-      // Display unlock messages
-      if (Shop._UnlockString != string.Empty)
+      // Check level completion behavior
+      switch (Settings._LevelCompletion._value)
       {
-        TogglePause(Menu2.MenuType.LEVELS);
+
+        // Next level
+        case 0:
+          if (Levels._CurrentLevelIndex + 1 == Levels._CurrentLevelCollection._levelData.Length)
+          {
+            TogglePause();
+            Menu2.SwitchMenu(Menu2.MenuType.LEVELS);
+            return;
+          }
+          NextLevel(Levels._CurrentLevelIndex + 1);
+          return;
+          break;
+
+        // Reload level
+        case 1:
+          NextLevel(Levels._CurrentLevelIndex);
+          break;
+
+        // Nothing
+        case 2:
+
+          break;
+
+        // Previous level
+        case 3:
+          if (Levels._CurrentLevelIndex == 0)
+          {
+            TogglePause();
+            Menu2.SwitchMenu(Menu2.MenuType.LEVELS);
+            return;
+          }
+          NextLevel(Levels._CurrentLevelIndex - 1);
+          break;
       }
-      else
+
+      // Increment menu selector
+      Menu2._SaveLevelSelected++;
+      if (Menu2._SaveLevelSelected == 12)
       {
-        TogglePause();
-        Menu2.SwitchMenu(Menu2.MenuType.LEVELS);
+        Menu2._SaveLevelSelected = 0;
+        Menu2._SaveMenuDir++;
       }
-      return;
     }
-    // Increment menu selector
-    Menu2._SaveLevelSelected++;
-    if (Menu2._SaveLevelSelected == 12)
-    {
-      Menu2._SaveLevelSelected = 0;
-      Menu2._SaveMenuDir++;
-    }
-    // Load next level
-    NextLevel(Levels._CurrentLevelIndex + 1);
   }
 
   public static void NextLevel(int levelIndex)
