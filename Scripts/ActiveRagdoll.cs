@@ -1387,72 +1387,108 @@ public class ActiveRagdoll
     if (!Settings._Blood) return;
 
     /// Particles
-    // Blood
-    var particlesBlood = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.BLOOD);
-    if (particlesBlood == null || particlesBlood.Length == 0) return;
-
-    var blood = particlesBlood[0];
-    var emissionBlood = blood.emission;
-    emissionBlood.enabled = false;
-    blood.transform.position = _hip.position;// + _hip.transform.forward * 0.2f;//point;
-    blood.transform.LookAt(damageSource);
-    blood.transform.Rotate(new Vector3(0f, 1f, 0f) * 180f);
-    var rotationBlood = blood.transform.localRotation;
-    rotationBlood.eulerAngles = new Vector3(0f, rotationBlood.eulerAngles.y, rotationBlood.eulerAngles.z);
-    blood.transform.localRotation = rotationBlood;
-    blood.transform.Rotate(new Vector3(1f, 0f, 0f), UnityEngine.Random.value * -20f);
-    rotationBlood = blood.transform.localRotation;
-
-    // Giblets
-    if (spawnGiblets)
+    // Confetti
+    var useConfetti = false;
+    if (useConfetti)
     {
-      var bloodIndex = int.Parse(blood.name.Split('_')[1]);
-      var gibletIndex = -1;
-      switch (bloodIndex)
+      var particlesConfetti = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.CONFETTI);
+      if (particlesConfetti == null || particlesConfetti.Length == 0) { }
+      else
       {
-        case 0:
-        case 8:
-        case 9:
-        case 11:
-        case 12:
-        case 13:
-        case 14:
+        var confetti = particlesConfetti[0];
 
-          gibletIndex = 0;
-          break;
+        var emissionconfetti = confetti.emission;
+        emissionconfetti.enabled = false;
+        confetti.transform.position = _hip.position;
+        confetti.transform.LookAt(damageSource);
+        confetti.transform.Rotate(new Vector3(0f, 1f, 0f) * 180f);
+        var rotationConfetti = confetti.transform.localRotation;
+        rotationConfetti.eulerAngles = new Vector3(0f, rotationConfetti.eulerAngles.y, rotationConfetti.eulerAngles.z);
+        confetti.transform.localRotation = rotationConfetti;
+        confetti.transform.Rotate(new Vector3(1f, 0f, 0f), UnityEngine.Random.value * -20f);
+        rotationConfetti = confetti.transform.localRotation;
 
-        case 3:
-        case 6:
-        case 10:
+        GameScript._Singleton.StartCoroutine(BloodFollow(confetti));
 
-          gibletIndex = 1;
-          break;
-
-        case 1:
-        case 2:
-        case 4:
-        case 5:
-        case 7:
-
-          gibletIndex = 2;
-          break;
+        // Audio
+        var cSource = confetti.GetComponent<AudioSource>();
+        FunctionsC.PlaySound(ref cSource, "Ragdoll/Confetti", 0.6f, 1.2f);
       }
 
-      var particlesGiblet = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.GIBLETS, gibletIndex);
-      if (particlesGiblet == null || particlesGiblet.Length == 0) return;
-
-      var giblets = particlesGiblet[0];
-      giblets.transform.position = _hip.position;
-      giblets.transform.LookAt(damageSource);
-      giblets.transform.localRotation = rotationBlood;
-
-      giblets.Play();
     }
 
-    // Audio
-    var aSource = blood.GetComponent<AudioSource>();
-    FunctionsC.PlaySound(ref aSource, "Ragdoll/Blood", 1.2f, 1.5f);
-    GameScript._Singleton.StartCoroutine(BloodFollow(blood));
+    // Blood
+    else
+    {
+
+      var particlesBlood = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.BLOOD);
+      if (particlesBlood == null || particlesBlood.Length == 0) return;
+
+      var blood = particlesBlood[0];
+
+      var emissionBlood = blood.emission;
+      emissionBlood.enabled = false;
+      blood.transform.position = _hip.position;// + _hip.transform.forward * 0.2f;//point;
+      blood.transform.LookAt(damageSource);
+      blood.transform.Rotate(new Vector3(0f, 1f, 0f) * 180f);
+      var rotationBlood = blood.transform.localRotation;
+      rotationBlood.eulerAngles = new Vector3(0f, rotationBlood.eulerAngles.y, rotationBlood.eulerAngles.z);
+      blood.transform.localRotation = rotationBlood;
+      blood.transform.Rotate(new Vector3(1f, 0f, 0f), UnityEngine.Random.value * -20f);
+      rotationBlood = blood.transform.localRotation;
+
+      // Giblets
+      if (spawnGiblets)
+      {
+        var bloodIndex = int.Parse(blood.name.Split('_')[1]);
+        var gibletIndex = -1;
+        switch (bloodIndex)
+        {
+          case 0:
+          case 8:
+          case 9:
+          case 11:
+          case 12:
+          case 13:
+          case 14:
+
+            gibletIndex = 0;
+            break;
+
+          case 3:
+          case 6:
+          case 10:
+
+            gibletIndex = 1;
+            break;
+
+          case 1:
+          case 2:
+          case 4:
+          case 5:
+          case 7:
+
+            gibletIndex = 2;
+            break;
+        }
+
+        var particlesGiblet = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.GIBLETS, gibletIndex);
+        if (particlesGiblet == null || particlesGiblet.Length == 0) return;
+
+        var giblets = particlesGiblet[0];
+        giblets.transform.position = _hip.position;
+        giblets.transform.LookAt(damageSource);
+        giblets.transform.localRotation = rotationBlood;
+
+        giblets.Play();
+      }
+
+      GameScript._Singleton.StartCoroutine(BloodFollow(blood));
+
+      // Audio
+      var aSource = blood.GetComponent<AudioSource>();
+      FunctionsC.PlaySound(ref aSource, "Ragdoll/Blood", 1.2f, 1.5f);
+    }
   }
 
   public enum DamageSourceType

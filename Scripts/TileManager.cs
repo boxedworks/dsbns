@@ -1707,12 +1707,11 @@ public class TileManager
 
   public static void ResetParticles()
   {
-    // Misc
-    FunctionsC._BookManager.Init();
+    // Miscs
+    FunctionsC.s_BookManager.Init();
 
     // Gather particle systems to hide
-    var particles = Object.FindObjectsOfType<ParticleSystem>();
-    foreach (var p in particles)
+    foreach (var p in FunctionsC.s_ParticlesAll)
     {
       if (p == null) continue;
       p.Stop();

@@ -4,28 +4,34 @@ using UnityEngine;
 
 public static class FunctionsC
 {
-  static Dictionary<string, Dictionary<string, AudioSource>> _SoundLibrary;
+  static Dictionary<string, Dictionary<string, AudioSource>> s_soundLibrary;
+  public static ParticleSystem[] s_ParticlesAll;
   //static List<ParticleSystem> _BloodParticles;
-  public static Transform _Sounds;
+  public static Transform s_Sounds;
 
-  public static BookManager _BookManager;
+  public static BookManager s_BookManager;
   public static void Init()
   {
-    _BookManager = new BookManager();
-    _SoundLibrary = new Dictionary<string, Dictionary<string, AudioSource>>();
+    s_soundLibrary = new Dictionary<string, Dictionary<string, AudioSource>>();
+
+    s_ParticlesAll = Object.FindObjectsOfType<ParticleSystem>();
+
     // Populate audio library
-    _Sounds = Camera.main.transform.parent.GetChild(2);
-    for (var i = 0; i < _Sounds.childCount; i++)
+    s_Sounds = Camera.main.transform.parent.GetChild(2);
+    for (var i = 0; i < s_Sounds.childCount; i++)
     {
-      var root = _Sounds.GetChild(i);
+      var root = s_Sounds.GetChild(i);
       var sublib = new Dictionary<string, AudioSource>();
       for (var u = 0; u < root.childCount; u++)
       {
         Transform sound = root.GetChild(u);
         sublib.Add(sound.name, sound.GetComponent<AudioSource>());
       }
-      _SoundLibrary.Add(root.name, sublib);
+      s_soundLibrary.Add(root.name, sublib);
     }
+
+    //
+    s_BookManager = new BookManager();
 
     /*/ Particle lists
     _BloodParticles = new List<ParticleSystem>();
@@ -171,6 +177,7 @@ public static class FunctionsC
     BULLET_COLLIDE,
     EXPLOSION_MARK, EXPLOSION_MARK_SMALL,
     GIBLETS,
+    CONFETTI,
   }
   static int _ExplosionIter;
   public static ParticleSystem[] GetParticleSystem(ParticleSystemType particleType, int forceParticleIndex = -1)
@@ -178,7 +185,7 @@ public static class FunctionsC
     var particles = GameObject.Find("Particles").transform;
     int index = -1;
     bool randomChild = false,
-      isContainer = false; // True if contains multiple particle systems
+      hasChildren = false; // True if contains multiple particle systems
     switch (particleType)
     {
       case ParticleSystemType.BLOOD:
@@ -190,26 +197,26 @@ public static class FunctionsC
         break;
       case ParticleSystemType.SPARKS:
         index = 2;
-        isContainer = true;
+        hasChildren = true;
         break;
       case ParticleSystemType.EXPLOSION:
         index = 3;
-        isContainer = true;
+        hasChildren = true;
         break;
       case ParticleSystemType.GUN_SMOKE:
         index = 4;
-        isContainer = true;
+        hasChildren = true;
         break;
       case ParticleSystemType.SMOKE:
         index = 5;
         break;
       case ParticleSystemType.FIREBALL:
         index = 6;
-        isContainer = true;
+        hasChildren = true;
         break;
       case ParticleSystemType.SMOKEBALL:
         index = 7;
-        isContainer = true;
+        hasChildren = true;
         break;
       case ParticleSystemType.FOOTPRINT:
         index = 8;
@@ -243,6 +250,10 @@ public static class FunctionsC
       case ParticleSystemType.GIBLETS:
         index = 18;
         break;
+      case ParticleSystemType.CONFETTI:
+        index = 19;
+        randomChild = true;
+        break;
 
     }
 
@@ -265,7 +276,7 @@ public static class FunctionsC
       return new ParticleSystem[] { particle_return };
     }
 
-    else if (isContainer)
+    else if (hasChildren)
     {
       var container = particles.GetChild(index);
       if (
@@ -334,7 +345,7 @@ public static class FunctionsC
   {
     var split = soundPath.Split('/');
     string folder = split[0], name = split[1];
-    var sfx_source = _SoundLibrary[folder][name];
+    var sfx_source = s_soundLibrary[folder][name];
     if (sfx_source == null)
     {
       Debug.LogError("Need to implement random picker");
@@ -684,10 +695,10 @@ public static class FunctionsC
 
     public static void RegisterBooks(Transform books)
     {
-      FunctionsC._BookManager._books.Add(books);
+      FunctionsC.s_BookManager._books.Add(books);
     }
 
-    public static List<Transform> _Books { get { return FunctionsC._BookManager._books; } }
+    public static List<Transform> _Books { get { return FunctionsC.s_BookManager._books; } }
 
   }
 

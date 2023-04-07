@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -1553,8 +1553,8 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         if (!IsSurvival() && !_EditorEnabled)
         {
           // Check endgame
-          float timeToEnd = 2.2f;
-          if (_inLevelEnd && !_GameEnded)
+          var timeToEnd = 2.2f;
+          if (_inLevelEnd && !_GameEnded && (Settings._LevelCompletion._value != 2))
           {
             _levelEndTimer = Mathf.Clamp(_levelEndTimer + Time.deltaTime, 0f, timeToEnd);
 
@@ -1574,7 +1574,9 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
               OnLevelComplete();
             }
           }
-          else _levelEndTimer = Mathf.Clamp(_levelEndTimer - Time.deltaTime, 0f, timeToEnd);
+          else
+            _levelEndTimer = Mathf.Clamp(_levelEndTimer - Time.deltaTime, 0f, timeToEnd);
+
           // Check timer with particles
           {
             if (_LevelEndParticles == null) _LevelEndParticles = PlayerspawnScript._PlayerSpawns[0].GetComponent<ParticleSystem>();
@@ -3296,12 +3298,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         // Restart level
         case 1:
 
-          NextLevel(Levels._CurrentLevelIndex);
-          break;
-
-        // Nothing
-        case 2:
-
+          TileManager.ReloadMap();
           break;
 
         // Previous level
@@ -3328,9 +3325,6 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
           // Load previous level
           NextLevel(Levels._CurrentLevelIndex - 1);
           break;
-
-          break;
-
       }
 
       return;
@@ -3411,7 +3405,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
 
             // Achievement
 #if UNITY_STANDALONE
-                SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.DIFFICULTY_1);
+            SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.DIFFICULTY_1);
 #endif
 
             TogglePause(Menu2.MenuType.LEVELS);
@@ -3423,7 +3417,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
 
           // Achievement
 #if UNITY_STANDALONE
-              SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.DIFFICULTY_2);
+          SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.DIFFICULTY_2);
 #endif
 
           Shop._UnlockString += $"- you have beaten the classic mode!\n- try out the survival mode?\n";
@@ -3450,16 +3444,10 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
           }
           NextLevel(Levels._CurrentLevelIndex + 1);
           return;
-          break;
 
         // Reload level
         case 1:
-          NextLevel(Levels._CurrentLevelIndex);
-          break;
-
-        // Nothing
-        case 2:
-
+          TileManager.ReloadMap();
           break;
 
         // Previous level

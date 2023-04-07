@@ -5131,7 +5131,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
           })
           .AddEvent(EventType.ON_RENDER, (MenuComponent c) =>
           {
-            c._textColor = "yellow";
+            c._textColor = Settings._Extras_UsingAny ? "magenta" : "yellow";
           });
       }
 
@@ -5321,7 +5321,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
       .AddEvent((MenuComponent component) => { CommonEvents._SwitchMenu(MenuType.EXTRAS); })
       .AddEvent(EventType.ON_RENDER, (MenuComponent c) =>
       {
-        c._textColor = "yellow";
+        c._textColor = Settings._Extras_UsingAny ? "magenta" : "yellow";
       })
     // Tutorial
     .AddComponent("how to play\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
@@ -5884,21 +5884,21 @@ go to the <color=yellow>SHOP</color> to buy something~1
         var selections = new List<string>();
         var actions = new List<System.Action<MenuComponent>>();
 
-        selections.Add("next level - load the next level [DEFAULT]");
+        selections.Add("next level     - load the next level [DEFAULT]");
         actions.Add((MenuComponent component0) =>
         {
           Settings._LevelCompletion._value = 0;
           _CanRender = false;
           RenderMenu();
         });
-        selections.Add("reload level - replay the same level");
+        selections.Add("reload level   - replay the same level");
         actions.Add((MenuComponent component0) =>
         {
           Settings._LevelCompletion._value = 1;
           _CanRender = false;
           RenderMenu();
         });
-        selections.Add("nothing - nothing is loaded or happens");
+        selections.Add("nothing        - nothing is loaded or happens");
         actions.Add((MenuComponent component0) =>
         {
           Settings._LevelCompletion._value = 2;
