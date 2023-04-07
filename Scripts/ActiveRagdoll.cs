@@ -1388,7 +1388,7 @@ public class ActiveRagdoll
 
     /// Particles
     // Confetti
-    var useConfetti = false;
+    var useConfetti = Settings._Extra_BodyExplode._value == 1;
     if (useConfetti)
     {
       var particlesConfetti = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.CONFETTI);

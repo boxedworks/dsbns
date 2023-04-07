@@ -1773,7 +1773,7 @@ public class EnemyScript : MonoBehaviour
         TileManager._Level_Complete = true;
 
         // Check timers
-        var can_save_timers = !Settings._Extras_UsingAny;
+        var can_save_timers = !Settings._Extras_UsingAnyImportant;
         var level_time = float.Parse(TileManager._LevelTimer.ToString("0.000"));
         var level_time_best = float.Parse(PlayerPrefs.GetFloat($"{Levels._CurrentLevelCollection_Name}_{Levels._CurrentLevelIndex}_time", -1f).ToString("0.000"));
 

@@ -294,21 +294,32 @@ public static class Settings
     _Extra_RemoveBatGuy,
     _Extra_EnemyMultiplier,
     _Extra_PlayerAmmo, _Extra_EnemyAmmo,
-    _Extra_BodyExplode;
+    _Extra_BodyExplode,
+    _Extra_BloodType;
   public static bool _Extras_CanUse { get { return GameScript._GameMode == GameScript.GameModes.CLASSIC && !_LevelEditorEnabled; } }
   public static bool _Extras_UsingAny
   {
     get
     {
       return
-    _Extra_Superhot ||
-    _Extra_CrazyZombies ||
-    _Extra_RemoveBatGuy._value != 0 ||
-    _Extra_EnemyMultiplier._value != 0 ||
-    _Extra_PlayerAmmo._value != 0 ||
-    _Extra_EnemyAmmo._value != 0 ||
-    _Extra_BodyExplode._value != 0
-    ;
+        _Extras_UsingAnyImportant ||
+        _Extra_BloodType._value != 0
+      ;
+    }
+  }
+    public static bool _Extras_UsingAnyImportant
+  {
+    get
+    {
+      return
+        _Extra_Superhot ||
+        _Extra_CrazyZombies ||
+        _Extra_RemoveBatGuy._value != 0 ||
+        _Extra_EnemyMultiplier._value != 0 ||
+        _Extra_PlayerAmmo._value != 0 ||
+        _Extra_EnemyAmmo._value != 0 ||
+        _Extra_BodyExplode._value != 0
+      ;
     }
   }
 
@@ -459,6 +470,7 @@ public static class Settings
     _Extra_PlayerAmmo = new FunctionsC.SaveableStat_Int("extra_playerammo", 0);
     _Extra_EnemyAmmo = new FunctionsC.SaveableStat_Int("extra_enemyammo", 0);
     _Extra_BodyExplode = new FunctionsC.SaveableStat_Int("extra_bodyexplode", 0);
+    _Extra_BloodType = new FunctionsC.SaveableStat_Int("extra_bloodtype", 0);
   }
 
   public enum GamemodeChange

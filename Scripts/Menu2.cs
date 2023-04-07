@@ -6630,6 +6630,34 @@ a gampad if plugged in.~1
         () => { return true; return Shop.Unlocked(Shop.Unlocks.EXTRA_CHASER); }
       );
 
+      // Blood type
+      AddExtraSelection(
+        "blood type",
+        () =>
+        {
+          switch (Settings._Extra_BloodType._value)
+          {
+            case 0:
+              return "normal";
+            case 1:
+              return "confetti";
+          }
+          return "N/A";
+        },
+        new DropdownSelectionComponent[] {
+        new DropdownSelectionComponent("normal", "blood", (MenuComponent component) => {
+          Settings._Extra_EnemyMultiplier._value = 0;
+        }),
+        new DropdownSelectionComponent("confetti", "party time", (MenuComponent component) => {
+          Settings._Extra_EnemyMultiplier._value = 1;
+        }),
+        },
+        "change what blood looks like",
+
+        "unlock by...",
+        () => { return true; return Shop.Unlocked(Shop.Unlocks.EXTRA_CHASER); }
+      );
+
       // Body explode
       AddExtraSelection(
         "explode on death",
