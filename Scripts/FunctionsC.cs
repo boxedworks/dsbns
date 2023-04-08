@@ -178,6 +178,7 @@ public static class FunctionsC
     EXPLOSION_MARK, EXPLOSION_MARK_SMALL,
     GIBLETS,
     CONFETTI,
+    BULLET_CASING_HOT,
   }
   static int _ExplosionIter;
   public static ParticleSystem[] GetParticleSystem(ParticleSystemType particleType, int forceParticleIndex = -1)
@@ -253,6 +254,9 @@ public static class FunctionsC
       case ParticleSystemType.CONFETTI:
         index = 19;
         randomChild = true;
+        break;
+      case ParticleSystemType.BULLET_CASING_HOT:
+        index = 21;
         break;
 
     }

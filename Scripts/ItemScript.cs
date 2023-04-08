@@ -426,7 +426,7 @@ public class ItemScript : MonoBehaviour
           rb = bullet._rb;
 
           rb.velocity = Vector3.zero;
-          rb.position = new_position;
+          rb.transform.position = new_position;
           var f = MathC.Get2DVector(transform.forward).normalized;
           var speedMod = 0.5f * (_type == ItemType.FLAMETHROWER ? 1f : (use_penatrationAmount > 0 ? 1.35f : 1f)) + (i == 0 ? 0f : (UnityEngine.Random.value * 0.15f) - (0.075f));
           var addforce = Vector3.zero;

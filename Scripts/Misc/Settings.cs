@@ -315,6 +315,7 @@ public static class Settings
         _Extra_Superhot ||
         _Extra_CrazyZombies ||
         _Extra_RemoveBatGuy._value != 0 ||
+        Extra_Gravity != 0 ||
         _Extra_EnemyMultiplier._value != 0 ||
         _Extra_PlayerAmmo._value != 0 ||
         _Extra_EnemyAmmo._value != 0 ||

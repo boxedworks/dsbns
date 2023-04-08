@@ -125,17 +125,6 @@ public class BulletScript : MonoBehaviour
   }
   private void Update()
   {
-    // Check for start
-    if (_delayStart > 0 && _p != null)
-    {
-      _delayStart--;
-
-      if (_delayStart == 0)
-      {
-        _p.Play();
-        _light.enabled = true;
-      }
-    }
 
     // Heat seeking bullet; used when reflected back by bat
     if (_rb.isKinematic && _redirected)
@@ -170,7 +159,6 @@ public class BulletScript : MonoBehaviour
     _initialForce = force;
   }
 
-  int _delayStart;
   private void OnTriggerStay(Collider collider)
   {
     // Local function to apply ragdoll damage
@@ -258,6 +246,7 @@ public class BulletScript : MonoBehaviour
         var damage_othe = bullet_other._penatrationAmount;
 
         var hit_bullet = false;
+        var hotbullets = 0;
 
         if (damage_self == damage_othe)
         {
@@ -265,6 +254,7 @@ public class BulletScript : MonoBehaviour
           bullet_other.Hide();
 
           hit_bullet = true;
+          hotbullets = 2;
         }
 
         else if (damage_self > damage_othe)
@@ -273,6 +263,7 @@ public class BulletScript : MonoBehaviour
           bullet_other.Hide();
 
           hit_bullet = true;
+          hotbullets = 1;
         }
 
         else
@@ -281,10 +272,20 @@ public class BulletScript : MonoBehaviour
           Hide();
 
           hit_bullet = true;
+          hotbullets = 1;
         }
 
         // Sparks
         PlaySparks(hit_bullet);
+
+        // Hot bullets
+        if (hotbullets > 0)
+        {
+          var parts = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.BULLET_CASING_HOT)[0];
+          parts.transform.position = transform.position;
+          //parts.transform.LookAt(transform.position + -transform.forward);
+          parts.Emit(hotbullets);
+        }
 
         return;
       }
@@ -396,9 +397,9 @@ public class BulletScript : MonoBehaviour
       /*var parts = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.BULLET_COLLIDE)[0];
       parts.transform.position = transform.position;
       parts.Play();*/
-      var parts = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.SPARKS)[0];
+      var parts = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.BULLET_COLLIDE)[0];
       parts.transform.position = transform.position;
-      parts.transform.LookAt(transform.position + -transform.forward);
+      //parts.transform.LookAt(transform.position + -transform.forward);
       parts.Play();
     }
     else
@@ -429,9 +430,14 @@ public class BulletScript : MonoBehaviour
 
     if (source._type != GameScript.ItemManager.Items.FLAMETHROWER && source._type != GameScript.ItemManager.Items.ROCKET_FIST)
     {
-
       // Delay the start of playing the system to keep particles from emitting across screen
-      _delayStart = 7;
+      if (_p != null)
+      {
+        Debug.Log($"Playing: {_p.isPlaying} | Emitting: {_p.isEmitting} | Play position: {_p.transform.position}");
+
+        _p.Play();
+        _light.enabled = true;
+      }
     }
 
     if (_rb != null)
@@ -474,7 +480,6 @@ public class BulletScript : MonoBehaviour
   public void Hide()
   {
     _triggered = true;
-    _delayStart = 0;
     _light.enabled = false;
     if (_p == null) return;
     GameScript._Singleton.StartCoroutine(LagParticles(1f));

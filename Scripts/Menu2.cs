@@ -6462,7 +6462,7 @@ a gampad if plugged in.~1
       // Gravity direction
       AddExtraSelection(
         "gravity",
-        () => { return Settings._Extra_Gravity == 1 ? "inverted" : Settings._Extra_Gravity == 2 ? "north" : Settings._Extra_Gravity == 4 ? "none" : "normal"; },
+        () => { return Settings._Extra_Gravity == 1 ? "inverted" : Settings._Extra_Gravity == 2 ? "north" : Settings._Extra_Gravity == 3 ? "none" : "normal"; },
         new DropdownSelectionComponent[] {
           new DropdownSelectionComponent("normal", "normal gravity", (MenuComponent component) => {
             Settings._Extra_Gravity = 0;
@@ -6646,10 +6646,10 @@ a gampad if plugged in.~1
         },
         new DropdownSelectionComponent[] {
         new DropdownSelectionComponent("normal", "blood", (MenuComponent component) => {
-          Settings._Extra_EnemyMultiplier._value = 0;
+          Settings._Extra_BloodType._value = 0;
         }),
         new DropdownSelectionComponent("confetti", "party time", (MenuComponent component) => {
-          Settings._Extra_EnemyMultiplier._value = 1;
+          Settings._Extra_BloodType._value = 1;
         }),
         },
         "change what blood looks like",
