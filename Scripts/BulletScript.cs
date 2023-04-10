@@ -132,13 +132,14 @@ public class BulletScript : MonoBehaviour
       //if (_bounceToSourceEase < 1f)
       {
         //_bounceToSourceEase += Time.deltaTime * 5f;
-        Vector3 gotopos = _source._ragdoll._hip.position;
+        var gotopos = _source._ragdoll._hip.position;
         gotopos.y = transform.position.y;
-        Vector3 dis = (transform.position - gotopos);
+        var dis = (rb.position - gotopos);
         //_rb.position = Vector3.Lerp(_bounceToSourceSource, gotopos, _bounceToSourceEase);
         if (dis.magnitude > 1f)
           dis = dis.normalized;
         dis *= Time.deltaTime * 40f;
+        Debug.Log($"{gotopos} : {rb.position} : {dis} : {dis.magnitude}");
         if (dis.magnitude < 0.02f) { if (_source._ragdoll != null) OnTriggerStay(_source._ragdoll._hip.GetComponent<Collider>()); Hide(); return; }
         _rb.position += -dis;
       }
@@ -324,6 +325,9 @@ public class BulletScript : MonoBehaviour
           // Refresh weapon timer if reflected bullets; use again instantly
           r._itemL?.HitSomething();
           r._itemR?.HitSomething();
+
+          // Sparks
+          PlaySparks(true);
           return;
         }
         if (TakeDamage(r)) return;
@@ -370,6 +374,7 @@ public class BulletScript : MonoBehaviour
     {
       hit_wall = true;
     }
+
     // Check richochet
     if (_target != null && !_source._ragdoll._dead)
     {
@@ -433,8 +438,6 @@ public class BulletScript : MonoBehaviour
       // Delay the start of playing the system to keep particles from emitting across screen
       if (_p != null)
       {
-        Debug.Log($"Playing: {_p.isPlaying} | Emitting: {_p.isEmitting} | Play position: {_p.transform.position}");
-
         _p.Play();
         _light.enabled = true;
       }
@@ -509,8 +512,10 @@ public class BulletScript : MonoBehaviour
     _rb.isKinematic = true;
     //_rb.velocity = (_source._ragdoll._controller.position - _rb.position).normalized * _rb.velocity.magnitude * (speedUp ? 2.25f : 1f);
     _redirected = true;
+
     // Resize collider to make easier to hit source
     _c.size *= 1.25f;
+
     // Change target to soure
     _target = _source._ragdoll.transform;
   }

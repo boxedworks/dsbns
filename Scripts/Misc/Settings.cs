@@ -451,8 +451,8 @@ public static class Settings
     _LevelCompletion = new FunctionsC.SaveableStat_Int("LevelCompletion", 0);
 
     //Camera
-    _CameraZoom = new FunctionsC.SaveableStat_Int("CameraZoom", 1);
-    _CameraType = new FunctionsC.SaveableStat_Bool("CameraType_ortho", false);
+    _CameraZoom = new FunctionsC.SaveableStat_Int("CameraZoom", 3);
+    _CameraType = new FunctionsC.SaveableStat_Bool("CameraType_ortho", true);
     SetPostProcessing();
 
     // Top ratings

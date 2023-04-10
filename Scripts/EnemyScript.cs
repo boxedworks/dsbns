@@ -116,7 +116,7 @@ public class EnemyScript : MonoBehaviour
 
   public UnityEngine.AI.NavMeshAgent _agent;
 
-  float timer;
+  float _lastPosSetTime;
 
   public PathScript _path;
 
@@ -572,6 +572,7 @@ public class EnemyScript : MonoBehaviour
               Wait();
           }
         }
+
         // Checking something out
         else if (_state == State.SUSPICIOUS)
         {
@@ -583,7 +584,7 @@ public class EnemyScript : MonoBehaviour
             _waitAmount = 1f + Random.value * 3f;
             return;
           }
-          float dis = MathC.Get2DDistance(transform.position, _lastKnownPos);
+          var dis = MathC.Get2DDistance(transform.position, _lastKnownPos);
           _atd = dis;
           if (dis < 0.8f)
           {
@@ -604,6 +605,7 @@ public class EnemyScript : MonoBehaviour
         else if (_state == State.PURSUIT)
         {
           _atd = Time.time - _attackTime;
+
           // Check if game ended
           if (GameScript._Singleton._GameEnded)
           {
@@ -693,22 +695,29 @@ public class EnemyScript : MonoBehaviour
                   // Check if the enemy is at the right distance to shoot
                   if (_canMove)
                   {
-                    float close = 3.5f, far = 10f;
+
                     // If player has the exit, chase closer
+                    float close = 3.5f, far = 10f;
                     if (_ragdollTarget._isPlayer && _ragdollTarget._playerScript._hasExit)
                     {
                       close = 3f;
                       far = 4f;
                     }
+
                     // Move further back if reloading
                     if (_ragdoll._reloading)
                     {
                       close += 1.5f;
                       far += 1.5f;
                     }
+
                     // Keep distance per close and far values
-                    if (dis > close && dis < far)
+                    if (dis > close && dis < far && Time.time - _lastPosSetTime > 0.1f)
+                    {
                       _agent.SetDestination(transform.position);
+                      _lastPosSetTime = Time.time;
+                    }
+
                     // If not in distance, move into distance
                     else if (dis >= far)
                       ChaseTarget(false);
@@ -833,8 +842,11 @@ public class EnemyScript : MonoBehaviour
           if (_stuckIter > 20)
           {
             if (_isZombie) { /*Debug.Log("stuck");*/ }
-            else if (IsChaser())
+            else if (IsChaser() && Time.time - _lastPosSetTime > 0.1f)
+            {
               _agent.SetDestination(_ragdollTarget._hip.position);
+              _lastPosSetTime = Time.time;
+            }
             else
             {
               ChangeState(State.SEARCHING);
@@ -987,18 +999,25 @@ public class EnemyScript : MonoBehaviour
       // Check if lost object perusing
       if (_targetFound && _state != State.PANICKED && _ragdollTarget != null)
       {
-        if (!IsChaser() && !_isZombie) _time_lost += Time.deltaTime;
-        else _time_lost = 0f;
+        if (!IsChaser() && !_isZombie)
+          _time_lost += Time.deltaTime;
+        else
+          _time_lost = 0f;
+
         if (_time_lost > 12f)
           Walk();
+
         else if (_state != State.SEARCHING && _time_lost > 11f)
         {
           ChangeState(State.SEARCHING);
-          _agent.SetDestination(_lastKnownPos);
+          if (!Vector3.Equals(_agent.destination, _lastKnownPos))
+            _agent.SetDestination(_lastKnownPos);
         }
+
         // Reset attack time
         else if (_time_lost > 2f)
           _attackTime = Time.time + 0.2f;
+
         // Check if target is in LOS
         bool found = false;
         Vector3 dirToTarget = -MathC.Get2DVector(_ragdoll._hip.transform.position - _ragdollTarget._hip.transform.position).normalized;
