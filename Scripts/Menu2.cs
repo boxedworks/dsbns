@@ -10,9 +10,12 @@ public class Menu2
   {
     MAIN,
     SPLASH,
+
     OPTIONS,
     OPTIONS_GAME,
     OPTIONS_CONTROLS,
+    OPTIONS_SETTINGS,
+
     MODE_SELECTION,
     LEVELS,
     PAUSE,
@@ -5401,12 +5404,19 @@ go to the <color=yellow>SHOP</color> to buy something~1
     ModifyMenu_TipComponents(MenuType.OPTIONS, 15);
     ModifyMenu_TipSwitch(MenuType.OPTIONS);
 
+    // Game settings menu
+    var menu_options = new Menu2(MenuType.OPTIONS_SETTINGS)
+    {
+
+    }
+    .AddComponent($"<color={_COLOR_GRAY}>game</color>\n\n");
+
     // Game options menu
     var menu_options = new Menu2(MenuType.OPTIONS_GAME)
     {
 
     }
-    .AddComponent($"<color={_COLOR_GRAY}>game options</color>\n\n");
+    .AddComponent($"<color={_COLOR_GRAY}>settings</color>\n\n");
 
     // Non-console options
     if (Application.platform != RuntimePlatform.PS4 && Application.platform != RuntimePlatform.PS5 && Application.platform != RuntimePlatform.GameCoreXboxSeries && Application.platform != RuntimePlatform.GameCoreXboxOne && Application.platform != RuntimePlatform.XboxOne)
