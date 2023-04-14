@@ -45,6 +45,7 @@ public static class Shop
       "shoot your teammates",
       "press the &UD button to swap which hand each of your weapons are in",
       "you can find overall stats in the options menu",
+      "if you have a one-handed melee weapon, press &RS behind an enemy!",
 
       "equip mods to gain special attributes",
       "you can equip up to 4 mods",
@@ -158,6 +159,7 @@ public static class Shop
   public enum Unlocks
   {
     ITEM_KNIFE,
+    ITEM_FRYING_PAN,
     ITEM_PISTOL_SILENCED,
     ITEM_MACHINE_PISTOL,
     ITEM_DOUBLE_PISTOL,
@@ -265,7 +267,8 @@ public static class Shop
 
     _Unlocks_Descriptions = new Dictionary<Unlocks, Tuple<string, int>>();
     _Unlocks_Descriptions.Add(Unlocks.ITEM_KNIFE, new Tuple<string, int>("melee, fast", 3));
-    _Unlocks_Descriptions.Add(Unlocks.ITEM_AXE, new Tuple<string, int>("melee, slower, wide-sweep", 20));
+    _Unlocks_Descriptions.Add(Unlocks.ITEM_FRYING_PAN, new Tuple<string, int>("melee, fast", 6));
+    _Unlocks_Descriptions.Add(Unlocks.ITEM_AXE, new Tuple<string, int>("melee, slower, wide-sweep", 14));
     //_Unlocks_Descriptions.Add(Unlocks.ITEM_BAT, new Tuple<string, int>("melee, two-handed, wide-sweep", 10));
     _Unlocks_Descriptions.Add(Unlocks.ITEM_SWORD, new Tuple<string, int>("melee, two-handed, wide-sweep", 25));
     _Unlocks_Descriptions.Add(Unlocks.ITEM_PISTOL_SILENCED, new Tuple<string, int>("handgun, silenced, fast-reload", 15));
@@ -366,6 +369,7 @@ public static class Shop
 
     AddAvailableUnlock(Unlocks.ITEM_STICKY_GUN);
     AddAvailableUnlock(Unlocks.MOD_SMART_BULLETS);
+    AddAvailableUnlock(Unlocks.ITEM_FRYING_PAN);
 
     //AddAvailableUnlock(Unlocks.ITEM_ROCKET_FIST);
 

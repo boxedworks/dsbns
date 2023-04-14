@@ -1243,8 +1243,8 @@ public class TileManager
               {
                 if (id.Trim() == "") continue;
                 var idP = int.Parse(id);
-                Debug.Log(GameScript._Singleton.transform.GetChild(0).childCount);
-                Debug.Log(idP);
+                //Debug.Log(GameScript._Singleton.transform.GetChild(0).childCount);
+                //Debug.Log(idP);
                 door_script0.RegisterEnemy(idP);
                 door_script0.RegisterEnemyReal(GameScript._Singleton.transform.GetChild(0).GetChild(idP).GetChild(0).GetComponent<EnemyScript>());
               }
@@ -1872,7 +1872,7 @@ public class TileManager
 
     // Reload current map
     _Dev_Time_Save = TileManager._LevelTime_Dev;
-    Debug.Log("saved dev time: " + _Dev_Time_Save);
+    //Debug.Log("saved dev time: " + _Dev_Time_Save);
     LoadMap(_CurrentMapData, true);
 
     // Show menus

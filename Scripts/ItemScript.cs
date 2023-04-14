@@ -22,6 +22,8 @@ public class ItemScript : MonoBehaviour
 
   int _last_magazineDropId;
 
+  public bool _IsBulletDeflector { get { return _type == ItemType.FRYING_PAN || _type == ItemType.SWORD; } }
+
   // Custom components
   ParticleSystem[] _customParticles;
   Light[] _customLights;
@@ -74,7 +76,7 @@ public class ItemScript : MonoBehaviour
   protected int _clip, _bursts, _meleeIter;
   protected bool _triggerDown, _triggerDown_last, _used, _hitAnthing, _hitEnemy;
 
-  public void HitSomething()
+  public void DeflectedBullet()
   {
     if (_swinging) { _hitAnthing = true; }
   }
@@ -363,7 +365,8 @@ public class ItemScript : MonoBehaviour
             }
           }
 
-          _hitAnthing = true;
+          if (_twoHanded)
+            _hitAnthing = true;
           if (!_hitEnemy && !raycastInfo._ragdoll._isPlayer) _hitEnemy = true;
 
           // Record ragdoll id to stop multiple hits
@@ -391,8 +394,17 @@ public class ItemScript : MonoBehaviour
           }
 
           // Play noise
-          PlaySound(Audio.MELEE_HIT);
-          EnemyScript.CheckSound(_ragdoll._hip.transform.position, EnemyScript.Loudness.SUPERSOFT);
+          if (_type == ItemType.FRYING_PAN)
+          {
+            PlaySound(Audio.MELEE_HIT, 0.78f, 1.1f);
+            EnemyScript.CheckSound(_ragdoll._hip.transform.position, EnemyScript.Loudness.SOFT);
+          }
+          else
+          {
+            PlaySound(Audio.MELEE_HIT);
+            EnemyScript.CheckSound(_ragdoll._hip.transform.position, EnemyScript.Loudness.SUPERSOFT);
+          }
+
 
           // If not two handed, stop checking
           if (!_meleePenatrate)
@@ -499,12 +511,7 @@ public class ItemScript : MonoBehaviour
       _ragdoll._head.GetComponent<Rigidbody>().AddRelativeTorque(torqueForce);
 
       // Recoil player
-      _ragdoll._force += MathC.Get2DVector(-transform.forward) * _shoot_force;
-      if (_ragdoll._grappler != null)
-      {
-        _ragdoll._grappler._force += MathC.Get2DVector(-transform.forward) * _shoot_force;
-      }
-      //_ragdoll._forwardForce += _shoot_forward_force;
+      _ragdoll.RecoilSimple(_shoot_force);
 
       // Recoil arm
       if (_type != ItemType.FLAMETHROWER && _type != ItemType.ROCKET_FIST)
@@ -717,7 +724,7 @@ public class ItemScript : MonoBehaviour
               _swinging = false;
 
               // If hit anything and two handed, allow to use immediatly
-              if (_hitAnthing && _twoHanded)
+              if (_hitAnthing && _IsBulletDeflector)
                 _useTime = -1f;
             }
           }
@@ -757,6 +764,7 @@ public class ItemScript : MonoBehaviour
             switch (_type)
             {
               case (ItemType.KNIFE):
+              case (ItemType.FRYING_PAN):
                 float totalTime = UseRate(),
                   halfTime = _burstPerShot * _burstRate,
                   side_mod = (_side == ActiveRagdoll.Side.LEFT ? -1f : 1f);
@@ -850,6 +858,7 @@ public class ItemScript : MonoBehaviour
           (_side == ActiveRagdoll.Side.LEFT ? 1f : -1f) * 7f
         ));
       }
+
       // Save new rotation
       _save_rot_lower = _arm_lower.localEulerAngles;
       _save_rot_upper = _arm_upper.localEulerAngles;
@@ -857,6 +866,7 @@ public class ItemScript : MonoBehaviour
 
     // Scale
     transform.localScale = new Vector3(1f, 1f, 1f);
+
     // Set rotation
     Vector3 dir = _ragdoll._hip.transform.forward;
     dir.y = 0f;

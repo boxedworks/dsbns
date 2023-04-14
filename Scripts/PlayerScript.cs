@@ -85,7 +85,7 @@ public class PlayerScript : MonoBehaviour
 
     _SlowmoTimer = 0f;
     Time.timeScale = 1f;
-    _spawnRunCheck = true;
+    _spawnRunCheck = !Settings._Extra_Superhot;
     //_camHeight = Vector3.Distance(GameResources._Camera_Main.transform.position, transform.position);
 
     // Setup ragdoll
@@ -706,7 +706,7 @@ public class PlayerScript : MonoBehaviour
       hippos.y = -1.38f;
       //if (Time.timeScale < 0.9f)
       //{
-        _ring[0].transform.parent.position += (hippos - _ring[0].transform.parent.position) * Time.deltaTime * 15f;
+      _ring[0].transform.parent.position += (hippos - _ring[0].transform.parent.position) * Time.deltaTime * 15f;
       //}
       //else
       //  _ring[0].transform.parent.position = hippos;
@@ -1520,6 +1520,11 @@ public class PlayerScript : MonoBehaviour
     // Move player
     if (_ragdoll.Active() && _agent != null)
     {
+      /*if (Time.timeScale < 1f)
+      {
+        moveSpeed *= Mathf.Clamp(Time.timeScale * 1.3f, 0f, 1f);
+        Debug.Log($"{Time.timeScale} ... {moveSpeed}");
+      }*/
       var dis2 = (Vector3.right * input.x * moveSpeed) + (Vector3.forward * input.y * moveSpeed);
       var savepos = _agent.transform.position;
 

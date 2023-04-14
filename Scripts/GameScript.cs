@@ -2438,6 +2438,11 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
             t.localScale = new Vector3(0.1f, 0.12f, 0.1f);
             t.localEulerAngles += new Vector3(90f, 0f, 0f);
             break;
+          case ("FRYING_PAN"):
+            t.localPosition += new Vector3(-0.2f, 0.03f, 0f);
+            t.localScale = new Vector3(0.13f, 0.17f, 0.13f);
+            t.localEulerAngles = new Vector3(0f, 0f, 270f);
+            break;
           case ("BAT"):
             t.localPosition += new Vector3(-0.15f, 0f, 0f);
             t.localScale = new Vector3(0.11f, 0.12f, 0.11f);
@@ -2862,6 +2867,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       M16,
       ROCKET_LAUNCHER,
       SWORD,
+      FRYING_PAN,
       AXE,
       CROSSBOW,
       GRENADE_LAUNCHER,
@@ -2905,7 +2911,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
 
     public static GameObject GetItem(Items itemType)
     {
-      foreach (Item i in _Items)
+      foreach (var i in _Items)
       {
         if (i._type == itemType)
         {
@@ -2928,6 +2934,8 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
           return 4;
         case Items.KNIFE:
           return 1;
+        case Items.FRYING_PAN:
+          return 3;
         case Items.AXE:
           return 3;
         case Items.BAT:

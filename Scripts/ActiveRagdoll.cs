@@ -327,19 +327,19 @@ public class ActiveRagdoll
       if (_itemL != null && _itemL._twoHanded) { }
       else
       {
-        float spread_speed = 20f * dt;
+        var spread_speed = 20f * dt;
         if (_itemL != null)
           if (_la_limit - _la_targetLimit != 0f)
           {
             // Start z rotation of upper arm
-            float startPos = 73f;
+            var startPos = 73f;
 
             // Lerp
             _la_limit = Mathf.Clamp(_la_limit + ((_la_targetLimit - _la_limit) > 0f ? 1f : -1f) * 0.5f * spread_speed, 0f, 1f);
-            Transform arm_upper = _spine.transform.GetChild(0).GetChild(0).GetChild(0);
-            Vector3 localrot = arm_upper.localRotation.eulerAngles;
+            var arm_upper = _spine.transform.GetChild(0).GetChild(0).GetChild(0);
+            var localrot = arm_upper.localRotation.eulerAngles;
             localrot.z = Mathf.Lerp(startPos, startPos - 90f, _la_limit);
-            Quaternion q = arm_upper.localRotation;
+            var q = arm_upper.localRotation;
             q.eulerAngles = localrot;
             arm_upper.localRotation = q;
           }
@@ -347,14 +347,14 @@ public class ActiveRagdoll
           if (_ra_limit - _ra_targetLimit != 0f)
           {
             // Start z rotation of upper arm
-            float startPos = -73f;
+            var startPos = -73f;
 
             // Lerp
             _ra_limit = Mathf.Clamp(_ra_limit + ((_ra_targetLimit - _ra_limit) > 0f ? 1f : -1f) * 0.5f * spread_speed, 0f, 1f);
-            Transform arm_upper = _spine.transform.GetChild(0).GetChild(1).GetChild(0);
-            Vector3 localrot = arm_upper.localRotation.eulerAngles;
+            var arm_upper = _spine.transform.GetChild(0).GetChild(1).GetChild(0);
+            var localrot = arm_upper.localRotation.eulerAngles;
             localrot.z = Mathf.Lerp(startPos, startPos + 90f, _ra_limit);
-            Quaternion q = arm_upper.localRotation;
+            var q = arm_upper.localRotation;
             q.eulerAngles = localrot;
             arm_upper.localRotation = q;
           }
@@ -369,7 +369,7 @@ public class ActiveRagdoll
         var force_normalize = _force.magnitude < 1f ? _force : _force.normalized;
         var force_apply = _force * Time.deltaTime * 10f;
 
-        UnityEngine.AI.NavMeshAgent agent = (_isPlayer ? _playerScript._agent : _enemyScript._agent);
+        var agent = (_isPlayer ? _playerScript._agent : _enemyScript._agent);
         agent.Move(force_apply);
         _force -= force_apply;
       }
@@ -379,7 +379,7 @@ public class ActiveRagdoll
         var force_normalized = _forwardForce > max_velocity ? max_velocity : _forwardForce;
         var force_apply = force_normalized * MathC.Get2DVector(_hip.transform.forward) * Time.deltaTime * 10f;
 
-        UnityEngine.AI.NavMeshAgent agent = (_isPlayer ? _playerScript._agent : _enemyScript._agent);
+        var agent = (_isPlayer ? _playerScript._agent : _enemyScript._agent);
         agent.Move(force_apply);
         _forwardForce -= force_normalized;
       }
@@ -456,7 +456,10 @@ public class ActiveRagdoll
     {
       // Move / rotate hip (base)
       _hip.MovePosition(movePos);
-      if (_playerScript != null) dt = Time.unscaledDeltaTime;
+      if (_isPlayer)
+      {
+        dt = Time.unscaledDeltaTime;
+      }
       _hip.MoveRotation(Quaternion.RotateTowards(_hip.rotation, rot, dt * 14f * _rotSpeed * Mathf.Abs(Quaternion.Angle(_hip.rotation, rot))));
       // Use iter to move joints
       _movementIter += (_distance.magnitude / 3f) * Time.deltaTime * 65f;
@@ -1625,6 +1628,19 @@ public class ActiveRagdoll
     }
   }
 
+  public void Recoile(Vector3 dir, float force)
+  {
+    _force += MathC.Get2DVector(dir) * force;
+    if (_grappler != null)
+    {
+      _grappler._force += MathC.Get2DVector(dir) * force;
+    }
+  }
+  public void RecoilSimple(float force)
+  {
+    Recoile(-transform.forward, force);
+  }
+
   IEnumerator Rise()
   {
     var startRot = _hip.rotation;
@@ -1712,7 +1728,7 @@ public class ActiveRagdoll
   }
 
   // Add a grappler
-  public void AddGrappler()
+  public void AddGrappler(bool playSound = true)
   {
 
     // Checks
@@ -1735,7 +1751,10 @@ public class ActiveRagdoll
     Grapple(enemy.GetRagdoll());
 
     // FX
-    FunctionsC.PlaySound(ref _audioPlayer, "Ragdoll/Combust", 0.9f, 1.1f);
+    if (playSound)
+    {
+      FunctionsC.PlaySound(ref _audioPlayer, "Ragdoll/Combust", 0.9f, 1.1f);
+    }
     FunctionsC.PlayComplexParticleSystemAt(FunctionsC.ParticleSystemType.SMOKEBALL, spawn_pos);
   }
 
@@ -1766,6 +1785,18 @@ public class ActiveRagdoll
   public bool HasEmpty()
   {
     return ((_itemL?.IsEmpty() ?? false) || (_itemR?.IsEmpty() ?? false));
+  }
+  public bool HasItem(GameScript.ItemManager.Items item)
+  {
+    return (
+      (_itemL?._type ?? GameScript.ItemManager.Items.NONE) == item ||
+      (_itemR?._type ?? GameScript.ItemManager.Items.NONE) == item);
+  }
+  public bool HasBulletDeflector()
+  {
+    return
+      (_itemL?._IsBulletDeflector ?? false) ||
+      (_itemR?._IsBulletDeflector ?? false);
   }
 
   public bool Active()

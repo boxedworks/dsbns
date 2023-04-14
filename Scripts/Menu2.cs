@@ -747,14 +747,18 @@ public class Menu2
     return AddComponent(text == "" ? "back\n" : text, MenuComponent.ComponentType.BUTTON_SIMPLE)
       .AddEvent((MenuComponent component) =>
       {
+        component._menu._selectedComponent._focused = false;
         component._menu._selectionIndex = 0;
         CommonEvents._SwitchMenu(menuType);
-      });
+      })
+      .AddEvent(EventType.ON_RENDER, CommonEvents._OnRender_XSelector);
   }
   Menu2 AddBackButton(System.Action<MenuComponent> action)
   {
-    return AddComponent("back\n", MenuComponent.ComponentType.BUTTON_SIMPLE).
-      AddEvent(EventType.ON_SELECTED, action);
+    return AddComponent("back\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
+      .AddEvent(EventType.ON_SELECTED, action)
+      .AddEvent(EventType.ON_RENDER, CommonEvents._OnRender_XSelector);
+
   }
 
   public static class CommonEvents
@@ -797,6 +801,23 @@ public class Menu2
       _SwitchMenu(_PreviousMenuType);
     };
 
+    //
+    public static System.Action<MenuComponent> _OnRender_XSelector = (MenuComponent component) =>
+    {
+      // Set hint text when focused
+      component._selectorType = MenuComponent.SelectorType.X;
+      component._useEmptySelector = true;
+      if (component._focused)
+      {
+        component._selectorColor = "red";
+      }
+      else
+      {
+        component._selectorColor = _COLOR_GRAY;
+      }
+    };
+
+    //
     public static System.Action<MenuComponent> _RemoveDropdownSelections = (MenuComponent component) =>
     {
       Menu2 menu = component._menu;
@@ -1089,21 +1110,6 @@ public class Menu2
     };
 
     // Main menu
-    System.Action<MenuComponent> func_exit = (MenuComponent component) =>
-    {
-      // Set hint text when focused
-      component._selectorType = MenuComponent.SelectorType.X;
-      component._useEmptySelector = true;
-      if (component._focused)
-      {
-        component._selectorColor = "red";
-      }
-      else
-      {
-        component._selectorColor = _COLOR_GRAY;
-      }
-    };
-
     var demoText = GameScript._Singleton._IsDemo ? $" <color={_COLOR_GRAY}>[</color><color=red>demo</color><color={_COLOR_GRAY}>]</color>" : "";
     var main_menu = new Menu2(MenuType.MAIN)
     {
@@ -1156,7 +1162,7 @@ public class Menu2
 #endif
         GameScript.OnApplicationQuitS();
       })
-      .AddEvent(EventType.ON_RENDER, func_exit);
+      .AddEvent(EventType.ON_RENDER, CommonEvents._OnRender_XSelector);
     // Tip
 #if UNITY_STANDALONE
     ModifyMenu_TipComponents(MenuType.MAIN, 12, 1);
@@ -2423,6 +2429,7 @@ public class Menu2
                     {
                       CommonEvents._RemoveDropdownSelections(component0);
                       CommonEvents._SwitchMenu(MenuType.EDITOR_PACKS_EDIT);
+                      Menu2._CurrentMenu._selectedComponent._focused = false;
                       Menu2._CurrentMenu._selectionIndex = 0;
                       Menu2._CurrentMenu._selectedComponent._onFocus?.Invoke(Menu2._CurrentMenu._selectedComponent);
                       _CanRender = false;
@@ -2682,6 +2689,7 @@ public class Menu2
 
                   CommonEvents._RemoveDropdownSelections(component0);
                   CommonEvents._SwitchMenu(MenuType.EDITOR_PACKS_EDIT);
+                  _CurrentMenu._selectedComponent._focused = false;
                   _CurrentMenu._selectionIndex = 0;
                   _CanRender = false;
                   RenderMenu();
@@ -3617,7 +3625,10 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
               // Get dropdown match
               var match = "";
               if (_SaveLevelSelected != -1 && _SaveLevelSelected < selections.Count)
+              {
                 match = selections[_SaveLevelSelected];
+                Debug.Log(match);
+              }
               else
               {
                 var lastIter = 0;
@@ -5150,7 +5161,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
               _SaveIndex = 5;
               CommonEvents._SwitchMenu(MenuType.MODE_EXIT_CONFIRM);
             })
-            .AddEvent(EventType.ON_RENDER, func_exit)
+            .AddEvent(EventType.ON_RENDER, CommonEvents._OnRender_XSelector)
           // Switch to main menu
           .AddComponent("exit to main menu\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
             .AddEvent((MenuComponent component) =>
@@ -5160,7 +5171,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
               _SaveIndex = 6;
               CommonEvents._SwitchMenu(MenuType.MODE_EXIT_CONFIRM);
             })
-            .AddEvent(EventType.ON_RENDER, func_exit);
+            .AddEvent(EventType.ON_RENDER, CommonEvents._OnRender_XSelector);
       }
 
       else if (GameScript._EditorTesting)
@@ -5174,7 +5185,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
               _SaveIndex = 5;
               CommonEvents._SwitchMenu(MenuType.MODE_EXIT_CONFIRM);
             })
-            .AddEvent(EventType.ON_RENDER, func_exit)
+            .AddEvent(EventType.ON_RENDER, CommonEvents._OnRender_XSelector)
           // Switch to main menu
           .AddComponent("save and exit to main menu\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
             .AddEvent((MenuComponent component) =>
@@ -5184,7 +5195,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
               _SaveIndex = 6;
               CommonEvents._SwitchMenu(MenuType.MODE_EXIT_CONFIRM);
             })
-            .AddEvent(EventType.ON_RENDER, func_exit);
+            .AddEvent(EventType.ON_RENDER, CommonEvents._OnRender_XSelector);
       }
 
       else
@@ -5196,7 +5207,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
               _SaveIndex = 6;
               CommonEvents._SwitchMenu(MenuType.MODE_EXIT_CONFIRM);
             })
-            .AddEvent(EventType.ON_RENDER, func_exit)
+            .AddEvent(EventType.ON_RENDER, CommonEvents._OnRender_XSelector)
           // Switch to main menu
           .AddComponent("exit to main menu\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
             .AddEvent((MenuComponent component) =>
@@ -5204,7 +5215,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
               _SaveIndex = 7;
               CommonEvents._SwitchMenu(MenuType.MODE_EXIT_CONFIRM);
             })
-            .AddEvent(EventType.ON_RENDER, func_exit);
+            .AddEvent(EventType.ON_RENDER, CommonEvents._OnRender_XSelector);
 
       // Add pause menu stats (?)
       var format_stats = "=<color={0}>{1,-15}</color>{2,-11}{3,-11}{4,-11}{5,-11}\n";
@@ -5223,6 +5234,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
       // Set the onback function to be resume
       _Menus[MenuType.PAUSE]._onBack = () =>
       {
+        _CurrentMenu._selectedComponent._focused = false;
         _CurrentMenu._selectionIndex = 0;
         SendInput(Input.SPACE);
       };
@@ -5377,19 +5389,23 @@ go to the <color=yellow>SHOP</color> to buy something~1
 
     }
     .AddComponent($"<color={_COLOR_GRAY}>options</color>\n\n")
+    // Settings
+    .AddComponent("graphics / audio settings\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
+      .AddEvent((MenuComponent component) => { CommonEvents._SwitchMenu(MenuType.OPTIONS_SETTINGS); })
     // Game options
-    .AddComponent("game options\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
+    .AddComponent("game options\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
       .AddEvent((MenuComponent component) => { CommonEvents._SwitchMenu(MenuType.OPTIONS_GAME); })
     // Control options
     .AddComponent("controls\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
       .AddEvent((MenuComponent component) => { CommonEvents._SwitchMenu(MenuType.CONTROLS); })
-    .AddComponent("control options\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
+    .AddComponent("control options\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
       .AddEvent((MenuComponent component) => { CommonEvents._SwitchMenu(MenuType.OPTIONS_CONTROLS); })
     .AddComponent("overall stats\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
       .AddEvent((MenuComponent component) => { CommonEvents._SwitchMenu(MenuType.STATS); })
     // Back button; switch menu per pause setting
     .AddBackButton((MenuComponent component) =>
     {
+      component._menu._selectedComponent._focused = false;
       component._menu._selectionIndex = 0;
       CommonEvents._SwitchMenu(_InPause ? MenuType.PAUSE : MenuType.MAIN);
       if (_InPause)
@@ -5401,28 +5417,71 @@ go to the <color=yellow>SHOP</color> to buy something~1
     });
 
     // Tip
-    ModifyMenu_TipComponents(MenuType.OPTIONS, 15);
+    ModifyMenu_TipComponents(MenuType.OPTIONS, 12);
     ModifyMenu_TipSwitch(MenuType.OPTIONS);
 
     // Game settings menu
-    var menu_options = new Menu2(MenuType.OPTIONS_SETTINGS)
+    var menu_optionsSettings = new Menu2(MenuType.OPTIONS_SETTINGS)
     {
 
     }
-    .AddComponent($"<color={_COLOR_GRAY}>game</color>\n\n");
-
-    // Game options menu
-    var menu_options = new Menu2(MenuType.OPTIONS_GAME)
-    {
-
-    }
-    .AddComponent($"<color={_COLOR_GRAY}>settings</color>\n\n");
+    .AddComponent($"<color={_COLOR_GRAY}>graphics / audio settings</color>\n\n");
 
     // Non-console options
     if (Application.platform != RuntimePlatform.PS4 && Application.platform != RuntimePlatform.PS5 && Application.platform != RuntimePlatform.GameCoreXboxSeries && Application.platform != RuntimePlatform.GameCoreXboxOne && Application.platform != RuntimePlatform.XboxOne)
     {
+
+      // Window mode toggle
+      menu_optionsSettings
+      .AddComponent("window type:\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
+        .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+        {
+          // Set display text
+          string selection = Settings._Fullscreen ? "fullscreen" : "windowed";
+          component.SetDisplayText(string.Format(format_options, "window type:", selection));
+
+          // Set dropdown data
+          var selections = new List<string>();
+          var actions = new List<System.Action<MenuComponent>>();
+          var selection_match = selection;
+          selections.Add("windowed");
+          actions.Add((MenuComponent component0) =>
+          {
+
+            // Change to windowed mode
+            Settings._Fullscreen = false;
+          });
+          selections.Add("fullscreen");
+          actions.Add((MenuComponent component0) =>
+          {
+
+            // Make sure resolution is supported
+            var res_found = false;
+            for (var i = 0; i < Screen.resolutions.Length; i++)
+            {
+              var local_res = Screen.resolutions[i];
+              if (local_res.width == Settings._ScreenResolution.width && local_res.height == Settings._ScreenResolution.height && local_res.refreshRate == Settings._ScreenResolution.refreshRate)
+              {
+                res_found = true;
+                break;
+              }
+            }
+            if (!res_found)
+            {
+              Debug.LogError($"Could not find current resolution when setting fullscreen, setting to safemax");
+              Settings.SetResolution($"{Settings.GetSafeMaxResolution()}");
+            }
+            else
+              Debug.LogError($"Changing to fullscreen mode with supported resolution");
+
+            // Change to fullscreen
+            Settings._Fullscreen = true;
+          });
+          // Update dropdown data
+          component.SetDropdownData("window type\n\n", selections, actions, selection_match);
+        })
+
       // Resolution dropdown
-      menu_options
       .AddComponent("resolution:\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
         .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
           {
@@ -5492,6 +5551,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
             // Update dropdown data
             component.SetDropdownData("resolution\n\n", selections, actions, selection_match);
           })
+
       // Hertz
       .AddComponent("refresh rate:\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
         .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
@@ -5534,54 +5594,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
           // Update dropdown data
           component.SetDropdownData("refresh rate\n*if having performance issues; change to a lower number than 'max'\n\n", selections, actions, selection_match);
         })
-      // Window mode toggle
-      .AddComponent("window type:\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
-        .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
-        {
-          // Set display text
-          string selection = Settings._Fullscreen ? "fullscreen" : "windowed";
-          component.SetDisplayText(string.Format(format_options, "window type:", selection));
 
-          // Set dropdown data
-          var selections = new List<string>();
-          var actions = new List<System.Action<MenuComponent>>();
-          var selection_match = selection;
-          selections.Add("windowed");
-          actions.Add((MenuComponent component0) =>
-          {
-
-            // Change to windowed mode
-            Settings._Fullscreen = false;
-          });
-          selections.Add("fullscreen");
-          actions.Add((MenuComponent component0) =>
-          {
-
-            // Make sure resolution is supported
-            var res_found = false;
-            for (var i = 0; i < Screen.resolutions.Length; i++)
-            {
-              var local_res = Screen.resolutions[i];
-              if (local_res.width == Settings._ScreenResolution.width && local_res.height == Settings._ScreenResolution.height && local_res.refreshRate == Settings._ScreenResolution.refreshRate)
-              {
-                res_found = true;
-                break;
-              }
-            }
-            if (!res_found)
-            {
-              Debug.LogError($"Could not find current resolution when setting fullscreen, setting to safemax");
-              Settings.SetResolution($"{Settings.GetSafeMaxResolution()}");
-            }
-            else
-              Debug.LogError($"Changing to fullscreen mode with supported resolution");
-
-            // Change to fullscreen
-            Settings._Fullscreen = true;
-          });
-          // Update dropdown data
-          component.SetDropdownData("window type\n\n", selections, actions, selection_match);
-        })
       // Quality dropdown
       .AddComponent("quality level\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
         .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
@@ -5623,7 +5636,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
     }
 
     // Music volume dropdown
-    menu_options
+    menu_optionsSettings
     .AddComponent("music volume\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
       .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
       {
@@ -5669,6 +5682,16 @@ go to the <color=yellow>SHOP</color> to buy something~1
         // Update dropdown data
         component.SetDropdownData("sfx volume\n\n", selections, actions, selection_match);
       })
+
+    // Back button
+    .AddBackButton(MenuType.OPTIONS);
+
+    // Game options menu
+    var menu_optionsGame = new Menu2(MenuType.OPTIONS_GAME)
+    {
+
+    }
+    .AddComponent($"<color={_COLOR_GRAY}>game options</color>\n\n")
 
     // Toggle lightning
     .AddComponent("lightning\n\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
@@ -5802,72 +5825,6 @@ go to the <color=yellow>SHOP</color> to buy something~1
         Settings._Blood = !Settings._Blood;
         _CanRender = false;
         RenderMenu();
-      })
-
-    // Force keyboard toggle
-    .AddComponent("force keyboard\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
-      .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
-      {
-
-        // Set display text
-        var selection = Settings._ForceKeyboard ? "on" : "off";
-        component.SetDisplayText(string.Format(format_options, "force keyboard:", selection));
-
-        // Set dropdown data
-        var selections = new List<string>();
-        var actions = new List<System.Action<MenuComponent>>();
-        var selection_match = $"{selection} -";
-        selections.Add("on - use this if you want to play with controllers and the keyboard");
-        actions.Add((MenuComponent component0) =>
-        {
-          Settings._ForceKeyboard = true;
-          if (ControllerManager._NumberGamepads > 0)
-          {
-            GameScript.PlayerProfile._Profiles[1]._directionalAxis = GameScript.PlayerProfile._Profiles[0]._directionalAxis;
-            GameScript.PlayerProfile._Profiles[0]._directionalAxis = new float[3];
-          }
-        });
-        selections.Add("off - use this if you want to play with controllers, ignoring the keyboard [DEFAULT]");
-        actions.Add((MenuComponent component0) =>
-        {
-          Settings._ForceKeyboard = false;
-          if (ControllerManager._NumberGamepads > 0)
-          {
-            GameScript.PlayerProfile._Profiles[0]._directionalAxis = GameScript.PlayerProfile._Profiles[1]._directionalAxis;
-            GameScript.PlayerProfile._Profiles[1]._directionalAxis = new float[3];
-          }
-        });
-
-        // Update dropdown data
-        component.SetDropdownData("force keyboard as controller - REMEMBER this setting\n\n", selections, actions, selection_match);
-      })
-
-    // Controller rumble
-    .AddComponent("controller vibration\n\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
-      .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
-      {
-
-        // Set display text
-        var selection = Settings._ControllerRumble ? "on" : "off";
-        component.SetDisplayText(string.Format(format_options, "controller vibration:", selection) + '\n');
-
-        // Set dropdown data
-        var selections = new List<string>();
-        var actions = new List<System.Action<MenuComponent>>();
-        var selection_match = $"{selection} -";
-        selections.Add("on - the controller will vibrate when you die [DEFAULT]");
-        actions.Add((MenuComponent component0) =>
-        {
-          Settings._ControllerRumble = true;
-        });
-        selections.Add("off - the controller will never vibrate");
-        actions.Add((MenuComponent component0) =>
-        {
-          Settings._ControllerRumble = false;
-        });
-
-        // Update dropdown data
-        component.SetDropdownData("controller vibration\n\n", selections, actions, selection_match);
       })
 
     // Level end behavior
@@ -6242,7 +6199,7 @@ a gampad if plugged in.~1
           _InPause = false;
         }
       })
-      .AddEvent(EventType.ON_RENDER, func_exit)
+      .AddEvent(EventType.ON_RENDER, CommonEvents._OnRender_XSelector)
     .AddBackButton(MenuType.PAUSE, "back")
       .AddEvent((MenuComponent c) =>
       {
@@ -6258,6 +6215,79 @@ a gampad if plugged in.~1
 
     }
     .AddComponent($"<color={_COLOR_GRAY}>control options</color>\n\n")
+
+    // Force keyboard toggle
+    .AddComponent("force keyboard\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
+      .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+      {
+
+        // Set display text
+        var selection = Settings._ForceKeyboard ? "on" : "off";
+        component.SetDisplayText(string.Format(format_options, "force keyboard:", selection));
+
+        // Set dropdown data
+        var selections = new List<string>();
+        var actions = new List<System.Action<MenuComponent>>();
+        var selection_match = $"{selection} -";
+        selections.Add("on  - use this if you want to play with controllers and the keyboard");
+        actions.Add((MenuComponent component0) =>
+        {
+          Settings._ForceKeyboard = true;
+          if (ControllerManager._NumberGamepads > 0)
+          {
+            GameScript.PlayerProfile._Profiles[1]._directionalAxis = GameScript.PlayerProfile._Profiles[0]._directionalAxis;
+            GameScript.PlayerProfile._Profiles[0]._directionalAxis = new float[3];
+          }
+        });
+        selections.Add("off - use this if you want to play with controllers, ignoring the keyboard [DEFAULT]");
+        actions.Add((MenuComponent component0) =>
+        {
+          Settings._ForceKeyboard = false;
+          if (ControllerManager._NumberGamepads > 0)
+          {
+            GameScript.PlayerProfile._Profiles[0]._directionalAxis = GameScript.PlayerProfile._Profiles[1]._directionalAxis;
+            GameScript.PlayerProfile._Profiles[1]._directionalAxis = new float[3];
+          }
+        });
+
+        // Update dropdown data
+        component.SetDropdownData("force keyboard as controller - REMEMBER this setting\n\n", selections, actions, selection_match);
+      })
+
+    // Controller rumble
+    .AddComponent("controller vibration\n\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
+      .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+      {
+
+        // Set display text
+        var selection = Settings._ControllerRumble ? "on" : "off";
+        component.SetDisplayText(string.Format(format_options, "controller vibration:", selection) + '\n');
+
+        // Set dropdown data
+        var selections = new List<string>();
+        var actions = new List<System.Action<MenuComponent>>();
+        var selection_match = $"{selection} -";
+        selections.Add("on  - controllers will vibrate when you die [DEFAULT]");
+        actions.Add((MenuComponent component0) =>
+        {
+          Settings._ControllerRumble = true;
+        });
+        selections.Add("off - controllers will never vibrate");
+        actions.Add((MenuComponent component0) =>
+        {
+          Settings._ControllerRumble = false;
+        });
+
+        // Update dropdown data
+        component.SetDropdownData("controller vibration\n\n", selections, actions, selection_match);
+      })
+
+    .AddComponent("=======\n\n", MenuComponent.ComponentType.DISPLAY)
+      .AddEvent(EventType.ON_CREATED, (MenuComponent component) =>
+      {
+        component._textColor = _COLOR_GRAY;
+      })
+
     // Player index
     .AddComponent("player\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
       .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
@@ -6354,12 +6384,12 @@ a gampad if plugged in.~1
         component.SetDropdownData("reload setting\n\n", selections, actions, selection_match);
       })
     // Walk direction
-    .AddComponent("face walk direction\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
+    .AddComponent("face walk direction\n\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
       .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
       {
         // Set display text
         var selection = GameScript.PlayerProfile._CurrentSettingsProfile._faceMovement ? "on" : "off";
-        component.SetDisplayText(string.Format(format_options, "face walk direction:", selection));
+        component.SetDisplayText(string.Format(format_options, "face walk direction:", selection) + '\n');
         // Set dropdown data
         var selections = new List<string>();
         var actions = new List<System.Action<MenuComponent>>();
@@ -7090,6 +7120,7 @@ a gampad if plugged in.~1
   {
     _InMenus = true;
     _Menu.gameObject.SetActive(true);
+    _Menus[MenuType.PAUSE]._selectedComponent._focused = false;
     _Menus[MenuType.PAUSE]._selectionIndex = 0;
     if (Shop._UnlockString != string.Empty)
     {
@@ -7201,6 +7232,7 @@ a gampad if plugged in.~1
     GameScript._Paused = true;
     Time.timeScale = 0f;
 
+    _CurrentMenu._selectedComponent._focused = false;
     _CurrentMenu._selectionIndex = 0;
     _CanRender = true;
     RenderMenu();
