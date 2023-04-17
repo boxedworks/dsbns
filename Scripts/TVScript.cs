@@ -11,7 +11,7 @@ public class TVScript : MonoBehaviour
   public ExplosiveScript _explosion;
   ParticleSystem _ps_smoke, _ps_fire;
   GameObject _m0, _m1, _m2;
-  AudioSource _audio_sfx;
+  AudioSource _sfx;
   BoxCollider _collider;
 
   float _lastUpdate;
@@ -26,11 +26,8 @@ public class TVScript : MonoBehaviour
     _ps_smoke = transform.GetChild(4).GetComponent<ParticleSystem>();
     _ps_fire = transform.GetChild(5).GetComponent<ParticleSystem>();
 
-    _audio_sfx = GetComponents<AudioSource>()[1];
-
-    _audio_sfx.clip = FunctionsC.GetAudioClip("Etc/TV_static").clip;
-    _audio_sfx.volume = 0.06f;
-    FunctionsC.PlayAudioSource(ref _audio_sfx);
+    _sfx = transform.PlayAudioSourceSimple("Etc/TV_static");
+    _sfx.loop = true;
 
     _collider = GetComponent<BoxCollider>();
   }
@@ -39,6 +36,11 @@ public class TVScript : MonoBehaviour
   Color[] colors = new Color[] { Color.blue, Color.green, Color.yellow };
   void Update()
   {
+
+    if (_sfx != null)
+    {
+      _sfx.transform.position = transform.position;
+    }
 
     _lastUpdate -= Time.deltaTime;
     if (_lastUpdate <= 0f)
@@ -66,8 +68,7 @@ public class TVScript : MonoBehaviour
   {
     if (_explosion._exploded) return;
 
-    _explosion.Explode(source, false, false);
-    FunctionsC.PlayOneShot(_explosion._audio);
+    _explosion.Explode(source, false, true);
 
     _m0.SetActive(false);
     _m1.SetActive(false);
@@ -76,14 +77,24 @@ public class TVScript : MonoBehaviour
     _ps_smoke.Play();
     _ps_fire.Play();
 
-    _audio_sfx.clip = FunctionsC.GetAudioClip("Etc/Fire_loop").clip;
-    _audio_sfx.volume = 0.15f;
-    FunctionsC.PlayAudioSource(ref _audio_sfx);
+    _sfx.Stop();
+    _sfx = transform.PlayAudioSourceSimple("Etc/Fire_loop");
+    _sfx.loop = true;
 
     _light.range = 3f;
     _light.type = LightType.Point;
     _light.color = new Color(1f, 0.4087965f, 0.01568627f);
 
     _collider.enabled = false;
+  }
+
+  public void OnDestroy()
+  {
+    if (_sfx != null)
+    {
+      _sfx.loop = false;
+      _sfx.Stop();
+      _sfx = null;
+    }
   }
 }

@@ -177,7 +177,7 @@ public static class Settings
       if (VolumeMusic < 0)
         VolumeMusic = 5;
       // Update music volume
-      FunctionsC.MusicManager._TrackSource.volume = VolumeMusic / 5f * 0.8f;
+      FunctionsC.MusicManager.s_TrackSource.volume = VolumeMusic / 5f * 0.8f;
       // Save value
       PlayerPrefs.SetInt("VolumeMusic", VolumeMusic);
     }

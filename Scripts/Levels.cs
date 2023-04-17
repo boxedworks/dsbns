@@ -220,7 +220,7 @@ public class Levels : MonoBehaviour
   }
   public static float[] GetLevelRatingTimings(float dev_time)
   {
-    var medal_diamond = dev_time + 0.1f;
+    var medal_diamond = dev_time + 0.4f;
     return new float[]{
       medal_diamond,  // Diamond
       medal_diamond * 1.25f,  // Gold

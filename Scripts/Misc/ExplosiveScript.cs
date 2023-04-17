@@ -94,8 +94,13 @@ public class ExplosiveScript : MonoBehaviour
     var main = particles[0].main;
     main.startSpeed = new ParticleSystem.MinMaxCurve(2, Mathf.Lerp(5f, 10f, (_radius / 6f)));
     main = particles[1].main;
-    main.startSpeed = new ParticleSystem.MinMaxCurve(2, Mathf.Lerp(5f, 10f, (_radius / 6f))); var shape = particles[2].shape;
+    main.startSpeed = new ParticleSystem.MinMaxCurve(2, Mathf.Lerp(5f, 10f, (_radius / 6f)));
+    var shape = particles[2].shape;
     shape.radius = Mathf.Lerp(1f, 3f, (_radius / 6f));
+
+    var parts = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.BULLET_COLLIDE)[0];
+    parts.transform.position = transform.position;
+    parts.Play();
 
     // Check for nearby ragdolls
     FunctionsC.ApplyExplosionRadius(transform.position, _radius, _explosionType, source);
@@ -132,7 +137,7 @@ public class ExplosiveScript : MonoBehaviour
 
     // Play sound
     if (playSound)
-      FunctionsC.PlaySound(ref _audio, "Ragdoll/Explode", 0.825f, 1.175f);
+      SfxManager.PlayAudioSourceSimple(transform.position, "Ragdoll/Explode", 0.825f, 1.175f);
 
     // Try to remove RB
     if (disableGameobject)

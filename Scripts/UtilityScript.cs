@@ -76,15 +76,6 @@ public class UtilityScript : ItemScript
   new void Start()
   {
     _disableOnRagdollDeath = false;
-
-    // Get item sounds
-    _audioSources = new AudioSource[_sfx_clip.Length];
-    for (int i = 0; i < _audioSources.Length; i++)
-    {
-      _audioSources[i] = gameObject.AddComponent<AudioSource>();
-      _audioSources[i].playOnAwake = false;
-      _audioSources[i].spatialBlend = 0.65f;
-    }
   }
 
   MeshRenderer _ring;
@@ -769,7 +760,7 @@ public class UtilityScript : ItemScript
             player._profile.UtilityReload(side, true);
 
             // Play noise
-            FunctionsC.PlaySound(ref player._ragdoll._audioPlayer, "Ragdoll/Pickup");
+            player._ragdoll.PlaySound("Ragdoll/Pickup");
 
             // Disable and hide
             _c.enabled = false;
@@ -786,7 +777,7 @@ public class UtilityScript : ItemScript
       player._profile.UtilityReload(side, true);
 
       // Play noise
-      FunctionsC.PlaySound(ref player._ragdoll._audioPlayer, "Ragdoll/Pickup");
+      player._ragdoll.PlaySound("Ragdoll/Pickup");
 
       // Disable and hide
       _c.enabled = false;
@@ -801,8 +792,6 @@ public class UtilityScript : ItemScript
     if (_exploded) return;
     _exploded = true;
     if (_explosion == null) return;
-
-    _explosion._audio = _audioSources[1];
 
     // Explode effect
     if (delay > 0f)
@@ -832,9 +821,10 @@ public class UtilityScript : ItemScript
     _onCollisionEnter?.Invoke(collision);
 
     // Check for collision on throw based on velocity
-    if (_rb != null && _rb.velocity.magnitude > 0.1f && Time.time - _lastSound > 0.1f && _audioSources.Length > 3)
+    if (_rb != null && _rb.velocity.magnitude > 0.1f && Time.time - _lastSound > 0.1f && _sfx_clip.Length > 3)
     {
       _lastSound = Time.time;
+
       // Play noise
       PlaySound(Audio.UTILITY_HIT_FLOOR);
     }

@@ -15,7 +15,7 @@ public static class Shop
     {
       "it is highly recommended to play this game with a controller",
       "don't know the controls? check the options menu",
-      "want to play with your friend? use remote-play on Steam to play with them!",
+      "want to play with your friend? use remote-play on Steam!",
       "check out per-player control preferences in the options menu",
       "some utilities can be picked up to use again",
       "melee and range weapons have cooldowns before you can use them again",
@@ -54,23 +54,23 @@ public static class Shop
     };
     static string[] _Tips_Classic = new string[]
     {
-      "complete classic levels quickly and beat the fastest times to get the highest rank",
+      "beat classic levels quickly to get the highest rank and $$$",
       "each new level rank gives money for the shop (up to $4 per level)",
       "complete classic level directories to add more unlocks to the shop",
-      "purchase 'MAX_EQUIPMENT_POINTS' in the shop to equip more items in your loadouts",
-      "for loadouts, you can only equip as many items as you have equipment points",
+      "buy 'MAX_EQUIPMENT_POINTS' in the shop to equip more in your loadouts",
+      "you can only equip as many items as you have equipment points",
       "use filters in the shop or unlock menus to make them easier to read",
       "most actions make noise that can alert enemies",
       "stuck on a level? try making a different loadout",
       "you only have 1 health in classic mode",
-      "you can equip two of the same weapon or utility if you have enough points",
-      "you can switch weapons or edit a loadout mid-game if you are at the start area",
+      "equip two of the same weapon or utility if you have enough points",
+      "switch weapons or edit a loadout mid-game if you are at the start area",
       "use the &LD or &RD buttons on the D-PAD to cycle through your custom loadouts",
       "quickly restart the level with the   &RE   button",
-      "if you are playing with more than one person, you cannot restart if you are dead",
+      "playing with more than one person? you cannot restart if you are dead",
       "when changing loadouts, read the tags on items to learn more about them",
       "when changing loadouts, press &WB to quickly remove a peice of equipment",
-      "to buy things in the shop, you need to have enough money and max equipment points",
+      "you need to have enough money + max equipment points to buy things in the shop",
     };
     static string[] _Tips_Survival = new string[]
     {
@@ -371,6 +371,7 @@ public static class Shop
     AddAvailableUnlock(Unlocks.MOD_SMART_BULLETS);
     AddAvailableUnlock(Unlocks.ITEM_FRYING_PAN);
 
+    //AddAvailableUnlock(Unlocks.ITEM_FLAMETHROWER);
     //AddAvailableUnlock(Unlocks.ITEM_ROCKET_FIST);
 
     // Add unlocks to vault

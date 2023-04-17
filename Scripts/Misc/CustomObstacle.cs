@@ -383,7 +383,7 @@ public class CustomObstacle : MonoBehaviour
         p.RemoveInteractable();
         GameScript.SurvivalMode.OpenRoom(_index, _index2);
         // Play sound
-        FunctionsC.PlaySound(ref GameScript._audioListenerSource, "Survival/Buy_Wall");
+        p._ragdoll.PlaySound("Survival/Buy_Wall");
       }
       else if (use_type == InteractType.BUYITEM)
       {
@@ -474,8 +474,8 @@ public class CustomObstacle : MonoBehaviour
           p._profile._item_right = item_type;
         GameScript.PlayerProfile._Profiles[p._id].UpdateIcons();
 
-        // Play sound
-        FunctionsC.PlaySound(ref GameScript._audioListenerSource, "Survival/Buy_Weapon");
+        // Play sfx
+        p._ragdoll.PlaySound("Survival/Buy_Weapon");
 
 #if UNITY_STANDALONE
         // Achievement
@@ -622,7 +622,7 @@ public class CustomObstacle : MonoBehaviour
         GameScript.PlayerProfile._Profiles[p._id].UpdateIcons();
 
         // Play sound
-        FunctionsC.PlaySound(ref GameScript._audioListenerSource, "Survival/Buy_Weapon");
+        p._ragdoll.PlaySound("Survival/Buy_Weapon");
 
 #if UNITY_STANDALONE
         // Achievement
@@ -654,7 +654,7 @@ public class CustomObstacle : MonoBehaviour
         GameScript.PlayerProfile._Profiles[p._id].UpdateIcons();
 
         // Play sound
-        FunctionsC.PlaySound(ref GameScript._audioListenerSource, "Survival/Buy_Weapon");
+        p._ragdoll.PlaySound("Survival/Buy_Weapon");
 
 #if UNITY_STANDALONE
         // Achievement

@@ -111,17 +111,18 @@ public class Powerup : MonoBehaviour
     {
       case (Powerup.PowerupType.SILENCED_PISTOL):
         r.EquipItem(GameScript.ItemManager.Items.PISTOL_SILENCED, ActiveRagdoll.Side.RIGHT);
-        FunctionsC.PlaySound(ref r._audioPlayer, "Ragdoll/Reload");
+        r.PlaySound("Ragdoll/Reload");
         break;
       case (Powerup.PowerupType.KNIFE):
         r.EquipItem(GameScript.ItemManager.Items.KNIFE, ActiveRagdoll.Side.LEFT);
-        FunctionsC.PlaySound(ref r._audioPlayer, "Ragdoll/Slice");
+        r.PlaySound("Ragdoll/Slice");
         break;
       case (Powerup.PowerupType.END):
         remove = false;
         if (r._isPlayer && !GameScript._Singleton._ExitOpen)
         {
-          FunctionsC.PlaySound(ref r._audioPlayer, "Etc/Ping");
+          SfxManager.PlayAudioSourceSimple(r._controller.position, "Etc/Ping");
+
           /*if (EnemyScript.AllDead())
           {
             GameScript.NextLevel();
@@ -217,7 +218,7 @@ public class Powerup : MonoBehaviour
       if (pl_info != null && pl_info._ragdoll != null)
       {
         var dist = pl_info._distance;
-        _audio.volume += (((1f - dist / 5f) * 0.35f) - _audio.volume) * Time.deltaTime * 2f;
+        _audio.volume += (((1f - dist / 5f) * 0.27f) - _audio.volume) * Time.deltaTime * 2f;
       }
 
     }

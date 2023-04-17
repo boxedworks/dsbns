@@ -67,8 +67,6 @@ public class ActiveRagdoll
   // Holds rotation before Toggle()
   Quaternion _saveRot;
 
-  public AudioSource _audioPlayer_steps, _audioPlayer, _audioPlayer_extra;
-
   public int _health;
 
   public GameObject[] _parts;
@@ -193,10 +191,6 @@ public class ActiveRagdoll
 
     _parts = GetParts();
     _transform_parts = new Parts(this);
-
-    _audioPlayer_steps = transform.GetComponent<AudioSource>();
-    _audioPlayer = transform.GetComponents<AudioSource>()[1];
-    _audioPlayer_extra = transform.GetComponents<AudioSource>()[2];
 
     _color = Color.blue * 1.3f;
 
@@ -404,23 +398,21 @@ public class ActiveRagdoll
     // Move / rotate based on a rigidbody
     var movePos = _controller.position + _GROUNDHEIGHT;
     _distance = (movePos - _hip.position) * (Time.timeScale < 1f ? 0.3f : 1f);
+
     // Moving ragdoll too fast will break joints, clamp to .35f magnitude
     if (_distance.magnitude > 0.35f)
     {
       movePos = _hip.position + _distance.normalized * 0.35f;
       _distance = (movePos - _hip.position) * (Time.timeScale < 1f ? 0.3f : 1f);
     }
-    /*if (_isPlayer)
-    {
-      var source = GameObject.Find("test").GetComponent<AudioSource>();
-      source.pitch = Mathf.Clamp(source.pitch + ((Mathf.Clamp(_distance.magnitude, 0f, 0.15f) / 0.1f) - source.pitch) * Time.deltaTime * 5f, 0.05f, 2f);
-    }*/
+
     // If can't move, set movepos and distance to origin
     if (!_canMove || _grappled)
     {
       movePos = _hip.position;
       _distance = Vector3.zero;
     }
+
     // Stand if not moving, else iterate
     if (_distance.magnitude < 0.005f)
       _movementIter2 += (0.5f - _movementIter2) * dt * 12f;
@@ -436,7 +428,9 @@ public class ActiveRagdoll
         // If player, send footstep sound to enemies to check for detection
         if (_isPlayer && _playerScript._canDetect && _distance.magnitude > 0.1f)
           EnemyScript.CheckSound(_controller.position, (_distance.magnitude > 0.2f ? EnemyScript.Loudness.SOFT : (EnemyScript.Loudness.SUPERSOFT)));
-        PlaySound(ref _audioPlayer_steps, SceneThemes._footstep, 0.9f, 1.1f);
+
+        // Sfx
+        SfxManager.PlayAudioSourceSimple(_controller.position, SceneThemes._footstep.clip, SceneThemes._footstep.volume, 0.9f, 1.1f, SfxManager.AudioClass.FOOTSTEP);
 
         // Footprint
         var footprint_pos = _footprint ? _leg_lower_l.transform.position : _leg_lower_r.transform.position;
@@ -634,8 +628,8 @@ public class ActiveRagdoll
     _renderer.enabled = !toggle;
     //ToggleRaycasting(!toggle);
 
-    // Play noise
-    FunctionsC.PlaySound(ref _audioPlayer_steps, "Ragdoll/Combust", 0.9f, 1.1f);
+    // Play FX
+    PlaySound("Ragdoll/Combust", 0.9f, 1.1f);
     FunctionsC.PlayComplexParticleSystemAt(FunctionsC.ParticleSystemType.SMOKEBALL, _hip.position);
 
     // Set timer
@@ -871,7 +865,9 @@ public class ActiveRagdoll
         _playerScript._profile._equipment._item_right1 = itemR_type;
       }
     }
-    FunctionsC.PlaySound(ref _audioPlayer_steps, "Ragdoll/Weapon_Switch");
+
+    // Sfx
+    PlaySound("Ragdoll/Weapon_Switch");
   }
 
   // Check for and reload items in both hands
@@ -929,7 +925,7 @@ public class ActiveRagdoll
     else if (other.name.Equals("Mine"))
     {
       var s = other.transform.parent.GetComponent<ExplosiveScript>();
-      FunctionsC.PlaySound(ref s._audio, "Ragdoll/Tick", 0.95f, 1.1f);
+      PlaySound("Ragdoll/Tick", 0.95f, 1.1f);
     }
 
     // If ran into powerup, activate it
@@ -1015,7 +1011,8 @@ public class ActiveRagdoll
           //Debug.Log($"sound: {rb.name} {mag_old} .. {mag}");
 
           var soundName = mag_old > 13f ? "Thud_loud" : "Thud";
-          FunctionsC.PlaySound(ref rag._audioPlayer_extra, $"Ragdoll/{soundName}", 0.7f, 1.25f);
+          SfxManager.PlayAudioSourceSimple(rb.position, $"Ragdoll/{soundName}", 0.7f, 1.25f, SfxManager.AudioClass.NONE);
+
           //FunctionsC.PlayComplexParticleSystemAt(FunctionsC.ParticleSystemType.SMOKE_WHITE, rb.position);
         }
       }
@@ -1110,7 +1107,7 @@ public class ActiveRagdoll
       if (Time.time - _lastMetalHit > 0.05f && damageSourceType == DamageSourceType.BULLET)
       {
         _lastMetalHit = Time.time;
-        FunctionsC.PlaySound(ref _audioPlayer, "Enemies/Metal_hit", 0.8f, 1.2f);
+        PlaySound("Enemies/Metal_hit", 0.8f, 1.2f);
       }
       return false;
     }
@@ -1130,7 +1127,7 @@ public class ActiveRagdoll
       {
         // Fire player events
         _playerScript.OnDamageTaken();
-        FunctionsC.PlaySound(ref _audioPlayer, "Enemies/Ugh0", 0.9f, 1.1f);
+        PlaySound("Enemies/Ugh0");
 
         if (_hasArmor)
         {
@@ -1139,16 +1136,20 @@ public class ActiveRagdoll
           if (save_health > health_threshhold && _health <= health_threshhold)
             RemoveArmor(hitForce, false);
           else
-            FunctionsC.PlaySound(ref _audioPlayer, "Enemies/Metal_hit", 0.8f, 1.2f);
+            PlaySound("Enemies/Metal_hit", 0.8f, 1.2f);
         }
         else if (_health > 0)
           if (damageSourceType == DamageSourceType.FIRE)
           {
-            FunctionsC.PlaySound(ref _audioPlayer_steps, "Ragdoll/Combust", 0.9f, 1.1f);
+            PlaySound("Ragdoll/Combust");
             FunctionsC.PlayComplexParticleSystemAt(FunctionsC.ParticleSystemType.FIREBALL, _hip.position);
+            var parts = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.BULLET_COLLIDE)[0];
+            parts.transform.position = _hip.position;
+            parts.Play();
           }
           else
-            FunctionsC.PlaySound(ref _audioPlayer_steps, "Ragdoll/Punch", 0.9f, 1.1f);
+            PlaySound("Ragdoll/Punch");
+
       }
       // Enemy armor
       else
@@ -1163,18 +1164,22 @@ public class ActiveRagdoll
             ChangeColor(Color.green, 0.8f);
           }
           else if (_health > 0)
-            FunctionsC.PlaySound(ref _audioPlayer, "Enemies/Metal_hit", 0.8f, 1.2f);
+            PlaySound("Enemies/Metal_hit", 0.8f, 1.2f);
+
         }
         else
         {
           if (damageSourceType == DamageSourceType.FIRE)
           {
-            FunctionsC.PlaySound(ref _audioPlayer, "Ragdoll/Combust", 0.9f, 1.1f);
+            PlaySound("Ragdoll/Combust");
             FunctionsC.PlayComplexParticleSystemAt(FunctionsC.ParticleSystemType.FIREBALL, _hip.position);
             FunctionsC.SpawnExplosionScar(_hip.position);
+            var parts = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.BULLET_COLLIDE)[0];
+            parts.transform.position = _hip.position;
+            parts.Play();
           }
           else
-            FunctionsC.PlaySound(ref _audioPlayer_steps, "Ragdoll/Punch", 0.9f, 1.1f);
+            PlaySound("Ragdoll/Punch");
         }
       }
 
@@ -1216,7 +1221,7 @@ public class ActiveRagdoll
         _grapplee._hip.AddForce(_controller.forward * (1000f + Random.value * 250f));
         _grapplee._hip.AddTorque(new Vector3(Random.value < 0.5f ? -1f : 1f, 0f, 0f) * 10000000f);
 
-        FunctionsC.PlaySound(ref _audioPlayer, "Ragdoll/Neck_snap", 0.85f, 1.2f);
+        PlaySound("Ragdoll/Neck_snap", 0.85f, 1.2f);
       }
 
       // Else, gently let go (?)
@@ -1369,7 +1374,7 @@ public class ActiveRagdoll
         particles_sparks.transform.Rotate(new Vector3(0f, 1f, 0f) * (Random.value * 360f));
         particles_sparks.Play();
 
-        FunctionsC.PlaySound(ref _audioPlayer_steps, "Enemies/Electric_Spark", 0.9f, 1.1f);
+        PlaySound("Enemies/Electric_Spark");
       }
       IEnumerator PlaySparks()
       {
@@ -1381,7 +1386,7 @@ public class ActiveRagdoll
           yield return new WaitForSeconds(0.13f + Random.value * 0.7f);
         }
       }
-      FunctionsC.PlaySound(ref _audioPlayer_steps, "Enemies/Electric_Shock", 0.9f, 1.1f);
+      PlaySound("Enemies/Electric_Shock");
       GameScript._Singleton.StartCoroutine(PlaySparks());
       return;
     }
@@ -1414,8 +1419,7 @@ public class ActiveRagdoll
         GameScript._Singleton.StartCoroutine(BloodFollow(confetti));
 
         // Audio
-        var cSource = confetti.GetComponent<AudioSource>();
-        FunctionsC.PlaySound(ref cSource, "Ragdoll/Confetti", 0.6f, 1.2f);
+        PlaySound("Ragdoll/Confetti", 0.6f, 1.2f);
       }
 
     }
@@ -1489,8 +1493,7 @@ public class ActiveRagdoll
       GameScript._Singleton.StartCoroutine(BloodFollow(blood));
 
       // Audio
-      var aSource = blood.GetComponent<AudioSource>();
-      FunctionsC.PlaySound(ref aSource, "Ragdoll/Blood", 1.2f, 1.5f);
+      PlaySound("Ragdoll/Blood", 1.2f, 1.5f);
     }
   }
 
@@ -1576,14 +1579,6 @@ public class ActiveRagdoll
           explode_script._explosionType = ExplosiveScript.ExplosionType.AWAY;
           explode_script._radius = 3 * 0.8f;
           explode_script.Trigger(source, (damageSourceType == DamageSourceType.MELEE ? 1f : 0.1f), false, true);
-
-          var explode_audio = _hip.gameObject.AddComponent<AudioSource>();
-          explode_audio.playOnAwake = false;
-          explode_audio.spatialBlend = 0.65f;
-
-          explode_script._audio = explode_audio;
-
-          //FunctionsC.PlaySound(ref explode_audio, "Ragdoll/Explode", 0.825f, 1.175f);
         }
       }
 
@@ -1628,7 +1623,7 @@ public class ActiveRagdoll
     }
   }
 
-  public void Recoile(Vector3 dir, float force)
+  public void Recoil(Vector3 dir, float force)
   {
     _force += MathC.Get2DVector(dir) * force;
     if (_grappler != null)
@@ -1638,7 +1633,7 @@ public class ActiveRagdoll
   }
   public void RecoilSimple(float force)
   {
-    Recoile(-transform.forward, force);
+    Recoil(-_controller.forward, force);
   }
 
   IEnumerator Rise()
@@ -1708,7 +1703,7 @@ public class ActiveRagdoll
   {
     if (!_hasArmor) return;
 
-    FunctionsC.PlaySound(ref _audioPlayer_extra, "Enemies/Armor_break", 0.9f, 1.1f);
+    PlaySound("Enemies/Armor_break");
 
     var helmet = _head.transform.GetChild(0).gameObject;
     helmet.transform.parent =
@@ -1753,7 +1748,7 @@ public class ActiveRagdoll
     // FX
     if (playSound)
     {
-      FunctionsC.PlaySound(ref _audioPlayer, "Ragdoll/Combust", 0.9f, 1.1f);
+      PlaySound("Ragdoll/Combust");
     }
     FunctionsC.PlayComplexParticleSystemAt(FunctionsC.ParticleSystemType.SMOKEBALL, spawn_pos);
   }
@@ -2026,22 +2021,9 @@ public class ActiveRagdoll
     }
   }
 
-  public void PlaySound(string soundPath, float min = 1f, float max = 1f)
+  public void PlaySound(string soundPath, float min = 1f, float max = 1f, SfxManager.AudioClass audioClass = SfxManager.AudioClass.NONE, bool changePitch = true)
   {
-    FunctionsC.PlaySound(ref _audioPlayer, soundPath, min, max);
-  }
-  public void PlaySound(ref AudioSource audioPlayer, AudioSource sfx_source, float min = 1f, float max = 1f)
-  {
-    FunctionsC.PlaySound(ref audioPlayer, sfx_source, min, max);
-  }
-  public void PlaySound(ref AudioSource audioPlayer, string soundPath, float min = 1f, float max = 1f)
-  {
-    FunctionsC.PlaySound(ref audioPlayer, soundPath, min, max);
-  }
-
-  public void StopSound()
-  {
-    _audioPlayer.Stop();
+    SfxManager.PlayAudioSourceSimple(_controller.position, soundPath, min, max, audioClass, changePitch);
   }
 
   public static void Reset()
@@ -2050,7 +2032,7 @@ public class ActiveRagdoll
     _Ragdolls = null;
     BodyPart_Handler.Reset();
     Jobs_Clean();
-    FunctionsC.Reset();
+    SfxManager.Reset();
     UtilityScript.Reset();
   }
   public static void SoftReset()

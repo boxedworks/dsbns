@@ -240,9 +240,6 @@ public class PlayerScript : MonoBehaviour
         //thunder_light.shadows = LightShadows.Soft;
 
         GameScript._Singleton._Thunder_Light = thunder_light;
-
-        // Add to audio list
-        FunctionsC.AddToAudioList_Rain();
       }
 
       // Clean up rain SFX
@@ -717,7 +714,10 @@ public class PlayerScript : MonoBehaviour
 
     if (GameScript._Paused)
     {
-      if (_id == 0) FunctionsC.UpdateSFX(0f);
+      if (_id == 0)
+      {
+        SfxManager.Update(0f);
+      }
       return;
     }
 
@@ -810,20 +810,6 @@ public class PlayerScript : MonoBehaviour
                   break;
                 }
               }
-              if (speedMod != 4f && MissleScript._Missles != null)
-              {
-                foreach (var m in MissleScript._Missles)
-                {
-                  if (!m.gameObject.activeSelf || m._source._ragdoll._id == p._ragdoll._id) continue;
-                  if (MathC.Get2DDistance(p._ragdoll._hip.position, m.transform.position) < minDist * 1.5f)
-                  {
-                    //_SlowmoTimer = Mathf.Clamp(_SlowmoTimer + 1f, 0f, 2f);
-                    desiredTimeScale = slowTime;
-                    speedMod = 4f;
-                    break;
-                  }
-                }
-              }
             }
           if (Time.timeScale > desiredTimeScale) speedMod *= 0.5f;
 
@@ -837,7 +823,8 @@ public class PlayerScript : MonoBehaviour
           if (Time.timeScale < 0.01f) Time.timeScale = 0f;
         }
         // Update sounds with Time.timescale
-        FunctionsC.UpdateSFX(1f + -0.7f * ((1f - Time.timeScale) / (0.8f)));
+        var pitch = 1f + -0.7f * ((1f - Time.timeScale) / (0.8f));
+        SfxManager.Update(pitch);
       }
     }
     // Update ragdoll
@@ -1781,13 +1768,14 @@ public class PlayerScript : MonoBehaviour
             var rb = money.GetComponent<Rigidbody>();
             rb.isKinematic = false;
             rb.AddForce(_ragdoll._hip.transform.forward * 100f);
-            FunctionsC.PlaySound(ref _ragdoll._audioPlayer_extra, "Ragdoll/Throw", 0.9f, 1.1f);
+            _ragdoll.PlaySound("Ragdoll/Throw");
 
             IEnumerator sizeChange()
             {
               yield return new WaitForSeconds(0.2f);
               if (collider != null && collider0 != null)
-                FunctionsC.PlaySound(ref _ragdoll._audioPlayer_extra, "Survival/Points_Land_Floor", 0.9f, 1.1f);
+                _ragdoll.PlaySound("Survival/Points_Land_Floor");
+
               yield return new WaitForSeconds(0.3f);
               if (collider != null && collider0 != null)
                 Physics.IgnoreCollision(collider, collider0, false);
@@ -1800,7 +1788,8 @@ public class PlayerScript : MonoBehaviour
         // If classic, whistle
         else
         {
-          FunctionsC.PlaySound(ref _ragdoll._audioPlayer_steps, "Ragdoll/Whistle", 0.85f, 1.2f);
+          _ragdoll.PlaySound("Ragdoll/Whistle", 0.85f, 1.2f);
+
           EnemyScript.CheckSound(_ragdoll._hip.position + _ragdoll._hip.transform.forward * 3f, _ragdoll._hip.position, EnemyScript.Loudness.SOFT);
           _ragdoll.DisplayText("!");
 
@@ -2059,7 +2048,7 @@ public class PlayerScript : MonoBehaviour
           if (Time.time - _LastMoneyPickupNoiseTime > 0.1f)
           {
             _LastMoneyPickupNoiseTime = Time.time;
-            FunctionsC.PlaySound(ref _ragdoll._audioPlayer_extra, "Survival/Pickup_Points", 0.9f, 1.1f);
+            _ragdoll.PlaySound("Survival/Pickup_Points");
           }
           break;
         }

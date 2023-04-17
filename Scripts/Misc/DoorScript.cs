@@ -11,6 +11,8 @@ public class DoorScript : CustomEntity
   Transform _door;
   public CustomEntityUI _button;
 
+  AudioSource _sfx;
+
   public bool _hasButton
   {
     get { return _button != null; }
@@ -21,8 +23,6 @@ public class DoorScript : CustomEntity
   public bool _XScale, _opened;
   bool _original;
   public float _Speed;
-
-  AudioSource _audio_door, _audio_button;
 
   Light _l;
   Collider _collider0, _collider1;
@@ -38,8 +38,6 @@ public class DoorScript : CustomEntity
     _door = transform.GetChild(0).GetChild(0);
 
     _saveDoorPos = _door.position;
-
-    _audio_door = GetComponent<AudioSource>();
 
     _collider0 = _door.GetComponent<Collider>();
     _collider1 = _door.GetComponents<Collider>()[1];
@@ -113,7 +111,7 @@ public class DoorScript : CustomEntity
     if (_normalizedTime == 1f || _normalizedTime == 0f)
     {
       _opening = false;
-      _audio_door.Stop();
+      _sfx?.Stop();
       _ps_dust.Stop();
 
     }
@@ -126,7 +124,10 @@ public class DoorScript : CustomEntity
 
   public void Toggle()
   {
-    if (_button != null) FunctionsC.PlaySound(ref _audio_button, "Ragdoll/Tick", 0.9f, 1.1f);
+    if (_button != null)
+    {
+      SfxManager.PlayAudioSourceSimple(transform.position, "Ragdoll/Tick");
+    }
 
     if (!GameScript._EditorEnabled)
       EnemyScript.CheckSound(_door.position, EnemyScript.Loudness.SOFT);
@@ -143,8 +144,12 @@ public class DoorScript : CustomEntity
 
     _opening = true;
 
-    FunctionsC.PlaySound(ref _audio_door, "Etc/Door_open", 1.1f, 1.3f);
-    _audio_door.loop = true;
+    _sfx = SfxManager.PlayAudioSourceSimple(transform.position, "Etc/Door_open", 1.1f, 1.3f);
+    if (_sfx != null)
+    {
+      _sfx.loop = true;
+    }
+
     _ps_dust.Play();
   }
 
@@ -153,10 +158,12 @@ public class DoorScript : CustomEntity
     Toggle();
   }
 
-  public void Reset()
+  public void OnDestroy()
   {
-    if (_opened == _original) return;
-    _opened = _original;
-    Toggle(_original);
+    if (_sfx != null)
+    {
+      _sfx.loop = false;
+      _sfx.Stop();
+    }
   }
 }

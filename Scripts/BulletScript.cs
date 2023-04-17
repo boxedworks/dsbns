@@ -45,17 +45,6 @@ public class BulletScript : MonoBehaviour
     set { p = value; }
   }
 
-  AudioSource audioSource;
-  AudioSource _audioSource
-  {
-    get
-    {
-      if (audioSource == null) audioSource = _p.GetComponent<AudioSource>();
-      return audioSource;
-    }
-    set { audioSource = value; }
-  }
-
   float _startTime;
 
   new Light light;
@@ -206,7 +195,7 @@ public class BulletScript : MonoBehaviour
         if ((item._ragdoll?._swinging ?? false))
         {
           if (item._ragdoll._id != _sourceRagdoll._id)
-            Deflect(item._ragdoll, true);
+            Deflect(item, true);
         }
         else
         {
@@ -216,7 +205,7 @@ public class BulletScript : MonoBehaviour
           parts.transform.position = transform.position;
           parts.Emit(1);
 
-          item._ragdoll.Recoile(-(_sourceItem.transform.position - item.transform.position).normalized, _rb.velocity.magnitude / 15f);
+          item._ragdoll.Recoil(-(_sourceItem.transform.position - item.transform.position).normalized, _rb.velocity.magnitude / 25f);
 
           Hide();
         }
@@ -226,7 +215,7 @@ public class BulletScript : MonoBehaviour
       {
         // Check bullet damage
         var bullet_other = collider.GetComponent<BulletScript>();
-        if (bullet_other._triggered) return;
+        if (bullet_other._triggered || (bullet_other._sourceItem._type == GameScript.ItemManager.Items.FLAMETHROWER)) return;
         if (bullet_other.GetRagdollID() == GetRagdollID()) return;
 
         var damage_self = _penatrationAmount;
@@ -305,7 +294,7 @@ public class BulletScript : MonoBehaviour
 #endif
 
           // Deflect self
-          Deflect(r);
+          Deflect(r._itemL == null ? r._itemR : r._itemL);
           return;
         }
         if (TakeDamage(r)) return;
@@ -363,24 +352,17 @@ public class BulletScript : MonoBehaviour
 
   public void PlaySparks(bool other_bullet = false)
   {
-    var s = _audioSource;
     if (other_bullet)
     {
-      s.volume = 0.8f;
-      FunctionsC.PlaySound(ref s, "Etc/Bullet_ricochet", 0.9f, 1.1f);
+      SfxManager.PlayAudioSourceSimple(transform.position, "Etc/Bullet_ricochet");
 
-      /*var parts = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.BULLET_COLLIDE)[0];
-      parts.transform.position = transform.position;
-      parts.Play();*/
       var parts = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.BULLET_COLLIDE)[0];
       parts.transform.position = transform.position;
-      //parts.transform.LookAt(transform.position + -transform.forward);
       parts.Play();
     }
     else
     {
-      s.volume = 0.5f;
-      FunctionsC.PlaySound(ref s, "Etc/Bullet_impact", 0.9f, 1.1f);
+      SfxManager.PlayAudioSourceSimple(transform.position, "Etc/Bullet_impact");
 
       var parts = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.SPARKS)[0];
       parts.transform.position = transform.position;
@@ -475,7 +457,7 @@ public class BulletScript : MonoBehaviour
 
   ActiveRagdoll _sourceRagdoll;
   bool _deflected;
-  void Deflect(ActiveRagdoll redirector, bool recoil = false)
+  void Deflect(ItemScript redirectorItem, bool recoil = false)
   {
     _deflected = true;
 
@@ -484,21 +466,20 @@ public class BulletScript : MonoBehaviour
     rb.velocity = -MathC.Get2DVector(rb.position - _sourceRagdoll._hip.position).normalized * speed * 1.6f;
 
     // Do not hurt person who just redirected
-    _sourceRagdoll = redirector;
+    _sourceRagdoll = redirectorItem._ragdoll;
 
     //
     PlayerScript._SlowmoTimer += 1.3f;
 
     // Refresh weapon timer if reflected bullets; use again instantly
-    redirector._itemL.PlayBulletHit();
-    redirector._itemL?.DeflectedBullet();
-    redirector._itemR?.DeflectedBullet();
+    redirectorItem.PlayBulletHit();
+    redirectorItem.DeflectedBullet();
 
     // Sparks
     PlaySparks(true);
 
     // Recoil char
     if (recoil)
-      redirector.Recoile(-(_sourceItem.transform.position - redirector._controller.transform.position).normalized, _rb.velocity.magnitude / 20f);
+      _sourceRagdoll.Recoil(-(_sourceItem.transform.position - _sourceRagdoll._controller.transform.position).normalized, _rb.velocity.magnitude / 30f);
   }
 }

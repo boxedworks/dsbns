@@ -267,8 +267,8 @@ public class TileManager
               return "grenade";
             case (GameScript.ItemManager.Items.SHOTGUN_PUMP):
               return "shotgun";
-            case (GameScript.ItemManager.Items.ROCKET_LAUNCHER):
-              return "rocketlauncher";
+            case (GameScript.ItemManager.Items.GRENADE_LAUNCHER):
+              return "grenadelauncher";
             case (GameScript.ItemManager.Items.BAT):
               return "bat";
           }
@@ -1099,8 +1099,8 @@ public class TileManager
                 case ("shotgun"):
                   item = GameScript.ItemManager.Items.SHOTGUN_PUMP;
                   break;
-                case ("rocketlauncher"):
-                  item = GameScript.ItemManager.Items.ROCKET_LAUNCHER;
+                case ("grenadelauncher"):
+                  item = GameScript.ItemManager.Items.GRENADE_LAUNCHER;
                   break;
                 case ("bat"):
                   item = GameScript.ItemManager.Items.BAT;
@@ -1873,6 +1873,7 @@ public class TileManager
     // Reload current map
     _Dev_Time_Save = TileManager._LevelTime_Dev;
     //Debug.Log("saved dev time: " + _Dev_Time_Save);
+
     LoadMap(_CurrentMapData, true);
 
     // Show menus
@@ -2099,7 +2100,7 @@ public class TileManager
     if (!GameScript.IsSurvival())
     {
       if (EnemyScript._Enemies_alive != null)
-        foreach (EnemyScript e in EnemyScript._Enemies_alive)
+        foreach (var e in EnemyScript._Enemies_alive)
         {
           if (e._isZombie)
           {
@@ -2107,15 +2108,15 @@ public class TileManager
             continue;
           }
           e.enabled = false;
-          Transform controller = e.transform.parent.GetChild(0);
+          var controller = e.transform.parent.GetChild(0);
           controller.position = e._startPosition;
-          GameObject controller_visual = GiveEnemyVisual(ref controller);
+          var controller_visual = GiveEnemyVisual(ref controller);
           ChangeEnemyType(e, controller_visual.GetComponent<MeshRenderer>());
           controller.GetComponent<UnityEngine.AI.NavMeshAgent>().enabled = false;
           GameObject.Destroy(e.GetRagdoll().transform.gameObject);
         }
       if (EnemyScript._Enemies_dead != null)
-        foreach (EnemyScript e in EnemyScript._Enemies_dead)
+        foreach (var e in EnemyScript._Enemies_dead)
         {
           if (e._isZombie)
           {
@@ -2123,9 +2124,9 @@ public class TileManager
             continue;
           }
           e.enabled = false;
-          Transform controller = e.transform.parent.GetChild(0);
+          var controller = e.transform.parent.GetChild(0);
           controller.position = e._startPosition;
-          GameObject controller_visual = GiveEnemyVisual(ref controller);
+          var controller_visual = GiveEnemyVisual(ref controller);
           ChangeEnemyType(e, controller_visual.GetComponent<MeshRenderer>());
           controller.GetComponent<UnityEngine.AI.NavMeshAgent>().enabled = false;
           GameObject.Destroy(e.GetRagdoll().transform.gameObject);
@@ -2553,7 +2554,7 @@ public class TileManager
 
             enemy_type = "Grenade";
             break;
-          case GameScript.ItemManager.Items.ROCKET_LAUNCHER:
+          case GameScript.ItemManager.Items.GRENADE_LAUNCHER:
 
             enemy_type = "Grenade launcher";
             break;
@@ -4159,7 +4160,7 @@ public class TileManager
     else if (script._itemLeft == GameScript.ItemManager.Items.REVOLVER) currentType = 4;
     else if (script._itemLeft == GameScript.ItemManager.Items.SHOTGUN_PUMP) currentType = 5;
     else if (script._itemLeft == GameScript.ItemManager.Items.GRENADE_HOLD) currentType = 6;
-    else if (script._itemLeft == GameScript.ItemManager.Items.ROCKET_LAUNCHER) currentType = 7;
+    else if (script._itemLeft == GameScript.ItemManager.Items.GRENADE_LAUNCHER) currentType = 7;
     else if (script._itemLeft == GameScript.ItemManager.Items.BAT) currentType = 8;
     currentType += change;
 
@@ -4203,7 +4204,7 @@ public class TileManager
         changeColor.material.color = Color.red + Color.yellow;
         break;
       case (7):
-        script._itemLeft = GameScript.ItemManager.Items.ROCKET_LAUNCHER;
+        script._itemLeft = GameScript.ItemManager.Items.GRENADE_LAUNCHER;
         changeColor.material.color = Color.yellow;
         break;
       case (8):
@@ -4222,6 +4223,7 @@ public class TileManager
     controller_visual.GetComponent<MeshRenderer>().sharedMaterial.color = Color.red;
     controller_visual.transform.localScale = new Vector3(0.5f, 0.5f, 0.5f);
     controller_visual.transform.localPosition = Vector3.zero + new Vector3(0f, 1.5f, 0f);
+
     // Enable waypoint renderers
     var path = controller.parent.GetChild(1);
     for (var i = 0; i < path.childCount; i++)
@@ -4229,6 +4231,7 @@ public class TileManager
       var waypoint = path.GetChild(i);
       waypoint.gameObject.SetActive(true);
       waypoint.gameObject.GetComponent<MeshRenderer>().enabled = true;
+
       // Enable lookpoint renderers
       for (var u = 0; u < waypoint.childCount; u++)
       {

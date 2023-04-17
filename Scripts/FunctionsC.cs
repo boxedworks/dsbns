@@ -13,7 +13,6 @@ public static class FunctionsC
   public static void Init()
   {
     s_soundLibrary = new Dictionary<string, Dictionary<string, AudioSource>>();
-
     s_ParticlesAll = Object.FindObjectsOfType<ParticleSystem>();
 
     // Populate audio library
@@ -24,7 +23,7 @@ public static class FunctionsC
       var sublib = new Dictionary<string, AudioSource>();
       for (var u = 0; u < root.childCount; u++)
       {
-        Transform sound = root.GetChild(u);
+        var sound = root.GetChild(u);
         sublib.Add(sound.name, sound.GetComponent<AudioSource>());
       }
       s_soundLibrary.Add(root.name, sublib);
@@ -47,12 +46,6 @@ public static class FunctionsC
     Quaternion rotation = gameObject.transform.localRotation;
     rotation.eulerAngles = new Vector3(rotation.eulerAngles.x, newLocalY, rotation.eulerAngles.z);
     gameObject.transform.localRotation = rotation;
-  }
-
-  public static void ChangePitch(ref AudioSource s, float min = 0.9f, float max = 1.1f)
-  {
-    if (min == max) { s.pitch = min; return; }
-    s.pitch = min + Random.value * (max - min);
   }
 
   // Data structure returned via Player distance queries
@@ -123,39 +116,6 @@ public static class FunctionsC
     for (var i = 1; i < corners.Length; i++)
       dist += (corners[i] - corners[i - 1]).magnitude;
     return dist;
-  }
-
-  public static void PlayOneShot(AudioSource s, bool addToAudioList = true)
-  {
-    PlayOneShot(s, s.clip, addToAudioList);
-  }
-  public static void PlayOneShot(AudioSource s, AudioClip c, bool addToAudioList = true)
-  {
-    // Check for null
-    if (s == null || c == null || Settings._VolumeSFX == 0) return;
-
-    // Add to audio list
-    if (addToAudioList)
-      AddToAudioList(ref s);
-
-    // Set volume
-    s.volume *= Settings._VolumeSFX / 5f;
-
-    // Play
-    s.PlayOneShot(c);
-  }
-  public static void PlayAudioSource(ref AudioSource s, float min = 0.9f, float max = 1.1f, bool always_play = false)
-  {
-    if (s == null || (!always_play && Settings._VolumeSFX == 0))
-      return;
-
-    AddToAudioList(ref s);
-    if (!s.isPlaying)
-    {
-      ChangePitch(ref s, min, max);
-      s.volume *= Settings._VolumeSFX / 5f;
-      s.Play();
-    }
   }
 
   public enum ParticleSystemType
@@ -326,23 +286,7 @@ public static class FunctionsC
     return particles;
   }
 
-  static Dictionary<AudioSource, System.Tuple<float, float>> _PlayingAudio;
-  public static void AddToAudioList(ref AudioSource s)
-  {
-    if (s == null) return;
-    if (_PlayingAudio == null) _PlayingAudio = new Dictionary<AudioSource, System.Tuple<float, float>>();
-    if (_PlayingAudio.ContainsKey(s)) { _PlayingAudio[s] = System.Tuple.Create<float, float>(s.pitch, _PlayingAudio[s].Item2); return; }
-    _PlayingAudio.Add(s, System.Tuple.Create<float, float>(s.pitch, s.volume));
-  }
-  public static void AddToAudioList_Rain()
-  {
-    if (_Rain_Pair == null) return;
-    var rain_sfx = GameScript._Singleton._Rain_Audio;
-    if (_PlayingAudio == null) _PlayingAudio = new Dictionary<AudioSource, System.Tuple<float, float>>();
-    if (_PlayingAudio.ContainsKey(rain_sfx)) return;
-    _PlayingAudio.Add(rain_sfx, _Rain_Pair);
-
-  }
+  static Dictionary<AudioSource, System.Tuple<float, float>> s_playingAudio;
 
   // Find folder
   static public AudioSource GetAudioClip(string soundPath)
@@ -357,85 +301,6 @@ public static class FunctionsC
     }
 
     return sfx_source;
-  }
-
-  static public void PlaySound(ref AudioSource speaker, string soundPath, float pitch_min = 1f, float pitch_max = 1f)
-  {
-    if (speaker == null || Settings._VolumeSFX == 0) return;
-    if (_PlayingAudio == null) _PlayingAudio = new Dictionary<AudioSource, System.Tuple<float, float>>();
-
-    // Find folder
-    var sfx_source = GetAudioClip(soundPath);
-    speaker.volume = sfx_source.volume;
-    speaker.pitch = sfx_source.pitch;
-
-    // Change pitch
-    if (pitch_min != 1f || pitch_max != 1f) ChangePitch(ref speaker, pitch_min, pitch_max);
-
-    // PlayOneShot
-    PlayOneShot(speaker, sfx_source.clip);
-  }
-
-  static public void PlaySound(ref AudioSource speaker, AudioSource sfx_source, float min = 1f, float max = 1f)
-  {
-    if (speaker == null || Settings._VolumeSFX == 0) return;
-    if (_PlayingAudio == null) _PlayingAudio = new Dictionary<AudioSource, System.Tuple<float, float>>();
-
-    if (sfx_source == null)
-    {
-      return;
-    }
-    speaker.volume = sfx_source.volume;
-    speaker.pitch = sfx_source.pitch;
-
-    // Change pitch
-    if (min != 1f || max != 1f) ChangePitch(ref speaker, min, max);
-
-    // PlayOneShot
-    PlayOneShot(speaker, sfx_source.clip);
-  }
-
-  public static void UpdateSFX(float pitch)
-  {
-    if (_PlayingAudio == null) return;
-    foreach (var pair in _PlayingAudio)
-    {
-      // Check for null audio
-      if (pair.Key == null) { _PlayingAudio.Remove(pair.Key); break; }
-
-      // Get audio settings; pitch and volume
-      var settings = pair.Value;
-
-      // Remove audio that stopped playing; set defaults back
-      if (!pair.Key.isPlaying)
-      {
-        pair.Key.pitch = settings.Item1;
-        pair.Key.volume = settings.Item2;
-        _PlayingAudio.Remove(pair.Key); break;
-      }
-
-      // Update pitch
-      pair.Key.pitch = settings.Item1 * pitch;
-      // Update volume
-      pair.Key.volume = settings.Item2 * Settings._VolumeSFX / 5f;
-    }
-  }
-
-  static System.Tuple<float, float> _Rain_Pair;
-  public static void Reset()
-  {
-    if (_PlayingAudio == null) return;
-    foreach (var pair in _PlayingAudio)
-    {
-      if (pair.Key == null) continue;
-
-      if (pair.Key.clip != null && pair.Key.clip.name == "rain") { if (_Rain_Pair == null) _Rain_Pair = pair.Value; continue; }
-
-      pair.Key.pitch = pair.Value.Item1;
-      pair.Key.volume = pair.Value.Item2;
-      pair.Key.Stop();
-    }
-    _PlayingAudio = null;
   }
 
   public static Powerup SpawnPowerup(Powerup.PowerupType type)
@@ -453,19 +318,6 @@ public static class FunctionsC
     return !(0 > mousepos.x || 0 > mousepos.y || Screen.width < mousepos.x || Screen.height < mousepos.y);
   }
 
-  public static IEnumerator MoveCoroutine(Transform transform, Vector3 start, Vector3 end, float time)
-  {
-    float t = 0f,
-      interval = 0.015f;
-    while (t < time)
-    {
-      transform.position = Vector3.Lerp(start, end, t / time);
-      t += interval;
-      yield return new WaitForSeconds(interval);
-    }
-    transform.position = end;
-  }
-
   // Return a list a ragdolls if they are a distance (radius) from a point (distance)
   public static ActiveRagdoll[] CheckRadius(Vector3 position, float radius, bool raycast = false)
   {
@@ -474,6 +326,7 @@ public static class FunctionsC
     {
       // Sanitize
       if (r._hip == null) continue;
+
       // Check radius
       if (MathC.Get2DDistance(position, r._hip.position) > radius) continue;
       returnList.Add(r);
@@ -693,8 +546,7 @@ public static class FunctionsC
       paper.transform.Rotate(new Vector3(1f, 0f, 0f), UnityEngine.Random.value * -20f);
       paper.Play();
 
-      var a = c.GetComponent<AudioSource>();
-      FunctionsC.PlayAudioSource(ref a);
+      SfxManager.PlayAudioSourceSimple(source_pos, "Etc/Papers");
     }
 
     public static void RegisterBooks(Transform books)
@@ -706,11 +558,12 @@ public static class FunctionsC
 
   }
 
+
   // MUSIC
   public static class MusicManager
   {
-    public static int _CurrentTrack;
-    public static string[] _TrackNames = new string[]
+    public static int s_CurrentTrack;
+    public static string[] s_TrackNames = new string[]
     {
       // Menu music
       "Local Forecast - Elevator",
@@ -745,40 +598,40 @@ public static class FunctionsC
       "AcidJazz",
       "Faster Does It",
     };
-    static bool _Transitioning;
+    static bool s_transitioning;
 
-    public static AudioSource _TrackSource;
-    public static int _TrackOffset = 3;
+    public static AudioSource s_TrackSource;
+    public static int s_TrackOffset = 3;
 
     // Create the AudioSource component and play the menu music
     public static void Init()
     {
-      _TrackSource = GameScript._Singleton.gameObject.AddComponent<AudioSource>();
-      _TrackSource.playOnAwake = false;
+      s_TrackSource = GameScript._Singleton.gameObject.AddComponent<AudioSource>();
+      s_TrackSource.playOnAwake = false;
     }
 
     // Load an audio track async to prevent lag; returns a ResourceRequest that tells when the loading is complete
     static ResourceRequest LoadAudioClipAsync(int trackIndex)
     {
-      return Resources.LoadAsync<AudioClip>("Music/" + _TrackNames[trackIndex]);
+      return Resources.LoadAsync<AudioClip>("Music/" + s_TrackNames[trackIndex]);
     }
 
     public static void PlayTrack(int trackIndex)
     {
-      if (trackIndex > _TrackNames.Length - 1) throw new System.IndexOutOfRangeException($"Trying to access _TrackNames[{trackIndex}]");
-      _Transitioning = true;
+      if (trackIndex > s_TrackNames.Length - 1) throw new System.IndexOutOfRangeException($"Trying to access _TrackNames[{trackIndex}]");
+      s_transitioning = true;
       // Stop track and unload resource
-      if (_TrackSource.isPlaying)
-        _TrackSource.Stop();
+      if (s_TrackSource.isPlaying)
+        s_TrackSource.Stop();
       UnloadCurrentTrack();
       IEnumerator LoadAsync()
       {
         ResourceRequest musicRequest = LoadAudioClipAsync(trackIndex);
         while (!musicRequest.isDone) yield return new WaitForSecondsRealtime(0.06f);
-        _TrackSource.clip = musicRequest.asset as AudioClip;
-        _TrackSource.Play();
-        _CurrentTrack = trackIndex;
-        _Transitioning = false;
+        s_TrackSource.clip = musicRequest.asset as AudioClip;
+        s_TrackSource.Play();
+        s_CurrentTrack = trackIndex;
+        s_transitioning = false;
       }
       GameScript._Singleton.StartCoroutine(LoadAsync());
     }
@@ -786,8 +639,8 @@ public static class FunctionsC
     // fade out current music and play a new track
     public static void TransitionTo(int trackIndex)
     {
-      if (trackIndex > _TrackNames.Length - 1) throw new System.IndexOutOfRangeException($"Trying to access _TrackNames[{trackIndex}]");
-      _Transitioning = true;
+      if (trackIndex > s_TrackNames.Length - 1) throw new System.IndexOutOfRangeException($"Trying to access _TrackNames[{trackIndex}]");
+      s_transitioning = true;
       IEnumerator TransitionToCo()
       {
 
@@ -800,20 +653,20 @@ public static class FunctionsC
         {
           t = Mathf.Clamp(t - 0.05f, 0f, 1f);
           yield return new WaitForSecondsRealtime(0.05f);
-          _TrackSource.volume = t * (Settings._VolumeMusic / 5f);
+          s_TrackSource.volume = t * (Settings._VolumeMusic / 5f);
         }
         UnloadCurrentTrack();
 
         // Wait for music to load
         while (!musicRequest.isDone) yield return new WaitForSecondsRealtime(0.05f);
-        _TrackSource.Stop();
+        s_TrackSource.Stop();
 
         // Play new song
-        _TrackSource.clip = musicRequest.asset as AudioClip;
-        _TrackSource.Play();
-        _TrackSource.volume = (Settings._VolumeMusic / 5f);
-        _CurrentTrack = trackIndex;
-        _Transitioning = false;
+        s_TrackSource.clip = musicRequest.asset as AudioClip;
+        s_TrackSource.Play();
+        s_TrackSource.volume = (Settings._VolumeMusic / 5f);
+        s_CurrentTrack = trackIndex;
+        s_transitioning = false;
       }
       GameScript._Singleton.StartCoroutine(TransitionToCo());
     }
@@ -821,24 +674,24 @@ public static class FunctionsC
     // Unload tracks not being played to reduce memory usage
     static void UnloadCurrentTrack()
     {
-      Resources.UnloadAsset(_TrackSource.clip);
-      _TrackSource.clip = null;
+      Resources.UnloadAsset(s_TrackSource.clip);
+      s_TrackSource.clip = null;
     }
 
     // Check if song ended, play next in queue
     public static void Update()
     {
-      if (!_TrackSource.isPlaying && !_Transitioning)
+      if (!s_TrackSource.isPlaying && !s_transitioning)
       {
         // Check for menu music
         if (Menu2._InMenus)
         {
-          if (_CurrentTrack < _TrackOffset)
+          if (s_CurrentTrack < s_TrackOffset)
           {
             // If unlocked difficulty 1, play faster track
             if (Settings._DifficultyUnlocked > 0)
             {
-              if (_CurrentTrack != 1)
+              if (s_CurrentTrack != 1)
               {
                 TransitionTo(1);
                 return;
@@ -847,13 +700,13 @@ public static class FunctionsC
             // Else, play slower track
             else
             {
-              if (_CurrentTrack != 0)
+              if (s_CurrentTrack != 0)
               {
                 TransitionTo(0);
                 return;
               }
             }
-            _TrackSource.Play();
+            s_TrackSource.Play();
             return;
           }
         }
@@ -879,13 +732,13 @@ public static class FunctionsC
       // SURVIVAL mode music
       if (GameScript._GameMode == GameScript.GameModes.SURVIVAL)
       {
-        if (_CurrentTrack == 0 || _CurrentTrack == 1 || _CurrentTrack == 2)
-          _CurrentTrack = 3;
+        if (s_CurrentTrack == 0 || s_CurrentTrack == 1 || s_CurrentTrack == 2)
+          s_CurrentTrack = 3;
         else
-          _CurrentTrack++;
-        if (_CurrentTrack >= _TrackNames.Length)
-          _CurrentTrack -= 3;
-        return _CurrentTrack;
+          s_CurrentTrack++;
+        if (s_CurrentTrack >= s_TrackNames.Length)
+          s_CurrentTrack -= 3;
+        return s_CurrentTrack;
       }
       else
       {
@@ -894,23 +747,23 @@ public static class FunctionsC
         if (Levels._LevelPack_Playing || GameScript._EditorTesting)
         {
 
-          var songs_length = _TrackNames.Length - 3;
+          var songs_length = s_TrackNames.Length - 3;
           var song_index = Random.Range(0, songs_length);
 
           return song_index + 3;
         }
 
         // CLASSIC mode music
-        var iter_base = Mathf.RoundToInt((Levels._CurrentLevelIndex) / ((float)_TrackLevelRange) / ((float)_TrackNames.Length / 3f - 1));
+        var iter_base = Mathf.RoundToInt((Levels._CurrentLevelIndex) / ((float)_TrackLevelRange) / ((float)s_TrackNames.Length / 3f - 1));
         iter_base *= 3;
-        iter_base += _TrackOffset;
+        iter_base += s_TrackOffset;
         var iter = 0;
-        if (_CurrentTrack <= iter_base + 2 && _CurrentTrack >= iter_base)
-          iter = ++_CurrentTrack;
+        if (s_CurrentTrack <= iter_base + 2 && s_CurrentTrack >= iter_base)
+          iter = ++s_CurrentTrack;
         else
         {
           iter = iter_base + Random.Range(0, 3);
-          if (iter == _CurrentTrack)
+          if (iter == s_CurrentTrack)
             iter++;
         }
         if (iter > iter_base + 2)

@@ -10,6 +10,8 @@ public class ItemScript : MonoBehaviour
   public ActiveRagdoll _ragdoll;
   ActiveRagdoll.Side _side;
 
+  AudioSource _sfx0, _sfx1;
+
   public int _clipSize, _minimumClipToFire, _projectilesPerShot, _burstPerShot, _penatrationAmount;
   public bool _reloading, _melee, _twoHanded, _runWhileUse, _reloadOneAtTime, _silenced, _throwable, _dismember, _useOnRelease, _randomSpread, _chargeHold;
   public float _useTime, _reloadTime, _useRate, _downTime, _burstRate, _hit_force, _bullet_spread, _shoot_force, _shoot_forward_force;
@@ -106,8 +108,6 @@ public class ItemScript : MonoBehaviour
 
   public ItemType _type;
 
-  protected AudioSource[] _audioSources;
-
   List<int> _hitRagdolls;
 
   public enum Audio
@@ -131,12 +131,14 @@ public class ItemScript : MonoBehaviour
   // Play SFX via enum
   protected int GetAudioSource(Audio audio)
   {
-    if (_audioSources == null) return -1;
-
     int iter = 0;
     switch (audio)
     {
       case Audio.GUN_SHOOT:
+        if (_type == ItemType.FLAMETHROWER)
+        {
+          iter = -1;
+        }
         break;
       case Audio.GUN_RELOAD:
         if (_type == ItemType.FLAMETHROWER && _clip % 15 == 14)
@@ -176,25 +178,23 @@ public class ItemScript : MonoBehaviour
         break;
     }
 
-    if (iter >= _audioSources.Length) return -1;
+    if (iter >= _sfx_clip.Length) return -1;
 
     return iter;
   }
   // Play SFX via enum
   protected void PlaySound(Audio audioType, float pitchMin = 0.9f, float pitchMax = 1.1f)
   {
-    PlaySound(GetAudioSource(audioType), pitchMin, pitchMax);
+    var sfx = PlaySound(GetAudioSource(audioType), pitchMin, pitchMax);
+    if (audioType == Audio.MELEE_SWING || audioType == Audio.GUN_RELOAD)
+    {
+      _sfx_hold = sfx;
+    }
   }
-  protected void PlaySound(int source_index, float pitchMin = 0.9f, float pitchMax = 1.1f)
+  protected AudioSource PlaySound(int source_index, float pitchMin = 0.9f, float pitchMax = 1.1f)
   {
-    if (source_index == -1) return;
-
-    var source = _audioSources[source_index];
-    source.clip = _sfx_clip[source_index];
-    source.volume = _sfx_volume[source_index];
-
-    FunctionsC.ChangePitch(ref source, pitchMin, pitchMax);
-    FunctionsC.PlayOneShot(source);
+    if (source_index == -1) return null;
+    return transform.PlayAudioSourceSimple(_sfx_clip[source_index], SfxManager.AudioClass.NONE, _sfx_volume[source_index], Random.Range(pitchMin, pitchMax));
   }
 
   GameObject _laserSight;
@@ -228,7 +228,23 @@ public class ItemScript : MonoBehaviour
 
   private void OnDestroy()
   {
+
+    // Mod
     if (_laserSight) GameObject.Destroy(_laserSight);
+
+    // Sfx
+    if (_sfx0 != null)
+    {
+      _sfx0.loop = false;
+      _sfx0.Stop();
+      _sfx0 = null;
+    }
+    if (_sfx1 != null)
+    {
+      _sfx1.loop = false;
+      _sfx1.Stop();
+      _sfx1 = null;
+    }
   }
 
   static int _ID;
@@ -264,36 +280,11 @@ public class ItemScript : MonoBehaviour
         _BulletPool[i] = bullet.GetComponent<BulletScript>();
         rbs.Add(bullet.GetComponent<Collider>());
       }
-      /*/ Ignore bullet collisions
-      foreach (var c0 in rbs)
-        foreach (var c1 in rbs)
-          if (c0.GetInstanceID() == c1.GetInstanceID())
-            continue;
-          else
-            Physics.IgnoreCollision(c0, c1, true);*/
-    }
-
-    // Get item sounds
-    _audioSources = new AudioSource[_sfx_clip.Length];
-    for (var i = 0; i < _audioSources.Length; i++)
-    {
-      _audioSources[i] = gameObject.AddComponent<AudioSource>();
-      _audioSources[i].playOnAwake = false;
-      _audioSources[i].spatialBlend = 0.7f;
     }
 
     // Check special types
     if (_type == ItemType.FLAMETHROWER)
     {
-      // Set audio
-      _audioSources[3].clip = _sfx_clip[3];
-      _audioSources[3].volume = _sfx_volume[3];
-      _audioSources[3].loop = true;
-
-      _audioSources[4].clip = _sfx_clip[4];
-      _audioSources[4].volume = _sfx_volume[4];
-      _audioSources[4].loop = true;
-
       // Gather components
       _customParticles = new ParticleSystem[] { transform.GetChild(4).gameObject.GetComponent<ParticleSystem>() };
       _customLights = new Light[] { transform.GetChild(5).gameObject.GetComponent<Light>() };
@@ -466,13 +457,13 @@ public class ItemScript : MonoBehaviour
             p.position = transform.position + Vector3.up * 0.5f;
             p.rotation3D = q.eulerAngles;
             bullet_casing.Emit(p, 1);
-            FunctionsC.PlaySound(ref _ragdoll._audioPlayer_extra, "Ragdoll/Bullet_Casing", 0.8f, 1.2f);
+            SfxManager.PlayAudioSourceSimple(transform.position, "Ragdoll/Bullet_Casing", 0.8f, 1.2f);
 
             // Barrel smoke fx
             var ps_gunsmoke = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.GUN_SMOKE);
             foreach (var p_gunsmoke in ps_gunsmoke)
             {
-              p_gunsmoke.transform.position = transform.position + transform.forward * (0.3f + (_type == ItemType.DMR || _type == ItemType.AK47 || _type == ItemType.M16 || _type == ItemType.RIFLE || _type == ItemType.RIFLE_LEVER || _type == ItemType.ROCKET_LAUNCHER || _type == ItemType.SHOTGUN_BURST || _type == ItemType.SHOTGUN_PUMP ? 0.35f : 0f));
+              p_gunsmoke.transform.position = transform.position + transform.forward * (0.3f + (_type == ItemType.DMR || _type == ItemType.AK47 || _type == ItemType.M16 || _type == ItemType.RIFLE || _type == ItemType.RIFLE_LEVER || _type == ItemType.ROCKET_LAUNCHER || _type == ItemType.SHOTGUN_BURST || _type == ItemType.GRENADE_LAUNCHER || _type == ItemType.SHOTGUN_PUMP ? 0.35f : 0f));
               p_gunsmoke.transform.LookAt(transform.position + transform.forward);
               p_gunsmoke.Play();
             }
@@ -563,6 +554,15 @@ public class ItemScript : MonoBehaviour
         if (light.range < min_range + 0.1f) light.range = min_range;
         else light.range += (min_range - light.range) * Time.deltaTime * 5f;
       }
+
+      if (_sfx0 != null)
+      {
+        _sfx0.transform.position = transform.position;
+      }
+      if (_sfx1 != null)
+      {
+        _sfx1.transform.position = transform.position;
+      }
     }
 
     // Check for dead
@@ -619,23 +619,39 @@ public class ItemScript : MonoBehaviour
 
       // Particles
       if (flames.isPlaying && (!_used || _reloading || _clip == 0))
-        flames.Stop();
+        flames.Stop(true);
       else if (!flames.isEmitting && (_used && !_reloading && _clip > 0))
-        flames.Play();
+        flames.Play(true);
 
-      // Sound
+      // Sfx
       if (flames.isEmitting)
       {
-        if (!_audioSources[4].isPlaying)
-          FunctionsC.PlayAudioSource(ref _audioSources[4]);
-      }
-      else if (_audioSources[4].isPlaying)
-        _audioSources[4].Stop();
 
-      if ((_clip < 10 && !flames.isEmitting) && _audioSources[3].isPlaying)
-        _audioSources[3].Stop();
-      else if ((_clip >= 10) && !_audioSources[3].isPlaying)
-        FunctionsC.PlayAudioSource(ref _audioSources[3]);
+        if (_sfx0 == null)
+        {
+          _sfx0 = PlaySound(4, 1f, 1f);
+          _sfx0.loop = true;
+        }
+
+      }
+      else if (_sfx0 != null)
+      {
+        _sfx0.loop = false;
+        _sfx0.Stop();
+        _sfx0 = null;
+      }
+
+      if ((_clip < 10 && !flames.isEmitting) && _sfx1 != null)
+      {
+        _sfx1.loop = false;
+        _sfx1.Stop();
+        _sfx1 = null;
+      }
+      else if ((_clip >= 10) && _sfx1 == null)
+      {
+        _sfx1 = PlaySound(3, 1f, 1f);
+        _sfx1.loop = true;
+      }
     }
 
     // Check charge weapons
@@ -1176,14 +1192,13 @@ public class ItemScript : MonoBehaviour
   }
 
   // Fired on user death
+  AudioSource _sfx_hold;
   public void OnToggle()
   {
-    // Stop audio
-    foreach (var index in _melee ? new int[] { GetAudioSource(Audio.MELEE_SWING) } : new int[] { GetAudioSource(Audio.GUN_RELOAD) })
-      if (index == -1)
-        continue;
-      else
-        _audioSources[index].Stop();
+
+    // Stop sfx if playing
+    if (_sfx_hold?.isPlaying ?? false)
+      _sfx_hold.Stop();
 
     // Stop custom components
     if (_customParticles != null)
@@ -1192,6 +1207,12 @@ public class ItemScript : MonoBehaviour
     if (_customLights != null)
       foreach (var light in _customLights)
         light.enabled = false;
+
+    // Hide colliders
+    if (_type == ItemType.FRYING_PAN)
+    {
+      transform.GetChild(0).GetComponent<BoxCollider>().enabled = false;
+    }
   }
 
   class Item

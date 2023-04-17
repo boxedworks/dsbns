@@ -914,11 +914,11 @@ public class Menu2
     _Text = GameObject.Find("Menu2").transform.GetChild(0).GetComponent<TextMesh>();
 
     // Menu audio
-    _MenuAudio = new Dictionary<Noise, System.Tuple<AudioSource, float>>();
+    _MenuAudio = new Dictionary<Noise, AudioSource>();
     var index = 0;
     foreach (var component in _Menu.gameObject.GetComponents<AudioSource>())
     {
-      _MenuAudio.Add((Noise)(index++), System.Tuple.Create(component, component.volume));
+      _MenuAudio.Add((Noise)(index++), component);
     }
 
     // Set starting menu
@@ -1350,7 +1350,7 @@ public class Menu2
               }
 
               // Play music
-              if (FunctionsC.MusicManager._CurrentTrack < 3)
+              if (FunctionsC.MusicManager.s_CurrentTrack < 3)
                 FunctionsC.MusicManager.PlayNextTrack();
 
               // Remove level preview
@@ -1383,7 +1383,7 @@ public class Menu2
                 GameScript._Paused = false;
 
                 // Play music
-                if (FunctionsC.MusicManager._CurrentTrack < 3)
+                if (FunctionsC.MusicManager.s_CurrentTrack < 3)
                   FunctionsC.MusicManager.PlayNextTrack();
 
                 // Remove level preview
@@ -3580,7 +3580,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
                     CommonEvents._RemoveDropdownSelections(component0);
 
                     // Play music
-                    if (FunctionsC.MusicManager._CurrentTrack <= 2)
+                    if (FunctionsC.MusicManager.s_CurrentTrack <= 2)
                       FunctionsC.MusicManager.TransitionTo(FunctionsC.MusicManager.GetNextTrackIter());
 
                     // Remove menus
@@ -5693,44 +5693,6 @@ go to the <color=yellow>SHOP</color> to buy something~1
     }
     .AddComponent($"<color={_COLOR_GRAY}>game options</color>\n\n")
 
-    // Toggle lightning
-    .AddComponent("lightning\n\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
-      .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
-      {
-        // Set display text
-        var display_toggle = Settings._Toggle_Lightning._value ? "on" : "off";
-        component.SetDisplayText(string.Format(format_options, "lightning:", $"{display_toggle}") + "\n");
-        // Set dropdown data
-        var selections = new List<string>();
-        var actions = new List<System.Action<MenuComponent>>();
-        var selection_match = display_toggle;
-        for (var i = 0; i < 2; i++)
-        {
-          // Toggle lightning
-          switch (i)
-          {
-            case 0:
-              selections.Add("on");
-              // Add action to update sfx volume
-              actions.Add((MenuComponent component0) =>
-              {
-                Settings._Toggle_Lightning._value = true;
-              });
-              break;
-            case 1:
-              selections.Add("off");
-              // Add action to update sfx volume
-              actions.Add((MenuComponent component0) =>
-              {
-                Settings._Toggle_Lightning._value = false;
-              });
-              break;
-          }
-        }
-        // Update dropdown data
-        component.SetDropdownData("lightning\n\n", selections, actions, selection_match);
-      })
-
     // Camera type
     .AddComponent("camera type\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
       .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
@@ -5912,6 +5874,45 @@ go to the <color=yellow>SHOP</color> to buy something~1
         // Update dropdown data
         component.SetDropdownData("show tips\n\n", selections, actions, selection_match);
       })
+
+    // Toggle lightning
+    .AddComponent("lightning\n\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
+      .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+      {
+        // Set display text
+        var display_toggle = Settings._Toggle_Lightning._value ? "on" : "off";
+        component.SetDisplayText(string.Format(format_options, "lightning:", $"{display_toggle}") + "\n");
+        // Set dropdown data
+        var selections = new List<string>();
+        var actions = new List<System.Action<MenuComponent>>();
+        var selection_match = display_toggle;
+        for (var i = 0; i < 2; i++)
+        {
+          // Toggle lightning
+          switch (i)
+          {
+            case 0:
+              selections.Add("on");
+              // Add action to update sfx volume
+              actions.Add((MenuComponent component0) =>
+              {
+                Settings._Toggle_Lightning._value = true;
+              });
+              break;
+            case 1:
+              selections.Add("off");
+              // Add action to update sfx volume
+              actions.Add((MenuComponent component0) =>
+              {
+                Settings._Toggle_Lightning._value = false;
+              });
+              break;
+          }
+        }
+        // Update dropdown data
+        component.SetDropdownData("lightning\n\n", selections, actions, selection_match);
+      })
+
     // Delete all save data menu
     .AddComponent("delete save data\n\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
       .AddEventFront((MenuComponent component) =>
@@ -5975,7 +5976,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
             // Press back button
             component0._menu._menuComponent_last._onSelected?.Invoke(component0._menu._menuComponent_last);
             // Music
-            if (FunctionsC.MusicManager._CurrentTrack == 1)
+            if (FunctionsC.MusicManager.s_CurrentTrack == 1)
               FunctionsC.MusicManager.TransitionTo(0);
           }
         });
@@ -6016,12 +6017,12 @@ www.reddit.com/u/quaterniusdev
 
 <color={_COLOR_GRAY}>music</color>
 ";
-      foreach (string musicCredit in FunctionsC.MusicManager._TrackNames)
+      foreach (string musicCredit in FunctionsC.MusicManager.s_TrackNames)
         credits += $"<color={_COLOR_GRAY}>{musicCredit.ToLower()}</color>, kevin macleod (incompetech.com)\nlicensed under creative commons: by attribution 3.0\nhttp://creativecommons.org/licenses/by/3.0/\n\n";
 
       _Text.text = credits;
       _Text.transform.localPosition = new Vector3(-6f, -3.5f, -3.03f);
-      if (FunctionsC.MusicManager._CurrentTrack != 2)
+      if (FunctionsC.MusicManager.s_CurrentTrack != 2)
         FunctionsC.MusicManager.TransitionTo(2);
 
       IEnumerator scrollCredits()
@@ -7092,22 +7093,36 @@ a gampad if plugged in.~1
     BACK,
     PURCHASE
   }
-  static Dictionary<Noise, System.Tuple<AudioSource, float>> _MenuAudio;
-  public static System.Tuple<AudioSource, float> GetNoise(Noise noise)
+  static Dictionary<Noise, AudioSource> _MenuAudio;
+  public static AudioSource GetNoise(Noise noise)
   {
     return _MenuAudio[noise];
   }
-  static float _LastNoise;
+  static float[] s_volumes, s_times;
   public static void PlayNoise(Noise noise)
   {
+    if (s_volumes == null)
+    {
+      s_volumes = new float[5];
+      for (var i = 0; i < s_volumes.Length; i++)
+      {
+        var a = GetNoise((Noise)i);
+        s_volumes[i] = a.volume;
+      }
+
+      s_times = new float[5];
+    }
+
     if (!_Menu.gameObject.activeSelf) return;
-    if (Time.unscaledTime - _LastNoise < 0.05f) return;
-    _LastNoise = Time.unscaledTime;
-    var audioData = GetNoise(noise);
-    var audioSource = audioData.Item1;
-    audioSource.volume = audioData.Item2;
-    audioSource.pitch = (0.9f + Random.value * 0.15f);
-    FunctionsC.PlayOneShot(audioSource, false);
+    if (Time.unscaledTime - s_times[(int)noise] < 0.05f) return;
+    s_times[(int)noise] = Time.unscaledTime;
+    var audioSource = GetNoise(noise);
+    //var audioSource_ = SfxManager.GetAudioSource(GameResources._Camera_Main.transform.position, audioSource.clip, SfxManager.AudioClass.NONE, false, audioSource.volume, Random.Range(0.9f, 1.1f));
+    //if (audioSource_ != null)
+    //  SfxManager.PlayAudioSource(audioSource_, SfxManager.AudioClass.NONE, false);
+
+    audioSource.volume = s_volumes[(int)noise] * (Settings._VolumeSFX / 5f);
+    audioSource.PlayOneShot(audioSource.clip);
   }
 
   public static bool CanPause()
@@ -7127,7 +7142,6 @@ a gampad if plugged in.~1
       Shop.ShowUnlocks(afterUnlockMenu);
       CommonEvents._SwitchMenu(MenuType.GENERIC_MENU);
       PlayNoise(Noise.PURCHASE);
-      //GameScript._audioListenerSource.PlayOneShot(GetNoise(Noise.PURCHASE).Item1.clip);
       return;
     }
 

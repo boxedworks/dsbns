@@ -100,8 +100,8 @@ public class LaserScript : CustomEntity
               // Particles
               FunctionsC.PlayComplexParticleSystemAt(FunctionsC.ParticleSystemType.SMOKE, j.transform.position);
               // Sound
-              FunctionsC.PlaySound(ref r._audioPlayer, "Ragdoll/Slice", 0.9f, 1.1f);
-              FunctionsC.PlaySound(ref r._audioPlayer_steps, "Etc/Sizzle", 0.9f, 1.1f);
+              r.PlaySound("Ragdoll/Slice");
+              r.PlaySound("Etc/Sizzle");
               break;
             // Alert AIs
             case (LaserType.ALARM):
@@ -112,7 +112,7 @@ public class LaserScript : CustomEntity
                 e.SetRagdollTarget(r);
                 e.TargetFound();
               }
-              FunctionsC.PlaySound(ref _audio_other, "Etc/Buzzer");
+              SfxManager.PlayAudioSourceSimple(transform.position, "Etc/Buzzer");
               break;
           }
 

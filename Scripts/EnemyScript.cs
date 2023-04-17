@@ -285,7 +285,7 @@ public class EnemyScript : MonoBehaviour
           _canMove = false;
           _Chaser = this;
           break;
-        case (GameScript.ItemManager.Items.ROCKET_LAUNCHER):
+        case (GameScript.ItemManager.Items.GRENADE_LAUNCHER):
           _itemLeft = GameScript.ItemManager.Items.GRENADE_LAUNCHER;
           _ragdoll.ChangeColor(Color.yellow);
           break;
@@ -445,7 +445,7 @@ public class EnemyScript : MonoBehaviour
 
     if (!_agent.enabled) return;
 
-    var _lookAtPos = Vector3.zero;
+    var lookAtPos = Vector3.zero;
 
     var saveWait = waiting;
 
@@ -472,20 +472,23 @@ public class EnemyScript : MonoBehaviour
             var close_data = FunctionsC.GetClosestPlayerTo(transform.position);
             if (close_data._ragdoll != null)
             {
-              _lookAtPos = (close_data._ragdoll.transform.position);
-              LookAt(_lookAtPos);
+              lookAtPos = (close_data._ragdoll.transform.position);
+              LookAt(lookAtPos);
             }
           }
         }
       }
+
       // Waiting
       else if (Time.time - _waitTimer < _waitAmount && (_state != State.PURSUIT))
       {
         _atd = _waitAmount - (Time.time - _waitTimer);
         waiting = true;
+
         // Just started waiting
         if (!saveWait && _state == State.SUSPICIOUS)
           _waitLookPos = _lastKnownPos;
+
         // Look around
         if (!_patroling)
         {
@@ -509,8 +512,9 @@ public class EnemyScript : MonoBehaviour
           // Look in a direction
           Turn();
         }
-        _lookAtPos = _waitLookPos;
-        LookAt(_lookAtPos);
+
+        lookAtPos = _waitLookPos;
+        LookAt(lookAtPos);
       }
       // Check states
       else
@@ -558,12 +562,15 @@ public class EnemyScript : MonoBehaviour
               {
                 if (_path.GetPathLength() > 1)
                 {
+
                   // Look at direction
                   Transform lp = _path.GetLookPoint(),
                    p = _path.GetPatrolPoint();
                   _waitLookPos = MathC.Get2DVector(transform.position + (lp.position - p.position).normalized) + new Vector3(0f, transform.position.y, 0f);
+
                 }
                 _agent.Move(_path.GetPatrolPoint().position - transform.position);
+
                 // Wait until next movement
                 Wait(_path.GetPatrolWait(), (_path.GetPathLength() > 1));
               }
@@ -650,7 +657,7 @@ public class EnemyScript : MonoBehaviour
                         var nextPos = _agent.path.corners[iter + 1];
                         if (Vector3.Distance(nextPos, _agent.steeringTarget) < 2.5f && iter + 2 < _agent.path.corners.Length - 1)
                           nextPos = _agent.path.corners[iter + 2];
-                        _lookAtPos = nextPos;
+                        lookAtPos = nextPos;
                       }
                       iter++;
                     }
@@ -688,9 +695,9 @@ public class EnemyScript : MonoBehaviour
                 if (_ragdoll.HasGun())
                 {
                   if (_targetInFront)
-                    _lookAtPos = new Vector3(_ragdollTarget._hip.position.x, transform.position.y, _ragdollTarget._hip.position.z);
+                    lookAtPos = new Vector3(_ragdollTarget._hip.position.x, transform.position.y, _ragdollTarget._hip.position.z);
                   else
-                    _lookAtPos = _lastKnownPos;
+                    lookAtPos = _lastKnownPos;
 
                   // Check if the enemy is at the right distance to shoot
                   if (_canMove)
@@ -784,7 +791,7 @@ public class EnemyScript : MonoBehaviour
                 ChaseTarget();
 
                 if (!_canMove)
-                  _lookAtPos = _lastKnownPos;
+                  lookAtPos = _lastKnownPos;
               }
             }
           }
@@ -799,7 +806,7 @@ public class EnemyScript : MonoBehaviour
         else if (_state == State.SEARCHING)
         {
           _lastKnownPos = transform.position + _searchDir;
-          _lookAtPos = _lastKnownPos;
+          lookAtPos = _lastKnownPos;
           if (_agent.remainingDistance < 1f || !_canMove)
           {
             _patroling = true;
@@ -832,7 +839,7 @@ public class EnemyScript : MonoBehaviour
         }
 
         // Update controller
-        MoveRotateTransform(_lookAtPos);
+        MoveRotateTransform(lookAtPos);
 
         // Check if stuck and attempt to fix
         if (_ragdoll.HasGun() && _targetInLOS) { }
@@ -1315,7 +1322,6 @@ public class EnemyScript : MonoBehaviour
 
     // Make sure not already pursuing
     if (_state == State.PURSUIT || _state == State.PANICKED) return;
-    if (_ragdoll._itemL != null && (_ragdoll._itemL.IsThrowable() && _canMove)) Scream();
     _targetFound = true;
     // Stop waiting
     _waitAmount = 0f;
@@ -1469,20 +1475,8 @@ public class EnemyScript : MonoBehaviour
       _ragdoll.DisplayText("?");
 
     }
-    if (newState == State.PANICKED && !_ragdoll._dead)
-      Scream();
 
     _state = newState;
-  }
-
-  float _lastScreamTime;
-  void Scream()
-  {
-    return;
-    if (Time.time - _lastScreamTime < 1f) return;
-    _lastScreamTime = Time.time;
-    var r = Random.Range(0, 5);
-    _ragdoll.PlaySound("Enemies/Scream" + (r), 0.9f, 1.1f);
   }
 
   public ActiveRagdoll IsTarget(GameObject obj)
@@ -1713,7 +1707,6 @@ public class EnemyScript : MonoBehaviour
 
     _linkedDoor?.OnEnemyDie(this);
 
-    _ragdoll.StopSound();
     if (Time.time - _ragdoll._lastBubbleScriptTime < 0.4f) _ragdoll.DisplayText("");
 
     // Check is target
@@ -1724,7 +1717,7 @@ public class EnemyScript : MonoBehaviour
     _lr.positionCount = 0;
     _lr.SetPositions(new Vector3[] { });
 
-    // Swap contianers
+    // Swap containers
     _Enemies_alive.Remove(this);
     if (_Enemies_dead == null) _Enemies_dead = new List<EnemyScript>();
     _Enemies_dead.Add(this);
@@ -1828,12 +1821,10 @@ public class EnemyScript : MonoBehaviour
           IEnumerator AwardPlayer()
           {
 
-            var gameid = GameScript._GameId;
-
+            var gameId = GameScript._GameId;
             yield return new WaitForSeconds(0.5f);
 
-            var gameid_now = GameScript._GameId;
-            if (PlayerScript._All_Dead || gameid != gameid_now) { }
+            if (PlayerScript._All_Dead || gameId != GameScript._GameId) { }
             else
             {
 

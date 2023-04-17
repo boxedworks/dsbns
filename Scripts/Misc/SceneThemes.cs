@@ -92,15 +92,25 @@ public class SceneThemes : MonoBehaviour
     FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.FOOTPRINT)[0].GetComponent<ParticleSystemRenderer>().sharedMaterial.color = color;
 
     // Enable / disable rain
-    var rain_sfx = GameScript._Singleton._Rain_Audio;
-    if (_Theme._rain && !rain_sfx.isPlaying)
+    var rain_sfx = GameScript.s_SfxRain;
+    if (_Theme._rain)
     {
-      FunctionsC.PlayAudioSource(ref rain_sfx, 1f, 1f, true);
+      if (rain_sfx == null)
+      {
+        rain_sfx = SfxManager.PlayAudioSourceSimple(GameResources._Camera_Main.transform.position, "Etc/Rain", 1f, 1f);
+        rain_sfx.loop = true;
+        GameScript.s_SfxRain = rain_sfx;
+      }
       GameScript._Singleton._Thunder_Last = Time.time;
     }
-    else if (!_Theme._rain && rain_sfx.isPlaying)
+    else
     {
-      rain_sfx.Stop();
+      if (rain_sfx != null)
+      {
+        rain_sfx.loop = false;
+        rain_sfx.Stop();
+        GameScript.s_SfxRain = null;
+      }
     }
   }
 

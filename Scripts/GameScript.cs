@@ -22,7 +22,8 @@ public class GameScript : MonoBehaviour
 
   static MeshRenderer _BlackFade;
 
-  public static AudioSource _audioListenerSource, _music;
+  public static AudioSource s_Music, s_SfxRain;
+  static AudioSource s_sfxThunder;
 
   public bool _UseCamera, _X, _Y, _Z;
 
@@ -110,16 +111,12 @@ public class GameScript : MonoBehaviour
   {
     _Singleton = this;
 
-    // Rain SFX
-    var rain_sfx = GameObject.Find("RainAudio").GetComponents<AudioSource>();
-    _Rain_Audio = rain_sfx[0];
-    _Thunder_Audio = rain_sfx[1];
-
     //
     _debugText = GameObject.Find("DebugText").GetComponent<TextMesh>();
 
     //
     GameResources.Init();
+    SfxManager.Init();
     FunctionsC.Init();
     TutorialInformation.Init();
     ControllerManager.Init();
@@ -160,8 +157,7 @@ public class GameScript : MonoBehaviour
     _BlackFade = GameObject.Find("BlackFade").GetComponent<MeshRenderer>();
     FadeIn();
 
-    _audioListenerSource = GameObject.Find("AudioListener").GetComponent<AudioSource>();
-    _music = GameObject.Find("Music").GetComponent<AudioSource>();
+    s_Music = GameObject.Find("Music").GetComponent<AudioSource>();
 
     FunctionsC.MusicManager.Init();
 
@@ -467,9 +463,9 @@ public class GameScript : MonoBehaviour
       _ClosestSpawns = null;
 
       // Music
-      if (FunctionsC.MusicManager._CurrentTrack != 3)
+      if (FunctionsC.MusicManager.s_CurrentTrack != 3)
       {
-        FunctionsC.MusicManager._CurrentTrack = 0;
+        FunctionsC.MusicManager.s_CurrentTrack = 0;
         FunctionsC.MusicManager.TransitionTo(FunctionsC.MusicManager.GetNextTrackIter());
       }
     }
@@ -552,7 +548,7 @@ public class GameScript : MonoBehaviour
             p = PlayerspawnScript._PlayerSpawns[0].SpawnPlayer(false);
             p.transform.position = alive_player.transform.position;
             p.transform.parent.gameObject.SetActive(true);
-            FunctionsC.PlaySound(ref _audioListenerSource, "Ragdoll/Pop", 0.9f, 1.05f);
+            SfxManager.PlayAudioSourceSimple(p.transform.position, "Ragdoll/Pop", 0.9f, 1.05f);
           }
         }
 
@@ -568,7 +564,7 @@ public class GameScript : MonoBehaviour
 
       _AllSpawn = Vector3.zero;
 
-      FunctionsC.PlaySound(ref GameScript._audioListenerSource, "Survival/Wave_Start", 1f, 1f);
+      SfxManager.PlayAudioSourceSimple(GameResources._Camera_Main.transform.position, "Survival/Wave_Start");
 
       _Number_enemies_spawned = 0;
 
@@ -878,7 +874,6 @@ public class GameScript : MonoBehaviour
       if (Levels._CurrentLevelIndex == 0 && highest_wave < 11 && _Wave == 11)
       {
         TogglePause();
-        //_audioListenerSource.PlayOneShot(Menu2.GetNoise(Menu2.Noise.PURCHASE).Item1.clip);
         Menu2.PlayNoise(Menu2.Noise.PURCHASE);
         Menu2.GenericMenu(new string[] {
 $@"<color={Menu2._COLOR_GRAY}>new survival map unlocked</color>
@@ -931,7 +926,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
             p = PlayerspawnScript._PlayerSpawns[0].SpawnPlayer(false);
             p.transform.position = alive_player.transform.position;
             p.transform.parent.gameObject.SetActive(true);
-            FunctionsC.PlaySound(ref _audioListenerSource, "Ragdoll/Pop", 0.9f, 1.05f);
+            SfxManager.PlayAudioSourceSimple(p.transform.position, "Ragdoll/Pop", 0.9f, 1.05f);
           }
         }
 
@@ -1242,11 +1237,6 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
 
       CustomObstacle.HandleAll();
 
-      // Center audio listener
-      var als_pos = _audioListenerSource.transform.position;
-      als_pos.y = 0f;
-      _audioListenerSource.transform.position = als_pos;
-
       // Check if wave in progress
       if (_WavePlaying)
       {
@@ -1403,9 +1393,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
   static float _lastInputCheck;
   static int _HomePressed; // Used for cheat
 
-  // Rain sfx
-  [System.NonSerialized]
-  public AudioSource _Rain_Audio, _Thunder_Audio;
+  // Thunder lightning FX
   [System.NonSerialized]
   public float _Thunder_Last, _Thunder_Samples_Last;
   public Light _Thunder_Light;
@@ -1510,7 +1498,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
           {
             _Thunder_Last = Time.time;
 
-            FunctionsC.PlayAudioSource(ref _Thunder_Audio, 0.6f, 1.05f);
+            s_sfxThunder = SfxManager.PlayAudioSourceSimple(GameResources._Camera_Main.transform.position, "Etc/Thunder", 0.6f, 1.05f);
 
             var cpos = GameResources._Camera_Main.transform.position;
             cpos.y = 0f;
@@ -1526,13 +1514,17 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
           {
             var c = 0f;
 
-            if (_Thunder_Audio.isPlaying)
+            if (s_sfxThunder != null && !s_sfxThunder.isPlaying)
+            {
+              s_sfxThunder = null;
+            }
+            if (s_sfxThunder?.isPlaying ?? false)
             {
               _Thunder_Samples_Last = Time.time;
 
               var sample_length = 1024;
               var samples = new float[sample_length];
-              _Thunder_Audio.clip.GetData(samples, _Thunder_Audio.timeSamples);
+              s_sfxThunder.clip.GetData(samples, s_sfxThunder.timeSamples);
 
               var clipLoudness = 0f;
               foreach (var sample in samples)
@@ -1656,6 +1648,10 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
             {
               if (ControllerManager.GetKey(ControllerManager.Key.PAGE_UP, ControllerManager.InputMode.DOWN))
               {
+#if UNITY_EDITOR
+                NextLevel(Levels._CurrentLevelIndex + 1);
+                return;
+#endif
                 if (Levels._CurrentLevelIndex < (Levels._CurrentLevelCollection?._levelData.Length ?? 0) && Levels.LevelCompleted(Levels._CurrentLevelIndex))
                 {
                   NextLevel(Levels._CurrentLevelIndex + 1);
@@ -1825,6 +1821,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         if (iter == -1 && _equipment.IsEmpty()) loadoutIndex = 0;
         PlayerPrefs.SetInt($"{_playerPrefsPrefix}loadoutIndex", loadoutIndex);
         UpdateIcons();
+
         // If in loadout menu, update colors
         if (Menu2._InMenus && Menu2._CurrentMenu._type == Menu2.MenuType.SELECT_LOADOUT)
         {
@@ -3553,15 +3550,6 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
   public static bool IsSurvival()
   {
     return _GameMode == GameModes.SURVIVAL;
-  }
-
-  static float _lasttick;
-  public static bool CanPlayTick()
-  {
-    if (Time.unscaledTime - _lasttick < 0.05f) return false;
-    _lasttick = Time.unscaledTime;
-    FunctionsC.PlaySound(ref GameScript._audioListenerSource, "Ragdoll/Footstep");
-    return true;
   }
 
   // When called, the player can exit / complete the level
