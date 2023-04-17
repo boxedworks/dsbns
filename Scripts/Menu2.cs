@@ -3423,7 +3423,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
     ModifyMenu_TipSwitch(MenuType.MODE_SELECTION);
 
     // Level display menu
-    var dirs = 12;
+    var dirs = 11;
     var levels_per_dir = 12;
     void SpawnMenu_Levels()
     {

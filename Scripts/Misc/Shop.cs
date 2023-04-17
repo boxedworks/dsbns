@@ -267,10 +267,10 @@ public static class Shop
 
     _Unlocks_Descriptions = new Dictionary<Unlocks, Tuple<string, int>>();
     _Unlocks_Descriptions.Add(Unlocks.ITEM_KNIFE, new Tuple<string, int>("melee, fast", 3));
-    _Unlocks_Descriptions.Add(Unlocks.ITEM_FRYING_PAN, new Tuple<string, int>("melee, fast", 6));
-    _Unlocks_Descriptions.Add(Unlocks.ITEM_AXE, new Tuple<string, int>("melee, slower, wide-sweep", 14));
+    _Unlocks_Descriptions.Add(Unlocks.ITEM_FRYING_PAN, new Tuple<string, int>("melee, fast", 10));
+    _Unlocks_Descriptions.Add(Unlocks.ITEM_AXE, new Tuple<string, int>("melee, slower, wide-sweep", 15));
     //_Unlocks_Descriptions.Add(Unlocks.ITEM_BAT, new Tuple<string, int>("melee, two-handed, wide-sweep", 10));
-    _Unlocks_Descriptions.Add(Unlocks.ITEM_SWORD, new Tuple<string, int>("melee, two-handed, wide-sweep", 25));
+    _Unlocks_Descriptions.Add(Unlocks.ITEM_SWORD, new Tuple<string, int>("melee, two-handed, wide-sweep", 35));
     _Unlocks_Descriptions.Add(Unlocks.ITEM_PISTOL_SILENCED, new Tuple<string, int>("handgun, silenced, fast-reload", 15));
     _Unlocks_Descriptions.Add(Unlocks.ITEM_MACHINE_PISTOL, new Tuple<string, int>("handgun, 3-burst, fast-reload", 15));
     _Unlocks_Descriptions.Add(Unlocks.ITEM_DOUBLE_PISTOL, new Tuple<string, int>("handgun, double-barrel", 15));
@@ -278,12 +278,12 @@ public static class Shop
     _Unlocks_Descriptions.Add(Unlocks.ITEM_UZI, new Tuple<string, int>("gun, automatic, small-magazine", 20));
     _Unlocks_Descriptions.Add(Unlocks.ITEM_CROSSBOW, new Tuple<string, int>("bow, powerful, slow-reload", 15));
     _Unlocks_Descriptions.Add(Unlocks.ITEM_SHOTGUN_PUMP, new Tuple<string, int>("shotgun, silenced, reload", 20));
-    _Unlocks_Descriptions.Add(Unlocks.ITEM_SHOTGUN_DOUBLE, new Tuple<string, int>("shotgun, powerful, reload", 25));
-    _Unlocks_Descriptions.Add(Unlocks.ITEM_SHOTGUN_BURST, new Tuple<string, int>("shotgun, two-burst, reload", 25));
-    _Unlocks_Descriptions.Add(Unlocks.ITEM_AK47, new Tuple<string, int>("rifle, automatic, slow-reload", 30));
-    _Unlocks_Descriptions.Add(Unlocks.ITEM_M16, new Tuple<string, int>("rifle, burst, slow-reload", 30));
+    _Unlocks_Descriptions.Add(Unlocks.ITEM_SHOTGUN_DOUBLE, new Tuple<string, int>("shotgun, powerful, reload", 30));
+    _Unlocks_Descriptions.Add(Unlocks.ITEM_SHOTGUN_BURST, new Tuple<string, int>("shotgun, two-burst, reload", 40));
+    _Unlocks_Descriptions.Add(Unlocks.ITEM_AK47, new Tuple<string, int>("rifle, automatic, slow-reload", 40));
+    _Unlocks_Descriptions.Add(Unlocks.ITEM_M16, new Tuple<string, int>("rifle, burst, slow-reload", 40));
     _Unlocks_Descriptions.Add(Unlocks.ITEM_RIFLE, new Tuple<string, int>("rifle, semi-automatic, slow-fire", 15));
-    _Unlocks_Descriptions.Add(Unlocks.ITEM_RIFLE_LEVER, new Tuple<string, int>("rifle, semi-automatic, fast-fire", 15));
+    _Unlocks_Descriptions.Add(Unlocks.ITEM_RIFLE_LEVER, new Tuple<string, int>("rifle, semi-automatic, fast-fire", 30));
     _Unlocks_Descriptions.Add(Unlocks.ITEM_DMR, new Tuple<string, int>("rifle, semi-automatic, slow-reload", 25));
     _Unlocks_Descriptions.Add(Unlocks.ITEM_SNIPER, new Tuple<string, int>("bolt-action, semi-automatic, powerful", 25));
     _Unlocks_Descriptions.Add(Unlocks.ITEM_GRENADE_LAUNCHER, new Tuple<string, int>("explosive, semi-automatic, slow-reload", 20));
@@ -294,39 +294,39 @@ public static class Shop
 
     _Unlocks_Descriptions.Add(Unlocks.UTILITY_SHURIKEN, new Tuple<string, int>("throwable, pick-up, small", 3));
     _Unlocks_Descriptions.Add(Unlocks.UTILITY_SHURIKEN_BIG, new Tuple<string, int>("throwable, pick-up, large", 25));
-    _Unlocks_Descriptions.Add(Unlocks.UTILITY_KUNAI_EXPLOSIVE, new Tuple<string, int>("throwable, explodes, small", 6));
+    _Unlocks_Descriptions.Add(Unlocks.UTILITY_KUNAI_EXPLOSIVE, new Tuple<string, int>("throwable, explodes, small", 15));
     _Unlocks_Descriptions.Add(Unlocks.UTILITY_KUNAI_STICKY, new Tuple<string, int>("throwable, delalyed-explosion, small", 25));
     _Unlocks_Descriptions.Add(Unlocks.UTILITY_GRENADE, new Tuple<string, int>("throwable, explosive, large-radius", 20));
     _Unlocks_Descriptions.Add(Unlocks.UTILITY_GRENADE_IMPACT, new Tuple<string, int>("throwable, contact-explosive", 25));
-    _Unlocks_Descriptions.Add(Unlocks.UTILITY_C4, new Tuple<string, int>("throwable, explosive, remote-controlled", 10));
-    _Unlocks_Descriptions.Add(Unlocks.UTILITY_STOP_WATCH, new Tuple<string, int>("useable, slows-time", 15));
-    _Unlocks_Descriptions.Add(Unlocks.UTILITY_INVISIBILITY, new Tuple<string, int>("useable, short-invisibility", 15));
+    _Unlocks_Descriptions.Add(Unlocks.UTILITY_C4, new Tuple<string, int>("throwable, explosive, remote-controlled", 15));
+    _Unlocks_Descriptions.Add(Unlocks.UTILITY_STOP_WATCH, new Tuple<string, int>("useable, slows-time", 20));
+    _Unlocks_Descriptions.Add(Unlocks.UTILITY_INVISIBILITY, new Tuple<string, int>("useable, short-invisibility", 20));
     //_Unlocks_Descriptions.Add(Unlocks.UTILITY_DASH, new Tuple<string, int>("useable, quick speed boost", 0));
 
     _Unlocks_Descriptions.Add(Unlocks.MOD_LASER_SIGHTS, new Tuple<string, int>("-", 5));
-    _Unlocks_Descriptions.Add(Unlocks.MOD_NO_SLOWMO, new Tuple<string, int>("-", 0));
+    _Unlocks_Descriptions.Add(Unlocks.MOD_NO_SLOWMO, new Tuple<string, int>("-", 1));
     _Unlocks_Descriptions.Add(Unlocks.MOD_FASTER_RELOAD, new Tuple<string, int>("-", 25));
     _Unlocks_Descriptions.Add(Unlocks.MOD_MAX_AMMO_UP, new Tuple<string, int>("-", 25));
-    _Unlocks_Descriptions.Add(Unlocks.MOD_EXPLOSION_RESISTANCE, new Tuple<string, int>("-", 20));
+    _Unlocks_Descriptions.Add(Unlocks.MOD_EXPLOSION_RESISTANCE, new Tuple<string, int>("-", 25));
     _Unlocks_Descriptions.Add(Unlocks.MOD_EXPLOSIONS_UP, new Tuple<string, int>("-", 25));
 
     _Unlocks_Descriptions.Add(Unlocks.MOD_ARMOR_UP, new Tuple<string, int>("-", 0));
     _Unlocks_Descriptions.Add(Unlocks.MOD_PENETRATION_UP, new Tuple<string, int>("-", 0));
 
-    _Unlocks_Descriptions.Add(Unlocks.MOD_SMART_BULLETS, new Tuple<string, int>("-", 25));
+    _Unlocks_Descriptions.Add(Unlocks.MOD_SMART_BULLETS, new Tuple<string, int>("-", 30));
 
     _Unlocks_Descriptions.Add(Unlocks.MAX_EQUIPMENT_POINTS_0, new Tuple<string, int>("equipment-points, (+1)", 5));
     _Unlocks_Descriptions.Add(Unlocks.MAX_EQUIPMENT_POINTS_1, new Tuple<string, int>("equipment-points, (+1)", 5));
     _Unlocks_Descriptions.Add(Unlocks.MAX_EQUIPMENT_POINTS_2, new Tuple<string, int>("equipment-points, (+1)", 10));
     _Unlocks_Descriptions.Add(Unlocks.MAX_EQUIPMENT_POINTS_3, new Tuple<string, int>("equipment-points, (+1)", 15));
-    _Unlocks_Descriptions.Add(Unlocks.MAX_EQUIPMENT_POINTS_4, new Tuple<string, int>("equipment-points, (+1)", 25));
+    _Unlocks_Descriptions.Add(Unlocks.MAX_EQUIPMENT_POINTS_4, new Tuple<string, int>("equipment-points, (+1)", 20));
     _Unlocks_Descriptions.Add(Unlocks.MAX_EQUIPMENT_POINTS_5, new Tuple<string, int>("equipment-points, (+1)", 25));
-    _Unlocks_Descriptions.Add(Unlocks.MAX_EQUIPMENT_POINTS_6, new Tuple<string, int>("equipment-points, (+1)", 50));
-    _Unlocks_Descriptions.Add(Unlocks.MAX_EQUIPMENT_POINTS_7, new Tuple<string, int>("equipment-points, (+1)", 50));
-    _Unlocks_Descriptions.Add(Unlocks.MAX_EQUIPMENT_POINTS_8, new Tuple<string, int>("equipment-points, (+1)", 75));
-    _Unlocks_Descriptions.Add(Unlocks.MAX_EQUIPMENT_POINTS_9, new Tuple<string, int>("equipment-points, (+1)", 99));
+    _Unlocks_Descriptions.Add(Unlocks.MAX_EQUIPMENT_POINTS_6, new Tuple<string, int>("equipment-points, (+1)", 30));
+    _Unlocks_Descriptions.Add(Unlocks.MAX_EQUIPMENT_POINTS_7, new Tuple<string, int>("equipment-points, (+1)", 35));
+    _Unlocks_Descriptions.Add(Unlocks.MAX_EQUIPMENT_POINTS_8, new Tuple<string, int>("equipment-points, (+1)", 40));
+    _Unlocks_Descriptions.Add(Unlocks.MAX_EQUIPMENT_POINTS_9, new Tuple<string, int>("equipment-points, (+1)", 50));
 
-    _Unlocks_Descriptions.Add(Unlocks.MODE_SURVIVAL, new Tuple<string, int>("unlocks survival mode", 0));
+    _Unlocks_Descriptions.Add(Unlocks.MODE_SURVIVAL, new Tuple<string, int>("unlocks survival mode", 11));
 
     _Unlocks_Descriptions.Add(Unlocks.EXTRA_TIME, new Tuple<string, int>("unlocks the 'time' extra", 0));
     _Unlocks_Descriptions.Add(Unlocks.EXTRA_GRAVITY, new Tuple<string, int>("unlocks the 'gravity' extra", 0));
@@ -346,7 +346,7 @@ public static class Shop
     };
 
     // Load available / purchased unlocks
-    var total_point = 0;
+    var shopPointsTotaled = 0;
     foreach (var pair in _Unlocks_Descriptions)
     {
       var unlock = pair.Key;
@@ -355,9 +355,9 @@ public static class Shop
       if (PlayerPrefs.GetInt($"Shop_Unlocks_{unlock}", 0) == 1)
         Unlock(unlock);
 
-      total_point += pair.Value.Item2;
+      shopPointsTotaled += pair.Value.Item2;
     }
-    Debug.Log($"Total points: ({_AvailablePoints}) {total_point} / {((11 - 1) * 12 + (12 - 1) * 12 + (1) * 12) * 4}");
+    Debug.Log($"Total points: ({_AvailablePoints}) {shopPointsTotaled} / {((1 * 11 * 2) + (10 * 12 * 2)) * 4}");
 
     // Set starter unlocks
     AddAvailableUnlock(Unlocks.ITEM_KNIFE);

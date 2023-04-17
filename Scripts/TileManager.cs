@@ -2185,10 +2185,13 @@ public class TileManager
         lr.transform.Rotate(new Vector3(1f, 0f, 0f) * 90f);
       }
     }
+
     // Turn on camera light
     GameScript.ToggleCameraLight(true);
+
     // Set time to normal
     Time.timeScale = 1f;
+
     // Remove combined meshes and enable tile renderers
     var meshes = GameObject.Find("Meshes_Tiles_Up");
     if (meshes) GameObject.Destroy(meshes);
@@ -2211,6 +2214,14 @@ public class TileManager
     GameScript.ToggleExit(false);
     //Debug.Log("Map editor enabled.");
     //Time.timeScale = 1f;
+
+    // Camera zoom
+    if (Settings._CameraZoom._value == 3)
+    {
+      Settings._CameraZoom._value = 1;
+      Settings.SetPostProcessing();
+      Settings._CameraZoom._value = 3;
+    }
 
     // Set player spawn layer
     PlayerspawnScript._PlayerSpawns[0].gameObject.layer = 0;
@@ -3657,31 +3668,6 @@ public class TileManager
       LevelEditorObject.GetCurrentObject()._textDisplayFunction(_SelectedObject != null ? _SelectedObject.gameObject : null);
     // Move Camera with mouse
     var mousepos = ControllerManager.GetMousePosition();
-    /*if (mousepos.x > 0f && mousepos.x <= Screen.safeArea.width && mousepos.y > 0f && mousepos.y <= Screen.safeArea.height)
-    {
-      Vector3 newPos = GameResources._Camera_Main.ScreenPointToRay(mousepos).GetPoint(10f);
-      newPos.y = 16f;// _CameraZoom;
-
-      Vector3 dis = (newPos - GameResources._Camera_Main.transform.position);
-      Vector2 minDis = new Vector2(5f, 3f),
-        intensity = new Vector2(0f, 0f);
-      if (Mathf.Abs(dis.x) > minDis.x)
-        intensity.x = Mathf.LerpUnclamped(0f, 0.6f, Mathf.Abs(dis.x) - minDis.x);
-      if (Mathf.Abs(dis.z) > minDis.y)
-        intensity.y = Mathf.LerpUnclamped(0f, 0.5f, Mathf.Abs(dis.z) - minDis.y);
-      float maxDistance = _Width;
-      // Get middle tile and check distances
-      Vector3 middlePosition = Tile.GetTile(_Width / 2, _Height / 2)._tile.transform.position;
-      middlePosition.y = GameResources._Camera_Main.transform.position.y;
-      //if (Mathf.Abs(middlePosition.x - newPos.x) > maxDistance)
-      //  newPos.x = middlePosition.x + maxDistance * Mathf.Sign(middlePosition.x + newPos.x);
-      //if (Mathf.Abs(middlePosition.z - newPos.z) > maxDistance)
-      //  newPos.z = middlePosition.z + maxDistance * Mathf.Sign(middlePosition.z + newPos.z);
-      Vector3 movePos = (newPos - GameResources._Camera_Main.transform.position) * Time.deltaTime * 3f;
-      movePos.x *= intensity.x;
-      movePos.z *= intensity.y;
-      GameResources._Camera_Main.transform.position += movePos;
-    }*/
 
     // Move camera with arrows
     if (ControllerManager.GetKey(Key.ARROW_U, ControllerManager.InputMode.HOLD))
@@ -3731,42 +3717,6 @@ public class TileManager
 
     // Basic editor shortcuts
     {
-      // Switch mode
-      //if (ControllerManager.GetKey(Key.Q)) LevelEditorObject.IncrementIter(-1, true);
-      //if (ControllerManager.GetKey(Key.W)) LevelEditorObject.IncrementIter(1, true);
-      /*if (ControllerManager.GetKey(Key.SPACE, ControllerManager.InputMode.HOLD))
-      {
-      // Save
-      if (ControllerManager.GetKey(Key.S)) SaveFileOverwrite(SaveMap());
-      // Save as new map
-      if (ControllerManager.GetKey(Key.INSERT))
-      {
-        string mapdata = SaveMap();
-        // Copy the map to the end of the maps array
-        Levels.CopyMap(Levels._CurrentLevelIndex);
-        // Set current map to the last map
-        Levels._CurrentLevelIndex++;
-        // Disable editor
-        EditorDisabled(mapdata);
-        GameScript._EditorEnabled = false;
-      }
-      // Delete map
-      if (ControllerManager.GetKey(Key.DELETE))
-      {
-        // Save to clipboard in case
-        string olddata = SaveMap();
-        // Delete level
-        Levels.DeleteLevel(Levels._CurrentLevelIndex);
-        // Set current map
-        //Levels._CurrentLevelIndex--;
-        // Disable editor
-        EditorDisabled(olddata);
-        GameScript._EditorEnabled = false;
-        // Return to level select menu
-        //GameScript.TogglePause();
-        //Menu._CurrentMenu._menuActions[3]();
-      }
-      }*/
       // Move camera to playerspawn
       if (ControllerManager.GetKey(Key.PERIOD_NUMPAD) || ControllerManager.GetKey(Key.PERIOD))
         GameResources._Camera_Main.transform.position = new Vector3(PlayerspawnScript._PlayerSpawns[0].transform.position.x, GameResources._Camera_Main.transform.position.y, PlayerspawnScript._PlayerSpawns[0].transform.position.z);
@@ -4693,12 +4643,12 @@ public class TileManager
     // Set preview pos
     if (Menu2._CurrentMenu._type == Menu2.MenuType.EDITOR_LEVELS)
     {
-      container.parent = Camera.main.transform;
+      container.parent = GameResources._Camera_Main.transform;
       container.localPosition = new Vector3(2.8f, 1.5f, 6f);
     }
     else if (Menu2._CurrentMenu._type == Menu2.MenuType.EDITOR_PACKS_EDIT)
     {
-      container.parent = Camera.main.transform;
+      container.parent = GameResources._Camera_Main.transform;
       container.localPosition = new Vector3(2.8f, 1.5f, 6f);
     }
     else if (GameScript._GameMode == GameScript.GameModes.CLASSIC)

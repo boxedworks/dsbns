@@ -77,7 +77,9 @@ public class TVScript : MonoBehaviour
     _ps_smoke.Play();
     _ps_fire.Play();
 
+    _sfx.loop = false;
     _sfx.Stop();
+
     _sfx = transform.PlayAudioSourceSimple("Etc/Fire_loop");
     _sfx.loop = true;
 
