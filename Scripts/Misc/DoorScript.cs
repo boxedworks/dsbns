@@ -111,9 +111,16 @@ public class DoorScript : CustomEntity
     if (_normalizedTime == 1f || _normalizedTime == 0f)
     {
       _opening = false;
-      _sfx?.Stop();
+      if (_sfx != null)
+      {
+        _sfx.loop = false;
+        _sfx?.Stop();
+        _sfx = null;
+      }
       _ps_dust.Stop();
 
+      if (!_opened)
+        _obstacle.gameObject.isStatic = true;
     }
   }
 
@@ -139,15 +146,21 @@ public class DoorScript : CustomEntity
   void Toggle(bool open)
   {
     _collider0.enabled = open;
-    _collider1.enabled = open;
+    //_collider1.enabled = open;
     _obstacle.enabled = open;
 
     _opening = true;
 
-    _sfx = SfxManager.PlayAudioSourceSimple(transform.position, "Etc/Door_open", 1.1f, 1.3f);
-    if (_sfx != null)
+    if (_opened)
+      _obstacle.gameObject.isStatic = false;
+
+    if (_sfx == null)
     {
-      _sfx.loop = true;
+      _sfx = SfxManager.PlayAudioSourceSimple(transform.position, "Etc/Door_open", 1.1f, 1.3f);
+      if (_sfx != null)
+      {
+        _sfx.loop = true;
+      }
     }
 
     _ps_dust.Play();
@@ -164,6 +177,7 @@ public class DoorScript : CustomEntity
     {
       _sfx.loop = false;
       _sfx.Stop();
+      _sfx = null;
     }
   }
 }

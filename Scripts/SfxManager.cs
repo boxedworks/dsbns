@@ -121,6 +121,11 @@ public static class SfxManager
   public static void PlayAudioSource(AudioSource audioSource, AudioClass audioClass, bool changePitch = true)
   {
 
+    if (audioSource.loop)
+    {
+      Debug.LogError("AAAAAAA gotcha: " + audioSource.gameObject.name);
+    }
+
     s_audioSourcesPlaying.Add(new AudioData()
     {
       _audioSource = audioSource,

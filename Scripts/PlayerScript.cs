@@ -893,7 +893,7 @@ public class PlayerScript : MonoBehaviour
           }
           else
           {
-            Settings._CameraZoom._value = 2;
+            Settings._CameraZoom._value = 1;
             Settings.SetPostProcessing();
             Settings._CameraZoom._value = 3;
 
