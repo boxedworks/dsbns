@@ -1412,6 +1412,12 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
           TileManager._Text_LevelTimer.text = string.Format("{0:0.000}", TileManager._LevelTimer);
       }
 
+      // If more candles than can handle, hide some
+      if (CustomObstacle._CustomCandles != null && CustomObstacle._CustomCandles.Count > 4)
+      {
+        CustomObstacle.HandleAll();
+      }
+
     }
 
     else

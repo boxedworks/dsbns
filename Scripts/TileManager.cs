@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -18,7 +18,7 @@ public class TileManager
   public static Transform _Map, _Tile;
   public static Transform _Floor { get { return _Map.transform.GetChild(0); } }
   public static UnityEngine.AI.NavMeshSurface _navMeshSurface, _navMeshSurface2;
-  static List<string> _LevelObjects;
+  static List<string> s_levelObjectData;
   public static string _CurrentLevel_Name,
     _CurrentLevel_Loadout;
   public static int _CurrentLevel_Theme = -1;
@@ -176,7 +176,7 @@ public class TileManager
   {
     GameScript.ResetObjects();
     CustomObstacle.Reset();
-    GameScript game = GameObject.Find("Game").GetComponent<GameScript>();
+    var game = GameObject.Find("Game").GetComponent<GameScript>();
     Transform enemies = game.transform.GetChild(0),
       objects = GameResources._Container_Objects,
       navmesh_mods = _Map.GetChild(1),
@@ -358,7 +358,7 @@ public class TileManager
   {
     _LoadingMap = true;
     _CurrentMapData = data;
-    _LevelObjects = new List<string>();
+    s_levelObjectData = new List<string>();
     var game = GameObject.Find("Game").GetComponent<GameScript>();
     if (!GameResources._Loaded) GameResources.Init();
     if (!first_load) HideGameOverText();
@@ -489,7 +489,7 @@ public class TileManager
         }
 
         // Add to level data for reloading
-        _LevelObjects.Add(data_);
+        s_levelObjectData.Add(data_);
 
         // Check if data is the spawnpoint data; save it for later
         if (data_.Contains("playerspawn_"))
@@ -669,26 +669,52 @@ public class TileManager
     }
 
     // Load objects
-    for (var i = 0; i < _LevelObjects.Count;)
+    var candles = new List<GameObject>();
+    for (var i = 0; i < s_levelObjectData.Count;)
     {
-      for (var u = 0; i < _LevelObjects.Count && u < 15; u++)
+      for (var u = 0; i < s_levelObjectData.Count && u < 15; u++)
       {
-        var obj_load = _LevelObjects[i++];
-        if (LoadObject(obj_load) == null)
+        var objectData = s_levelObjectData[i++];
+        var objectLoaded = LoadObject(objectData);
+        if (objectLoaded == null)
         {
-          if (obj_load.StartsWith("bdt_"))
+
+          // Check bdt load
+          if (objectData.StartsWith("bdt_"))
           {
             continue;
           }
 
+          // Throw object parse error
           GameScript._Coroutine_load = null;
           _LoadingMap = false;
 
-          throw new System.NullReferenceException("Error loading object: " + obj_load);
+          throw new System.NullReferenceException("Error parsing object data: " + objectData);
+        }
+        else
+        {
+
+          if (objectLoaded.name.Equals(_LEO_CandelBarrel._name) || objectLoaded.name.Equals(_LEO_CandelBig._name) || objectLoaded.name.Equals(_LEO_CandelTable._name))
+          {
+            candles.Add(objectLoaded);
+          }
+
         }
       }
       yield return new WaitForSeconds(0.01f);
     }
+
+    // Check for light max
+    if (!GameScript.IsSurvival())
+      if (candles.Count > 4)
+      {
+        Debug.LogWarning("Max light sources! Adding light dimmers");
+        foreach (var candle in candles)
+        {
+          var customObstacle = candle.AddComponent<CustomObstacle>();
+          customObstacle.InitCandle();
+        }
+      }
 
     // Make sure ragdolls are not null
     if (ActiveRagdoll._Ragdolls != null)
@@ -1321,7 +1347,7 @@ public class TileManager
     // If not loaded, try loading furniture
     if (loadedObject == null)
     {
-      foreach (var leo in _Furniture)
+      foreach (var leo in s_furniture)
       {
         if (leo == null) Debug.LogError("LEO");
         if (!object_base._type.Equals(leo._name.ToLower())) continue;
@@ -1395,8 +1421,10 @@ public class TileManager
               Debug.LogError($"LoadObject() => Unhandled property <color=red>{pair.Key}</color> with value <color=red>{pair.Value}</color>\n{object_data}");
               break;
           }
+
         // Change furnature color
         ChangeColorRecursive(loadedObject.transform, SceneThemes._Theme._furnatureColor);
+
         // Check for light color change
         if (loadedObject.transform.childCount > 2)
         {
@@ -1405,6 +1433,7 @@ public class TileManager
           {
             l.color = SceneThemes._Theme._lightColor;
             l.shadowStrength = SceneThemes._Theme._shadowStrength;
+
             // Ignore raycasts on lamps
             if (!GameScript._EditorEnabled)
               loadedObject.layer = 2;
@@ -1412,6 +1441,7 @@ public class TileManager
         }
         break;
       }
+
       // Finally if not loaded, throw error
       if (loadedObject == null)
         Debug.LogWarning("Error loading object data " + object_data);
@@ -1643,6 +1673,7 @@ public class TileManager
     for (var i = objects.childCount - 1; i >= 0; i--)
     {
       GameObject child = objects.GetChild(i).gameObject;
+
       // Reset lasers
       LaserScript l = child.GetComponent<LaserScript>();
       if (l != null)
@@ -1650,6 +1681,7 @@ public class TileManager
         l.Reset();
         continue;
       }
+
       // Reset barrels
       var e = child.GetComponent<ExplosiveScript>();
       if (e != null && e.name.Equals("ExplosiveBarrel"))
@@ -1659,36 +1691,62 @@ public class TileManager
       }
       GameObject.Destroy(child);
     }
-    var map_objects = _Map.GetChild(1);
-    for (var i = map_objects.childCount - 1; i >= 0; i--)
+
+    var mapObjects = _Map.GetChild(1);
+    var candles = new List<GameObject>();
+    for (var i = mapObjects.childCount - 1; i >= 0; i--)
     {
-      var g = map_objects.GetChild(i).gameObject;
-      if (GameScript._GameMode != GameScript.GameModes.SURVIVAL && g.name.Contains("Candel")) continue;
-      GameObject.Destroy(g);
+      var mapObject = mapObjects.GetChild(i).gameObject;
+      if (GameScript._GameMode != GameScript.GameModes.SURVIVAL && mapObject.name.Contains("Candel"))
+      {
+        candles.Add(mapObject);
+        continue;
+      }
+      GameObject.Destroy(mapObject);
     }
+
     // Reload certain objects
-    var reloadObjects = new string[] { "e_", "door_", "p_", "button_", "playerspawn_", (GameScript._GameMode == GameScript.GameModes.SURVIVAL ? "candel" : "__") };
-    foreach (var data in _LevelObjects)
+    var reloadObjectTypes = new string[] { "e_", "door_", "p_", "button_", "playerspawn_", (GameScript._GameMode == GameScript.GameModes.SURVIVAL ? "candel" : "__") };
+    foreach (var levelObjectData in s_levelObjectData)
     {
       var loaded = false;
-      foreach (string s in reloadObjects)
+      foreach (var reloadObjectType in reloadObjectTypes)
       {
-        if (data.Length <= s.Length || !data.Substring(0, s.Length).Equals(s)) continue;
-        LoadObject(data);
+        if (levelObjectData.Length <= reloadObjectType.Length || !levelObjectData.Substring(0, reloadObjectType.Length).Equals(reloadObjectType)) continue;
+        LoadObject(levelObjectData);
         loaded = true;
         break;
       }
       if (loaded) continue;
+
       // Load all furnature
-      foreach (var leo in _Furniture)
+      foreach (var leo in s_furniture)
       {
         var s = leo._addSettings._data.Split('_')[0] + "_";
-        if (s.Contains("candel")) continue;
-        if (data.Length <= s.Length || !data.Substring(0, s.Length).Equals(s)) continue;
-        LoadObject(data);
+        if (s.Contains("candel"))
+        {
+          continue;
+        }
+        if (levelObjectData.Length <= s.Length || !levelObjectData.Substring(0, s.Length).Equals(s)) continue;
+        LoadObject(levelObjectData);
         break;
       }
     }
+
+    // Check for light max
+    if (!GameScript.IsSurvival())
+      if (candles.Count > 4)
+      {
+
+        Debug.LogWarning("Max light sources! Adding light dimmers");
+        foreach (var candle in candles)
+        {
+          var customObstacle = candle.AddComponent<CustomObstacle>();
+          customObstacle.InitCandle();
+        }
+
+      }
+
     // Combine meshes
     IEnumerator co()
     {
@@ -1696,10 +1754,13 @@ public class TileManager
       CombineMeshes(false);
     }
     GameScript._Singleton.StartCoroutine(co());
+
     // Set level time
     GameScript._LevelStartTime = Time.time;
+
     // Init enemies
     EnemyScript.HardInitAll();
+
     // Spawn player
     GameScript.SpawnPlayers();
     OnMapLoad();
@@ -2072,7 +2133,7 @@ public class TileManager
     for (int i = navmesh_mods.childCount - 1; i >= 0; i--)
       GameObject.Destroy(navmesh_mods.GetChild(i).gameObject);
     string[] notloadObjects = new string[] { "e_", "playerspawn_" };
-    foreach (string data in _LevelObjects)
+    foreach (string data in s_levelObjectData)
     {
       bool found = false;
       foreach (string data_type in notloadObjects)
@@ -2237,6 +2298,7 @@ public class TileManager
 
     // Forget tiles
     _Selected_Tiles = null;
+
     // Remove enemies
     EnemyScript.Reset();
     CustomObstacle.Reset();
@@ -3313,7 +3375,7 @@ public class TileManager
       null);
   #endregion
 
-  static LevelEditorObject[] _Furniture = new LevelEditorObject[]
+  static LevelEditorObject[] s_furniture = new LevelEditorObject[]
   {
     _LEO_Table,
     _LEO_TableSmall,
@@ -3888,8 +3950,9 @@ public class TileManager
         // Check for key and if current object can move
         if (ControllerManager.GetKey(Key.G) && movementSettings != null)
           _CurrentMode = EditorMode.MOVE;
-        /*/ Check for custom obstacles
-        if (CanCustomObject())
+
+        // Check for custom obstacles
+        if (CanCustomObject() && ControllerManager.GetKey(Key.SHIFT_L, ControllerManager.InputMode.HOLD))
         {
           var co = _SelectedObject.GetComponent<CustomObstacle>();
           // Add / remove
@@ -3899,10 +3962,10 @@ public class TileManager
               _SelectedObject.gameObject.AddComponent<CustomObstacle>();
             else
               GameObject.DestroyImmediate(_SelectedObject.gameObject.GetComponent<CustomObstacle>());
-            ClearText();
-            UpdateText();
+            //ClearText();
+            //UpdateText();
           }
-          var mod = 1;
+          /*var mod = 1;
           if (ControllerManager.GetKey(Key.CONTROL_LEFT, ControllerManager.InputMode.HOLD)) mod = -1;
           // Change index
           if (ControllerManager.GetKey(Key.N) && co != null)
@@ -3917,16 +3980,16 @@ public class TileManager
             co._index2 += mod;
             ClearText();
             UpdateText();
-          }
+          }*/
           // Change type
           if (ControllerManager.GetKey(Key.COMMA) && co != null)
           {
             co._type = (CustomObstacle.InteractType)((((int)co._type) + 1) % 5);
             co._index = co._index;
-            ClearText();
-            UpdateText();
+            //ClearText();
+            //UpdateText();
           }
-        }*/
+        }
       }
       LevelEditorObject.RotationSettings rotationSettings = obj._rotationSettings;
 

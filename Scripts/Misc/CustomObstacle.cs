@@ -956,7 +956,9 @@ public class CustomObstacle : MonoBehaviour
   }
   void Handle(CType ctype)
   {
+    if (this == null) return;
     if (ctype == CType.CANDLE && !_candleScript._enabled) return;
+
     // Check for nearby players
     _desiredScale = 0f;
     if (PlayerScript._Players != null)
@@ -964,11 +966,11 @@ public class CustomObstacle : MonoBehaviour
       var min_dist = 1000f;
       foreach (var player in PlayerScript._Players)
       {
-        if (player._ragdoll._dead) continue;
+        if (player._ragdoll._dead || player == null) continue;
         var path = new UnityEngine.AI.NavMeshPath();
         var filter = new UnityEngine.AI.NavMeshQueryFilter();
         filter.areaMask = 1;
-        filter.agentTypeID = TileManager._navMeshSurface2.agentTypeID;
+        filter.agentTypeID = GameScript.IsSurvival() ? TileManager._navMeshSurface2.agentTypeID : TileManager._navMeshSurface.agentTypeID;
         var usePosition = transform.position;
         if (ctype == CType.CANDLE)
         {
@@ -990,8 +992,9 @@ public class CustomObstacle : MonoBehaviour
         _desiredScale = (min_dist < 0.6f ? 0.3f : (min_dist < 1.5f ? 0.15f : 0f));
       else if (ctype == CType.CANDLE)
       {
-        var min = 5.5f;
-        var max = 8.5f;
+        //Debug.Log(min_dist);
+        var min = GameScript.IsSurvival() ? 5.5f : 7;
+        var max = GameScript.IsSurvival() ? 8.5f : 12f;
         if (min_dist < min) _candleScript._normalizedEnable = 1f;
         else if (min_dist > max) _candleScript._normalizedEnable = 0f;
         else _candleScript._normalizedEnable = 1f - ((min_dist - min) / (max - min));
