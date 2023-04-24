@@ -1272,7 +1272,11 @@ public class TileManager
                 //Debug.Log(GameScript._Singleton.transform.GetChild(0).childCount);
                 //Debug.Log(idP);
                 door_script0.RegisterEnemy(idP);
-                door_script0.RegisterEnemyReal(GameScript._Singleton.transform.GetChild(0).GetChild(idP).GetChild(0).GetComponent<EnemyScript>());
+                var enemies = GameScript._Singleton.transform.GetChild(0);
+                if(idP >= enemies.childCount){
+                  throw new System.IndexOutOfRangeException($"Trying to link door with enemy ID {idP} out of {enemies.childCount}");
+                }
+                door_script0.RegisterEnemyReal(enemies.GetChild(idP).GetChild(0).GetComponent<EnemyScript>());
               }
               break;
             default:

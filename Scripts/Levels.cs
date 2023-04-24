@@ -255,8 +255,21 @@ public class Levels : MonoBehaviour
   }
   public static System.Tuple<string, string> GetLevelRating(int level_index)
   {
-    var time_data = Levels._CurrentLevel_LevelTimesData[Settings._DIFFICULTY][level_index];
-    return GetLevelRating(time_data.Item1, time_data.Item2);
+    try
+    {
+      var time_data = Levels._CurrentLevel_LevelTimesData[Settings._DIFFICULTY][level_index];
+      return GetLevelRating(time_data.Item1, time_data.Item2);
+    }
+    catch (System.Exception e)
+    {
+      if (Levels._CurrentLevel_LevelTimesData == null)
+      {
+        Debug.LogError("Levels times null");
+        return null;
+      }
+      Debug.LogError($"{level_index} / {Levels._CurrentLevel_LevelTimesData[Settings._DIFFICULTY].Count}");
+      return null;
+    }
   }
   public static bool LevelHasTopRating(int level_index)
   {

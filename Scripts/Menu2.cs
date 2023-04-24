@@ -3448,7 +3448,8 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
       // Set level directory options
       if (GameScript._GameMode == GameScript.GameModes.CLASSIC)
       {
-        dirs = Mathf.CeilToInt(Levels._CurrentLevelCollection._levelData.Length / levels_per_dir);
+        Debug.Log($"{Levels._CurrentLevelCollection._levelData.Length} / {levels_per_dir} = {(float)Levels._CurrentLevelCollection._levelData.Length / levels_per_dir} ... {Mathf.CeilToInt((float)Levels._CurrentLevelCollection._levelData.Length / levels_per_dir)}");
+        dirs = Mathf.CeilToInt((float)Levels._CurrentLevelCollection._levelData.Length / levels_per_dir);
       }
       else if (GameScript._GameMode == GameScript.GameModes.CHALLENGE || GameScript._GameMode == GameScript.GameModes.SURVIVAL)
         dirs = Levels._CurrentLevelCollection._levelData.Length;

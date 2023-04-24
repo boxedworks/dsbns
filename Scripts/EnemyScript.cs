@@ -1779,8 +1779,9 @@ public class EnemyScript : MonoBehaviour
           GameScript.SurvivalMode.GivePoints(source._playerScript._id, 5 * (GameScript.SurvivalMode._Wave), true);
       }
 
-      else if (!PlayerScript._All_Dead)
+      else
       {
+
         // Level timer
         TileManager._Level_Complete = true;
 
@@ -1789,47 +1790,52 @@ public class EnemyScript : MonoBehaviour
         var level_time = float.Parse(TileManager._LevelTimer.ToString("0.000"));
         var level_time_best = float.Parse(PlayerPrefs.GetFloat($"{Levels._CurrentLevelCollection_Name}_{Levels._CurrentLevelIndex}_time", -1f).ToString("0.000"));
 
-        if (level_time_best == -1 || level_time < level_time_best)
+        // Give player time and awards if alive after 0.5 seconds
+        IEnumerator AwardPlayer()
         {
 
-          // Show new best score
-          if (can_save_timers)
-          {
-            PlayerPrefs.SetFloat($"{Levels._CurrentLevelCollection_Name}_{Levels._CurrentLevelIndex}_time", level_time);
-            TileManager._Text_LevelTimer_Best.text += string.Format(" -> {0:0.000}", level_time);
-          }
+          var gameId = GameScript._GameId;
+          yield return new WaitForSeconds(0.5f);
 
-          // Cannot save score
+          if (PlayerScript._All_Dead || gameId != GameScript._GameId)
+          {
+            TileManager._Text_LevelTimer_Best.text += string.Format(" -> <s>{0:0.000}</s> (dead)", level_time);
+          }
           else
           {
-            TileManager._Text_LevelTimer_Best.text += string.Format(" -> <s>{0:0.000}</s> (extras on)", level_time);
-          }
-        }
 
-        // Show time difference between best time
-        if (level_time_best != -1f && level_time != level_time_best)
-        {
-          if (level_time < level_time_best)
-            TileManager._Text_LevelTimer.text = string.Format($"{{0:0.000}} (<color=green>-{{1:0.000}}</color>)", level_time, level_time_best - level_time);
-          else
-            TileManager._Text_LevelTimer.text = string.Format($"{{0:0.000}} (<color=red>+{{1:0.000}}</color>)", level_time, level_time - level_time_best);
-        }
+            // Check best player time
+            if (level_time_best == -1 || level_time < level_time_best)
+            {
 
-        if (can_save_timers)
-        {
+              // Show new best score
+              if (can_save_timers)
+              {
+                PlayerPrefs.SetFloat($"{Levels._CurrentLevelCollection_Name}_{Levels._CurrentLevelIndex}_time", level_time);
+                TileManager._Text_LevelTimer_Best.text += string.Format(" -> {0:0.000}", level_time);
+              }
 
-          IEnumerator AwardPlayer()
-          {
+              // Cannot save score
+              else
+              {
+                TileManager._Text_LevelTimer_Best.text += string.Format(" -> <s>{0:0.000}</s> (extras on)", level_time);
+              }
+            }
 
-            var gameId = GameScript._GameId;
-            yield return new WaitForSeconds(0.5f);
+            // Show time difference between best time
+            if (level_time_best != -1f && level_time != level_time_best)
+            {
+              if (level_time < level_time_best)
+                TileManager._Text_LevelTimer.text = string.Format($"{{0:0.000}} (<color=green>-{{1:0.000}}</color>)", level_time, level_time_best - level_time);
+              else
+                TileManager._Text_LevelTimer.text = string.Format($"{{0:0.000}} (<color=red>+{{1:0.000}}</color>)", level_time, level_time - level_time_best);
+            }
 
-            if (PlayerScript._All_Dead || gameId != GameScript._GameId) { }
-            else
+            if (can_save_timers)
             {
 
               // Save best dev time
-              if (Debug.isDebugBuild)
+              if (false && Debug.isDebugBuild)
               {
 
                 if (TileManager._LevelTime_Dev == -1 || level_time < TileManager._LevelTime_Dev)
@@ -1955,8 +1961,8 @@ public class EnemyScript : MonoBehaviour
             }
           }
 
-          StartCoroutine(AwardPlayer());
         }
+        StartCoroutine(AwardPlayer());
 
         // Teleport exit to player
         if (level_time_best != -1f)

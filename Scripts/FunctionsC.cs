@@ -72,13 +72,14 @@ public static class FunctionsC
     }
     return info;
   }
-  public static DistanceInfo GetClosestEnemyTo(Vector3 pos)
+  public static DistanceInfo GetClosestEnemyTo(Vector3 pos, bool include_chaser = true)
   {
     if (EnemyScript._Enemies_alive == null) return null;
     var info = new DistanceInfo();
     info._distance = 1000f;
     foreach (var enemy in EnemyScript._Enemies_alive)
     {
+      if (enemy.IsChaser() && !include_chaser) { continue; }
       var dist = MathC.Get2DDistance(enemy.GetRagdoll()._hip.position, pos);
       if (dist < info._distance)
       {

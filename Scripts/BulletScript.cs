@@ -166,7 +166,7 @@ public class BulletScript : MonoBehaviour
         {
           if (_sourceRagdoll._playerScript?.HasPerk(Shop.Perk.PerkType.SMART_BULLETS) ?? false)
           {
-            var enemy = FunctionsC.GetClosestEnemyTo(transform.position);
+            var enemy = FunctionsC.GetClosestEnemyTo(transform.position, false);
             if (enemy != null && enemy._ragdoll != null)
             {
               var new_vel = (enemy._ragdoll._hip.transform.position - _rb.position).normalized * _rb.velocity.magnitude;
@@ -192,22 +192,31 @@ public class BulletScript : MonoBehaviour
       else if (collider.transform.parent.name == "FRYING_PAN")
       {
         var item = collider.transform.parent.GetComponent<ItemScript>();
-        if ((item._ragdoll?._swinging ?? false))
+        if (item._ragdoll._id != _sourceRagdoll._id)
         {
-          if (item._ragdoll._id != _sourceRagdoll._id)
+          if ((item._ragdoll?._swinging ?? false))
+          {
+
             Deflect(item, true);
-        }
-        else
-        {
-          PlaySparks(true);
 
-          var parts = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.BULLET_CASING_HOT)[0];
-          parts.transform.position = transform.position;
-          parts.Emit(1);
+#if UNITY_STANDALONE
+            // Check achievement
+            if (item._ragdoll._isPlayer && item._ragdoll._playerScript != null)
+              SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.BAT_DEFLECT);
+#endif
+          }
+          else
+          {
+            PlaySparks(true);
 
-          item._ragdoll.Recoil(-(_sourceItem.transform.position - item.transform.position).normalized, _rb.velocity.magnitude / 25f);
+            var parts = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.BULLET_CASING_HOT)[0];
+            parts.transform.position = transform.position;
+            parts.Emit(1);
 
-          Hide();
+            item._ragdoll.Recoil(-(_sourceItem.transform.position - item.transform.position).normalized, _rb.velocity.magnitude / 25f);
+
+            Hide();
+          }
         }
         return;
       }
