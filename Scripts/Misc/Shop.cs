@@ -230,6 +230,7 @@ public static class Shop
     EXTRA_ENEMY_MULTI,
     EXTRA_BLOOD_FX,
     EXTRA_EXPLODED,
+    EXTRA_CROWNMODE,
 
     TUTORIAL_PART0,
     TUTORIAL_PART1
@@ -340,6 +341,7 @@ public static class Shop
     _Unlocks_Descriptions.Add(Unlocks.EXTRA_HORDE, new Tuple<string, int>("unlocks 'horde' extra", 0));
     _Unlocks_Descriptions.Add(Unlocks.EXTRA_BLOOD_FX, new Tuple<string, int>("unlocks 'blood fx' extra", 0));
     _Unlocks_Descriptions.Add(Unlocks.EXTRA_EXPLODED, new Tuple<string, int>("unlocks 'explode death' extra", 0));
+    _Unlocks_Descriptions.Add(Unlocks.EXTRA_CROWNMODE, new Tuple<string, int>("unlocks 'crown' extra", 0));
 
     _Unlocks_Descriptions.Add(Unlocks.TUTORIAL_PART0, new Tuple<string, int>("", 0));
     _Unlocks_Descriptions.Add(Unlocks.TUTORIAL_PART1, new Tuple<string, int>("", 0));

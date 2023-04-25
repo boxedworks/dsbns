@@ -250,10 +250,11 @@ public class PlayerScript : MonoBehaviour
     }
 
     // Check crown
-    if (GameScript.s_CrownPlayer == _Profile._Id)
-    {
-      _ragdoll.AddCrown();
-    }
+    if (Settings._Extra_CrownMode._value != 0)
+      if (GameScript.s_CrownPlayer == _Profile._Id)
+      {
+        _ragdoll.AddCrown();
+      }
   }
 
   public void RegisterUtilities()

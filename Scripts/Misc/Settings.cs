@@ -295,7 +295,8 @@ public static class Settings
     _Extra_EnemyMultiplier,
     _Extra_PlayerAmmo, _Extra_EnemyAmmo,
     _Extra_BodyExplode,
-    _Extra_BloodType;
+    _Extra_BloodType,
+    _Extra_CrownMode;
   public static bool _Extras_CanUse { get { return GameScript._GameMode == GameScript.GameModes.CLASSIC && !_LevelEditorEnabled; } }
   public static bool _Extras_UsingAny
   {
@@ -319,7 +320,8 @@ public static class Settings
         _Extra_EnemyMultiplier._value != 0 ||
         _Extra_PlayerAmmo._value != 0 ||
         _Extra_EnemyAmmo._value != 0 ||
-        _Extra_BodyExplode._value != 0
+        _Extra_BodyExplode._value != 0 || 
+        _Extra_CrownMode._value != 0
       ;
     }
   }
@@ -472,6 +474,7 @@ public static class Settings
     _Extra_EnemyAmmo = new FunctionsC.SaveableStat_Int("extra_enemyammo", 0);
     _Extra_BodyExplode = new FunctionsC.SaveableStat_Int("extra_bodyexplode", 0);
     _Extra_BloodType = new FunctionsC.SaveableStat_Int("extra_bloodtype", 0);
+    _Extra_CrownMode = new FunctionsC.SaveableStat_Int("extra_crownmode", 0);
 
     s_Extra_UnlockCriterea = new Dictionary<
     Shop.Unlocks,

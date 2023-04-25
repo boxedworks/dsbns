@@ -1516,21 +1516,22 @@ public class ActiveRagdoll
     if (!_ragdolled) _saveRot = _hip.rotation;
 
     // Check crown
-    if (_hasCrown)
-    {
-      GameScript.s_CrownPlayer = GameScript.s_CrownEnemy = -1;
-      if (source != null)
+    if (Settings._Extra_CrownMode._value != 0)
+      if (_hasCrown)
       {
+        GameScript.s_CrownPlayer = GameScript.s_CrownEnemy = -1;
+        if (source != null)
+        {
 
-        RemoveCrown();
-        source.AddCrown();
+          RemoveCrown();
+          source.AddCrown();
 
-        if (source._isPlayer)
-          GameScript.s_CrownPlayer = source._playerScript._Profile._Id;
-        else
-          GameScript.s_CrownEnemy = source._enemyScript._Id;
+          if (source._isPlayer)
+            GameScript.s_CrownPlayer = source._playerScript._Profile._Id;
+          else
+            GameScript.s_CrownEnemy = source._enemyScript._Id;
+        }
       }
-    }
 
     // Invert values
     _hip.isKinematic = !_hip.isKinematic;

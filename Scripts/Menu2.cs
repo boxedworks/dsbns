@@ -6685,7 +6685,7 @@ a gampad if plugged in.~1
           Settings._Extra_EnemyMultiplier._value = 2;
         }),
         },
-        "modify the number of enemies initially spawned",
+        "modify the number of enemies spawned",
 
         Shop.Unlocks.EXTRA_ENEMY_MULTI,
         () => { return Shop.Unlocked(Shop.Unlocks.EXTRA_ENEMY_MULTI); }
@@ -6759,6 +6759,43 @@ a gampad if plugged in.~1
         "\n\n"
       );
 
+      /*/ Crown mode
+      AddExtraSelection(
+        "crown",
+        () =>
+        {
+          switch (Settings._Extra_CrownMode._value)
+          {
+            case 0:
+              return "off";
+            case 1:
+              return "all";
+            case 2:
+              return "enemies";
+            case 3:
+              return "players";
+          }
+          return "N/A";
+        },
+        new DropdownSelectionComponent[] {
+        new DropdownSelectionComponent("off", "", (MenuComponent component) => {
+          Settings._Extra_CrownMode._value = 0;
+        }),
+        new DropdownSelectionComponent("on", "", (MenuComponent component) => {
+          Settings._Extra_CrownMode._value = 1;
+        }),
+        new DropdownSelectionComponent("on - but no enemy bonuses", "", (MenuComponent component) => {
+          Settings._Extra_CrownMode._value = 2;
+        }),
+        },
+        "a crown shows the victor! enemies wearing the crown gain bonuses",
+
+        Shop.Unlocks.EXTRA_CROWNMODE,
+        () => { return Shop.Unlocked(Shop.Unlocks.EXTRA_CROWNMODE); },
+
+        "\n\n"
+      );*/
+
       // Back button
       menu_extras.AddBackButton((MenuComponent component) =>
       {
@@ -6792,8 +6829,7 @@ a gampad if plugged in.~1
 <color={_COLOR_GRAY}>===================</color>
 <color={_COLOR_GRAY}>unlock requirements</color>
 
--<color={_COLOR_GRAY}>level</color>      : {ex_level}
--<color={_COLOR_GRAY}>difficulty</color> : {ex_difficulty}
+-<color={_COLOR_GRAY}>level</color>      : {ex_level} - {ex_difficulty}
 -<color={_COLOR_GRAY}>parameters</color> : solo, {ex_extras}
 -<color={_COLOR_GRAY}>loadout</color>    : {ex_loadout}
         ");
