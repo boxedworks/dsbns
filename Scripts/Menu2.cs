@@ -3848,7 +3848,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
       // Correct playerprofiles
       if (num_loadouts == 0) num_loadouts = 1;
       else if (num_loadouts < GameScript.ItemManager.Loadout._Loadouts.Length) num_loadouts++;
-      foreach (var profile in GameScript.PlayerProfile._Profiles)
+      foreach (var profile in GameScript.PlayerProfile.s_Profiles)
         profile.ChangeLoadoutIfEmpty(num_loadouts - 1);
       // Spawn selections
       for (int i = 0; i < Mathf.Clamp(num_loadouts, 1, num_loadouts); i++)
@@ -3930,10 +3930,10 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
         if (equipment.Trim().Length == 0) equipment = "-";
         if (equipment1.Trim().Length == 0) equipment1 = "-";
         var color = "white";
-        if (GameScript.PlayerProfile._Profiles != null)
+        if (GameScript.PlayerProfile.s_Profiles != null)
           for (var u = 0; u < Settings._NumberPlayers; u++)
-            if (u < GameScript.PlayerProfile._Profiles.Length &&
-            GameScript.PlayerProfile._Profiles[u]._loadoutIndex == i)
+            if (u < GameScript.PlayerProfile.s_Profiles.Length &&
+            GameScript.PlayerProfile.s_Profiles[u]._loadoutIndex == i)
             {
               color = "yellow";
               break;
@@ -4025,7 +4025,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
       _Menus[MenuType.SELECT_LOADOUT]._onSwitchTo += () =>
       {
         SpawnMenu_SelectLoadout();
-        foreach (var profile in GameScript.PlayerProfile._Profiles)
+        foreach (var profile in GameScript.PlayerProfile.s_Profiles)
           if (profile._equipment.IsEmpty())
             profile._loadoutIndex++;
       };
@@ -4191,7 +4191,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
                   });
                 }
                 // Update UI
-                foreach (var profile in GameScript.PlayerProfile._Profiles)
+                foreach (var profile in GameScript.PlayerProfile.s_Profiles)
                   profile.UpdateIcons();
               });
               // Check if item is unlocked
@@ -4286,7 +4286,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
                   });
                 }
                 // Update UI
-                foreach (var profile in GameScript.PlayerProfile._Profiles)
+                foreach (var profile in GameScript.PlayerProfile.s_Profiles)
                   profile.UpdateIcons();
               });
               // Check if item is unlocked
@@ -4384,7 +4384,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
                     });
                   }
                   // Update UI
-                  foreach (var profile in GameScript.PlayerProfile._Profiles)
+                  foreach (var profile in GameScript.PlayerProfile.s_Profiles)
                     profile.UpdateIcons();
                 });
                 // Check if item is unlocked
@@ -4478,7 +4478,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
                       RenderMenu();
                     });
                   }                // Update UI
-                  foreach (var profile in GameScript.PlayerProfile._Profiles)
+                  foreach (var profile in GameScript.PlayerProfile.s_Profiles)
                     profile.UpdateIcons();
                 });
                 // Check if item is unlocked
@@ -4607,7 +4607,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
                   });
                 }
                 // Update UI
-                foreach (var profile in GameScript.PlayerProfile._Profiles)
+                foreach (var profile in GameScript.PlayerProfile.s_Profiles)
                   profile.UpdateIcons();
               });
               // Check if utility is unlocked
@@ -4711,7 +4711,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
                   });
                 }
                 // Update UI
-                foreach (var profile in GameScript.PlayerProfile._Profiles)
+                foreach (var profile in GameScript.PlayerProfile.s_Profiles)
                   profile.UpdateIcons();
               });
               // Check if utility is unlocked
@@ -4853,7 +4853,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
                   });
                 };
                 // Update UI
-                foreach (var profile in GameScript.PlayerProfile._Profiles)
+                foreach (var profile in GameScript.PlayerProfile.s_Profiles)
                   profile.UpdateIcons();
               });
               // Check if utility is unlocked
@@ -4884,8 +4884,8 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
             RenderMenu();
 
             // Loop through players and equip loadout
-            if (PlayerScript._Players != null)
-              foreach (var player in PlayerScript._Players)
+            if (PlayerScript.s_Players != null)
+              foreach (var player in PlayerScript.s_Players)
               {
                 player.EquipLoadout(CurrentLoadout()._id, false);
               }
@@ -4937,11 +4937,11 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
             RenderMenu();
 
             // Loop through players
-            if (PlayerScript._Players != null)
-              foreach (var player in PlayerScript._Players)
+            if (PlayerScript.s_Players != null)
+              foreach (var player in PlayerScript.s_Players)
               {
                 if (player == null || player._ragdoll == null || player._ragdoll._dead) continue;
-                if (player._profile._loadoutIndex == CurrentLoadout()._id)
+                if (player._Profile._loadoutIndex == CurrentLoadout()._id)
                   player.EquipLoadout(CurrentLoadout()._id, false);
               }
           });
@@ -4951,7 +4951,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
           loadout.Save();
 
         // Check empty loadout
-        foreach (var profile in GameScript.PlayerProfile._Profiles)
+        foreach (var profile in GameScript.PlayerProfile.s_Profiles)
           profile.ChangeLoadoutIfEmpty();
       };
 
@@ -5077,8 +5077,8 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
           .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
           {
             var obscured = false;
-            if (PlayerScript._Players != null)
-              foreach (var player in PlayerScript._Players)
+            if (PlayerScript.s_Players != null)
+              foreach (var player in PlayerScript.s_Players)
               {
                 if (player == null || player._ragdoll == null || player._ragdoll._dead) continue;
                 if (MathC.Get2DDistance(player.transform.position, PlayerspawnScript._PlayerSpawns[0].transform.position) > 1.2f)
@@ -5230,7 +5230,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
           continue;
         }
         var stat = Stats._Stats[i];
-        mPause.AddComponent(string.Format(format_stats, GameScript.PlayerProfile._Profiles[i].GetColorName(), $"P{i + 1}/", $"{stat._kills}", $"{stat._deaths}", Settings._NumberPlayers > 1 ? $"{stat._teamkills}" : "", GameScript._GameMode == GameScript.GameModes.SURVIVAL ? $"{stat._points}" : ""));
+        mPause.AddComponent(string.Format(format_stats, GameScript.PlayerProfile.s_Profiles[i].GetColorName(), $"P{i + 1}/", $"{stat._kills}", $"{stat._deaths}", Settings._NumberPlayers > 1 ? $"{stat._teamkills}" : "", GameScript._GameMode == GameScript.GameModes.SURVIVAL ? $"{stat._points}" : ""));
       };
       // Set the onback function to be resume
       _Menus[MenuType.PAUSE]._onBack = () =>
@@ -5401,8 +5401,8 @@ go to the <color=yellow>SHOP</color> to buy something~1
       .AddEvent((MenuComponent component) => { CommonEvents._SwitchMenu(MenuType.CONTROLS); })
     .AddComponent("control options\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
       .AddEvent((MenuComponent component) => { CommonEvents._SwitchMenu(MenuType.OPTIONS_CONTROLS); })
-    .AddComponent("overall stats\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-      .AddEvent((MenuComponent component) => { CommonEvents._SwitchMenu(MenuType.STATS); })
+    .AddComponent("overall stats - broke\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE, _COLOR_GRAY)
+      .AddEvent((MenuComponent component) => { /*CommonEvents._SwitchMenu(MenuType.STATS); */})
     // Back button; switch menu per pause setting
     .AddBackButton((MenuComponent component) =>
     {
@@ -5964,7 +5964,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
               loadout._two_weapon_pairs = false;
               loadout.Load();
             }
-            foreach (var profile in GameScript.PlayerProfile._Profiles)
+            foreach (var profile in GameScript.PlayerProfile.s_Profiles)
             {
               profile._loadoutIndex = 0;
               profile.UpdateIcons();
@@ -6237,8 +6237,8 @@ a gampad if plugged in.~1
           Settings._ForceKeyboard = true;
           if (ControllerManager._NumberGamepads > 0)
           {
-            GameScript.PlayerProfile._Profiles[1]._directionalAxis = GameScript.PlayerProfile._Profiles[0]._directionalAxis;
-            GameScript.PlayerProfile._Profiles[0]._directionalAxis = new float[3];
+            GameScript.PlayerProfile.s_Profiles[1]._directionalAxis = GameScript.PlayerProfile.s_Profiles[0]._directionalAxis;
+            GameScript.PlayerProfile.s_Profiles[0]._directionalAxis = new float[3];
           }
         });
         selections.Add("off - use this if you want to play with controllers, ignoring the keyboard [DEFAULT]");
@@ -6247,8 +6247,8 @@ a gampad if plugged in.~1
           Settings._ForceKeyboard = false;
           if (ControllerManager._NumberGamepads > 0)
           {
-            GameScript.PlayerProfile._Profiles[0]._directionalAxis = GameScript.PlayerProfile._Profiles[1]._directionalAxis;
-            GameScript.PlayerProfile._Profiles[1]._directionalAxis = new float[3];
+            GameScript.PlayerProfile.s_Profiles[0]._directionalAxis = GameScript.PlayerProfile.s_Profiles[1]._directionalAxis;
+            GameScript.PlayerProfile.s_Profiles[1]._directionalAxis = new float[3];
           }
         });
 
@@ -6295,11 +6295,11 @@ a gampad if plugged in.~1
       .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
       {
         // Set display text
-        component.SetDisplayText(string.Format(format_options, "player:", (GameScript.PlayerProfile._CurrentSettingsProfileID + 1) + ""));
+        component.SetDisplayText(string.Format(format_options, "player:", (GameScript.PlayerProfile.s_CurrentSettingsProfileID + 1) + ""));
         // Set dropdown data
         var selections = new List<string>();
         var actions = new List<System.Action<MenuComponent>>();
-        var selection_match = (GameScript.PlayerProfile._CurrentSettingsProfileID + 1) + "";
+        var selection_match = (GameScript.PlayerProfile.s_CurrentSettingsProfileID + 1) + "";
         for (int i = 0; i < 4; i++)
         {
           // Add quality level
@@ -6307,7 +6307,7 @@ a gampad if plugged in.~1
           // Add action to update quality
           actions.Add((MenuComponent component0) =>
     {
-      GameScript.PlayerProfile._CurrentSettingsProfileID = component0._dropdownIndex;
+      GameScript.PlayerProfile.s_CurrentSettingsProfileID = component0._dropdownIndex;
     });
         }
         // Update dropdown data
@@ -6319,19 +6319,19 @@ a gampad if plugged in.~1
       {
         var colors = new string[] { "blue", "red", "yellow", "cyan", "white", "black", "orange" };
         // Set display text
-        component.SetDisplayText(string.Format(format_options, "color:", colors[GameScript.PlayerProfile._CurrentSettingsProfile._playerColor]));
+        component.SetDisplayText(string.Format(format_options, "color:", colors[GameScript.PlayerProfile.s_CurrentSettingsProfile._playerColor]));
         // Set dropdown data
         var selections = new List<string>();
         var actions = new List<System.Action<MenuComponent>>();
-        var selection_match = colors[GameScript.PlayerProfile._CurrentSettingsProfile._playerColor];
+        var selection_match = colors[GameScript.PlayerProfile.s_CurrentSettingsProfile._playerColor];
         for (int i = 0; i < GameScript.PlayerProfile._Colors.Length; i++)
         {
           selections.Add($"{colors[i]}");
           // Add action to update profile color
           actions.Add((MenuComponent component0) =>
     {
-      GameScript.PlayerProfile._CurrentSettingsProfile._playerColor = component0._dropdownIndex;
-      GameScript.PlayerProfile._CurrentSettingsProfile.CreateHealthUI(GameScript.PlayerProfile._CurrentSettingsProfile._player == null ? 1 : GameScript.PlayerProfile._CurrentSettingsProfile._player._ragdoll._health);
+      GameScript.PlayerProfile.s_CurrentSettingsProfile._playerColor = component0._dropdownIndex;
+      GameScript.PlayerProfile.s_CurrentSettingsProfile.CreateHealthUI(GameScript.PlayerProfile.s_CurrentSettingsProfile._Player == null ? 1 : GameScript.PlayerProfile.s_CurrentSettingsProfile._Player._ragdoll._health);
     });
         }
         // Update dropdown data
@@ -6366,7 +6366,7 @@ a gampad if plugged in.~1
       .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
       {
         // Set display text
-        var selection = GameScript.PlayerProfile._CurrentSettingsProfile._reloadSidesSameTime ? "both" : "one_at_a_time";
+        var selection = GameScript.PlayerProfile.s_CurrentSettingsProfile._reloadSidesSameTime ? "both" : "one_at_a_time";
         component.SetDisplayText(string.Format(format_options, "reload setting:", selection));
         // Set dropdown data
         var selections = new List<string>();
@@ -6375,12 +6375,12 @@ a gampad if plugged in.~1
         selections.Add("both -        - press the reload button to reload weapons at the same time [DEFAULT]");
         actions.Add((MenuComponent component0) =>
         {
-          GameScript.PlayerProfile._CurrentSettingsProfile._reloadSidesSameTime = true;
+          GameScript.PlayerProfile.s_CurrentSettingsProfile._reloadSidesSameTime = true;
         });
         selections.Add("one_at_a_time - press the reload button to reload weapons one at a time");
         actions.Add((MenuComponent component0) =>
         {
-          GameScript.PlayerProfile._CurrentSettingsProfile._reloadSidesSameTime = false;
+          GameScript.PlayerProfile.s_CurrentSettingsProfile._reloadSidesSameTime = false;
         });
         // Update dropdown data
         component.SetDropdownData("reload setting\n\n", selections, actions, selection_match);
@@ -6390,7 +6390,7 @@ a gampad if plugged in.~1
       .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
       {
         // Set display text
-        var selection = GameScript.PlayerProfile._CurrentSettingsProfile._faceMovement ? "on" : "off";
+        var selection = GameScript.PlayerProfile.s_CurrentSettingsProfile._faceMovement ? "on" : "off";
         component.SetDisplayText(string.Format(format_options, "face walk direction:", selection) + '\n');
         // Set dropdown data
         var selections = new List<string>();
@@ -6399,12 +6399,12 @@ a gampad if plugged in.~1
         selections.Add("on - face the direction you are moving if not aiming [DEFAULT]");
         actions.Add((MenuComponent component0) =>
         {
-          GameScript.PlayerProfile._CurrentSettingsProfile._faceMovement = true;
+          GameScript.PlayerProfile.s_CurrentSettingsProfile._faceMovement = true;
         });
         selections.Add("off - ignore the direction you are moving, only face your aim direction");
         actions.Add((MenuComponent component0) =>
         {
-          GameScript.PlayerProfile._CurrentSettingsProfile._faceMovement = false;
+          GameScript.PlayerProfile.s_CurrentSettingsProfile._faceMovement = false;
         });
         // Update dropdown data
         component.SetDropdownData("walk direction setting\n\n", selections, actions, selection_match);
@@ -6415,7 +6415,12 @@ a gampad if plugged in.~1
     //ModifyMenu_TipComponents(MenuType.OPTIONS_CONTROLS, 16, 1);
     //ModifyMenu_TipSwitch(MenuType.OPTIONS_CONTROLS);
 
-    // Extras
+    /// Extras
+    // Extra hint unlock info
+    var ex_level = 50;
+    var ex_difficulty = "sneaky";
+    var ex_extras = "no extras";
+    var ex_loadout = "knife, silenced pistol";
     void SpawnMenu_Extras()
     {
       var format_extras = "{0,-12}- {1,-50}";
@@ -6435,7 +6440,8 @@ a gampad if plugged in.~1
         DropdownSelectionComponent[] dropdown_selection_datas,
         string dropdown_prompt,
 
-        string hint,
+        Shop.Unlocks extra,
+
         System.Func<bool> visibility_conditions,
 
         string line_end = "\n")
@@ -6484,21 +6490,34 @@ a gampad if plugged in.~1
         // Obfuscate component and show hint for unlock
         else
         {
-          menu_extras.AddComponent($"???{line_end}", MenuComponent.ComponentType.BUTTON_SIMPLE)
-            .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+          menu_extras.AddComponent($"???{line_end}", MenuComponent.ComponentType.BUTTON_SIMPLE);
+          /*.AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+          {
+            // Set hint text when focused
+            component._selectorType = MenuComponent.SelectorType.QUESTION;
+            if (component._focused)
             {
-              // Set hint text when focused
-              component._selectorType = MenuComponent.SelectorType.QUESTION;
-              if (component._focused)
-              {
-                component.SetDisplayText(string.Format(format_extras2 + line_end, "???", hint));
-              }
-              else
-              {
-                component.SetDisplayText($"???{line_end}");
-              }
-            });
+              component.SetDisplayText(string.Format(format_extras2 + line_end, "???", hint));
+            }
+            else
+            {
+              component.SetDisplayText($"???{line_end}");
+            }
+          });*/
         }
+
+        // Set hint info and reload component
+        menu_extras.AddEvent(EventType.ON_FOCUS, (MenuComponent c) =>
+        {
+          var unlockInfo = Settings.s_Extra_UnlockCriterea[extra];
+
+          ex_level = unlockInfo.Item1;
+          ex_difficulty = unlockInfo.Item2 == 0 ? "sneaky" : "<color=cyan>sneakier</color>";
+          ex_extras = unlockInfo.Item3 == null ? "no extras" : "extras...";
+          ex_loadout = unlockInfo.Item4;
+
+          c._menu._menuComponent_last._onFocus?.Invoke(c._menu._menuComponent_last);
+        });
       }
 
       // Gravity direction
@@ -6525,8 +6544,8 @@ a gampad if plugged in.~1
         },
         "set gravity's direction",
 
-        "unlock by completing sneaky level 80, solo, with just a knife and silenced pistol",
-        () => { return true; Shop.Unlocked(Shop.Unlocks.EXTRA_GRAVITY); }
+        Shop.Unlocks.EXTRA_GRAVITY,
+        () => { return Shop.Unlocked(Shop.Unlocks.EXTRA_GRAVITY); }
       );
 
       // Remove bat guy
@@ -6558,8 +6577,8 @@ a gampad if plugged in.~1
         },
         "modify the chasing guy",
 
-        "unlock by...",
-        () => { return true; Shop.Unlocked(Shop.Unlocks.EXTRA_CHASER); }
+        Shop.Unlocks.EXTRA_CHASE,
+        () => { return Shop.Unlocked(Shop.Unlocks.EXTRA_CHASE); }
       );
 
 
@@ -6597,8 +6616,8 @@ a gampad if plugged in.~1
         },
         "change the max ammo of your weapons / utilities",
 
-        "unlock by...",
-        () => { return true; return Shop.Unlocked(Shop.Unlocks.EXTRA_CHASER); },
+        Shop.Unlocks.EXTRA_PLAYER_AMMO,
+        () => { return Shop.Unlocked(Shop.Unlocks.EXTRA_PLAYER_AMMO); },
 
         "\n\n"
       );
@@ -6617,8 +6636,8 @@ a gampad if plugged in.~1
         },
         "set the speed that time passes",
 
-        "unlock by completing sneaky level 40, solo, with just a knife",
-        () => { return true; Shop.Unlocked(Shop.Unlocks.EXTRA_TIME); }
+        Shop.Unlocks.EXTRA_TIME,
+        () => { return Shop.Unlocked(Shop.Unlocks.EXTRA_TIME); }
       );
 
       // Crazy zombies
@@ -6635,8 +6654,8 @@ a gampad if plugged in.~1
         },
         "toggle a horde mode",
 
-        "unlock by...",
-        () => { return true; Shop.Unlocked(Shop.Unlocks.EXTRA_HORDE); }
+        Shop.Unlocks.EXTRA_HORDE,
+        () => { return Shop.Unlocked(Shop.Unlocks.EXTRA_HORDE); }
       );
 
       // Enemy multiplier
@@ -6668,13 +6687,13 @@ a gampad if plugged in.~1
         },
         "modify the number of enemies initially spawned",
 
-        "unlock by...",
-        () => { return true; return Shop.Unlocked(Shop.Unlocks.EXTRA_CHASER); }
+        Shop.Unlocks.EXTRA_ENEMY_MULTI,
+        () => { return Shop.Unlocked(Shop.Unlocks.EXTRA_ENEMY_MULTI); }
       );
 
       // Blood type
       AddExtraSelection(
-        "blood type",
+        "blood fx",
         () =>
         {
           switch (Settings._Extra_BloodType._value)
@@ -6696,13 +6715,13 @@ a gampad if plugged in.~1
         },
         "change what blood looks like",
 
-        "unlock by...",
-        () => { return true; return Shop.Unlocked(Shop.Unlocks.EXTRA_CHASER); }
+        Shop.Unlocks.EXTRA_BLOOD_FX,
+        () => { return Shop.Unlocked(Shop.Unlocks.EXTRA_BLOOD_FX); }
       );
 
       // Body explode
       AddExtraSelection(
-        "explode on death",
+        "explode death",
         () =>
         {
           switch (Settings._Extra_BodyExplode._value)
@@ -6734,8 +6753,8 @@ a gampad if plugged in.~1
         },
         "explode on death",
 
-        "unlock by...",
-        () => { return true; return Shop.Unlocked(Shop.Unlocks.EXTRA_CHASER); },
+        Shop.Unlocks.EXTRA_EXPLODED,
+        () => { return Shop.Unlocked(Shop.Unlocks.EXTRA_EXPLODED); },
 
         "\n\n"
       );
@@ -6753,11 +6772,38 @@ a gampad if plugged in.~1
           _Menus[MenuType.GAMETYPE_CLASSIC]._selectionIndex = 3;
           SwitchMenu(MenuType.GAMETYPE_CLASSIC);
         }
+      })
+      .AddEvent(EventType.ON_FOCUS, (MenuComponent c) =>
+      {
+        ex_level = -1;
+        menu_extras._menuComponent_last._onFocus?.Invoke(menu_extras._menuComponent_last);
       });
+
+      // Extra hint info
+      menu_extras.AddComponent("\n\n\n\n\n\n\n\n")
+        .AddEvent(EventType.ON_FOCUS, (MenuComponent c) =>
+        {
+          if (ex_level == -1)
+          {
+            c.SetDisplayText("");
+          }
+          else
+            c.SetDisplayText($@"
+<color={_COLOR_GRAY}>===================</color>
+<color={_COLOR_GRAY}>unlock requirements</color>
+
+-<color={_COLOR_GRAY}>level</color>      : {ex_level}
+-<color={_COLOR_GRAY}>difficulty</color> : {ex_difficulty}
+-<color={_COLOR_GRAY}>parameters</color> : solo, {ex_extras}
+-<color={_COLOR_GRAY}>loadout</color>    : {ex_loadout}
+        ");
+        });
+
       // Spawn menu
       _Menus[MenuType.EXTRAS]._onSwitchTo += () =>
       {
         SpawnMenu_Extras();
+        _Menus[MenuType.EXTRAS]._selectedComponent._onFocus(_Menus[MenuType.EXTRAS]._selectedComponent);
       };
       // Tip
       //ModifyMenu_TipComponents(MenuType.EXTRAS, 14);

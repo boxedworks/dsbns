@@ -521,7 +521,7 @@ public class ItemScript : MonoBehaviour
         _clip++;
       }
 
-      _ragdoll._playerScript?._profile.ItemUse(_side);
+      _ragdoll._playerScript?._Profile.ItemUse(_side);
 
       if (_clip == 0) OnClipEmpty();
     };
@@ -703,7 +703,7 @@ public class ItemScript : MonoBehaviour
       {
         // Update UI
         _swang = true;
-        _ragdoll._playerScript?._profile.ItemUse(_side);
+        _ragdoll._playerScript?._Profile.ItemUse(_side);
       }
       // Play sound
       //if(_customProjetile != UtilityScript.UtilityType.NONE) playSound = false;
@@ -759,7 +759,7 @@ public class ItemScript : MonoBehaviour
           if (IsChargeWeapon() && _clip < _minimumClipToFire)
           {
             _clip = 0;
-            _ragdoll._playerScript?._profile.ItemSetClip(_side, _clip);
+            _ragdoll._playerScript?._Profile.ItemSetClip(_side, _clip);
             PlayEmpty();
           }
           else
@@ -819,7 +819,7 @@ public class ItemScript : MonoBehaviour
     if (_swang && _time >= _useTime + UseRate() && !IsChargeWeapon())
     {
       _swang = false;
-      _ragdoll._playerScript?._profile.ItemReload(_side, false);
+      _ragdoll._playerScript?._Profile.ItemReload(_side, false);
     }
   }
 
@@ -1084,7 +1084,7 @@ public class ItemScript : MonoBehaviour
       () =>
       {
         _reloading = false;
-        if (!IsChargeWeapon()) _ragdoll._playerScript?._profile.ItemReload(_side, _reloadOneAtTime);
+        if (!IsChargeWeapon()) _ragdoll._playerScript?._Profile.ItemReload(_side, _reloadOneAtTime);
       },
       (ProgressBar.instance instance) =>
       {
@@ -1108,7 +1108,7 @@ public class ItemScript : MonoBehaviour
       });
 
     // Charge weapon
-    if (IsChargeWeapon()) _ragdoll._playerScript?._profile.ItemReload(_side, _reloadOneAtTime);
+    if (IsChargeWeapon()) _ragdoll._playerScript?._Profile.ItemReload(_side, _reloadOneAtTime);
 
     // Reload animation
     float totalTime = reloadTime,

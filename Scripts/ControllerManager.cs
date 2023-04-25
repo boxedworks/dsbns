@@ -193,12 +193,12 @@ public static class ControllerManager
   }
   static PlayerScript GetPlayer(InputAction.CallbackContext obj)
   {
-    if (PlayerScript._Players == null || PlayerScript._Players.Count == 0) return null;
+    if (PlayerScript.s_Players == null || PlayerScript.s_Players.Count == 0) return null;
     // Check keyboard
     if (obj.control.device.name.Equals("Keyboard") && (_NumberGamepads == 0 || Settings._ForceKeyboard))
-      return PlayerScript._Players[0];
+      return PlayerScript.s_Players[0];
     // Check controllers
-    foreach (var player in PlayerScript._Players)
+    foreach (var player in PlayerScript.s_Players)
     {
       var g = GetPlayerGamepad(player._id);
       if (g == null) continue;

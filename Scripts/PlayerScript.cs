@@ -5,7 +5,7 @@ using UnityEngine;
 public class PlayerScript : MonoBehaviour
 {
   // Singleton
-  public static List<PlayerScript> _Players;
+  public static List<PlayerScript> s_Players;
 
   public static bool _All_Dead;
 
@@ -35,7 +35,7 @@ public class PlayerScript : MonoBehaviour
 
   bool mouseEnabled, _runToggle;
 
-  public bool _hasExit, _canDetect;
+  public bool _HasExit, _canDetect;
 
   float _spawnTimer, _invisible;
 
@@ -45,17 +45,17 @@ public class PlayerScript : MonoBehaviour
 
   public List<UtilityScript> _utilities_left, _utilities_right;
 
-  public GameScript.PlayerProfile _profile
+  public GameScript.PlayerProfile _Profile
   {
     get
     {
-      return GameScript.PlayerProfile._Profiles[_id];
+      return GameScript.PlayerProfile.s_Profiles[_id];
     }
   }
 
   public GameScript.PlayerProfile.Equipment _equipment
   {
-    get { return _profile._equipment; }
+    get { return _Profile._equipment; }
   }
 
   int _saveLoadoutIndex;
@@ -112,9 +112,9 @@ public class PlayerScript : MonoBehaviour
     // Get NavMeshAgent
     _agent = transform.GetComponent<UnityEngine.AI.NavMeshAgent>();
     // Add self to list of players
-    if (_Players == null)
-      _Players = new List<PlayerScript>();
-    _Players.Add(this);
+    if (s_Players == null)
+      s_Players = new List<PlayerScript>();
+    s_Players.Add(this);
     // Give unique _PlayerID and decide input based upon _PlayerID
     _id = _PLAYERID++ % Settings._NumberPlayers;
     // Check all players to make sure no duplicate _PlayerID
@@ -122,7 +122,7 @@ public class PlayerScript : MonoBehaviour
     while (true && loops++ < 5)
     {
       var breakLoop = true;
-      foreach (var p in _Players)
+      foreach (var p in s_Players)
       {
         if (p == null) continue;
         // If self, skip
@@ -144,7 +144,7 @@ public class PlayerScript : MonoBehaviour
     //_profile.CreateHealthUI(health);
 
     // Assign color by _PlayerID
-    var color = _profile.GetColor();
+    var color = _Profile.GetColor();
     _ragdoll.ChangeColor(color);
     // Create ring
     var new_ring = Instantiate(TileManager._Ring.gameObject) as GameObject;
@@ -167,7 +167,7 @@ public class PlayerScript : MonoBehaviour
     _ring[0].transform.parent.gameObject.SetActive(true);
 
     // Equip starting weapons
-    _profile._equipmentIndex = 0;
+    _Profile._equipmentIndex = 0;
     _itemLeft = _equipment._item_left0;
     _itemRight = _equipment._item_right0;
     GameScript.ItemManager.SpawnItem(_itemLeft);
@@ -176,7 +176,7 @@ public class PlayerScript : MonoBehaviour
     GameScript.ItemManager.SpawnItem(_equipment._item_right1);
     EquipStart();
 
-    _saveLoadoutIndex = _profile._loadoutIndex;
+    _saveLoadoutIndex = _Profile._loadoutIndex;
 
     // Save start loadout for challenges
     _equipment_start = _equipment;
@@ -208,8 +208,8 @@ public class PlayerScript : MonoBehaviour
 
     RegisterUtilities();
 
-    _profile.OnPlayerSpawn();
-    _profile.UpdateHealthUI();
+    _Profile.OnPlayerSpawn();
+    _Profile.UpdateHealthUI();
 
     ControllerManager.GetPlayerGamepad(_id)?.SetMotorSpeeds(0f, 0f);
 
@@ -247,6 +247,12 @@ public class PlayerScript : MonoBehaviour
       {
 
       }
+    }
+
+    // Check crown
+    if (GameScript.s_CrownPlayer == _Profile._Id)
+    {
+      _ragdoll.AddCrown();
     }
   }
 
@@ -359,7 +365,7 @@ public class PlayerScript : MonoBehaviour
   }
   static public void AddLights()
   {
-    foreach (var p in _Players)
+    foreach (var p in s_Players)
     {
       if (p == null || p._ragdoll == null || p._ragdoll._dead) continue;
       p.AddLight();
@@ -368,14 +374,14 @@ public class PlayerScript : MonoBehaviour
 
   public static void Reset()
   {
-    if (_Players != null)
-      foreach (var p in _Players)
+    if (s_Players != null)
+      foreach (var p in s_Players)
       {
-        p._hasExit = false;
+        p._HasExit = false;
         if (p != null && p.gameObject != null) Destroy(p.gameObject);
       }
     GameScript._inLevelEnd = false;
-    _Players = null;
+    s_Players = null;
   }
 
   public void EquipStart()
@@ -409,7 +415,7 @@ public class PlayerScript : MonoBehaviour
   {
     _TimerStarted = true;
 
-    if (PlayerScript._Players[0]._level_ratings_shown)
+    if (PlayerScript.s_Players[0]._level_ratings_shown)
     {
       TileManager._Text_LevelTimer_Best.text = TileManager._Text_LevelTimer_Best.text.Split("\n")[0];
     }
@@ -482,9 +488,9 @@ public class PlayerScript : MonoBehaviour
     if (_isauto && !_ragdoll._dead && !GameScript._Paused)
     {
       _rearrangeTime -= Time.deltaTime * (_agent.pathStatus != UnityEngine.AI.NavMeshPathStatus.PathComplete ? 10f : 1f);
-      if (_rearrangeTime <= 0f && !_Players[0]._ragdoll._dead)
+      if (_rearrangeTime <= 0f && !s_Players[0]._ragdoll._dead)
       {
-        var pos = _Players[0]._ragdoll._hip.position;
+        var pos = s_Players[0]._ragdoll._hip.position;
         var dis = MathC.Get2DDistance(pos, transform.position);
         var maxD = 5f;
 
@@ -694,7 +700,7 @@ public class PlayerScript : MonoBehaviour
       dt = Time.deltaTime;
     _SlowmoTimer = Mathf.Clamp(_SlowmoTimer - unscaled_dt, 0f, 2f);
 
-    if (_Players == null || this == null) return;
+    if (s_Players == null || this == null) return;
 
     // Move ring with hip
     if (!_ragdoll._dead)
@@ -752,12 +758,12 @@ public class PlayerScript : MonoBehaviour
 
             var dirs = Vector2.zero;
             var num = 0;
-            for (var i = 0; i < _Players.Count; i++)
+            for (var i = 0; i < s_Players.Count; i++)
             {
-              if (!_Players[i]._ragdoll._dead)
+              if (!s_Players[i]._ragdoll._dead)
               {
                 num++;
-                dirs += _Players[i]._saveInput;
+                dirs += s_Players[i]._saveInput;
               }
             }
             if (num == 0) num = 1;
@@ -777,7 +783,7 @@ public class PlayerScript : MonoBehaviour
           if (_SlowmoTimer > 0f)
           {
             var has_perk = false;
-            foreach (var p in _Players)
+            foreach (var p in s_Players)
             {
               if (p._ragdoll._dead) continue;
               if (p.HasPerk(Shop.Perk.PerkType.NO_SLOWMO))
@@ -795,7 +801,7 @@ public class PlayerScript : MonoBehaviour
           }
           else
             // Loop through players
-            foreach (var p in _Players)
+            foreach (var p in s_Players)
             {
               // Check if player dead
               if (p._ragdoll._dead || HasPerk(Shop.Perk.PerkType.NO_SLOWMO)) continue;
@@ -814,7 +820,7 @@ public class PlayerScript : MonoBehaviour
           if (Time.timeScale > desiredTimeScale) speedMod *= 0.5f;
 
           var onealive = false;
-          foreach (var player in _Players)
+          foreach (var player in s_Players)
             if (player._ragdoll != null && !player._ragdoll._dead) { onealive = true; break; }
           if (!onealive) desiredTimeScale = 0f;
 
@@ -923,7 +929,7 @@ public class PlayerScript : MonoBehaviour
         var counter = 0;
         while (true)
         {
-          foreach (var p in _Players)
+          foreach (var p in s_Players)
           {
             if (p._ragdoll._dead && followAlive) continue;
             sharedPos += new Vector3(p._ragdoll._hip.position.x, 0f, p._ragdoll._hip.position.z);
@@ -1015,7 +1021,7 @@ public class PlayerScript : MonoBehaviour
       return;
 
     //
-    if (_saveLoadoutIndex != _profile._loadoutIndex)
+    if (_saveLoadoutIndex != _Profile._loadoutIndex)
       ResetLoadout();
 
     // Spawn enemies as player gets closer to goal; 3rd difficulty / game mode ?
@@ -1186,7 +1192,7 @@ public class PlayerScript : MonoBehaviour
       else
         _ragdoll.ArmsDown();
       // Check runkey
-      if (_profile._holdRun)
+      if (_Profile._holdRun)
       {
         runKeyDown = (ControllerManager.ShiftHeld());
       }
@@ -1230,8 +1236,8 @@ public class PlayerScript : MonoBehaviour
       // Check weapon swap
       if (ControllerManager.GetKey(ControllerManager.Key.G))
       {
-        _ragdoll.SwapItemHands(_profile._equipmentIndex);
-        _profile.UpdateIcons();
+        _ragdoll.SwapItemHands(_Profile._equipmentIndex);
+        _Profile.UpdateIcons();
       }
 
       // Check interactable
@@ -1240,7 +1246,7 @@ public class PlayerScript : MonoBehaviour
           _currentInteractable.Interact(this, CustomObstacle.InteractSide.DEFAULT);
 
       // Check reload
-      if (ControllerManager.GetKey(ControllerManager.Key.R, _profile._reloadSidesSameTime ? ControllerManager.InputMode.HOLD : ControllerManager.InputMode.DOWN))
+      if (ControllerManager.GetKey(ControllerManager.Key.R, _Profile._reloadSidesSameTime ? ControllerManager.InputMode.HOLD : ControllerManager.InputMode.DOWN))
         Reload();
     }
     else
@@ -1357,7 +1363,7 @@ public class PlayerScript : MonoBehaviour
         _lastInputDPad = input;
 
         // Check runkey
-        if (_profile._holdRun)
+        if (_Profile._holdRun)
           runKeyDown = gamepad.leftStickButton.wasPressedThisFrame;
         else runKeyDown = gamepad.leftStickButton.isPressed;
 
@@ -1411,7 +1417,7 @@ public class PlayerScript : MonoBehaviour
             _currentInteractable.Interact(this, CustomObstacle.InteractSide.DEFAULT);
 
         // Check reload
-        if (_profile._reloadSidesSameTime ? gamepad.buttonWest.isPressed : gamepad.buttonWest.wasPressedThisFrame)
+        if (_Profile._reloadSidesSameTime ? gamepad.buttonWest.isPressed : gamepad.buttonWest.wasPressedThisFrame)
           Reload();
       }
     }
@@ -1430,7 +1436,7 @@ public class PlayerScript : MonoBehaviour
     /// Run
     {
       // Check run option; option is not toggle run
-      if (_profile._holdRun)
+      if (_Profile._holdRun)
       {
         // If moving and run key is down and not running, run
         if (runKeyDown)
@@ -1539,13 +1545,13 @@ public class PlayerScript : MonoBehaviour
   {
     if (_ragdoll._dead) return;
     // Check changed loadout profile
-    if (_profile._loadoutIndex != _saveLoadoutIndex)
+    if (_Profile._loadoutIndex != _saveLoadoutIndex)
     {
       if (MathC.Get2DDistance(transform.position, PlayerspawnScript._PlayerSpawns[0].transform.position) > 1.2f)
-        _profile._loadoutIndex = _saveLoadoutIndex;
+        _Profile._loadoutIndex = _saveLoadoutIndex;
       else
       {
-        EquipLoadout(_profile._loadoutIndex);
+        EquipLoadout(_Profile._loadoutIndex);
         _equipment_changed = true;
       }
     }
@@ -1553,15 +1559,15 @@ public class PlayerScript : MonoBehaviour
 
   public void EquipLoadout(int loadoutIndex, bool checkCanSwap = true)
   {
-    _profile._loadoutIndex = loadoutIndex;
+    _Profile._loadoutIndex = loadoutIndex;
 
-    _profile._equipmentIndex = 0;
+    _Profile._equipmentIndex = 0;
     if (!checkCanSwap || _ragdoll.CanSwapWeapons())
     {
       _ragdoll.SwapItems(
-        System.Tuple.Create(_profile._item_left, -1, -1f),
-        System.Tuple.Create(_profile._item_right, -1, -1f),
-        _profile._equipmentIndex,
+        System.Tuple.Create(_Profile._item_left, -1, -1f),
+        System.Tuple.Create(_Profile._item_right, -1, -1f),
+        _Profile._equipmentIndex,
         checkCanSwap
       );
       // Despawn utilities
@@ -1578,8 +1584,8 @@ public class PlayerScript : MonoBehaviour
             GameObject.Destroy(_utilities_right[i].gameObject);
         }
       RegisterUtilities();
-      _profile.UpdateIcons();
-      _saveLoadoutIndex = _profile._loadoutIndex;
+      _Profile.UpdateIcons();
+      _saveLoadoutIndex = _Profile._loadoutIndex;
     }
   }
 
@@ -1588,7 +1594,7 @@ public class PlayerScript : MonoBehaviour
     if (_isauto) return;
     if (Mathf.Abs(input.x) > 0.1f || Mathf.Abs(input.y) > 0.1f)
       transform.LookAt(transform.position + (new Vector3(GameResources._Camera_Main.transform.right.x, 0f, GameResources._Camera_Main.transform.right.z).normalized * input.x + new Vector3(GameResources._Camera_Main.transform.forward.x, 0f, GameResources._Camera_Main.transform.forward.z).normalized * input.y).normalized * 5f);
-    else if (_profile._faceMovement)
+    else if (_Profile._faceMovement)
       transform.LookAt(transform.position + (new Vector3(GameResources._Camera_Main.transform.right.x, 0f, GameResources._Camera_Main.transform.right.z).normalized * input2.x + new Vector3(GameResources._Camera_Main.transform.forward.x, 0f, GameResources._Camera_Main.transform.forward.z).normalized * input2.y).normalized * 5f);
   }
 
@@ -1605,7 +1611,7 @@ public class PlayerScript : MonoBehaviour
   public void SwapLoadouts()
   {
     if (!_ragdoll.CanSwapWeapons()) return;
-    if (!_profile._loadout._two_weapon_pairs) return;
+    if (!_Profile._loadout._two_weapon_pairs) return;
 
     var clip_l = -1;
     var clip_r = -1;
@@ -1630,13 +1636,13 @@ public class PlayerScript : MonoBehaviour
     _loadout_info[2] = _ragdoll._itemL ? _ragdoll._itemL._useTime : -1f;
     _loadout_info[3] = _ragdoll._itemR ? _ragdoll._itemR._useTime : -1f;
 
-    _profile._equipmentIndex++;
+    _Profile._equipmentIndex++;
     _ragdoll.SwapItems(
-      System.Tuple.Create(_profile._item_left, clip_l, useTime_l),
-      System.Tuple.Create(_profile._item_right, clip_r, useTime_r),
-      _profile._equipmentIndex
+      System.Tuple.Create(_Profile._item_left, clip_l, useTime_l),
+      System.Tuple.Create(_Profile._item_right, clip_r, useTime_r),
+      _Profile._equipmentIndex
     );
-    _profile.UpdateIcons();
+    _Profile.UpdateIcons();
   }
 
   public void OnRefill()
@@ -1667,7 +1673,7 @@ public class PlayerScript : MonoBehaviour
     // If dead, check if all other players dead
     if (_ragdoll._dead)
     {
-      foreach (var p in _Players)
+      foreach (var p in s_Players)
         if (!p._ragdoll._dead)
         {
           reset = false;
@@ -1734,8 +1740,8 @@ public class PlayerScript : MonoBehaviour
     {
       // Up
       case (0):
-        _ragdoll.SwapItemHands(_profile._equipmentIndex);
-        _profile.UpdateIcons();
+        _ragdoll.SwapItemHands(_Profile._equipmentIndex);
+        _Profile.UpdateIcons();
         break;
 
       // Down
@@ -1829,18 +1835,18 @@ public class PlayerScript : MonoBehaviour
   public static PlayerScript GetClosestPlayerTo(Vector2 position)
   {
 
-    if (_Players.Count == 0)
+    if (s_Players.Count == 0)
     {
       return null;
     }
-    if (_Players.Count == 1 && _Players[0]._ragdoll != null && !_Players[0]._ragdoll._dead)
+    if (s_Players.Count == 1 && s_Players[0]._ragdoll != null && !s_Players[0]._ragdoll._dead)
     {
-      return _Players[0];
+      return s_Players[0];
     }
 
     var distance = 10000f;
     PlayerScript closest_player = null;
-    foreach (var player in _Players)
+    foreach (var player in s_Players)
     {
       if (player?._ragdoll._dead ?? true) continue;
       var distance0 = Vector2.Distance(position, new Vector2(player._ragdoll._controller.position.x, player._ragdoll._controller.position.z));
@@ -1858,16 +1864,16 @@ public class PlayerScript : MonoBehaviour
   // Cycles through all players to see if one has the exit
   public static bool HasExit()
   {
-    foreach (PlayerScript p in _Players)
+    foreach (PlayerScript p in s_Players)
     {
-      if (p._hasExit) return true;
+      if (p._HasExit) return true;
     }
     return false;
   }
 
   public void OnDamageTaken()
   {
-    _profile.UpdateHealthUI();
+    _Profile.UpdateHealthUI();
 
     // Controller rumble
     if (!mouseEnabled && Settings._ControllerRumble)
@@ -1928,7 +1934,7 @@ public class PlayerScript : MonoBehaviour
     // Remove ring
     IEnumerator fadeRing()
     {
-      Color c = _profile.GetColor();
+      Color c = _Profile.GetColor();
       float t = 1f, startA = c.a;
       while (t >= 0f)
       {
@@ -1945,7 +1951,7 @@ public class PlayerScript : MonoBehaviour
 
     // Slow motion on player death
     var lastplayer = true;
-    foreach (var p0 in _Players)
+    foreach (var p0 in s_Players)
       if (p0._id != _id && !p0._ragdoll._dead)
       {
         lastplayer = false;
@@ -2013,9 +2019,9 @@ public class PlayerScript : MonoBehaviour
     //_ragdoll._audioPlayer.volume = 1f;
 
     // If has the exit and dies, re-drop the exit so someone else can pick it up
-    if (!_hasExit || GameScript._Singleton._GameEnded) return;
+    if (!_HasExit || GameScript._Singleton._GameEnded) return;
     GameScript.ToggleExit(false);
-    _hasExit = false;
+    _HasExit = false;
     GameScript._inLevelEnd = false;
     Powerup p = FunctionsC.SpawnPowerup(Powerup.PowerupType.END);
     p.transform.position = _ragdoll._hip.transform.position;
@@ -2057,7 +2063,7 @@ public class PlayerScript : MonoBehaviour
   }
   public void OnTriggerStay(Collider other)
   {
-    if (!_ragdoll._dead && other.name.Equals("PlayerSpawn") && _hasExit)
+    if (!_ragdoll._dead && other.name.Equals("PlayerSpawn") && _HasExit)
       GameScript._inLevelEnd = true;
     switch (other.name)
     {
@@ -2070,7 +2076,7 @@ public class PlayerScript : MonoBehaviour
   public void OnTriggerExit(Collider other)
   {
     // Stop being in end of level
-    if (!_ragdoll._dead && other.name.Equals("PlayerSpawn") && _hasExit)
+    if (!_ragdoll._dead && other.name.Equals("PlayerSpawn") && _HasExit)
       GameScript._inLevelEnd = false;
     // Check interactable
     if (_currentInteractable != null)

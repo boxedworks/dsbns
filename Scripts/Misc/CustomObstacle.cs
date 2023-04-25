@@ -407,20 +407,20 @@ public class CustomObstacle : MonoBehaviour
         // Check if replacing a weapon
         if (equip_info.Item3 == "BOTH")
         {
-          if (p._profile._item_left == GameScript.ItemManager.Items.NONE && p._profile._item_right == GameScript.ItemManager.Items.NONE) { }
-          else if (p._profile._item_left_other != GameScript.ItemManager.Items.NONE && p._profile._item_right_other != GameScript.ItemManager.Items.NONE) { }
-          else if (p._profile._item_left_other == GameScript.ItemManager.Items.NONE && p._profile._item_right_other == GameScript.ItemManager.Items.NONE)
+          if (p._Profile._item_left == GameScript.ItemManager.Items.NONE && p._Profile._item_right == GameScript.ItemManager.Items.NONE) { }
+          else if (p._Profile._item_left_other != GameScript.ItemManager.Items.NONE && p._Profile._item_right_other != GameScript.ItemManager.Items.NONE) { }
+          else if (p._Profile._item_left_other == GameScript.ItemManager.Items.NONE && p._Profile._item_right_other == GameScript.ItemManager.Items.NONE)
           {
-            p._profile._item_left_other = p._profile._item_left;
-            p._profile._item_right_other = p._profile._item_right;
+            p._Profile._item_left_other = p._Profile._item_left;
+            p._Profile._item_right_other = p._Profile._item_right;
           }
           else
           {
             GameScript.ItemManager.Items[] items = null;
-            if (p._profile._item_left_other == GameScript.ItemManager.Items.NONE && p._profile._item_left != GameScript.ItemManager.Items.NONE)
-              items = new GameScript.ItemManager.Items[] { p._profile._item_left, p._profile._item_right };
-            else if (p._profile._item_right_other == GameScript.ItemManager.Items.NONE && p._profile._item_right != GameScript.ItemManager.Items.NONE)
-              items = new GameScript.ItemManager.Items[] { p._profile._item_right, p._profile._item_left };
+            if (p._Profile._item_left_other == GameScript.ItemManager.Items.NONE && p._Profile._item_left != GameScript.ItemManager.Items.NONE)
+              items = new GameScript.ItemManager.Items[] { p._Profile._item_left, p._Profile._item_right };
+            else if (p._Profile._item_right_other == GameScript.ItemManager.Items.NONE && p._Profile._item_right != GameScript.ItemManager.Items.NONE)
+              items = new GameScript.ItemManager.Items[] { p._Profile._item_right, p._Profile._item_left };
             if (items != null)
               foreach (var current_item in items)
               {
@@ -428,14 +428,14 @@ public class CustomObstacle : MonoBehaviour
                 var equip_info2 = CheckEquip(p, current_item, InteractSide.DEFAULT, akimbo, 1);
                 var equip_side2 = equip_info2.Item2;
 
-                var current_item2 = (equip_side2 == ActiveRagdoll.Side.LEFT ? p._profile._item_left_other : p._profile._item_right_other);
+                var current_item2 = (equip_side2 == ActiveRagdoll.Side.LEFT ? p._Profile._item_left_other : p._Profile._item_right_other);
                 if (current_item2 == GameScript.ItemManager.Items.NONE)
                   if (equip_info2.Item1)
                   {
                     if (equip_side2 == ActiveRagdoll.Side.LEFT)
-                      p._profile._item_left_other = current_item;
+                      p._Profile._item_left_other = current_item;
                     else
-                      p._profile._item_right_other = current_item;
+                      p._Profile._item_right_other = current_item;
                     break;
                   }
               }
@@ -443,21 +443,21 @@ public class CustomObstacle : MonoBehaviour
         }
         else
         {
-          var current_item = (equip_side == ActiveRagdoll.Side.LEFT ? p._profile._item_left : p._profile._item_right);
+          var current_item = (equip_side == ActiveRagdoll.Side.LEFT ? p._Profile._item_left : p._Profile._item_right);
           if (current_item != GameScript.ItemManager.Items.NONE)
           {
             // Try to equip in other slots
             var equip_info2 = CheckEquip(p, current_item, InteractSide.DEFAULT, akimbo, 1);
             var equip_side2 = equip_info2.Item2;
 
-            var current_item2 = (equip_side2 == ActiveRagdoll.Side.LEFT ? p._profile._item_left_other : p._profile._item_right_other);
+            var current_item2 = (equip_side2 == ActiveRagdoll.Side.LEFT ? p._Profile._item_left_other : p._Profile._item_right_other);
             if (current_item2 == GameScript.ItemManager.Items.NONE)
               if (equip_info2.Item1)
               {
                 if (equip_side2 == ActiveRagdoll.Side.LEFT)
-                  p._profile._item_left_other = current_item;
+                  p._Profile._item_left_other = current_item;
                 else
-                  p._profile._item_right_other = current_item;
+                  p._Profile._item_right_other = current_item;
               }
           }
         }
@@ -465,14 +465,14 @@ public class CustomObstacle : MonoBehaviour
         // Equip
         p._ragdoll.EquipItem(item_type, equip_side);
         if (equip_info.Item3 == "BOTH")
-          p._profile._item_right = GameScript.ItemManager.Items.NONE;
+          p._Profile._item_right = GameScript.ItemManager.Items.NONE;
 
         // Update UI
         if (equip_side == ActiveRagdoll.Side.LEFT)
-          p._profile._item_left = item_type;
+          p._Profile._item_left = item_type;
         else
-          p._profile._item_right = item_type;
-        GameScript.PlayerProfile._Profiles[p._id].UpdateIcons();
+          p._Profile._item_right = item_type;
+        GameScript.PlayerProfile.s_Profiles[p._id].UpdateIcons();
 
         // Play sfx
         p._ragdoll.PlaySound("Survival/Buy_Weapon");
@@ -489,7 +489,7 @@ public class CustomObstacle : MonoBehaviour
         if (side == InteractSide.DEFAULT) equip_side = ActiveRagdoll.Side.RIGHT;
 
         // Check utility side
-        var equipment = p._profile._equipment;
+        var equipment = p._Profile._equipment;
         var add = false;
         if (equipment._utilities_left.Length == 0 && equipment._utilities_right.Length == 0) { }
         if (side == InteractSide.DEFAULT)
@@ -619,7 +619,7 @@ public class CustomObstacle : MonoBehaviour
         p.RegisterUtility(equip_side, saveamount);
 
         // Update UI
-        GameScript.PlayerProfile._Profiles[p._id].UpdateIcons();
+        GameScript.PlayerProfile.s_Profiles[p._id].UpdateIcons();
 
         // Play sound
         p._ragdoll.PlaySound("Survival/Buy_Weapon");
@@ -651,7 +651,7 @@ public class CustomObstacle : MonoBehaviour
         Shop.Perk.BuyPerk(p._id, perk);
 
         // Update UI
-        GameScript.PlayerProfile._Profiles[p._id].UpdateIcons();
+        GameScript.PlayerProfile.s_Profiles[p._id].UpdateIcons();
 
         // Play sound
         p._ragdoll.PlaySound("Survival/Buy_Weapon");
@@ -686,8 +686,8 @@ public class CustomObstacle : MonoBehaviour
     var equip_side = ActiveRagdoll.Side.RIGHT;
     if (side == InteractSide.LEFT) equip_side = ActiveRagdoll.Side.LEFT;
 
-    var item_type_l = equipmentIndex == 0 ? p._profile._item_left : p._profile._item_left_other;
-    var item_type_r = equipmentIndex == 0 ? p._profile._item_right : p._profile._item_right_other;
+    var item_type_l = equipmentIndex == 0 ? p._Profile._item_left : p._Profile._item_left_other;
+    var item_type_r = equipmentIndex == 0 ? p._Profile._item_right : p._Profile._item_right_other;
 
     var has_item_l = item_type_l != GameScript.ItemManager.Items.NONE;
     var has_item_r = item_type_r != GameScript.ItemManager.Items.NONE;
@@ -961,10 +961,10 @@ public class CustomObstacle : MonoBehaviour
 
     // Check for nearby players
     _desiredScale = 0f;
-    if (PlayerScript._Players != null)
+    if (PlayerScript.s_Players != null)
     {
       var min_dist = 1000f;
-      foreach (var player in PlayerScript._Players)
+      foreach (var player in PlayerScript.s_Players)
       {
         if (player._ragdoll._dead || player == null) continue;
         var path = new UnityEngine.AI.NavMeshPath();

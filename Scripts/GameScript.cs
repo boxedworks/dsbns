@@ -69,6 +69,8 @@ public class GameScript : MonoBehaviour
   }
   public static GameModes _GameMode;
 
+  public static int s_CrownPlayer, s_CrownEnemy;
+
   public Input_action _Controls;
 
   /// <summary>
@@ -185,6 +187,8 @@ public class GameScript : MonoBehaviour
     //foreach(var gamepad in ControllerManager._Gamepads){
     //  Debug.Log(gamepad.name);
     //}
+
+    s_CrownPlayer = s_CrownEnemy = -1;
   }
 
   public static Transform _lp0, _lp1, _lp2;
@@ -193,18 +197,18 @@ public class GameScript : MonoBehaviour
   {
     PlayerScript._PLAYERID = 0;
     _PlayerIter = 0;
-    if (PlayerScript._Players != null)
+    if (PlayerScript.s_Players != null)
     {
 
       // Count number of players to spawn.. only used if trying to stay persistant or players joined?
-      foreach (var p in PlayerScript._Players) if (p != null && !p._ragdoll._dead) _PlayerIter++;
+      foreach (var p in PlayerScript.s_Players) if (p != null && !p._ragdoll._dead) _PlayerIter++;
 
       // Remove null / dead players
-      for (var i = PlayerScript._Players.Count - 1; i >= 0; i--)
+      for (var i = PlayerScript.s_Players.Count - 1; i >= 0; i--)
       {
-        var p = PlayerScript._Players[i];
+        var p = PlayerScript.s_Players[i];
         if (p == null || p._ragdoll == null || !p._ragdoll._dead)
-          PlayerScript._Players.RemoveAt(i);
+          PlayerScript.s_Players.RemoveAt(i);
       }
     }
 
@@ -518,13 +522,13 @@ public class GameScript : MonoBehaviour
     {
       // Respawn players and heal
       _PlayerIter = 0;
-      if (PlayerScript._Players != null)
+      if (PlayerScript.s_Players != null)
       {
         PlayerScript alive_player = null;
         for (var i = 0; i < Settings._NumberPlayers; i++)
         {
           //if (i >= PlayerScript._Players.Count) continue;
-          var p = PlayerScript._Players[i];
+          var p = PlayerScript.s_Players[i];
           if (p == null || p._ragdoll == null || p._ragdoll._dead) continue;
           alive_player = p;
           break;
@@ -534,17 +538,17 @@ public class GameScript : MonoBehaviour
         if (alive_player == null) return;
 
         // Count number of players to spawn.. only used if trying to stay persistant or players joined?
-        foreach (var p in PlayerScript._Players) if (p != null && !p._ragdoll._dead) _PlayerIter++;
+        foreach (var p in PlayerScript.s_Players) if (p != null && !p._ragdoll._dead) _PlayerIter++;
 
         // Remove null / dead players
-        for (var i = PlayerScript._Players.Count - 1; i >= 0; i--)
+        for (var i = PlayerScript.s_Players.Count - 1; i >= 0; i--)
         {
-          var p = PlayerScript._Players[i];
+          var p = PlayerScript.s_Players[i];
           if (p == null || p._ragdoll == null || p._ragdoll._dead)
           {
             ActiveRagdoll._Ragdolls.Remove(p._ragdoll);
             GameObject.Destroy(p.transform.parent.gameObject);
-            PlayerScript._Players.RemoveAt(i);
+            PlayerScript.s_Players.RemoveAt(i);
             p = PlayerspawnScript._PlayerSpawns[0].SpawnPlayer(false);
             p.transform.position = alive_player.transform.position;
             p.transform.parent.gameObject.SetActive(true);
@@ -553,7 +557,7 @@ public class GameScript : MonoBehaviour
         }
 
         // Heal and reload all players
-        foreach (var p in PlayerScript._Players)
+        foreach (var p in PlayerScript.s_Players)
           if (p != null && p._ragdoll != null)
             HealPlayer(p);
       }
@@ -896,13 +900,13 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
 
       // Respawn players
       _PlayerIter = 0;
-      if (PlayerScript._Players != null)
+      if (PlayerScript.s_Players != null)
       {
         PlayerScript alive_player = null;
         for (var i = 0; i < Settings._NumberPlayers; i++)
         {
           //if (i >= PlayerScript._Players.Count) continue;
-          var p = PlayerScript._Players[i];
+          var p = PlayerScript.s_Players[i];
           if (p == null || p._ragdoll == null || p._ragdoll._dead) continue;
           alive_player = p;
           break;
@@ -912,17 +916,17 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         if (alive_player == null) return;
 
         // Count number of players to spawn.. only used if trying to stay persistant or players joined?
-        foreach (var p in PlayerScript._Players) if (p != null && !p._ragdoll._dead) _PlayerIter++;
+        foreach (var p in PlayerScript.s_Players) if (p != null && !p._ragdoll._dead) _PlayerIter++;
 
         // Remove null / dead players
-        for (var i = PlayerScript._Players.Count - 1; i >= 0; i--)
+        for (var i = PlayerScript.s_Players.Count - 1; i >= 0; i--)
         {
-          var p = PlayerScript._Players[i];
+          var p = PlayerScript.s_Players[i];
           if (p == null || p._ragdoll == null || p._ragdoll._dead)
           {
             ActiveRagdoll._Ragdolls.Remove(p._ragdoll);
             GameObject.Destroy(p.transform.parent.gameObject);
-            PlayerScript._Players.RemoveAt(i);
+            PlayerScript.s_Players.RemoveAt(i);
             p = PlayerspawnScript._PlayerSpawns[0].SpawnPlayer(false);
             p.transform.position = alive_player.transform.position;
             p.transform.parent.gameObject.SetActive(true);
@@ -940,12 +944,12 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         }
 
         // Heal and reload all players
-        foreach (var p in PlayerScript._Players)
+        foreach (var p in PlayerScript.s_Players)
           if (p != null && p._ragdoll != null)
           {
             HealPlayer(p);
             p.RegisterUtilities();
-            p._profile.UpdateIcons();
+            p._Profile.UpdateIcons();
           }
       }
     }
@@ -978,7 +982,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       }*/
 
       // Update UI
-      p._profile.UpdateHealthUI();
+      p._Profile.UpdateHealthUI();
     }
 
     public static void SetAllSpawn()
@@ -1003,7 +1007,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     static void IncrementalUpdate()
     {
       //
-      if (PlayerScript._Players == null) return;
+      if (PlayerScript.s_Players == null) return;
 
       /*#if DEBUG
             if (_ClosestSpawns != null)
@@ -1038,7 +1042,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         if (_ClosestSpawns == null) _ClosestSpawns = new Dictionary<Vector3, float>();
 
         // Gather player and spawn
-        var player = PlayerScript._Players[_ClosestSpawns_PlayerIter++ % PlayerScript._Players.Count];
+        var player = PlayerScript.s_Players[_ClosestSpawns_PlayerIter++ % PlayerScript.s_Players.Count];
         var spawn = _Spawn_Points[_ClosestSpawns_SpawnIter++ % _Spawn_Points.Count];
 
         if (player._ragdoll != null && !player._ragdoll._dead)
@@ -1059,7 +1063,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
           if (_ClosestSpawns.ContainsKey(spawn))
             _ClosestSpawns[spawn] = dist;
           // Check if dict empty
-          else if (_ClosestSpawns.Count < Mathf.Clamp(Mathf.RoundToInt(PlayerScript._Players.Count * 1.4f), 2, 5))
+          else if (_ClosestSpawns.Count < Mathf.Clamp(Mathf.RoundToInt(PlayerScript.s_Players.Count * 1.4f), 2, 5))
             _ClosestSpawns.Add(spawn, dist);
           // Else, compare
           else
@@ -1227,7 +1231,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       var text = "";
       if (!_Paused && !Menu2._InMenus)
         for (var i = 0; i < Settings._NumberPlayers; i++)
-          text += $"<color={PlayerProfile._Profiles[i].GetColorName(false)}>p{i + 1}:</color> {_PlayerScores[i]}\n";
+          text += $"<color={PlayerProfile.s_Profiles[i].GetColorName(false)}>p{i + 1}:</color> {_PlayerScores[i]}\n";
       _Text_Scores.text = text;
 
       // Check if paused or in menu
@@ -1439,7 +1443,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     Menu2.UpdateMenus();
 
     // Update playerprofiles
-    foreach (var profile in PlayerProfile._Profiles)
+    foreach (var profile in PlayerProfile.s_Profiles)
       profile.HandleInput();
 
     // Screenshot
@@ -1477,7 +1481,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
           ui.GetChild(i).gameObject.SetActive(i < Settings._NumberPlayers);
 
         // Pause if a controller was unplugged and playing
-        if (!Menu2._InMenus && (!_EditorTesting) && Settings._NumberControllers != PlayerScript._Players.Count)
+        if (!Menu2._InMenus && (!_EditorTesting) && Settings._NumberControllers != PlayerScript.s_Players.Count)
           Menu2.OnControllersChanged(Settings._NumberControllers - numcontrollers_save, numcontrollers_save);
       }
     }
@@ -1562,13 +1566,19 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
               _inLevelEnd = false;
               _levelEndTimer = 0f;
 
-              if (PlayerScript._Players != null)
-                foreach (var p in PlayerScript._Players)
-                {
-                  if (p == null) continue;
-                  p._hasExit = false;
-                }
+              // Check who got the goal
+              s_CrownPlayer = -1;
+              foreach (var p in PlayerScript.s_Players)
+              {
+                if (!p._HasExit) { continue; }
+                p._HasExit = false;
+                s_CrownPlayer = p._Profile._Id;
+                break;
 
+              }
+              Debug.Log($"Goal retrieved by {s_CrownPlayer}!");
+
+              // Complete level
               OnLevelComplete();
             }
           }
@@ -1731,7 +1741,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     }
     else
     {
-      foreach (var profile in PlayerProfile._Profiles)
+      foreach (var profile in PlayerProfile.s_Profiles)
         profile.HandleMenuInput();
 
       // Check if checking for controllers
@@ -1764,43 +1774,43 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
   // Assists with controls
   public class PlayerProfile
   {
-    static int CurrentSettingsID;
-    public static int _CurrentSettingsProfileID
+    static int s_currentSettingsID;
+    public static int s_CurrentSettingsProfileID
     {
       get
       {
-        return CurrentSettingsID;
+        return s_currentSettingsID;
       }
       set
       {
-        CurrentSettingsID = value % 4;
-        if (CurrentSettingsID < 0)
-          CurrentSettingsID = 3;
+        s_currentSettingsID = value % 4;
+        if (s_currentSettingsID < 0)
+          s_currentSettingsID = 3;
       }
     }
-    public static PlayerProfile _CurrentSettingsProfile { get { return _Profiles[_CurrentSettingsProfileID]; } }
+    public static PlayerProfile s_CurrentSettingsProfile { get { return s_Profiles[s_CurrentSettingsProfileID]; } }
 
-    static int _ID;
-    public static PlayerProfile[] _Profiles;
+    static int s_iD;
+    public static PlayerProfile[] s_Profiles;
 
-    int _id;
+    public int _Id;
     string _playerPrefsPrefix
     {
       get
       {
-        return $"PlayerProfile{_id}_";
+        return $"PlayerProfile{_Id}_";
       }
     }
 
     // The player this profile is attatched to
-    public PlayerScript _player
+    public PlayerScript _Player
     {
       get
       {
-        if (PlayerScript._Players == null) return null;
-        foreach (var player in PlayerScript._Players)
+        if (PlayerScript.s_Players == null) return null;
+        foreach (var player in PlayerScript.s_Players)
           if (player == null) continue;
-          else if (player._id == _id) return player;
+          else if (player._id == _Id) return player;
         return null;
       }
     }
@@ -1851,7 +1861,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         if (Levels._HardcodedLoadout != null && !GameScript._EditorTesting) return Levels._HardcodedLoadout;
 
         // SURVIVAL mode
-        if (_GameMode == GameModes.SURVIVAL && SurvivalMode._PlayerLoadouts != null) return SurvivalMode._PlayerLoadouts[_id];
+        if (_GameMode == GameModes.SURVIVAL && SurvivalMode._PlayerLoadouts != null) return SurvivalMode._PlayerLoadouts[_Id];
 
         // CLASSIC mode
         return ItemManager.Loadout._Loadouts[_loadoutIndex];
@@ -1961,25 +1971,25 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
           playerColor = _Colors.Length - 1;
         // Update UI
         Transform ui = GameResources._UI_Player;
-        ui.GetChild(_id).GetChild(0).GetComponent<TextMesh>().color = GetColor();
+        ui.GetChild(_Id).GetChild(0).GetComponent<TextMesh>().color = GetColor();
         // Check for alive player
-        if (PlayerScript._Players != null)
-          foreach (PlayerScript p in PlayerScript._Players)
-            if (p._id == _id && !p._ragdoll._dead) p._ragdoll.ChangeColor(GetColor());
+        if (PlayerScript.s_Players != null)
+          foreach (PlayerScript p in PlayerScript.s_Players)
+            if (p._id == _Id && !p._ragdoll._dead) p._ragdoll.ChangeColor(GetColor());
         // Save pref
         PlayerPrefs.SetInt($"{_playerPrefsPrefix}color", playerColor);
       }
     }
-    Transform _UI { get { return GameResources._UI_Player.GetChild(_id); } }
+    Transform _UI { get { return GameResources._UI_Player.GetChild(_Id); } }
 
     MeshRenderer[] _health_UI, _perk_UI;
 
     public PlayerProfile()
     {
-      _id = _ID++;
+      _Id = s_iD++;
 
-      if (_Profiles == null) _Profiles = new PlayerProfile[4];
-      _Profiles[_id] = this;
+      if (s_Profiles == null) s_Profiles = new PlayerProfile[4];
+      s_Profiles[_Id] = this;
 
       _directionalAxis = new float[3];
 
@@ -2010,9 +2020,9 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     public void HandleMenuInput()
     {
       // Accommodate for _ForceKeyboard; checking for -1 controllerID and controllerID > Gamepad.all.Count
-      if (Settings._ForceKeyboard && _id == 0)
+      if (Settings._ForceKeyboard && _Id == 0)
         return;
-      if (_id + (Settings._ForceKeyboard ? -1 : 0) >= ControllerManager._NumberGamepads)
+      if (_Id + (Settings._ForceKeyboard ? -1 : 0) >= ControllerManager._NumberGamepads)
         return;
       // Check axis selections
       for (int i = 0; i < 2; i++)
@@ -2021,10 +2031,10 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         switch (i)
         {
           case (0):
-            y = ControllerManager.GetControllerAxis(_id, ControllerManager.Axis.LSTICK_Y);
+            y = ControllerManager.GetControllerAxis(_Id, ControllerManager.Axis.LSTICK_Y);
             break;
           case (1):
-            y = ControllerManager.GetControllerAxis(_id, ControllerManager.Axis.DPAD_Y);
+            y = ControllerManager.GetControllerAxis(_Id, ControllerManager.Axis.DPAD_Y);
             break;
         }
         if (y > 0.75f)
@@ -2052,7 +2062,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     public void HandleInput()
     {
       // Accommodate for _ForceKeyboard; checking for -1 controllerID and controllerID > Gamepad.all.Count
-      if (Settings._ForceKeyboard && _id == 0 || _id + (Settings._ForceKeyboard ? -1 : 0) >= ControllerManager._NumberGamepads)
+      if (Settings._ForceKeyboard && _Id == 0 || _Id + (Settings._ForceKeyboard ? -1 : 0) >= ControllerManager._NumberGamepads)
       {
         // Check loadout change
         if (ControllerManager.GetKey(ControllerManager.Key.Z))
@@ -2062,7 +2072,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         return;
       }
       // Check axis selections
-      var y = ControllerManager.GetControllerAxis(_id, ControllerManager.Axis.DPAD_X);
+      var y = ControllerManager.GetControllerAxis(_Id, ControllerManager.Axis.DPAD_X);
       if (y > 0.75f)
       {
         if (_directionalAxis[2] <= 0f)
@@ -2122,7 +2132,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
 
     public void LoadPrefs()
     {
-      _playerColor = PlayerPrefs.GetInt($"{_playerPrefsPrefix}color", _id);
+      _playerColor = PlayerPrefs.GetInt($"{_playerPrefsPrefix}color", _Id);
       _holdRun = PlayerPrefs.GetInt($"{_playerPrefsPrefix}holdRun", 1) == 1;
       _faceMovement = PlayerPrefs.GetInt($"{_playerPrefsPrefix}faceDir", 1) == 1;
       _loadoutIndex = PlayerPrefs.GetInt($"{_playerPrefsPrefix}loadoutIndex", 0);
@@ -2182,7 +2192,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
 
     public void UpdateHealthUI()
     {
-      UpdateHealthUI(_player._ragdoll._health);
+      UpdateHealthUI(_Player._ragdoll._health);
     }
     public void UpdateHealthUI(int health)
     {
@@ -2389,12 +2399,12 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       if (_item_left != ItemManager.Items.NONE)
       {
         _weaponIcons[equipmentIter] = new ItemIcon();
-        _weaponIcons[equipmentIter].Init(LoadIcon(_item_left.ToString(), equipmentIter), equipmentIter++, System.Tuple.Create(_player, false, ActiveRagdoll.Side.LEFT));
+        _weaponIcons[equipmentIter].Init(LoadIcon(_item_left.ToString(), equipmentIter), equipmentIter++, System.Tuple.Create(_Player, false, ActiveRagdoll.Side.LEFT));
       }
       if (_item_right != ItemManager.Items.NONE)
       {
         _weaponIcons[equipmentIter] = new ItemIcon();
-        _weaponIcons[equipmentIter].Init(LoadIcon(_item_right.ToString(), equipmentIter), equipmentIter++, System.Tuple.Create(_player, false, ActiveRagdoll.Side.RIGHT));
+        _weaponIcons[equipmentIter].Init(LoadIcon(_item_right.ToString(), equipmentIter), equipmentIter++, System.Tuple.Create(_Player, false, ActiveRagdoll.Side.RIGHT));
       }
       // Load utilities
       var loaded_utils = new List<System.Tuple<Transform, int, int, ActiveRagdoll.Side>>();
@@ -2411,14 +2421,14 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       foreach (var util in loaded_utils)
       {
         _weaponIcons[util.Item3] = new ItemIcon();
-        _weaponIcons[util.Item3].Init(System.Tuple.Create(util.Item1, util.Item2), util.Item3, System.Tuple.Create(_player, true, util.Item4));
+        _weaponIcons[util.Item3].Init(System.Tuple.Create(util.Item1, util.Item2), util.Item3, System.Tuple.Create(_Player, true, util.Item4));
       }
       loaded_utils = null;
       // Local parsing function
       System.Tuple<Transform, int> LoadIcon(string name, int iter)
       {
         // Get icon
-        var item = ItemManager.GetItemUI(name, _player);
+        var item = ItemManager.GetItemUI(name, _Player);
         Transform t = item.Item1;
         t.parent = _UI;
         // Move BG
@@ -2580,7 +2590,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         _perk_UI = new MeshRenderer[] { _UI.GetChild(2).GetChild(0).GetComponent<MeshRenderer>(), _UI.GetChild(2).GetChild(1).GetComponent<MeshRenderer>(), _UI.GetChild(2).GetChild(2).GetComponent<MeshRenderer>(), _UI.GetChild(2).GetChild(3).GetComponent<MeshRenderer>() };
 
       // Current perks
-      var perks = Shop.Perk.GetPerks(_id);
+      var perks = Shop.Perk.GetPerks(_Id);
 
       // Check empty
       if (perks.Count == 0)
@@ -2605,7 +2615,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     {
       UpdateIcons();
 
-      CreateHealthUI(_player == null ? 1 : _player._ragdoll._health);
+      CreateHealthUI(_Player == null ? 1 : _Player._ragdoll._health);
     }
   }
 
@@ -3106,7 +3116,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       Time.timeScale = 1f;
       // Check player amount change
       if (_GameMode != GameModes.SURVIVAL)
-        if (PlayerScript._Players != null && Settings._NumberPlayers != PlayerScript._Players.Count) TileManager.ReloadMap();
+        if (PlayerScript.s_Players != null && Settings._NumberPlayers != PlayerScript.s_Players.Count) TileManager.ReloadMap();
       TileManager._Text_LevelNum.gameObject.SetActive(true);
       TileManager._Text_LevelTimer.gameObject.SetActive(true);
       TileManager._Text_LevelTimer_Best.gameObject.SetActive(true);
@@ -3509,13 +3519,13 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     _Singleton._GameEnded = true;
     _inLevelEnd = false;
     // Fix players
-    if (PlayerScript._Players != null)
+    if (PlayerScript.s_Players != null)
     {
       // Get player with goal
       PlayerScript hasGoal = null;
-      foreach (var p in PlayerScript._Players)
+      foreach (var p in PlayerScript.s_Players)
       {
-        if (p == null || !p._hasExit) continue;
+        if (p == null || !p._HasExit) continue;
         hasGoal = p;
         // Move player to playerspawn to correct errors
         p.transform.position = PlayerspawnScript._PlayerSpawns[0].transform.position;
@@ -3523,9 +3533,9 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       }
       if (hasGoal != null)
       {
-        hasGoal._hasExit = false;
+        hasGoal._HasExit = false;
         // Teleport other players to them
-        foreach (var p in PlayerScript._Players)
+        foreach (var p in PlayerScript.s_Players)
         {
           if (p == null || p._ragdoll._dead || p._id == hasGoal._id) continue;
           p.transform.position = hasGoal.transform.position;

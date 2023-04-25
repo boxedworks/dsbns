@@ -57,10 +57,10 @@ public static class FunctionsC
   // Return the closest player to a point
   public static DistanceInfo GetClosestPlayerTo(Vector3 pos)
   {
-    if (PlayerScript._Players == null) return null;
+    if (PlayerScript.s_Players == null) return null;
     DistanceInfo info = new DistanceInfo();
     info._distance = 1000f;
-    foreach (var player in PlayerScript._Players)
+    foreach (var player in PlayerScript.s_Players)
     {
       if (player._ragdoll._dead || player._ragdoll._hip == null) continue;
       var dist = MathC.Get2DDistance(player._ragdoll._hip.position, pos);
@@ -92,12 +92,12 @@ public static class FunctionsC
   // Return the farthest player from a point
   public static DistanceInfo GetFarthestPlayerFrom(Vector3 pos)
   {
-    if (PlayerScript._Players == null) return null;
+    if (PlayerScript.s_Players == null) return null;
 
     var info = new DistanceInfo();
     info._distance = -1000f;
 
-    foreach (var p in PlayerScript._Players)
+    foreach (var p in PlayerScript.s_Players)
     {
       if (p._ragdoll._dead) continue;
       var dist = MathC.Get2DDistance(p._ragdoll._hip.position, pos);

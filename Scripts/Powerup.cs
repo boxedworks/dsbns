@@ -154,7 +154,7 @@ public class Powerup : MonoBehaviour
           }
 
           GameScript.ToggleExit();
-          r._playerScript._hasExit = true;
+          r._playerScript._HasExit = true;
           _rb.constraints = RigidbodyConstraints.None;
           transform.parent = transform.parent.parent;
           //_audio.Stop();

@@ -856,13 +856,13 @@ public class ActiveRagdoll
     {
       if (index == 0)
       {
-        _playerScript._profile._equipment._item_left0 = itemL_type;
-        _playerScript._profile._equipment._item_right0 = itemR_type;
+        _playerScript._Profile._equipment._item_left0 = itemL_type;
+        _playerScript._Profile._equipment._item_right0 = itemR_type;
       }
       else
       {
-        _playerScript._profile._equipment._item_left1 = itemL_type;
-        _playerScript._profile._equipment._item_right1 = itemR_type;
+        _playerScript._Profile._equipment._item_left1 = itemL_type;
+        _playerScript._Profile._equipment._item_right1 = itemR_type;
       }
     }
 
@@ -880,7 +880,7 @@ public class ActiveRagdoll
     {
       _itemL.Reload();
       // Check player settings
-      if (_isPlayer && !_playerScript._profile._reloadSidesSameTime) return;
+      if (_isPlayer && !_playerScript._Profile._reloadSidesSameTime) return;
       else
       {
         IEnumerator delayedReload()
@@ -1515,6 +1515,23 @@ public class ActiveRagdoll
     // If about to die, save hip rotation for later
     if (!_ragdolled) _saveRot = _hip.rotation;
 
+    // Check crown
+    if (_hasCrown)
+    {
+      GameScript.s_CrownPlayer = GameScript.s_CrownEnemy = -1;
+      if (source != null)
+      {
+
+        RemoveCrown();
+        source.AddCrown();
+
+        if (source._isPlayer)
+          GameScript.s_CrownPlayer = source._playerScript._Profile._Id;
+        else
+          GameScript.s_CrownEnemy = source._enemyScript._Id;
+      }
+    }
+
     // Invert values
     _hip.isKinematic = !_hip.isKinematic;
     ToggleRaycasting(false);
@@ -1664,9 +1681,9 @@ public class ActiveRagdoll
     var crown = GameObject.Instantiate(GameResources._Crown).transform;
 
     crown.transform.parent = _head.transform;
-    crown.localScale = Vector3.one;
+    crown.localScale = Vector3.one * 2f;
     crown.localEulerAngles = new Vector3(-60f, 90f, 0f);
-    crown.localPosition = new Vector3(0.245f, 1.314f, 0.095f);
+    crown.localPosition = new Vector3(0.067f, 1f, 0.095f);
 
     _hasCrown = true;
   }
@@ -2037,7 +2054,7 @@ public class ActiveRagdoll
   }
   public static void SoftReset()
   {
-    if (PlayerScript._Players == null || _Ragdolls == null) return;
+    if (PlayerScript.s_Players == null || _Ragdolls == null) return;
     // Remove current ragdolls if dead
     for (var i = _Ragdolls.Count - 1; i > 0; i--)
     {
@@ -2045,7 +2062,7 @@ public class ActiveRagdoll
       if (r._dead && r._isPlayer)
       {
         _Ragdolls.Remove(r);
-        PlayerScript._Players.Remove(r._playerScript);
+        PlayerScript.s_Players.Remove(r._playerScript);
         if (r._controller == null)
           continue;
         GameObject.Destroy(r._controller.parent.gameObject);
@@ -2053,7 +2070,7 @@ public class ActiveRagdoll
     }
     // Add players' ragdolls
     _Ragdolls.Clear();
-    foreach (var p in PlayerScript._Players)
+    foreach (var p in PlayerScript.s_Players)
     {
       _Ragdolls.Add(p._ragdoll);
     }

@@ -58,7 +58,7 @@ public class EnemyScript : MonoBehaviour
 
     public static void Register(EnemyScript e)
     {
-      _EnemyOrder[_EnemyOrderIter++] = e._id;
+      _EnemyOrder[_EnemyOrderIter++] = e._Id;
     }
 
     public static RaycastHit GetSpherecastHit(EnemyScript e, int iter)
@@ -99,7 +99,7 @@ public class EnemyScript : MonoBehaviour
     SpherecastHandler.QueueSpherecast(origin, dir, radius);
 
     // 3; Cast towards lastknownpos
-    dir = -MathC.Get2DVector(_ragdoll._head.transform.position - _lastKnownPos).normalized + right * (0.1f + (Mathf.PingPong(Time.time * 1.5f + _id, 2f) - 1f));
+    dir = -MathC.Get2DVector(_ragdoll._head.transform.position - _lastKnownPos).normalized + right * (0.1f + (Mathf.PingPong(Time.time * 1.5f + _Id, 2f) - 1f));
     SpherecastHandler.QueueSpherecast(origin, dir, radius);
 
     // Disable self casting collide
@@ -110,7 +110,7 @@ public class EnemyScript : MonoBehaviour
   public static int _ID;
   public static int _MAX_RAGDOLLS_DEAD = 15, _MAX_RAGDOLLS_ALIVE = 40;
 
-  public int _id;
+  public int _Id;
 
   ActiveRagdoll _ragdoll;
 
@@ -201,8 +201,8 @@ public class EnemyScript : MonoBehaviour
   {
 
     // Set unique ID
-    if (_id != 0) return;
-    _id = _ID++;
+    if (_Id != 0) return;
+    _Id = _ID++;
 
     // Add to list of enemies
     _Enemies_alive.Add(this);
@@ -346,6 +346,13 @@ public class EnemyScript : MonoBehaviour
       }
     }
 
+    // Check crown
+    if (GameScript.s_CrownEnemy == _Id)
+    {
+      _ragdoll.AddCrown();
+    }
+
+    // Start cycle
     Walk();
   }
 
@@ -358,7 +365,7 @@ public class EnemyScript : MonoBehaviour
   {
     // Check null
     if (_Enemies_alive == null || _Enemies_alive.Count == 0 || GameScript._EditorEnabled) return;
-    if (Menu2._InMenus || TileManager._LoadingMap || PlayerScript._Players == null || PlayerScript._Players.Count == 0) return;
+    if (Menu2._InMenus || TileManager._LoadingMap || PlayerScript.s_Players == null || PlayerScript.s_Players.Count == 0) return;
     if (GameScript._GameMode != GameScript.GameModes.SURVIVAL)
     {
       // Set up handler
@@ -682,7 +689,7 @@ public class EnemyScript : MonoBehaviour
                 }
 
                 // Check to chase player if has exit
-                if (!_canMove && _ragdollTarget._playerScript._hasExit)
+                if (!_canMove && _ragdollTarget._playerScript._HasExit)
                 {
                   _sawWithGoal = true;
                   if (dis > 13f)
@@ -705,7 +712,7 @@ public class EnemyScript : MonoBehaviour
 
                     // If player has the exit, chase closer
                     float close = 3.5f, far = 10f;
-                    if (_ragdollTarget._isPlayer && _ragdollTarget._playerScript._hasExit)
+                    if (_ragdollTarget._isPlayer && _ragdollTarget._playerScript._HasExit)
                     {
                       close = 3f;
                       far = 4f;
@@ -1481,8 +1488,8 @@ public class EnemyScript : MonoBehaviour
 
   public ActiveRagdoll IsTarget(GameObject obj)
   {
-    if (PlayerScript._Players == null) return null;
-    foreach (PlayerScript p in PlayerScript._Players)
+    if (PlayerScript.s_Players == null) return null;
+    foreach (PlayerScript p in PlayerScript.s_Players)
     {
       if (!p._canDetect || p._ragdoll._dead) continue;
       if (p._ragdoll.IsSelf(obj)) return p._ragdoll;
@@ -1673,7 +1680,7 @@ public class EnemyScript : MonoBehaviour
         SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.KILL);
 #endif
 
-      // Save stats
+      /*/ Save stats
       if (GameScript._GameMode == GameScript.GameModes.CLASSIC)
       {
         var item_type = _ragdoll._itemL != null ? _ragdoll._itemL._type : _ragdoll._itemR._type;
@@ -1702,7 +1709,7 @@ public class EnemyScript : MonoBehaviour
           Stats.OverallStats._Enemies_Killed_Survival_Armored++;
         else
           Stats.OverallStats._Enemies_Killed_Survival_Basic++;
-      }
+      }*/
     }
 
     _linkedDoor?.OnEnemyDie(this);
@@ -1803,6 +1810,43 @@ public class EnemyScript : MonoBehaviour
           }
           else
           {
+
+            // Check extra unlocks
+            if (GameScript._GameMode == GameScript.GameModes.CLASSIC)
+            {
+
+              foreach (var extraInfo in Settings.s_Extra_UnlockCriterea)
+              {
+                // Check level and difficulty
+                var level = extraInfo.Value.Item1;
+                var diff = extraInfo.Value.Item2;
+
+                if (Levels._CurrentLevelIndex != level || Settings._DIFFICULTY != diff)
+                {
+                  continue;
+                }
+
+                // Make sure player count not changed
+
+
+                // Make sure extras not changed
+
+
+                // Make sure loadout not changed
+
+
+                // Check player count
+
+
+                // Check extras
+
+
+                // Check loadout
+
+
+                // Award extra in shop
+              }
+            }
 
             // Check best player time
             if (level_time_best == -1 || level_time < level_time_best)
@@ -2093,7 +2137,7 @@ public class EnemyScript : MonoBehaviour
     var enemy = TileManager.LoadObject($"e_0_0_li_{weapon}_");
     var e = enemy.transform.GetChild(0).GetComponent<EnemyScript>();
     e.transform.position = new Vector3(location.x, enemy.transform.position.y, location.y);
-    if (PlayerScript._Players != null && PlayerScript._Players.Count > 0 && PlayerScript._Players[0] != null) e.LookAt(PlayerScript._Players[0].transform.position);
+    if (PlayerScript.s_Players != null && PlayerScript.s_Players.Count > 0 && PlayerScript.s_Players[0] != null) e.LookAt(PlayerScript.s_Players[0].transform.position);
     e.Init(survivalAttributes);
     e.EquipStart();
 

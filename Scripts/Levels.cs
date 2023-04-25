@@ -508,8 +508,8 @@ public class Levels : MonoBehaviour
     {
       Levels._HardcodedLoadout._equipment = equipment;
 
-      if (GameScript.PlayerProfile._Profiles != null)
-        foreach (var profile in GameScript.PlayerProfile._Profiles)
+      if (GameScript.PlayerProfile.s_Profiles != null)
+        foreach (var profile in GameScript.PlayerProfile.s_Profiles)
           profile.UpdateIcons();
     }
 

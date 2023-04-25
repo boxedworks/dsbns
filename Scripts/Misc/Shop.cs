@@ -225,7 +225,11 @@ public static class Shop
     EXTRA_TIME,
     EXTRA_GRAVITY,
     EXTRA_HORDE,
-    EXTRA_CHASER,
+    EXTRA_CHASE,
+    EXTRA_PLAYER_AMMO,
+    EXTRA_ENEMY_MULTI,
+    EXTRA_BLOOD_FX,
+    EXTRA_EXPLODED,
 
     TUTORIAL_PART0,
     TUTORIAL_PART1
@@ -326,12 +330,16 @@ public static class Shop
     _Unlocks_Descriptions.Add(Unlocks.MAX_EQUIPMENT_POINTS_8, new Tuple<string, int>("equipment-points, (+1)", 40));
     _Unlocks_Descriptions.Add(Unlocks.MAX_EQUIPMENT_POINTS_9, new Tuple<string, int>("equipment-points, (+1)", 50));
 
-    _Unlocks_Descriptions.Add(Unlocks.MODE_SURVIVAL, new Tuple<string, int>("unlocks survival mode", 11));
+    _Unlocks_Descriptions.Add(Unlocks.MODE_SURVIVAL, new Tuple<string, int>("unlocks 'survival' mode", 11));
 
-    _Unlocks_Descriptions.Add(Unlocks.EXTRA_TIME, new Tuple<string, int>("unlocks the 'time' extra", 0));
-    _Unlocks_Descriptions.Add(Unlocks.EXTRA_GRAVITY, new Tuple<string, int>("unlocks the 'gravity' extra", 0));
-    _Unlocks_Descriptions.Add(Unlocks.EXTRA_HORDE, new Tuple<string, int>("unlocks the 'horde' extra", 0));
-    _Unlocks_Descriptions.Add(Unlocks.EXTRA_CHASER, new Tuple<string, int>("unlocks the 'chaser' extra", 0));
+    _Unlocks_Descriptions.Add(Unlocks.EXTRA_GRAVITY, new Tuple<string, int>("unlocks 'gravity' extra", 0));
+    _Unlocks_Descriptions.Add(Unlocks.EXTRA_PLAYER_AMMO, new Tuple<string, int>("unlocks 'player ammo' extra", 0));
+    _Unlocks_Descriptions.Add(Unlocks.EXTRA_ENEMY_MULTI, new Tuple<string, int>("unlocks 'enemy multiplier' extra", 0));
+    _Unlocks_Descriptions.Add(Unlocks.EXTRA_CHASE, new Tuple<string, int>("unlocks 'chaser' extra", 0));
+    _Unlocks_Descriptions.Add(Unlocks.EXTRA_TIME, new Tuple<string, int>("unlocks 'time' extra", 0));
+    _Unlocks_Descriptions.Add(Unlocks.EXTRA_HORDE, new Tuple<string, int>("unlocks 'horde' extra", 0));
+    _Unlocks_Descriptions.Add(Unlocks.EXTRA_BLOOD_FX, new Tuple<string, int>("unlocks 'blood fx' extra", 0));
+    _Unlocks_Descriptions.Add(Unlocks.EXTRA_EXPLODED, new Tuple<string, int>("unlocks 'explode death' extra", 0));
 
     _Unlocks_Descriptions.Add(Unlocks.TUTORIAL_PART0, new Tuple<string, int>("", 0));
     _Unlocks_Descriptions.Add(Unlocks.TUTORIAL_PART1, new Tuple<string, int>("", 0));
@@ -609,43 +617,43 @@ public static class Shop
 
     public static bool HasPerk(int playerId, PerkType perk)
     {
-      return GameScript.PlayerProfile._Profiles[playerId]._equipment._perks.Contains(perk);
+      return GameScript.PlayerProfile.s_Profiles[playerId]._equipment._perks.Contains(perk);
     }
 
     public static List<PerkType> GetPerks(int playerId)
     {
-      return GameScript.PlayerProfile._Profiles[playerId]._equipment._perks;
+      return GameScript.PlayerProfile.s_Profiles[playerId]._equipment._perks;
     }
 
     public static int GetNumPerks(int playerId)
     {
-      return GameScript.PlayerProfile._Profiles[playerId]._equipment._perks.Count;
+      return GameScript.PlayerProfile.s_Profiles[playerId]._equipment._perks.Count;
     }
 
     public static void BuyPerk(int playerId, PerkType perk)
     {
       if (GameScript._GameMode != GameScript.GameModes.SURVIVAL) return;
 
-      GameScript.PlayerProfile._Profiles[playerId]._equipment._perks.Add(perk);
-      GameScript.PlayerProfile._Profiles[playerId].UpdatePerkIcons();
+      GameScript.PlayerProfile.s_Profiles[playerId]._equipment._perks.Add(perk);
+      GameScript.PlayerProfile.s_Profiles[playerId].UpdatePerkIcons();
 
       switch (perk)
       {
         // Increase max ammo
         case (PerkType.MAX_AMMO_UP):
-          foreach (var player in PlayerScript._Players)
+          foreach (var player in PlayerScript.s_Players)
           {
             if (player._id == playerId)
             {
               player._ragdoll.RefillAmmo();
-              player._profile.UpdateIcons();
+              player._Profile.UpdateIcons();
               return;
             }
           }
           break;
         // Give laser sights to ranged weapons
         case (PerkType.LASER_SIGHTS):
-          foreach (var player in PlayerScript._Players)
+          foreach (var player in PlayerScript.s_Players)
           {
             if (player._id == playerId)
             {
@@ -657,12 +665,12 @@ public static class Shop
           break;
         // Give two extra health
         case (PerkType.ARMOR_UP):
-          foreach (var player in PlayerScript._Players)
+          foreach (var player in PlayerScript.s_Players)
           {
             if (player._id == playerId)
             {
               player._ragdoll._health += 2;
-              player._profile.UpdateHealthUI();
+              player._Profile.UpdateHealthUI();
               if (player._ragdoll._health > 3)
                 player._ragdoll.AddArmor();
               return;

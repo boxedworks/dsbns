@@ -531,7 +531,7 @@ public class UtilityScript : ItemScript
             };
             _explosion._onExplode += () =>
             {
-              if (_unregister) _ragdoll._playerScript?._profile.UtilityUse(_side);
+              if (_unregister) _ragdoll._playerScript?._Profile.UtilityUse(_side);
               // Hide ring
               if (_ring != null)
                 _ring.enabled = false;
@@ -571,7 +571,7 @@ public class UtilityScript : ItemScript
 
       // Increment clip
       _clip--;
-      if (incrementClip && _unregister) _ragdoll._playerScript?._profile.UtilityUse(_side);
+      if (incrementClip && _unregister) _ragdoll._playerScript?._Profile.UtilityUse(_side);
 
       // Extra; infinite ammo
       if (_ragdoll._isPlayer && Settings._Extras_CanUse && Settings._Extra_PlayerAmmo._value == 3)
@@ -640,7 +640,7 @@ public class UtilityScript : ItemScript
               if (!_thrown)
               {
                 transform.position = _ragdoll._transform_parts._hip.position + _ragdoll._transform_parts._hip.forward * 0.3f;
-                if (_unregister) _ragdoll._playerScript?._profile.UtilityUse(_side);
+                if (_unregister) _ragdoll._playerScript?._Profile.UtilityUse(_side);
               }
               // Disable rung
               _ring.enabled = false;
@@ -747,17 +747,17 @@ public class UtilityScript : ItemScript
     if (util_data.Item1)
     {
       var side = util_data.Item2;
-      if (!player._profile.CanUtilityReload(side))
+      if (!player._Profile.CanUtilityReload(side))
       {
         // Check for right side
         if (side == ActiveRagdoll.Side.LEFT && player.HasUtility(_utility_type, ActiveRagdoll.Side.RIGHT).Item1)
         {
           side = ActiveRagdoll.Side.RIGHT;
-          if (player._profile.CanUtilityReload(side))
+          if (player._Profile.CanUtilityReload(side))
           {
             // Give player utility and update player UI
             player.AddUtility(_utility_type, side);
-            player._profile.UtilityReload(side, true);
+            player._Profile.UtilityReload(side, true);
 
             // Play noise
             player._ragdoll.PlaySound("Ragdoll/Pickup");
@@ -774,7 +774,7 @@ public class UtilityScript : ItemScript
 
       // Give player utility and update player UI
       player.AddUtility(_utility_type, side);
-      player._profile.UtilityReload(side, true);
+      player._Profile.UtilityReload(side, true);
 
       // Play noise
       player._ragdoll.PlaySound("Ragdoll/Pickup");

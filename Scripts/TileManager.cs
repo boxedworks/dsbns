@@ -12,7 +12,7 @@ public class TileManager
   static float _Tile_spacing = 2.5f;
   static Vector2 _offset;
 
-  static List<PlayerScript> Players { get { return PlayerScript._Players; } }
+  static List<PlayerScript> Players { get { return PlayerScript.s_Players; } }
 
   static Transform _Tile_begin, _Tile_end;
   public static Transform _Map, _Tile;
@@ -2528,7 +2528,7 @@ public class TileManager
 
           if (script_enemy._linkedDoor != null)
           {
-            script_enemy._linkedDoor._trigger_enemies.Remove(script_enemy._id);
+            script_enemy._linkedDoor._trigger_enemies.Remove(script_enemy._Id);
             script_enemy._linkedDoor = null;
           }
         }
@@ -2551,11 +2551,11 @@ public class TileManager
 
               if (script_enemy._linkedDoor != null)
               {
-                script_enemy._linkedDoor._trigger_enemies.Remove(script_enemy._id);
+                script_enemy._linkedDoor._trigger_enemies.Remove(script_enemy._Id);
                 script_enemy._linkedDoor = null;
               }
 
-              d.RegisterEnemy(script_enemy._id);
+              d.RegisterEnemy(script_enemy._Id);
               script_enemy._linkedDoor = d;
             }
             _IsLinking = false;
