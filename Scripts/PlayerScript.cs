@@ -78,6 +78,8 @@ public class PlayerScript : MonoBehaviour
   // Last time whistled
   public float _last_whistle;
 
+  public static int s_PlayerCountSave;
+
   // Use this for initialization
   void Start()
   {

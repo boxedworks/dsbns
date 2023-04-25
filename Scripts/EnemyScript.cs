@@ -1672,6 +1672,7 @@ public class EnemyScript : MonoBehaviour
 
   public void OnToggle(ActiveRagdoll source, ActiveRagdoll.DamageSourceType damageSourceType)
   {
+
     // Check achievement
     if (source != null && source._isPlayer)
     {
