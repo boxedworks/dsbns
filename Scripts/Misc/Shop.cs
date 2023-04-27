@@ -227,7 +227,7 @@ public static class Shop
     EXTRA_HORDE,
     EXTRA_CHASE,
     EXTRA_PLAYER_AMMO,
-    EXTRA_ENEMY_MULTI,
+    EXTRA_ENEMY_OFF,
     EXTRA_BLOOD_FX,
     EXTRA_EXPLODED,
     EXTRA_CROWNMODE,
@@ -267,8 +267,6 @@ public static class Shop
 
     _Unlocks = new List<Unlocks>();
     _Unlocks_Available = new List<Unlocks>();
-
-    _UnlockString = "";
 
     _Unlocks_Descriptions = new Dictionary<Unlocks, Tuple<string, int>>();
     _Unlocks_Descriptions.Add(Unlocks.ITEM_KNIFE, new Tuple<string, int>("melee, fast", 3));
@@ -335,7 +333,7 @@ public static class Shop
 
     _Unlocks_Descriptions.Add(Unlocks.EXTRA_GRAVITY, new Tuple<string, int>("unlocks 'gravity' extra", 0));
     _Unlocks_Descriptions.Add(Unlocks.EXTRA_PLAYER_AMMO, new Tuple<string, int>("unlocks 'player ammo' extra", 0));
-    _Unlocks_Descriptions.Add(Unlocks.EXTRA_ENEMY_MULTI, new Tuple<string, int>("unlocks 'enemy multiplier' extra", 0));
+    _Unlocks_Descriptions.Add(Unlocks.EXTRA_ENEMY_OFF, new Tuple<string, int>("unlocks 'enemy off' extra", 0));
     _Unlocks_Descriptions.Add(Unlocks.EXTRA_CHASE, new Tuple<string, int>("unlocks 'chaser' extra", 0));
     _Unlocks_Descriptions.Add(Unlocks.EXTRA_TIME, new Tuple<string, int>("unlocks 'time' extra", 0));
     _Unlocks_Descriptions.Add(Unlocks.EXTRA_HORDE, new Tuple<string, int>("unlocks 'horde' extra", 0));
@@ -451,6 +449,9 @@ public static class Shop
     _ActualTwoHanded_Dictionary = new List<GameScript.ItemManager.Items>();
     _ActualTwoHanded_Dictionary.Add(GameScript.ItemManager.Items.SWORD);
     _ActualTwoHanded_Dictionary.Add(GameScript.ItemManager.Items.BAT);
+
+    // Unlock string
+    s_unlockString = PlayerPrefs.GetString("UnlockString", "");
   }
 
   // Get a list of items with ItemManager.Items enum
@@ -501,14 +502,24 @@ public static class Shop
     PlayerPrefs.SetInt($"Shop_UnlocksAvailable_{unlock}", 1);
 
     if (alert)
-      _UnlockString += $"- new unlock added to shop: <color=yellow>{unlock}</color>\n";
+      s_UnlockString += $"- new unlock added to shop: <color=yellow>{unlock}</color>\n";
   }
-  public static string _UnlockString;
+
+  static string s_unlockString;
+  public static string s_UnlockString
+  {
+    get { return s_unlockString; }
+    set
+    {
+      s_unlockString = value;
+      PlayerPrefs.SetString("UnlockString", value);
+    }
+  }
 
   public static void ShowUnlocks(Menu2.MenuType toMenu)
   {
-    Menu2.GenericMenu(new string[] { "new unlocks\n\n", _UnlockString }, (UnityEngine.Random.value < 0.5f ? "wow" : "nice"), toMenu);
-    _UnlockString = "";
+    Menu2.GenericMenu(new string[] { "new unlocks\n\n", s_UnlockString }, (UnityEngine.Random.value < 0.5f ? "wow" : "nice"), toMenu);
+    s_UnlockString = "";
   }
 
   // Unlock from available unlocks
@@ -542,11 +553,10 @@ public static class Shop
 
   public static int GetUtilityCount(UtilityScript.UtilityType utility)
   {
-    int count = 1;
+    var count = 1;
     switch (utility)
     {
       case UtilityScript.UtilityType.SHURIKEN:
-      case UtilityScript.UtilityType.SHURIKEN_BIG:
         count = 2;
         break;
     }

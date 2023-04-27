@@ -365,7 +365,7 @@ public static class FunctionsC
         var hit = new RaycastHit();
         var start_pos = new Vector3(position.x, -0.1f, position.z);
         var dir = -(r._dead ? start_pos - r._hip.position : MathC.Get2DVector(start_pos - r._hip.position)).normalized;
-        if (!Physics.SphereCast(new Ray(start_pos, dir), 0.1f, out hit, radius + 5f, EnemyScript._Layermask_Ragdoll))
+        if (!Physics.SphereCast(new Ray(start_pos, dir), 0.05f, out hit, radius + 5f, EnemyScript._Layermask_Ragdoll))
         {
           r.ToggleRaycasting(false, true);
           continue;

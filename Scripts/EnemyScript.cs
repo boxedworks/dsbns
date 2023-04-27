@@ -4,6 +4,8 @@ using UnityEngine;
 using Unity.Jobs;
 using Unity.Collections;
 
+using System.Linq;
+
 public class EnemyScript : MonoBehaviour
 {
 
@@ -1492,7 +1494,7 @@ public class EnemyScript : MonoBehaviour
     if (PlayerScript.s_Players == null) return null;
     foreach (PlayerScript p in PlayerScript.s_Players)
     {
-      if (!p._canDetect || p._ragdoll._dead) continue;
+      if (!p._CanDetect || p._ragdoll._dead) continue;
       if (p._ragdoll.IsSelf(obj)) return p._ragdoll;
     }
     return null;
@@ -1750,7 +1752,28 @@ public class EnemyScript : MonoBehaviour
     // Check for last enemy killed
     var last_killed = false;
     if (_Enemies_alive.Count == 0)
+    {
       GameScript._Singleton._goalPickupTime = Time.time;
+    }
+
+    // First enemy killed
+    if (_Enemies_dead.Count == 1)
+    {
+
+      // Take snapshot of extras
+      PlayerScript.s_ExtrasSnapshot = Settings.GetExtrasSnapshot();
+
+      // Save player num
+      PlayerScript.s_NumPlayersStart = Settings._NumberPlayers;
+
+      // Register equip
+      if (PlayerScript.s_Players != null)
+        foreach (var p in PlayerScript.s_Players)
+        {
+          p?.RegisterEquipment();
+        }
+
+    }
 
     // Sneaky difficulty
     if (Settings._DIFFICULTY == 0)
@@ -1813,43 +1836,6 @@ public class EnemyScript : MonoBehaviour
           else
           {
 
-            // Check extra unlocks
-            if (GameScript._GameMode == GameScript.GameModes.CLASSIC)
-            {
-
-              foreach (var extraInfo in Settings.s_Extra_UnlockCriterea)
-              {
-                // Check level and difficulty
-                var level = extraInfo.Value.Item1;
-                var diff = extraInfo.Value.Item2;
-
-                if (Levels._CurrentLevelIndex != level || Settings._DIFFICULTY != diff)
-                {
-                  continue;
-                }
-
-                // Make sure player count not changed
-
-
-                // Make sure extras not changed
-
-
-                // Make sure loadout not changed
-
-
-                // Check player count
-
-
-                // Check extras
-
-
-                // Check loadout
-
-
-                // Award extra in shop
-              }
-            }
-
             // Check best player time
             if (level_time_best == -1 || level_time < level_time_best)
             {
@@ -1877,6 +1863,7 @@ public class EnemyScript : MonoBehaviour
                 TileManager._Text_LevelTimer.text = string.Format($"{{0:0.000}} (<color=red>+{{1:0.000}}</color>)", level_time, level_time - level_time_best);
             }
 
+            var ratingIndex = -1;
             if (can_save_timers)
             {
 
@@ -1931,7 +1918,6 @@ public class EnemyScript : MonoBehaviour
 
               }
 
-
               // Time ratings
               {
 
@@ -1941,7 +1927,6 @@ public class EnemyScript : MonoBehaviour
                 var ratings = Levels.GetLevelRatings();
 
                 var index = 0;
-                var medal_index = -1;
                 TileManager._Text_LevelTimer_Best.text += "\n\n";
                 var medal_format = "<color={0}>{1,-5}: {2,-6}</color>\n";
                 var points_awarded = 0;
@@ -1952,8 +1937,8 @@ public class EnemyScript : MonoBehaviour
                   if (level_time <= time_)
                   {
 
-                    if (medal_index == -1)
-                      medal_index = index;
+                    if (ratingIndex == -1)
+                      ratingIndex = index;
 
                     // Check new medal
                     if (level_time_best > time || level_time_best == -1f)
@@ -1962,7 +1947,7 @@ public class EnemyScript : MonoBehaviour
                     }
 
                   }
-                  TileManager._Text_LevelTimer_Best.text += string.Format(medal_format, ratings[index].Item2, ratings[index].Item1, string.Format("{0:0.000}", time_) + (medal_index == index ? "*" : ""));
+                  TileManager._Text_LevelTimer_Best.text += string.Format(medal_format, ratings[index].Item2, ratings[index].Item1, string.Format("{0:0.000}", time_) + (ratingIndex == index ? "*" : ""));
                   index++;
                 }
 
@@ -1978,7 +1963,7 @@ public class EnemyScript : MonoBehaviour
                     if (Settings._CurrentDifficulty_NotTopRated)
                     {
                       var levelratings_difficulty = Levels._Levels_All_TopRatings[Settings._DIFFICULTY];
-                      levelratings_difficulty[Levels._CurrentLevelIndex] = medal_index == 0;
+                      levelratings_difficulty[Levels._CurrentLevelIndex] = ratingIndex == 0;
 
                       var all_top_rated = true;
                       for (var i = 1; i < Levels._CurrentLevelCollection._levelData.Length; i++)
@@ -2004,6 +1989,163 @@ public class EnemyScript : MonoBehaviour
                     Debug.Log($"Fake awarded {points_awarded} points");
                 }
               }
+            }
+
+            // Check extra unlocks
+            {
+              var prereqsSatisfied = true;
+
+              // Make sure player count not changed
+              if (PlayerScript.s_NumPlayersStart != 1 || Settings._NumberPlayers != 1)
+              {
+                Debug.LogWarning($"No extras; player count: {PlayerScript.s_NumPlayersStart} - {PlayerScript.s_Players.Count}");
+                prereqsSatisfied = false;
+              }
+
+              // Make sure extras not changed
+              var extrasSnapshot = Settings.GetExtrasSnapshot();
+              if (!extrasSnapshot.SequenceEqual(PlayerScript.s_ExtrasSnapshot))
+              {
+                Debug.LogWarning("No extras; extras changed");
+                prereqsSatisfied = false;
+              }
+
+              // Make sure loadout not changed
+              bool EquipmentIsEqual(GameScript.PlayerProfile.Equipment e0, GameScript.PlayerProfile.Equipment e1)
+              {
+
+                // Check items equal
+                var equipment0_items = new List<GameScript.ItemManager.Items>(){
+                  e0._item_left0,
+                  e0._item_right0,
+                  e0._item_left1,
+                  e0._item_right1
+                };
+                var equipment1_items = new List<GameScript.ItemManager.Items>(){
+                  e1._item_left0,
+                  e1._item_right0,
+                  e1._item_left1,
+                  e1._item_right1
+                };
+                foreach (var item in equipment0_items)
+                {
+                  if (!equipment1_items.Contains(item))
+                  {
+                    return false;
+                  }
+                  equipment1_items.Remove(item);
+                }
+
+                // Check perks equal
+                if (e0._perks.Count != e1._perks.Count)
+                {
+                  return false;
+                }
+                foreach (var perk0 in e0._perks)
+                {
+                  if (!e1._perks.Contains(perk0))
+                  {
+                    return false;
+                  }
+                }
+
+                // Check utilities equal
+                var utilsTotal = new List<UtilityScript.UtilityType>();
+                foreach (var util in e0._utilities_left)
+                  utilsTotal.Add(util);
+                foreach (var util in e0._utilities_right)
+                  utilsTotal.Add(util);
+
+                foreach (var util in e1._utilities_left)
+                {
+                  if (!utilsTotal.Contains(util))
+                  {
+                    return false;
+                  }
+                  utilsTotal.Remove(util);
+                }
+
+                //
+                return true;
+              }
+
+              var equipmentStart = PlayerScript.s_Players[0]._EquipmentStart;
+              var equipment_changed = PlayerScript.s_Players[0]._EquipmentChanged;
+              if (equipment_changed || !EquipmentIsEqual(equipmentStart, PlayerScript.s_Players[0]._Equipment))
+              {
+                Debug.LogWarning("No extras; equipment changed");
+                prereqsSatisfied = false;
+              }
+
+              if (prereqsSatisfied)
+                foreach (var extraMeta in Settings.s_Extra_UnlockCriterea)
+                {
+
+                  var extraUnlock = extraMeta.Key;
+                  var extraInfo = extraMeta.Value;
+
+                  // Check level and difficulty
+                  var level = extraInfo.level;
+                  var diff = extraInfo.difficulty;
+
+                  if (Levels._CurrentLevelIndex + 1 != level || Settings._DIFFICULTY != diff)
+                  {
+                    continue;
+                  }
+
+                  // Check extras
+                  if (extraInfo.extras != null)
+                  {
+
+                    // Horde
+                    if (extraInfo.extras.Contains(Shop.Unlocks.EXTRA_HORDE))
+                    {
+                      if (!Settings._Extra_CrazyZombies)
+                        continue;
+                    }
+
+                    // Time
+                    if (extraInfo.extras.Contains(Shop.Unlocks.EXTRA_TIME))
+                    {
+                      if (!Settings._Extra_Superhot)
+                        continue;
+                    }
+
+                  }
+
+                  // Check ranking
+                  if (ratingIndex == -1 || extraMeta.Value.rating < ratingIndex)
+                  {
+                    continue;
+                  }
+
+                  // Check loadout
+                  var equipmentFake = new GameScript.PlayerProfile.Equipment();
+                  {
+                    if (extraInfo.items?.Length > 0)
+                      equipmentFake._item_left0 = extraInfo.items[0];
+                    if (extraInfo.items?.Length > 1)
+                      equipmentFake._item_right0 = extraInfo.items[1];
+                    if (extraInfo.items?.Length > 2)
+                      equipmentFake._item_left1 = extraInfo.items[2];
+                    if (extraInfo.items?.Length > 3)
+                      equipmentFake._item_right1 = extraInfo.items[3];
+
+                    equipmentFake._utilities_left = extraInfo.utilities == null ? new UtilityScript.UtilityType[0] : extraInfo.utilities;
+
+                    if (extraInfo.perks != null)
+                      equipmentFake._perks = new List<Shop.Perk.PerkType>(extraInfo.perks);
+                  }
+
+                  if (!EquipmentIsEqual(equipmentStart, equipmentFake))
+                  {
+                    continue;
+                  }
+
+                  // Award extra in shop
+                  Debug.Log($"Unlocked {extraUnlock}");
+                  Shop.AddAvailableUnlock(extraUnlock, true);
+                }
             }
           }
 

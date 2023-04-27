@@ -166,10 +166,10 @@ public class GameScript : MonoBehaviour
     Settings.Init();
 
     // Init playerprofile and loadouts
-    PlayerScript._Materials_Ring = new Material[4];
+    PlayerScript.s_Materials_Ring = new Material[4];
     var mat = Instantiate(TileManager._Ring.gameObject).transform.GetChild(0).GetComponent<MeshRenderer>().sharedMaterial;
-    for (var i = 0; i < PlayerScript._Materials_Ring.Length; i++)
-      PlayerScript._Materials_Ring[i] = new Material(mat);
+    for (var i = 0; i < PlayerScript.s_Materials_Ring.Length; i++)
+      PlayerScript.s_Materials_Ring[i] = new Material(mat);
 
     new PlayerProfile();
     new PlayerProfile();
@@ -216,9 +216,6 @@ public class GameScript : MonoBehaviour
     if (_PlayerIter < Settings._NumberPlayers)
       for (; _PlayerIter < Settings._NumberPlayers; _PlayerIter++)
         PlayerspawnScript._PlayerSpawns[0].SpawnPlayer();
-
-    // Save player num for challenges
-    PlayerScript._NumPlayers_Start = Settings._NumberPlayers;
   }
 
   static Coroutine _tutorialCo;
@@ -2256,8 +2253,8 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
             if (side == ActiveRagdoll.Side.LEFT) ammo = player._ragdoll._itemL != null ? player._ragdoll._itemL.Clip() : ammo;
             else ammo = player._ragdoll._itemR != null ? player._ragdoll._itemR.Clip() : ammo;
           else
-            if (side == ActiveRagdoll.Side.LEFT) ammo = player._utilities_left != null ? player._utilities_left.Count : ammo;
-          else ammo = player._utilities_right != null ? player._utilities_right.Count : ammo;
+            if (side == ActiveRagdoll.Side.LEFT) ammo = player._UtilitiesLeft != null ? player._UtilitiesLeft.Count : ammo;
+          else ammo = player._UtilitiesRight != null ? player._UtilitiesRight.Count : ammo;
         }
         if (ammo != _ammoCount) _ammoVisible = ammo;
         // Create meshes
@@ -3145,136 +3142,6 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
   public static void OnLastEnemyKilled()
   {
 
-    // Check for extras challenges
-    if (_GameMode == GameModes.CLASSIC)
-    {
-
-
-
-      /*/
-      bool EquipmentIsEqual(PlayerProfile.Equipment e0, PlayerProfile.Equipment e1)
-      {
-
-        // Check items equal
-        var equipment0_items = new List<ItemManager.Items>(){
-          e0._item_left0,
-          e0._item_right0,
-          e0._item_left1,
-          e0._item_right1
-        };
-        var equipment1_items = new List<ItemManager.Items>(){
-          e1._item_left0,
-          e1._item_right0,
-          e1._item_left1,
-          e1._item_right1
-        };
-        foreach (var item in equipment0_items)
-        {
-          if (!equipment1_items.Contains(item)) { return false; }
-          equipment1_items.Remove(item);
-        }
-        if (equipment0_items.Count != equipment1_items.Count) { return false; }
-
-        // Check perks equal
-        if (e0._perks.Count != e1._perks.Count) return false;
-        foreach (var perk0 in e0._perks)
-        {
-          if (!e1._perks.Contains(perk0)) return false;
-        }
-
-        // Check utilities equal
-        if (e0._utilities_left.Length != e1._utilities_left.Length) return false;
-        foreach (var utlity0 in e0._utilities_left)
-        {
-          if (!e1._utilities_left.Contains(utlity0)) return false;
-        }
-        if (e0._utilities_right.Length != e1._utilities_right.Length) return false;
-        foreach (var utlity0 in e0._utilities_right)
-        {
-          if (!e1._utilities_right.Contains(utlity0)) return false;
-        }
-
-        return true;
-      }
-
-      // Make sure # of players has not changed
-      if (PlayerScript._NumPlayers_Start == 1 && PlayerScript._Players.Count > 0)
-      {
-
-        // Make sure equipment has not changed
-        var equipment_start = PlayerScript._Players[0]._equipment_start;
-        var equipment_changed = PlayerScript._Players[0]._equipment_changed;
-        if (EquipmentIsEqual(equipment_start, PlayerScript._Players[0]._equipment) && !equipment_changed)
-        {
-
-          // Function to check for equipment matching
-          bool HasItemPair(PlayerProfile.Equipment equipment, params ItemManager.Items[] items)
-          {
-            // Check perks, utils
-            if (equipment._perks.Count > 0)
-            {
-              return false;
-            }
-            if (equipment._utilities_left.Length > 0)
-            {
-              return false;
-            }
-            if (equipment._utilities_right.Length > 0)
-            {
-              return false;
-            }
-
-            // Check item pair
-            var equipment_items = new List<ItemManager.Items>(){
-              equipment._item_left0,
-              equipment._item_right0,
-              equipment._item_left1,
-              equipment._item_right1
-            };
-            foreach (var item in items)
-            {
-              if (item == ItemManager.Items.NONE) { continue; }
-              if (!equipment_items.Contains(item)) { return false; }
-              equipment_items.Remove(item);
-            }
-
-            // Matches
-            return true;
-          }
-
-          switch (Levels._CurrentLevelIndex + 1)
-          {
-
-            // Check time extra
-            // "unlock by completing sneaky level 40, solo, with just a knife",
-            case 40:
-
-              if (HasItemPair(equipment_start, ItemManager.Items.KNIFE))
-              {
-                Debug.Log("Unlocked EXTRA_TIME");
-                Shop.AddAvailableUnlock(Shop.Unlocks.EXTRA_TIME, true);
-              }
-
-              break;
-
-            // Check gravity extra
-            // "unlock by completing sneaky level 80, solo, with just a knife and silenced pistol",
-            case 80:
-
-              if (HasItemPair(equipment_start, ItemManager.Items.KNIFE, ItemManager.Items.PISTOL_SILENCED))
-              {
-                Debug.Log("Unlocked EXTRA_GRAVITY");
-                Shop.AddAvailableUnlock(Shop.Unlocks.EXTRA_GRAVITY, true);
-              }
-
-              break;
-
-          }
-
-        }
-      }*/
-
-    }
   }
 
   //
@@ -3396,7 +3263,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     if (_Singleton._IsDemo && Levels._CurrentLevelIndex + 1 >= 48)
     {
       Menu2._SaveMenuDir = -1;
-      Shop._UnlockString += $"- you've reached the end of the <color=cyan>demo</color> for CLASSIC mode\n- purchase the game to access the rest of the game!\n";
+      Shop.s_UnlockString += $"- you've reached the end of the <color=cyan>demo</color> for CLASSIC mode\n- purchase the game to access the rest of the game!\n";
 
 #if UNITY_STANDALONE
       // Achievement
@@ -3422,7 +3289,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
             Levels._CurrentLevelCollectionIndex = 1;
             Menu2._SaveMenuDir = -1;
             Settings._DifficultyUnlocked = 1;
-            Shop._UnlockString += $"- new difficulty unlocked: <color=cyan>sneakier</color>\n";
+            Shop.s_UnlockString += $"- new difficulty unlocked: <color=cyan>sneakier</color>\n";
 
             // Achievement
 #if UNITY_STANDALONE
@@ -3441,11 +3308,11 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
           SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.DIFFICULTY_2);
 #endif
 
-          Shop._UnlockString += $"- you have beaten the classic mode!\n- try out the survival mode?\n";
+          Shop.s_UnlockString += $"- you have beaten the classic mode!\n- try out the survival mode?\n";
         }
 
         // Display unlock messages
-        if (Shop._UnlockString != string.Empty)
+        if (Shop.s_UnlockString != string.Empty)
         {
           TogglePause(Menu2.MenuType.LEVELS);
         }

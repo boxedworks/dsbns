@@ -260,7 +260,7 @@ public class Levels : MonoBehaviour
       var time_data = Levels._CurrentLevel_LevelTimesData[Settings._DIFFICULTY][level_index];
       return GetLevelRating(time_data.Item1, time_data.Item2);
     }
-    catch (System.Exception e)
+    catch
     {
       if (Levels._CurrentLevel_LevelTimesData == null)
       {

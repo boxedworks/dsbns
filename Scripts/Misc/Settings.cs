@@ -320,7 +320,7 @@ public static class Settings
         _Extra_EnemyMultiplier._value != 0 ||
         _Extra_PlayerAmmo._value != 0 ||
         _Extra_EnemyAmmo._value != 0 ||
-        _Extra_BodyExplode._value != 0 || 
+        _Extra_BodyExplode._value != 0 ||
         _Extra_CrownMode._value != 0
       ;
     }
@@ -476,199 +476,183 @@ public static class Settings
     _Extra_BloodType = new FunctionsC.SaveableStat_Int("extra_bloodtype", 0);
     _Extra_CrownMode = new FunctionsC.SaveableStat_Int("extra_crownmode", 0);
 
-    s_Extra_UnlockCriterea = new Dictionary<
-    Shop.Unlocks,
-    (
-      int, int,
-
-      Shop.Unlocks[],
-
-      string,
-      GameScript.ItemManager.Items[],
-      UtilityScript.UtilityType[], UtilityScript.UtilityType[],
-      Shop.Perk.PerkType[]
-    )>();
+    s_Extra_UnlockCriterea = new Dictionary<Shop.Unlocks, UnlockCriteria>();
 
     // Gravity
     s_Extra_UnlockCriterea.Add(
-      Shop.Unlocks.EXTRA_GRAVITY,
-      (
-
-        // Level / difficulty
-        80, 0,
-
-        // Extras
-        null,
-
-        // Loadout
-        "knife, silenced pistol",
-        new GameScript.ItemManager.Items[]{
-          GameScript.ItemManager.Items.KNIFE,
-          GameScript.ItemManager.Items.PISTOL_SILENCED
-        },
-        null, null,
-        null
-      )
+        Shop.Unlocks.EXTRA_GRAVITY,
+        new UnlockCriteria
+        {
+          level = 63,
+          difficulty = 0,
+          rating = 0,
+          extras = null,
+          loadoutDesc = "knife, silenced pistol",
+          items = new GameScript.ItemManager.Items[] {
+            GameScript.ItemManager.Items.KNIFE,
+            GameScript.ItemManager.Items.PISTOL_SILENCED
+            },
+          utilities = null,
+          perks = null
+        }
     );
 
     // Player ammo
     s_Extra_UnlockCriterea.Add(
-      Shop.Unlocks.EXTRA_PLAYER_AMMO,
-      (
-
-        // Level / difficulty
-        95, 0,
-
-        // Extras
-        null,
-
-        // Loadout
-        "knife, lever-action rifle",
-        new GameScript.ItemManager.Items[]{
-          GameScript.ItemManager.Items.KNIFE,
-          GameScript.ItemManager.Items.RIFLE_LEVER
-        },
-        null, null,
-        null
-      )
+        Shop.Unlocks.EXTRA_PLAYER_AMMO,
+        new UnlockCriteria
+        {
+          level = 95,
+          difficulty = 0,
+          rating = 1,
+          extras = new Shop.Unlocks[] { Shop.Unlocks.EXTRA_HORDE },
+          loadoutDesc = "knife, lever-action rifle",
+          items = new GameScript.ItemManager.Items[] {
+            GameScript.ItemManager.Items.KNIFE,
+            GameScript.ItemManager.Items.RIFLE_LEVER
+            },
+          utilities = null,
+          perks = null
+        }
     );
 
     // Chaser
     s_Extra_UnlockCriterea.Add(
-      Shop.Unlocks.EXTRA_CHASE,
-      (
-
-        // Level / difficulty
-        110, 0,
-
-        // Extras
-        new Shop.Unlocks[] { Shop.Unlocks.EXTRA_HORDE },
-
-        // Loadout
-        "knife, double-barrel shotgun",
-        new GameScript.ItemManager.Items[]{
-          GameScript.ItemManager.Items.KNIFE,
-          GameScript.ItemManager.Items.SHOTGUN_DOUBLE
-        },
-        null, null,
-        null
-      )
+        Shop.Unlocks.EXTRA_CHASE,
+        new UnlockCriteria
+        {
+          level = 110,
+          difficulty = 0,
+          rating = 1,
+          extras = new Shop.Unlocks[] { Shop.Unlocks.EXTRA_HORDE },
+          loadoutDesc = "knife, double-barrel shotgun",
+          items = new GameScript.ItemManager.Items[] {
+            GameScript.ItemManager.Items.KNIFE,
+            GameScript.ItemManager.Items.SHOTGUN_DOUBLE
+            },
+          utilities = null,
+          perks = null
+        }
     );
 
     // Enemy multi
     s_Extra_UnlockCriterea.Add(
-      Shop.Unlocks.EXTRA_ENEMY_MULTI,
-      (
-
-        // Level / difficulty
-        20, 0,
-
-        // Extras
-        null,
-
-        // Loadout
-        "sticky gun",
-        new GameScript.ItemManager.Items[]{
-          GameScript.ItemManager.Items.STICKY_GUN
-        },
-        null, null,
-        null
-      )
+        Shop.Unlocks.EXTRA_ENEMY_OFF,
+        new UnlockCriteria
+        {
+          level = 12,
+          difficulty = 0,
+          rating = 2,
+          extras = null,
+          loadoutDesc = "sticky gun",
+          items = new GameScript.ItemManager.Items[] {
+            GameScript.ItemManager.Items.STICKY_GUN
+            },
+          utilities = null,
+          perks = null
+        }
     );
 
     // Horde
     s_Extra_UnlockCriterea.Add(
-      Shop.Unlocks.EXTRA_HORDE,
-      (
-
-        // Level / difficulty
-        50, 1,
-
-        // Extras
-        null,
-
-        // Loadout
-        "axe x2",
-        new GameScript.ItemManager.Items[]{
-          GameScript.ItemManager.Items.AXE,
-          GameScript.ItemManager.Items.AXE
-        },
-        null, null,
-        null
-      )
+        Shop.Unlocks.EXTRA_HORDE,
+        new UnlockCriteria
+        {
+          level = 50,
+          difficulty = 1,
+          rating = 1,
+          extras = null,
+          loadoutDesc = "axe x2",
+          items = new GameScript.ItemManager.Items[] {
+            GameScript.ItemManager.Items.AXE,
+            GameScript.ItemManager.Items.AXE
+            },
+          utilities = null,
+          perks = null
+        }
     );
 
     // Time
     s_Extra_UnlockCriterea.Add(
-      Shop.Unlocks.EXTRA_TIME,
-      (
-
-        // Level / difficulty
-        75, 1,
-
-        // Extras
-        null,
-
-        // Loadout
-        "silenced pistol x2",
-        new GameScript.ItemManager.Items[]{
-          GameScript.ItemManager.Items.PISTOL_SILENCED,
-          GameScript.ItemManager.Items.PISTOL_SILENCED
-        },
-        null, null,
-        null
-      )
+        Shop.Unlocks.EXTRA_TIME,
+        new UnlockCriteria
+        {
+          level = 75,
+          difficulty = 1,
+          rating = 0,
+          extras = null,
+          loadoutDesc = "silenced pistol x2",
+          items = new GameScript.ItemManager.Items[] {
+            GameScript.ItemManager.Items.PISTOL_SILENCED,
+            GameScript.ItemManager.Items.PISTOL_SILENCED
+          },
+          utilities = null,
+          perks = null
+        }
     );
 
     // Blood FX
     s_Extra_UnlockCriterea.Add(
-      Shop.Unlocks.EXTRA_BLOOD_FX,
-      (
-
-        // Level / difficulty
-        100, 1,
-
-        // Extras
-        null,
-
-        // Loadout
-        "sword",
-        new GameScript.ItemManager.Items[]{
-          GameScript.ItemManager.Items.SWORD,
-        },
-        null, null,
-        null
-      )
+        Shop.Unlocks.EXTRA_BLOOD_FX,
+        new UnlockCriteria
+        {
+          level = 127,
+          difficulty = 0,
+          rating = 0,
+          extras = null,
+          loadoutDesc = "sword, shuriken x2",
+          items = new GameScript.ItemManager.Items[] {
+            GameScript.ItemManager.Items.SWORD,
+            },
+          utilities = new UtilityScript.UtilityType[]{
+            UtilityScript.UtilityType.SHURIKEN,
+          },
+          perks = null
+        }
     );
 
     // Explode on death
     s_Extra_UnlockCriterea.Add(
-      Shop.Unlocks.EXTRA_EXPLODED,
-      (
-
-        // Level / difficulty
-        110, 1,
-
-        // Extras
-        null,
-
-        // Loadout
-        "grenade impact x2, explosion resistance",
-        null,
-        new UtilityScript.UtilityType[] {
-          UtilityScript.UtilityType.GRENADE_IMPACT,
-          UtilityScript.UtilityType.GRENADE_IMPACT,
-        },
-        new UtilityScript.UtilityType[] {
-          UtilityScript.UtilityType.GRENADE_IMPACT,
-          UtilityScript.UtilityType.GRENADE_IMPACT,
-        },
-        new Shop.Perk.PerkType[]{
-          Shop.Perk.PerkType.EXPLOSION_RESISTANCE
+        Shop.Unlocks.EXTRA_EXPLODED,
+        new UnlockCriteria
+        {
+          level = 109,
+          difficulty = 1,
+          rating = 0,
+          extras = null,
+          loadoutDesc = "grenade impact x4, explosion res.",
+          items = null,
+          utilities = new UtilityScript.UtilityType[]
+          {
+            UtilityScript.UtilityType.GRENADE_IMPACT,
+            UtilityScript.UtilityType.GRENADE_IMPACT,
+            UtilityScript.UtilityType.GRENADE_IMPACT,
+            UtilityScript.UtilityType.GRENADE_IMPACT,
+          },
+          perks = new Shop.Perk.PerkType[]
+          {
+            Shop.Perk.PerkType.EXPLOSION_RESISTANCE
+          }
         }
-      )
     );
 
+  }
+
+  // Take snapshot of extras
+  public static int[] GetExtrasSnapshot()
+  {
+    return new int[]{
+        Settings._Extra_CrazyZombies ? 1 : 0,
+        Settings._Extra_CrownMode._value,
+        Settings._Extra_EnemyAmmo._value,
+        Settings._Extra_EnemyMultiplier._value,
+        Settings._Extra_Gravity,
+        Settings._Extra_PlayerAmmo._value,
+        Settings._Extra_RemoveBatGuy._value,
+        Settings._Extra_Superhot ? 1 : 0,
+        Settings._Extra_BloodType._value,
+        Settings._Extra_BodyExplode._value
+      };
   }
 
   public enum GamemodeChange
@@ -835,20 +819,22 @@ public static class Settings
     }
   }
 
-  //
-  public static Dictionary<Shop.Unlocks, (
+  public struct UnlockCriteria
+  {
+    // Level and difficulty
+    public int level;
+    public int difficulty;
+    public int rating;
 
-  // Level and difficulty
-  int, int,
+    // Extras
+    public Shop.Unlocks[] extras;
 
-  // Extras
-  Shop.Unlocks[],
+    // Loadout
+    public string loadoutDesc;
+    public GameScript.ItemManager.Items[] items;
+    public UtilityScript.UtilityType[] utilities;
+    public Shop.Perk.PerkType[] perks;
+  }
 
-  // Loadout
-  string,
-  GameScript.ItemManager.Items[],
-  UtilityScript.UtilityType[], UtilityScript.UtilityType[],
-  Shop.Perk.PerkType[]
-
-  )> s_Extra_UnlockCriterea;
+  public static Dictionary<Shop.Unlocks, UnlockCriteria> s_Extra_UnlockCriterea;
 }

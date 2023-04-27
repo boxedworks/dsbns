@@ -426,7 +426,7 @@ public class ActiveRagdoll
       if (!_ragdolled && !_grappled && ((save < 0.5f && _movementIter2 >= 0.5f) || (save > 0.5f && _movementIter2 <= 0.5f)))
       {
         // If player, send footstep sound to enemies to check for detection
-        if (_isPlayer && _playerScript._canDetect && _distance.magnitude > 0.1f)
+        if (_isPlayer && _playerScript._CanDetect && _distance.magnitude > 0.1f)
           EnemyScript.CheckSound(_controller.position, (_distance.magnitude > 0.2f ? EnemyScript.Loudness.SOFT : (EnemyScript.Loudness.SUPERSOFT)));
 
         // Sfx

@@ -137,6 +137,7 @@ public class Menu2
     public BoxCollider _collider;
 
     public string _dropdownPrompt;
+    public bool _useDropdownPreprompt;
     public string[] _dropdownSelections;
     public System.Action<MenuComponent>[] _dropdownActions,
       _dropdownOnCreated,
@@ -257,11 +258,13 @@ public class Menu2
           _menu._selectionIndex = -1;
           _Text.text = _menu.GetDisplayText();
           _menu._onRendered?.Invoke();
+
           // Create prompt
-          var prompt = $"\n===========\n{_dropdownPrompt}";
+          var prompt = _useDropdownPreprompt ? $"\n===========\n{_dropdownPrompt}" : _dropdownPrompt;
           _menu.AddComponent(prompt);
           _TextBuffer = string.Empty;
           _TextBuffer += prompt;
+
           // Create dropdown selections
           var iter = 0;
           foreach (var selection in _dropdownSelections)
@@ -433,6 +436,7 @@ public class Menu2
       });
 
       _dropdownPrompt = prompt;
+      _useDropdownPreprompt = true;
       _dropdownSelections = selections_final;
       _dropdownActions = actions_selected.ToArray();
       _dropdownOnCreated = actions_onCreated.ToArray();
@@ -2854,6 +2858,11 @@ public class Menu2
               SendInput(Input.UP);
               SendInput(Input.UP);
             }
+          })
+          .AddEvent(EventType.ON_FOCUS, (MenuComponent c) =>
+          {
+            if (GameScript._lp0 != null)
+              GameObject.Destroy(GameScript._lp0.gameObject);
           });
       else
         menu_editpacks
@@ -2868,6 +2877,11 @@ public class Menu2
             RenderMenu();
             Menu2.SendInput(Input.SPACE);
             Menu2.SendInput(Input.DOWN);
+          })
+          .AddEvent(EventType.ON_FOCUS, (MenuComponent c) =>
+          {
+            if (GameScript._lp0 != null)
+              GameObject.Destroy(GameScript._lp0.gameObject);
           });
 #endif
     }
@@ -3448,7 +3462,6 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
       // Set level directory options
       if (GameScript._GameMode == GameScript.GameModes.CLASSIC)
       {
-        Debug.Log($"{Levels._CurrentLevelCollection._levelData.Length} / {levels_per_dir} = {(float)Levels._CurrentLevelCollection._levelData.Length / levels_per_dir} ... {Mathf.CeilToInt((float)Levels._CurrentLevelCollection._levelData.Length / levels_per_dir)}");
         dirs = Mathf.CeilToInt((float)Levels._CurrentLevelCollection._levelData.Length / levels_per_dir);
       }
       else if (GameScript._GameMode == GameScript.GameModes.CHALLENGE || GameScript._GameMode == GameScript.GameModes.SURVIVAL)
@@ -6225,12 +6238,12 @@ a gampad if plugged in.~1
 
         // Set display text
         var selection = Settings._ForceKeyboard ? "on" : "off";
+        var selection_match = Settings._ForceKeyboard ? "on  -" : "off -";
         component.SetDisplayText(string.Format(format_options, "force keyboard:", selection));
 
         // Set dropdown data
         var selections = new List<string>();
         var actions = new List<System.Action<MenuComponent>>();
-        var selection_match = $"{selection} -";
         selections.Add("on  - use this if you want to play with controllers and the keyboard");
         actions.Add((MenuComponent component0) =>
         {
@@ -6417,15 +6430,12 @@ a gampad if plugged in.~1
 
     /// Extras
     // Extra hint unlock info
-    var ex_level = 50;
-    var ex_difficulty = "sneaky";
-    var ex_extras = "no extras";
-    var ex_loadout = "knife, silenced pistol";
+    var exInfo = Settings.s_Extra_UnlockCriterea[Shop.Unlocks.EXTRA_GRAVITY];
+    var useExInfo = true;
     void SpawnMenu_Extras()
     {
       var format_extras = "{0,-12}- {1,-50}";
-      var format_extras2 = "{0,-20}: {1,-50}";
-      var format_extras3 = "<color={2}>{0,-20}</color>: {1,-50}";
+      var format_extras1 = "<color={2}>{0,-20}</color>: {1,-50}";
       var menu_extras = new Menu2(MenuType.EXTRAS)
       {
 
@@ -6473,16 +6483,17 @@ a gampad if plugged in.~1
               }
 
               // Update dropdown data
-              component.SetDropdownData($"{dropdown_prompt}\n\n", selections, actions, selection_match);
+              component.SetDropdownData($"\n\n===========\n{dropdown_prompt}\n\n", selections, actions, selection_match);
+              component._useDropdownPreprompt = false;
 
               // Set display text
               if (defaultSelection)
               {
-                component.SetDisplayText(string.Format(format_extras3 + line_end, $"{prompt}", selection, _COLOR_GRAY));
+                component.SetDisplayText(string.Format(format_extras1 + line_end, $"{prompt}", selection, _COLOR_GRAY));
               }
               else
               {
-                component.SetDisplayText(string.Format(format_extras3 + line_end, $"{prompt}*", selection, "magenta"));
+                component.SetDisplayText(string.Format(format_extras1 + line_end, $"{prompt}*", selection, "magenta"));
               }
             });
         }
@@ -6509,12 +6520,8 @@ a gampad if plugged in.~1
         // Set hint info and reload component
         menu_extras.AddEvent(EventType.ON_FOCUS, (MenuComponent c) =>
         {
-          var unlockInfo = Settings.s_Extra_UnlockCriterea[extra];
-
-          ex_level = unlockInfo.Item1;
-          ex_difficulty = unlockInfo.Item2 == 0 ? "sneaky" : "<color=cyan>sneakier</color>";
-          ex_extras = unlockInfo.Item3 == null ? "no extras" : "extras...";
-          ex_loadout = unlockInfo.Item4;
+          exInfo = Settings.s_Extra_UnlockCriterea[extra];
+          useExInfo = true;
 
           c._menu._menuComponent_last._onFocus?.Invoke(c._menu._menuComponent_last);
         });
@@ -6658,9 +6665,9 @@ a gampad if plugged in.~1
         () => { return Shop.Unlocked(Shop.Unlocks.EXTRA_HORDE); }
       );
 
-      // Enemy multiplier
+      // Enemy off
       AddExtraSelection(
-        "enemy multiplier",
+        "enemy off",
         () =>
         {
           switch (Settings._Extra_EnemyMultiplier._value)
@@ -6687,8 +6694,8 @@ a gampad if plugged in.~1
         },
         "modify the number of enemies spawned",
 
-        Shop.Unlocks.EXTRA_ENEMY_MULTI,
-        () => { return Shop.Unlocked(Shop.Unlocks.EXTRA_ENEMY_MULTI); }
+        Shop.Unlocks.EXTRA_ENEMY_OFF,
+        () => { return Shop.Unlocked(Shop.Unlocks.EXTRA_ENEMY_OFF); }
       );
 
       // Blood type
@@ -6796,6 +6803,21 @@ a gampad if plugged in.~1
         "\n\n"
       );*/
 
+      menu_extras.AddComponent("about\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
+        .AddEvent(EventType.ON_RENDER, (MenuComponent c) =>
+        {
+          c._selectorType = MenuComponent.SelectorType.QUESTION;
+        })
+        .AddEvent(EventType.ON_SELECTED, (MenuComponent c) =>
+        {
+
+        })
+        .AddEvent(EventType.ON_FOCUS, (MenuComponent c) =>
+        {
+          useExInfo = false;
+          menu_extras._menuComponent_last._onFocus?.Invoke(menu_extras._menuComponent_last);
+        });
+
       // Back button
       menu_extras.AddBackButton((MenuComponent component) =>
       {
@@ -6812,27 +6834,48 @@ a gampad if plugged in.~1
       })
       .AddEvent(EventType.ON_FOCUS, (MenuComponent c) =>
       {
-        ex_level = -1;
+        useExInfo = false;
         menu_extras._menuComponent_last._onFocus?.Invoke(menu_extras._menuComponent_last);
       });
 
       // Extra hint info
-      menu_extras.AddComponent("\n\n\n\n\n\n\n\n")
+      menu_extras.AddComponent("\n\n\n\n\n")
         .AddEvent(EventType.ON_FOCUS, (MenuComponent c) =>
         {
-          if (ex_level == -1)
+          if (!useExInfo)
           {
             c.SetDisplayText("");
           }
           else
+          {
+
+            // Rating
+            var ratingInfo = Levels.GetLevelRatings()[exInfo.rating];
+
+            // Difficulty
+            var difficultyName = exInfo.difficulty == 0 ? "sneaky" : "sneakier";
+            var difficultyColor = exInfo.difficulty == 0 ? _COLOR_GRAY : "cyan";
+            // Extras
+            var extrasText = "";
+            if (exInfo.extras != null)
+            {
+              if (exInfo.extras.Contains(Shop.Unlocks.EXTRA_HORDE))
+              {
+                extrasText += "horde";
+              }
+            }
+
+            // Formatting
+            var line0 = string.Format($"-<color={_COLOR_GRAY}>{{0, -9}}</color> : {{1, -14}} <color={_COLOR_GRAY}>{{2, -9}}</color> : <color={{3}}>{{4, -14}}</color> <color={_COLOR_GRAY}>{{5, -9}}</color> : <color={{6}}>{{7, -10}}</color>", "level", exInfo.level, "difficulty", difficultyColor, difficultyName, "rating", ratingInfo.Item2, ratingInfo.Item1);
+            var line1 = string.Format($"-<color={_COLOR_GRAY}>{{0, -9}}</color> : {{1, -42}} <color={_COLOR_GRAY}>{{2, -9}}</color> : {{3, -30}}", "loadout", exInfo.loadoutDesc, "extras", extrasText);
+
             c.SetDisplayText($@"
 <color={_COLOR_GRAY}>===================</color>
 <color={_COLOR_GRAY}>unlock requirements</color>
 
--<color={_COLOR_GRAY}>level</color>      : {ex_level} - {ex_difficulty}
--<color={_COLOR_GRAY}>parameters</color> : solo, {ex_extras}
--<color={_COLOR_GRAY}>loadout</color>    : {ex_loadout}
-        ");
+{line0}
+{line1}");
+          }
         });
 
       // Spawn menu
@@ -7220,7 +7263,7 @@ a gampad if plugged in.~1
     _Menu.gameObject.SetActive(true);
     _Menus[MenuType.PAUSE]._selectedComponent._focused = false;
     _Menus[MenuType.PAUSE]._selectionIndex = 0;
-    if (Shop._UnlockString != string.Empty)
+    if (Shop.s_UnlockString != string.Empty)
     {
       Shop.ShowUnlocks(afterUnlockMenu);
       CommonEvents._SwitchMenu(MenuType.GENERIC_MENU);

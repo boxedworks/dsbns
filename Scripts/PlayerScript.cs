@@ -35,7 +35,7 @@ public class PlayerScript : MonoBehaviour
 
   bool mouseEnabled, _runToggle;
 
-  public bool _HasExit, _canDetect;
+  public bool _HasExit, _CanDetect;
 
   float _spawnTimer, _invisible;
 
@@ -43,7 +43,7 @@ public class PlayerScript : MonoBehaviour
 
   static float _cY, _cX;
 
-  public List<UtilityScript> _utilities_left, _utilities_right;
+  public List<UtilityScript> _UtilitiesLeft, _UtilitiesRight;
 
   public GameScript.PlayerProfile _Profile
   {
@@ -53,7 +53,7 @@ public class PlayerScript : MonoBehaviour
     }
   }
 
-  public GameScript.PlayerProfile.Equipment _equipment
+  public GameScript.PlayerProfile.Equipment _Equipment
   {
     get { return _Profile._equipment; }
   }
@@ -62,21 +62,22 @@ public class PlayerScript : MonoBehaviour
 
   //
   [System.NonSerialized]
-  public GameScript.PlayerProfile.Equipment _equipment_start;
+  public GameScript.PlayerProfile.Equipment _EquipmentStart;
   [System.NonSerialized]
-  public bool _equipment_changed;
-  public static int _NumPlayers_Start;
+  public bool _EquipmentChanged;
+  public static int s_NumPlayersStart;
+  public static int[] s_ExtrasSnapshot;
 
   // Colored ring under player
   MeshRenderer[] _ring;
-  public static Material[] _Materials_Ring;
+  public static Material[] s_Materials_Ring;
 
   bool _isauto;
-  static float _autouserate;
-  static ActiveRagdoll.Side _autoside;
+  static float s_autoUseRate;
+  static ActiveRagdoll.Side s_autoSide;
 
   // Last time whistled
-  public float _last_whistle;
+  public float _LastWhistle;
 
   public static int s_PlayerCountSave;
 
@@ -105,7 +106,7 @@ public class PlayerScript : MonoBehaviour
 
     // Check armor for editor maps
     if (!GameScript.IsSurvival())
-      if (_equipment._perks != null && _equipment._perks.Contains(Shop.Perk.PerkType.ARMOR_UP))
+      if (_Equipment._perks != null && _Equipment._perks.Contains(Shop.Perk.PerkType.ARMOR_UP))
       {
         _ragdoll.AddArmor();
         _ragdoll._health = 3;
@@ -153,8 +154,8 @@ public class PlayerScript : MonoBehaviour
     _ring = new MeshRenderer[] { new_ring.transform.GetChild(0).GetComponent<MeshRenderer>(), new_ring.transform.GetChild(1).GetComponent<MeshRenderer>() };
     Resources.UnloadAsset(_ring[0].sharedMaterial);
     Resources.UnloadAsset(_ring[1].sharedMaterial);
-    _ring[0].sharedMaterial = _Materials_Ring[_id];
-    _ring[1].sharedMaterial = _Materials_Ring[_id];
+    _ring[0].sharedMaterial = s_Materials_Ring[_id];
+    _ring[1].sharedMaterial = s_Materials_Ring[_id];
     Vector3 localscale = _ring[0].transform.parent.localScale;
     localscale *= 0.8f;
     localscale.y = 2f;
@@ -170,25 +171,21 @@ public class PlayerScript : MonoBehaviour
 
     // Equip starting weapons
     _Profile._equipmentIndex = 0;
-    _itemLeft = _equipment._item_left0;
-    _itemRight = _equipment._item_right0;
+    _itemLeft = _Equipment._item_left0;
+    _itemRight = _Equipment._item_right0;
     GameScript.ItemManager.SpawnItem(_itemLeft);
     GameScript.ItemManager.SpawnItem(_itemRight);
-    GameScript.ItemManager.SpawnItem(_equipment._item_left1);
-    GameScript.ItemManager.SpawnItem(_equipment._item_right1);
+    GameScript.ItemManager.SpawnItem(_Equipment._item_left1);
+    GameScript.ItemManager.SpawnItem(_Equipment._item_right1);
     EquipStart();
 
     _saveLoadoutIndex = _Profile._loadoutIndex;
-
-    // Save start loadout for challenges
-    _equipment_start = _equipment;
-    _equipment_changed = false;
 
     // Set camera position
     _camPos = GameResources._Camera_Main.transform.position;
 
     _spawnTimer = 0.25f;
-    _canDetect = true;
+    _CanDetect = true;
 
     _lastInputTriggers = new Vector2(-1f, -1f);
 
@@ -259,6 +256,13 @@ public class PlayerScript : MonoBehaviour
       }
   }
 
+  public void RegisterEquipment()
+  {
+    // Save start loadout for challenges
+    _EquipmentStart = _Equipment;
+    _EquipmentChanged = false;
+  }
+
   public void RegisterUtilities()
   {
     // Register utilities
@@ -287,20 +291,17 @@ public class PlayerScript : MonoBehaviour
     var max = amount == -1 ? 100 : amount;
     if (side == ActiveRagdoll.Side.LEFT)
     {
-      _utilities_left = new List<UtilityScript>();
-      foreach (var utility in _equipment._utilities_left)
+      _UtilitiesLeft = new List<UtilityScript>();
+      foreach (var utility in _Equipment._utilities_left)
       {
-        var count = 1;
-        if (utility == UtilityScript.UtilityType.SHURIKEN)
-          count = 2;
-        for (; count > 0 && max-- > 0; count--)
+        for (var i = Shop.GetUtilityCount(utility); i > 0 && max-- > 0; i--)
           AddUtility(utility, side);
       }
     }
     else
     {
-      _utilities_right = new List<UtilityScript>();
-      foreach (var utility in _equipment._utilities_right)
+      _UtilitiesRight = new List<UtilityScript>();
+      foreach (var utility in _Equipment._utilities_right)
       {
         var count = 1;
         if (utility == UtilityScript.UtilityType.SHURIKEN)
@@ -315,14 +316,14 @@ public class PlayerScript : MonoBehaviour
   {
     var util = UtilityScript.GetUtility(utility);
     util._side = side;
-    (side == ActiveRagdoll.Side.LEFT ? _utilities_left : _utilities_right).Add(util);
+    (side == ActiveRagdoll.Side.LEFT ? _UtilitiesLeft : _UtilitiesRight).Add(util);
     util.RegisterUtility(_ragdoll);
   }
 
   // Remove utility
   public void NextUtility(ActiveRagdoll.Side side)
   {
-    var utilities = (side == ActiveRagdoll.Side.LEFT ? _utilities_left : _utilities_right);
+    var utilities = (side == ActiveRagdoll.Side.LEFT ? _UtilitiesLeft : _UtilitiesRight);
     if (utilities.Count == 0) return;
     utilities.RemoveAt(0);
   }
@@ -345,14 +346,14 @@ public class PlayerScript : MonoBehaviour
 
   public bool IsUtility(ActiveRagdoll.Side side, UtilityScript utility)
   {
-    var utilities = (side == ActiveRagdoll.Side.LEFT ? _utilities_left : _utilities_right);
+    var utilities = (side == ActiveRagdoll.Side.LEFT ? _UtilitiesLeft : _UtilitiesRight);
     return (utilities != null && utilities.Count > 0 &&
       utilities[0] == utility);
   }
 
   public int UtilityCount(ActiveRagdoll.Side side)
   {
-    return (side == ActiveRagdoll.Side.LEFT ? _utilities_left : _utilities_right).Count;
+    return (side == ActiveRagdoll.Side.LEFT ? _UtilitiesLeft : _UtilitiesRight).Count;
   }
 
   public void AddLight()
@@ -588,12 +589,12 @@ public class PlayerScript : MonoBehaviour
               for (var i = 0; i < 2; i++)
               {
                 if (switch_sides)
-                  _autoside = _autoside == ActiveRagdoll.Side.LEFT ? ActiveRagdoll.Side.RIGHT : ActiveRagdoll.Side.LEFT;
+                  s_autoSide = s_autoSide == ActiveRagdoll.Side.LEFT ? ActiveRagdoll.Side.RIGHT : ActiveRagdoll.Side.LEFT;
                 switch_sides = false;
 
-                if (Time.time - _autouserate < 0) break;
+                if (Time.time - s_autoUseRate < 0) break;
 
-                var item = (_autoside == ActiveRagdoll.Side.LEFT ? _ragdoll._itemL : _ragdoll._itemR);
+                var item = (s_autoSide == ActiveRagdoll.Side.LEFT ? _ragdoll._itemL : _ragdoll._itemR);
 
                 if (!item)
                 {
@@ -620,14 +621,14 @@ public class PlayerScript : MonoBehaviour
                   if (hit.distance < dist)
                   {
                     // Use item
-                    if (_autoside == ActiveRagdoll.Side.LEFT)
+                    if (s_autoSide == ActiveRagdoll.Side.LEFT)
                       _ragdoll.UseLeft();
                     else
                       _ragdoll.UseRight();
 
                     // Set use rate
                     if (item._melee)
-                      _autouserate = Time.time + item.UseRate();
+                      s_autoUseRate = Time.time + item.UseRate();
                     else if (item._fireMode == ItemScript.FireMode.AUTOMATIC)
                     {
                       if (item.NeedsReload())
@@ -636,7 +637,7 @@ public class PlayerScript : MonoBehaviour
                     else if (item._fireMode == ItemScript.FireMode.BURST || item._fireMode == ItemScript.FireMode.SEMI)
                     {
                       switch_sides = true;
-                      _autouserate = Time.time + 0.2f;
+                      s_autoUseRate = Time.time + 0.2f;
                     }
 
                     // Check reload
@@ -644,7 +645,7 @@ public class PlayerScript : MonoBehaviour
                       item.Reload();
 
                     if (switch_sides)
-                      _autoside = _autoside == ActiveRagdoll.Side.LEFT ? ActiveRagdoll.Side.RIGHT : ActiveRagdoll.Side.LEFT;
+                      s_autoSide = s_autoSide == ActiveRagdoll.Side.LEFT ? ActiveRagdoll.Side.RIGHT : ActiveRagdoll.Side.LEFT;
                     switch_sides = false;
 
                     break;
@@ -1206,31 +1207,31 @@ public class PlayerScript : MonoBehaviour
       // Check utility
       if (ControllerManager.GetKey(ControllerManager.Key.Q))
       {
-        if (_utilities_left.Count == 0 && _utilities_right.Count > 0)
-          _utilities_right[0].UseDown();
-        else if (_utilities_left.Count > 0)
-          _utilities_left[0].UseDown();
+        if (_UtilitiesLeft.Count == 0 && _UtilitiesRight.Count > 0)
+          _UtilitiesRight[0].UseDown();
+        else if (_UtilitiesLeft.Count > 0)
+          _UtilitiesLeft[0].UseDown();
       }
       else if (ControllerManager.GetKey(ControllerManager.Key.Q, ControllerManager.InputMode.UP))
       {
-        if (_utilities_left.Count == 0 && _utilities_right.Count > 0)
-          _utilities_right[0].UseUp();
-        else if (_utilities_left.Count > 0)
-          _utilities_left[0].UseUp();
+        if (_UtilitiesLeft.Count == 0 && _UtilitiesRight.Count > 0)
+          _UtilitiesRight[0].UseUp();
+        else if (_UtilitiesLeft.Count > 0)
+          _UtilitiesLeft[0].UseUp();
       }
       if (ControllerManager.GetKey(ControllerManager.Key.E))
       {
-        if (_utilities_right.Count == 0 && _utilities_left.Count > 0)
-          _utilities_left[0].UseDown();
-        else if (_utilities_right.Count > 0)
-          _utilities_right[0].UseDown();
+        if (_UtilitiesRight.Count == 0 && _UtilitiesLeft.Count > 0)
+          _UtilitiesLeft[0].UseDown();
+        else if (_UtilitiesRight.Count > 0)
+          _UtilitiesRight[0].UseDown();
       }
       else if (ControllerManager.GetKey(ControllerManager.Key.E, ControllerManager.InputMode.UP))
       {
-        if (_utilities_right.Count == 0 && _utilities_left.Count > 0)
-          _utilities_left[0].UseUp();
-        else if (_utilities_right.Count > 0)
-          _utilities_right[0].UseUp();
+        if (_UtilitiesRight.Count == 0 && _UtilitiesLeft.Count > 0)
+          _UtilitiesLeft[0].UseUp();
+        else if (_UtilitiesRight.Count > 0)
+          _UtilitiesRight[0].UseUp();
       }
 
       // Check weapon swap
@@ -1383,31 +1384,31 @@ public class PlayerScript : MonoBehaviour
         // Check utilities
         if (gamepad.leftShoulder.wasPressedThisFrame)
         {
-          if (_utilities_left.Count == 0 && _utilities_right.Count > 0)
-            _utilities_right[0].UseDown();
-          else if (_utilities_left.Count > 0)
-            _utilities_left[0].UseDown();
+          if (_UtilitiesLeft.Count == 0 && _UtilitiesRight.Count > 0)
+            _UtilitiesRight[0].UseDown();
+          else if (_UtilitiesLeft.Count > 0)
+            _UtilitiesLeft[0].UseDown();
         }
         else if (gamepad.leftShoulder.wasReleasedThisFrame)
         {
-          if (_utilities_left.Count == 0 && _utilities_right.Count > 0)
-            _utilities_right[0].UseUp();
-          else if (_utilities_left.Count > 0)
-            _utilities_left[0].UseUp();
+          if (_UtilitiesLeft.Count == 0 && _UtilitiesRight.Count > 0)
+            _UtilitiesRight[0].UseUp();
+          else if (_UtilitiesLeft.Count > 0)
+            _UtilitiesLeft[0].UseUp();
         }
         if (gamepad.rightShoulder.wasPressedThisFrame)
         {
-          if (_utilities_right.Count == 0 && _utilities_left.Count > 0)
-            _utilities_left[0].UseDown();
-          else if (_utilities_right.Count > 0)
-            _utilities_right[0].UseDown();
+          if (_UtilitiesRight.Count == 0 && _UtilitiesLeft.Count > 0)
+            _UtilitiesLeft[0].UseDown();
+          else if (_UtilitiesRight.Count > 0)
+            _UtilitiesRight[0].UseDown();
         }
         else if (gamepad.rightShoulder.wasReleasedThisFrame)
         {
-          if (_utilities_right.Count == 0 && _utilities_left.Count > 0)
-            _utilities_left[0].UseUp();
-          else if (_utilities_right.Count > 0)
-            _utilities_right[0].UseUp();
+          if (_UtilitiesRight.Count == 0 && _UtilitiesLeft.Count > 0)
+            _UtilitiesLeft[0].UseUp();
+          else if (_UtilitiesRight.Count > 0)
+            _UtilitiesRight[0].UseUp();
         }
 
         // Check weapon swap
@@ -1555,7 +1556,8 @@ public class PlayerScript : MonoBehaviour
       else
       {
         EquipLoadout(_Profile._loadoutIndex);
-        _equipment_changed = true;
+        if (EnemyScript._Enemies_dead?.Count > 0)
+          _EquipmentChanged = true;
       }
     }
   }
@@ -1574,17 +1576,17 @@ public class PlayerScript : MonoBehaviour
         checkCanSwap
       );
       // Despawn utilities
-      if (_utilities_left != null)
-        for (int i = _utilities_left.Count - 1; i > 0; i--)
+      if (_UtilitiesLeft != null)
+        for (int i = _UtilitiesLeft.Count - 1; i > 0; i--)
         {
-          if (_utilities_left[i] != null)
-            GameObject.Destroy(_utilities_left[i].gameObject);
+          if (_UtilitiesLeft[i] != null)
+            GameObject.Destroy(_UtilitiesLeft[i].gameObject);
         }
-      if (_utilities_right != null)
-        for (int i = _utilities_right.Count - 1; i > 0; i--)
+      if (_UtilitiesRight != null)
+        for (int i = _UtilitiesRight.Count - 1; i > 0; i--)
         {
-          if (_utilities_right[i] != null)
-            GameObject.Destroy(_utilities_right[i].gameObject);
+          if (_UtilitiesRight[i] != null)
+            GameObject.Destroy(_UtilitiesRight[i].gameObject);
         }
       RegisterUtilities();
       _Profile.UpdateIcons();
@@ -1802,7 +1804,7 @@ public class PlayerScript : MonoBehaviour
           EnemyScript.CheckSound(_ragdoll._hip.position + _ragdoll._hip.transform.forward * 3f, _ragdoll._hip.position, EnemyScript.Loudness.SOFT);
           _ragdoll.DisplayText("!");
 
-          _last_whistle = Time.time;
+          _LastWhistle = Time.time;
         }
 
         /*if (_tauntIter >= 0)
@@ -2093,17 +2095,17 @@ public class PlayerScript : MonoBehaviour
   private void OnDestroy()
   {
     // Despawn utilities
-    if (_utilities_left != null)
-      for (int i = _utilities_left.Count - 1; i > 0; i--)
+    if (_UtilitiesLeft != null)
+      for (int i = _UtilitiesLeft.Count - 1; i > 0; i--)
       {
-        if (_utilities_left[i] != null)
-          GameObject.Destroy(_utilities_left[i].gameObject);
+        if (_UtilitiesLeft[i] != null)
+          GameObject.Destroy(_UtilitiesLeft[i].gameObject);
       }
-    if (_utilities_right != null)
-      for (int i = _utilities_right.Count - 1; i > 0; i--)
+    if (_UtilitiesRight != null)
+      for (int i = _UtilitiesRight.Count - 1; i > 0; i--)
       {
-        if (_utilities_right[i] != null)
-          GameObject.Destroy(_utilities_right[i].gameObject);
+        if (_UtilitiesRight[i] != null)
+          GameObject.Destroy(_UtilitiesRight[i].gameObject);
       }
 
     // Despawn ring
@@ -2114,17 +2116,17 @@ public class PlayerScript : MonoBehaviour
 
   public System.Tuple<bool, ActiveRagdoll.Side> HasUtility(UtilityScript.UtilityType utility)
   {
-    if (_equipment._utilities_left != null && _equipment._utilities_left.Length > 0 && _equipment._utilities_left[0] == utility)
+    if (_Equipment._utilities_left != null && _Equipment._utilities_left.Length > 0 && _Equipment._utilities_left[0] == utility)
       return System.Tuple.Create(true, ActiveRagdoll.Side.LEFT);
-    if (_equipment._utilities_right != null && _equipment._utilities_right.Length > 0 && _equipment._utilities_right[0] == utility)
+    if (_Equipment._utilities_right != null && _Equipment._utilities_right.Length > 0 && _Equipment._utilities_right[0] == utility)
       return System.Tuple.Create(true, ActiveRagdoll.Side.RIGHT);
     return System.Tuple.Create(false, ActiveRagdoll.Side.LEFT);
   }
   public System.Tuple<bool, ActiveRagdoll.Side> HasUtility(UtilityScript.UtilityType utility, ActiveRagdoll.Side side)
   {
-    if (_equipment._utilities_left != null && _equipment._utilities_left.Length > 0 && _equipment._utilities_left[0] == utility && side == ActiveRagdoll.Side.LEFT)
+    if (_Equipment._utilities_left != null && _Equipment._utilities_left.Length > 0 && _Equipment._utilities_left[0] == utility && side == ActiveRagdoll.Side.LEFT)
       return System.Tuple.Create(true, ActiveRagdoll.Side.LEFT);
-    if (_equipment._utilities_right != null && _equipment._utilities_right.Length > 0 && _equipment._utilities_right[0] == utility && side == ActiveRagdoll.Side.RIGHT)
+    if (_Equipment._utilities_right != null && _Equipment._utilities_right.Length > 0 && _Equipment._utilities_right[0] == utility && side == ActiveRagdoll.Side.RIGHT)
       return System.Tuple.Create(true, ActiveRagdoll.Side.RIGHT);
     return System.Tuple.Create(false, side);
   }

@@ -484,6 +484,7 @@ public class ItemScript : MonoBehaviour
 
           var utility = _customProjectiles[_customProjectileIter++];
           utility._side = _side;
+          utility._ragdoll = _ragdoll;
           utility.SetSpawnLocation(spawn_pos);
           utility.SetSpawnDirection(forward);
           utility.UseDown();

@@ -426,7 +426,7 @@ public class TileManager
     main_camera.farClipPlane = 10f;
 
     // Show unlocks
-    if (!Menu2._InMenus && Shop._UnlockString != string.Empty)
+    if (!Menu2._InMenus && Shop.s_UnlockString != string.Empty)
       GameScript.TogglePause(Menu2.MenuType.NONE);
 
     // Remove prior enemies / objects
