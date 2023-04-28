@@ -540,7 +540,7 @@ public static class Settings
         Shop.Unlocks.EXTRA_ENEMY_OFF,
         new UnlockCriteria
         {
-          level = 12,
+          level = 48,
           difficulty = 0,
           rating = 2,
           extras = null,
