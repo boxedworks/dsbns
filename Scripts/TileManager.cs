@@ -29,7 +29,8 @@ public class TileManager
 
   public static TMPro.TextMeshPro
     _Text_LevelNum,
-    _Text_LevelTimer, _Text_LevelTimer_Best;
+    _Text_LevelTimer, _Text_LevelTimer_Best,
+    _Text_Money;
   public static TextMesh _Text_GameOver;
   public static float _LevelTimer, _LevelTime_Dev;
   public static bool _Level_Complete;
@@ -74,9 +75,11 @@ public class TileManager
       _Text_LevelTimer_Best = GameObject.Find("LevelTimer_Best").GetComponent<TMPro.TextMeshPro>();
     if (_Text_GameOver == null)
       _Text_GameOver = GameObject.Find("Game_Over").GetComponent<TextMesh>();
+    if (_Text_Money == null)
+      _Text_Money = GameObject.Find("LevelMoney").GetComponent<TMPro.TextMeshPro>();
 
     if (_Tiles != null)
-      foreach (Tile t in _Tiles)
+      foreach (var t in _Tiles)
         t._tile.transform.parent = _Map;
     GetBaseTile();
     _Tile.gameObject.SetActive(true);
@@ -1273,7 +1276,8 @@ public class TileManager
                 //Debug.Log(idP);
                 door_script0.RegisterEnemy(idP);
                 var enemies = GameScript._Singleton.transform.GetChild(0);
-                if(idP >= enemies.childCount){
+                if (idP >= enemies.childCount)
+                {
                   throw new System.IndexOutOfRangeException($"Trying to link door with enemy ID {idP} out of {enemies.childCount}");
                 }
                 door_script0.RegisterEnemyReal(enemies.GetChild(idP).GetChild(0).GetComponent<EnemyScript>());

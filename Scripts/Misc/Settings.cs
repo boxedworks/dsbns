@@ -504,7 +504,7 @@ public static class Settings
         {
           level = 95,
           difficulty = 0,
-          rating = 1,
+          rating = 2,
           extras = new Shop.Unlocks[] { Shop.Unlocks.EXTRA_HORDE },
           loadoutDesc = "knife, lever-action rifle",
           items = new GameScript.ItemManager.Items[] {
@@ -521,9 +521,9 @@ public static class Settings
         Shop.Unlocks.EXTRA_CHASE,
         new UnlockCriteria
         {
-          level = 110,
+          level = 113,
           difficulty = 0,
-          rating = 1,
+          rating = 2,
           extras = new Shop.Unlocks[] { Shop.Unlocks.EXTRA_HORDE },
           loadoutDesc = "knife, double-barrel shotgun",
           items = new GameScript.ItemManager.Items[] {

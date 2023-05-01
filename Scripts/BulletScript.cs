@@ -131,7 +131,7 @@ public class BulletScript : MonoBehaviour
     bool TakeDamage(ActiveRagdoll r)
     {
 
-      var use_position = (_lastRagdollPosition == Vector3.zero ? _sourceItem.transform.position : _lastRagdollPosition);
+      var use_position = (_lastRagdollPosition == Vector3.zero ? _sourceItem._ragdoll._hip.transform.position : _lastRagdollPosition);
       var hitForce = MathC.Get2DVector(
         -(use_position - collider.transform.position).normalized * (4000f + (Random.value * 2000f)) * (_deflected ? Mathf.Clamp(_sourceItem._hit_force * 1.5f, 0.5f, 2f) : _sourceItem._hit_force)
       );

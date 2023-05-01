@@ -1863,7 +1863,67 @@ public class EnemyScript : MonoBehaviour
                 TileManager._Text_LevelTimer.text = string.Format($"{{0:0.000}} (<color=red>+{{1:0.000}}</color>)", level_time, level_time - level_time_best);
             }
 
+            // Time ratings
             var ratingIndex = -1;
+            var best_dev_time = TileManager._LevelTime_Dev;
+
+            var medal_times = Levels.GetLevelRatingTimings(best_dev_time);
+            var ratings = Levels.GetLevelRatings();
+
+            var index = 0;
+            var points_awarded = 0;
+            foreach (var time in medal_times)
+            {
+              var time_ = float.Parse(string.Format("{0:0.000}", time));
+              if (level_time <= time_)
+              {
+
+                if (ratingIndex == -1)
+                  ratingIndex = index;
+
+                // Check new medal
+                if (level_time_best > time || level_time_best == -1f)
+                {
+                  points_awarded++;
+                }
+
+              }
+
+              index++;
+            }
+
+            // FX
+            TileManager._Text_LevelTimer_Best.text += "\n\n";
+            var medal_format = "<color={0}>{1,-5}: {2,-6}</color>\n";
+            var played_wrong = false;
+            for (var i = medal_times.Length - 1; i >= 0; i--)
+            {
+              var time = medal_times[i];
+              var time_ = float.Parse(string.Format("{0:0.000}", time));
+
+              TileManager._Text_LevelTimer_Best.text += string.Format(medal_format, ratings[i].Item2, ratings[i].Item1, string.Format("{0:0.000}", time_) + (ratingIndex == i ? "*" : ""));
+
+              // FX
+              if (i < ratingIndex)
+              {
+                if (!played_wrong)
+                {
+                  played_wrong = true;
+                  SfxManager.PlayAudioSourceSimple(GameResources._Camera_Main.transform.GetChild(1).position, "Etc/Wrong", 0.95f, 1f);
+                }
+              }
+              else if (i > ratingIndex)
+              {
+                SfxManager.PlayAudioSourceSimple(GameResources._Camera_Main.transform.GetChild(1).position, "Etc/Tick", 0.95f, 1f);
+              }
+              else
+              {
+                SfxManager.PlayAudioSourceSimple(GameResources._Camera_Main.transform.GetChild(1).position, "Etc/Bell", 0.95f, 1f);
+              }
+              yield return new WaitForSeconds(0.1f);
+            }
+
+            // Save stuff
             if (can_save_timers)
             {
 
@@ -1878,7 +1938,7 @@ public class EnemyScript : MonoBehaviour
                   // Set level data
                   var level_data_split = Levels._CurrentLevelData.Split(' ');
                   var level_data_new = new List<string>();
-                  var index = -1;
+                  index = -1;
                   var levelname_index = -1;
                   foreach (var d in level_data_split)
                   {
@@ -1918,40 +1978,8 @@ public class EnemyScript : MonoBehaviour
 
               }
 
-              // Time ratings
+              // Give points based on medals
               {
-
-                var best_dev_time = TileManager._LevelTime_Dev;
-
-                var medal_times = Levels.GetLevelRatingTimings(best_dev_time);
-                var ratings = Levels.GetLevelRatings();
-
-                var index = 0;
-                TileManager._Text_LevelTimer_Best.text += "\n\n";
-                var medal_format = "<color={0}>{1,-5}: {2,-6}</color>\n";
-                var points_awarded = 0;
-                foreach (var time in medal_times)
-                {
-
-                  var time_ = float.Parse(string.Format("{0:0.000}", time));
-                  if (level_time <= time_)
-                  {
-
-                    if (ratingIndex == -1)
-                      ratingIndex = index;
-
-                    // Check new medal
-                    if (level_time_best > time || level_time_best == -1f)
-                    {
-                      points_awarded++;
-                    }
-
-                  }
-                  TileManager._Text_LevelTimer_Best.text += string.Format(medal_format, ratings[index].Item2, ratings[index].Item1, string.Format("{0:0.000}", time_) + (ratingIndex == index ? "*" : ""));
-                  index++;
-                }
-
-                // Give points based on medals
                 if (points_awarded > 0)
                 {
                   if (can_save_timers)
