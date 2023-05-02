@@ -1872,6 +1872,7 @@ public class EnemyScript : MonoBehaviour
 
             var index = 0;
             var points_awarded = 0;
+            var points_awarded_table = new int[] { -1, -1, -1, -1 };
             foreach (var time in medal_times)
             {
               var time_ = float.Parse(string.Format("{0:0.000}", time));
@@ -1885,6 +1886,7 @@ public class EnemyScript : MonoBehaviour
                 if (level_time_best > time || level_time_best == -1f)
                 {
                   points_awarded++;
+                  points_awarded_table[index] = index;
                 }
 
               }
@@ -1894,14 +1896,22 @@ public class EnemyScript : MonoBehaviour
 
             // FX
             TileManager._Text_LevelTimer_Best.text += "\n\n";
+            TileManager._Text_Money.text = $"$$${Shop._AvailablePoints}";
             var medal_format = "<color={0}>{1,-5}: {2,-6}</color>\n";
             var played_wrong = false;
+            var points_awarded_counter = points_awarded;
             for (var i = medal_times.Length - 1; i >= 0; i--)
             {
               var time = medal_times[i];
               var time_ = float.Parse(string.Format("{0:0.000}", time));
 
               TileManager._Text_LevelTimer_Best.text += string.Format(medal_format, ratings[i].Item2, ratings[i].Item1, string.Format("{0:0.000}", time_) + (ratingIndex == i ? "*" : ""));
+
+              // Show $$$
+              if (points_awarded_table.Contains(i))
+              {
+                TileManager.MoveMonie(3 - i, points_awarded - points_awarded_counter--);
+              }
 
               // FX
               if (i < ratingIndex)
@@ -1914,13 +1924,25 @@ public class EnemyScript : MonoBehaviour
               }
               else if (i > ratingIndex)
               {
-                SfxManager.PlayAudioSourceSimple(GameResources._Camera_Main.transform.GetChild(1).position, "Etc/Tick", 0.95f, 1f);
+                //SfxManager.PlayAudioSourceSimple(GameResources._Camera_Main.transform.GetChild(1).position, "Etc/Tick", 0.95f, 1f);
+                var mod = i * 0.15f;
+                SfxManager.PlayAudioSourceSimple(GameResources._Camera_Main.transform.GetChild(1).position, "Etc/Best_rank", 0.95f - mod, 1f - mod);
               }
               else
               {
-                SfxManager.PlayAudioSourceSimple(GameResources._Camera_Main.transform.GetChild(1).position, "Etc/Bell", 0.95f, 1f);
+                if (ratingIndex == 0)
+                  SfxManager.PlayAudioSourceSimple(GameResources._Camera_Main.transform.GetChild(1).position, "Etc/Best_rank", 0.95f, 1f);
+                else
+                {
+                  //SfxManager.PlayAudioSourceSimple(GameResources._Camera_Main.transform.GetChild(1).position, "Etc/Bell", 0.95f, 1f);
+
+                  var mod = i * 0.15f;
+                  SfxManager.PlayAudioSourceSimple(GameResources._Camera_Main.transform.GetChild(1).position, "Etc/Best_rank", 0.95f - mod, 1f - mod);
+                }
               }
-              yield return new WaitForSeconds(0.1f);
+
+              if (!played_wrong)
+                yield return new WaitForSeconds(0.1f);
             }
 
             // Save stuff

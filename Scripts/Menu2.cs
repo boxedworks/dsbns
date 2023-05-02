@@ -3597,12 +3597,14 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
                     if (FunctionsC.MusicManager.s_CurrentTrack <= 2)
                       FunctionsC.MusicManager.TransitionTo(FunctionsC.MusicManager.GetNextTrackIter());
 
-                    // Remove menus
+                    // Remove / show menus
                     _Menu.gameObject.SetActive(false);
                     _InMenus = false;
                     TileManager._Text_LevelNum.gameObject.SetActive(true);
                     TileManager._Text_LevelTimer.gameObject.SetActive(true);
                     TileManager._Text_LevelTimer_Best.gameObject.SetActive(true);
+                    TileManager._Text_Money.gameObject.SetActive(true);
+                    TileManager.ResetMonies();
                   });
                   // Add focus event
                   actions_onFocus.Add((MenuComponent component0) =>
@@ -3690,6 +3692,8 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
                 TileManager._Text_LevelNum.gameObject.SetActive(true);
                 TileManager._Text_LevelTimer.gameObject.SetActive(true);
                 TileManager._Text_LevelTimer_Best.gameObject.SetActive(true);
+                TileManager._Text_Money.gameObject.SetActive(true);
+                TileManager.ResetMonies();
               });
               // Set dropdown data
               component.SetDropdownData(prompt, selections, actions, "yes");

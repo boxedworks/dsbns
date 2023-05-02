@@ -472,16 +472,20 @@ public class PlayerScript : MonoBehaviour
       var medal_format = "<color={0}>{1,-5}: {2,-6}</color>\n";
       foreach (var time in medal_times)
       {
-
         var time_ = float.Parse(string.Format("{0:0.000}", time));
         if (level_time_best != -1f && level_time_best <= time_ && medal_index == -1)
         {
           medal_index = index;
         }
-        TileManager._Text_LevelTimer_Best.text += string.Format(medal_format, ratings[index].Item2, ratings[index].Item1, string.Format("{0:0.000}", time_) + (medal_index == index ? "*" : ""));
         index++;
       }
 
+      // FX
+      for (var i = medal_times.Length - 1; i >= 0; i--)
+      {
+        var time_ = float.Parse(string.Format("{0:0.000}", medal_times[i]));
+        TileManager._Text_LevelTimer_Best.text += string.Format(medal_format, ratings[i].Item2, ratings[i].Item1, string.Format("{0:0.000}", time_) + (medal_index == i ? "*" : ""));
+      }
     }
 
 #if DEBUG

@@ -3106,7 +3106,8 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       TileManager._Text_LevelTimer.gameObject.SetActive(false);
       TileManager._Text_LevelTimer_Best.gameObject.SetActive(false);
       TileManager._Text_GameOver.gameObject.SetActive(false);
-
+      TileManager._Text_Money.gameObject.SetActive(false);
+      TileManager.HideMonies();
     }
     else
     {
@@ -3118,6 +3119,8 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       TileManager._Text_LevelTimer.gameObject.SetActive(true);
       TileManager._Text_LevelTimer_Best.gameObject.SetActive(true);
       TileManager._Text_GameOver.gameObject.SetActive(true);
+      TileManager._Text_Money.gameObject.SetActive(true);
+      TileManager.UnHideMonies();
     }
     // Toggle text bubbles
     TextBubbleScript.ToggleBubbles(!_Paused);

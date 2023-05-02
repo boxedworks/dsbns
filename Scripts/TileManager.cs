@@ -31,6 +31,8 @@ public class TileManager
     _Text_LevelNum,
     _Text_LevelTimer, _Text_LevelTimer_Best,
     _Text_Money;
+  static TMPro.TextMeshPro[] _Text_Monies;
+  static Vector3[] _Positions_Monies;
   public static TextMesh _Text_GameOver;
   public static float _LevelTimer, _LevelTime_Dev;
   public static bool _Level_Complete;
@@ -60,13 +62,100 @@ public class TileManager
     _Text_GameOver.text = "";
 
     var best_time = PlayerPrefs.GetFloat($"{Levels._CurrentLevelCollection_Name}_{Levels._CurrentLevelIndex}_time", -1f);
-    TileManager._Text_LevelTimer_Best.text = best_time == -1f ? "-" : string.Format("{0:0.000}", best_time);
+    _Text_LevelTimer_Best.text = best_time == -1f ? "-" : string.Format("{0:0.000}", best_time);
+
+    ResetMonies();
 
     GameScript._GameId++;
   }
 
+  public static void HideMonies()
+  {
+    for (var i = 0; i < _Text_Monies.Length; i++)
+    {
+      HideMonie(i);
+    }
+  }
+  static void HideMonie(int index)
+  {
+    _Text_Monies[index].gameObject.SetActive(false);
+  }
+  public static void UnHideMonies()
+  {
+    for (var i = 0; i < _Text_Monies.Length; i++)
+    {
+      UnHideMonie(i);
+    }
+  }
+  static void ResetMonie(int index)
+  {
+    _Text_Monies[index].text = "";
+  }
+  public static void ResetMonies()
+  {
+    for (var i = 0; i < _Text_Monies.Length; i++)
+    {
+      ResetMonie(i);
+    }
+  }
+  static void UnHideMonie(int index)
+  {
+    _Text_Monies[index].gameObject.SetActive(true);
+  }
+  public static void DisplayMonie(int index)
+  {
+    _Text_Monies[index].transform.localPosition = _Positions_Monies[index];
+    _Text_Monies[index].text = "$$$";
+  }
+  public static void MoveMonie(int index, int delay)
+  {
+
+    bool IsActive()
+    {
+      return _Text_Money.gameObject.activeSelf && _Text_Money.text.Length > 0 && !_LoadingMap;
+    }
+
+    IEnumerator MoveMonieCo()
+    {
+      yield return new WaitForSeconds(0.5f);
+      if (IsActive())
+      {
+        DisplayMonie(index);
+        SfxManager.PlayAudioSourceSimple(GameResources._Camera_Main.transform.GetChild(1).position, "Etc/Monie_show", 0.95f, 1f);
+        yield return new WaitForSeconds(0.9f + delay * 0.2f);
+
+        var m = _Text_Monies[index];
+
+        var t = 1f;
+        while (t > 0f && IsActive())
+        {
+
+          m.transform.localPosition = new Vector3(
+            Mathf.Lerp(_Positions_Monies[index].x, _Positions_Monies[4].x, (1f - Mathf.Clamp(t, 0f, 1f))),
+            Mathf.Lerp(_Positions_Monies[index].y, _Positions_Monies[4].y, Easings.QuarticEaseIn(1f - Mathf.Clamp(t, 0f, 1f))),
+            _Positions_Monies[index].z
+          );
+          yield return new WaitForSeconds(0.01f);
+          t -= 0.062f;
+        }
+        if (IsActive())
+        {
+          m.transform.localPosition = _Positions_Monies[4];
+          var monie = int.Parse(_Text_Money.text.Substring(3));
+          _Text_Money.text = $"$$${monie + 1}";
+          SfxManager.PlayAudioSourceSimple(GameResources._Camera_Main.transform.GetChild(1).position, "Etc/Monie_store", 0.95f, 1f);
+        }
+      }
+
+      ResetMonie(index);
+    }
+    GameScript._Singleton.StartCoroutine(MoveMonieCo());
+  }
+
   public static void Init()
   {
+
+    // Get UI elements
     if (_Text_LevelNum == null)
       _Text_LevelNum = GameObject.Find("LevelNum").GetComponent<TMPro.TextMeshPro>();
     if (_Text_LevelTimer == null)
@@ -77,7 +166,28 @@ public class TileManager
       _Text_GameOver = GameObject.Find("Game_Over").GetComponent<TextMesh>();
     if (_Text_Money == null)
       _Text_Money = GameObject.Find("LevelMoney").GetComponent<TMPro.TextMeshPro>();
+    if (_Text_Monies == null)
+    {
+      _Text_Monies = new TMPro.TextMeshPro[]{
+        GameObject.Find("MoneyInstance0").GetComponent<TMPro.TextMeshPro>(),
+        GameObject.Find("MoneyInstance1").GetComponent<TMPro.TextMeshPro>(),
+        GameObject.Find("MoneyInstance2").GetComponent<TMPro.TextMeshPro>(),
+        GameObject.Find("MoneyInstance3").GetComponent<TMPro.TextMeshPro>(),
+      };
+      _Positions_Monies = new Vector3[]{
 
+        // Start positions
+        _Text_Monies[0].transform.localPosition,
+        _Text_Monies[1].transform.localPosition,
+        _Text_Monies[2].transform.localPosition,
+        _Text_Monies[3].transform.localPosition,
+
+        // End position
+        new Vector3(8.14f, -15.58f, _Text_Monies[0].transform.localPosition.z)
+      };
+    }
+
+    // Reset tilemap
     if (_Tiles != null)
       foreach (var t in _Tiles)
         t._tile.transform.parent = _Map;
@@ -97,6 +207,7 @@ public class TileManager
     }
     if (_Ring == null) _Ring = GameObject.Find("ring").transform;
     if (_Tile == null || _Tile.gameObject == null) throw new System.NullReferenceException("_Tile is null!");
+
     // Check if map already loaded
     if (_Map.childCount > 3)
     {
@@ -949,6 +1060,7 @@ public class TileManager
   static void OnMapLoad()
   {
     _Text_LevelNum.text = "";
+    _Text_Money.text = "";
     _LevelTimer = 0f;
     _Level_Complete = false;
     PlayerScript._TimerStarted = false;
@@ -993,6 +1105,8 @@ public class TileManager
         _Text_LevelNum.gameObject.SetActive(false);
         _Text_LevelTimer.gameObject.SetActive(false);
         _Text_LevelTimer_Best.gameObject.SetActive(false);
+        _Text_Money.gameObject.SetActive(false);
+        ResetMonies();
       }
     }
 
