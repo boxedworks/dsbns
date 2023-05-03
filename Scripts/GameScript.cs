@@ -151,6 +151,7 @@ public class GameScript : MonoBehaviour
     TileManager._navMeshSurface = TileManager._Map.GetComponent<UnityEngine.AI.NavMeshSurface>();
     TileManager._navMeshSurface2 = TileManager._Map.GetComponents<UnityEngine.AI.NavMeshSurface>()[1];
     TileManager.Init();
+    TileManager._LoadingMap = true;
     TileManager.LoadMap("5 6 1 1 1 0 1 1 1 1 0 0 0 0 0 0 0 0 0 0 1 1 0 0 0 0 1 1 1 0 1 1 playerspawn_-37.5_-55.62_rot_0 e_-42.5_-48.1_li_knife_w_-42.5_-48.1_l_-41.4_-48.1_canmove_true_canhear_true_ e_-32.5_-48.1_li_knife_w_-32.5_-48.1_l_-33.6_-48.1_canmove_true_canhear_true_ e_-40_-50.6_li_knife_w_-40_-50.6_l_-39.7_-49.4_canmove_true_canhear_true_ e_-35_-44.4_li_knife_w_-35_-44.4_l_-36.1_-44.4_canmove_true_canhear_true_ p_-37.5_-44.38_end_ barrel_-40.66_-42.61_rot_0 barrel_-39.79_-42.62_rot_0 barrel_-38.9_-42.59_rot_0 barrel_-37.96_-42.62_rot_0 barrel_-37.02_-42.55_rot_0 barrel_-40.72_-46.53_rot_0 barrel_-40.73_-45.68_rot_0 barrel_-34.44_-46.61_rot_0 bookcasebig_-35.16_-42.79_rot_15 bookcaseopen_-40.47_-51.45_rot_0 bookcaseopen_-34.37_-51.19_rot_90.00001 bookcaseopen_-34.39_-50_rot_90.00001 bookcaseopen_-40.67_-44.71_rot_90.00001 bookcaseopen_-37.5_-46.88_rot_0 bookcaseopen_-37.5_-47.67_rot_0 barrel_-34.39_-45.78_rot_0 barrel_-31.86_-47.48_rot_0 barrel_-31.84_-48.37_rot_0 barrel_-35.15_-51.47_rot_0 tablesmall_-43.08_-48.95_rot_0 chair_-42.68_-49.08_rot_45 chair_-31.83_-49.12_rot_1.692939E-06 chair_-40.71_-43.66_rot_135 bookcasebig_-38.42_-50.79_rot_285 bookcaseopen_-36.42_-47.9_rot_75 barrel_-39.44_-51.42_rot_0 barrel_-39.25_-50.49_rot_0 candelbig_-36.55_-46.97_rot_90.00001 bookcaseopen_-43.24_-47.83_rot_105", false, false, true);
 
     TileManager.EditorMenus.Init();
@@ -224,7 +225,13 @@ public class GameScript : MonoBehaviour
     IEnumerator tutorialfunction()
     {
       TutorialInformation._TutorialArrow.position = new Vector3(-100f, 0f, 0f);
-      var goal = GameObject.Find("Powerup").GetComponent<Powerup>();
+      Powerup goal = null;
+      do
+      {
+        goal = GameObject.Find("Powerup")?.GetComponent<Powerup>();
+        if (goal == null)
+          yield return new WaitForSecondsRealtime(0.1f);
+      } while (goal == null);
       yield return new WaitForSecondsRealtime(1f);
       var m = TutorialInformation._TutorialArrow.GetComponent<MeshRenderer>();
       float ypos = 1.75f;
@@ -955,7 +962,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     {
       // Heal; check for armor perk
       //var healed = false;
-      if (Shop.Perk.HasPerk(p._id, Shop.Perk.PerkType.ARMOR_UP))
+      if (Shop.Perk.HasPerk(p._Id, Shop.Perk.PerkType.ARMOR_UP))
       {
         if (p._ragdoll._health != 5)
         {
@@ -1647,6 +1654,8 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
                       Settings._Classic_0_TopRated._value = false;
                     else
                       Settings._Classic_1_TopRated._value = false;
+
+                    Levels.BufferLevelTimeDatas();
                   }
                 }
               }
@@ -1807,7 +1816,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         if (PlayerScript.s_Players == null) return null;
         foreach (var player in PlayerScript.s_Players)
           if (player == null) continue;
-          else if (player._id == _Id) return player;
+          else if (player._Id == _Id) return player;
         return null;
       }
     }
@@ -1972,7 +1981,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         // Check for alive player
         if (PlayerScript.s_Players != null)
           foreach (PlayerScript p in PlayerScript.s_Players)
-            if (p._id == _Id && !p._ragdoll._dead) p._ragdoll.ChangeColor(GetColor());
+            if (p._Id == _Id && !p._ragdoll._dead) p._ragdoll.ChangeColor(GetColor());
         // Save pref
         PlayerPrefs.SetInt($"{_playerPrefsPrefix}color", playerColor);
       }
@@ -3382,12 +3391,13 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     if (_Coroutine_load != null) return;
 
     // Begin coroutine
+    _Singleton._GameEnded = true;
     _Coroutine_load = _Singleton.StartCoroutine(NextLevelCo(levelData));
   }
   static IEnumerator NextLevelCo(string levelData)
   {
-    _Singleton._GameEnded = true;
     _inLevelEnd = false;
+
     // Fix players
     if (PlayerScript.s_Players != null)
     {
@@ -3407,7 +3417,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         // Teleport other players to them
         foreach (var p in PlayerScript.s_Players)
         {
-          if (p == null || p._ragdoll._dead || p._id == hasGoal._id) continue;
+          if (p == null || p._ragdoll._dead || p._Id == hasGoal._Id) continue;
           p.transform.position = hasGoal.transform.position;
         }
       }

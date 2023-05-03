@@ -6,6 +6,8 @@ using Key = ControllerManager.Key;
 
 public class TileManager
 {
+  static int _s_mapIndex;
+
   public static List<Tile> _Tiles;
   static int _MouseID, _Width = 50, _Height = 50;
   public static int _Map_Size_X, _Map_Size_Y;
@@ -107,9 +109,12 @@ public class TileManager
     _Text_Monies[index].transform.localPosition = _Positions_Monies[index];
     _Text_Monies[index].text = "$$$";
   }
-  public static void MoveMonie(int index, int delay)
+
+  // Lerp UI monie
+  public static void MoveMonie(int index, int delay, int spacingIndex)
   {
 
+    // Make sure UI / level is the same
     bool IsActive()
     {
       return _Text_Money.gameObject.activeSelf && _Text_Money.text.Length > 0 && !_LoadingMap;
@@ -117,25 +122,32 @@ public class TileManager
 
     IEnumerator MoveMonieCo()
     {
-      yield return new WaitForSeconds(0.5f);
+      yield return new WaitForSecondsRealtime(0.5f);
       if (IsActive())
       {
         DisplayMonie(index);
         SfxManager.PlayAudioSourceSimple(GameResources._Camera_Main.transform.GetChild(1).position, "Etc/Monie_show", 0.95f, 1f);
-        yield return new WaitForSeconds(0.9f + delay * 0.2f);
+        yield return new WaitForSecondsRealtime(0.9f + delay * 0.2f);
 
         var m = _Text_Monies[index];
 
         var t = 1f;
+        var posStart = _Positions_Monies[index];
+        switch (spacingIndex)
+        {
+          case 1:
+            posStart.x = -6.21f;
+            break;
+        }
         while (t > 0f && IsActive())
         {
 
           m.transform.localPosition = new Vector3(
-            Mathf.Lerp(_Positions_Monies[index].x, _Positions_Monies[4].x, (1f - Mathf.Clamp(t, 0f, 1f))),
-            Mathf.Lerp(_Positions_Monies[index].y, _Positions_Monies[4].y, Easings.QuarticEaseIn(1f - Mathf.Clamp(t, 0f, 1f))),
-            _Positions_Monies[index].z
+            Mathf.Lerp(posStart.x, _Positions_Monies[4].x, (1f - Mathf.Clamp(t, 0f, 1f))),
+            Mathf.Lerp(posStart.y, _Positions_Monies[4].y, Easings.QuarticEaseIn(1f - Mathf.Clamp(t, 0f, 1f))),
+            posStart.z
           );
-          yield return new WaitForSeconds(0.01f);
+          yield return new WaitForSecondsRealtime(0.01f);
           t -= 0.062f;
         }
         if (IsActive())
@@ -483,6 +495,8 @@ public class TileManager
   static Vector3 _lastUsePos;
   static IEnumerator LoadMapCo(string data, bool doubleSizeInit = false, bool appendToEditMaps = false)
   {
+
+    _s_mapIndex++;
 
     //Debug.Log("Loading map with data:\n== BEGIN ==\n" + data + "\n== END ==");
 
@@ -883,9 +897,14 @@ public class TileManager
     // Init all enemies
     EnemyScript.HardInitAll();
 
-    // Spawn player
-    if (!Menu2._InMenus)
+    // Hide menus
+    if (Menu2._InMenus && _s_mapIndex > 1)
+    {
+      Menu2.HideMenus();
+
+      // Spawn player
       GameScript.SpawnPlayers();
+    }
 
     // Refill player ammo
     if (Players != null)
@@ -1377,7 +1396,7 @@ public class TileManager
             // Set the open status
             case ("open"):
               int open = int.Parse(pair.Value);
-              door_script0._opened = open == 1;
+              door_script0._Opened = open == 1;
               door_script0.enabled = true;
               break;
             case ("enemypos"):
@@ -1388,13 +1407,14 @@ public class TileManager
                 var idP = int.Parse(id);
                 //Debug.Log(GameScript._Singleton.transform.GetChild(0).childCount);
                 //Debug.Log(idP);
-                door_script0.RegisterEnemy(idP);
                 var enemies = GameScript._Singleton.transform.GetChild(0);
                 if (idP >= enemies.childCount)
                 {
                   throw new System.IndexOutOfRangeException($"Trying to link door with enemy ID {idP} out of {enemies.childCount}");
                 }
-                door_script0.RegisterEnemyReal(enemies.GetChild(idP).GetChild(0).GetComponent<EnemyScript>());
+                var e = enemies.GetChild(idP).GetChild(0).GetComponent<EnemyScript>();
+                door_script0.RegisterEnemyEditor(e);
+                door_script0.RegisterEnemyGame(e);
               }
               break;
             default:
@@ -2319,10 +2339,10 @@ public class TileManager
     else
     {
       if (EnemyScript._Enemies_alive != null)
-        foreach (EnemyScript e in EnemyScript._Enemies_alive)
+        foreach (var e in EnemyScript._Enemies_alive)
           GameObject.Destroy(e.transform.parent.gameObject);
       if (EnemyScript._Enemies_dead != null)
-        foreach (EnemyScript e in EnemyScript._Enemies_dead)
+        foreach (var e in EnemyScript._Enemies_dead)
           GameObject.Destroy(e.transform.parent.gameObject);
     }
     // Clear ragdolls
@@ -2559,13 +2579,15 @@ public class TileManager
               returnString += "end_";
               break;
           }
+
           // Add connected entities
           var b = p.GetComponent<CustomEntityUI>();
-          foreach (CustomEntity entity in b._activate)
+          foreach (var entity in b._activate)
           {
             if (entity == null) continue;
+
             // Check for doors
-            DoorScript ds = entity.gameObject.GetComponent<DoorScript>();
+            var ds = entity.gameObject.GetComponent<DoorScript>();
             if (ds != null)
             {
               var pos_use_local = ds.transform.position - offset;
@@ -2573,10 +2595,10 @@ public class TileManager
               var append = "";
 
               {
-                var savebutton = ds._button;
-                ds._button = null;
+                var savebutton = ds._Button;
+                ds._Button = null;
                 append = _LEO_Door._saveFunction?.Invoke(_LEO_Door, ds.gameObject, offset, pos_use_local);
-                ds._button = savebutton;
+                ds._Button = savebutton;
               }
 
               //Debug.Log("saving door, got: " + append);
@@ -2646,8 +2668,7 @@ public class TileManager
 
           if (script_enemy._linkedDoor != null)
           {
-            script_enemy._linkedDoor._trigger_enemies.Remove(script_enemy._Id);
-            script_enemy._linkedDoor = null;
+            script_enemy._linkedDoor.UnregisterEnemy(script_enemy);
           }
         }
 
@@ -2669,11 +2690,10 @@ public class TileManager
 
               if (script_enemy._linkedDoor != null)
               {
-                script_enemy._linkedDoor._trigger_enemies.Remove(script_enemy._Id);
-                script_enemy._linkedDoor = null;
+                script_enemy._linkedDoor.UnregisterEnemy(script_enemy);
               }
 
-              d.RegisterEnemy(script_enemy._Id);
+              d.RegisterEnemyEditor(script_enemy);
               script_enemy._linkedDoor = d;
             }
             _IsLinking = false;
@@ -2933,7 +2953,7 @@ public class TileManager
               // Add y rotation
               returnString += "rot_" + ds.transform.localRotation.eulerAngles.y + "_";
               // Add open status
-              returnString += "open_" + (ds._opened ? "1" : "0") + "_";
+              returnString += "open_" + (ds._Opened ? "1" : "0") + "_";
               continue;
             }
           }
@@ -3695,7 +3715,7 @@ public class TileManager
         var cui = selection.GetComponent<CustomEntityUI>();
         foreach (var activate in cui._activate)
           if (activate != null && activate.gameObject.name == "Door")
-            ((DoorScript)activate)._button = null;
+            ((DoorScript)activate)._Button = null;
         cui._activate = new CustomEntity[0];
       }
       // Link CustomEntityUI with CustomEntity
@@ -3725,7 +3745,7 @@ public class TileManager
 
             if (ce.name == "Door")
             {
-              ((DoorScript)ce)._button = custom_entity_ui;
+              ((DoorScript)ce)._Button = custom_entity_ui;
             }
           }
           _IsLinking = false;
@@ -3771,16 +3791,16 @@ public class TileManager
       var doorScript = g.GetComponent<DoorScript>();
       if (doorScript != null)
       {
-        if (doorScript._hasButton) return null;
-        if (doorScript._trigger_enemies == null || doorScript._trigger_enemies.Count == 0)
+        if (doorScript._HasButton) return null;
+        if (doorScript._EnemiesEditor == null || doorScript._EnemiesEditor.Count == 0)
         {
 
         }
         else
         {
-          returnString += $"_enemypos_{doorScript.GetRegisteredEnemies()}";
+          returnString += $"_enemypos_{doorScript.GetRegisteredEnemiesEditor()}";
         }
-        returnString += "_open_" + (doorScript._opened ? "1" : "0") + "_";
+        returnString += "_open_" + (doorScript._Opened ? "1" : "0") + "_";
 
       }
       returnString += " ";
@@ -4113,23 +4133,23 @@ public class TileManager
           }
         }
       }
-      LevelEditorObject.RotationSettings rotationSettings = obj._rotationSettings;
+      var rotationSettings = obj._rotationSettings;
 
       // Check rotate
       if (rotationSettings != null)
       {
 
         // Set amount to rotate
-        float rotate_degree = Mathf.RoundToInt(UnityEngine.InputSystem.Mouse.current.scroll.y.ReadValue() * 0.085f);
+        var rotate_degree = (float)Mathf.RoundToInt(UnityEngine.InputSystem.Mouse.current.scroll.y.ReadValue() * 0.085f);
         if (ControllerManager.GetKey(Key.R))
           rotate_degree = 45f;
         if (ControllerManager.ShiftHeld()) rotate_degree /= 3f;
 
         // Select the transform to rotate
-        Transform rotate_target = LevelEditorObject.GetTransformTarget(rotationSettings._target);
+        var rotate_target = LevelEditorObject.GetTransformTarget(rotationSettings._target);
 
         // Rotate the appropriate axis
-        Vector3 rotate_axis = Vector3.zero;
+        var rotate_axis = Vector3.zero;
         if (rotationSettings._axis == LevelEditorObject.Axis.X)
           rotate_axis.x = 1f;
         else if (rotationSettings._axis == LevelEditorObject.Axis.Y)
@@ -4147,12 +4167,25 @@ public class TileManager
         LevelEditor_Copy(copySettings);
 
       // Check delete
-      LevelEditorObject.DeleteSettings deleteSettings = obj._deleteSettings;
+      var deleteSettings = obj._deleteSettings;
       if (deleteSettings != null && ControllerManager.GetKey(Key.DELETE))
       {
         // Select the transform to delete
-        Transform delete_target = LevelEditorObject.GetTransformTarget(deleteSettings._target);
-        // Delete it
+        var delete_target = LevelEditorObject.GetTransformTarget(deleteSettings._target);
+
+        // Check special case
+        if (LevelEditorObject.GetCurrentObject()._name == _LEO_Enemy._name)
+        {
+
+          // Remove from alive
+          var enemyScript = delete_target.GetChild(0).GetComponent<EnemyScript>();
+          EnemyScript._Enemies_alive.Remove(enemyScript);
+
+          // Check if linked to any doors
+          enemyScript?._linkedDoor?.UnregisterEnemy(enemyScript);
+        }
+
+        // Delete LEO
         GameObject.Destroy(delete_target.gameObject);
         _CurrentMode = EditorMode.NONE;
         _SelectedObject = null;

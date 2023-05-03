@@ -115,7 +115,7 @@ public static class Settings
     }
   }
 
-  public static FunctionsC.SaveableStat_Bool _CameraType, _Classic_0_TopRated, _Classic_1_TopRated;
+  public static FunctionsC.SaveableStat_Bool _CameraType, _Classic_0_TopRated, _Classic_1_TopRated, _Option_FastText;
   public static bool _CurrentDifficulty_NotTopRated { get { return (_DIFFICULTY == 0 && !_Classic_0_TopRated._value) || (_DIFFICULTY == 1 && !_Classic_1_TopRated._value); } }
 
   static bool ControllerRumble;
@@ -326,7 +326,7 @@ public static class Settings
     }
   }
 
-  public static float _VERSION = 1.25f;
+  public static float _VERSION = 1.26f;
 
   // Struct holding info what item pair gets unlocked at what level
   public class WeaponPair
@@ -428,6 +428,8 @@ public static class Settings
     // Load general settings
     _Blood = PlayerPrefs.GetInt("show_blood", 1) == 1;
     _ForceKeyboard = PlayerPrefs.GetInt("force_keyboard", 0) == 1;
+
+    _Option_FastText = new FunctionsC.SaveableStat_Bool("option_fasttext", false);
     _ShowTips = PlayerPrefs.GetInt("show_tips", 1) == 1;
 
     // Load graphics settings
@@ -535,7 +537,7 @@ public static class Settings
         }
     );
 
-    // Enemy multi
+    // Enemy off
     s_Extra_UnlockCriterea.Add(
         Shop.Unlocks.EXTRA_ENEMY_OFF,
         new UnlockCriteria
@@ -653,6 +655,20 @@ public static class Settings
         Settings._Extra_BloodType._value,
         Settings._Extra_BodyExplode._value
       };
+  }
+
+  public static void AllExtrasOff()
+  {
+    Settings._Extra_CrazyZombies = false;
+    Settings._Extra_CrownMode._value = 0;
+    Settings._Extra_EnemyAmmo._value = 0;
+    Settings._Extra_EnemyMultiplier._value = 0;
+    Settings._Extra_Gravity = 0;
+    Settings._Extra_PlayerAmmo._value = 0;
+    Settings._Extra_RemoveBatGuy._value = 0;
+    Settings._Extra_Superhot = false;
+    Settings._Extra_BloodType._value = 0;
+    Settings._Extra_BodyExplode._value = 0;
   }
 
   public enum GamemodeChange

@@ -370,7 +370,7 @@ public class CustomObstacle : MonoBehaviour
     if (!_text.gameObject.activeSelf) return;
 
     // Purchase
-    if (GameScript.SurvivalMode.HasPoints(p._id, _pointCost))
+    if (GameScript.SurvivalMode.HasPoints(p._Id, _pointCost))
     {
       // Check random
       var use_type = _type == InteractType.BUYRANDOM ? _randomType : _type;
@@ -392,7 +392,7 @@ public class CustomObstacle : MonoBehaviour
 
         var equip_side = ActiveRagdoll.Side.RIGHT;
 
-        var akimbo = Shop.Perk.HasPerk(p._id, Shop.Perk.PerkType.AKIMBO);
+        var akimbo = Shop.Perk.HasPerk(p._Id, Shop.Perk.PerkType.AKIMBO);
 
         // Check if can equip
         var equip_info = CheckEquip(p, item_type, side, akimbo, 0);
@@ -472,7 +472,7 @@ public class CustomObstacle : MonoBehaviour
           p._Profile._item_left = item_type;
         else
           p._Profile._item_right = item_type;
-        GameScript.PlayerProfile.s_Profiles[p._id].UpdateIcons();
+        GameScript.PlayerProfile.s_Profiles[p._Id].UpdateIcons();
 
         // Play sfx
         p._ragdoll.PlaySound("Survival/Buy_Weapon");
@@ -619,7 +619,7 @@ public class CustomObstacle : MonoBehaviour
         p.RegisterUtility(equip_side, saveamount);
 
         // Update UI
-        GameScript.PlayerProfile.s_Profiles[p._id].UpdateIcons();
+        GameScript.PlayerProfile.s_Profiles[p._Id].UpdateIcons();
 
         // Play sound
         p._ragdoll.PlaySound("Survival/Buy_Weapon");
@@ -633,7 +633,7 @@ public class CustomObstacle : MonoBehaviour
       {
         var perk = _perk_info.Item1;
 
-        if (Shop.Perk.HasPerk(p._id, perk))
+        if (Shop.Perk.HasPerk(p._Id, perk))
         {
           var text_haveAlready = "i have this already";
           p._ragdoll.DisplayText(text_haveAlready);
@@ -641,17 +641,17 @@ public class CustomObstacle : MonoBehaviour
         }
 
         // Check max perks
-        if (Shop.Perk.GetNumPerks(p._id) > 3)
+        if (Shop.Perk.GetNumPerks(p._Id) > 3)
         {
           var text_haveAlready = "i already have 4 mods";
           p._ragdoll.DisplayText(text_haveAlready);
           return;
         }
 
-        Shop.Perk.BuyPerk(p._id, perk);
+        Shop.Perk.BuyPerk(p._Id, perk);
 
         // Update UI
-        GameScript.PlayerProfile.s_Profiles[p._id].UpdateIcons();
+        GameScript.PlayerProfile.s_Profiles[p._Id].UpdateIcons();
 
         // Play sound
         p._ragdoll.PlaySound("Survival/Buy_Weapon");
@@ -664,7 +664,7 @@ public class CustomObstacle : MonoBehaviour
       }
 
       // Reduce points
-      GameScript.SurvivalMode.SpendPoints(p._id, _pointCost);
+      GameScript.SurvivalMode.SpendPoints(p._Id, _pointCost);
     }
     else
       p._ragdoll.DisplayText("not enough points..");

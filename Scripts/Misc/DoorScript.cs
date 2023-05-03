@@ -9,28 +9,28 @@ public class DoorScript : CustomEntity
   float _normalizedTime;
 
   Transform _door;
-  public CustomEntityUI _button;
+  public CustomEntityUI _Button;
 
   AudioSource _sfx;
 
-  public bool _hasButton
+  public bool _HasButton
   {
-    get { return _button != null; }
+    get { return _Button != null; }
   }
 
   Vector3 _saveDoorPos;
 
-  public bool _XScale, _opened;
+  public bool _XScale, _Opened;
   bool _original;
   public float _Speed;
 
   Light _l;
   Collider _collider0, _collider1;
   UnityEngine.AI.NavMeshObstacle _obstacle;
-  ParticleSystem _ps_dust;
+  ParticleSystem _psDust;
 
-  public List<int> _trigger_enemies;
-  public List<EnemyScript> _registered_enemies;
+  public List<EnemyScript> _EnemiesEditor;
+  public List<EnemyScript> _EnemiesGame;
 
   // Use this for initialization
   void Start()
@@ -43,10 +43,10 @@ public class DoorScript : CustomEntity
     _collider1 = _door.GetComponents<Collider>()[1];
     _obstacle = _door.GetComponent<UnityEngine.AI.NavMeshObstacle>();
 
-    _ps_dust = transform.GetChild(0).GetChild(2).GetComponent<ParticleSystem>();
+    _psDust = transform.GetChild(0).GetChild(2).GetComponent<ParticleSystem>();
 
-    _original = _opened;
-    if (!_opened)
+    _original = _Opened;
+    if (!_Opened)
     {
       SetDoorScale(1f);
       _normalizedTime = 1f;
@@ -55,48 +55,62 @@ public class DoorScript : CustomEntity
 
   }
 
-  public void RegisterEnemy(int enemyPos)
+  public void RegisterEnemyEditor(EnemyScript e)
   {
-    if (_trigger_enemies == null) _trigger_enemies = new List<int>();
-    if (_trigger_enemies.Contains(enemyPos)) return;
-    _trigger_enemies.Add(enemyPos);
+    if (_EnemiesEditor == null) _EnemiesEditor = new List<EnemyScript>();
+    if (_EnemiesEditor.Contains(e)) return;
+    _EnemiesEditor.Add(e);
   }
-  public string GetRegisteredEnemies()
+  public string GetRegisteredEnemiesEditor()
   {
+    // Get translated enemy table
+    var t = new Dictionary<int, int>();
+    var idIndex = 0;
+    foreach (var e in EnemyScript._Enemies_alive)
+    {
+      t.Add(e._Id, idIndex++);
+    }
+
     var returnString = "";
-    foreach (var enemyId in _trigger_enemies)
-      returnString += $"{enemyId}|";
+    foreach (var e in _EnemiesEditor)
+      returnString += $"{t[e._Id]}|";
     return returnString;
   }
 
-  public void RegisterEnemyReal(EnemyScript e)
+  public void RegisterEnemyGame(EnemyScript e)
   {
-    if (_registered_enemies == null) _registered_enemies = new List<EnemyScript>();
-    if (_registered_enemies.Contains(e)) return;
+    if (_EnemiesGame == null) _EnemiesGame = new List<EnemyScript>();
+    if (_EnemiesGame.Contains(e)) return;
     e._linkedDoor = this;
-    _registered_enemies.Add(e);
+    _EnemiesGame.Add(e);
+  }
+
+  public void UnregisterEnemy(EnemyScript e)
+  {
+    _EnemiesEditor.Remove(e);
+    e._linkedDoor = null;
   }
 
   public void OnEnemyDie(EnemyScript e)
   {
-    _registered_enemies.Remove(e);
-    if (_registered_enemies.Count == 0)
+    _EnemiesGame.Remove(e);
+    if (_EnemiesGame.Count == 0)
       Toggle();
   }
 
   public void RegisterButton(ref CustomEntityUI button)
   {
-    _button = button;
+    _Button = button;
     AddToButtonList();
   }
   public void AddToButtonList()
   {
-    _button.AddToActivateArray(this);
+    _Button.AddToActivateArray(this);
   }
   public void LinkToDoor(DoorScript script)
   {
-    if (script._button == null) return;
-    RegisterButton(ref script._button);
+    if (script._Button == null) return;
+    RegisterButton(ref script._Button);
   }
 
   // Update is called once per frame
@@ -105,7 +119,7 @@ public class DoorScript : CustomEntity
     if (!_opening) return;
 
     //_door.position = Vector3.Lerp(_saveDoorPos, _saveDoorPos - new Vector3(0f, 1f, 0f), _normalizedTime);
-    _normalizedTime = Mathf.Clamp(_normalizedTime + Time.deltaTime * _Speed * 0.4f * (_opened ? -1f : 1f), 0f, 1f);
+    _normalizedTime = Mathf.Clamp(_normalizedTime + Time.deltaTime * _Speed * 0.4f * (_Opened ? -1f : 1f), 0f, 1f);
     SetDoorScale(_normalizedTime);
 
     if (_normalizedTime == 1f || _normalizedTime == 0f)
@@ -117,9 +131,9 @@ public class DoorScript : CustomEntity
         _sfx?.Stop();
         _sfx = null;
       }
-      _ps_dust.Stop();
+      _psDust.Stop();
 
-      if (!_opened)
+      if (!_Opened)
         _obstacle.gameObject.isStatic = true;
     }
   }
@@ -131,7 +145,7 @@ public class DoorScript : CustomEntity
 
   public void Toggle()
   {
-    if (_button != null)
+    if (_Button != null)
     {
       SfxManager.PlayAudioSourceSimple(transform.position, "Ragdoll/Tick");
     }
@@ -139,8 +153,8 @@ public class DoorScript : CustomEntity
     if (!GameScript._EditorEnabled)
       EnemyScript.CheckSound(_door.position, EnemyScript.Loudness.SOFT);
 
-    _opened = !_opened;
-    Toggle(_opened);
+    _Opened = !_Opened;
+    Toggle(_Opened);
   }
 
   void Toggle(bool open)
@@ -151,7 +165,7 @@ public class DoorScript : CustomEntity
 
     _opening = true;
 
-    if (_opened)
+    if (_Opened)
       _obstacle.gameObject.isStatic = false;
 
     if (_sfx == null)
@@ -163,7 +177,7 @@ public class DoorScript : CustomEntity
       }
     }
 
-    _ps_dust.Play();
+    _psDust.Play();
   }
 
   public override void Activate(CustomEntityUI ui)

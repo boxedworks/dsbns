@@ -295,17 +295,22 @@ public class Menu2
                 if (_dropdownOnUnfocus == null || component0._dropdownIndex > _dropdownOnFocus.Length - 1) return;
                 _dropdownOnUnfocus[component0._dropdownIndex]?.Invoke(component0);
               });
+
             // Add double selected event
             if (_dropdownOnDoubleSelected != null && iter < _dropdownOnDoubleSelected.Length)
               _menu.AddEvent(EventType.ON_SELECTED_DOUBLE, _dropdownOnDoubleSelected[iter]);
+
             // Fire on created event
             if (_dropdownOnCreated != null && iter < _dropdownOnCreated.Length)
               _dropdownOnCreated[iter]?.Invoke(_menu._menuComponent_last);
+
             // Set selection index to first dropdown selection
             if (_menu._menuComponent_last._textColor == "white")
               _menu._selectionIndex = _menu._menuComponent_last._buttonIndex;
+
             // Register dropdown index
             _menu._menuComponent_last._dropdownIndex = iter;
+
             // Update the text buffer with selection
             var displayText = _menu._menuComponent_last._obscured ? FunctionsC.GenerateGarbageText(selection) : selection;
             displayText = (_menu._menuComponent_last._buttonIndex == _menu._selectionIndex ? "[<color=yellow>*</color>" : "[ ") + $"] <color={_menu._menuComponent_last._textColor}>{displayText}</color>";
@@ -321,7 +326,15 @@ public class Menu2
             RenderMenu();
           }
           else
-            _CanRender = true;
+          {
+            if (Settings._Option_FastText._value)
+            {
+              _CanRender = false;
+              RenderMenu();
+            }
+            else
+              _CanRender = true;
+          }
         };
       }
 
@@ -1327,10 +1340,6 @@ public class Menu2
                 GameScript.NextLevel(level_data);
 
                 // Remove menus
-                CommonEvents._RemoveDropdownSelections(component0);
-                _Menu.gameObject.SetActive(false);
-                _InMenus = false;
-                _InPause = false;
                 Time.timeScale = 1f;
                 GameScript._Paused = false;
 
@@ -3591,15 +3600,12 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
                     // Load level
                     var levelIter = int.Parse(component0.GetDisplayText().Split(' ')[2].Trim().Substring(1)) - 1;
                     GameScript.NextLevel(levelIter);
-                    CommonEvents._RemoveDropdownSelections(component0);
 
                     // Play music
                     if (FunctionsC.MusicManager.s_CurrentTrack <= 2)
                       FunctionsC.MusicManager.TransitionTo(FunctionsC.MusicManager.GetNextTrackIter());
 
                     // Remove / show menus
-                    _Menu.gameObject.SetActive(false);
-                    _InMenus = false;
                     TileManager._Text_LevelNum.gameObject.SetActive(true);
                     TileManager._Text_LevelTimer.gameObject.SetActive(true);
                     TileManager._Text_LevelTimer_Best.gameObject.SetActive(true);
@@ -5808,7 +5814,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
       })
 
     // Level end behavior
-    .AddComponent("level completion\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
+    .AddComponent("level completion\n\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
       .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
       {
         // Set display text
@@ -5825,7 +5831,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
             selection = "previous level";
             break;
         }
-        component.SetDisplayText(string.Format(format_options, "level completion:", selection));
+        component.SetDisplayText(string.Format(format_options + '\n', "level completion:", selection));
 
         // Set dropdown data
         var selections = new List<string>();
@@ -5862,6 +5868,36 @@ go to the <color=yellow>SHOP</color> to buy something~1
 
         // Update dropdown data
         component.SetDropdownData("when you beat a level, what should happen?\n\n", selections, actions, selection);
+      })
+
+    // Fast text
+    .AddComponent("menu speed\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
+      .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+      {
+        // Set display text
+        var selection = !Settings._Option_FastText._value ? "typed" : "instant";
+        component.SetDisplayText(string.Format(format_options, "menu speed:", selection));
+
+        // Set dropdown data
+        var selections = new List<string>();
+        var actions = new List<System.Action<MenuComponent>>();
+        var selection_match = $"{selection} -";
+        selections.Add("type - menus are typed out like using a keyboard [DEFAULT]");
+        actions.Add((MenuComponent component0) =>
+        {
+          Settings._Option_FastText._value = false;
+          _CanRender = false;
+          RenderMenu();
+        });
+        selections.Add("instant - menus are displayed instantly");
+        actions.Add((MenuComponent component0) =>
+        {
+          Settings._Option_FastText._value = true;
+          _CanRender = false;
+          RenderMenu();
+        });
+        // Update dropdown data
+        component.SetDropdownData("menu speed\n\n", selections, actions, selection_match);
       })
 
     // Show tips
@@ -6704,7 +6740,7 @@ a gampad if plugged in.~1
 
       // Blood type
       AddExtraSelection(
-        "blood fx",
+        "blood fx`",
         () =>
         {
           switch (Settings._Extra_BloodType._value)
@@ -6807,14 +6843,49 @@ a gampad if plugged in.~1
         "\n\n"
       );*/
 
-      menu_extras.AddComponent("about\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
+      // Extra infos
+      menu_extras.AddComponent("about\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
         .AddEvent(EventType.ON_RENDER, (MenuComponent c) =>
         {
           c._selectorType = MenuComponent.SelectorType.QUESTION;
         })
         .AddEvent(EventType.ON_SELECTED, (MenuComponent c) =>
         {
+          GenericMenu(new string[]{
+  @$"<color={_COLOR_GRAY}>============
+about extras</color>
 
+-unlock extras by satisfying the requirements at the bottom of the extras menu
+
+-extras only work in the CLASSIC mode
+
+-you cannot get level rankings if you have any extras enabled (besides extras
+ with ` next to them)
+"
+}, "neat", MenuType.EXTRAS, null, true, null, (MenuComponent m) =>
+{
+  _Menus[MenuType.EXTRAS]._selectionIndex = _Menus[MenuType.EXTRAS]._menuComponentsSelectable.Count - 3;
+  _CanRender = true;
+  RenderMenu();
+});
+        })
+        .AddEvent(EventType.ON_FOCUS, (MenuComponent c) =>
+        {
+          useExInfo = false;
+          menu_extras._menuComponent_last._onFocus?.Invoke(menu_extras._menuComponent_last);
+        });
+
+      // Turn off all extras
+      menu_extras.AddComponent("clear\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
+        .AddEvent(EventType.ON_RENDER, (MenuComponent c) =>
+        {
+          c._selectorType = MenuComponent.SelectorType.X;
+        })
+        .AddEvent(EventType.ON_SELECTED, (MenuComponent c) =>
+        {
+          Settings.AllExtrasOff();
+          _CanRender = false;
+          RenderMenu();
         })
         .AddEvent(EventType.ON_FOCUS, (MenuComponent c) =>
         {
@@ -7081,6 +7152,8 @@ a gampad if plugged in.~1
   // Draw current menu
   public static void RenderMenu()
   {
+    if (_CanRender && Settings._Option_FastText._value && _CurrentMenu._type != MenuType.SPLASH)
+      _CanRender = false;
     _CurrentMenu.Render();
   }
 
@@ -7346,8 +7419,11 @@ a gampad if plugged in.~1
 
   public static void HideMenus()
   {
-    _InMenus = false;
+    if (_CurrentMenu._hasDropdown)
+      CommonEvents._RemoveDropdownSelections(_CurrentMenu._menuComponentsSelectable[0]);
     _Menu.gameObject.SetActive(false);
+    _InMenus = false;
+    _InPause = false;
   }
 
   public static void AppendToEditMaps(string map_data)

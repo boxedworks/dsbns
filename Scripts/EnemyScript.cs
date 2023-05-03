@@ -1808,7 +1808,7 @@ public class EnemyScript : MonoBehaviour
       if (GameScript._GameMode == GameScript.GameModes.SURVIVAL)
       {
         if (source._isPlayer)
-          GameScript.SurvivalMode.GivePoints(source._playerScript._id, 5 * (GameScript.SurvivalMode._Wave), true);
+          GameScript.SurvivalMode.GivePoints(source._playerScript._Id, 5 * (GameScript.SurvivalMode._Wave), true);
       }
 
       else
@@ -1827,7 +1827,7 @@ public class EnemyScript : MonoBehaviour
         {
 
           var gameId = GameScript._GameId;
-          yield return new WaitForSeconds(0.5f);
+          yield return new WaitForSecondsRealtime(0.5f);
 
           if (PlayerScript._All_Dead || gameId != GameScript._GameId)
           {
@@ -1896,10 +1896,12 @@ public class EnemyScript : MonoBehaviour
 
             // FX
             TileManager._Text_LevelTimer_Best.text += "\n\n";
-            TileManager._Text_Money.text = $"$$${Shop._AvailablePoints}";
             var medal_format = "<color={0}>{1,-5}: {2,-6}</color>\n";
             var played_wrong = false;
             var points_awarded_counter = points_awarded;
+            var medal_maxLength = medal_times[3].ToString().Length;
+            if (can_save_timers)
+              TileManager._Text_Money.text = $"$$${Shop._AvailablePoints}";
             for (var i = medal_times.Length - 1; i >= 0; i--)
             {
               var time = medal_times[i];
@@ -1908,9 +1910,9 @@ public class EnemyScript : MonoBehaviour
               TileManager._Text_LevelTimer_Best.text += string.Format(medal_format, ratings[i].Item2, ratings[i].Item1, string.Format("{0:0.000}", time_) + (ratingIndex == i ? "*" : ""));
 
               // Show $$$
-              if (points_awarded_table.Contains(i))
+              if (can_save_timers && points_awarded_table.Contains(i))
               {
-                TileManager.MoveMonie(3 - i, points_awarded - points_awarded_counter--);
+                TileManager.MoveMonie(3 - i, points_awarded - points_awarded_counter--, medal_maxLength == 5 ? 0 : 1);
               }
 
               // FX
@@ -1942,7 +1944,7 @@ public class EnemyScript : MonoBehaviour
               }
 
               if (!played_wrong)
-                yield return new WaitForSeconds(0.1f);
+                yield return new WaitForSecondsRealtime(0.1f);
             }
 
             // Save stuff
@@ -2002,6 +2004,7 @@ public class EnemyScript : MonoBehaviour
 
               // Give points based on medals
               {
+
                 if (points_awarded > 0)
                 {
                   if (can_save_timers)
@@ -2025,7 +2028,7 @@ public class EnemyScript : MonoBehaviour
                           break;
                         }
                       }
-                      Debug.Log($"All top rated: {all_top_rated}");
+                      Debug.Log($"All top rated: {all_top_rated}: {Settings._DIFFICULTY}");
                       if (all_top_rated)
                       {
                         if (Settings._DIFFICULTY == 0)
@@ -2254,7 +2257,7 @@ public class EnemyScript : MonoBehaviour
 
     // Increment survival score
     if (GameScript._GameMode == GameScript.GameModes.SURVIVAL && source._isPlayer)
-      GameScript.SurvivalMode.IncrementScore(source._playerScript._id);
+      GameScript.SurvivalMode.IncrementScore(source._playerScript._Id);
   }
 
   //

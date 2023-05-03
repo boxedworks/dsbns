@@ -200,7 +200,7 @@ public static class ControllerManager
     // Check controllers
     foreach (var player in PlayerScript.s_Players)
     {
-      var g = GetPlayerGamepad(player._id);
+      var g = GetPlayerGamepad(player._Id);
       if (g == null) continue;
       if (g.deviceId == obj.control.device.deviceId)
         return player;

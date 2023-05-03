@@ -146,7 +146,7 @@ public class Levels : MonoBehaviour
     var difficulty_save = Settings._DIFFICULTY;
     for (var difficulty = 0; difficulty < 2; difficulty++)
     {
-      Levels._CurrentLevelIndex = Settings._DIFFICULTY = difficulty;
+       Settings._DIFFICULTY = difficulty;
 
       // Get directory to loop through
       var level_datas = _CurrentLevelCollection._levelData;
@@ -180,10 +180,12 @@ public class Levels : MonoBehaviour
         // Save data
         _CurrentLevel_LevelTimesData[difficulty].Add(i, System.Tuple.Create(dev_time, level_time_best));
         if (Settings._CurrentDifficulty_NotTopRated)
+        {
+
+          // Check if top rated level
           _Levels_All_TopRatings[difficulty].Add(i, LevelHasTopRating(i));
 
-        if (Settings._CurrentDifficulty_NotTopRated)
-        {
+          // Gather lowest rank per difficulty
           if (dev_time == -1f || level_time_best < 0f)
           {
             _Ranks_Lowest[difficulty] = "";
@@ -199,9 +201,10 @@ public class Levels : MonoBehaviour
           }
         }
       }
-
     }
-    Levels._CurrentLevelIndex = Settings._DIFFICULTY = difficulty_save;
+
+    // Reset difficulty
+    Settings._DIFFICULTY = difficulty_save;
   }
 
   public static bool LevelCompleted(int leveliter)

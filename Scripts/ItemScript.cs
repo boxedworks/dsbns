@@ -61,7 +61,7 @@ public class ItemScript : MonoBehaviour
   }
   public float UseRate()
   {
-    if (!_melee && _ragdoll != null && _ragdoll._isPlayer && Shop.Perk.HasPerk(_ragdoll._playerScript._id, Shop.Perk.PerkType.FIRE_RATE_UP))
+    if (!_melee && _ragdoll != null && _ragdoll._isPlayer && Shop.Perk.HasPerk(_ragdoll._playerScript._Id, Shop.Perk.PerkType.FIRE_RATE_UP))
       return _useRate * 0.5f;
     return _useRate;
   }
@@ -92,7 +92,7 @@ public class ItemScript : MonoBehaviour
   // Check for perk
   public int GetPenatrationAmount()
   {
-    if (_ragdoll._isPlayer && Shop.Perk.HasPerk(_ragdoll._playerScript._id, Shop.Perk.PerkType.PENETRATION_UP))
+    if (_ragdoll._isPlayer && Shop.Perk.HasPerk(_ragdoll._playerScript._Id, Shop.Perk.PerkType.PENETRATION_UP))
       return _penatrationAmount + 1;
     return _penatrationAmount;
   }

@@ -655,7 +655,7 @@ public static class Shop
         case (PerkType.MAX_AMMO_UP):
           foreach (var player in PlayerScript.s_Players)
           {
-            if (player._id == playerId)
+            if (player._Id == playerId)
             {
               player._ragdoll.RefillAmmo();
               player._Profile.UpdateIcons();
@@ -667,7 +667,7 @@ public static class Shop
         case (PerkType.LASER_SIGHTS):
           foreach (var player in PlayerScript.s_Players)
           {
-            if (player._id == playerId)
+            if (player._Id == playerId)
             {
               player._ragdoll._itemL?.AddLaserSight();
               player._ragdoll._itemR?.AddLaserSight();
@@ -679,7 +679,7 @@ public static class Shop
         case (PerkType.ARMOR_UP):
           foreach (var player in PlayerScript.s_Players)
           {
-            if (player._id == playerId)
+            if (player._Id == playerId)
             {
               player._ragdoll._health += 2;
               player._Profile.UpdateHealthUI();

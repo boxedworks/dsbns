@@ -1561,8 +1561,8 @@ public class ActiveRagdoll
       // Record stats
       if (source._isPlayer)
       {
-        Stats.RecordKill(source._playerScript._id);
-        if (_isPlayer) Stats.RecordTeamkill(source._playerScript._id);
+        Stats.RecordKill(source._playerScript._Id);
+        if (_isPlayer) Stats.RecordTeamkill(source._playerScript._Id);
       }
 
       // Fire function per script type

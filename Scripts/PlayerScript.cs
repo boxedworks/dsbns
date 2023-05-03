@@ -10,7 +10,7 @@ public class PlayerScript : MonoBehaviour
   public static bool _All_Dead;
 
   public static int _PLAYERID = 0;
-  public int _id;
+  public int _Id;
   // Ragdoll
   public ActiveRagdoll _ragdoll;
   // Holds values for camera position / rotation to lerp to
@@ -49,7 +49,7 @@ public class PlayerScript : MonoBehaviour
   {
     get
     {
-      return GameScript.PlayerProfile.s_Profiles[_id];
+      return GameScript.PlayerProfile.s_Profiles[_Id];
     }
   }
 
@@ -119,7 +119,7 @@ public class PlayerScript : MonoBehaviour
       s_Players = new List<PlayerScript>();
     s_Players.Add(this);
     // Give unique _PlayerID and decide input based upon _PlayerID
-    _id = _PLAYERID++ % Settings._NumberPlayers;
+    _Id = _PLAYERID++ % Settings._NumberPlayers;
     // Check all players to make sure no duplicate _PlayerID
     var loops = 0;
     while (true && loops++ < 5)
@@ -131,9 +131,9 @@ public class PlayerScript : MonoBehaviour
         // If self, skip
         if (p.transform.GetInstanceID() == transform.GetInstanceID() || p._ragdoll._dead) continue;
         // If has same _PlayerID, increment id and set do not break while loop
-        if (p._id == _id)
+        if (p._Id == _Id)
         {
-          _id = _PLAYERID++ % Settings._NumberPlayers;
+          _Id = _PLAYERID++ % Settings._NumberPlayers;
           breakLoop = false;
           break;
         }
@@ -141,7 +141,7 @@ public class PlayerScript : MonoBehaviour
       // If break loop, break the loop
       if (breakLoop) break;
     }
-    if (loops == 5) Debug.LogError("Duplicate _PlayerID, may cause bug " + _id);
+    if (loops == 5) Debug.LogError("Duplicate _PlayerID, may cause bug " + _Id);
 
     // Create health UI
     //_profile.CreateHealthUI(health);
@@ -154,8 +154,8 @@ public class PlayerScript : MonoBehaviour
     _ring = new MeshRenderer[] { new_ring.transform.GetChild(0).GetComponent<MeshRenderer>(), new_ring.transform.GetChild(1).GetComponent<MeshRenderer>() };
     Resources.UnloadAsset(_ring[0].sharedMaterial);
     Resources.UnloadAsset(_ring[1].sharedMaterial);
-    _ring[0].sharedMaterial = s_Materials_Ring[_id];
-    _ring[1].sharedMaterial = s_Materials_Ring[_id];
+    _ring[0].sharedMaterial = s_Materials_Ring[_Id];
+    _ring[1].sharedMaterial = s_Materials_Ring[_Id];
     Vector3 localscale = _ring[0].transform.parent.localScale;
     localscale *= 0.8f;
     localscale.y = 2f;
@@ -210,10 +210,10 @@ public class PlayerScript : MonoBehaviour
     _Profile.OnPlayerSpawn();
     _Profile.UpdateHealthUI();
 
-    ControllerManager.GetPlayerGamepad(_id)?.SetMotorSpeeds(0f, 0f);
+    ControllerManager.GetPlayerGamepad(_Id)?.SetMotorSpeeds(0f, 0f);
 
     // Handle rain VFX
-    if (_id == 0)
+    if (_Id == 0)
     {
 
       // Clean up old light if exists
@@ -438,7 +438,7 @@ public class PlayerScript : MonoBehaviour
   {
 
     // Timer
-    if (!_TimerStarted && _id == 0)
+    if (!_TimerStarted && _Id == 0)
     {
 
       var player_farthest = FunctionsC.GetFarthestPlayerFrom(PlayerspawnScript._PlayerSpawns[0].transform.position);
@@ -450,7 +450,7 @@ public class PlayerScript : MonoBehaviour
 
     // Ratings
     if (
-      _id == 0 && !_level_ratings_shown && !TileManager._Level_Complete && !GameScript._Paused &&
+      _Id == 0 && !_level_ratings_shown && !TileManager._Level_Complete && !GameScript._Paused &&
       (
         (!_TimerStarted && Time.time - GameScript._LevelStartTime > 3f) ||
         (_ragdoll._dead && Time.unscaledTime - _ragdoll._time_dead > 3f)
@@ -728,7 +728,7 @@ public class PlayerScript : MonoBehaviour
 
     if (GameScript._Paused)
     {
-      if (_id == 0)
+      if (_Id == 0)
       {
         SfxManager.Update(0f);
       }
@@ -742,10 +742,7 @@ public class PlayerScript : MonoBehaviour
     if (!_isauto)
       HandleInput();
 
-    if (GameScript._Paused)
-      return;
-
-    if (TileManager._LoadingMap)
+    if (TileManager._LoadingMap || GameScript._Singleton._GameEnded || GameScript._Paused)
     {
       Time.timeScale = 1f;
       return;
@@ -754,7 +751,7 @@ public class PlayerScript : MonoBehaviour
     // Check for timescale change
     if (true)
     {
-      if (_id == 0)
+      if (_Id == 0)
       {
 
         // Update time via player speed
@@ -853,7 +850,7 @@ public class PlayerScript : MonoBehaviour
     float unscaled_dt = Time.unscaledDeltaTime,
       dt = Time.deltaTime;
 
-    if (_id == 0 && GameScript._Singleton._UseCamera)
+    if (_Id == 0 && GameScript._Singleton._UseCamera)
     {
       var camera_height = Settings._CameraZoom == 1 ? 14f : Settings._CameraZoom == 0 ? 10f : 18f;
       if (Settings._CameraType._value)
@@ -1010,7 +1007,7 @@ public class PlayerScript : MonoBehaviour
 
   public bool HasPerk(Shop.Perk.PerkType perk)
   {
-    return Shop.Perk.HasPerk(_id, perk);
+    return Shop.Perk.HasPerk(_Id, perk);
   }
 
   Vector2 _lastInputTriggers, _lastInputDPad;
@@ -1025,7 +1022,7 @@ public class PlayerScript : MonoBehaviour
     if (!Application.isFocused) return;
 
     //
-    if (AutoPlayer._Playing && _id != 0)
+    if (AutoPlayer._Playing && _Id != 0)
       return;
 
     //
@@ -1034,7 +1031,7 @@ public class PlayerScript : MonoBehaviour
 
     // Spawn enemies as player gets closer to goal; 3rd difficulty / game mode ?
     if (!GameScript.IsSurvival())
-      if (_id == 0 && (Settings._Extra_CrazyZombies && Settings._Extras_CanUse) && Powerup._Powerups.Count > 0)
+      if (_Id == 0 && (Settings._Extra_CrazyZombies && Settings._Extras_CanUse) && Powerup._Powerups.Count > 0)
       {
         var dis_spawn = MathC.Get2DDistance(transform.position, PlayerspawnScript._PlayerSpawns[0].transform.position);
         //Debug.Log("| " + dis_spawn + " " + (EnemyScript._Enemies_alive.Count < EnemyScript._MAX_RAGDOLLS_ALIVE));
@@ -1090,7 +1087,7 @@ public class PlayerScript : MonoBehaviour
 
     var saveInput = Vector2.zero;
 
-    if ((_id == 0 && Settings._ForceKeyboard) || ControllerManager._NumberGamepads == 0)
+    if ((_Id == 0 && Settings._ForceKeyboard) || ControllerManager._NumberGamepads == 0)
       mouseEnabled = true;
     else if (ControllerManager._NumberGamepads > 0)
       mouseEnabled = false;
@@ -1261,10 +1258,10 @@ public class PlayerScript : MonoBehaviour
     // Controller
     {
       // Check sticks
-      Vector2 controllerInput0 = new Vector2(ControllerManager.GetControllerAxis(_id, ControllerManager.Axis.LSTICK_X),
-          ControllerManager.GetControllerAxis(_id, ControllerManager.Axis.LSTICK_Y)),
-        controllerInput1 = new Vector2(ControllerManager.GetControllerAxis(_id, ControllerManager.Axis.RSTICK_X),
-          ControllerManager.GetControllerAxis(_id, ControllerManager.Axis.RSTICK_Y));
+      Vector2 controllerInput0 = new Vector2(ControllerManager.GetControllerAxis(_Id, ControllerManager.Axis.LSTICK_X),
+          ControllerManager.GetControllerAxis(_Id, ControllerManager.Axis.LSTICK_Y)),
+        controllerInput1 = new Vector2(ControllerManager.GetControllerAxis(_Id, ControllerManager.Axis.RSTICK_X),
+          ControllerManager.GetControllerAxis(_Id, ControllerManager.Axis.RSTICK_Y));
       float min = 0.125f, max = 0.85f;
       if (Mathf.Abs(controllerInput0.x) <= min) controllerInput0.x = 0f;
       else if (Mathf.Abs(controllerInput0.x) >= max) controllerInput0.x = 1f * Mathf.Sign(controllerInput0.x);
@@ -1288,7 +1285,7 @@ public class PlayerScript : MonoBehaviour
       }
 
       // Move arms
-      var gamepad = ControllerManager.GetPlayerGamepad(_id);
+      var gamepad = ControllerManager.GetPlayerGamepad(_Id);
       if (gamepad != null)
       {
         if (!_ragdoll._dead && gamepad.buttonSouth.isPressed)
@@ -1297,8 +1294,8 @@ public class PlayerScript : MonoBehaviour
           _ragdoll.ArmsDown();
 
         // Use items
-        Vector2 input = new Vector2(ControllerManager.GetControllerAxis(_id, ControllerManager.Axis.L2),
-          ControllerManager.GetControllerAxis(_id, ControllerManager.Axis.R2));
+        Vector2 input = new Vector2(ControllerManager.GetControllerAxis(_Id, ControllerManager.Axis.L2),
+          ControllerManager.GetControllerAxis(_Id, ControllerManager.Axis.R2));
         float bias = 0.4f;
         min = 0f + bias;
         if (input.x >= 1f - bias && _lastInputTriggers.x < 1f - bias)
@@ -1356,8 +1353,8 @@ public class PlayerScript : MonoBehaviour
         _lastInputTriggers = input;
 
         // DPad - taunts
-        input = new Vector2(ControllerManager.GetControllerAxis(_id, ControllerManager.Axis.DPAD_X),
-          ControllerManager.GetControllerAxis(_id, ControllerManager.Axis.DPAD_Y));
+        input = new Vector2(ControllerManager.GetControllerAxis(_Id, ControllerManager.Axis.DPAD_X),
+          ControllerManager.GetControllerAxis(_Id, ControllerManager.Axis.DPAD_Y));
         if (input.y == -1f && _lastInputDPad.y != -1f)
           Taunt(1);
 
@@ -1764,12 +1761,12 @@ public class PlayerScript : MonoBehaviour
             var points = 10;
             for (; points > 0; points--)
             {
-              if (GameScript.SurvivalMode.HasPoints(_id, points))
+              if (GameScript.SurvivalMode.HasPoints(_Id, points))
                 break;
             }
             if (points == 0) return;
 
-            GameScript.SurvivalMode.SpendPoints(_id, points);
+            GameScript.SurvivalMode.SpendPoints(_Id, points);
             var money = GameObject.Instantiate(GameResources._Money) as GameObject;
             GameScript.SurvivalMode.AddMoney(money);
             money.name = $"Money {points}";
@@ -1889,7 +1886,7 @@ public class PlayerScript : MonoBehaviour
     {
       IEnumerator rumble()
       {
-        var gamepad = ControllerManager.GetPlayerGamepad(_id);
+        var gamepad = ControllerManager.GetPlayerGamepad(_Id);
         gamepad.SetMotorSpeeds(0.2f, 0.2f);
 
         yield return new WaitForSecondsRealtime(1f);
@@ -1904,14 +1901,14 @@ public class PlayerScript : MonoBehaviour
   public void OnToggle(ActiveRagdoll source, ActiveRagdoll.DamageSourceType damageSourceType)
   {
     // Record stat
-    Stats.RecordDeath(_id);
+    Stats.RecordDeath(_Id);
 
     // Controller rumble
     if (!mouseEnabled && Settings._ControllerRumble)
     {
       IEnumerator rumble()
       {
-        var gamepad = ControllerManager.GetPlayerGamepad(_id);
+        var gamepad = ControllerManager.GetPlayerGamepad(_Id);
         gamepad.SetMotorSpeeds(0.8f, 0.8f);
 
         yield return new WaitForSecondsRealtime(1.5f);
@@ -1929,7 +1926,7 @@ public class PlayerScript : MonoBehaviour
     if (source != null)
     {
       SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.DIE);
-      if (source._isPlayer && source._playerScript != null && source._playerScript._id != _id)
+      if (source._isPlayer && source._playerScript != null && source._playerScript._Id != _Id)
         SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.TEAM_KILL);
       if (damageSourceType == ActiveRagdoll.DamageSourceType.EXPLOSION)
         SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.EXPLODE);
@@ -1938,7 +1935,7 @@ public class PlayerScript : MonoBehaviour
 
     // Survival
     if (GameScript._GameMode == GameScript.GameModes.SURVIVAL)
-      GameScript.SurvivalMode.OnPlayerDead(_id);
+      GameScript.SurvivalMode.OnPlayerDead(_Id);
 
     // Remove ring
     IEnumerator fadeRing()
@@ -1961,7 +1958,7 @@ public class PlayerScript : MonoBehaviour
     // Slow motion on player death
     var lastplayer = true;
     foreach (var p0 in s_Players)
-      if (p0._id != _id && !p0._ragdoll._dead)
+      if (p0._Id != _Id && !p0._ragdoll._dead)
       {
         lastplayer = false;
         break;
@@ -2058,7 +2055,7 @@ public class PlayerScript : MonoBehaviour
         if (other.name.StartsWith("Money"))
         {
           var amount = int.Parse(other.name.Split(' ')[1]);
-          GameScript.SurvivalMode.GivePoints(_id, amount);
+          GameScript.SurvivalMode.GivePoints(_Id, amount);
           GameObject.Destroy(other.gameObject);
           if (Time.time - _LastMoneyPickupNoiseTime > 0.1f)
           {
