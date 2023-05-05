@@ -119,7 +119,7 @@ public class Powerup : MonoBehaviour
         break;
       case (Powerup.PowerupType.END):
         remove = false;
-        if (r._isPlayer && !GameScript._Singleton._ExitOpen)
+        if (r._isPlayer && !GameScript._s_Singleton._ExitOpen)
         {
           SfxManager.PlayAudioSourceSimple(r._controller.position, "Etc/Ping");
 
@@ -188,7 +188,7 @@ public class Powerup : MonoBehaviour
         return;
       }
       // If game ended, set activated2
-      if (GameScript._Singleton._GameEnded)
+      if (GameScript._s_Singleton._GameEnded)
       {
         _activated2 = true;
       }

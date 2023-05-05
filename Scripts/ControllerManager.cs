@@ -216,7 +216,7 @@ public static class ControllerManager
     {
       if (context.phase != InputActionPhase.Started) return;
       // Quick-remove in menu loadout editor
-      if (Menu2._InMenus && Menu2._CurrentMenu._type == Menu2.MenuType.EDIT_LOADOUT)
+      if (Menu2._InMenus && Menu2._CurrentMenu._Type == Menu2.MenuType.EDIT_LOADOUT)
         Menu2._CurrentMenu.QuickRemoveEdit();
     }
     void Input_action.IPlayerActions.OnReloadMap(InputAction.CallbackContext context)

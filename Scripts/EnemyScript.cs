@@ -624,7 +624,7 @@ public class EnemyScript : MonoBehaviour
           _atd = Time.time - _attackTime;
 
           // Check if game ended
-          if (GameScript._Singleton._GameEnded)
+          if (GameScript._s_Singleton._GameEnded)
           {
           }
 
@@ -972,7 +972,7 @@ public class EnemyScript : MonoBehaviour
   // Go through "Enemies" Transform children and init
   public static void HardInitAll()
   {
-    var enemies = GameScript._Singleton.transform.GetChild(0);
+    var enemies = GameScript._s_Singleton.transform.GetChild(0);
     for (var i = 0; i < enemies.childCount; i++)
     {
       var e = enemies.GetChild(i).GetChild(0).GetComponent<EnemyScript>();
@@ -1753,7 +1753,7 @@ public class EnemyScript : MonoBehaviour
     var last_killed = false;
     if (_Enemies_alive.Count == 0)
     {
-      GameScript._Singleton._goalPickupTime = Time.time;
+      GameScript._s_Singleton._goalPickupTime = Time.time;
     }
 
     // First enemy killed
@@ -1921,25 +1921,25 @@ public class EnemyScript : MonoBehaviour
                 if (!played_wrong)
                 {
                   played_wrong = true;
-                  SfxManager.PlayAudioSourceSimple(GameResources._Camera_Main.transform.GetChild(1).position, "Etc/Wrong", 0.95f, 1f);
+                  SfxManager.PlayAudioSourceSimple(GameResources._Camera_Main.transform.GetChild(1).position, "Etc/Wrong", 0.95f, 1f, SfxManager.AudioClass.NONE, false, false);
                 }
               }
               else if (i > ratingIndex)
               {
                 //SfxManager.PlayAudioSourceSimple(GameResources._Camera_Main.transform.GetChild(1).position, "Etc/Tick", 0.95f, 1f);
                 var mod = i * 0.15f;
-                SfxManager.PlayAudioSourceSimple(GameResources._Camera_Main.transform.GetChild(1).position, "Etc/Best_rank", 0.95f - mod, 1f - mod);
+                SfxManager.PlayAudioSourceSimple(GameResources._Camera_Main.transform.GetChild(1).position, "Etc/Best_rank", 0.95f - mod, 1f - mod, SfxManager.AudioClass.NONE, false, false);
               }
               else
               {
                 if (ratingIndex == 0)
-                  SfxManager.PlayAudioSourceSimple(GameResources._Camera_Main.transform.GetChild(1).position, "Etc/Best_rank", 0.95f, 1f);
+                  SfxManager.PlayAudioSourceSimple(GameResources._Camera_Main.transform.GetChild(1).position, "Etc/Best_rank", 0.95f, 1f, SfxManager.AudioClass.NONE, false, false);
                 else
                 {
                   //SfxManager.PlayAudioSourceSimple(GameResources._Camera_Main.transform.GetChild(1).position, "Etc/Bell", 0.95f, 1f);
 
                   var mod = i * 0.15f;
-                  SfxManager.PlayAudioSourceSimple(GameResources._Camera_Main.transform.GetChild(1).position, "Etc/Best_rank", 0.95f - mod, 1f - mod);
+                  SfxManager.PlayAudioSourceSimple(GameResources._Camera_Main.transform.GetChild(1).position, "Etc/Best_rank", 0.95f - mod, 1f - mod, SfxManager.AudioClass.NONE, false, false);
                 }
               }
 

@@ -8,7 +8,7 @@ public class GameScript : MonoBehaviour
 {
   public static TextMesh _debugText;
 
-  public static GameScript _Singleton;
+  public static GameScript _s_Singleton;
 
   public static bool _Paused;
 
@@ -52,7 +52,7 @@ public class GameScript : MonoBehaviour
   }
   public static void OnApplicationQuitS()
   {
-    _Singleton.OnApplicationQuit();
+    _s_Singleton.OnApplicationQuit();
   }
 
   static float _levelEndTimer;
@@ -111,7 +111,7 @@ public class GameScript : MonoBehaviour
   // Use this for initialization
   void Start()
   {
-    _Singleton = this;
+    _s_Singleton = this;
 
     //
     _debugText = GameObject.Find("DebugText").GetComponent<TextMesh>();
@@ -273,10 +273,10 @@ public class GameScript : MonoBehaviour
     {
       if (_tutorialCo != null)
       {
-        _Singleton.StopCoroutine(_tutorialCo);
+        _s_Singleton.StopCoroutine(_tutorialCo);
         _tutorialCo = null;
       }
-      _tutorialCo = _Singleton.StartCoroutine(tutorialfunction());
+      _tutorialCo = _s_Singleton.StartCoroutine(tutorialfunction());
     }
   }
 
@@ -1751,7 +1751,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         profile.HandleMenuInput();
 
       // Check if checking for controllers
-      if (Menu2._CurrentMenu._type == Menu2.MenuType.CONTROLLERS_CHANGED)
+      if (Menu2._CurrentMenu._Type == Menu2.MenuType.CONTROLLERS_CHANGED)
       {
         var numplayers = (ControllerManager._NumberGamepads) + (Settings._ForceKeyboard ? 1 : 0);
         if (numplayers >= Menu2._Save_NumPlayers)
@@ -1824,13 +1824,14 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     public float[] _directionalAxis;
 
     int loadoutIndex;
-    public int _loadoutIndex
+    public int _LoadoutIndex
     {
       get { return loadoutIndex; }
       set
       {
         if (Levels._HardcodedLoadout != null && !GameScript._EditorTesting) return;
         if (_GameMode != GameModes.CLASSIC) return;
+        if (_Player?._ragdoll?._grappling ?? false) return;
         var iter = ItemManager.Loadout._Loadouts.Length;
         var difference = value - loadoutIndex;
         while (iter >= 0)
@@ -1845,10 +1846,14 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         UpdateIcons();
 
         // If in loadout menu, update colors
-        if (Menu2._InMenus && Menu2._CurrentMenu._type == Menu2.MenuType.SELECT_LOADOUT)
+        if (Menu2._InMenus && Menu2._CurrentMenu._Type == Menu2.MenuType.SELECT_LOADOUT)
         {
+          Menu2.TriggerActionSwapTo(Menu2.MenuType.SELECT_LOADOUT);
+          /*var save_selection = Menu2.GetCurrentSelection();
+          Menu2.SetCurrentSelection(0);
+          Menu2.SetCurrentSelection(save_selection);
           Menu2._CanRender = false;
-          Menu2.RenderMenu();
+          Menu2.RenderMenu();*/
         }
       }
     }
@@ -1870,7 +1875,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         if (_GameMode == GameModes.SURVIVAL && SurvivalMode._PlayerLoadouts != null) return SurvivalMode._PlayerLoadouts[_Id];
 
         // CLASSIC mode
-        return ItemManager.Loadout._Loadouts[_loadoutIndex];
+        return ItemManager.Loadout._Loadouts[_LoadoutIndex];
       }
     }
 
@@ -2014,10 +2019,10 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     public void ChangeLoadoutIfEmpty(int max_loadout = 4)
     {
       // Bounds-check _loadoutIndex
-      if (max_loadout != 4 && _loadoutIndex > max_loadout)
-        _loadoutIndex = 0;
+      if (max_loadout != 4 && _LoadoutIndex > max_loadout)
+        _LoadoutIndex = 0;
       else if (_equipment.IsEmpty())
-        _loadoutIndex++;
+        _LoadoutIndex++;
 
       // Update UI
       UpdateIcons();
@@ -2072,9 +2077,9 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       {
         // Check loadout change
         if (ControllerManager.GetKey(ControllerManager.Key.Z))
-          _loadoutIndex--;
+          _LoadoutIndex--;
         if (ControllerManager.GetKey(ControllerManager.Key.C))
-          _loadoutIndex++;
+          _LoadoutIndex++;
         return;
       }
       // Check axis selections
@@ -2084,7 +2089,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         if (_directionalAxis[2] <= 0f)
         {
           _directionalAxis[2] = 1f;
-          _loadoutIndex++;
+          _LoadoutIndex++;
         }
       }
       else if (y < -0.75f)
@@ -2092,7 +2097,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         if (_directionalAxis[2] >= 0f)
         {
           _directionalAxis[2] = -1f;
-          _loadoutIndex--;
+          _LoadoutIndex--;
         }
       }
       else
@@ -2141,7 +2146,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       _playerColor = PlayerPrefs.GetInt($"{_playerPrefsPrefix}color", _Id);
       _holdRun = PlayerPrefs.GetInt($"{_playerPrefsPrefix}holdRun", 1) == 1;
       _faceMovement = PlayerPrefs.GetInt($"{_playerPrefsPrefix}faceDir", 1) == 1;
-      _loadoutIndex = PlayerPrefs.GetInt($"{_playerPrefsPrefix}loadoutIndex", 0);
+      _LoadoutIndex = PlayerPrefs.GetInt($"{_playerPrefsPrefix}loadoutIndex", 0);
       _reloadSidesSameTime = PlayerPrefs.GetInt($"{_playerPrefsPrefix}reloadSidesSameTime", 1) == 1;
     }
 
@@ -2276,7 +2281,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
           _ammo[i].localScale = localScale;
           _ammo[i].localEulerAngles = Vector3.zero;
           _ammo[i].localPosition = new Vector3(0.36f + index * 0.8f + _Offset.x, -0.23f + _Offset.y, 0f) + new Vector3(Mathf.Lerp(0f, 0.7f, (float)i / _ammoCount), 0f, 0f) + new Vector3(localScale.x / 2f, 0f, 0f);
-          _ammo[i].GetComponent<Renderer>().sharedMaterial = _Singleton._item_materials[0];
+          _ammo[i].GetComponent<Renderer>().sharedMaterial = _s_Singleton._item_materials[0];
           if (i >= ammo) _ammo[i].gameObject.SetActive(false);
         }
       }
@@ -2580,8 +2585,8 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
           for (int i = 0; i < mesh.sharedMaterials.Length; i++)
           {
             var shared = mesh.sharedMaterials;
-            if (shared[i].name.Equals("Item")) shared[i] = _Singleton._item_materials[0];
-            else shared[i] = _Singleton._item_materials[1];
+            if (shared[i].name.Equals("Item")) shared[i] = _s_Singleton._item_materials[0];
+            else shared[i] = _s_Singleton._item_materials[1];
             mesh.sharedMaterials = shared;
           }
         return item;
@@ -2650,7 +2655,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     if (toggle && _CameraLight.intensity != 0f) return;
     else if (!toggle && _CameraLight.intensity == 0f) return;
     if (_movecam != null) return;
-    _movecam = _Singleton.StartCoroutine(ToggleCameraLightCo(toggle));
+    _movecam = _s_Singleton.StartCoroutine(ToggleCameraLightCo(toggle));
   }
   static IEnumerator ToggleCameraLightCo(bool toggle)
   {
@@ -2688,8 +2693,8 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
 
       public static void Init()
       {
-        _Loadouts = new Loadout[10];
-        for (int i = 0; i < _Loadouts.Length; i++)
+        _Loadouts = new Loadout[Shop._s_LoadoutCount._value];
+        for (var i = 0; i < _Loadouts.Length; i++)
           _Loadouts[i] = new Loadout(i);
       }
 
@@ -3062,6 +3067,8 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
           return 0;
 
         case Shop.Perk.PerkType.SMART_BULLETS:
+          return 4;
+        case Shop.Perk.PerkType.GRAPPLE_MASTER:
           return 3;
       }
       return 100;
@@ -3272,7 +3279,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     }
 
     // Check demo
-    if (_Singleton._IsDemo && Levels._CurrentLevelIndex + 1 >= 48)
+    if (_s_Singleton._IsDemo && Levels._CurrentLevelIndex + 1 >= 48)
     {
       Menu2._SaveMenuDir = -1;
       Shop.s_UnlockString += $"- you've reached the end of the <color=cyan>demo</color> for CLASSIC mode\n- purchase the game to access the rest of the game!\n";
@@ -3391,8 +3398,8 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     if (_Coroutine_load != null) return;
 
     // Begin coroutine
-    _Singleton._GameEnded = true;
-    _Coroutine_load = _Singleton.StartCoroutine(NextLevelCo(levelData));
+    _s_Singleton._GameEnded = true;
+    _Coroutine_load = _s_Singleton.StartCoroutine(NextLevelCo(levelData));
   }
   static IEnumerator NextLevelCo(string levelData)
   {
@@ -3430,7 +3437,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     TileManager.LoadMap(levelData);
     System.GC.Collect();
     yield return new WaitForSeconds(0.05f);
-    _Singleton._GameEnded = false;
+    _s_Singleton._GameEnded = false;
 
     // Check for editor enable
     while (TileManager._LoadingMap)
@@ -3452,21 +3459,21 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
   public float _goalPickupTime;
   public static void ToggleExit(bool toggle = true)
   {
-    if (_Singleton._ExitOpen == toggle) return;
-    _Singleton._ExitOpen = toggle;
+    if (_s_Singleton._ExitOpen == toggle) return;
+    _s_Singleton._ExitOpen = toggle;
     if (toggle)
     {
-      _Singleton._goalPickupTime = Time.time;
+      _s_Singleton._goalPickupTime = Time.time;
     }
   }
 
   public static void FadeIn()
   {
-    _Singleton.StartCoroutine(FadeScreen(true));
+    _s_Singleton.StartCoroutine(FadeScreen(true));
   }
   public static void FadeOut()
   {
-    _Singleton.StartCoroutine(FadeScreen(false));
+    _s_Singleton.StartCoroutine(FadeScreen(false));
   }
   static IEnumerator FadeScreen(bool toggle)
   {

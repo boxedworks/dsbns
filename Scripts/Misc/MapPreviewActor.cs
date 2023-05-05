@@ -31,7 +31,7 @@ public class MapPreviewActor : MonoBehaviour {
         if (Physics.Raycast(new Ray(transform.position, transform.up * 100f), out h))
         {
           Transform laser = transform.GetChild(0);
-          laser.parent = GameScript._Singleton.transform;
+          laser.parent = GameScript._s_Singleton.transform;
           laser.localScale = new Vector3(0.02f, h.distance, 0.02f);
           laser.position = transform.position + transform.up * laser.lossyScale.y / 2f;
           laser.parent = transform;

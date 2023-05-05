@@ -444,7 +444,7 @@ public class BulletScript : MonoBehaviour
     _triggered = true;
     _light.enabled = false;
     if (_p == null) return;
-    GameScript._Singleton.StartCoroutine(LagParticles(1f));
+    GameScript._s_Singleton.StartCoroutine(LagParticles(1f));
   }
   public static void HideAll()
   {

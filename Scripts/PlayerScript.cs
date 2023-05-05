@@ -179,7 +179,7 @@ public class PlayerScript : MonoBehaviour
     GameScript.ItemManager.SpawnItem(_Equipment._item_right1);
     EquipStart();
 
-    _saveLoadoutIndex = _Profile._loadoutIndex;
+    _saveLoadoutIndex = _Profile._LoadoutIndex;
 
     // Set camera position
     _camPos = GameResources._Camera_Main.transform.position;
@@ -217,8 +217,8 @@ public class PlayerScript : MonoBehaviour
     {
 
       // Clean up old light if exists
-      if (GameScript._Singleton._Thunder_Light != null)
-        GameObject.DestroyImmediate(GameScript._Singleton._Thunder_Light.gameObject);
+      if (GameScript._s_Singleton._Thunder_Light != null)
+        GameObject.DestroyImmediate(GameScript._s_Singleton._Thunder_Light.gameObject);
 
       // Handle creating rain SFX
       if (SceneThemes._Theme._rain)
@@ -238,7 +238,7 @@ public class PlayerScript : MonoBehaviour
         thunder_light.shadowNearPlane = 7f;
         //thunder_light.shadows = LightShadows.Soft;
 
-        GameScript._Singleton._Thunder_Light = thunder_light;
+        GameScript._s_Singleton._Thunder_Light = thunder_light;
       }
 
       // Clean up rain SFX
@@ -742,7 +742,7 @@ public class PlayerScript : MonoBehaviour
     if (!_isauto)
       HandleInput();
 
-    if (TileManager._LoadingMap || GameScript._Singleton._GameEnded || GameScript._Paused)
+    if (TileManager._LoadingMap || GameScript._s_Singleton._GameEnded || GameScript._Paused)
     {
       Time.timeScale = 1f;
       return;
@@ -850,7 +850,7 @@ public class PlayerScript : MonoBehaviour
     float unscaled_dt = Time.unscaledDeltaTime,
       dt = Time.deltaTime;
 
-    if (_Id == 0 && GameScript._Singleton._UseCamera)
+    if (_Id == 0 && GameScript._s_Singleton._UseCamera)
     {
       var camera_height = Settings._CameraZoom == 1 ? 14f : Settings._CameraZoom == 0 ? 10f : 18f;
       if (Settings._CameraType._value)
@@ -958,9 +958,9 @@ public class PlayerScript : MonoBehaviour
           sharedForward /= 1.4f;
 
         var changePos = Vector3.zero;
-        if (GameScript._Singleton._X) changePos.x = sharedPos.x + sharedForward.x;
-        if (GameScript._Singleton._Y) changePos.y = sharedPos.y;
-        if (GameScript._Singleton._Z) changePos.z = sharedPos.z + sharedForward.z;
+        if (GameScript._s_Singleton._X) changePos.x = sharedPos.x + sharedForward.x;
+        if (GameScript._s_Singleton._Y) changePos.y = sharedPos.y;
+        if (GameScript._s_Singleton._Z) changePos.z = sharedPos.z + sharedForward.z;
 
         /*if (_cycle_objects)
         {
@@ -1026,7 +1026,7 @@ public class PlayerScript : MonoBehaviour
       return;
 
     //
-    if (_saveLoadoutIndex != _Profile._loadoutIndex)
+    if (_saveLoadoutIndex != _Profile._LoadoutIndex)
       ResetLoadout();
 
     // Spawn enemies as player gets closer to goal; 3rd difficulty / game mode ?
@@ -1550,13 +1550,13 @@ public class PlayerScript : MonoBehaviour
   {
     if (_ragdoll._dead) return;
     // Check changed loadout profile
-    if (_Profile._loadoutIndex != _saveLoadoutIndex)
+    if (_Profile._LoadoutIndex != _saveLoadoutIndex)
     {
       if (MathC.Get2DDistance(transform.position, PlayerspawnScript._PlayerSpawns[0].transform.position) > 1.2f)
-        _Profile._loadoutIndex = _saveLoadoutIndex;
+        _Profile._LoadoutIndex = _saveLoadoutIndex;
       else
       {
-        EquipLoadout(_Profile._loadoutIndex);
+        EquipLoadout(_Profile._LoadoutIndex);
         if (EnemyScript._Enemies_dead?.Count > 0)
           _EquipmentChanged = true;
       }
@@ -1565,7 +1565,7 @@ public class PlayerScript : MonoBehaviour
 
   public void EquipLoadout(int loadoutIndex, bool checkCanSwap = true)
   {
-    _Profile._loadoutIndex = loadoutIndex;
+    _Profile._LoadoutIndex = loadoutIndex;
 
     _Profile._equipmentIndex = 0;
     if (!checkCanSwap || _ragdoll.CanSwapWeapons())
@@ -1591,7 +1591,7 @@ public class PlayerScript : MonoBehaviour
         }
       RegisterUtilities();
       _Profile.UpdateIcons();
-      _saveLoadoutIndex = _Profile._loadoutIndex;
+      _saveLoadoutIndex = _Profile._LoadoutIndex;
     }
   }
 
@@ -1686,7 +1686,7 @@ public class PlayerScript : MonoBehaviour
           break;
         }
     }
-    if (reset && !GameScript._Singleton._GameEnded)
+    if (reset && !GameScript._s_Singleton._GameEnded)
     {
       if (GameScript.ReloadMap(true, true))
       {
@@ -1770,7 +1770,7 @@ public class PlayerScript : MonoBehaviour
             var money = GameObject.Instantiate(GameResources._Money) as GameObject;
             GameScript.SurvivalMode.AddMoney(money);
             money.name = $"Money {points}";
-            money.transform.parent = GameScript._Singleton.transform;
+            money.transform.parent = GameScript._s_Singleton.transform;
             money.transform.position = _ragdoll._hip.position + _ragdoll._hip.transform.forward * 0.2f;
             var collider = money.GetComponent<Collider>();
             var collider0 = _ragdoll._hip.GetComponents<Collider>()[1];
@@ -1953,7 +1953,7 @@ public class PlayerScript : MonoBehaviour
       }
       if (_ring != null) _ring[0].transform.parent.gameObject.SetActive(false);
     }
-    GameScript._Singleton.StartCoroutine(fadeRing());
+    GameScript._s_Singleton.StartCoroutine(fadeRing());
 
     // Slow motion on player death
     var lastplayer = true;
@@ -2019,13 +2019,13 @@ public class PlayerScript : MonoBehaviour
           tutorial_ui1.position =
           new Vector3(1000f, 0f, 0f);
       }
-      GameScript._Singleton.StartCoroutine(FlashRestart());
+      GameScript._s_Singleton.StartCoroutine(FlashRestart());
     }
     // Play death sound
     //_ragdoll._audioPlayer.volume = 1f;
 
     // If has the exit and dies, re-drop the exit so someone else can pick it up
-    if (!_HasExit || GameScript._Singleton._GameEnded) return;
+    if (!_HasExit || GameScript._s_Singleton._GameEnded) return;
     GameScript.ToggleExit(false);
     _HasExit = false;
     GameScript._inLevelEnd = false;

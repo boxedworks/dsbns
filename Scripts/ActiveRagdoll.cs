@@ -889,7 +889,7 @@ public class ActiveRagdoll
           if (_itemR != null && _itemR.CanReload())
             _itemR.Reload();
         }
-        GameScript._Singleton.StartCoroutine(delayedReload());
+        GameScript._s_Singleton.StartCoroutine(delayedReload());
       }
     }
     //else if (_itemL != null && !_itemL._melee && _isPlayer) DisplayText("already reloading L");
@@ -1051,8 +1051,8 @@ public class ActiveRagdoll
       return;
     }
     if (_color_Coroutine != null)
-      GameScript._Singleton.StopCoroutine(_color_Coroutine);
-    _color_Coroutine = GameScript._Singleton.StartCoroutine(LerpColor(mesh, c, lerpAmount));
+      GameScript._s_Singleton.StopCoroutine(_color_Coroutine);
+    _color_Coroutine = GameScript._s_Singleton.StartCoroutine(LerpColor(mesh, c, lerpAmount));
   }
   void SetLerpAmount(ref SkinnedMeshRenderer mesh, Color c, float normalized, Color sc0, Color sc1)
   {
@@ -1108,6 +1108,10 @@ public class ActiveRagdoll
       {
         _lastMetalHit = Time.time;
         PlaySound("Enemies/Metal_hit", 0.8f, 1.2f);
+
+        var parts = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.BULLET_COLLIDE)[0];
+        parts.transform.position = _hip.position;
+        parts.Play();
       }
       return false;
     }
@@ -1136,13 +1140,19 @@ public class ActiveRagdoll
           if (save_health > health_threshhold && _health <= health_threshhold)
             RemoveArmor(hitForce, false);
           else
+          {
             PlaySound("Enemies/Metal_hit", 0.8f, 1.2f);
+            var parts = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.BULLET_COLLIDE)[0];
+            parts.transform.position = _hip.position;
+            parts.Play();
+          }
         }
         else if (_health > 0)
           if (damageSourceType == DamageSourceType.FIRE)
           {
             PlaySound("Ragdoll/Combust");
             FunctionsC.PlayComplexParticleSystemAt(FunctionsC.ParticleSystemType.FIREBALL, _hip.position);
+
             var parts = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.BULLET_COLLIDE)[0];
             parts.transform.position = _hip.position;
             parts.Play();
@@ -1157,21 +1167,33 @@ public class ActiveRagdoll
         if (_hasArmor)
         {
           spawnBlood = false;
-          if (save_health > 1 && damage > 0)
+          if (_health <= 1 && save_health > 1)
           {
             RemoveArmor(hitForce, false);
-            // Change color to normal
-            ChangeColor(Color.green, 0.8f);
+
+            if (_health < 1)
+            {
+              spawnBlood = true;
+            }
+            else
+
+            // Change color to normal for survival
+            if (_enemyScript?._survivalAttributes != null)
+              ChangeColor(Color.green, 0.8f);
           }
           else if (_health > 0)
+          {
             PlaySound("Enemies/Metal_hit", 0.8f, 1.2f);
-
+            var parts = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.BULLET_COLLIDE)[0];
+            parts.transform.position = _hip.position;
+            parts.Play();
+          }
         }
         else
         {
           if (damageSourceType == DamageSourceType.FIRE)
           {
-            PlaySound("Ragdoll/Combust");
+            PlaySound("Ragdoll/Combust", 0.9f, 1.1f);
             FunctionsC.PlayComplexParticleSystemAt(FunctionsC.ParticleSystemType.FIREBALL, _hip.position);
             FunctionsC.SpawnExplosionScar(_hip.position);
             var parts = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.BULLET_COLLIDE)[0];
@@ -1179,7 +1201,7 @@ public class ActiveRagdoll
             parts.Play();
           }
           else
-            PlaySound("Ragdoll/Punch");
+            PlaySound("Ragdoll/Punch", 0.9f, 1.1f);
         }
       }
 
@@ -1192,6 +1214,7 @@ public class ActiveRagdoll
   public bool _grappling { get { return _grapplee != null; } }
   public bool _grappled;
   public ActiveRagdoll _grappler, _grapplee;
+  float _lastTryGrapple;
   float _kickTimer, _kickTimer_start;
   bool _kicking;
   public void Grapple(bool gentle)
@@ -1235,39 +1258,74 @@ public class ActiveRagdoll
 
         _grapplee._controller.position = _grapplee._hip.position;
         _grapplee._controller.rotation = _controller.rotation;
+
+        // Check armor perk
+        if (_playerScript?.HasPerk(Shop.Perk.PerkType.GRAPPLE_MASTER) ?? false)
+        {
+          if (_grapplee._hasArmor)
+          {
+            _grapplee.RemoveArmor(Vector3.zero);
+            _grapplee._health = 1;
+          }
+        }
       }
       _grapplee._grappled = false;
       _grapplee._grappler = null;
       _grapplee = null;
 
+      PlaySound("Enemies/Grapple", 0.65f, 0.8f);
     }
 
     // Grapple a ragdoll
-    else
+    else if (Time.time - _lastTryGrapple > 0.5f)
     {
+      _lastTryGrapple = Time.time;
 
-      // Raycast for ragdoll
-      RaycastHit hit;
-      ToggleRaycasting(false);
-      if (Physics.SphereCast(_controller.position, 0.25f, _controller.forward, out hit, 0.5f, EnemyScript._Layermask_Ragdoll))
+      IEnumerator TryGrapple()
       {
-        var ragdoll = ActiveRagdoll.GetRagdoll(hit.collider.gameObject);
-        if (ragdoll == null)
-        {
-          ToggleRaycasting(true);
-          return;
-        }
 
-        // Check facing somewhat away dir
-        if ((_controller.forward - ragdoll._controller.forward).magnitude > 0.9f)
-        {
-          ToggleRaycasting(true);
-          return;
-        }
+        // FX
+        PlaySound("Enemies/Grapple", 0.9f, 1.1f);
 
-        // Grab ragdoll
-        Grapple(ragdoll);
+        // Try a few times to feel better with controls
+        var i = 4;
+        while (i-- > 0)
+        {
+
+          // Raycast for ragdoll
+          RaycastHit hit;
+          ToggleRaycasting(false);
+          var dir = _controller.forward;
+          if (i == 2)
+            dir += _controller.right * 0.25f;
+          else if (i == 1)
+            dir += -_controller.right * 0.25f;
+          if (Physics.SphereCast(_controller.position, 0.3f, dir, out hit, 0.75f, EnemyScript._Layermask_Ragdoll))
+          {
+            var ragdoll = ActiveRagdoll.GetRagdoll(hit.collider.gameObject);
+            if (ragdoll == null)
+            {
+              ToggleRaycasting(true);
+              break;
+            }
+
+            // Check facing somewhat away dir
+            if ((_controller.forward - ragdoll._controller.forward).magnitude > 0.9f)
+            {
+              ToggleRaycasting(true);
+              break;
+            }
+
+            // Grab ragdoll
+            Grapple(ragdoll);
+            break;
+          }
+
+          yield return new WaitForSeconds(0.1f);
+          if (_dead) break;
+        }
       }
+      GameScript._s_Singleton.StartCoroutine(TryGrapple());
 
       /*/ Kick
       else if (!_kicking && Time.time - _kickTimer_start >= 2f)
@@ -1296,6 +1354,14 @@ public class ActiveRagdoll
       agent.enabled = false;
     }
 
+    // Check armor perk
+    if (_playerScript?.HasPerk(Shop.Perk.PerkType.GRAPPLE_MASTER) ?? false)
+    {
+      other.AddArmor();
+      other._health = 3;
+    }
+
+    // Fire event
     other._enemyScript?.OnGrappled();
   }
 
@@ -1387,7 +1453,7 @@ public class ActiveRagdoll
         }
       }
       PlaySound("Enemies/Electric_Shock");
-      GameScript._Singleton.StartCoroutine(PlaySparks());
+      GameScript._s_Singleton.StartCoroutine(PlaySparks());
       return;
     }
 
@@ -1416,7 +1482,7 @@ public class ActiveRagdoll
         confetti.transform.Rotate(new Vector3(1f, 0f, 0f), UnityEngine.Random.value * -20f);
         rotationConfetti = confetti.transform.localRotation;
 
-        GameScript._Singleton.StartCoroutine(BloodFollow(confetti));
+        GameScript._s_Singleton.StartCoroutine(BloodFollow(confetti));
 
         // Audio
         PlaySound("Ragdoll/Confetti", 0.6f, 1.2f);
@@ -1490,7 +1556,7 @@ public class ActiveRagdoll
         giblets.Play();
       }
 
-      GameScript._Singleton.StartCoroutine(BloodFollow(blood));
+      GameScript._s_Singleton.StartCoroutine(BloodFollow(blood));
 
       // Audio
       PlaySound("Ragdoll/Blood", 1.2f, 1.5f);
@@ -1705,6 +1771,8 @@ public class ActiveRagdoll
     var armor = GameObject.Instantiate(GameResources._Armor);
     var helmet = armor.transform.GetChild(0);
 
+    PlaySound("Enemies/Armor_give", 0.9f, 1.1f);
+
     // Equip helmet
     _head.transform.localScale = new Vector3(0.3f, 0.3f, 0.3f);
 
@@ -1721,7 +1789,11 @@ public class ActiveRagdoll
   {
     if (!_hasArmor) return;
 
-    PlaySound("Enemies/Armor_break");
+    PlaySound("Enemies/Armor_break", 0.9f, 1.1f);
+
+    var parts = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.BULLET_COLLIDE)[0];
+    parts.transform.position = _hip.position;
+    parts.Play();
 
     var helmet = _head.transform.GetChild(0).gameObject;
     helmet.transform.parent =

@@ -120,12 +120,6 @@ public static class SfxManager
   //
   public static void PlayAudioSource(AudioSource audioSource, AudioClass audioClass, bool changePitch = true)
   {
-
-    if (audioSource.loop)
-    {
-      Debug.LogError("AAAAAAA gotcha: " + audioSource.gameObject.name);
-    }
-
     s_audioSourcesPlaying.Add(new AudioData()
     {
       _audioSource = audioSource,
@@ -172,7 +166,7 @@ public static class SfxManager
   }
   public static AudioSource PlayAudioSourceSimple(Vector3 position, string audioPath, float pitchMin = 0.9f, float pitchMax = 1.1f, AudioClass audioClass = AudioClass.NONE, bool priority = false, bool changePitch = true)
   {
-    var audioClipData = FunctionsC.GetAudioClip(audioPath);
+    var audioClipData = FunctionsC.GetAudioSource(audioPath);
     return PlayAudioSourceSimple(position, audioClipData.clip, audioClass, audioClipData.volume, pitchMin != pitchMax ? Random.Range(pitchMin, pitchMax) : pitchMin, priority, changePitch);
   }
 

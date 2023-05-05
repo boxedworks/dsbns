@@ -56,7 +56,7 @@ public class TileManager
       if (_Text_GameOver.text != "")
         _Text_GameOver.text = $"<color={color_base}>{text}</color>";
     }
-    GameScript._Singleton.StartCoroutine(ShowTextCo());
+    GameScript._s_Singleton.StartCoroutine(ShowTextCo());
     _Text_GameOver.gameObject.SetActive(true);
   }
   public static void HideGameOverText()
@@ -161,7 +161,7 @@ public class TileManager
 
       ResetMonie(index);
     }
-    GameScript._Singleton.StartCoroutine(MoveMonieCo());
+    GameScript._s_Singleton.StartCoroutine(MoveMonieCo());
   }
 
   public static void Init()
@@ -892,15 +892,18 @@ public class TileManager
     GameScript._LevelStartTime = Time.time;
 
     // Lerp cam distance
-    GameScript._Singleton.StartCoroutine(LerpCam());
+    GameScript._s_Singleton.StartCoroutine(LerpCam());
 
     // Init all enemies
     EnemyScript.HardInitAll();
 
-    // Hide menus
-    if (Menu2._InMenus && _s_mapIndex > 1)
+    // Spawn players / hide menus
+    if (_s_mapIndex > 1)
     {
-      Menu2.HideMenus();
+      if (Menu2._InMenus)
+      {
+        Menu2.HideMenus();
+      }
 
       // Spawn player
       GameScript.SpawnPlayers();
@@ -908,7 +911,7 @@ public class TileManager
 
     // Refill player ammo
     if (Players != null)
-      foreach (PlayerScript p in Players) p._ragdoll.RefillAmmo();
+      foreach (var p in Players) p._ragdoll.RefillAmmo();
     OnMapLoad();
 
     // Append to maps
@@ -1407,7 +1410,7 @@ public class TileManager
                 var idP = int.Parse(id);
                 //Debug.Log(GameScript._Singleton.transform.GetChild(0).childCount);
                 //Debug.Log(idP);
-                var enemies = GameScript._Singleton.transform.GetChild(0);
+                var enemies = GameScript._s_Singleton.transform.GetChild(0);
                 if (idP >= enemies.childCount)
                 {
                   throw new System.IndexOutOfRangeException($"Trying to link door with enemy ID {idP} out of {enemies.childCount}");
@@ -1895,7 +1898,7 @@ public class TileManager
       yield return new WaitForSecondsRealtime(0.1f);
       CombineMeshes(false);
     }
-    GameScript._Singleton.StartCoroutine(co());
+    GameScript._s_Singleton.StartCoroutine(co());
 
     // Set level time
     GameScript._LevelStartTime = Time.time;
@@ -2091,86 +2094,69 @@ public class TileManager
       switch (i)
       {
 
-        // Spawn enemy
+        // Spawn enemy / books
         case 1:
 
           button.onClick.AddListener(() =>
           {
-            if (ControllerManager.ShiftHeld())
-              SpawnObjectSimple(_LEO_Books);
-            else
+            if (!ControllerManager.ShiftHeld())
               SpawnObjectSimple(_LEO_Enemy);
+            else
+              SpawnObjectSimple(_LEO_Books);
           });
           break;
 
-        // Spawn barrel
+        // Spawn barrel / tv
         case 2:
 
           button.onClick.AddListener(() =>
           {
-            if (ControllerManager.ShiftHeld())
-              SpawnObjectSimple(_LEO_TV);
-            else
+            if (!ControllerManager.ShiftHeld())
               SpawnObjectSimple(_LEO_Barrel);
+            else
+              SpawnObjectSimple(_LEO_TV);
           });
           break;
 
-        // Spawn Table
+        // Spawn Table / small
         case 3:
 
           button.onClick.AddListener(() =>
           {
-            SpawnObjectSimple(_LEO_Table);
+            if (!ControllerManager.ShiftHeld())
+              SpawnObjectSimple(_LEO_Table);
+            else
+              SpawnObjectSimple(_LEO_TableSmall);
           });
           break;
 
-        // Spawn Bookcase
+        // Spawn Bookcase / small
         case 4:
 
           button.onClick.AddListener(() =>
           {
-            SpawnObjectSimple(_LEO_BookcaseBig);
+            if (!ControllerManager.ShiftHeld())
+              SpawnObjectSimple(_LEO_BookcaseBig);
+            else
+              SpawnObjectSimple(_LEO_BookcaseOpen);
+
           });
           break;
 
-        // Spawn Bookcase small
+        // Spawn candle / smaller
         case 5:
 
           button.onClick.AddListener(() =>
           {
-            SpawnObjectSimple(_LEO_BookcaseOpen);
+            if (!ControllerManager.ShiftHeld())
+              SpawnObjectSimple(_LEO_CandelBig);
+            else
+              SpawnObjectSimple(_LEO_CandelTable);
           });
           break;
 
-        // Spawn Chair
+        // Spawn candle smallest
         case 6:
-
-          button.onClick.AddListener(() =>
-          {
-            SpawnObjectSimple(_LEO_Chair);
-          });
-          break;
-
-        // Spawn Candle
-        case 7:
-
-          button.onClick.AddListener(() =>
-          {
-            SpawnObjectSimple(_LEO_CandelBig);
-          });
-          break;
-
-        // Spawn Candle smaller
-        case 8:
-
-          button.onClick.AddListener(() =>
-          {
-            SpawnObjectSimple(_LEO_CandelTable);
-          });
-          break;
-
-        // Spawn Candle smallest
-        case 9:
 
           button.onClick.AddListener(() =>
           {
@@ -2178,32 +2164,47 @@ public class TileManager
           });
           break;
 
-        // Spawn Door
+        // Spawn door / button
+        case 7:
+
+          button.onClick.AddListener(() =>
+          {
+            if (!ControllerManager.ShiftHeld())
+              SpawnObjectSimple(_LEO_Door);
+            else
+              SpawnObjectSimple(_LEO_Button);
+          });
+          break;
+
+        // Spawn wall / cover
+        case 8:
+
+          button.onClick.AddListener(() =>
+          {
+            if (!ControllerManager.ShiftHeld())
+              SpawnObjectSimple(_LEO_TileWall);
+            else
+              SpawnObjectSimple(_LEO_FakeTile);
+          });
+          break;
+
+        // Spawn chair
+        case 9:
+
+          button.onClick.AddListener(() =>
+          {
+            SpawnObjectSimple(_LEO_Chair);
+          });
+          break;
+
+        // Spawn doorway
         case 10:
 
           button.onClick.AddListener(() =>
           {
-            SpawnObjectSimple(_LEO_Door);
+            SpawnObjectSimple(_LEO_Arch);
           });
           break;
-
-        // Spawn Fake wall
-        case 11:
-
-          button.onClick.AddListener(() =>
-          {
-            SpawnObjectSimple(_LEO_TileWall);
-          });
-          break;
-
-        /*/ Spawn Button
-        case 11:
-
-          button.onClick.AddListener(() =>
-          {
-            SpawnObjectSimple(_LEO_Button);
-          });
-          break;*/
 
         // Edit tiles
         case 12:
@@ -2356,7 +2357,7 @@ public class TileManager
       _Pointer = GameObject.CreatePrimitive(PrimitiveType.Sphere).transform;
       GameObject.Destroy(_Pointer.GetComponent<Collider>());
       _Pointer.gameObject.name = "Pointer";
-      _Pointer.parent = GameScript._Singleton.transform;
+      _Pointer.parent = GameScript._s_Singleton.transform;
       _Pointer.gameObject.layer = 2;
       MeshRenderer m = _Pointer.GetComponent<MeshRenderer>();
       m.sharedMaterial = GameObject.Find("BlackFade").GetComponent<MeshRenderer>().sharedMaterial;
@@ -3688,7 +3689,7 @@ public class TileManager
       }
       // Toggle
       if (ControllerManager.GetMouseInput(1, ControllerManager.InputMode.DOWN) && _Selected_Tiles != null)
-        GameScript._Singleton.StartCoroutine(Tile.LerpPositions(_Selected_Tiles.ToArray(), 0f, false));
+        GameScript._s_Singleton.StartCoroutine(Tile.LerpPositions(_Selected_Tiles.ToArray(), 0f, false));
     }
     ,
     _UpdateFunction_Object = (GameObject selection) =>
@@ -4538,7 +4539,7 @@ public class TileManager
     background.parent = container;
     background.transform.localPosition = Vector3.zero;
     background.transform.localScale = new Vector3(1f, 1f, 0.1f);
-    GameScript._Singleton.StartCoroutine(GetMapPreviewCo(container, mapData));
+    GameScript._s_Singleton.StartCoroutine(GetMapPreviewCo(container, mapData));
     return container;
   }
 
@@ -4859,12 +4860,12 @@ public class TileManager
     }
 
     // Set preview pos
-    if (Menu2._CurrentMenu._type == Menu2.MenuType.EDITOR_LEVELS)
+    if (Menu2._CurrentMenu._Type == Menu2.MenuType.EDITOR_LEVELS)
     {
       container.parent = GameResources._Camera_Main.transform;
       container.localPosition = new Vector3(2.8f, 1.5f, 6f);
     }
-    else if (Menu2._CurrentMenu._type == Menu2.MenuType.EDITOR_PACKS_EDIT)
+    else if (Menu2._CurrentMenu._Type == Menu2.MenuType.EDITOR_PACKS_EDIT)
     {
       container.parent = GameResources._Camera_Main.transform;
       container.localPosition = new Vector3(2.8f, 1.5f, 6f);
@@ -4888,8 +4889,8 @@ public class TileManager
       if (
         !Menu2._InMenus ||
         (
-          ((Menu2._CurrentMenu._type != Menu2.MenuType.LEVELS) || (Menu2._CurrentMenu._type == Menu2.MenuType.LEVELS && Menu2._CurrentMenu._dropdownCount == 0)) &&
-          (Menu2._CurrentMenu._type != Menu2.MenuType.EDITOR_LEVELS && Menu2._CurrentMenu._type != Menu2.MenuType.EDITOR_PACKS_EDIT)
+          ((Menu2._CurrentMenu._Type != Menu2.MenuType.LEVELS) || (Menu2._CurrentMenu._Type == Menu2.MenuType.LEVELS && Menu2._CurrentMenu._dropdownCount == 0)) &&
+          (Menu2._CurrentMenu._Type != Menu2.MenuType.EDITOR_LEVELS && Menu2._CurrentMenu._Type != Menu2.MenuType.EDITOR_PACKS_EDIT)
         )
         )
       {
@@ -4981,7 +4982,7 @@ public class TileManager
 
     public void ChangeColor(Color c)
     {
-      GameScript._Singleton.StartCoroutine(ChangeColorCo(c, 0.2f));
+      GameScript._s_Singleton.StartCoroutine(ChangeColorCo(c, 0.2f));
     }
 
     IEnumerator ChangeColorCo(Color c, float time = 1f)

@@ -100,12 +100,20 @@ public class Menu2
   {
     _menuComponentsSelectable[index]._onSelected?.Invoke(_menuComponentsSelectable[index]);
   }
-  public void SetCurrentSelection(int index)
+  public void SetSelection(int index)
   {
     if (index == _selectionIndex) return;
     _menuComponentsSelectable[_selectionIndex]._onUnfocus?.Invoke(_menuComponentsSelectable[_selectionIndex]);
     _selectionIndex = index;
     _menuComponentsSelectable[index]._onFocus?.Invoke(_menuComponentsSelectable[index]);
+  }
+  public static void SetCurrentSelection(int index)
+  {
+    _CurrentMenu.SetSelection(index);
+  }
+  public static int GetCurrentSelection()
+  {
+    return _CurrentMenu._selectionIndex;
   }
 
   public class MenuComponent
@@ -510,11 +518,11 @@ public class Menu2
   }
 
   // Primary key of menu via Enum
-  public MenuType _type;
+  public MenuType _Type;
 
   public Menu2(MenuType type)
   {
-    _type = type;
+    _Type = type;
 
     _canSkip = true;
     _canSlowLoad = true;
@@ -522,10 +530,10 @@ public class Menu2
     // Add to menu list
     if (_Menus == null) _Menus = new Dictionary<MenuType, Menu2>();
     // Remove menu if exists already
-    if (_Menus.ContainsKey(_type))
+    if (_Menus.ContainsKey(_Type))
     {
       _Max_Height = _Start_Max_Height;
-      _Menus[_type].Destroy();
+      _Menus[_Type].Destroy();
     }
 
     _Menus.Add(type, this);
@@ -537,7 +545,7 @@ public class Menu2
     _onUpdate += () =>
     {
       // Increment time displayed if is current menu
-      if (_CurrentMenuType == _type)
+      if (_CurrentMenuType == _Type)
         _timeDisplayed += Time.unscaledDeltaTime;
     };
 
@@ -545,7 +553,7 @@ public class Menu2
     _onBack += () =>
     {
       // If main menu, highlight last selection. Do not select
-      if (_type == MenuType.MAIN && _dropdownCount == 0)
+      if (_Type == MenuType.MAIN && _dropdownCount == 0)
       {
         var component_last = _menuComponentsSelectable[_menuComponentsSelectable.Count - 1];
 
@@ -573,7 +581,7 @@ public class Menu2
     }
     _menuComponents = null;
     _menuComponentsSelectable = null;
-    _Menus.Remove(_type);
+    _Menus.Remove(_Type);
   }
 
   // Concat all menu components display texts
@@ -802,11 +810,11 @@ public class Menu2
         _CurrentMenuType = type;
         _CurrentMenu.ToggleColliders(true);
         _CurrentMenu._timeDisplayed = 0f;
-        if (_CurrentMenu._type != MenuType.CREDITS)
+        if (_CurrentMenu._Type != MenuType.CREDITS)
           _CurrentMenu._selectedComponent._focused = true;
         _CurrentMenu._onSwitchTo?.Invoke();
         // Render new menu
-        if (_CurrentMenu._type == MenuType.CREDITS) return;
+        if (_CurrentMenu._Type == MenuType.CREDITS) return;
         _CanRender = true;
         RenderMenu();
       }
@@ -1127,7 +1135,7 @@ public class Menu2
     };
 
     // Main menu
-    var demoText = GameScript._Singleton._IsDemo ? $" <color={_COLOR_GRAY}>[</color><color=red>demo</color><color={_COLOR_GRAY}>]</color>" : "";
+    var demoText = GameScript._s_Singleton._IsDemo ? $" <color={_COLOR_GRAY}>[</color><color=red>demo</color><color={_COLOR_GRAY}>]</color>" : "";
     var main_menu = new Menu2(MenuType.MAIN)
     {
 
@@ -2256,7 +2264,7 @@ public class Menu2
               _CanRender = false;
               RenderMenu();
             }
-            GameScript._Singleton.StartCoroutine(reloaddelay());
+            GameScript._s_Singleton.StartCoroutine(reloaddelay());
           })
         /*.AddComponent("open deleted levels / packs backup\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
           .AddEvent((MenuComponent component) =>
@@ -3553,7 +3561,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
             }
 
             // Demo and default case
-            if (GameScript._Singleton._IsDemo && component._buttonIndex >= 4)
+            if (GameScript._s_Singleton._IsDemo && component._buttonIndex >= 4)
             {
               component._obscured = true;
               return;
@@ -3612,17 +3620,23 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
                     TileManager._Text_Money.gameObject.SetActive(true);
                     TileManager.ResetMonies();
                   });
+
                   // Add focus event
                   actions_onFocus.Add((MenuComponent component0) =>
                   {
+                    Debug.Log("onfocus " + component0._dropdownIndex);
+
                     if (component0._menu._menuComponent_lastFocused._buttonIndex > component0._menu._menuComponentsSelectable.Count - 1 - component0._menu._dropdownCount)
                       component0._menu._menuComponent_lastFocused._textColor = _COLOR_GRAY;
+
                     component0._textColor = "white";
-                    int levelIter = int.Parse(component0.GetDisplayText().Split(' ')[2].Trim().Substring(1)) - 1;
+
+                    var levelIter = int.Parse(component0.GetDisplayText().Split(' ')[2].Trim().Substring(1)) - 1;
                     GameScript._lp0 = TileManager.GetMapPreview(Levels._CurrentLevelCollection._levelData[levelIter]).transform;
                   });
                   actions_onCreated.Add((MenuComponent component0) => { });
                 }
+
                 // Disable component
                 else
                 {
@@ -3649,7 +3663,6 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
               if (_SaveLevelSelected != -1 && _SaveLevelSelected < selections.Count)
               {
                 match = selections[_SaveLevelSelected];
-                Debug.Log(match);
               }
               else
               {
@@ -3837,6 +3850,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
         if (save_saveLevelSelected != -1)
         {
           _CurrentMenu._selectionIndex = (_CurrentMenu._menuComponentsSelectable.Count - _CurrentMenu._dropdownCount + save_saveLevelSelected);
+          _CurrentMenu._menuComponent_lastFocused = _CurrentMenu._menuComponentsSelectable[_CurrentMenu._menuComponentsSelectable.Count - _CurrentMenu._dropdownCount];
           _CurrentMenu._selectedComponent._onFocus?.Invoke(_CurrentMenu._selectedComponent);
         }
         // Render
@@ -3858,8 +3872,8 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
 
       }
       //.AddComponent("select loadout\n\n")
-      .AddComponent("=== " + string.Format(loadout_select_format, "", "equipment", "points left") + "\n")
-      .AddComponent("==  " + string.Format(loadout_select_format, "", "========", "==========") + "\n\n");
+      .AddComponent($"<color={_COLOR_GRAY}>=== " + string.Format(loadout_select_format, "", "equipment", "points left") + "</color>\n")
+      .AddComponent($"<color={_COLOR_GRAY}>==  " + string.Format(loadout_select_format, "", "========", "==========") + "</color>\n\n");
 
       // Determine number of loadouts
       var num_loadouts = GameScript.ItemManager.Loadout._Loadouts.Length;
@@ -3874,7 +3888,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
       foreach (var profile in GameScript.PlayerProfile.s_Profiles)
         profile.ChangeLoadoutIfEmpty(num_loadouts - 1);
       // Spawn selections
-      for (int i = 0; i < Mathf.Clamp(num_loadouts, 1, num_loadouts); i++)
+      for (var i = 0; i < Mathf.Clamp(num_loadouts, 1, num_loadouts); i++)
       {
         var loadout = GameScript.ItemManager.Loadout._Loadouts[i];
 
@@ -3956,7 +3970,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
         if (GameScript.PlayerProfile.s_Profiles != null)
           for (var u = 0; u < Settings._NumberPlayers; u++)
             if (u < GameScript.PlayerProfile.s_Profiles.Length &&
-            GameScript.PlayerProfile.s_Profiles[u]._loadoutIndex == i)
+            GameScript.PlayerProfile.s_Profiles[u]._LoadoutIndex == i)
             {
               color = "yellow";
               break;
@@ -4018,15 +4032,19 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
 
         // Set text
         _Menus[MenuType.SELECT_LOADOUT].AddComponent(displayText, MenuComponent.ComponentType.BUTTON_SIMPLE)
-        // Go to edit loadout when selected
+
+        // Edit loadout when selected
         .AddEvent((MenuComponent component) =>
         {
           GameScript.ItemManager.Loadout._CurrentLoadoutIndex = component._buttonIndex;
           CommonEvents._SwitchMenu(MenuType.EDIT_LOADOUT);
         });
       }
+
+      // Back button
       _Menus[MenuType.SELECT_LOADOUT].AddBackButton((MenuComponent component) =>
       {
+
         // Check for empty loadout for tutorial
         foreach (var loadout in GameScript.ItemManager.Loadout._Loadouts)
           if (!loadout._equipment.IsEmpty())
@@ -4044,13 +4062,25 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
           RenderMenu();
         }
       });
+
       // Check for empty player profiles
       _Menus[MenuType.SELECT_LOADOUT]._onSwitchTo += () =>
       {
         SpawnMenu_SelectLoadout();
         foreach (var profile in GameScript.PlayerProfile.s_Profiles)
           if (profile._equipment.IsEmpty())
-            profile._loadoutIndex++;
+            profile._LoadoutIndex++;
+
+        // Set selected loadout
+        if (_PreviousMenuType != MenuType.EDIT_LOADOUT)
+        {
+
+          Menu2.SetCurrentSelection(0);
+          Menu2.SetCurrentSelection(GameScript.PlayerProfile.s_Profiles[0]._LoadoutIndex);
+          Menu2._CanRender = true;
+          Menu2.RenderMenu();
+        }
+        _PreviousMenuType = MenuType.SELECT_LOADOUT;
       };
     }
     SpawnMenu_SelectLoadout();
@@ -4964,7 +4994,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
               foreach (var player in PlayerScript.s_Players)
               {
                 if (player == null || player._ragdoll == null || player._ragdoll._dead) continue;
-                if (player._Profile._loadoutIndex == CurrentLoadout()._id)
+                if (player._Profile._LoadoutIndex == CurrentLoadout()._id)
                   player.EquipLoadout(CurrentLoadout()._id, false);
               }
           });
@@ -5162,8 +5192,10 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
 
       if (!GameScript.IsSurvival())
       {
-        mPause.AddComponent("extras*\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-          .AddEvent((MenuComponent component) =>
+        mPause.AddComponent("extras*\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE);
+        if (Shop.Unlocked(Shop.Unlocks.MODE_EXTRAS))
+        {
+          mPause.AddEvent((MenuComponent component) =>
           {
             CommonEvents._SwitchMenu(MenuType.EXTRAS);
           })
@@ -5171,6 +5203,14 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
           {
             c._textColor = Settings._Extras_UsingAny ? "magenta" : "yellow";
           });
+        }
+        else
+        {
+          mPause.AddEvent(EventType.ON_RENDER, (MenuComponent c) =>
+          {
+            c._obscured = true;
+          });
+        }
       }
 
       //
@@ -5274,7 +5314,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
     SpawnMenu_Pause();
 
     // Classic mode menu
-    new Menu2(MenuType.GAMETYPE_CLASSIC)
+    var menu_classic = new Menu2(MenuType.GAMETYPE_CLASSIC)
     {
 
     }
@@ -5356,14 +5396,24 @@ go to the <color=yellow>SHOP</color> to buy something~1
         c._textColor = Shop.Unlocked(Shop.Unlocks.TUTORIAL_PART0) ? "white" : "yellow";
       })
     // Extras
-    .AddComponent("extras*\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-      .AddEvent((MenuComponent component) => { CommonEvents._SwitchMenu(MenuType.EXTRAS); })
-      .AddEvent(EventType.ON_RENDER, (MenuComponent c) =>
+    .AddComponent("extras*\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE);
+    if (Shop.Unlocked(Shop.Unlocks.MODE_EXTRAS))
+    {
+      menu_classic.AddEvent((MenuComponent component) => { CommonEvents._SwitchMenu(MenuType.EXTRAS); })
+        .AddEvent(EventType.ON_RENDER, (MenuComponent c) =>
+        {
+          c._textColor = Settings._Extras_UsingAny ? "magenta" : "yellow";
+        });
+    }
+    else
+    {
+      menu_classic.AddEvent(EventType.ON_RENDER, (MenuComponent c) =>
       {
-        c._textColor = Settings._Extras_UsingAny ? "magenta" : "yellow";
-      })
+        c._obscured = true;
+      });
+    }
     // Tutorial
-    .AddComponent("how to play\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
+    menu_classic.AddComponent("how to play\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
       .AddEvent((MenuComponent component) => { CommonEvents._SwitchMenu(MenuType.HOWTOPLAY_CLASSIC); })
       .AddEvent(EventType.ON_RENDER, (MenuComponent c) =>
       {
@@ -6019,7 +6069,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
             }
             foreach (var profile in GameScript.PlayerProfile.s_Profiles)
             {
-              profile._loadoutIndex = 0;
+              profile._LoadoutIndex = 0;
               profile.UpdateIcons();
             }
             // Erase level data
@@ -6090,7 +6140,7 @@ www.reddit.com/u/quaterniusdev
         }
         SwitchMenu(MenuType.MAIN);
       }
-      GameScript._Singleton.StartCoroutine(scrollCredits());
+      GameScript._s_Singleton.StartCoroutine(scrollCredits());
     };
     m_cred._onSwitched += () =>
     {
@@ -7138,6 +7188,19 @@ about extras</color>
     }
   }
 
+  public static void TriggerActionSwapTo(MenuType menuType)
+  {
+    _Menus[menuType]._onSwitchTo?.Invoke();
+  }
+  public static void TriggerActionOnFocus(MenuType menuType)
+  {
+    _Menus[menuType]._selectedComponent._onFocus?.Invoke(_Menus[menuType]._selectedComponent);
+  }
+  public static void TriggerActionUnFocus(MenuType menuType)
+  {
+    _Menus[menuType]._selectedComponent._onUnfocus?.Invoke(_Menus[menuType]._selectedComponent);
+  }
+
   // Toggle collider selections
   void ToggleColliders(bool toggle)
   {
@@ -7152,7 +7215,7 @@ about extras</color>
   // Draw current menu
   public static void RenderMenu()
   {
-    if (_CanRender && Settings._Option_FastText._value && _CurrentMenu._type != MenuType.SPLASH)
+    if (_CanRender && Settings._Option_FastText._value && _CurrentMenu._Type != MenuType.SPLASH)
       _CanRender = false;
     _CurrentMenu.Render();
   }

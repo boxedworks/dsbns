@@ -290,7 +290,7 @@ public static class FunctionsC
   static Dictionary<AudioSource, System.Tuple<float, float>> s_playingAudio;
 
   // Find folder
-  static public AudioSource GetAudioClip(string soundPath)
+  static public AudioSource GetAudioSource(string soundPath)
   {
     var split = soundPath.Split('/');
     string folder = split[0], name = split[1];
@@ -607,7 +607,7 @@ public static class FunctionsC
     // Create the AudioSource component and play the menu music
     public static void Init()
     {
-      s_TrackSource = GameScript._Singleton.gameObject.AddComponent<AudioSource>();
+      s_TrackSource = GameScript._s_Singleton.gameObject.AddComponent<AudioSource>();
       s_TrackSource.playOnAwake = false;
     }
 
@@ -634,7 +634,7 @@ public static class FunctionsC
         s_CurrentTrack = trackIndex;
         s_transitioning = false;
       }
-      GameScript._Singleton.StartCoroutine(LoadAsync());
+      GameScript._s_Singleton.StartCoroutine(LoadAsync());
     }
 
     // fade out current music and play a new track
@@ -669,7 +669,7 @@ public static class FunctionsC
         s_CurrentTrack = trackIndex;
         s_transitioning = false;
       }
-      GameScript._Singleton.StartCoroutine(TransitionToCo());
+      GameScript._s_Singleton.StartCoroutine(TransitionToCo());
     }
 
     // Unload tracks not being played to reduce memory usage
@@ -728,7 +728,7 @@ public static class FunctionsC
     public static int GetNextTrackIter()
     {
       // If main menu is showing, play main menu music
-      if (Menu2._CurrentMenu._type == Menu2.MenuType.MAIN) return 0;
+      if (Menu2._CurrentMenu._Type == Menu2.MenuType.MAIN) return 0;
 
       // SURVIVAL mode music
       if (GameScript._GameMode == GameScript.GameModes.SURVIVAL)
