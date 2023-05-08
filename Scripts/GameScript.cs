@@ -2566,6 +2566,13 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
             t.localPosition += new Vector3(0f, 0.01f, 0f);
             t.localScale = new Vector3(0.15f, 0.15f, 0.15f);
             break;
+
+          default:
+            Debug.LogWarning($"Unhandled positioning of Utility UI type: {name}");
+
+            t.localPosition += new Vector3(-0.19f, 0.08f, 0f);
+            t.localScale = new Vector3(0.14f, 0.14f, 0.14f);
+            break;
         }
         // Color
         var meshes = new List<Renderer>();
@@ -3028,10 +3035,15 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
           return 2;
         case UtilityScript.UtilityType.STOP_WATCH:
           return 2;
+        case UtilityScript.UtilityType.TEMP_SHIELD:
+          return 2;
         case UtilityScript.UtilityType.INVISIBILITY:
           return 3;
         case UtilityScript.UtilityType.DASH:
           return 1;
+
+        case UtilityScript.UtilityType.GRENADE_STUN:
+          return 2;
       }
       return 100;
     }
@@ -3064,6 +3076,8 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         case Shop.Perk.PerkType.NO_SLOWMO:
           return 0;
 
+        case Shop.Perk.PerkType.SPEED_UP:
+          return 2;
         case Shop.Perk.PerkType.SMART_BULLETS:
           return 6;
         case Shop.Perk.PerkType.GRAPPLE_MASTER:
@@ -3415,12 +3429,14 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     // Fix players
     if (PlayerScript.s_Players != null)
     {
+
       // Get player with goal
       PlayerScript hasGoal = null;
       foreach (var p in PlayerScript.s_Players)
       {
         if (p == null || !p._HasExit) continue;
         hasGoal = p;
+
         // Move player to playerspawn to correct errors
         p.transform.position = PlayerspawnScript._PlayerSpawns[0].transform.position;
         break;
@@ -3428,6 +3444,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       if (hasGoal != null)
       {
         hasGoal._HasExit = false;
+
         // Teleport other players to them
         foreach (var p in PlayerScript.s_Players)
         {
@@ -3437,6 +3454,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       }
 
     }
+
     // Hide exit
     ToggleExit(false);
     ActiveRagdoll.SoftReset();

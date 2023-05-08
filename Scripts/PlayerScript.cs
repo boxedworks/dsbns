@@ -1190,6 +1190,7 @@ public class PlayerScript : MonoBehaviour
         ExtendArms();
       else
         _ragdoll.ArmsDown();
+
       // Check runkey
       if (_Profile._holdRun)
       {
@@ -1232,6 +1233,7 @@ public class PlayerScript : MonoBehaviour
       // Check weapon swap
       if (ControllerManager.GetKey(ControllerManager.Key.TAB))
         SwapLoadouts();
+
       // Check weapon swap
       if (ControllerManager.GetKey(ControllerManager.Key.G))
       {
@@ -1470,7 +1472,9 @@ public class PlayerScript : MonoBehaviour
 
       // Apply run speed
       if (_runToggle || _ragdoll._forceRun)*/
-      movespeed *= RUNSPEED;
+      movespeed *= RUNSPEED * 
+        // Speed perk
+        (HasPerk(Shop.Perk.PerkType.SPEED_UP) ? 1.25f : 1f);
     }
 
     // Move player

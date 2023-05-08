@@ -156,6 +156,7 @@ public class CustomObstacle : MonoBehaviour
       _BUYABLE_UTILITY_TIERS[1].Add(System.Tuple.Create(UtilityScript.UtilityType.KUNAI_STICKY, 35));
       _BUYABLE_UTILITY_TIERS[1].Add(System.Tuple.Create(UtilityScript.UtilityType.C4, 40));
       _BUYABLE_UTILITY_TIERS[1].Add(System.Tuple.Create(UtilityScript.UtilityType.STOP_WATCH, 40));
+      _BUYABLE_UTILITY_TIERS[1].Add(System.Tuple.Create(UtilityScript.UtilityType.GRENADE_STUN, 30));
     }
 
   }

@@ -194,7 +194,10 @@ public static class Shop
     UTILITY_KUNAI_STICKY,
     UTILITY_STOP_WATCH,
     UTILITY_INVISIBILITY,
+    UTILITY_TEMP_SHIELD,
     UTILITY_DASH,
+
+    UTILITY_GRENDADE_STUN,
 
     //PERK_PENETRATION_UP,
     //PERK_ARMOR_UP,
@@ -209,6 +212,7 @@ public static class Shop
     MOD_PENETRATION_UP,
     MOD_SMART_BULLETS,
     MOD_GRAPPLE_MASTER,
+    MOD_SPEED_UP,
 
     MAX_EQUIPMENT_POINTS_0,
     MAX_EQUIPMENT_POINTS_1,
@@ -317,7 +321,10 @@ public static class Shop
     _Unlocks_Descriptions.Add(Unlocks.UTILITY_C4, new Tuple<string, int>("throwable, explosive, remote-controlled", 15));
     _Unlocks_Descriptions.Add(Unlocks.UTILITY_STOP_WATCH, new Tuple<string, int>("useable, slows-time", 20));
     _Unlocks_Descriptions.Add(Unlocks.UTILITY_INVISIBILITY, new Tuple<string, int>("useable, short-invisibility", 15));
+    _Unlocks_Descriptions.Add(Unlocks.UTILITY_TEMP_SHIELD, new Tuple<string, int>("useable, shield, requires-melee", 15));
     //_Unlocks_Descriptions.Add(Unlocks.UTILITY_DASH, new Tuple<string, int>("useable, quick speed boost", 0));
+
+    _Unlocks_Descriptions.Add(Unlocks.UTILITY_GRENDADE_STUN, new Tuple<string, int>("throwable, stun", 10));
 
     _Unlocks_Descriptions.Add(Unlocks.MOD_LASER_SIGHTS, new Tuple<string, int>("-", 5));
     _Unlocks_Descriptions.Add(Unlocks.MOD_NO_SLOWMO, new Tuple<string, int>("-", 1));
@@ -329,7 +336,8 @@ public static class Shop
     _Unlocks_Descriptions.Add(Unlocks.MOD_ARMOR_UP, new Tuple<string, int>("-", 0));
     _Unlocks_Descriptions.Add(Unlocks.MOD_PENETRATION_UP, new Tuple<string, int>("-", 0));
 
-    _Unlocks_Descriptions.Add(Unlocks.MOD_SMART_BULLETS, new Tuple<string, int>("-", 30));
+    _Unlocks_Descriptions.Add(Unlocks.MOD_SPEED_UP, new Tuple<string, int>("-", 10));
+    _Unlocks_Descriptions.Add(Unlocks.MOD_SMART_BULLETS, new Tuple<string, int>("-", 20));
     _Unlocks_Descriptions.Add(Unlocks.MOD_GRAPPLE_MASTER, new Tuple<string, int>("-", 5));
 
     _Unlocks_Descriptions.Add(Unlocks.MAX_EQUIPMENT_POINTS_0, new Tuple<string, int>("equipment points (+1)", 5));
@@ -399,6 +407,10 @@ public static class Shop
     AddAvailableUnlock(Unlocks.MAX_EQUIPMENT_POINTS_1);
     AddAvailableUnlock(Unlocks.ITEM_PISTOL_SILENCED);
 
+    AddAvailableUnlock(Unlocks.UTILITY_TEMP_SHIELD);
+    AddAvailableUnlock(Unlocks.MOD_SPEED_UP);
+    AddAvailableUnlock(Unlocks.UTILITY_GRENDADE_STUN);
+
     //AddAvailableUnlock(Unlocks.ITEM_ROCKET_FIST);
 
     // Add unlocks to vault
@@ -415,10 +427,10 @@ public static class Shop
       _Unlocks_Vault.Add("classic_0", new Unlocks[] { Unlocks.ITEM_AXE, Unlocks.UTILITY_GRENADE, Unlocks.MAX_EQUIPMENT_POINTS_2, Unlocks.LOADOUT_SLOT_X2_0 });
       _Unlocks_Vault.Add("classic_1", new Unlocks[] { Unlocks.MOD_LASER_SIGHTS, Unlocks.UTILITY_KUNAI_EXPLOSIVE, Unlocks.MOD_NO_SLOWMO });
       _Unlocks_Vault.Add("classic_2", new Unlocks[] { Unlocks.MODE_SURVIVAL, Unlocks.ITEM_RIFLE, Unlocks.ITEM_MACHINE_PISTOL, Unlocks.MAX_EQUIPMENT_POINTS_3, Unlocks.LOADOUT_SLOT_X2_1 });
-      _Unlocks_Vault.Add("classic_3", new Unlocks[] { Unlocks.ITEM_DOUBLE_PISTOL, Unlocks.UTILITY_STOP_WATCH });
+      _Unlocks_Vault.Add("classic_3", new Unlocks[] { Unlocks.ITEM_DOUBLE_PISTOL, Unlocks.UTILITY_STOP_WATCH, Unlocks.UTILITY_TEMP_SHIELD, Unlocks.MOD_SPEED_UP });
       _Unlocks_Vault.Add("classic_4", new Unlocks[] { Unlocks.ITEM_AXE, Unlocks.ITEM_REVOLVER, Unlocks.UTILITY_C4, Unlocks.UTILITY_SHURIKEN_BIG });
       _Unlocks_Vault.Add("classic_5", new Unlocks[] { Unlocks.ITEM_STICKY_GUN, Unlocks.ITEM_GRENADE_LAUNCHER, Unlocks.UTILITY_GRENADE_IMPACT, Unlocks.MAX_EQUIPMENT_POINTS_4 });
-      _Unlocks_Vault.Add("classic_6", new Unlocks[] { Unlocks.ITEM_FRYING_PAN, Unlocks.ITEM_CROSSBOW });
+      _Unlocks_Vault.Add("classic_6", new Unlocks[] { Unlocks.ITEM_FRYING_PAN, Unlocks.ITEM_CROSSBOW, Unlocks.UTILITY_GRENDADE_STUN });
       _Unlocks_Vault.Add("classic_7", new Unlocks[] { Unlocks.UTILITY_KUNAI_STICKY, Unlocks.UTILITY_INVISIBILITY, Unlocks.MAX_EQUIPMENT_POINTS_5, Unlocks.LOADOUT_SLOT_X2_2 });
       _Unlocks_Vault.Add("classic_8", new Unlocks[] { Unlocks.ITEM_UZI, Unlocks.ITEM_SHOTGUN_PUMP, Unlocks.MOD_GRAPPLE_MASTER });
       _Unlocks_Vault.Add("classic_9", new Unlocks[] { Unlocks.ITEM_RIFLE_LEVER, Unlocks.LOADOUT_SLOT_X2_3 });
@@ -445,9 +457,12 @@ public static class Shop
     _Utility_Cap.Add(UtilityScript.UtilityType.SHURIKEN_BIG, 5);
     _Utility_Cap.Add(UtilityScript.UtilityType.KUNAI_EXPLOSIVE, 5);
     _Utility_Cap.Add(UtilityScript.UtilityType.KUNAI_STICKY, 5);
-    _Utility_Cap.Add(UtilityScript.UtilityType.STOP_WATCH, 2);
-    _Utility_Cap.Add(UtilityScript.UtilityType.INVISIBILITY, 2);
+    _Utility_Cap.Add(UtilityScript.UtilityType.STOP_WATCH, 5);
+    _Utility_Cap.Add(UtilityScript.UtilityType.TEMP_SHIELD, 5);
+    _Utility_Cap.Add(UtilityScript.UtilityType.INVISIBILITY, 5);
     _Utility_Cap.Add(UtilityScript.UtilityType.DASH, 5);
+
+    _Utility_Cap.Add(UtilityScript.UtilityType.STICKY_GUN_BULLET, 5);
 
     //
     _TwoHanded_Dictionary = new List<GameScript.ItemManager.Items>();
@@ -637,6 +652,7 @@ public static class Shop
       NO_SLOWMO,
       SMART_BULLETS,
       GRAPPLE_MASTER,
+      SPEED_UP,
 
       NONE
     }
@@ -660,6 +676,7 @@ public static class Shop
       _PERK_DESCRIPTIONS.Add(PerkType.NO_SLOWMO, "no slowmo; harder");
       _PERK_DESCRIPTIONS.Add(PerkType.SMART_BULLETS, "strong gun = smart bullet");
       _PERK_DESCRIPTIONS.Add(PerkType.GRAPPLE_MASTER, "grapple armor");
+      _PERK_DESCRIPTIONS.Add(PerkType.SPEED_UP, "1.25x movement speed");
     }
 
     public static bool HasPerk(int playerId, PerkType perk)

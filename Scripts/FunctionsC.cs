@@ -344,15 +344,25 @@ public static class FunctionsC
   // Apply damage and force in a radius to Ragdolls
   public static void ApplyExplosionRadius(Vector3 position, float radius, ExplosiveScript.ExplosionType type, ActiveRagdoll source)
   {
+
+    // Gather ragdolls in radius
     var rags = CheckRadius(position, radius);
+
+    // Toggle raycasting for rags
     foreach (var r in rags)
       r.ToggleRaycasting(false);
-    var exploded = 0;
+
+    // SFX
     PlayComplexParticleSystemAt(ParticleSystemType.EXPLOSION, position + new Vector3(0f, 0.2f, 0f));
+
+    // Loop through ragdolls to raycast and affect
+    var exploded = 0;
+    var isStun = type == ExplosiveScript.ExplosionType.STUN;
     foreach (var r in rags)
     {
 
       // Check for perk
+      //if (!isStun)
       if (r._isPlayer && r._id == source._id && r._playerScript.HasPerk(Shop.Perk.PerkType.EXPLOSION_RESISTANCE)) continue;
 
       // Check dist
@@ -375,11 +385,14 @@ public static class FunctionsC
         if (!r.IsSelf(hit.collider.gameObject)) continue;
       }
 
-      if (!r._dead)
+      // Increment exploded counter and award achievements
+      if (!isStun)
       {
-        // Check for 3+ kills for slowmo
-        if (exploded++ == 3)
-          PlayerScript._SlowmoTimer += 2f;
+        if (!r._dead)
+        {
+          // Check for 3+ kills for slowmo
+          if (exploded++ == 3)
+            PlayerScript._SlowmoTimer += 2f;
 
 #if UNITY_STANDALONE
         if (exploded == 5)
@@ -389,40 +402,58 @@ public static class FunctionsC
         else if (exploded == 25)
           SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.DEMO_LEVEL_2);
 #endif
+        }
       }
 
-      // Explosion force type
-      var explosionForce = Vector3.zero;
-      if (type == ExplosiveScript.ExplosionType.UPWARD) explosionForce = new Vector3(0f, 3000f, 0f);
-      else if (type == ExplosiveScript.ExplosionType.AWAY)
+      // Check explosion effects
       {
-        var away = -(position - r._hip.position).normalized;
-        away.y = 0.2f;
-        explosionForce = away * 3000f;
-      }
 
-      // Assign damage
-      r.TakeDamage(
-        new ActiveRagdoll.RagdollDamageSource()
+        // Stun
+        if (isStun)
         {
-          Source = source,
+          r.Stun();
+        }
 
-          HitForce = explosionForce,
+        // Explosion
+        else
+        {
+          // Explosion force type
+          var explosionForce = Vector3.zero;
+          if (type == ExplosiveScript.ExplosionType.UPWARD) explosionForce = new Vector3(0f, 3000f, 0f);
+          else if (type == ExplosiveScript.ExplosionType.AWAY)
+          {
+            var away = -(position - r._hip.position).normalized;
+            away.y = 0.2f;
+            explosionForce = away * 3000f;
+          }
 
-          Damage = 3,
-          DamageSource = Vector3.zero,
-          DamageSourceType = ActiveRagdoll.DamageSourceType.EXPLOSION,
+          // Assign damage
+          r.TakeDamage(
+            new ActiveRagdoll.RagdollDamageSource()
+            {
+              Source = source,
 
-          SpawnBlood = true,
-          SpawnGiblets = true
-        });
-      if (r._dead)
-      {
-        r.DismemberRandomTimes(explosionForce, Random.Range(1, 5));
-        r._hip.AddForce(explosionForce);
+              HitForce = explosionForce,
+
+              Damage = 3,
+              DamageSource = Vector3.zero,
+              DamageSourceType = ActiveRagdoll.DamageSourceType.EXPLOSION,
+
+              SpawnBlood = true,
+              SpawnGiblets = true
+            });
+          if (r._dead)
+          {
+            r.DismemberRandomTimes(explosionForce, Random.Range(1, 5));
+            r._hip.AddForce(explosionForce);
+          }
+        }
+
       }
+
     }
 
+    // Retoggle raycasting
     foreach (var r in rags)
       if (!r._dead) r.ToggleRaycasting(true);
   }

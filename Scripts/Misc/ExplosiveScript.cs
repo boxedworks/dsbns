@@ -20,7 +20,9 @@ public class ExplosiveScript : MonoBehaviour
   public enum ExplosionType
   {
     UPWARD,
-    AWAY
+    AWAY,
+
+    STUN
   }
 
   ActiveRagdoll _source;
@@ -115,23 +117,30 @@ public class ExplosiveScript : MonoBehaviour
       FunctionsC.BookManager.ExplodeBooks(b.GetComponent<Collider>(), transform.position);
     }
 
-    // Bullets
-    var bullets = ItemScript._BulletPool;
-    for (var i = bullets.Length - 1; i >= 0; i--)
+    // Only affect certain other objects if not stun
+    if (_explosionType != ExplosionType.STUN)
     {
-      var b = bullets[i];
-      if (b == null) continue;
-      if (MathC.Get2DDistance(transform.position, b.transform.position) > _radius) continue;
-      b.Hide();
+
+      // Bullets
+      var bullets = ItemScript._BulletPool;
+      for (var i = bullets.Length - 1; i >= 0; i--)
+      {
+        var b = bullets[i];
+        if (b == null) continue;
+        if (MathC.Get2DDistance(transform.position, b.transform.position) > _radius) continue;
+        b.Hide();
+      }
+
+      // Check for nearby explosives
+      foreach (var e in _Explosives)
+      {
+        if (e == null) continue;
+        if (e.name.Equals("Missle") || e.name.Equals("Grenade") || MathC.Get2DDistance(transform.position, e.transform.position) > _radius) continue;
+        e.Trigger(source, 0.25f);
+      }
+
     }
 
-    // Check for nearby explosives
-    foreach (var e in _Explosives)
-    {
-      if (e == null) continue;
-      if (e.name.Equals("Missle") || e.name.Equals("Grenade") || MathC.Get2DDistance(transform.position, e.transform.position) > _radius) continue;
-      e.Trigger(source, 0.25f);
-    }
     // Set sound alert
     EnemyScript.CheckSound(transform.position, EnemyScript.Loudness.LOUD);
 

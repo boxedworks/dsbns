@@ -19,6 +19,9 @@ public class UtilityScript : ItemScript
     INVISIBILITY,
     DASH,
 
+    TEMP_SHIELD,
+    GRENADE_STUN,
+
     STICKY_GUN_BULLET,
   }
 
@@ -122,6 +125,7 @@ public class UtilityScript : ItemScript
     _spawnDirection = Vector3.zero;
     _forceModifier = 1f;
     _expirationTimer = 30f;
+    var explosionType = ExplosiveScript.ExplosionType.AWAY;
 
     // Check utility-specific items
     float explosion_radius = -1f;
@@ -138,6 +142,12 @@ public class UtilityScript : ItemScript
       case UtilityType.GRENADE_IMPACT:
         explosion_radius = 3f;
         _throwSpeed = 2f;
+        break;
+
+      case UtilityType.GRENADE_STUN:
+        explosion_radius = 3f;
+        _throwSpeed = 2f;
+        explosionType = ExplosiveScript.ExplosionType.STUN;
         break;
 
       case UtilityType.C4:
@@ -178,6 +188,7 @@ public class UtilityScript : ItemScript
         _useOnRelease = false;
         break;
     }
+
     // If has radius, add ring and explosion
     if (explosion_radius != -1f)
     {
@@ -185,7 +196,7 @@ public class UtilityScript : ItemScript
       _ring.transform.parent.gameObject.SetActive(true);
 
       _explosion = gameObject.AddComponent<ExplosiveScript>();
-      _explosion._explosionType = ExplosiveScript.ExplosionType.AWAY;
+      _explosion._explosionType = explosionType;
       _explosion._onExplode += () =>
       {
         _c.enabled = false;
@@ -217,7 +228,8 @@ public class UtilityScript : ItemScript
       if (_ragdoll._invisible && (
         _utility_type != UtilityType.INVISIBILITY ||
         _utility_type != UtilityType.STOP_WATCH ||
-        _utility_type != UtilityType.DASH
+        _utility_type != UtilityType.DASH ||
+        _utility_type != UtilityType.TEMP_SHIELD
       ))
         _ragdoll.SetInvisible(false);
 
@@ -488,6 +500,7 @@ public class UtilityScript : ItemScript
           break;
 
         case UtilityType.GRENADE_IMPACT:
+        case UtilityType.GRENADE_STUN:
           // Add explode on impact event
           _onCollisionEnter += (Collision c) =>
           {
@@ -550,6 +563,17 @@ public class UtilityScript : ItemScript
         case UtilityType.STOP_WATCH:
 
           PlayerScript._SlowmoTimer += 2f;
+          Unregister();
+
+          break;
+
+        case UtilityType.TEMP_SHIELD:
+
+          if(_ragdoll._grappling){
+            _ragdoll.Grapple(false);
+          }
+
+          _ragdoll.AddGrappler();
           Unregister();
 
           break;

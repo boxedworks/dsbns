@@ -1303,7 +1303,7 @@ public class EnemyScript : MonoBehaviour
           _agent.SetPath(path_new);
       }
     }
-    yield return new WaitForSeconds(0.1f + Random.value * 0.05f);
+    yield return new WaitForSeconds(0.15f + Random.value * 0.15f);
     _chasingTarget = false;
   }
   #endregion
@@ -1316,8 +1316,10 @@ public class EnemyScript : MonoBehaviour
       _ragdollTarget = null;
       return;
     }
+
     // Make sure is not targeting self
     if (_ragdoll._id == ragdoll._id) return;
+    
     // Check for same setting
     if (_ragdollTarget != null && _ragdollTarget._id == ragdoll._id) return;
     _ragdollTarget = ragdoll;
