@@ -114,6 +114,8 @@ public class TileManager
   public static void MoveMonie(int index, int delay, int spacingIndex)
   {
 
+    Debug.Log(spacingIndex);
+
     // Make sure UI / level is the same
     bool IsActive()
     {
@@ -125,24 +127,31 @@ public class TileManager
       yield return new WaitForSecondsRealtime(0.5f);
       if (IsActive())
       {
-        DisplayMonie(index);
-        SfxManager.PlayAudioSourceSimple(GameResources._Camera_Main.transform.GetChild(1).position, "Etc/Monie_show", 0.95f, 1f);
-        yield return new WaitForSecondsRealtime(0.9f + delay * 0.2f);
+        var monieText = _Text_Monies[index];
 
-        var m = _Text_Monies[index];
-
-        var t = 1f;
+        // Set start pos and display
         var posStart = _Positions_Monies[index];
         switch (spacingIndex)
         {
           case 1:
-            posStart.x = -6.21f;
+            posStart.x = -6.37f;
             break;
         }
+
+        // Display
+        DisplayMonie(index);
+        monieText.transform.localPosition = posStart;
+
+        // FX
+        SfxManager.PlayAudioSourceSimple(GameResources._Camera_Main.transform.GetChild(1).position, "Etc/Monie_show", 0.95f, 1f);
+        yield return new WaitForSecondsRealtime(0.9f + delay * 0.2f);
+
+        // Animation
+        var t = 1f;
         while (t > 0f && IsActive())
         {
 
-          m.transform.localPosition = new Vector3(
+          monieText.transform.localPosition = new Vector3(
             Mathf.Lerp(posStart.x, _Positions_Monies[4].x, (1f - Mathf.Clamp(t, 0f, 1f))),
             Mathf.Lerp(posStart.y, _Positions_Monies[4].y, Easings.QuarticEaseIn(1f - Mathf.Clamp(t, 0f, 1f))),
             posStart.z
@@ -152,7 +161,7 @@ public class TileManager
         }
         if (IsActive())
         {
-          m.transform.localPosition = _Positions_Monies[4];
+          monieText.transform.localPosition = _Positions_Monies[4];
           var monie = int.Parse(_Text_Money.text.Substring(3));
           _Text_Money.text = $"$$${monie + 1}";
           SfxManager.PlayAudioSourceSimple(GameResources._Camera_Main.transform.GetChild(1).position, "Etc/Monie_store", 0.95f, 1f);
@@ -688,7 +697,6 @@ public class TileManager
     {
       TileManager._LevelTime_Dev = _Dev_Time_Save;
       _Dev_Time_Save = -1f;
-      Debug.Log("Brought over best dev time: " + TileManager._LevelTime_Dev);
     }
     else if (!Settings._LevelEditorEnabled)
     {

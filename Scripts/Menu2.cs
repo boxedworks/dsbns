@@ -630,8 +630,11 @@ public class Menu2
           selector = component._buttonIndex == _selectionIndex ||
             (_dropdownCount > 0 && component._buttonIndex == _dropdownParentIndex) ?
             $"[<color=yellow>*</color>]" : component.GetEmptySelector();
-        if (component._textColor != "white" && component._textColor != "")
-          displayText = $"{selector} <color={component._textColor}>{displayText.Substring(4)}</color>";
+
+        var textColor = component._textColor;
+        if (component._obscured) textColor = _COLOR_GRAY;
+        if (textColor != "white" && textColor != "")
+          displayText = $"{selector} <color={textColor}>{displayText.Substring(4)}</color>";
         else
           displayText = $"{selector} <color=white>{displayText.Substring(4)}</color>";
       }
@@ -3544,11 +3547,13 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
             if (GameScript._GameMode != GameScript.GameModes.SURVIVAL)
             {
               var first_level_iter = (component._buttonIndex) * levels_per_dir;
+#if !UNITY_EDITOR
               if (first_level_iter > 0 && !Levels.LevelCompleted(first_level_iter - 1))
               {
                 component.SetDisplayText(string.Format(format_subdirs, $"****", $"-    ", "", "") + '\n');
                 return;
               }
+#endif
             }
             // Obscur survival levels
             else
@@ -3584,6 +3589,9 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
               {
                 var level_iter = (component._buttonIndex) * levels_per_dir + u;
                 var level_unlocked = (level_iter == 0 ? true : Levels.LevelCompleted(level_iter - 1));
+#if UNITY_EDITOR
+                level_unlocked = true;
+#endif
 
                 if (level_iter >= Levels._CurrentLevelCollection._levelData.Length) continue;
 
@@ -3624,8 +3632,6 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
                   // Add focus event
                   actions_onFocus.Add((MenuComponent component0) =>
                   {
-                    Debug.Log("onfocus " + component0._dropdownIndex);
-
                     if (component0._menu._menuComponent_lastFocused._buttonIndex > component0._menu._menuComponentsSelectable.Count - 1 - component0._menu._dropdownCount)
                       component0._menu._menuComponent_lastFocused._textColor = _COLOR_GRAY;
 
@@ -3782,10 +3788,13 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
                 Local_SetDifficulty(0);
             });
             actions_onCreated.Add((MenuComponent component0) => { });
-            bool difficultyLoaded = Settings._DifficultyUnlocked > 0;
+            var difficultyUnlocked = Settings._DifficultyUnlocked > 0;
+#if UNITY_EDITOR
+            difficultyUnlocked = true;
+#endif
 
             selections.Add(string.Format(format_ds, $"sneakier", ratings_lowest[1], "more enemies, harder levels, pressure"));
-            if (difficultyLoaded)
+            if (difficultyUnlocked)
             {
               actions.Add((MenuComponent component0) =>
               {
@@ -4067,9 +4076,17 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
       _Menus[MenuType.SELECT_LOADOUT]._onSwitchTo += () =>
       {
         SpawnMenu_SelectLoadout();
-        foreach (var profile in GameScript.PlayerProfile.s_Profiles)
-          if (profile._equipment.IsEmpty())
-            profile._LoadoutIndex++;
+        var allEmpty = true;
+        foreach (var loadout in GameScript.ItemManager.Loadout._Loadouts)
+          if (!loadout._equipment.IsEmpty())
+          {
+            allEmpty = false;
+            break;
+          }
+        if (!allEmpty)
+          foreach (var profile in GameScript.PlayerProfile.s_Profiles)
+            if (profile._equipment.IsEmpty())
+              profile._LoadoutIndex++;
 
         // Set selected loadout
         if (_PreviousMenuType != MenuType.EDIT_LOADOUT)
@@ -5193,7 +5210,11 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
       if (!GameScript.IsSurvival())
       {
         mPause.AddComponent("extras*\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE);
-        if (Shop.Unlocked(Shop.Unlocks.MODE_EXTRAS))
+        if (Shop.Unlocked(Shop.Unlocks.MODE_EXTRAS)
+#if UNITY_EDITOR
+          || true
+#endif
+        )
         {
           mPause.AddEvent((MenuComponent component) =>
           {
@@ -5397,7 +5418,11 @@ go to the <color=yellow>SHOP</color> to buy something~1
       })
     // Extras
     .AddComponent("extras*\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE);
-    if (Shop.Unlocked(Shop.Unlocks.MODE_EXTRAS))
+    if (Shop.Unlocked(Shop.Unlocks.MODE_EXTRAS)
+#if UNITY_EDITOR
+          || true
+#endif
+        )
     {
       menu_classic.AddEvent((MenuComponent component) => { CommonEvents._SwitchMenu(MenuType.EXTRAS); })
         .AddEvent(EventType.ON_RENDER, (MenuComponent c) =>
@@ -6040,16 +6065,23 @@ go to the <color=yellow>SHOP</color> to buy something~1
             var save_fullscreen = Settings._Fullscreen;
             var save_quality = Settings._QualityLevel;
             var save_vsync = Settings._VSync;
+            var save_cameratype = Settings._CameraType._value;
+            var save_camerazoom = Settings._CameraZoom._value;
+            var save_menutextspeed = Settings._Option_FastText._value;
             var save_blood = Settings._Blood;
             var save_forcekeyboard = Settings._ForceKeyboard;
             var save_rumble = Settings._ControllerRumble;
+
             // Erase save data
             PlayerPrefs.DeleteAll();
+
             // Do not pause
             _InPause = false;
             _SaveMenuDir = _SaveLevelSelected = -1;
+
             // Reload tutorial
             GameScript.TutorialInformation._HasRestarted = false;
+
             // Reload settings
             Settings.Init();
             Settings._VolumeMusic = save_music;
@@ -6058,6 +6090,9 @@ go to the <color=yellow>SHOP</color> to buy something~1
             Settings._Fullscreen = save_fullscreen;
             Settings._QualityLevel = save_quality;
             Settings._VSync = save_vsync;
+            Settings._CameraType = new FunctionsC.SaveableStat_Bool(Settings._CameraType._name, save_cameratype);
+            Settings._CameraZoom = new FunctionsC.SaveableStat_Int(Settings._CameraZoom._name, save_camerazoom);
+            Settings._Option_FastText = new FunctionsC.SaveableStat_Bool(Settings._Option_FastText._name, save_menutextspeed);
             Settings._Blood = save_blood;
             Settings._ForceKeyboard = save_forcekeyboard;
             Settings._ControllerRumble = save_rumble;
@@ -6548,7 +6583,11 @@ a gampad if plugged in.~1
       {
 
         // Check if component should be visible; add dropdown placeholder for later
-        if (visibility_conditions.Invoke())
+        if (visibility_conditions.Invoke()
+#if UNITY_EDITOR
+          || true
+#endif
+        )
         {
           menu_extras.AddComponent($"placeholder{line_end}", MenuComponent.ComponentType.BUTTON_DROPDOWN)
             .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
@@ -6906,12 +6945,15 @@ a gampad if plugged in.~1
 about extras</color>
 
 -unlock extras by satisfying the requirements at the bottom of the extras menu
+ then buying the extra in the <color=yellow>SHOP</color>
 
--extras only work in the CLASSIC mode
+-extras only work in the <color={_COLOR_GRAY}>CLASSIC</color> mode
 
--you cannot get level rankings if you have any extras enabled (besides extras
- with ` next to them)
-"
+-extras change game mechanics around. use and combine them for interesting game modes!
+
+-you <color={_COLOR_GRAY}>cannot get level rankings or $$$</color> if you have any extras enabled (besides
+ extras with ` next to them)
+ "
 }, "neat", MenuType.EXTRAS, null, true, null, (MenuComponent m) =>
 {
   _Menus[MenuType.EXTRAS]._selectionIndex = _Menus[MenuType.EXTRAS]._menuComponentsSelectable.Count - 3;
@@ -6980,6 +7022,7 @@ about extras</color>
             // Difficulty
             var difficultyName = exInfo.difficulty == 0 ? "sneaky" : "sneakier";
             var difficultyColor = exInfo.difficulty == 0 ? _COLOR_GRAY : "cyan";
+
             // Extras
             var extrasText = "";
             if (exInfo.extras != null)

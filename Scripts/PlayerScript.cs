@@ -22,16 +22,10 @@ public class PlayerScript : MonoBehaviour
 
   public GameScript.ItemManager.Items _itemLeft, _itemRight;
 
-  public static readonly float MOD =
-#if UNITY_EDITOR
-  1.2f
-#else
-  1f
-#endif
-    ,
-  MOVESPEED = 4.5f * MOD,
+  public static readonly float
+  MOVESPEED = 4.5f,
     RUNSPEED = 1.15f,
-    ROTATIONSPEED = 2f / MOD;
+    ROTATIONSPEED = 2f;
 
   bool mouseEnabled, _runToggle;
 
@@ -1440,7 +1434,7 @@ public class PlayerScript : MonoBehaviour
 
     /// Run
     {
-      // Check run option; option is not toggle run
+      /*/ Check run option; option is not toggle run
       if (_Profile._holdRun)
       {
         // If moving and run key is down and not running, run
@@ -1475,8 +1469,8 @@ public class PlayerScript : MonoBehaviour
       }
 
       // Apply run speed
-      if (_runToggle || _ragdoll._forceRun)
-        movespeed *= RUNSPEED;
+      if (_runToggle || _ragdoll._forceRun)*/
+      movespeed *= RUNSPEED;
     }
 
     // Move player

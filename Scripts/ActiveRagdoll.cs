@@ -1056,8 +1056,9 @@ public class ActiveRagdoll
   }
   void SetLerpAmount(ref SkinnedMeshRenderer mesh, Color c, float normalized, Color sc0, Color sc1)
   {
-    Color c0 = Color.Lerp(sc1, c / 2f, normalized);
-    c = Color.Lerp(sc0, c + Color.white / 2f, normalized);
+    var c0 = Color.Lerp(sc1, c / 2f, normalized);
+    c = Color.Lerp(sc0, c + Color.white / 3f, normalized);
+
     // Skin
     mesh.sharedMaterials[1].color = c;
     // Clothes

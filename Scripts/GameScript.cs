@@ -127,6 +127,10 @@ public class GameScript : MonoBehaviour
     Shop.Init();
     Stats.Init();
 
+    s_Music = GameObject.Find("Music").GetComponent<AudioSource>();
+    FunctionsC.MusicManager.Init();
+
+    Settings.Init();
     UpdateLevelVault();
 
     SteamManager.SteamMenus.Init();
@@ -159,12 +163,6 @@ public class GameScript : MonoBehaviour
 
     _BlackFade = GameObject.Find("BlackFade").GetComponent<MeshRenderer>();
     FadeIn();
-
-    s_Music = GameObject.Find("Music").GetComponent<AudioSource>();
-
-    FunctionsC.MusicManager.Init();
-
-    Settings.Init();
 
     // Init playerprofile and loadouts
     PlayerScript.s_Materials_Ring = new Material[4];
@@ -2999,7 +2997,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         case Items.CROSSBOW:
           return 4;
         case Items.GRENADE_LAUNCHER:
-          return 4;
+          return 3;
         case Items.ROCKET_LAUNCHER:
           break;
         case Items.SWORD:
@@ -3067,7 +3065,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
           return 0;
 
         case Shop.Perk.PerkType.SMART_BULLETS:
-          return 4;
+          return 6;
         case Shop.Perk.PerkType.GRAPPLE_MASTER:
           return 3;
       }
@@ -3146,15 +3144,19 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
   public static void UpdateLevelVault()
   {
 
+    var dirsPerLevel = 12;
+
     // Check difficulty 0
-    for (var i = 0; i < 12; i++)
-      if (PlayerPrefs.GetInt($"levels0_{11 + i * 12}") == 1)
+    var numDirs0 = Levels._LevelCollections[0]._levelData.Length / dirsPerLevel;
+    for (var i = 0; i < numDirs0; i++)
+      if (PlayerPrefs.GetInt($"levels0_{(i * dirsPerLevel) + (dirsPerLevel - 1)}") == 1)
         Shop.AddAvailableUnlockVault($"classic_{i}");
 
     // Check difficulty 1
-    for (var i = 0; i < 12; i++)
-      if (PlayerPrefs.GetInt($"levels1_{11 + i * 12}") == 1)
-        Shop.AddAvailableUnlockVault($"classic_{12 + i}");
+    var numDirs1 = Levels._LevelCollections[1]._levelData.Length / dirsPerLevel;
+    for (var i = 0; i < numDirs1; i++)
+      if (PlayerPrefs.GetInt($"levels1_{(i * dirsPerLevel) + (dirsPerLevel - 1)}") == 1)
+        Shop.AddAvailableUnlockVault($"classic_{(numDirs0) + i}");
   }
 
   // Fired on last enemy killed
@@ -3256,7 +3258,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       if (_GameMode == GameModes.CLASSIC)
       {
         // Award shop point
-        Shop._AvailablePoints++;
+        //Shop._AvailablePoints++;
 
         /*/ Check unlocks at end of level packs
         if ((Levels._CurrentLevelIndex + 1) % 12 == 0)
@@ -3327,7 +3329,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
           SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.DIFFICULTY_2);
 #endif
 
-          Shop.s_UnlockString += $"- you have beaten the classic mode!\n- try out the survival mode?\n";
+          Shop.s_UnlockString += $"- you have beaten the classic mode!\n- try out the survival mode or try\n  to unlock the optional extra settings!";
         }
 
         // Display unlock messages
@@ -3384,6 +3386,11 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     // Unpause if paused
     if (GameScript._Paused) GameScript.TogglePause();
 
+    // Check last level
+    if (levelIndex >= Levels._CurrentLevelCollection._levelData.Length)
+      return;
+
+    // Load
     Levels._CurrentLevelIndex = levelIndex;
     NextLevel(Levels._CurrentLevelData);
   }

@@ -462,7 +462,7 @@ public class EnemyScript : MonoBehaviour
     if (_ragdoll.Active())
     {
       if (!_isZombie)
-        _ragdoll._rotSpeed = (_state == State.PURSUIT ? _targetDirectlyInFront ? 1.3f : 1f : 0.8f) * PlayerScript.ROTATIONSPEED;
+        _ragdoll._rotSpeed = (_state == State.PURSUIT ? _targetDirectlyInFront ? 1.15f : 0.8f : 0.6f) * PlayerScript.ROTATIONSPEED;
 
       // If chaser, check if enabled
       if (!_canAttack && IsChaser() && !_isZombie)
@@ -1899,20 +1899,20 @@ public class EnemyScript : MonoBehaviour
             var medal_format = "<color={0}>{1,-5}: {2,-6}</color>\n";
             var played_wrong = false;
             var points_awarded_counter = points_awarded;
-            var medal_maxLength = medal_times[3].ToString().Length;
             if (can_save_timers)
               TileManager._Text_Money.text = $"$$${Shop._AvailablePoints}";
             for (var i = medal_times.Length - 1; i >= 0; i--)
             {
               var time = medal_times[i];
               var time_ = float.Parse(string.Format("{0:0.000}", time));
+              var timeText = string.Format("{0:0.000}", time_);
 
-              TileManager._Text_LevelTimer_Best.text += string.Format(medal_format, ratings[i].Item2, ratings[i].Item1, string.Format("{0:0.000}", time_) + (ratingIndex == i ? "*" : ""));
+              TileManager._Text_LevelTimer_Best.text += string.Format(medal_format, ratings[i].Item2, ratings[i].Item1, timeText + (ratingIndex == i ? "*" : ""));
 
               // Show $$$
               if (can_save_timers && points_awarded_table.Contains(i))
               {
-                TileManager.MoveMonie(3 - i, points_awarded - points_awarded_counter--, medal_maxLength == 5 ? 0 : 1);
+                TileManager.MoveMonie(3 - i, points_awarded - points_awarded_counter--, timeText.Length < 6 ? 0 : 1);
               }
 
               // FX
@@ -1952,7 +1952,7 @@ public class EnemyScript : MonoBehaviour
             {
 
               // Save best dev time
-              if (false && Debug.isDebugBuild)
+              if (/*false &&*/ Debug.isDebugBuild)
               {
 
                 if (TileManager._LevelTime_Dev == -1 || level_time < TileManager._LevelTime_Dev)
@@ -2019,7 +2019,7 @@ public class EnemyScript : MonoBehaviour
                       levelratings_difficulty[Levels._CurrentLevelIndex] = ratingIndex == 0;
 
                       var all_top_rated = true;
-                      for (var i = 1; i < Levels._CurrentLevelCollection._levelData.Length; i++)
+                      for (var i = Levels._CurrentLevelCollection._levelData.Length - 1; i > 0; i--)
                       {
                         var top_rated = levelratings_difficulty[i];
                         if (!top_rated)

@@ -286,7 +286,7 @@ new Theme(){
   _tileColorDown = new Color(0.1698113f, 0.06736612f, 0.06327872f, 0f),
   _tileColorUp = new Color(0.3207547f, 0.1951762f, 0.1951762f, 0f),
   _furnatureColor = new Color(0.08245816f, 0.1603774f, 0.08245816f, 0f),
-  _lightColor = new Color(1f, 1f, 1f, 0f),
+  _lightColor = new Color(0.8962264f, 0.8081236f, 0.5960751f, 0f),
   _innerWallColor = new Color(0.08245816f, 0.1603774f, 0.08245816f, 0f),
   _shadowStrength = 0.6f,
   _profile = 5,

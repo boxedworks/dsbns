@@ -67,7 +67,7 @@ public static class Shop
       "switch weapons or edit a loadout mid-game if you are at the start area",
       "use the &LD or &RD buttons on the D-PAD to cycle through your custom loadouts",
       "quickly restart the level with the   &RE   button",
-      "playing with more than one person? you cannot restart if you are dead",
+      "playing with more than one person? you cannot restart unless you are alive",
       "when changing loadouts, read the tags on items to learn more about them",
       "when changing loadouts, press &WB to quickly remove a peice of equipment",
       "you need to have enough money + max equipment points to buy things in the shop",
@@ -283,28 +283,28 @@ public static class Shop
     _Unlocks_Descriptions = new Dictionary<Unlocks, Tuple<string, int>>();
     _Unlocks_Descriptions.Add(Unlocks.ITEM_KNIFE, new Tuple<string, int>("melee, fast", 3));
     _Unlocks_Descriptions.Add(Unlocks.ITEM_FRYING_PAN, new Tuple<string, int>("melee, fast, block", 10));
-    _Unlocks_Descriptions.Add(Unlocks.ITEM_AXE, new Tuple<string, int>("melee, slower, wide-sweep", 15));
+    _Unlocks_Descriptions.Add(Unlocks.ITEM_AXE, new Tuple<string, int>("melee, slower, wide-sweep", 10));
     //_Unlocks_Descriptions.Add(Unlocks.ITEM_BAT, new Tuple<string, int>("melee, two-handed, wide-sweep", 10));
-    _Unlocks_Descriptions.Add(Unlocks.ITEM_SWORD, new Tuple<string, int>("melee, two-handed, wide-sweep", 35));
+    _Unlocks_Descriptions.Add(Unlocks.ITEM_SWORD, new Tuple<string, int>("melee, two-handed, wide-sweep", 25));
     _Unlocks_Descriptions.Add(Unlocks.ITEM_PISTOL_SILENCED, new Tuple<string, int>("handgun, silenced, fast-reload", 15));
     _Unlocks_Descriptions.Add(Unlocks.ITEM_MACHINE_PISTOL, new Tuple<string, int>("handgun, 3-burst, fast-reload", 15));
     _Unlocks_Descriptions.Add(Unlocks.ITEM_DOUBLE_PISTOL, new Tuple<string, int>("handgun, double-barrel", 15));
-    _Unlocks_Descriptions.Add(Unlocks.ITEM_REVOLVER, new Tuple<string, int>("handgun, powerful, slower-reload", 25));
-    _Unlocks_Descriptions.Add(Unlocks.ITEM_UZI, new Tuple<string, int>("gun, automatic, small-magazine", 20));
+    _Unlocks_Descriptions.Add(Unlocks.ITEM_REVOLVER, new Tuple<string, int>("handgun, powerful, slower-reload", 20));
+    _Unlocks_Descriptions.Add(Unlocks.ITEM_UZI, new Tuple<string, int>("gun, automatic, small-magazine", 15));
     _Unlocks_Descriptions.Add(Unlocks.ITEM_CROSSBOW, new Tuple<string, int>("bow, powerful, slow-reload", 15));
-    _Unlocks_Descriptions.Add(Unlocks.ITEM_SHOTGUN_PUMP, new Tuple<string, int>("shotgun, silenced, reload", 20));
-    _Unlocks_Descriptions.Add(Unlocks.ITEM_SHOTGUN_DOUBLE, new Tuple<string, int>("shotgun, powerful, reload", 30));
-    _Unlocks_Descriptions.Add(Unlocks.ITEM_SHOTGUN_BURST, new Tuple<string, int>("shotgun, two-burst, reload", 40));
-    _Unlocks_Descriptions.Add(Unlocks.ITEM_AK47, new Tuple<string, int>("rifle, automatic, slow-reload", 40));
-    _Unlocks_Descriptions.Add(Unlocks.ITEM_M16, new Tuple<string, int>("rifle, burst, slow-reload", 40));
+    _Unlocks_Descriptions.Add(Unlocks.ITEM_SHOTGUN_PUMP, new Tuple<string, int>("shotgun, silenced, reload", 15));
+    _Unlocks_Descriptions.Add(Unlocks.ITEM_SHOTGUN_DOUBLE, new Tuple<string, int>("shotgun, powerful, reload", 25));
+    _Unlocks_Descriptions.Add(Unlocks.ITEM_SHOTGUN_BURST, new Tuple<string, int>("shotgun, two-burst, reload", 25));
+    _Unlocks_Descriptions.Add(Unlocks.ITEM_AK47, new Tuple<string, int>("rifle, automatic, slow-reload", 25));
+    _Unlocks_Descriptions.Add(Unlocks.ITEM_M16, new Tuple<string, int>("rifle, burst, slow-reload", 25));
     _Unlocks_Descriptions.Add(Unlocks.ITEM_RIFLE, new Tuple<string, int>("rifle, semi-automatic, slow-fire", 15));
-    _Unlocks_Descriptions.Add(Unlocks.ITEM_RIFLE_LEVER, new Tuple<string, int>("rifle, semi-automatic, fast-fire", 30));
+    _Unlocks_Descriptions.Add(Unlocks.ITEM_RIFLE_LEVER, new Tuple<string, int>("rifle, semi-automatic, fast-fire", 20));
     _Unlocks_Descriptions.Add(Unlocks.ITEM_DMR, new Tuple<string, int>("rifle, semi-automatic, slow-reload", 25));
     _Unlocks_Descriptions.Add(Unlocks.ITEM_SNIPER, new Tuple<string, int>("bolt-action, semi-automatic, powerful", 25));
-    _Unlocks_Descriptions.Add(Unlocks.ITEM_GRENADE_LAUNCHER, new Tuple<string, int>("explosive, semi-automatic, slow-reload", 20));
+    _Unlocks_Descriptions.Add(Unlocks.ITEM_GRENADE_LAUNCHER, new Tuple<string, int>("explosive, semi-automatic, slow-reload", 15));
     _Unlocks_Descriptions.Add(Unlocks.ITEM_STICKY_GUN, new Tuple<string, int>("stealthy, chain, slow-reload", 20));
 
-    _Unlocks_Descriptions.Add(Unlocks.ITEM_FLAMETHROWER, new Tuple<string, int>("charge-shot, incendiary, slow-reload", 25));
+    _Unlocks_Descriptions.Add(Unlocks.ITEM_FLAMETHROWER, new Tuple<string, int>("charge-shot, incendiary, slow-reload", 20));
 
     //_Unlocks_Descriptions.Add(Unlocks.ITEM_ROCKET_FIST, new Tuple<string, int>("charge-shot, melee, slow-reload", 0));
 
@@ -316,7 +316,7 @@ public static class Shop
     _Unlocks_Descriptions.Add(Unlocks.UTILITY_GRENADE_IMPACT, new Tuple<string, int>("throwable, contact-explosive", 25));
     _Unlocks_Descriptions.Add(Unlocks.UTILITY_C4, new Tuple<string, int>("throwable, explosive, remote-controlled", 15));
     _Unlocks_Descriptions.Add(Unlocks.UTILITY_STOP_WATCH, new Tuple<string, int>("useable, slows-time", 20));
-    _Unlocks_Descriptions.Add(Unlocks.UTILITY_INVISIBILITY, new Tuple<string, int>("useable, short-invisibility", 20));
+    _Unlocks_Descriptions.Add(Unlocks.UTILITY_INVISIBILITY, new Tuple<string, int>("useable, short-invisibility", 15));
     //_Unlocks_Descriptions.Add(Unlocks.UTILITY_DASH, new Tuple<string, int>("useable, quick speed boost", 0));
 
     _Unlocks_Descriptions.Add(Unlocks.MOD_LASER_SIGHTS, new Tuple<string, int>("-", 5));
@@ -329,38 +329,38 @@ public static class Shop
     _Unlocks_Descriptions.Add(Unlocks.MOD_ARMOR_UP, new Tuple<string, int>("-", 0));
     _Unlocks_Descriptions.Add(Unlocks.MOD_PENETRATION_UP, new Tuple<string, int>("-", 0));
 
-    _Unlocks_Descriptions.Add(Unlocks.MOD_SMART_BULLETS, new Tuple<string, int>("-", 15));
-    _Unlocks_Descriptions.Add(Unlocks.MOD_GRAPPLE_MASTER, new Tuple<string, int>("-", 15));
+    _Unlocks_Descriptions.Add(Unlocks.MOD_SMART_BULLETS, new Tuple<string, int>("-", 30));
+    _Unlocks_Descriptions.Add(Unlocks.MOD_GRAPPLE_MASTER, new Tuple<string, int>("-", 5));
 
     _Unlocks_Descriptions.Add(Unlocks.MAX_EQUIPMENT_POINTS_0, new Tuple<string, int>("equipment points (+1)", 5));
     _Unlocks_Descriptions.Add(Unlocks.MAX_EQUIPMENT_POINTS_1, new Tuple<string, int>("equipment points (+1)", 5));
     _Unlocks_Descriptions.Add(Unlocks.MAX_EQUIPMENT_POINTS_2, new Tuple<string, int>("equipment points (+1)", 10));
-    _Unlocks_Descriptions.Add(Unlocks.MAX_EQUIPMENT_POINTS_3, new Tuple<string, int>("equipment points (+1)", 15));
-    _Unlocks_Descriptions.Add(Unlocks.MAX_EQUIPMENT_POINTS_4, new Tuple<string, int>("equipment points (+1)", 20));
-    _Unlocks_Descriptions.Add(Unlocks.MAX_EQUIPMENT_POINTS_5, new Tuple<string, int>("equipment points (+1)", 25));
+    _Unlocks_Descriptions.Add(Unlocks.MAX_EQUIPMENT_POINTS_3, new Tuple<string, int>("equipment points (+1)", 10));
+    _Unlocks_Descriptions.Add(Unlocks.MAX_EQUIPMENT_POINTS_4, new Tuple<string, int>("equipment points (+1)", 15));
+    _Unlocks_Descriptions.Add(Unlocks.MAX_EQUIPMENT_POINTS_5, new Tuple<string, int>("equipment points (+1)", 20));
     _Unlocks_Descriptions.Add(Unlocks.MAX_EQUIPMENT_POINTS_6, new Tuple<string, int>("equipment points (+1)", 30));
-    _Unlocks_Descriptions.Add(Unlocks.MAX_EQUIPMENT_POINTS_7, new Tuple<string, int>("equipment points (+1)", 35));
-    _Unlocks_Descriptions.Add(Unlocks.MAX_EQUIPMENT_POINTS_8, new Tuple<string, int>("equipment points (+1)", 40));
+    _Unlocks_Descriptions.Add(Unlocks.MAX_EQUIPMENT_POINTS_7, new Tuple<string, int>("equipment points (+1)", 40));
+    _Unlocks_Descriptions.Add(Unlocks.MAX_EQUIPMENT_POINTS_8, new Tuple<string, int>("equipment points (+1)", 50));
     _Unlocks_Descriptions.Add(Unlocks.MAX_EQUIPMENT_POINTS_9, new Tuple<string, int>("equipment points (+1)", 50));
 
-    _Unlocks_Descriptions.Add(Unlocks.LOADOUT_SLOT_X2_0, new Tuple<string, int>("loadout slot (+2)", 50));
-    _Unlocks_Descriptions.Add(Unlocks.LOADOUT_SLOT_X2_1, new Tuple<string, int>("loadout slot (+2)", 50));
-    _Unlocks_Descriptions.Add(Unlocks.LOADOUT_SLOT_X2_2, new Tuple<string, int>("loadout slot (+2)", 50));
-    _Unlocks_Descriptions.Add(Unlocks.LOADOUT_SLOT_X2_3, new Tuple<string, int>("loadout slot (+2)", 50));
-    _Unlocks_Descriptions.Add(Unlocks.LOADOUT_SLOT_X2_4, new Tuple<string, int>("loadout slot (+2)", 50));
-    _Unlocks_Descriptions.Add(Unlocks.LOADOUT_SLOT_X2_5, new Tuple<string, int>("loadout slot (+2)", 50));
+    _Unlocks_Descriptions.Add(Unlocks.LOADOUT_SLOT_X2_0, new Tuple<string, int>("loadout slot (+2)", 3));
+    _Unlocks_Descriptions.Add(Unlocks.LOADOUT_SLOT_X2_1, new Tuple<string, int>("loadout slot (+2)", 8));
+    _Unlocks_Descriptions.Add(Unlocks.LOADOUT_SLOT_X2_2, new Tuple<string, int>("loadout slot (+2)", 15));
+    _Unlocks_Descriptions.Add(Unlocks.LOADOUT_SLOT_X2_3, new Tuple<string, int>("loadout slot (+2)", 20));
+    _Unlocks_Descriptions.Add(Unlocks.LOADOUT_SLOT_X2_4, new Tuple<string, int>("loadout slot (+2)", 25));
+    _Unlocks_Descriptions.Add(Unlocks.LOADOUT_SLOT_X2_5, new Tuple<string, int>("loadout slot (+2)", 30));
 
-    _Unlocks_Descriptions.Add(Unlocks.MODE_SURVIVAL, new Tuple<string, int>("unlocks 'survival' mode", 11));
+    _Unlocks_Descriptions.Add(Unlocks.MODE_SURVIVAL, new Tuple<string, int>("unlocks 'survival' mode", 1));
 
-    _Unlocks_Descriptions.Add(Unlocks.MODE_EXTRAS, new Tuple<string, int>("unlocks 'extras' menu", 0));
-    _Unlocks_Descriptions.Add(Unlocks.EXTRA_GRAVITY, new Tuple<string, int>("unlocks 'gravity' extra", 0));
-    _Unlocks_Descriptions.Add(Unlocks.EXTRA_PLAYER_AMMO, new Tuple<string, int>("unlocks 'player ammo' extra", 0));
-    _Unlocks_Descriptions.Add(Unlocks.EXTRA_ENEMY_OFF, new Tuple<string, int>("unlocks 'enemy off' extra", 0));
-    _Unlocks_Descriptions.Add(Unlocks.EXTRA_CHASE, new Tuple<string, int>("unlocks 'chaser' extra", 0));
-    _Unlocks_Descriptions.Add(Unlocks.EXTRA_TIME, new Tuple<string, int>("unlocks 'time' extra", 0));
-    _Unlocks_Descriptions.Add(Unlocks.EXTRA_HORDE, new Tuple<string, int>("unlocks 'horde' extra", 0));
-    _Unlocks_Descriptions.Add(Unlocks.EXTRA_BLOOD_FX, new Tuple<string, int>("unlocks 'blood fx' extra", 0));
-    _Unlocks_Descriptions.Add(Unlocks.EXTRA_EXPLODED, new Tuple<string, int>("unlocks 'explode death' extra", 0));
+    _Unlocks_Descriptions.Add(Unlocks.MODE_EXTRAS, new Tuple<string, int>("unlocks 'extras' menu", 1));
+    _Unlocks_Descriptions.Add(Unlocks.EXTRA_GRAVITY, new Tuple<string, int>("unlocks 'gravity' extra", 1));
+    _Unlocks_Descriptions.Add(Unlocks.EXTRA_PLAYER_AMMO, new Tuple<string, int>("unlocks 'player ammo' extra", 1));
+    _Unlocks_Descriptions.Add(Unlocks.EXTRA_ENEMY_OFF, new Tuple<string, int>("unlocks 'enemy off' extra", 1));
+    _Unlocks_Descriptions.Add(Unlocks.EXTRA_CHASE, new Tuple<string, int>("unlocks 'chaser' extra", 1));
+    _Unlocks_Descriptions.Add(Unlocks.EXTRA_TIME, new Tuple<string, int>("unlocks 'time' extra", 1));
+    _Unlocks_Descriptions.Add(Unlocks.EXTRA_HORDE, new Tuple<string, int>("unlocks 'horde' extra", 1));
+    _Unlocks_Descriptions.Add(Unlocks.EXTRA_BLOOD_FX, new Tuple<string, int>("unlocks 'blood fx' extra", 1));
+    _Unlocks_Descriptions.Add(Unlocks.EXTRA_EXPLODED, new Tuple<string, int>("unlocks 'explode death' extra", 1));
     _Unlocks_Descriptions.Add(Unlocks.EXTRA_CROWNMODE, new Tuple<string, int>("unlocks 'crown' extra", 0));
 
     _Unlocks_Descriptions.Add(Unlocks.TUTORIAL_PART0, new Tuple<string, int>("", 0));
@@ -399,19 +399,6 @@ public static class Shop
     AddAvailableUnlock(Unlocks.MAX_EQUIPMENT_POINTS_1);
     AddAvailableUnlock(Unlocks.ITEM_PISTOL_SILENCED);
 
-    AddAvailableUnlock(Unlocks.ITEM_STICKY_GUN);
-    AddAvailableUnlock(Unlocks.MOD_SMART_BULLETS);
-    AddAvailableUnlock(Unlocks.MOD_GRAPPLE_MASTER);
-    AddAvailableUnlock(Unlocks.ITEM_FRYING_PAN);
-
-    AddAvailableUnlock(Unlocks.LOADOUT_SLOT_X2_0);
-    AddAvailableUnlock(Unlocks.LOADOUT_SLOT_X2_1);
-    AddAvailableUnlock(Unlocks.LOADOUT_SLOT_X2_2);
-    AddAvailableUnlock(Unlocks.LOADOUT_SLOT_X2_3);
-    AddAvailableUnlock(Unlocks.LOADOUT_SLOT_X2_4);
-    AddAvailableUnlock(Unlocks.LOADOUT_SLOT_X2_5);
-
-    //AddAvailableUnlock(Unlocks.ITEM_FLAMETHROWER);
     //AddAvailableUnlock(Unlocks.ITEM_ROCKET_FIST);
 
     // Add unlocks to vault
@@ -425,28 +412,28 @@ public static class Shop
     }
     else
     {
-      _Unlocks_Vault.Add("classic_0", new Unlocks[] { Unlocks.ITEM_AXE, Unlocks.UTILITY_GRENADE });
-      _Unlocks_Vault.Add("classic_1", new Unlocks[] { Unlocks.MOD_LASER_SIGHTS, Unlocks.UTILITY_KUNAI_EXPLOSIVE, Unlocks.MAX_EQUIPMENT_POINTS_2 });
-      _Unlocks_Vault.Add("classic_2", new Unlocks[] { Unlocks.MODE_SURVIVAL, Unlocks.ITEM_RIFLE, Unlocks.ITEM_MACHINE_PISTOL });
-      _Unlocks_Vault.Add("classic_3", new Unlocks[] { Unlocks.ITEM_DOUBLE_PISTOL, Unlocks.UTILITY_STOP_WATCH, Unlocks.MAX_EQUIPMENT_POINTS_3 });
+      _Unlocks_Vault.Add("classic_0", new Unlocks[] { Unlocks.ITEM_AXE, Unlocks.UTILITY_GRENADE, Unlocks.MAX_EQUIPMENT_POINTS_2, Unlocks.LOADOUT_SLOT_X2_0 });
+      _Unlocks_Vault.Add("classic_1", new Unlocks[] { Unlocks.MOD_LASER_SIGHTS, Unlocks.UTILITY_KUNAI_EXPLOSIVE, Unlocks.MOD_NO_SLOWMO });
+      _Unlocks_Vault.Add("classic_2", new Unlocks[] { Unlocks.MODE_SURVIVAL, Unlocks.ITEM_RIFLE, Unlocks.ITEM_MACHINE_PISTOL, Unlocks.MAX_EQUIPMENT_POINTS_3, Unlocks.LOADOUT_SLOT_X2_1 });
+      _Unlocks_Vault.Add("classic_3", new Unlocks[] { Unlocks.ITEM_DOUBLE_PISTOL, Unlocks.UTILITY_STOP_WATCH });
       _Unlocks_Vault.Add("classic_4", new Unlocks[] { Unlocks.ITEM_AXE, Unlocks.ITEM_REVOLVER, Unlocks.UTILITY_C4, Unlocks.UTILITY_SHURIKEN_BIG });
-      _Unlocks_Vault.Add("classic_5", new Unlocks[] { Unlocks.MOD_NO_SLOWMO, Unlocks.UTILITY_GRENADE_IMPACT });
-      _Unlocks_Vault.Add("classic_6", new Unlocks[] { Unlocks.ITEM_CROSSBOW, Unlocks.MAX_EQUIPMENT_POINTS_4 });
-      _Unlocks_Vault.Add("classic_7", new Unlocks[] { Unlocks.UTILITY_KUNAI_STICKY, Unlocks.UTILITY_INVISIBILITY });
-      _Unlocks_Vault.Add("classic_8", new Unlocks[] { Unlocks.ITEM_UZI, Unlocks.ITEM_SHOTGUN_PUMP });
-      _Unlocks_Vault.Add("classic_9", new Unlocks[] { Unlocks.ITEM_RIFLE_LEVER, Unlocks.MAX_EQUIPMENT_POINTS_5 });
-      _Unlocks_Vault.Add("classic_10", new Unlocks[] { Unlocks.MOD_EXPLOSIONS_UP, Unlocks.ITEM_GRENADE_LAUNCHER });
+      _Unlocks_Vault.Add("classic_5", new Unlocks[] { Unlocks.ITEM_STICKY_GUN, Unlocks.ITEM_GRENADE_LAUNCHER, Unlocks.UTILITY_GRENADE_IMPACT, Unlocks.MAX_EQUIPMENT_POINTS_4 });
+      _Unlocks_Vault.Add("classic_6", new Unlocks[] { Unlocks.ITEM_FRYING_PAN, Unlocks.ITEM_CROSSBOW });
+      _Unlocks_Vault.Add("classic_7", new Unlocks[] { Unlocks.UTILITY_KUNAI_STICKY, Unlocks.UTILITY_INVISIBILITY, Unlocks.MAX_EQUIPMENT_POINTS_5, Unlocks.LOADOUT_SLOT_X2_2 });
+      _Unlocks_Vault.Add("classic_8", new Unlocks[] { Unlocks.ITEM_UZI, Unlocks.ITEM_SHOTGUN_PUMP, Unlocks.MOD_GRAPPLE_MASTER });
+      _Unlocks_Vault.Add("classic_9", new Unlocks[] { Unlocks.ITEM_RIFLE_LEVER, Unlocks.LOADOUT_SLOT_X2_3 });
+      _Unlocks_Vault.Add("classic_10", new Unlocks[] { Unlocks.MOD_EXPLOSIONS_UP });
 
-      _Unlocks_Vault.Add("classic_11", new Unlocks[] { Unlocks.MODE_EXTRAS });
+      _Unlocks_Vault.Add("classic_11", new Unlocks[] { Unlocks.MODE_EXTRAS, Unlocks.MAX_EQUIPMENT_POINTS_6, Unlocks.LOADOUT_SLOT_X2_4 });
       _Unlocks_Vault.Add("classic_12", new Unlocks[] { Unlocks.ITEM_SNIPER, Unlocks.ITEM_SWORD });
-      _Unlocks_Vault.Add("classic_13", new Unlocks[] { Unlocks.ITEM_DMR, Unlocks.MAX_EQUIPMENT_POINTS_6 });
-      _Unlocks_Vault.Add("classic_14", new Unlocks[] { Unlocks.MOD_EXPLOSION_RESISTANCE, Unlocks.ITEM_SHOTGUN_DOUBLE });
-      _Unlocks_Vault.Add("classic_15", new Unlocks[] { Unlocks.ITEM_M16, Unlocks.MAX_EQUIPMENT_POINTS_7 });
+      _Unlocks_Vault.Add("classic_13", new Unlocks[] { Unlocks.ITEM_DMR, Unlocks.MAX_EQUIPMENT_POINTS_7 });
+      _Unlocks_Vault.Add("classic_14", new Unlocks[] { Unlocks.ITEM_SHOTGUN_DOUBLE, Unlocks.MOD_EXPLOSION_RESISTANCE });
+      _Unlocks_Vault.Add("classic_15", new Unlocks[] { Unlocks.ITEM_M16, Unlocks.MAX_EQUIPMENT_POINTS_8, Unlocks.LOADOUT_SLOT_X2_5 });
       _Unlocks_Vault.Add("classic_16", new Unlocks[] { Unlocks.MOD_FASTER_RELOAD });
-      _Unlocks_Vault.Add("classic_17", new Unlocks[] { Unlocks.ITEM_FLAMETHROWER });
-      _Unlocks_Vault.Add("classic_18", new Unlocks[] { Unlocks.ITEM_AK47, Unlocks.MAX_EQUIPMENT_POINTS_8 });
+      _Unlocks_Vault.Add("classic_17", new Unlocks[] { Unlocks.ITEM_FLAMETHROWER, Unlocks.MOD_SMART_BULLETS, });
+      _Unlocks_Vault.Add("classic_18", new Unlocks[] { Unlocks.ITEM_AK47, Unlocks.MAX_EQUIPMENT_POINTS_9 });
       _Unlocks_Vault.Add("classic_19", new Unlocks[] { Unlocks.MOD_MAX_AMMO_UP });
-      _Unlocks_Vault.Add("classic_22", new Unlocks[] { Unlocks.ITEM_SHOTGUN_BURST, Unlocks.MAX_EQUIPMENT_POINTS_9 });
+      _Unlocks_Vault.Add("classic_20", new Unlocks[] { Unlocks.ITEM_SHOTGUN_BURST });
     }
 
     // Create utility cap
