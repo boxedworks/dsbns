@@ -1472,9 +1472,9 @@ public class PlayerScript : MonoBehaviour
 
       // Apply run speed
       if (_runToggle || _ragdoll._forceRun)*/
-      movespeed *= RUNSPEED * 
+      movespeed *= RUNSPEED *
         // Speed perk
-        (HasPerk(Shop.Perk.PerkType.SPEED_UP) ? 1.25f : 1f);
+        (HasPerk(Shop.Perk.PerkType.SPEED_UP) ? 1.15f : 1f);
     }
 
     // Move player

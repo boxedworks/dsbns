@@ -453,7 +453,42 @@ public class EnemyScript : MonoBehaviour
       }
     }
 
-    if (!_agent.enabled) return;
+    if (!_agent.enabled)
+    {
+
+      // Check for attacking
+      if (_ragdoll._grappled)
+      {
+        if (Time.time - _attackTime > 0f && _canAttack)
+        {
+
+          // Only attack if is alive, the target is alive, and (the target is in front, or has a machine gun, or has a melee weapon)
+          if (!_ragdoll._dead)
+          {
+            var useitem = (_leftweaponuse ? _ragdoll._itemL : (_ragdoll._itemR != null ? _ragdoll._itemR : _ragdoll._itemL));
+
+            // Check for reload
+            if (_ragdoll.HasGun() && useitem.NeedsReload())
+            {
+              _ragdoll.Reload();
+              _attackTime = Time.time + (0.5f + Random.value * 0.5f);
+            }
+
+            // Attack if close enough or pointed at target
+            else if (_ragdoll.HasGun() || _ragdoll.HasMelee())
+            {
+              UseItem(true);
+              if (HasMachineGun())
+                _attackTime = Time.time + useitem.UseRate();
+              else
+                _attackTime = Time.time + (0.2f + Random.value * (_ragdoll.HasSilencedWeapon() || _itemLeft == GameScript.ItemManager.Items.REVOLVER ? 0.1f : 0.5f));
+            }
+          }
+        }
+      }
+
+      return;
+    }
 
     var lookAtPos = Vector3.zero;
 
@@ -802,6 +837,13 @@ public class EnemyScript : MonoBehaviour
 
                 if (!_canMove)
                   lookAtPos = _lastKnownPos;
+
+                // Reload if chasing and not
+                var useitem = (_leftweaponuse ? _ragdoll._itemL : (_ragdoll._itemR != null ? _ragdoll._itemR : _ragdoll._itemL));
+                if (useitem?.NeedsReload() ?? false)
+                {
+                  _ragdoll.Reload();
+                }
               }
             }
           }
@@ -1319,7 +1361,7 @@ public class EnemyScript : MonoBehaviour
 
     // Make sure is not targeting self
     if (_ragdoll._id == ragdoll._id) return;
-    
+
     // Check for same setting
     if (_ragdollTarget != null && _ragdollTarget._id == ragdoll._id) return;
     _ragdollTarget = ragdoll;

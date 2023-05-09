@@ -2567,6 +2567,22 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
             t.localScale = new Vector3(0.15f, 0.15f, 0.15f);
             break;
 
+          case ("GRENADE_STUN"):
+
+            t.localPosition += new Vector3(-0.13f, -0.01f, 0f);
+            t.localEulerAngles = new Vector3(0f, 0f, -90f);
+            t.localScale = new Vector3(0.85f, 0.85f, 0.85f);
+
+            break;
+
+          case ("TEMP_SHIELD"):
+
+            t.localPosition += new Vector3(-0.22f, 0.02f, 0f);
+            t.localEulerAngles = new Vector3(90f, 0f, 0f);
+            t.localScale = new Vector3(0.7f, 0.7f, 0.7f);
+
+            break;
+
           default:
             Debug.LogWarning($"Unhandled positioning of Utility UI type: {name}");
 
@@ -3057,8 +3073,6 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
           return 4;
         case Shop.Perk.PerkType.ARMOR_UP:
           return 4;
-        case Shop.Perk.PerkType.SPEED_UP:
-          break;
         case Shop.Perk.PerkType.EXPLOSION_RESISTANCE:
           return 3;
         case Shop.Perk.PerkType.EXPLOSIONS_UP:

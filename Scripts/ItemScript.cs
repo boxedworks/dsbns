@@ -330,16 +330,23 @@ public class ItemScript : MonoBehaviour
         if (hit)
         {
           //bool hitEnemy = !raycastInfo._ragdoll._isPlayer;
+
+          // Check stunned
+          if (!_ragdoll.Active()) return;
+
           // If is enemy, and isn't two handed, don't kill friendlies
-          if (!_ragdoll._isPlayer && !_meleePenatrate && !raycastInfo._ragdoll._isPlayer && !raycastInfo._ragdoll._grappled) return;
+          if (!_ragdoll._isPlayer && !_meleePenatrate && !raycastInfo._ragdoll._isPlayer && !raycastInfo._ragdoll._grappled && !_ragdoll._grappled) return;
+
           // If is player v player, is two handed, and hit enemy before, dont hit
           if (_ragdoll._isPlayer && raycastInfo._ragdoll._isPlayer && _meleePenatrate && _hitEnemy) return;
+
           // If is enemy and target is player, and player is swinging, dont hit
           if (!_ragdoll._isPlayer && raycastInfo._ragdoll._isPlayer && raycastInfo._ragdoll._swinging)
           {
             //FunctionsC.PlaySound(ref raycastInfo._ragdoll._audioPlayer_steps, "Ragdoll/Deflect");
             return;
           }
+
           // Check grappler
           if (raycastInfo._ragdoll._grappling)
           {
@@ -358,6 +365,7 @@ public class ItemScript : MonoBehaviour
 
           if (_twoHanded)
             _hitAnthing = true;
+
           if (!_hitEnemy && !raycastInfo._ragdoll._isPlayer) _hitEnemy = true;
 
           // Record ragdoll id to stop multiple hits

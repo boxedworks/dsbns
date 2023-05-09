@@ -454,7 +454,9 @@ public class ActiveRagdoll
       {
         dt = Time.unscaledDeltaTime;
       }
+
       _hip.MoveRotation(Quaternion.RotateTowards(_hip.rotation, rot, dt * 14f * _rotSpeed * Mathf.Abs(Quaternion.Angle(_hip.rotation, rot))));
+
       // Use iter to move joints
       _movementIter += (_distance.magnitude / 3f) * Time.deltaTime * 65f;
     }
@@ -1251,14 +1253,14 @@ public class ActiveRagdoll
       // Else, gently let go (?)
       else
       {
+        _grapplee._controller.position = _grapplee._hip.position;
+        _grapplee._controller.rotation = _controller.rotation;
+
         var agent = _grapplee._isPlayer ? (_grapplee._playerScript?._agent) : (_grapplee._enemyScript?._agent);
         if (agent != null)
         {
           agent.enabled = true;
         }
-
-        _grapplee._controller.position = _grapplee._hip.position;
-        _grapplee._controller.rotation = _controller.rotation;
 
         // Check armor perk
         if (_playerScript?.HasPerk(Shop.Perk.PerkType.GRAPPLE_MASTER) ?? false)
@@ -1311,7 +1313,7 @@ public class ActiveRagdoll
             }
 
             // Check facing somewhat away dir
-            if ((_controller.forward - ragdoll._controller.forward).magnitude > 0.9f)
+            if ((_controller.forward - ragdoll._controller.forward).magnitude > 0.9f || (ragdoll._enemyScript?.IsChaser() ?? false))
             {
               ToggleRaycasting(true);
               break;
@@ -1680,6 +1682,14 @@ public class ActiveRagdoll
     _playerScript?.OnRefill();
   }
 
+  // Stun the ragdoll
+  bool _stunned { get { return Time.time - _stunTimer < 0f; } }
+  float _stunTimer;
+  public void Stun(float duration = 1.5f)
+  {
+    _stunTimer = Time.time + duration;
+  }
+
   System.Tuple<bool, bool>[] _saveRagdollState;
   public void Ragdoll(bool toggle)
   {
@@ -1887,7 +1897,7 @@ public class ActiveRagdoll
 
   public bool Active()
   {
-    return !_ragdolled && !_reviving;
+    return !_ragdolled && !_reviving && !_stunned;
   }
 
   // Return a true if o is in _parts
