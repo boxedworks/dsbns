@@ -285,7 +285,7 @@ public class ActiveRagdoll
     joint.limits = limits;
   }
 
-  float _invisibility_timer;
+  float _invisibility_timer, _confusedTimer;
   public void Update()
   {
 #if DEBUG
@@ -393,6 +393,13 @@ public class ActiveRagdoll
           agent.Move(dis);
         }
       }
+
+      // Check hip
+      if(_hip.transform.position.y > 0f){
+        Debug.Log("defective ragdoll");
+        Kill(null, DamageSourceType.MELEE, Vector3.zero);
+        return;
+      }
     }
 
     // Move / rotate based on a rigidbody
@@ -463,8 +470,21 @@ public class ActiveRagdoll
     else
     {
       _controller.position = _hip.position;
+
       // Use iter to move joints
       _movementIter += (_distance.magnitude / 10f) * Time.deltaTime * 50f;
+
+      // Check stun FX
+      if (!_dead && _stunned)
+      {
+        if (Time.time - _confusedTimer > 0f)
+        {
+          _confusedTimer = Time.time + Random.Range(0.2f, 0.5f);
+          var p = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.CONFUSED)[0];
+          p.transform.position = _head != null ? _head.transform.position : _controller.position;
+          p.Play();
+        }
+      }
     }
 
     // Kick
@@ -1303,7 +1323,7 @@ public class ActiveRagdoll
             dir += _controller.right * 0.25f;
           else if (i == 1)
             dir += -_controller.right * 0.25f;
-          if (Physics.SphereCast(_controller.position, 0.3f, dir, out hit, 0.75f, EnemyScript._Layermask_Ragdoll))
+          if (Physics.SphereCast(_spine != null ? _spine.transform.position : _hip.transform.position, 0.3f, dir, out hit, 0.75f, EnemyScript._Layermask_Ragdoll))
           {
             var ragdoll = ActiveRagdoll.GetRagdoll(hit.collider.gameObject);
             if (ragdoll == null)
@@ -1393,10 +1413,7 @@ public class ActiveRagdoll
     if (_grapplee != null)
       if (!_grapplee._dead)
       {
-        _grapplee._grappled = false;
-
-        _grapplee._controller.position = _grapplee._hip.position;
-        _grapplee._controller.rotation = _controller.rotation;
+        Grapple(true);
 
         _grapplee?._enemyScript?.OnGrapplerRemoved();
       }
@@ -1628,7 +1645,7 @@ public class ActiveRagdoll
     if (changeColor)
     {
       // Record stats
-      if (source._isPlayer)
+      if (source?._isPlayer ?? false)
       {
         Stats.RecordKill(source._playerScript._Id);
         if (_isPlayer) Stats.RecordTeamkill(source._playerScript._Id);
@@ -1968,7 +1985,7 @@ public class ActiveRagdoll
     if (index == -1)
       return null;
     return _Ragdolls[index / 11];*/
-    foreach (ActiveRagdoll r in _Ragdolls)
+    foreach (var r in _Ragdolls)
       if (r.IsSelf(o)) return r;
     return null;
   }

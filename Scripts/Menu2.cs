@@ -2986,7 +2986,7 @@ public class Menu2
           });
 
       // Shop table headers
-      m.AddComponent("=== " + string.Format(format_shop, "name", "tags", "($$$)", "equip cost", "white", "white", "white") + "\n\n");
+      m.AddComponent($"<color={_COLOR_GRAY}>===</color>" + string.Format(format_shop, "name", "tags", "($$$)", "equip cost", _COLOR_GRAY, _COLOR_GRAY, _COLOR_GRAY) + "\n\n");
 
       // Add unlocks
       foreach (var desc in Shop._Unlocks_Descriptions)
@@ -4603,9 +4603,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
             {
               var utility_amount = Shop.GetUtilityCount(utilities[0]) * utilities.Length;
               utility_name = utilities[0].ToString();
-              var mod = 1f;
-              if (utilities[0] == UtilityScript.UtilityType.SHURIKEN)
-                mod = 0.5f;
+              var mod = 1f / Shop.GetUtilityCount(utilities[0]);
               utility_cost = (int)(GameScript.ItemManager.GetUtilityValue(utilities[0]) * utility_amount * mod);
               component.SetDisplayText(string.Format(loadoutEquip_format, "left utility", $"{utility_name} x{utility_amount}", $"{utility_cost}") + "\n", true);
             }
@@ -4707,9 +4705,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
             {
               var utility_amount = Shop.GetUtilityCount(utilities[0]) * utilities.Length;
               utility_name = utilities[0].ToString();
-              var mod = 1f;
-              if (utilities[0] == UtilityScript.UtilityType.SHURIKEN)
-                mod = 0.5f;
+              var mod = 1f / Shop.GetUtilityCount(utilities[0]);
               utility_cost = (int)(GameScript.ItemManager.GetUtilityValue(utilities[0]) * utility_amount * mod);
               component.SetDisplayText(string.Format(loadoutEquip_format, "right utility", $"{utility_name} x{utility_amount}", $"{utility_cost}") + "\n\n", true);
             }
@@ -5888,6 +5884,43 @@ go to the <color=yellow>SHOP</color> to buy something~1
         RenderMenu();
       })
 
+    /*/ Level end condition
+    .AddComponent("level end condition\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
+      .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+      {
+        // Set display text
+        var selection = "return to level start";
+        switch (Settings._LevelEndcondition._value)
+        {
+          case 1:
+            selection = "on last enemy death";
+            break;
+        }
+        component.SetDisplayText(string.Format(format_options, "level end condition:", selection));
+
+        // Set dropdown data
+        var selections = new List<string>();
+        var actions = new List<System.Action<MenuComponent>>();
+
+        selections.Add($"return to level start [DEFAULT]");
+        actions.Add((MenuComponent component0) =>
+        {
+          Settings._LevelEndcondition._value = 0;
+          _CanRender = false;
+          RenderMenu();
+        });
+        selections.Add($"on last enemy death");
+        actions.Add((MenuComponent component0) =>
+        {
+          Settings._LevelEndcondition._value = 1;
+          _CanRender = false;
+          RenderMenu();
+        });
+
+        // Update dropdown data
+        component.SetDropdownData("when should the level be completed?\n\n", selections, actions, selection);
+      })*/
+
     // Level end behavior
     .AddComponent("level completion\n\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
       .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
@@ -5957,7 +5990,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
         var selections = new List<string>();
         var actions = new List<System.Action<MenuComponent>>();
         var selection_match = $"{selection} -";
-        selections.Add("type - menus are typed out like using a keyboard [DEFAULT]");
+        selections.Add("type    - menus are typed out like using a keyboard [DEFAULT]");
         actions.Add((MenuComponent component0) =>
         {
           Settings._Option_FastText._value = false;
@@ -5986,7 +6019,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
         var selections = new List<string>();
         var actions = new List<System.Action<MenuComponent>>();
         var selection_match = $"{selection} -";
-        selections.Add("on - show game tips in some of the menus [DEFAULT]");
+        selections.Add("on  - show game tips in some of the menus [DEFAULT]");
         actions.Add((MenuComponent component0) =>
         {
           Settings._ShowTips = true;
@@ -6021,7 +6054,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
           switch (i)
           {
             case 0:
-              selections.Add("on");
+              selections.Add("on [DEFAULT]");
               // Add action to update sfx volume
               actions.Add((MenuComponent component0) =>
               {
@@ -6090,9 +6123,12 @@ go to the <color=yellow>SHOP</color> to buy something~1
             Settings._Fullscreen = save_fullscreen;
             Settings._QualityLevel = save_quality;
             Settings._VSync = save_vsync;
-            Settings._CameraType = new FunctionsC.SaveableStat_Bool(Settings._CameraType._name, save_cameratype);
-            Settings._CameraZoom = new FunctionsC.SaveableStat_Int(Settings._CameraZoom._name, save_camerazoom);
-            Settings._Option_FastText = new FunctionsC.SaveableStat_Bool(Settings._Option_FastText._name, save_menutextspeed);
+            Settings._CameraType.Reset();
+            Settings._CameraType._value = save_cameratype;
+            Settings._CameraZoom.Reset();
+            Settings._CameraZoom._value = save_camerazoom;
+            Settings._Option_FastText.Reset();
+            Settings._Option_FastText._value = save_menutextspeed;
             Settings._Blood = save_blood;
             Settings._ForceKeyboard = save_forcekeyboard;
             Settings._ControllerRumble = save_rumble;

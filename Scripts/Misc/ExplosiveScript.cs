@@ -92,7 +92,7 @@ public class ExplosiveScript : MonoBehaviour
     if (disableGameobject) transform.GetChild(0).gameObject.SetActive(false);
 
     // Particles
-    var particles = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.EXPLOSION);
+    var particles = FunctionsC.GetParticleSystem(_explosionType != ExplosionType.STUN ? FunctionsC.ParticleSystemType.EXPLOSION : FunctionsC.ParticleSystemType.EXPLOSION_STUN);
     var main = particles[0].main;
     main.startSpeed = new ParticleSystem.MinMaxCurve(2, Mathf.Lerp(5f, 10f, (_radius / 6f)));
     main = particles[1].main;

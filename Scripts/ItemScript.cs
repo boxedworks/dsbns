@@ -429,7 +429,7 @@ public class ItemScript : MonoBehaviour
           if (_type == ItemType.ROCKET_FIST) spawn_pos = _ragdoll._hip.position;
           var new_position = new Vector3(spawn_pos.x, _ragdoll._spine.transform.position.y, spawn_pos.z);
           bullet.gameObject.SetActive(true);
-          var use_size = use_penatrationAmount > 0 ? use_penatrationAmount > 3 ? 3.5f : 1.2f : 1f;
+          var use_size = use_penatrationAmount > 0 ? use_penatrationAmount > 3 ? 3f : 1.2f : 1f;
           if (_type == ItemType.FLAMETHROWER) use_size = 2.1f;
           else if (_type == ItemType.ROCKET_FIST) use_size = 4.5f;
           bullet.SetSize(use_size);

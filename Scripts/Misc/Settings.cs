@@ -200,7 +200,7 @@ public static class Settings
 
 
   public static FunctionsC.SaveableStat_Bool _Toggle_Lightning;
-  public static FunctionsC.SaveableStat_Int _CameraZoom, _LevelCompletion;
+  public static FunctionsC.SaveableStat_Int _CameraZoom, _LevelCompletion, _LevelEndcondition;
 
   public static int _QualityLevel
   {
@@ -453,6 +453,7 @@ public static class Settings
 
     // Level settings
     _LevelCompletion = new FunctionsC.SaveableStat_Int("LevelCompletion", 0);
+    _LevelEndcondition = new FunctionsC.SaveableStat_Int("LevelEndcondition", 0);
 
     //Camera
     _CameraZoom = new FunctionsC.SaveableStat_Int("CameraZoom", 1);

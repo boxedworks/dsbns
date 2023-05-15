@@ -114,6 +114,11 @@ public static class Shop
   {
     get
     {
+
+      #if UNITY_EDITOR
+        return 999;
+      #endif
+
       if ((Settings._Classic_0_TopRated?._value ?? false) && (Settings._Classic_1_TopRated?._value ?? false))
         return 999;
       return AvailablePoints;
@@ -300,11 +305,11 @@ public static class Shop
     _Unlocks_Descriptions.Add(Unlocks.ITEM_SHOTGUN_DOUBLE, new Tuple<string, int>("shotgun, powerful, reload", 25));
     _Unlocks_Descriptions.Add(Unlocks.ITEM_SHOTGUN_BURST, new Tuple<string, int>("shotgun, two-burst, reload", 25));
     _Unlocks_Descriptions.Add(Unlocks.ITEM_AK47, new Tuple<string, int>("rifle, automatic, slow-reload", 25));
-    _Unlocks_Descriptions.Add(Unlocks.ITEM_M16, new Tuple<string, int>("rifle, burst, slow-reload", 25));
-    _Unlocks_Descriptions.Add(Unlocks.ITEM_RIFLE, new Tuple<string, int>("rifle, semi-automatic, slow-fire", 15));
+    _Unlocks_Descriptions.Add(Unlocks.ITEM_M16, new Tuple<string, int>("rifle, burst, slow-reload", 20));
+    _Unlocks_Descriptions.Add(Unlocks.ITEM_RIFLE, new Tuple<string, int>("rifle, semi-automatic, slow-fire", 10));
     _Unlocks_Descriptions.Add(Unlocks.ITEM_RIFLE_LEVER, new Tuple<string, int>("rifle, semi-automatic, fast-fire", 20));
     _Unlocks_Descriptions.Add(Unlocks.ITEM_DMR, new Tuple<string, int>("rifle, semi-automatic, slow-reload", 25));
-    _Unlocks_Descriptions.Add(Unlocks.ITEM_SNIPER, new Tuple<string, int>("bolt-action, semi-automatic, powerful", 25));
+    _Unlocks_Descriptions.Add(Unlocks.ITEM_SNIPER, new Tuple<string, int>("bolt-action, semi-automatic, powerful", 20));
     _Unlocks_Descriptions.Add(Unlocks.ITEM_GRENADE_LAUNCHER, new Tuple<string, int>("explosive, semi-automatic, slow-reload", 15));
     _Unlocks_Descriptions.Add(Unlocks.ITEM_STICKY_GUN, new Tuple<string, int>("stealthy, chain, slow-reload", 20));
 
@@ -317,7 +322,7 @@ public static class Shop
     _Unlocks_Descriptions.Add(Unlocks.UTILITY_KUNAI_EXPLOSIVE, new Tuple<string, int>("throwable, explodes, small", 15));
     _Unlocks_Descriptions.Add(Unlocks.UTILITY_KUNAI_STICKY, new Tuple<string, int>("throwable, delalyed-explosion, small", 25));
     _Unlocks_Descriptions.Add(Unlocks.UTILITY_GRENADE, new Tuple<string, int>("throwable, explosive, large-radius", 20));
-    _Unlocks_Descriptions.Add(Unlocks.UTILITY_GRENADE_IMPACT, new Tuple<string, int>("throwable, contact-explosive", 25));
+    _Unlocks_Descriptions.Add(Unlocks.UTILITY_GRENADE_IMPACT, new Tuple<string, int>("throwable, contact-explosive", 20));
     _Unlocks_Descriptions.Add(Unlocks.UTILITY_C4, new Tuple<string, int>("throwable, explosive, remote-controlled", 15));
     _Unlocks_Descriptions.Add(Unlocks.UTILITY_STOP_WATCH, new Tuple<string, int>("useable, slows-time", 20));
     _Unlocks_Descriptions.Add(Unlocks.UTILITY_INVISIBILITY, new Tuple<string, int>("useable, short-invisibility", 15));
@@ -330,7 +335,7 @@ public static class Shop
     _Unlocks_Descriptions.Add(Unlocks.MOD_NO_SLOWMO, new Tuple<string, int>("-", 1));
     _Unlocks_Descriptions.Add(Unlocks.MOD_FASTER_RELOAD, new Tuple<string, int>("-", 25));
     _Unlocks_Descriptions.Add(Unlocks.MOD_MAX_AMMO_UP, new Tuple<string, int>("-", 25));
-    _Unlocks_Descriptions.Add(Unlocks.MOD_EXPLOSION_RESISTANCE, new Tuple<string, int>("-", 25));
+    _Unlocks_Descriptions.Add(Unlocks.MOD_EXPLOSION_RESISTANCE, new Tuple<string, int>("-", 20));
     _Unlocks_Descriptions.Add(Unlocks.MOD_EXPLOSIONS_UP, new Tuple<string, int>("-", 25));
 
     _Unlocks_Descriptions.Add(Unlocks.MOD_ARMOR_UP, new Tuple<string, int>("-", 0));
@@ -397,7 +402,9 @@ public static class Shop
 
       shopPointsTotaled += pair.Value.Item2;
     }
+#if UNITY_EDITOR
     Debug.Log($"Total points: ({_AvailablePoints}) {shopPointsTotaled} / {((1 * 11 * 2) + (10 * 12 * 2)) * 4}");
+#endif
 
     // Set starter unlocks
     AddAvailableUnlock(Unlocks.ITEM_KNIFE);
@@ -407,9 +414,9 @@ public static class Shop
     AddAvailableUnlock(Unlocks.MAX_EQUIPMENT_POINTS_1);
     AddAvailableUnlock(Unlocks.ITEM_PISTOL_SILENCED);
 
-    AddAvailableUnlock(Unlocks.UTILITY_TEMP_SHIELD);
-    AddAvailableUnlock(Unlocks.MOD_SPEED_UP);
-    AddAvailableUnlock(Unlocks.UTILITY_GRENADE_STUN);
+    //AddAvailableUnlock(Unlocks.UTILITY_TEMP_SHIELD);
+    //AddAvailableUnlock(Unlocks.MOD_SPEED_UP);
+    //AddAvailableUnlock(Unlocks.UTILITY_GRENADE_STUN);
 
     //AddAvailableUnlock(Unlocks.ITEM_ROCKET_FIST);
 
@@ -425,12 +432,12 @@ public static class Shop
     else
     {
       _Unlocks_Vault.Add("classic_0", new Unlocks[] { Unlocks.ITEM_AXE, Unlocks.UTILITY_GRENADE, Unlocks.MAX_EQUIPMENT_POINTS_2, Unlocks.LOADOUT_SLOT_X2_0 });
-      _Unlocks_Vault.Add("classic_1", new Unlocks[] { Unlocks.MOD_LASER_SIGHTS, Unlocks.UTILITY_KUNAI_EXPLOSIVE, Unlocks.MOD_NO_SLOWMO });
+      _Unlocks_Vault.Add("classic_1", new Unlocks[] { Unlocks.MOD_LASER_SIGHTS, Unlocks.MOD_NO_SLOWMO, Unlocks.UTILITY_KUNAI_EXPLOSIVE });
       _Unlocks_Vault.Add("classic_2", new Unlocks[] { Unlocks.MODE_SURVIVAL, Unlocks.ITEM_RIFLE, Unlocks.ITEM_MACHINE_PISTOL, Unlocks.MAX_EQUIPMENT_POINTS_3, Unlocks.LOADOUT_SLOT_X2_1 });
       _Unlocks_Vault.Add("classic_3", new Unlocks[] { Unlocks.ITEM_DOUBLE_PISTOL, Unlocks.UTILITY_STOP_WATCH, Unlocks.UTILITY_TEMP_SHIELD, Unlocks.MOD_SPEED_UP });
-      _Unlocks_Vault.Add("classic_4", new Unlocks[] { Unlocks.ITEM_AXE, Unlocks.ITEM_REVOLVER, Unlocks.UTILITY_C4, Unlocks.UTILITY_SHURIKEN_BIG });
+      _Unlocks_Vault.Add("classic_4", new Unlocks[] { Unlocks.ITEM_AXE, Unlocks.ITEM_REVOLVER, Unlocks.UTILITY_C4, Unlocks.UTILITY_GRENADE_STUN, Unlocks.UTILITY_SHURIKEN_BIG });
       _Unlocks_Vault.Add("classic_5", new Unlocks[] { Unlocks.ITEM_STICKY_GUN, Unlocks.ITEM_GRENADE_LAUNCHER, Unlocks.UTILITY_GRENADE_IMPACT, Unlocks.MAX_EQUIPMENT_POINTS_4 });
-      _Unlocks_Vault.Add("classic_6", new Unlocks[] { Unlocks.ITEM_FRYING_PAN, Unlocks.ITEM_CROSSBOW, Unlocks.UTILITY_GRENADE_STUN });
+      _Unlocks_Vault.Add("classic_6", new Unlocks[] { Unlocks.ITEM_FRYING_PAN, Unlocks.ITEM_CROSSBOW });
       _Unlocks_Vault.Add("classic_7", new Unlocks[] { Unlocks.UTILITY_KUNAI_STICKY, Unlocks.UTILITY_INVISIBILITY, Unlocks.MAX_EQUIPMENT_POINTS_5, Unlocks.LOADOUT_SLOT_X2_2 });
       _Unlocks_Vault.Add("classic_8", new Unlocks[] { Unlocks.ITEM_UZI, Unlocks.ITEM_SHOTGUN_PUMP, Unlocks.MOD_GRAPPLE_MASTER });
       _Unlocks_Vault.Add("classic_9", new Unlocks[] { Unlocks.ITEM_RIFLE_LEVER, Unlocks.LOADOUT_SLOT_X2_3 });
@@ -450,19 +457,19 @@ public static class Shop
 
     // Create utility cap
     _Utility_Cap = new Dictionary<UtilityScript.UtilityType, int>();
-    _Utility_Cap.Add(UtilityScript.UtilityType.GRENADE, 5);
-    _Utility_Cap.Add(UtilityScript.UtilityType.GRENADE_IMPACT, 5);
-    _Utility_Cap.Add(UtilityScript.UtilityType.C4, 5);
-    _Utility_Cap.Add(UtilityScript.UtilityType.SHURIKEN, 5);
-    _Utility_Cap.Add(UtilityScript.UtilityType.SHURIKEN_BIG, 5);
-    _Utility_Cap.Add(UtilityScript.UtilityType.KUNAI_EXPLOSIVE, 5);
-    _Utility_Cap.Add(UtilityScript.UtilityType.KUNAI_STICKY, 5);
-    _Utility_Cap.Add(UtilityScript.UtilityType.STOP_WATCH, 5);
-    _Utility_Cap.Add(UtilityScript.UtilityType.TEMP_SHIELD, 5);
-    _Utility_Cap.Add(UtilityScript.UtilityType.INVISIBILITY, 5);
-    _Utility_Cap.Add(UtilityScript.UtilityType.DASH, 5);
+    _Utility_Cap.Add(UtilityScript.UtilityType.GRENADE, 6);
+    _Utility_Cap.Add(UtilityScript.UtilityType.GRENADE_IMPACT, 6);
+    _Utility_Cap.Add(UtilityScript.UtilityType.C4, 6);
+    _Utility_Cap.Add(UtilityScript.UtilityType.SHURIKEN, 6);
+    _Utility_Cap.Add(UtilityScript.UtilityType.SHURIKEN_BIG, 6);
+    _Utility_Cap.Add(UtilityScript.UtilityType.KUNAI_EXPLOSIVE, 6);
+    _Utility_Cap.Add(UtilityScript.UtilityType.KUNAI_STICKY, 6);
+    _Utility_Cap.Add(UtilityScript.UtilityType.STOP_WATCH, 6);
+    _Utility_Cap.Add(UtilityScript.UtilityType.TEMP_SHIELD, 6);
+    _Utility_Cap.Add(UtilityScript.UtilityType.INVISIBILITY, 6);
+    _Utility_Cap.Add(UtilityScript.UtilityType.DASH, 6);
 
-    _Utility_Cap.Add(UtilityScript.UtilityType.STICKY_GUN_BULLET, 5);
+    _Utility_Cap.Add(UtilityScript.UtilityType.STICKY_GUN_BULLET, 50);
 
     //
     _TwoHanded_Dictionary = new List<GameScript.ItemManager.Items>();

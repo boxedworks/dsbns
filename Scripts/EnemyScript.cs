@@ -457,7 +457,7 @@ public class EnemyScript : MonoBehaviour
     {
 
       // Check for attacking
-      if (_ragdoll._grappled)
+      if (_ragdoll._grappled && _ragdoll._grappler._isPlayer)
       {
         if (Time.time - _attackTime > 0f && _canAttack)
         {
@@ -1705,7 +1705,6 @@ public class EnemyScript : MonoBehaviour
     SetRagdollTarget(closestPlayer);
 
     SetRandomStrafe();
-    _agent.enabled = true;
     _ragdoll._rotSpeed = PlayerScript.ROTATIONSPEED * (0.8f + Random.value * 0.3f);
     TargetFound(true, false);
   }
@@ -1860,6 +1859,7 @@ public class EnemyScript : MonoBehaviour
 
         // Level timer
         TileManager._Level_Complete = true;
+        GameScript.MarkLevelCompleted();
 
         // Check timers
         var can_save_timers = !Settings._Extras_UsingAnyImportant;
@@ -1996,7 +1996,7 @@ public class EnemyScript : MonoBehaviour
             {
 
               // Save best dev time
-              if (/*false &&*/ Debug.isDebugBuild)
+              if (false && Debug.isDebugBuild)
               {
 
                 if (TileManager._LevelTime_Dev == -1 || level_time < TileManager._LevelTime_Dev)
@@ -2092,6 +2092,12 @@ public class EnemyScript : MonoBehaviour
             {
               var prereqsSatisfied = true;
 
+              // Check extras menu
+              if (!Shop.Unlocked(Shop.Unlocks.MODE_EXTRAS))
+              {
+                prereqsSatisfied = false;
+              }
+
               // Make sure player count not changed
               if (PlayerScript.s_NumPlayersStart != 1 || Settings._NumberPlayers != 1)
               {
@@ -2155,12 +2161,22 @@ public class EnemyScript : MonoBehaviour
 
                 foreach (var util in e1._utilities_left)
                 {
-                  if (!utilsTotal.Contains(util))
+                  if (utilsTotal.Contains(util))
                   {
                     return false;
                   }
                   utilsTotal.Remove(util);
                 }
+                foreach (var util in e1._utilities_right)
+                {
+                  if (utilsTotal.Contains(util))
+                  {
+                    return false;
+                  }
+                  utilsTotal.Remove(util);
+                }
+                if (utilsTotal.Count > 0)
+                  return false;
 
                 //
                 return true;
@@ -2243,6 +2259,18 @@ public class EnemyScript : MonoBehaviour
                   Debug.Log($"Unlocked {extraUnlock}");
                   Shop.AddAvailableUnlock(extraUnlock, true);
                 }
+            }
+          }
+
+          // Last killed settings
+          if (last_killed && Settings._LevelEndcondition._value == 1)
+          {
+            if (Settings._Extra_CrazyZombies && !PlayerScript.HasExit())
+            { }
+            else
+            {
+              yield return new WaitForSecondsRealtime(0.5f);
+              GameScript.OnLevelComplete();
             }
           }
 

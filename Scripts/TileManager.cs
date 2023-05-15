@@ -43,6 +43,8 @@ public class TileManager
   {
     IEnumerator ShowTextCo()
     {
+      //SfxManager.PlayAudioSourceSimple(GameResources._Camera_Main.transform.GetChild(1).position, "Etc/HiHat", 0.95f, 1f, SfxManager.AudioClass.NONE, false, false);
+
       _Text_GameOver.text = $"<color={color_base}>{text}</color>";
       for (var i = 0; i < flashes; i++)
       {
@@ -114,7 +116,7 @@ public class TileManager
   public static void MoveMonie(int index, int delay, int spacingIndex)
   {
 
-    Debug.Log(spacingIndex);
+    //Debug.Log(spacingIndex);
 
     // Make sure UI / level is the same
     bool IsActive()

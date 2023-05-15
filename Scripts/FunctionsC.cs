@@ -140,6 +140,8 @@ public static class FunctionsC
     GIBLETS,
     CONFETTI,
     BULLET_CASING_HOT,
+    CONFUSED,
+    EXPLOSION_STUN,
   }
   static int _ExplosionIter;
   public static ParticleSystem[] GetParticleSystem(ParticleSystemType particleType, int forceParticleIndex = -1)
@@ -220,6 +222,14 @@ public static class FunctionsC
         index = 21;
         break;
 
+      case ParticleSystemType.CONFUSED:
+        index = 23;
+        break;
+      case ParticleSystemType.EXPLOSION_STUN:
+        index = 24;
+        hasChildren = true;
+        break;
+
     }
 
     if (forceParticleIndex != -1)
@@ -246,6 +256,7 @@ public static class FunctionsC
       var container = particles.GetChild(index);
       if (
         particleType == ParticleSystemType.EXPLOSION ||
+        particleType == ParticleSystemType.EXPLOSION_STUN ||
         particleType == ParticleSystemType.FIREBALL ||
         particleType == ParticleSystemType.SMOKEBALL
         )
@@ -353,7 +364,7 @@ public static class FunctionsC
       r.ToggleRaycasting(false);
 
     // SFX
-    PlayComplexParticleSystemAt(ParticleSystemType.EXPLOSION, position + new Vector3(0f, 0.2f, 0f));
+    PlayComplexParticleSystemAt(type != ExplosiveScript.ExplosionType.STUN ? FunctionsC.ParticleSystemType.EXPLOSION : FunctionsC.ParticleSystemType.EXPLOSION_STUN, position + new Vector3(0f, 0.2f, 0f));
 
     // Loop through ragdolls to raycast and affect
     var exploded = 0;
@@ -395,12 +406,12 @@ public static class FunctionsC
             PlayerScript._SlowmoTimer += 2f;
 
 #if UNITY_STANDALONE
-        if (exploded == 5)
-          SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.DEMO_LEVEL_0);
-        else if (exploded == 10)
-          SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.DEMO_LEVEL_1);
-        else if (exploded == 25)
-          SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.DEMO_LEVEL_2);
+          if (exploded == 5)
+            SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.DEMO_LEVEL_0);
+          else if (exploded == 10)
+            SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.DEMO_LEVEL_1);
+          else if (exploded == 25)
+            SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.DEMO_LEVEL_2);
 #endif
         }
       }

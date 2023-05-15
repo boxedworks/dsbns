@@ -50,7 +50,7 @@ public static class SfxManager
     s_audioClassCounts = new Dictionary<AudioClass, int>();
     s_audioClassAmounts.Add(AudioClass.NONE, -1);
     s_audioClassCounts.Add(AudioClass.NONE, 0);
-    s_audioClassAmounts.Add(AudioClass.FOOTSTEP, 50);
+    s_audioClassAmounts.Add(AudioClass.FOOTSTEP, 35);
     s_audioClassCounts.Add(AudioClass.FOOTSTEP, 0);
   }
 

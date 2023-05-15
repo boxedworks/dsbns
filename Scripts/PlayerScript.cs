@@ -23,7 +23,7 @@ public class PlayerScript : MonoBehaviour
   public GameScript.ItemManager.Items _itemLeft, _itemRight;
 
   public static readonly float
-  MOVESPEED = 4.5f,
+  MOVESPEED = 4f,
     RUNSPEED = 1.15f,
     ROTATIONSPEED = 2f;
 
@@ -297,9 +297,7 @@ public class PlayerScript : MonoBehaviour
       _UtilitiesRight = new List<UtilityScript>();
       foreach (var utility in _Equipment._utilities_right)
       {
-        var count = 1;
-        if (utility == UtilityScript.UtilityType.SHURIKEN)
-          count = 2;
+        var count = Shop.GetUtilityCount(utility);
         for (; count > 0 && max-- > 0; count--)
           AddUtility(utility, side);
       }
@@ -1203,30 +1201,30 @@ public class PlayerScript : MonoBehaviour
       // Check utility
       if (ControllerManager.GetKey(ControllerManager.Key.Q))
       {
-        if (_UtilitiesLeft.Count == 0 && _UtilitiesRight.Count > 0)
+        /*if (_UtilitiesLeft.Count == 0 && _UtilitiesRight.Count > 0)
           _UtilitiesRight[0].UseDown();
-        else if (_UtilitiesLeft.Count > 0)
+        else */if (_UtilitiesLeft.Count > 0)
           _UtilitiesLeft[0].UseDown();
       }
       else if (ControllerManager.GetKey(ControllerManager.Key.Q, ControllerManager.InputMode.UP))
       {
-        if (_UtilitiesLeft.Count == 0 && _UtilitiesRight.Count > 0)
+        /*if (_UtilitiesLeft.Count == 0 && _UtilitiesRight.Count > 0)
           _UtilitiesRight[0].UseUp();
-        else if (_UtilitiesLeft.Count > 0)
+        else */if (_UtilitiesLeft.Count > 0)
           _UtilitiesLeft[0].UseUp();
       }
       if (ControllerManager.GetKey(ControllerManager.Key.E))
       {
-        if (_UtilitiesRight.Count == 0 && _UtilitiesLeft.Count > 0)
+        /*if (_UtilitiesRight.Count == 0 && _UtilitiesLeft.Count > 0)
           _UtilitiesLeft[0].UseDown();
-        else if (_UtilitiesRight.Count > 0)
+        else */if (_UtilitiesRight.Count > 0)
           _UtilitiesRight[0].UseDown();
       }
       else if (ControllerManager.GetKey(ControllerManager.Key.E, ControllerManager.InputMode.UP))
       {
-        if (_UtilitiesRight.Count == 0 && _UtilitiesLeft.Count > 0)
+        /*if (_UtilitiesRight.Count == 0 && _UtilitiesLeft.Count > 0)
           _UtilitiesLeft[0].UseUp();
-        else if (_UtilitiesRight.Count > 0)
+        else */if (_UtilitiesRight.Count > 0)
           _UtilitiesRight[0].UseUp();
       }
 
@@ -1381,30 +1379,30 @@ public class PlayerScript : MonoBehaviour
         // Check utilities
         if (gamepad.leftShoulder.wasPressedThisFrame)
         {
-          if (_UtilitiesLeft.Count == 0 && _UtilitiesRight.Count > 0)
-            _UtilitiesRight[0].UseDown();
-          else if (_UtilitiesLeft.Count > 0)
+          /*if (_UtilitiesLeft.Count == 0 && _UtilitiesRight.Count > 0)
+            {}_UtilitiesRight[0].UseDown();
+          else */if (_UtilitiesLeft.Count > 0)
             _UtilitiesLeft[0].UseDown();
         }
         else if (gamepad.leftShoulder.wasReleasedThisFrame)
         {
-          if (_UtilitiesLeft.Count == 0 && _UtilitiesRight.Count > 0)
+          /*if (_UtilitiesLeft.Count == 0 && _UtilitiesRight.Count > 0)
             _UtilitiesRight[0].UseUp();
-          else if (_UtilitiesLeft.Count > 0)
+          else */if (_UtilitiesLeft.Count > 0)
             _UtilitiesLeft[0].UseUp();
         }
         if (gamepad.rightShoulder.wasPressedThisFrame)
         {
-          if (_UtilitiesRight.Count == 0 && _UtilitiesLeft.Count > 0)
+          /*if (_UtilitiesRight.Count == 0 && _UtilitiesLeft.Count > 0)
             _UtilitiesLeft[0].UseDown();
-          else if (_UtilitiesRight.Count > 0)
+          else */if (_UtilitiesRight.Count > 0)
             _UtilitiesRight[0].UseDown();
         }
         else if (gamepad.rightShoulder.wasReleasedThisFrame)
         {
-          if (_UtilitiesRight.Count == 0 && _UtilitiesLeft.Count > 0)
+          /*if (_UtilitiesRight.Count == 0 && _UtilitiesLeft.Count > 0)
             _UtilitiesLeft[0].UseUp();
-          else if (_UtilitiesRight.Count > 0)
+          else */if (_UtilitiesRight.Count > 0)
             _UtilitiesRight[0].UseUp();
         }
 

@@ -84,8 +84,9 @@ public class BulletScript : MonoBehaviour
   {
     if (_sourceItem == null || _triggered)
       return;
+
     // Check for timeout
-    if (Time.time - _startTime > 1.25f)
+    if (Time.time - _startTime > 3f)
     {
       Hide();
       return;
@@ -125,6 +126,7 @@ public class BulletScript : MonoBehaviour
     _initialForce = force;
   }
 
+  float _saveSmartVelocity;
   private void OnTriggerStay(Collider collider)
   {
     // Local function to apply ragdoll damage
@@ -169,8 +171,12 @@ public class BulletScript : MonoBehaviour
             var enemy = FunctionsC.GetClosestEnemyTo(transform.position, false);
             if (enemy != null && enemy._ragdoll != null)
             {
-              var new_vel = (enemy._ragdoll._hip.transform.position - _rb.position).normalized * _rb.velocity.magnitude;
+              if (_saveSmartVelocity == -1f)
+                _saveSmartVelocity = _rb.velocity.magnitude;
+              var new_vel = (enemy._ragdoll._hip.transform.position - _rb.position).normalized * _saveSmartVelocity;
               _rb.velocity = new_vel;
+
+              _startTime = Time.time;
             }
           }
           return true;
@@ -194,28 +200,37 @@ public class BulletScript : MonoBehaviour
         var item = collider.transform.parent.GetComponent<ItemScript>();
         if (item._ragdoll._id != _sourceRagdoll._id)
         {
-          if ((item._ragdoll?._swinging ?? false))
-          {
 
-            Deflect(item, true);
+          var logic = true;
+          if (_sourceItem._ragdoll._grappled)
+          {
+            if (_sourceRagdoll._id == _sourceItem._ragdoll._id && item._ragdoll._id == _sourceRagdoll._grappler._id)
+              logic = false;
+          }
+          if (logic)
+          {
+            if ((item._ragdoll?._swinging ?? false))
+            {
+
+              Deflect(item, true);
 
 #if UNITY_STANDALONE
-            // Check achievement
-            if (item._ragdoll._isPlayer && item._ragdoll._playerScript != null)
-              SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.BAT_DEFLECT);
+              // Check achievement
+              if (item._ragdoll._isPlayer && item._ragdoll._playerScript != null)
+                SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.BAT_DEFLECT);
 #endif
-          }
-          else
-          {
-            PlaySparks(true);
+            }
+            else
+            {
+              PlaySparks(true);
 
-            var parts = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.BULLET_CASING_HOT)[0];
-            parts.transform.position = transform.position;
-            parts.Emit(1);
+              var parts = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.BULLET_CASING_HOT)[0];
+              parts.transform.position = transform.position;
+              parts.Emit(1);
 
-            item._ragdoll.Recoil(-(_sourceItem.transform.position - item.transform.position).normalized, _rb.velocity.magnitude / 25f);
-
-            Hide();
+              item._ragdoll.Recoil(-(_sourceItem.transform.position - item.transform.position).normalized, _rb.velocity.magnitude / 25f);
+              Hide();
+            }
           }
         }
         return;
@@ -393,6 +408,7 @@ public class BulletScript : MonoBehaviour
     _p.transform.parent = transform;
     _p.transform.localPosition = new Vector3(0f, 0f, 0.5f);
     _lastRagdollPosition = Vector3.zero;
+    _saveSmartVelocity = -1f;
 
     if (item._type != GameScript.ItemManager.Items.FLAMETHROWER && item._type != GameScript.ItemManager.Items.ROCKET_FIST)
     {
@@ -469,6 +485,7 @@ public class BulletScript : MonoBehaviour
   void Deflect(ItemScript redirectorItem, bool recoil = false)
   {
     _deflected = true;
+    _startTime = Time.time;
 
     // Change direction
     var speed = rb.velocity.magnitude;

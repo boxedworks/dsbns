@@ -145,7 +145,7 @@ public class UtilityScript : ItemScript
         break;
 
       case UtilityType.GRENADE_STUN:
-        explosion_radius = 3f;
+        explosion_radius = 2f;
         _throwSpeed = 2f;
         explosionType = ExplosiveScript.ExplosionType.STUN;
         break;

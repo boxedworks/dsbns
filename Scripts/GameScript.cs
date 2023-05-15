@@ -2372,13 +2372,13 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       var utils = _equipment._utilities_left;
       if (side == ActiveRagdoll.Side.RIGHT)
         utils = _equipment._utilities_right;
+
       // Check for no utilities
       if (utils.Length == 0)
         return 0;
-      // Check for special utils
-      if (utils[0] == UtilityScript.UtilityType.SHURIKEN)
-        return utils.Length * 2;
-      return utils.Length;
+
+      //
+      return utils.Length * Shop.GetUtilityCount(utils[0]);
     }
 
     public void UpdateIcons()
@@ -2577,7 +2577,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
 
           case ("TEMP_SHIELD"):
 
-            t.localPosition += new Vector3(-0.22f, 0.02f, 0f);
+            t.localPosition += new Vector3(-0.2f, 0.03f, 0f);
             t.localEulerAngles = new Vector3(90f, 0f, 0f);
             t.localScale = new Vector3(0.7f, 0.7f, 0.7f);
 
@@ -3059,7 +3059,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
           return 1;
 
         case UtilityScript.UtilityType.GRENADE_STUN:
-          return 2;
+          return 1;
       }
       return 100;
     }
@@ -3194,7 +3194,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
   }
 
   //
-  static void OnLevelComplete()
+  static public void OnLevelComplete()
   {
     // Check survival
     if (IsSurvival()) return;
@@ -3274,6 +3274,60 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       return;
     }
 
+    if (Levels._CurrentLevelIndex == 0)
+    {
+      MarkLevelCompleted();
+    }
+
+    // Display unlock messages
+    if (Shop.s_UnlockString != string.Empty)
+    {
+      TogglePause(Shop.s_UnlockString.Contains("new difficulty unlocked") || Shop.s_UnlockString.Contains("to unlock the optional extra settings") ? Menu2.MenuType.LEVELS : Menu2.MenuType.NONE);
+    }
+
+    // Check level completion behavior
+    switch (Settings._LevelCompletion._value)
+    {
+
+      // Next level
+      case 0:
+        if (Levels._CurrentLevelIndex + 1 == Levels._CurrentLevelCollection._levelData.Length)
+        {
+          TogglePause();
+          Menu2.SwitchMenu(Menu2.MenuType.LEVELS);
+          return;
+        }
+        NextLevel(Levels._CurrentLevelIndex + 1);
+        return;
+
+      // Reload level
+      case 1:
+        TileManager.ReloadMap();
+        break;
+
+      // Previous level
+      case 3:
+        if (Levels._CurrentLevelIndex == 0)
+        {
+          TogglePause();
+          Menu2.SwitchMenu(Menu2.MenuType.LEVELS);
+          return;
+        }
+        NextLevel(Levels._CurrentLevelIndex - 1);
+        break;
+    }
+
+    // Increment menu selector
+    Menu2._SaveLevelSelected++;
+    if (Menu2._SaveLevelSelected == 12)
+    {
+      Menu2._SaveLevelSelected = 0;
+      Menu2._SaveMenuDir++;
+    }
+  }
+
+  public static bool MarkLevelCompleted()
+  {
     // Stat
     Stats.OverallStats._Levels_Completed++;
 
@@ -3308,105 +3362,42 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       }
     }
 
-    // Check demo
-    if (_s_Singleton._IsDemo && Levels._CurrentLevelIndex + 1 >= 48)
+    // Check last level completed
+    if (Levels._CurrentLevelIndex + 1 == Levels._CurrentLevelCollection._levelData.Length)
     {
-      Menu2._SaveMenuDir = -1;
-      Shop.s_UnlockString += $"- you've reached the end of the <color=cyan>demo</color> for CLASSIC mode\n- purchase the game to access the rest of the game!\n";
-
-#if UNITY_STANDALONE
-      // Achievement
-      SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.DIFFICULTY_1);
-      TogglePause(Menu2.MenuType.LEVELS);
-#endif
-
-      return;
-    }
-
-    // Classic mode
-    else
-    {
-
-      // Check last level completed
-      if (Levels._CurrentLevelIndex + 1 == Levels._CurrentLevelCollection._levelData.Length)
+      if (Settings._DIFFICULTY == 0)
       {
-        if (Settings._DIFFICULTY == 0)
+        if (Settings._DifficultyUnlocked == 0)
         {
-          if (Settings._DifficultyUnlocked == 0)
-          {
-            Settings._DIFFICULTY = 1;
-            Levels._CurrentLevelCollectionIndex = 1;
-            Menu2._SaveMenuDir = -1;
-            Settings._DifficultyUnlocked = 1;
-            Shop.s_UnlockString += $"- new difficulty unlocked: <color=cyan>sneakier</color>\n";
-
-            // Achievement
-#if UNITY_STANDALONE
-            SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.DIFFICULTY_1);
-#endif
-
-            TogglePause(Menu2.MenuType.LEVELS);
-            return;
-          }
-        }
-        else if (Settings._DIFFICULTY == 1)
-        {
+          Settings._DIFFICULTY = 1;
+          Levels._CurrentLevelCollectionIndex = 1;
+          Menu2._SaveMenuDir = -1;
+          Settings._DifficultyUnlocked = 1;
+          Shop.s_UnlockString += $"- new difficulty unlocked: <color=cyan>sneakier</color>\n";
 
           // Achievement
 #if UNITY_STANDALONE
-          SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.DIFFICULTY_2);
+          SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.DIFFICULTY_1);
 #endif
 
-          Shop.s_UnlockString += $"- you have beaten the classic mode!\n- try out the survival mode or try\n  to unlock the optional extra settings!";
-        }
-
-        // Display unlock messages
-        if (Shop.s_UnlockString != string.Empty)
-        {
-          TogglePause(Menu2.MenuType.LEVELS);
+          return true;
         }
       }
-
-      // Check level completion behavior
-      switch (Settings._LevelCompletion._value)
+      else if (Settings._DIFFICULTY == 1)
       {
 
-        // Next level
-        case 0:
-          if (Levels._CurrentLevelIndex + 1 == Levels._CurrentLevelCollection._levelData.Length)
-          {
-            TogglePause();
-            Menu2.SwitchMenu(Menu2.MenuType.LEVELS);
-            return;
-          }
-          NextLevel(Levels._CurrentLevelIndex + 1);
-          return;
+        // Achievement
+#if UNITY_STANDALONE
+        SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.DIFFICULTY_2);
+#endif
 
-        // Reload level
-        case 1:
-          TileManager.ReloadMap();
-          break;
-
-        // Previous level
-        case 3:
-          if (Levels._CurrentLevelIndex == 0)
-          {
-            TogglePause();
-            Menu2.SwitchMenu(Menu2.MenuType.LEVELS);
-            return;
-          }
-          NextLevel(Levels._CurrentLevelIndex - 1);
-          break;
+        Shop.s_UnlockString += $"- you have beaten the classic mode!\n- try out the survival mode or try\n  to unlock the optional extra settings!";
+        return true;
       }
 
-      // Increment menu selector
-      Menu2._SaveLevelSelected++;
-      if (Menu2._SaveLevelSelected == 12)
-      {
-        Menu2._SaveLevelSelected = 0;
-        Menu2._SaveMenuDir++;
-      }
     }
+
+    return false;
   }
 
   public static void NextLevel(int levelIndex)
