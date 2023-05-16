@@ -52,8 +52,10 @@ public class EnemyScript : MonoBehaviour
     {
       // Schedule the batch of raycasts
       JobHandle handle = SpherecastCommand.ScheduleBatch(_Commands, _Results, 1, default(JobHandle));
+
       // Wait for the batch processing job to complete
       handle.Complete();
+
       // Reset enemyorderiter so jobs can be retrieved in order
       _EnemyOrderIter = 0;
     }
@@ -63,7 +65,7 @@ public class EnemyScript : MonoBehaviour
       _EnemyOrder[_EnemyOrderIter++] = e._Id;
     }
 
-    public static RaycastHit GetSpherecastHit(EnemyScript e, int iter)
+    public static RaycastHit GetSpherecastHit(int iter)
     {
       var index = _EnemyOrderIter * _NumSpherecasts + iter;
       if (index < _Results.Length)
@@ -306,7 +308,7 @@ public class EnemyScript : MonoBehaviour
     _lr.startWidth = 0.3f;
     _lr.endWidth = 0f;
     Resources.UnloadAsset(_lr.sharedMaterial);
-    _lr.sharedMaterial = GameObject.Find("Blood_0").GetComponent<Renderer>().sharedMaterial;
+    _lr.sharedMaterial = GameResources.s_Blood0.sharedMaterial;
     _lr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
     Gradient gradient = new Gradient();
     gradient.SetKeys(
@@ -383,10 +385,12 @@ public class EnemyScript : MonoBehaviour
       SpherecastHandler.ScheduleAllSpherecasts();
 
       // Update with spherecast data
-      foreach (var e in _Enemies_alive)
+      SpherecastHandler._EnemyOrderIter = _Enemies_alive.Count - 1;
+      for (var i = _Enemies_alive.Count - 1; i >= 0; i--)
       {
+        var e = _Enemies_alive[i];
         e.Handle();
-        SpherecastHandler._EnemyOrderIter++;
+        SpherecastHandler._EnemyOrderIter--;
       }
 
       // Clean up data
@@ -1090,7 +1094,7 @@ public class EnemyScript : MonoBehaviour
             found = true;
           else
           {
-            h = SpherecastHandler.GetSpherecastHit(this, _targetInLOS || Time.time - _lastSeenTime < 1.5f ? 0 : 3);
+            h = SpherecastHandler.GetSpherecastHit(_targetInLOS || Time.time - _lastSeenTime < 1.5f ? 0 : 3);
             if (h.collider != null)
               found = CheckRay(h);
           }
@@ -1165,11 +1169,11 @@ public class EnemyScript : MonoBehaviour
       if (_isZombie && _survivalAttributes._enemyType != GameScript.SurvivalMode.EnemyType.PISTOL_WALK) return;
       {
         bool hit = false;
-        h = SpherecastHandler.GetSpherecastHit(this, 1);
+        h = SpherecastHandler.GetSpherecastHit(1);
         //Debug.DrawLine(transform.position, h.point);
         if (!hit && h.collider != null)
           hit = CheckRay(h);
-        h = SpherecastHandler.GetSpherecastHit(this, 2);
+        h = SpherecastHandler.GetSpherecastHit(2);
         //Debug.DrawLine(transform.position, h.point);
         if (!hit && h.collider != null)
           CheckRay(h);
@@ -1178,7 +1182,7 @@ public class EnemyScript : MonoBehaviour
       if (_canMove)
         if (_state == State.SEARCHING || _state == State.SUSPICIOUS || _suspiciousTimer > 0f)
         {
-          h = SpherecastHandler.GetSpherecastHit(this, 3);
+          h = SpherecastHandler.GetSpherecastHit(3);
           if (h.collider != null)
           {
             CheckRay(h, true);
@@ -1573,7 +1577,7 @@ public class EnemyScript : MonoBehaviour
   public static EnemyScript LoadEnemy(Vector3 position)
   {
     GameObject new_gameobject = GameObject.Instantiate(GameResources._Enemy);
-    new_gameobject.transform.parent = GameObject.Find("Game").transform.GetChild(0);
+    new_gameobject.transform.parent = GameResources.s_Game.transform.GetChild(0);
     new_gameobject.transform.localScale = new Vector3(0.1f, 0.1f, 1f);
     new_gameobject.transform.position = position;
     new_gameobject.transform.localPosition = new Vector3(new_gameobject.transform.localPosition.x, -1.32f, new_gameobject.transform.localPosition.z);

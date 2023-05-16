@@ -3664,13 +3664,15 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
                   component0._textColor = _COLOR_GRAY;
                 });
               }
+
               // Get dropdown match
+              Debug.Log(_PreviousMenuType);
               var match = "";
               if (_SaveLevelSelected != -1 && _SaveLevelSelected < selections.Count)
               {
                 match = selections[_SaveLevelSelected];
               }
-              else
+              else if (_PreviousMenuType == MenuType.GAMETYPE_CLASSIC)
               {
                 var lastIter = 0;
                 foreach (var selection in selections)
@@ -3692,9 +3694,16 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
                     match = selections[0];
                 }
               }
+
               // Check for last level
-              if (Levels.LevelCompleted(143))
+              if (_PreviousMenuType == MenuType.GAMETYPE_CLASSIC && Levels.LevelCompleted(143))
                 match = selections[0];
+
+              if (match == "")
+              {
+                match = selections[0];
+              }
+
               // Set dropdown data
               component.SetDropdownData($"=== {string.Format(format_subdirs, "level", "time", "rank", "preview")}\n\n", selections, actions, match, actions_onCreated, null, actions_onFocus, actions_onUnfocus);
             }
@@ -3828,6 +3837,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
         if (_Text.transform.childCount == 1)
           GameObject.Destroy(_Text.transform.GetChild(0).gameObject);
       };
+
       m._onSwitchTo += () =>
       {
         SpawnMenu_Levels();
@@ -5921,6 +5931,38 @@ go to the <color=yellow>SHOP</color> to buy something~1
         component.SetDropdownData("when should the level be completed?\n\n", selections, actions, selection);
       })*/
 
+    // Death text toggle
+    .AddComponent("death text\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
+      .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+      {
+
+        // Set display text
+        var selection = Settings._ShowDeathText._value ? "on" : "off";
+        component.SetDisplayText(string.Format(format_options, "death text:", selection));
+
+        // Set dropdown data
+        var selections = new List<string>();
+        var actions = new List<System.Action<MenuComponent>>();
+        var selection_match = $"{selection}";
+        selections.Add("on [DEFAULT]");
+        actions.Add((MenuComponent component0) =>
+        {
+          Settings._ShowDeathText._value = true;
+          _CanRender = false;
+          RenderMenu();
+        });
+        selections.Add("off");
+        actions.Add((MenuComponent component0) =>
+        {
+          Settings._ShowDeathText._value = false;
+          _CanRender = false;
+          RenderMenu();
+        });
+
+        // Update dropdown data
+        component.SetDropdownData("should the 'not sneaky' banner show after you die?\n\n", selections, actions, selection_match);
+      })
+
     // Level end behavior
     .AddComponent("level completion\n\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
       .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
@@ -6159,7 +6201,11 @@ go to the <color=yellow>SHOP</color> to buy something~1
         component.SetDropdownData("delete save data\n*this <color=red>cannot</color> be undone. resets level completion, <color=yellow>unlocks</color>, stats, and control settings.\n*does not delete saved maps / workshop content\n\n", selections, actions, "");
       })
     // Back button
-    .AddBackButton(MenuType.OPTIONS);
+    .AddBackButton(MenuType.OPTIONS)
+
+    // Game version
+    .AddComponent($"\n<color={_COLOR_GRAY}>game version {Settings._VERSION}</color>");
+
     // Tip
     //ModifyMenu_TipComponents(MenuType.OPTIONS_GAME, 11, 1);
     //ModifyMenu_TipSwitch(MenuType.OPTIONS_GAME);

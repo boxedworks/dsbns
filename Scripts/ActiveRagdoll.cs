@@ -395,7 +395,8 @@ public class ActiveRagdoll
       }
 
       // Check hip
-      if(_hip.transform.position.y > 0f){
+      if (_hip.transform.position.y > 0f)
+      {
         Debug.Log("defective ragdoll");
         Kill(null, DamageSourceType.MELEE, Vector3.zero);
         return;
@@ -1704,6 +1705,7 @@ public class ActiveRagdoll
   float _stunTimer;
   public void Stun(float duration = 1.5f)
   {
+    if (_enemyScript?.IsChaser() ?? false) { return; }
     _stunTimer = Time.time + duration;
   }
 

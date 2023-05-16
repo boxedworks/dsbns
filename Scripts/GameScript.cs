@@ -1670,17 +1670,22 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
               {
 #if UNITY_EDITOR
                 NextLevel(Levels._CurrentLevelIndex + 1);
+                IncrementLevelMenu(1);
                 return;
 #endif
                 if (Levels._CurrentLevelIndex < (Levels._CurrentLevelCollection?._levelData.Length ?? 0) && Levels.LevelCompleted(Levels._CurrentLevelIndex))
                 {
                   NextLevel(Levels._CurrentLevelIndex + 1);
+                  IncrementLevelMenu(1);
                 }
               }
               else if (ControllerManager.GetKey(ControllerManager.Key.PAGE_DOWN, ControllerManager.InputMode.DOWN))
               {
                 if (Levels._CurrentLevelIndex > 0)
+                {
                   NextLevel(Levels._CurrentLevelIndex - 1);
+                  IncrementLevelMenu(-1);
+                }
               }
             }
           }
@@ -2237,19 +2242,22 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         GameObject.Destroy(_ammoUI.gameObject);
       }
 
-      public void Init(System.Tuple<Transform, int> data, int index, System.Tuple<PlayerScript, bool, ActiveRagdoll.Side> item_data = null)
+      public void Init(System.Tuple<Transform, int> data, int index, System.Tuple<PlayerScript, bool, ActiveRagdoll.Side> item_data, bool is_utility)
       {
         _base = data.Item1;
         _base.localPosition += new Vector3(_Offset.x, _Offset.y, 0f);
         _ammoCount = _ammoVisible = data.Item2;
 
         // Spawn ammo border
-        _ammoUI = GameObject.Instantiate(GameObject.Find("AmmoUI") as GameObject).transform;
+        GameResources.s_AmmoSideUi.text = !is_utility ? "" : item_data.Item3 == ActiveRagdoll.Side.LEFT ? "L" : "R";
+        _ammoUI = GameObject.Instantiate(GameResources.s_AmmoUi).transform;
         _ammoUI.gameObject.layer = 11;
         _ammoUI.parent = _base.parent;
         _ammoUI.localPosition = new Vector3(0.8f + index * 0.8f, -0.15f, 0f);
         _ammoUI.localEulerAngles = new Vector3(90f, 0f, 0f);
         _ammoUI.localScale = new Vector3(0.8f, 0.004f, 0.25f);
+
+
 
         // Create ammo meshes
         _ammo = new Transform[_ammoCount];
@@ -2404,16 +2412,16 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         bg.localScale = new Vector3(0.6f, 0.74f, 0.001f);
         return;
       }
-      int equipmentIter = 0;
+      var equipmentIter = 0;
       if (_item_left != ItemManager.Items.NONE)
       {
         _weaponIcons[equipmentIter] = new ItemIcon();
-        _weaponIcons[equipmentIter].Init(LoadIcon(_item_left.ToString(), equipmentIter), equipmentIter++, System.Tuple.Create(_Player, false, ActiveRagdoll.Side.LEFT));
+        _weaponIcons[equipmentIter].Init(LoadIcon(_item_left.ToString(), equipmentIter), equipmentIter++, System.Tuple.Create(_Player, false, ActiveRagdoll.Side.LEFT), false);
       }
       if (_item_right != ItemManager.Items.NONE)
       {
         _weaponIcons[equipmentIter] = new ItemIcon();
-        _weaponIcons[equipmentIter].Init(LoadIcon(_item_right.ToString(), equipmentIter), equipmentIter++, System.Tuple.Create(_Player, false, ActiveRagdoll.Side.RIGHT));
+        _weaponIcons[equipmentIter].Init(LoadIcon(_item_right.ToString(), equipmentIter), equipmentIter++, System.Tuple.Create(_Player, false, ActiveRagdoll.Side.RIGHT), false);
       }
       // Load utilities
       var loaded_utils = new List<System.Tuple<Transform, int, int, ActiveRagdoll.Side>>();
@@ -2430,7 +2438,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       foreach (var util in loaded_utils)
       {
         _weaponIcons[util.Item3] = new ItemIcon();
-        _weaponIcons[util.Item3].Init(System.Tuple.Create(util.Item1, util.Item2), util.Item3, System.Tuple.Create(_Player, true, util.Item4));
+        _weaponIcons[util.Item3].Init(System.Tuple.Create(util.Item1, util.Item2), util.Item3, System.Tuple.Create(_Player, true, util.Item4), true);
       }
       loaded_utils = null;
       // Local parsing function
@@ -3298,6 +3306,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
           return;
         }
         NextLevel(Levels._CurrentLevelIndex + 1);
+        IncrementLevelMenu(1);
         return;
 
       // Reload level
@@ -3314,15 +3323,25 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
           return;
         }
         NextLevel(Levels._CurrentLevelIndex - 1);
+        IncrementLevelMenu(-1);
         break;
     }
+  }
 
+  // Increment level menu
+  static void IncrementLevelMenu(int by)
+  {
     // Increment menu selector
-    Menu2._SaveLevelSelected++;
+    Menu2._SaveLevelSelected += by;
     if (Menu2._SaveLevelSelected == 12)
     {
       Menu2._SaveLevelSelected = 0;
       Menu2._SaveMenuDir++;
+    }
+    else if (Menu2._SaveLevelSelected == -1)
+    {
+      Menu2._SaveLevelSelected = 11;
+      Menu2._SaveMenuDir--;
     }
   }
 

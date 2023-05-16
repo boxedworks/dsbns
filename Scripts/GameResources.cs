@@ -37,7 +37,13 @@ public static class GameResources
     _Armor,
     _Crown,
 
-    _PerkTypes;
+    _PerkTypes,
+
+    s_Game, s_Particles, s_AmmoUi;
+
+  public static TMPro.TextMeshPro s_AmmoSideUi;
+
+  public static Renderer s_Blood0;
 
   public static bool _Loaded;
 
@@ -117,6 +123,13 @@ public static class GameResources
 
     _Armor = Resources.Load("Armor") as GameObject;
     _Crown = Resources.Load("Crown") as GameObject;
+
+    s_Game = GameObject.Find("Game");
+    s_Particles = GameObject.Find("Particles");
+    s_AmmoUi = GameObject.Find("AmmoUI");
+    s_AmmoSideUi = s_AmmoUi.transform.GetChild(0).GetComponent<TMPro.TextMeshPro>();
+
+    s_Blood0 = GameObject.Find("Blood_0").GetComponent<Renderer>();
 
     _Loaded = true;
   }

@@ -1203,28 +1203,32 @@ public class PlayerScript : MonoBehaviour
       {
         /*if (_UtilitiesLeft.Count == 0 && _UtilitiesRight.Count > 0)
           _UtilitiesRight[0].UseDown();
-        else */if (_UtilitiesLeft.Count > 0)
+        else */
+        if (_UtilitiesLeft.Count > 0)
           _UtilitiesLeft[0].UseDown();
       }
       else if (ControllerManager.GetKey(ControllerManager.Key.Q, ControllerManager.InputMode.UP))
       {
         /*if (_UtilitiesLeft.Count == 0 && _UtilitiesRight.Count > 0)
           _UtilitiesRight[0].UseUp();
-        else */if (_UtilitiesLeft.Count > 0)
+        else */
+        if (_UtilitiesLeft.Count > 0)
           _UtilitiesLeft[0].UseUp();
       }
       if (ControllerManager.GetKey(ControllerManager.Key.E))
       {
         /*if (_UtilitiesRight.Count == 0 && _UtilitiesLeft.Count > 0)
           _UtilitiesLeft[0].UseDown();
-        else */if (_UtilitiesRight.Count > 0)
+        else */
+        if (_UtilitiesRight.Count > 0)
           _UtilitiesRight[0].UseDown();
       }
       else if (ControllerManager.GetKey(ControllerManager.Key.E, ControllerManager.InputMode.UP))
       {
         /*if (_UtilitiesRight.Count == 0 && _UtilitiesLeft.Count > 0)
           _UtilitiesLeft[0].UseUp();
-        else */if (_UtilitiesRight.Count > 0)
+        else */
+        if (_UtilitiesRight.Count > 0)
           _UtilitiesRight[0].UseUp();
       }
 
@@ -1381,28 +1385,32 @@ public class PlayerScript : MonoBehaviour
         {
           /*if (_UtilitiesLeft.Count == 0 && _UtilitiesRight.Count > 0)
             {}_UtilitiesRight[0].UseDown();
-          else */if (_UtilitiesLeft.Count > 0)
+          else */
+          if (_UtilitiesLeft.Count > 0)
             _UtilitiesLeft[0].UseDown();
         }
         else if (gamepad.leftShoulder.wasReleasedThisFrame)
         {
           /*if (_UtilitiesLeft.Count == 0 && _UtilitiesRight.Count > 0)
             _UtilitiesRight[0].UseUp();
-          else */if (_UtilitiesLeft.Count > 0)
+          else */
+          if (_UtilitiesLeft.Count > 0)
             _UtilitiesLeft[0].UseUp();
         }
         if (gamepad.rightShoulder.wasPressedThisFrame)
         {
           /*if (_UtilitiesRight.Count == 0 && _UtilitiesLeft.Count > 0)
             _UtilitiesLeft[0].UseDown();
-          else */if (_UtilitiesRight.Count > 0)
+          else */
+          if (_UtilitiesRight.Count > 0)
             _UtilitiesRight[0].UseDown();
         }
         else if (gamepad.rightShoulder.wasReleasedThisFrame)
         {
           /*if (_UtilitiesRight.Count == 0 && _UtilitiesLeft.Count > 0)
             _UtilitiesLeft[0].UseUp();
-          else */if (_UtilitiesRight.Count > 0)
+          else */
+          if (_UtilitiesRight.Count > 0)
             _UtilitiesRight[0].UseUp();
         }
 
@@ -1970,7 +1978,8 @@ public class PlayerScript : MonoBehaviour
       var saveinfo = GameScript.TutorialInformation._HasRestarted;
 
       // Embarass player ultimately leading to the return of the title
-      TileManager.ShowGameOverText("NOT SNEAKY.", "white", "red");
+      if (Settings._ShowDeathText._value)
+        TileManager.ShowGameOverText("NOT SNEAKY.", "white", "red");
 
       // Coroutine to show controls
       IEnumerator FlashRestart()

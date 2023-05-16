@@ -31,14 +31,6 @@ public static class FunctionsC
 
     //
     s_BookManager = new BookManager();
-
-    /*/ Particle lists
-    _BloodParticles = new List<ParticleSystem>();
-
-    var particles = GameObject.Find("Particles").transform;
-    var particles_blood = particles.GetChild(0);
-    for (var i = 0; i < particles_blood.childCount; i++)
-      _BloodParticles.Add(particles_blood.GetChild(i).GetComponent<ParticleSystem>());*/
   }
 
   public static void RotateLocal(ref GameObject gameObject, float newLocalY)
@@ -146,8 +138,8 @@ public static class FunctionsC
   static int _ExplosionIter;
   public static ParticleSystem[] GetParticleSystem(ParticleSystemType particleType, int forceParticleIndex = -1)
   {
-    var particles = GameObject.Find("Particles").transform;
-    int index = -1;
+    var particles = GameResources.s_Particles.transform;
+    var index = -1;
     bool randomChild = false,
       hasChildren = false; // True if contains multiple particle systems
     switch (particleType)

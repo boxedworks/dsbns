@@ -240,6 +240,8 @@ public static class Settings
     }
   }
 
+  public static FunctionsC.SaveableStat_Bool _ShowDeathText;
+
   // Extras
   static int Extra_Gravity;
   public static int _Extra_Gravity
@@ -459,6 +461,9 @@ public static class Settings
     _CameraZoom = new FunctionsC.SaveableStat_Int("CameraZoom", 1);
     _CameraType = new FunctionsC.SaveableStat_Bool("CameraType_ortho", false);
     SetPostProcessing();
+
+    //
+    _ShowDeathText = new FunctionsC.SaveableStat_Bool("showDeathText", true);
 
     // Top ratings
     _Classic_0_TopRated = new FunctionsC.SaveableStat_Bool("_Classic_0_TopRated", false);
