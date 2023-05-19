@@ -50,8 +50,16 @@ public static class GameResources
   public static Transform _Container_Objects, _UI_Player;
   public static Camera _Camera_Main, _Camera_Menu;
 
+  public static int _Layermask_Ragdoll;
+
   public static void Init()
   {
+    _Layermask_Ragdoll = ~0;
+    _Layermask_Ragdoll &= ~(1 << LayerMask.NameToLayer("UI"));
+    _Layermask_Ragdoll &= ~(1 << LayerMask.NameToLayer("Bullet"));
+    _Layermask_Ragdoll &= ~(1 << LayerMask.NameToLayer("Ignore Raycast"));
+    _Layermask_Ragdoll &= ~(1 << LayerMask.NameToLayer("CAMERA2"));
+
     _Player = Resources.Load("Player") as GameObject;
     _Enemy = Resources.Load("Enemy") as GameObject;
     _Ragdoll = Resources.Load("Ragdoll") as GameObject;

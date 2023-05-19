@@ -340,8 +340,8 @@ public class ItemScript : MonoBehaviour
           // If is player v player, is two handed, and hit enemy before, dont hit
           if (_ragdoll._isPlayer && raycastInfo._ragdoll._isPlayer && _meleePenatrate && _hitEnemy) return;
 
-          // If is enemy and target is player, and player is swinging, dont hit
-          if (!_ragdoll._isPlayer && raycastInfo._ragdoll._isPlayer && raycastInfo._ragdoll._swinging)
+          // If is enemy and not chaser and target is player, and player is swinging, dont hit
+          if (!_ragdoll._isPlayer && !_ragdoll._enemyScript.IsChaser() && raycastInfo._ragdoll._isPlayer && raycastInfo._ragdoll._swinging)
           {
             //FunctionsC.PlaySound(ref raycastInfo._ragdoll._audioPlayer_steps, "Ragdoll/Deflect");
             return;
@@ -1288,13 +1288,14 @@ public class ItemScript : MonoBehaviour
     );
     var hit = false;
     var maxDistance = 0.4f * (_meleePenatrate ? 1.3f : 1f) * (_ragdoll._isPlayer ? 1f : _meleePenatrate ? 0.75f : 0.65f);
-    if (Physics.SphereCast(ray, (0.4f), out raycastInfo._raycastHit, maxDistance, EnemyScript._Layermask_Ragdoll))
+    if (Physics.SphereCast(ray, (0.4f), out raycastInfo._raycastHit, maxDistance, GameResources._Layermask_Ragdoll))
     {
       raycastInfo._ragdoll = ActiveRagdoll.GetRagdoll(raycastInfo._raycastHit.collider.gameObject);
       if (raycastInfo._ragdoll != null && !raycastInfo._ragdoll._dead)
         hit = true;
       raycastInfo._hitPoint = raycastInfo._raycastHit.point;
     }
+
     _ragdoll.ToggleRaycasting(true);
     _ragdoll._grappler?.ToggleRaycasting(true);
     return hit;

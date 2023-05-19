@@ -506,7 +506,7 @@ public class ActiveRagdoll
 
           RaycastHit hit;
           ToggleRaycasting(false);
-          if (Physics.SphereCast(_controller.position, 0.25f, _controller.forward, out hit, 0.5f, EnemyScript._Layermask_Ragdoll))
+          if (Physics.SphereCast(_controller.position, 0.25f, _controller.forward, out hit, 0.5f, GameResources._Layermask_Ragdoll))
           {
             var ragdoll = ActiveRagdoll.GetRagdoll(hit.collider.gameObject);
             if (ragdoll != null)
@@ -1324,7 +1324,7 @@ public class ActiveRagdoll
             dir += _controller.right * 0.25f;
           else if (i == 1)
             dir += -_controller.right * 0.25f;
-          if (Physics.SphereCast(_spine != null ? _spine.transform.position : _hip.transform.position, 0.3f, dir, out hit, 0.75f, EnemyScript._Layermask_Ragdoll))
+          if (Physics.SphereCast(_spine != null ? _spine.transform.position : _hip.transform.position, 0.3f, dir, out hit, 0.75f, GameResources._Layermask_Ragdoll))
           {
             var ragdoll = ActiveRagdoll.GetRagdoll(hit.collider.gameObject);
             if (ragdoll == null)
@@ -1859,7 +1859,8 @@ public class ActiveRagdoll
       {
         _enemyType = GameScript.SurvivalMode.EnemyType.KNIFE_RUN
       },
-      new Vector2(spawn_pos.x, spawn_pos.y)
+      new Vector2(spawn_pos.x, spawn_pos.y),
+      true
     );
 
     // Set grapplee
@@ -1928,13 +1929,13 @@ public class ActiveRagdoll
     return false;
   }
 
-  public void ToggleRaycasting(bool toggle, bool override_ = false)
+  public void ToggleRaycasting(bool enable, bool override_ = false)
   {
     if (_ragdolled && !override_) return;
     foreach (var part in _parts)
     {
       if (part == null) continue;
-      part.layer = (toggle ? 10 : 2);
+      part.layer = (enable ? 10 : 2);
     }
   }
 

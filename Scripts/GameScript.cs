@@ -1116,7 +1116,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
 
         // Check if others in front
         var hit = new RaycastHit();
-        if (Physics.SphereCast(new Ray(enemy_ragdoll._hip.transform.position, MathC.Get2DVector(enemy_ragdoll._hip.transform.forward) * 100f), 0.5f, out hit, 100f, EnemyScript._Layermask_Ragdoll))
+        if (Physics.SphereCast(new Ray(enemy_ragdoll._hip.transform.position, MathC.Get2DVector(enemy_ragdoll._hip.transform.forward) * 100f), 0.5f, out hit, 100f, GameResources._Layermask_Ragdoll))
         {
           enemy_ragdoll.ToggleRaycasting(true);
           if (hit.distance > 10f) return;
@@ -1560,11 +1560,17 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
           var timeToEnd = 2.2f;
           if (_inLevelEnd && !_GameEnded && (Settings._LevelCompletion._value != 2))
           {
-            _levelEndTimer = Mathf.Clamp(_levelEndTimer + Time.deltaTime, 0f, timeToEnd);
+            _levelEndTimer += Time.deltaTime;
 
             // Check time
-            if (_levelEndTimer >= timeToEnd || (EnemyScript.NumberAlive() == 0 && Time.time - _goalPickupTime > 0.8f))
+            if (_levelEndTimer > timeToEnd || (EnemyScript.NumberAlive() == 0 && Time.time - _goalPickupTime > 0.8f))
             {
+
+              if (_levelEndTimer > timeToEnd)
+              {
+                MarkLevelCompleted();
+              }
+
               _inLevelEnd = false;
               _levelEndTimer = 0f;
 
@@ -1578,7 +1584,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
                 break;
 
               }
-              Debug.Log($"Goal retrieved by {s_CrownPlayer}!");
+              //Debug.Log($"Goal retrieved by {s_CrownPlayer}!");
 
               // Complete level
               OnLevelComplete();
@@ -1590,16 +1596,16 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
           // Check timer with particles
           {
             if (_LevelEndParticles == null) _LevelEndParticles = PlayerspawnScript._PlayerSpawns[0].GetComponent<ParticleSystem>();
-            if (_levelEndTimer > 0f && !_LevelEndParticles.isPlaying)
+            if (_inLevelEnd && !_LevelEndParticles.isPlaying)
               _LevelEndParticles.Play();
-            else if (_levelEndTimer <= 0f && _LevelEndParticles.isPlaying)
+            else if (!_inLevelEnd && _LevelEndParticles.isPlaying)
               _LevelEndParticles.Stop();
-            if (_LevelEndParticles.isPlaying && _levelEndTimer > 0f)
+            /*if (_LevelEndParticles.isPlaying && _levelEndTimer > 0f)
             {
               // Emit particles for feedback
               var emit = _LevelEndParticles.emission;
-              emit.rateOverTime = _levelEndTimer * 60f;
-            }
+              emit.rateOverTime = 700f;
+            }*/
           }
         }
         // Enable editor
@@ -1662,26 +1668,47 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
           }
 
           // Next / previous level
-          if (!_EditorEnabled)
+          if (!_EditorEnabled && !IsSurvival())
           {
             if (!TileManager._LoadingMap)
             {
               if (ControllerManager.GetKey(ControllerManager.Key.PAGE_UP, ControllerManager.InputMode.DOWN))
               {
+
+                // Editor logic
 #if UNITY_EDITOR
-                NextLevel(Levels._CurrentLevelIndex + 1);
-                IncrementLevelMenu(1);
+                if (Settings._LevelCompletion._value == 4)
+                  LoadRandomLevel();
+                else if (Settings._LevelCompletion._value == 5)
+                  LoadRandomLevel(true);
+                else
+                {
+                  NextLevel(Levels._CurrentLevelIndex + 1);
+                  IncrementLevelMenu(1);
+                }
                 return;
 #endif
-                if (Levels._CurrentLevelIndex < (Levels._CurrentLevelCollection?._levelData.Length ?? 0) && Levels.LevelCompleted(Levels._CurrentLevelIndex))
+
+                // Game logic
+                if (Settings._LevelCompletion._value == 4)
+                  LoadRandomLevel();
+                else if (Settings._LevelCompletion._value == 5)
+                  LoadRandomLevel(true);
+                else if (Levels._CurrentLevelIndex < (Levels._CurrentLevelCollection?._levelData.Length ?? 0) && Levels.LevelCompleted(Levels._CurrentLevelIndex))
                 {
                   NextLevel(Levels._CurrentLevelIndex + 1);
                   IncrementLevelMenu(1);
                 }
               }
+
+              // Previous level
               else if (ControllerManager.GetKey(ControllerManager.Key.PAGE_DOWN, ControllerManager.InputMode.DOWN))
               {
-                if (Levels._CurrentLevelIndex > 0)
+                if (Settings._LevelCompletion._value == 4)
+                  LoadRandomLevel();
+                else if (Settings._LevelCompletion._value == 5)
+                  LoadRandomLevel(true);
+                else if (Levels._CurrentLevelIndex > 0)
                 {
                   NextLevel(Levels._CurrentLevelIndex - 1);
                   IncrementLevelMenu(-1);
@@ -3117,18 +3144,6 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     ActiveRagdoll.SoftReset();
   }
 
-  // Remove a target from target list, returns true if all targets dead
-  public static bool KillTarget(EnemyScript target)
-  {
-    EnemyScript._Targets.Remove(target);
-    if (EnemyScript._Targets.Count == 0)
-    {
-      ToggleExit();
-      return true;
-    }
-    return false;
-  }
-
   public static float _LastPause;
   public static void TogglePause()
   {
@@ -3198,7 +3213,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
   // Fired on last enemy killed
   public static void OnLastEnemyKilled()
   {
-
+    _s_Singleton._goalPickupTime = Time.time;
   }
 
   //
@@ -3217,6 +3232,8 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
 
         // Next level
         case 0:
+        case 4:
+        case 5:
 
           // Check last level
           if (Levels._CurrentLevelIndex + 1 == Levels._CurrentLevelCollection._levelData.Length)
@@ -3282,11 +3299,6 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       return;
     }
 
-    if (Levels._CurrentLevelIndex == 0)
-    {
-      MarkLevelCompleted();
-    }
-
     // Display unlock messages
     if (Shop.s_UnlockString != string.Empty)
     {
@@ -3325,7 +3337,34 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         NextLevel(Levels._CurrentLevelIndex - 1);
         IncrementLevelMenu(-1);
         break;
+
+      // Random level
+      case 4:
+
+        LoadRandomLevel(false);
+        break;
+
+      case 5:
+
+        LoadRandomLevel(true);
+        break;
     }
+  }
+
+  // Load a random level
+  static void LoadRandomLevel(bool anyDifficulty = false)
+  {
+
+#if UNITY_EDITOR
+    if (anyDifficulty)
+      Settings._DIFFICULTY = Levels._CurrentLevelCollectionIndex = Random.Range(0, 2);
+    NextLevel(Random.Range(0, Levels._CurrentLevelCollection._levelData.Length));
+    return;
+#endif
+
+    if (anyDifficulty)
+      Settings._DIFFICULTY = Levels._CurrentLevelCollectionIndex = Random.Range(0, Settings._DifficultyUnlocked + 1);
+    NextLevel(Settings._LevelsCompleted_Current[Random.Range(0, Settings._LevelsCompleted_Current.Count)]);
   }
 
   // Increment level menu

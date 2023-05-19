@@ -54,7 +54,7 @@ public static class Shop
     };
     static string[] _Tips_Classic = new string[]
     {
-      "beat classic levels quickly to get the highest rank and $$$",
+      "beat classic levels quickly to get the highest rank and $$",
       "each new level rank gives money for the shop (up to $4 per level)",
       "complete classic level directories to add more unlocks to the shop",
       "buy 'MAX_EQUIPMENT_POINTS' in the shop to equip more in your loadouts",
@@ -414,9 +414,7 @@ public static class Shop
     AddAvailableUnlock(Unlocks.MAX_EQUIPMENT_POINTS_1);
     AddAvailableUnlock(Unlocks.ITEM_PISTOL_SILENCED);
 
-    //AddAvailableUnlock(Unlocks.UTILITY_TEMP_SHIELD);
-    //AddAvailableUnlock(Unlocks.MOD_SPEED_UP);
-    //AddAvailableUnlock(Unlocks.UTILITY_GRENADE_STUN);
+    AddAvailableUnlock(Unlocks.MODE_EXTRAS);
 
     //AddAvailableUnlock(Unlocks.ITEM_ROCKET_FIST);
 

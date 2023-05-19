@@ -45,6 +45,7 @@ public class Menu2
 
     CREDITS,
 
+    EXIT_GAME_CONFIRM,
     MODE_EXIT_CONFIRM,
 
     CONTROLLERS_CHANGED,
@@ -1184,11 +1185,7 @@ public class Menu2
     .AddComponent("exit\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
       .AddEvent((MenuComponent component) =>
       {
-#if UNITY_EDITOR
-        UnityEditor.EditorApplication.isPlaying = false;
-        return;
-#endif
-        GameScript.OnApplicationQuitS();
+        CommonEvents._SwitchMenu(MenuType.EXIT_GAME_CONFIRM);
       })
       .AddEvent(EventType.ON_RENDER, CommonEvents._OnRender_XSelector);
     // Tip
@@ -2940,16 +2937,16 @@ public class Menu2
       }
       .AddComponent($"<color={_COLOR_GRAY}>shop</color>\n\n")
 
-      // Show available $$$
-      .AddComponent("available ($$$): 10\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
+      // Show available $$
+      .AddComponent("available ($$): 10\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
         .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
         {
           if (component._focused)
-            component.SetDisplayText($"</color><color={_COLOR_GRAY}>available ($$$): {Shop._AvailablePoints}</color>      <-- get ($$$) by completing new CLASSIC levels<color=white>\n");
+            component.SetDisplayText($"</color><color={_COLOR_GRAY}>available ($$): {Shop._AvailablePoints}</color>       <-- get ($$) by completing new CLASSIC levels<color=white>\n");
           else
           {
             var color = Shop._AvailablePoints > 0 ? "yellow" : "red";
-            component.SetDisplayText($"available ($$$): </color><color={color}>{Shop._AvailablePoints}</color><color=white>\n");
+            component.SetDisplayText($"available ($$): </color><color={color}>{Shop._AvailablePoints}</color><color=white>\n");
           }
         })
         .SetSelectorType(MenuComponent.SelectorType.QUESTION)
@@ -2986,7 +2983,7 @@ public class Menu2
           });
 
       // Shop table headers
-      m.AddComponent($"<color={_COLOR_GRAY}>===</color>" + string.Format(format_shop, "name", "tags", "($$$)", "equip cost", _COLOR_GRAY, _COLOR_GRAY, _COLOR_GRAY) + "\n\n");
+      m.AddComponent($"<color={_COLOR_GRAY}>===</color>" + string.Format(format_shop, "name", "tags", "($$)", "equip cost", _COLOR_GRAY, _COLOR_GRAY, _COLOR_GRAY) + "\n\n");
 
       // Add unlocks
       foreach (var desc in Shop._Unlocks_Descriptions)
@@ -3034,7 +3031,7 @@ public class Menu2
           if (display_mode == Shop.DisplayModes.ALL)
           {
             m.AddComponent($"{string.Format(format_shop2, FunctionsC.GenerateGarbageText(name), FunctionsC.GenerateGarbageText(shop_details.Item1), FunctionsC.GenerateGarbageText(cost + ""), "*", _COLOR_GRAY, _COLOR_GRAY, _COLOR_GRAY)}\n", MenuComponent.ComponentType.BUTTON_SIMPLE);
-            Debug.Log("Shop unlock not available...: " + unlock);
+            //Debug.Log("Shop unlock not available...: " + unlock);
           }
           continue;
         }
@@ -3172,7 +3169,7 @@ public class Menu2
             GenericMenu(new string[]
             {
             Shop._AvailablePoints < cost ?
-            "cannot afford item\n\n- you do not have enough <color=yellow>($$$)</color> to buy this item\n\n- complete classic mode ranks to get more <color=yellow>($$$)</color>\n\n"
+            "cannot afford item\n\n- you do not have enough <color=yellow>($$)</color> to buy this item\n\n- complete classic mode ranks to get more <color=yellow>($$)</color>\n\n"
             :
             "cannot equip / purchase item\n\n- you do not have enough <color=yellow>equipment_points</color> to equip this item if you purchased it\n\n- buy more <color=yellow>MAX_EQUIP_POINTS</color> in the SHOP to equip / buy this\n\n"
             },
@@ -3317,6 +3314,7 @@ public class Menu2
           t.localPosition += lp;
         }
       })
+    .AddComponent($"{string.Format(format_controls, "toggle camera type:", "", "f3")} \n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
     .AddComponent($"{string.Format(format_controls, "next level:", "", "page up")} \n", MenuComponent.ComponentType.BUTTON_SIMPLE)
     .AddComponent($"{string.Format(format_controls, "previous level:", "", "page down")} \n", MenuComponent.ComponentType.BUTTON_SIMPLE)
     .AddComponent($"\n<color={_COLOR_GRAY}>mode - </color><color=yellow>CLASSIC</color>\n")
@@ -3442,6 +3440,9 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
       })
       .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
       {
+#if UNITY_EDITOR
+        return;
+#endif
         component._obscured = !Shop.Unlocked(Shop.Unlocks.MODE_SURVIVAL);
       })
     .AddBackButton(MenuType.MAIN)
@@ -3666,7 +3667,6 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
               }
 
               // Get dropdown match
-              Debug.Log(_PreviousMenuType);
               var match = "";
               if (_SaveLevelSelected != -1 && _SaveLevelSelected < selections.Count)
               {
@@ -3679,7 +3679,11 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
                 {
                   if (lastIter == 0) { lastIter++; continue; }
                   var level_unlocked = Levels.LevelCompleted(int.Parse(selection.Split(' ')[0].Substring(1)) - 2);
-                  if (!level_unlocked) break;
+                  if (!level_unlocked)
+                  {
+                    Debug.Log($"Level not unlocked {selections[lastIter - 1]}");
+                    break;
+                  }
                   lastIter++;
                 }
 
@@ -5335,7 +5339,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
         SpawnMenu_Pause();
       };
       // Tip
-      ModifyMenu_TipComponents(MenuType.PAUSE, (GameScript._GameMode == GameScript.GameModes.SURVIVAL ? 4 : 3));
+      ModifyMenu_TipComponents(MenuType.PAUSE, (GameScript._GameMode == GameScript.GameModes.SURVIVAL ? 5 : 3));
       ModifyMenu_TipSwitch(MenuType.PAUSE);
     }
     SpawnMenu_Pause();
@@ -5487,7 +5491,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
     ModifyMenu_TipComponents(MenuType.GAMETYPE_SURVIVAL, 16);
     ModifyMenu_TipSwitch(MenuType.GAMETYPE_SURVIVAL);
 
-    var format_options = "{0,-25}{1,22}\n";
+    var format_options = "{0,-25}{1,28}\n";
     // Options menu
     new Menu2(MenuType.OPTIONS)
     {
@@ -5980,6 +5984,12 @@ go to the <color=yellow>SHOP</color> to buy something~1
           case 3:
             selection = "previous level";
             break;
+          case 4:
+            selection = "random level (current difficulty)";
+            break;
+          case 5:
+            selection = "random level (any difficulty)";
+            break;
         }
         component.SetDisplayText(string.Format(format_options + '\n', "level completion:", selection));
 
@@ -6012,6 +6022,20 @@ go to the <color=yellow>SHOP</color> to buy something~1
         actions.Add((MenuComponent component0) =>
         {
           Settings._LevelCompletion._value = 3;
+          _CanRender = false;
+          RenderMenu();
+        });
+        selections.Add("random level (current difficulty) - load any unlocked level");
+        actions.Add((MenuComponent component0) =>
+        {
+          Settings._LevelCompletion._value = 4;
+          _CanRender = false;
+          RenderMenu();
+        });
+        selections.Add("random level (any difficulty)     - load any unlocked level");
+        actions.Add((MenuComponent component0) =>
+        {
+          Settings._LevelCompletion._value = 5;
           _CanRender = false;
           RenderMenu();
         });
@@ -6276,7 +6300,7 @@ www.reddit.com/u/quaterniusdev
 <color={_COLOR_GRAY}>overview</color>~2
 in this mode, you will complete levels.~2 collect the <color=yellow>CUBE</color>~1 and bring
 it back to the start of the level.~2 complete levels quickly
-to earn ranks and earn <color=yellow>money ($$$)</color> to spend at the SHOP.~2 customize
+to earn ranks and earn <color=yellow>money ($$)</color> to spend at the SHOP.~2 customize
 your loadouts in the EDIT_LOADOUT menu.~2
 
 
@@ -6357,6 +6381,29 @@ a gampad if plugged in.~1
 
 ")
     .AddBackButton(MenuType.EDITOR_MAIN, "ok then");
+
+    // Confirm exit game
+    new Menu2(MenuType.EXIT_GAME_CONFIRM)
+    {
+
+    }
+    .AddComponent("are you sure you want to exit the game?\n\n")
+    // Exit to level selection or main menu
+    .AddComponent("exit\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
+      .AddEvent((MenuComponent component) =>
+      {
+#if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false;
+        return;
+#endif
+        GameScript.OnApplicationQuitS();
+      })
+      .AddEvent(EventType.ON_RENDER, CommonEvents._OnRender_XSelector)
+    .AddBackButton(MenuType.PAUSE, "back")
+      .AddEvent((MenuComponent c) =>
+      {
+        CommonEvents._SwitchMenu(MenuType.MAIN);
+      });
 
     // Confirm exit mode
     new Menu2(MenuType.MODE_EXIT_CONFIRM)
@@ -7033,7 +7080,7 @@ about extras</color>
 
 -extras change game mechanics around. use and combine them for interesting game modes!
 
--you <color={_COLOR_GRAY}>cannot get level rankings or $$$</color> if you have any extras enabled (besides
+-you <color={_COLOR_GRAY}>cannot get level rankings or $$</color> if you have any extras enabled (besides
  extras with ` next to them)
  "
 }, "neat", MenuType.EXTRAS, null, true, null, (MenuComponent m) =>

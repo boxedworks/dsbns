@@ -24,7 +24,7 @@ public class PlayerScript : MonoBehaviour
 
   public static readonly float
   MOVESPEED = 4f,
-    RUNSPEED = 1.15f,
+    RUNSPEED = 1.25f,
     ROTATIONSPEED = 2f;
 
   bool mouseEnabled, _runToggle;
@@ -575,7 +575,7 @@ public class PlayerScript : MonoBehaviour
 
           _ragdoll.ToggleRaycasting(false);
           var hit = new RaycastHit();
-          if (Physics.SphereCast(new Ray(_ragdoll._transform_parts._head.transform.position, _ragdoll._hip.transform.forward * 100f + Vector3.up * 0.3f), 0.1f, out hit, EnemyScript._Layermask_Ragdoll))
+          if (Physics.SphereCast(new Ray(_ragdoll._transform_parts._head.transform.position, _ragdoll._hip.transform.forward * 100f + Vector3.up * 0.3f), 0.1f, out hit, GameResources._Layermask_Ragdoll))
           {
             if (_targetRagdoll.IsSelf(hit.collider.gameObject))
             {
@@ -716,6 +716,23 @@ public class PlayerScript : MonoBehaviour
       var lookpos = _ragdoll._transform_parts._hip.position + _ragdoll._transform_parts._hip.forward * 10f;
       lookpos.y = _ring[0].transform.parent.position.y;
       _ring[0].transform.parent.LookAt(lookpos);
+
+      // Check back at spawn
+      var spawnDist = Vector3.Distance(new Vector3(PlayerspawnScript._PlayerSpawns[0].transform.position.x, 0f, PlayerspawnScript._PlayerSpawns[0].transform.position.z), new Vector3(_ragdoll._hip.position.x, 0f, _ragdoll._hip.position.z));
+      if (_HasExit)
+      {
+        if (GameScript._inLevelEnd)
+        {
+          if (spawnDist > 0.35f)
+            GameScript._inLevelEnd = false;
+        }
+        else
+        {
+          if (spawnDist <= 0.35f)
+            GameScript._inLevelEnd = true;
+        }
+      }
+
     }
 
     if (GameScript._Paused)
@@ -1517,7 +1534,7 @@ public class PlayerScript : MonoBehaviour
   public void MovePlayer(float deltaTime, float moveSpeed, Vector2 input)
   {
     // Decrease movespead
-    if (_ragdoll._grappling) { moveSpeed *= 0.7f; }
+    if (_ragdoll._grappling) { moveSpeed *= 0.9f; }
 
     // Move player
     if (_ragdoll.Active() && _agent != null)
@@ -2074,8 +2091,11 @@ public class PlayerScript : MonoBehaviour
   }
   public void OnTriggerStay(Collider other)
   {
+    /*
     if (!_ragdoll._dead && other.name.Equals("PlayerSpawn") && _HasExit)
-      GameScript._inLevelEnd = true;
+      GameScript._inLevelEnd = true;*/
+
+    // Check interactable
     switch (other.name)
     {
       case ("Interactable"):
@@ -2086,15 +2106,15 @@ public class PlayerScript : MonoBehaviour
   }
   public void OnTriggerExit(Collider other)
   {
-    // Stop being in end of level
+    /*/ Stop being in end of level
     if (!_ragdoll._dead && other.name.Equals("PlayerSpawn") && _HasExit)
-      GameScript._inLevelEnd = false;
+      GameScript._inLevelEnd = false;*/
+
     // Check interactable
-    if (_currentInteractable != null)
-      if (other.gameObject.GetInstanceID() == _currentInteractable.gameObject.GetInstanceID())
-      {
-        _currentInteractable = null;
-      }
+    if (other.gameObject.GetInstanceID() == _currentInteractable?.gameObject.GetInstanceID())
+    {
+      _currentInteractable = null;
+    }
   }
 
   // Destroy dependancies

@@ -109,7 +109,7 @@ public class TileManager
   public static void DisplayMonie(int index)
   {
     _Text_Monies[index].transform.localPosition = _Positions_Monies[index];
-    _Text_Monies[index].text = "$$$";
+    _Text_Monies[index].text = "$$";
   }
 
   // Lerp UI monie
@@ -165,7 +165,7 @@ public class TileManager
         {
           monieText.transform.localPosition = _Positions_Monies[4];
           var monie = int.Parse(_Text_Money.text.Substring(3));
-          _Text_Money.text = $"$$${monie + 1}";
+          _Text_Money.text = $"$${monie + 1}";
           SfxManager.PlayAudioSourceSimple(GameResources._Camera_Main.transform.GetChild(1).position, "Etc/Monie_store", 0.95f, 1f);
         }
       }
@@ -593,9 +593,9 @@ public class TileManager
         SceneThemes.ChangeMapTheme(SceneThemes._Instance._ThemeOrder[3]);
     }
     else if (GameScript.IsSurvival())
-      SceneThemes.ChangeMapTheme(SceneThemes._Instance._ThemeOrder[3]);
+      SceneThemes.ChangeMapTheme(SceneThemes._Instance._ThemeOrder[2]);
     else if (GameScript._EditorTesting)
-      SceneThemes.ChangeMapTheme(SceneThemes._Instance._ThemeOrder[3]);
+      SceneThemes.ChangeMapTheme(SceneThemes._Instance._ThemeOrder[2]);
     else
     {
       if (Levels._CurrentLevelIndex < 12 && Levels._CurrentLevelIndex > (Settings._DIFFICULTY == 1 ? 8 : 7))
@@ -705,12 +705,12 @@ public class TileManager
       if (best_time != null)
       {
         TileManager._LevelTime_Dev = float.Parse(best_time.Split('_')[1]);
-        Debug.Log("Loaded best dev time: " + TileManager._LevelTime_Dev);
+        //Debug.Log("Loaded best dev time: " + TileManager._LevelTime_Dev);
       }
       else
       {
         TileManager._LevelTime_Dev = -1f;
-        Debug.LogWarning("No best time set for classic level");
+        //Debug.LogWarning("No best time set for classic level");
       }
     }
 
@@ -2687,7 +2687,7 @@ public class TileManager
         {
           // Get mouse pos
           RaycastHit h;
-          Physics.SphereCast(GameResources._Camera_Main.ScreenPointToRay(ControllerManager.GetMousePosition()), 0.25f, out h, 100f, EnemyScript._Layermask_Ragdoll);
+          Physics.SphereCast(GameResources._Camera_Main.ScreenPointToRay(ControllerManager.GetMousePosition()), 0.25f, out h, 100f, GameResources._Layermask_Ragdoll);
           Vector3 mousePos = h.point;
           mousePos.y = -1f;
           _LineRenderers[1].positionCount = 2;
@@ -3740,7 +3740,7 @@ public class TileManager
       {
         // Get mouse pos
         RaycastHit h;
-        Physics.SphereCast(GameResources._Camera_Main.ScreenPointToRay(ControllerManager.GetMousePosition()), 0.25f, out h, 100f, EnemyScript._Layermask_Ragdoll);
+        Physics.SphereCast(GameResources._Camera_Main.ScreenPointToRay(ControllerManager.GetMousePosition()), 0.25f, out h, 100f, GameResources._Layermask_Ragdoll);
         Vector3 mousePos = h.point;
         mousePos.y = -1f;
         _LineRenderers[1].positionCount = 2;
@@ -3909,7 +3909,7 @@ public class TileManager
     // Get raycast info
     RaycastHit raycast_info;
     var r = GameResources._Camera_Main.ScreenPointToRay(mousepos);
-    Physics.SphereCast(r, 0.2f, out raycast_info, 100f, EnemyScript._Layermask_Ragdoll);
+    Physics.SphereCast(r, 0.2f, out raycast_info, 100f, GameResources._Layermask_Ragdoll);
     if (raycast_info.collider == null) return;
 
     // Save map
@@ -3981,7 +3981,7 @@ public class TileManager
 
           // Try to find objects
           var save_collider = raycast_info.collider;
-          Physics.SphereCast(r, 0.2f, out raycast_info, 100f, EnemyScript._Layermask_Ragdoll);
+          Physics.SphereCast(r, 0.2f, out raycast_info, 100f, GameResources._Layermask_Ragdoll);
           got_obj = raycast_info.collider.gameObject;
 
           // If did not find collider or finds the floor, end

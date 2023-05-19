@@ -608,11 +608,12 @@ public static class Settings
           difficulty = 0,
           rating = 0,
           extras = null,
-          loadoutDesc = "sword, shuriken x2",
+          loadoutDesc = "sword, shuriken x4",
           items = new GameScript.ItemManager.Items[] {
             GameScript.ItemManager.Items.SWORD,
             },
           utilities = new UtilityScript.UtilityType[]{
+            UtilityScript.UtilityType.SHURIKEN,
             UtilityScript.UtilityType.SHURIKEN,
           },
           perks = null

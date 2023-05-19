@@ -9,7 +9,6 @@ using System.Linq;
 public class EnemyScript : MonoBehaviour
 {
 
-  public static int _Layermask_Ragdoll;
   static class SpherecastHandler
   {
 
@@ -28,12 +27,6 @@ public class EnemyScript : MonoBehaviour
       _EnemyOrder = new int[count];
       _EnemyOrderIter = 0;
       _Commands_Iter = 0;
-
-      _Layermask_Ragdoll = ~0;
-      _Layermask_Ragdoll &= ~(1 << LayerMask.NameToLayer("UI"));
-      _Layermask_Ragdoll &= ~(1 << LayerMask.NameToLayer("Bullet"));
-      _Layermask_Ragdoll &= ~(1 << LayerMask.NameToLayer("Ignore Raycast"));
-      _Layermask_Ragdoll &= ~(1 << LayerMask.NameToLayer("CAMERA2"));
     }
 
     public static void Clean()
@@ -45,7 +38,7 @@ public class EnemyScript : MonoBehaviour
 
     public static void QueueSpherecast(Vector3 origin, Vector3 direction, float radius)
     {
-      _Commands[_Commands_Iter++] = new SpherecastCommand(origin, radius, direction, 100f, _Layermask_Ragdoll);
+      _Commands[_Commands_Iter++] = new SpherecastCommand(origin, radius, direction, 100f, GameResources._Layermask_Ragdoll);
     }
 
     public static void ScheduleAllSpherecasts()
@@ -68,6 +61,7 @@ public class EnemyScript : MonoBehaviour
     public static RaycastHit GetSpherecastHit(int iter)
     {
       var index = _EnemyOrderIter * _NumSpherecasts + iter;
+      if (index < 0) return new RaycastHit();
       if (index < _Results.Length)
         return _Results[index];
       return new RaycastHit();
@@ -137,8 +131,7 @@ public class EnemyScript : MonoBehaviour
     _reactToSound;
   public bool _strafeRight;
 
-  public bool _isTarget, // Used for kill the target game mode
-    _canAttack;
+  public bool _canAttack;
   public static List<EnemyScript> _Targets;
 
   public Vector3 _waitLookPos;
@@ -201,7 +194,7 @@ public class EnemyScript : MonoBehaviour
   public SurvivalAttributes _survivalAttributes;
 
   // Use this for initialization
-  public void Init(SurvivalAttributes survivalAttributes)
+  public void Init(SurvivalAttributes survivalAttributes, bool grappled = false)
   {
 
     // Set unique ID
@@ -295,22 +288,13 @@ public class EnemyScript : MonoBehaviour
           break;
       }
 
-    // Add to targets if is a target
-    if (_isTarget)
-    {
-      if (_Targets == null)
-        _Targets = new List<EnemyScript>();
-      _Targets.Add(this);
-      _ragdoll.ChangeColor(Color.yellow);
-    }
-
     _lr = _ragdoll._head.gameObject.AddComponent<LineRenderer>();
     _lr.startWidth = 0.3f;
     _lr.endWidth = 0f;
     Resources.UnloadAsset(_lr.sharedMaterial);
     _lr.sharedMaterial = GameResources.s_Blood0.sharedMaterial;
     _lr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-    Gradient gradient = new Gradient();
+    var gradient = new Gradient();
     gradient.SetKeys(
         new GradientColorKey[] { new GradientColorKey(_ragdoll._color, 0.0f), new GradientColorKey(Color.black, 1.0f) },
         new GradientAlphaKey[] { new GradientAlphaKey(1f, 0.0f), new GradientAlphaKey(1f, 1.0f) }
@@ -338,7 +322,8 @@ public class EnemyScript : MonoBehaviour
       SetRagdollTarget(closestPlayer);
 
       SetRandomStrafe();
-      _agent.enabled = true;
+      if (!grappled)
+        _agent.enabled = true;
       _ragdoll._rotSpeed = PlayerScript.ROTATIONSPEED * (0.8f + Random.value * 0.3f);
       TargetFound(false, false);
 
@@ -440,7 +425,7 @@ public class EnemyScript : MonoBehaviour
     {
       _ragdoll.ToggleRaycasting(true);
 
-      if (_lr.positionCount > 1)
+      if (_lr.enabled && _lr.positionCount > 1)
       {
         _lr_pos0 = _ragdoll._head.gameObject.transform.position;
         _lr_pos1 = _lr_pos0 + _ragdoll._hip.transform.forward * 3f;
@@ -811,16 +796,22 @@ public class EnemyScript : MonoBehaviour
                   // If has a melee weapon and sees the target, run at them
                   if (!_ragdoll.HasGun() && _time_seen > 0.05f && _targetInLOS && _enemyType != EnemyType.ROBOT && !_isZombie)
                     _moveSpeed = PlayerScript.RUNSPEED;
+
+                  // If grappling, slower
+                  if (_ragdoll._grappling) { _moveSpeed *= 0.9f; }
+
                   // Only attack if is alive, the target is alive, and (the target is in front, or has a machine gun, or has a melee weapon)
                   if (!_ragdoll._dead && !_ragdollTarget._dead && (_targetDirectlyInFront || HasMachineGun() || !_ragdoll.HasGun()))
                   {
-                    ItemScript useitem = (_leftweaponuse ? _ragdoll._itemL : (_ragdoll._itemR != null ? _ragdoll._itemR : _ragdoll._itemL));
+                    var useitem = (_leftweaponuse ? _ragdoll._itemL : (_ragdoll._itemR != null ? _ragdoll._itemR : _ragdoll._itemL));
+
                     // Check for reload
                     if (_ragdoll.HasGun() && useitem.NeedsReload())
                     {
                       _ragdoll.Reload();
                       _attackTime = Time.time + (0.5f + Random.value * 0.5f);
                     }
+
                     // Attack if close enough or pointed at target
                     else if ((_ragdoll.HasGun()) || (!_ragdoll.HasGun() && dis < (_itemLeft == GameScript.ItemManager.Items.GRENADE_HOLD ? 1f : _itemLeft == GameScript.ItemManager.Items.BAT ? 1.2f : 1.4f)))
                     {
@@ -1030,7 +1021,7 @@ public class EnemyScript : MonoBehaviour
   public static int NumberAlive()
   {
     if (_Enemies_alive == null) return 0;
-    return Mathf.Abs(_Enemies_alive.Count);
+    return _Enemies_alive.Count;
   }
 
   float _DIS;
@@ -1767,10 +1758,6 @@ public class EnemyScript : MonoBehaviour
 
     if (Time.time - _ragdoll._lastBubbleScriptTime < 0.4f) _ragdoll.DisplayText("");
 
-    // Check is target
-    if (_isTarget)
-      GameScript.KillTarget(this);
-
     // Remove line renderers
     _lr.positionCount = 0;
     _lr.SetPositions(new Vector3[] { });
@@ -1798,10 +1785,6 @@ public class EnemyScript : MonoBehaviour
 
     // Check for last enemy killed
     var last_killed = false;
-    if (_Enemies_alive.Count == 0)
-    {
-      GameScript._s_Singleton._goalPickupTime = Time.time;
-    }
 
     // First enemy killed
     if (_Enemies_dead.Count == 1)
@@ -1885,21 +1868,19 @@ public class EnemyScript : MonoBehaviour
           {
 
             // Check best player time
-            if (level_time_best == -1 || level_time < level_time_best)
+            if (can_save_timers)
             {
-
-              // Show new best score
-              if (can_save_timers)
+              if (level_time_best == -1 || level_time < level_time_best)
               {
                 PlayerPrefs.SetFloat($"{Levels._CurrentLevelCollection_Name}_{Levels._CurrentLevelIndex}_time", level_time);
                 TileManager._Text_LevelTimer_Best.text += string.Format(" -> {0:0.000}", level_time);
               }
+            }
 
-              // Cannot save score
-              else
-              {
-                TileManager._Text_LevelTimer_Best.text += string.Format(" -> <s>{0:0.000}</s> (extras on)", level_time);
-              }
+            // Cannot save score
+            else
+            {
+              TileManager._Text_LevelTimer_Best.text += string.Format(" -> <s>{0:0.000}</s> (extras on)", level_time);
             }
 
             // Show time difference between best time
@@ -1947,8 +1928,8 @@ public class EnemyScript : MonoBehaviour
             var medal_format = "<color={0}>{1,-5}: {2,-6}</color>\n";
             var played_wrong = false;
             var points_awarded_counter = points_awarded;
-            if (can_save_timers)
-              TileManager._Text_Money.text = $"$$${Shop._AvailablePoints}";
+            if (can_save_timers && Shop._AvailablePoints != 999)
+              TileManager._Text_Money.text = $"$${Shop._AvailablePoints}";
             for (var i = medal_times.Length - 1; i >= 0; i--)
             {
               var time = medal_times[i];
@@ -1957,8 +1938,8 @@ public class EnemyScript : MonoBehaviour
 
               TileManager._Text_LevelTimer_Best.text += string.Format(medal_format, ratings[i].Item2, ratings[i].Item1, timeText + (ratingIndex == i ? "*" : ""));
 
-              // Show $$$
-              if (can_save_timers && points_awarded_table.Contains(i))
+              // Show $$
+              if (can_save_timers && Shop._AvailablePoints != 999 && points_awarded_table.Contains(i))
               {
                 TileManager.MoveMonie(3 - i, points_awarded - points_awarded_counter--, timeText.Length < 6 ? 0 : 1);
               }
@@ -2099,6 +2080,7 @@ public class EnemyScript : MonoBehaviour
               // Check extras menu
               if (!Shop.Unlocked(Shop.Unlocks.MODE_EXTRAS))
               {
+                Debug.LogWarning($"No extras; extras menu no unlocked");
                 prereqsSatisfied = false;
               }
 
@@ -2136,25 +2118,29 @@ public class EnemyScript : MonoBehaviour
                 };
                 foreach (var item in equipment0_items)
                 {
-                  if (!equipment1_items.Contains(item))
+                  if (equipment1_items.Contains(item))
                   {
-                    return false;
+                    equipment1_items.Remove(item);
                   }
-                  equipment1_items.Remove(item);
                 }
+                if (equipment1_items.Count > 0)
+                  return false;
 
                 // Check perks equal
                 if (e0._perks.Count != e1._perks.Count)
                 {
                   return false;
                 }
+                var perkList = new List<Shop.Perk.PerkType>(e1._perks);
                 foreach (var perk0 in e0._perks)
                 {
-                  if (!e1._perks.Contains(perk0))
+                  if (perkList.Contains(perk0))
                   {
-                    return false;
+                    perkList.Remove(perk0);
                   }
                 }
+                if (perkList.Count > 0)
+                  return false;
 
                 // Check utilities equal
                 var utilsTotal = new List<UtilityScript.UtilityType>();
@@ -2167,17 +2153,15 @@ public class EnemyScript : MonoBehaviour
                 {
                   if (utilsTotal.Contains(util))
                   {
-                    return false;
+                    utilsTotal.Remove(util);
                   }
-                  utilsTotal.Remove(util);
                 }
                 foreach (var util in e1._utilities_right)
                 {
                   if (utilsTotal.Contains(util))
                   {
-                    return false;
+                    utilsTotal.Remove(util);
                   }
-                  utilsTotal.Remove(util);
                 }
                 if (utilsTotal.Count > 0)
                   return false;
@@ -2190,7 +2174,7 @@ public class EnemyScript : MonoBehaviour
               var equipment_changed = PlayerScript.s_Players[0]._EquipmentChanged;
               if (equipment_changed || !EquipmentIsEqual(equipmentStart, PlayerScript.s_Players[0]._Equipment))
               {
-                Debug.LogWarning("No extras; equipment changed");
+                Debug.LogWarning($"No extras; equipment changed ({equipment_changed})");
                 prereqsSatisfied = false;
               }
 
@@ -2398,7 +2382,7 @@ public class EnemyScript : MonoBehaviour
     return _ragdoll.HasAutomatic();
   }
 
-  public static EnemyScript SpawnEnemyAt(SurvivalAttributes survivalAttributes, Vector2 location)
+  public static EnemyScript SpawnEnemyAt(SurvivalAttributes survivalAttributes, Vector2 location, bool grappled = false)
   {
 
     var weapon = "knife";
@@ -2411,7 +2395,7 @@ public class EnemyScript : MonoBehaviour
     var e = enemy.transform.GetChild(0).GetComponent<EnemyScript>();
     e.transform.position = new Vector3(location.x, enemy.transform.position.y, location.y);
     if (PlayerScript.s_Players != null && PlayerScript.s_Players.Count > 0 && PlayerScript.s_Players[0] != null) e.LookAt(PlayerScript.s_Players[0].transform.position);
-    e.Init(survivalAttributes);
+    e.Init(survivalAttributes, grappled);
     e.EquipStart();
 
     return e;
