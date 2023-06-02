@@ -3413,9 +3413,9 @@ public class Menu2
         {
           GenericMenu(
             new string[] {
-              @"~1
+              @"welcome,~1
 
-if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' menu~2
+if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' menu~1
 
 "
             },
@@ -3548,13 +3548,11 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
             if (GameScript._GameMode != GameScript.GameModes.SURVIVAL)
             {
               var first_level_iter = (component._buttonIndex) * levels_per_dir;
-#if !UNITY_EDITOR
               if (first_level_iter > 0 && !Levels.LevelCompleted(first_level_iter - 1))
               {
                 component.SetDisplayText(string.Format(format_subdirs, $"****", $"-    ", "", "") + '\n');
                 return;
               }
-#endif
             }
             // Obscur survival levels
             else
@@ -3591,7 +3589,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
                 var level_iter = (component._buttonIndex) * levels_per_dir + u;
                 var level_unlocked = (level_iter == 0 ? true : Levels.LevelCompleted(level_iter - 1));
 #if UNITY_EDITOR
-                level_unlocked = true;
+                //level_unlocked = true;
 #endif
 
                 if (level_iter >= Levels._CurrentLevelCollection._levelData.Length) continue;
@@ -3681,7 +3679,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
                   var level_unlocked = Levels.LevelCompleted(int.Parse(selection.Split(' ')[0].Substring(1)) - 2);
                   if (!level_unlocked)
                   {
-                    Debug.Log($"Level not unlocked {selections[lastIter - 1]}");
+                    //Debug.Log($"Level not unlocked {selections[lastIter - 1]}");
                     break;
                   }
                   lastIter++;
@@ -3803,7 +3801,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
             actions_onCreated.Add((MenuComponent component0) => { });
             var difficultyUnlocked = Settings._DifficultyUnlocked > 0;
 #if UNITY_EDITOR
-            difficultyUnlocked = true;
+            //difficultyUnlocked = true;
 #endif
 
             selections.Add(string.Format(format_ds, $"sneakier", ratings_lowest[1], "more enemies, harder levels, pressure"));
@@ -5222,7 +5220,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
         mPause.AddComponent("extras*\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE);
         if (Shop.Unlocked(Shop.Unlocks.MODE_EXTRAS)
 #if UNITY_EDITOR
-          || true
+          //|| true
 #endif
         )
         {
@@ -5430,7 +5428,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
     .AddComponent("extras*\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE);
     if (Shop.Unlocked(Shop.Unlocks.MODE_EXTRAS)
 #if UNITY_EDITOR
-          || true
+          //|| true
 #endif
         )
     {
@@ -6297,22 +6295,22 @@ www.reddit.com/u/quaterniusdev
     $@"<color={_COLOR_GRAY}>how to play - CLASSIC mode</color>~1
 
 
-<color={_COLOR_GRAY}>overview</color>~2
-in this mode, you will complete levels.~2 collect the <color=yellow>CUBE</color>~1 and bring
-it back to the start of the level.~2 complete levels quickly
-to earn ranks and earn <color=yellow>money ($$)</color> to spend at the SHOP.~2 customize
-your loadouts in the EDIT_LOADOUT menu.~2
+<color={_COLOR_GRAY}>overview</color>~1
+in this mode, you will complete levels.~1 collect the <color=yellow>CUBE</color>~1 and bring
+it back to the start of the level.~1 complete levels quickly
+to earn ranks and earn <color=yellow>money ($$)</color> to spend at the SHOP.~1 customize
+your loadouts in the EDIT_LOADOUT menu.~1
 
 
-<color={_COLOR_GRAY}>special controls</color>~2
+<color={_COLOR_GRAY}>special controls</color>~1
 cycle between multiple custom loadouts using the <color=yellow>LEFT and RIGHT D-PAD</color>
-buttons.~2 for basic controls for the game, see CONTROLS in the
-OPTIONS menu~2 or just figure it out as you play.~2
+buttons.~1 for basic controls for the game, see CONTROLS in the
+OPTIONS menu~1 or just figure it out as you play.~1
 
 
-<color=cyan>quick start guide</color>:~2
-* <color=yellow>purchase</color> an item from the SHOP~2
-* <color=yellow>equip</color> the item to a loadout in the EDIT_LOADOUT menu~2
+<color=cyan>quick start guide</color>:~1
+* <color=yellow>purchase</color> an item from the SHOP~1
+* <color=yellow>equip</color> the item to a loadout in the EDIT_LOADOUT menu~1
 * <color=yellow>select</color> a level to play in the LEVEL_SELECT menu~1
 
 
@@ -6329,22 +6327,22 @@ OPTIONS menu~2 or just figure it out as you play.~2
     $@"<color={_COLOR_GRAY}>how to play - SURVIVAL mode</color>~1
 
 
-<color={_COLOR_GRAY}>overview</color>~2
-in this mode, you will fend off waves of enemies.~2 killing enemies
-gives you points,~2 spend points on upgrades in-game to get stronger.~2
+<color={_COLOR_GRAY}>overview</color>~1
+in this mode, you will fend off waves of enemies.~1 killing enemies
+gives you points,~1 spend points on upgrades in-game to get stronger.~1
 the mode never ends,~1 try to last as long as possible.~1
 
 
-<color={_COLOR_GRAY}>special controls</color>~2
-there are no loadouts.~1 buy items in-game with the <color=red>B or CIRCLE</color> button~2
-or specify a side to buy for with the <color=yellow>LEFT and RIGHT D-PAD</color> buttons.~2
+<color={_COLOR_GRAY}>special controls</color>~1
+there are no loadouts.~1 buy items in-game with the <color=red>B or CIRCLE</color> button~1
+or specify a side to buy for with the <color=yellow>LEFT and RIGHT D-PAD</color> buttons.~1
 for other controls for SURVIVAL mode, see CONTROLS in the OPTIONS
-menu.~2
+menu.~1
 
 
-<color={_COLOR_GRAY}>notes</color>~2
-* if you die, you lose your items and upgrades.~2
-* you have two sets of weapons;~1 meaning you can hold 4 weapons total.~2
+<color={_COLOR_GRAY}>notes</color>~1
+* if you die, you lose your items and upgrades.~1
+* you have two sets of weapons;~1 meaning you can hold 4 weapons total.~1
 
 
 
@@ -6360,22 +6358,22 @@ menu.~2
     $@"<color={_COLOR_GRAY}>how to use - EDITOR LEVEL</color>~1
 
 
-<color={_COLOR_GRAY}>overview</color>~2
+<color={_COLOR_GRAY}>overview</color>~1
 with the level editor, you are able to make any levels you have seen in the
-<color=yellow>CLASSIC mode</color> and more.~2 string together levels into level packs. edit per level
+<color=yellow>CLASSIC mode</color> and more.~1 string together levels into level packs. edit per level
 options in the level pack editor such as: <color=yellow>level theme, order, and hard-set
 loadout</color>.~1 finally, publish or overwrite your own level packs, and download
 others' level packs on the <color=yellow>steam workshop</color>.~1
 
-<color={_COLOR_GRAY}>special controls</color>~2
+<color={_COLOR_GRAY}>special controls</color>~1
 level editing controls are restricted to <color=red>mouse and keyboard</color>~1- all
 keymappings are shown in the editor.~1 level testing will be done with
 a gampad if plugged in.~1
 
 
-<color={_COLOR_GRAY}>notes</color>~2
-* updating levels in a level pack requires overwriting them.~2
-* naming scheme for levels and levelpacks is a-z, 0-9, and '-'.~2
+<color={_COLOR_GRAY}>notes</color>~1
+* updating levels in a level pack requires overwriting them.~1
+* naming scheme for levels and levelpacks is a-z, 0-9, and '-'.~1
 
 
 
@@ -6714,7 +6712,7 @@ a gampad if plugged in.~1
         // Check if component should be visible; add dropdown placeholder for later
         if (visibility_conditions.Invoke()
 #if UNITY_EDITOR
-          || true
+          //|| true
 #endif
         )
         {

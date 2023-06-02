@@ -328,7 +328,7 @@ public static class Settings
     }
   }
 
-  public static float _VERSION = 1.3f;
+  public static float _VERSION = 1.31f;
 
   // Struct holding info what item pair gets unlocked at what level
   public class WeaponPair
@@ -397,6 +397,7 @@ public static class Settings
         new WeaponPair(1, 24),
         new WeaponPair(1, 36),
     };
+
     // Load completed levels
     _LevelsCompleted = new Dictionary<string, List<int>>();
     for (var u = 0; u < Levels._LevelCollections.Count; u++)

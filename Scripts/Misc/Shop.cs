@@ -414,7 +414,7 @@ public static class Shop
     AddAvailableUnlock(Unlocks.MAX_EQUIPMENT_POINTS_1);
     AddAvailableUnlock(Unlocks.ITEM_PISTOL_SILENCED);
 
-    AddAvailableUnlock(Unlocks.MODE_EXTRAS);
+    //AddAvailableUnlock(Unlocks.MODE_EXTRAS);
 
     //AddAvailableUnlock(Unlocks.ITEM_ROCKET_FIST);
 

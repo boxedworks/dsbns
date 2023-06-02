@@ -128,6 +128,7 @@ public class Powerup : MonoBehaviour
             GameScript.NextLevel();
             break;
           }*/
+
           // Disable chase enemies
           if (EnemyScript._Enemies_alive != null)
           {

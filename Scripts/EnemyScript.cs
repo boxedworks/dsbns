@@ -2080,14 +2080,14 @@ public class EnemyScript : MonoBehaviour
               // Check extras menu
               if (!Shop.Unlocked(Shop.Unlocks.MODE_EXTRAS))
               {
-                Debug.LogWarning($"No extras; extras menu no unlocked");
+                //Debug.LogWarning($"No extras; extras menu not unlocked");
                 prereqsSatisfied = false;
               }
 
               // Make sure player count not changed
               if (PlayerScript.s_NumPlayersStart != 1 || Settings._NumberPlayers != 1)
               {
-                Debug.LogWarning($"No extras; player count: {PlayerScript.s_NumPlayersStart} - {PlayerScript.s_Players.Count}");
+                //Debug.LogWarning($"No extras; player count: {PlayerScript.s_NumPlayersStart} - {PlayerScript.s_Players.Count}");
                 prereqsSatisfied = false;
               }
 
@@ -2095,7 +2095,7 @@ public class EnemyScript : MonoBehaviour
               var extrasSnapshot = Settings.GetExtrasSnapshot();
               if (!extrasSnapshot.SequenceEqual(PlayerScript.s_ExtrasSnapshot))
               {
-                Debug.LogWarning("No extras; extras changed");
+                //Debug.LogWarning("No extras; extras changed");
                 prereqsSatisfied = false;
               }
 
@@ -2174,7 +2174,7 @@ public class EnemyScript : MonoBehaviour
               var equipment_changed = PlayerScript.s_Players[0]._EquipmentChanged;
               if (equipment_changed || !EquipmentIsEqual(equipmentStart, PlayerScript.s_Players[0]._Equipment))
               {
-                Debug.LogWarning($"No extras; equipment changed ({equipment_changed})");
+                //Debug.LogWarning($"No extras; equipment changed ({equipment_changed})");
                 prereqsSatisfied = false;
               }
 
@@ -2244,7 +2244,7 @@ public class EnemyScript : MonoBehaviour
                   }
 
                   // Award extra in shop
-                  Debug.Log($"Unlocked {extraUnlock}");
+                  //Debug.Log($"Unlocked {extraUnlock}");
                   Shop.AddAvailableUnlock(extraUnlock, true);
                 }
             }

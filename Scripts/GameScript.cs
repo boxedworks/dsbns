@@ -1566,7 +1566,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
             if (_levelEndTimer > timeToEnd || (EnemyScript.NumberAlive() == 0 && Time.time - _goalPickupTime > 0.8f))
             {
 
-              if (_levelEndTimer > timeToEnd)
+              if (_levelEndTimer > timeToEnd || Levels._CurrentLevelIndex == 0)
               {
                 MarkLevelCompleted();
               }
@@ -3394,6 +3394,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     {
       Settings._LevelsCompleted_Current.Add(Levels._CurrentLevelIndex);
       PlayerPrefs.SetInt($"{Levels._CurrentLevelCollection_Name}_{Levels._CurrentLevelIndex}", 1);
+
       // Check mode-specific unlocks
       if (_GameMode == GameModes.CLASSIC)
       {
