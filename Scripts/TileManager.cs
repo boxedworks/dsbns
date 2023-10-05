@@ -66,7 +66,7 @@ public class TileManager
     _Text_GameOver.text = "";
 
     var best_time = PlayerPrefs.GetFloat($"{Levels._CurrentLevelCollection_Name}_{Levels._CurrentLevelIndex}_time", -1f);
-    _Text_LevelTimer_Best.text = best_time == -1f ? "-" : string.Format("{0:0.000}", best_time);
+    _Text_LevelTimer_Best.text = best_time == -1f ? "-" : best_time.ToStringTimer();
 
     ResetMonies();
 
@@ -164,7 +164,7 @@ public class TileManager
         if (IsActive())
         {
           monieText.transform.localPosition = _Positions_Monies[4];
-          var monie = int.Parse(_Text_Money.text.Substring(3));
+          var monie = _Text_Money.text.Substring(2).ParseIntInvariant();
           _Text_Money.text = $"$${monie + 1}";
           SfxManager.PlayAudioSourceSimple(GameResources._Camera_Main.transform.GetChild(1).position, "Etc/Monie_store", 0.95f, 1f);
         }
@@ -516,7 +516,7 @@ public class TileManager
     // Check for editor maps
     _CurrentLevel_Name = level_meta[1] == null ? "unnamed loaded map" : level_meta[1];
     _CurrentLevel_Loadout = level_meta[2];
-    _CurrentLevel_Theme = level_meta[3] != null ? int.Parse(level_meta[3]) : -1;
+    _CurrentLevel_Theme = level_meta[3] != null ? level_meta[3].ParseIntInvariant() : -1;
 
     if (_CurrentLevel_Loadout != null)
     {
@@ -538,8 +538,8 @@ public class TileManager
     //var reversed = data.Contains("__reversed_");
     try
     {
-      width = int.Parse(data_split[data_iter++]);
-      height = int.Parse(data_split[data_iter++]);
+      width = data_split[data_iter++].ParseIntInvariant();
+      height = data_split[data_iter++].ParseIntInvariant();
     }
     // If fails to load map, just load the first level
     catch (System.FormatException e)
@@ -657,7 +657,7 @@ public class TileManager
 
       // Find the local start position of the new map
       var splitData = spawnpoint_data.Split('_');
-      var spawnpos_tilepos = TransformPositionOntoTiles(float.Parse(splitData[1], System.Globalization.CultureInfo.InvariantCulture), float.Parse(splitData[2], System.Globalization.CultureInfo.InvariantCulture));
+      var spawnpos_tilepos = TransformPositionOntoTiles(splitData[1].ParseFloatInvariant(), splitData[2].ParseFloatInvariant());
 
       // Check for null players
       if (Players != null)
@@ -697,19 +697,19 @@ public class TileManager
     // Set best time
     if (_Dev_Time_Save != -1f)
     {
-      TileManager._LevelTime_Dev = _Dev_Time_Save;
+      _LevelTime_Dev = _Dev_Time_Save;
       _Dev_Time_Save = -1f;
     }
     else if (!Settings._LevelEditorEnabled)
     {
       if (best_time != null)
       {
-        TileManager._LevelTime_Dev = float.Parse(best_time.Split('_')[1]);
+        _LevelTime_Dev = best_time.Split('_')[1].ParseFloatInvariant();
         //Debug.Log("Loaded best dev time: " + TileManager._LevelTime_Dev);
       }
       else
       {
-        TileManager._LevelTime_Dev = -1f;
+        _LevelTime_Dev = -1f;
         //Debug.LogWarning("No best time set for classic level");
       }
     }
@@ -758,7 +758,7 @@ public class TileManager
         var useData = 1;
         if (w < _offset.x || w >= width + _offset.x || h < _offset.y || h >= height + _offset.y) { }
         else
-          useData = int.Parse(data_split[data_iter++]);
+          useData = data_split[data_iter++].ParseIntInvariant();
         var tile = _Tiles[w * _Height + h];
         // Down
         if (useData == 0)
@@ -1097,7 +1097,7 @@ public class TileManager
     _Level_Complete = false;
     PlayerScript._TimerStarted = false;
 
-    _Text_LevelTimer.text = string.Format("{0:0.000}", _LevelTimer);
+    _Text_LevelTimer.text = _LevelTimer.ToStringTimer();
 
     // Check survival
     if (GameScript.IsSurvival()) GameScript.SurvivalMode.Init();
@@ -1189,8 +1189,8 @@ public class TileManager
           }
           else if (setting == 1)
           {
-            var posx = float.Parse(object_data_split[1]);
-            var posy = float.Parse(object_data_split[2]);
+            var posx = object_data_split[1].ParseFloatInvariant();
+            var posy = object_data_split[2].ParseFloatInvariant();
 
             object_data_split[0] = "";
             object_data_split[1] = "";
@@ -1403,12 +1403,12 @@ public class TileManager
             // Rotation
             case ("rot"):
               Quaternion rot = loadedObject.transform.localRotation;
-              rot.eulerAngles = new Vector3(rot.eulerAngles.x, float.Parse(pair.Value, System.Globalization.CultureInfo.InvariantCulture), rot.eulerAngles.z);
+              rot.eulerAngles = new Vector3(rot.eulerAngles.x, pair.Value.ParseFloatInvariant(), rot.eulerAngles.z);
               loadedObject.transform.rotation = rot;
               break;
             // Set the open status
             case ("open"):
-              int open = int.Parse(pair.Value);
+              int open = pair.Value.ParseIntInvariant();
               door_script0._Opened = open == 1;
               door_script0.enabled = true;
               break;
@@ -1417,7 +1417,7 @@ public class TileManager
               foreach (var id in pair.Value.Split('|'))
               {
                 if (id.Trim() == "") continue;
-                var idP = int.Parse(id);
+                var idP = id.ParseIntInvariant();
                 //Debug.Log(GameScript._Singleton.transform.GetChild(0).childCount);
                 //Debug.Log(idP);
                 var enemies = GameScript._s_Singleton.transform.GetChild(0);
@@ -1449,11 +1449,11 @@ public class TileManager
             {
               // Rotation
               case ("rot"):
-                FunctionsC.RotateLocal(ref loadedObject, float.Parse(pair.Value, System.Globalization.CultureInfo.InvariantCulture));
+                FunctionsC.RotateLocal(ref loadedObject, pair.Value.ParseFloatInvariant());
                 break;
               // Set the rotation speed
               case ("rotspeed"):
-                laser_script._rotationSpeed = float.Parse(pair.Value, System.Globalization.CultureInfo.InvariantCulture);
+                laser_script._rotationSpeed = pair.Value.ParseFloatInvariant();
                 break;
               // Set the type
               case ("type"):
@@ -1484,12 +1484,12 @@ public class TileManager
           {
             // Rotation
             case ("rot"):
-              FunctionsC.RotateLocal(ref loadedObject, float.Parse(pair.Value, System.Globalization.CultureInfo.InvariantCulture));
+              FunctionsC.RotateLocal(ref loadedObject, pair.Value.ParseFloatInvariant());
               break;
             case ("co"):
               var co = loadedObject.AddComponent<CustomObstacle>();
               var split = pair.Value.Split('.');
-              var index = int.Parse(split[1], System.Globalization.CultureInfo.InvariantCulture);
+              var index = split[1].ParseIntInvariant();
               co._index = index;
               CustomObstacle._PlayerSpawn = co;
               break;
@@ -1547,16 +1547,16 @@ public class TileManager
           {
             // Rotation
             case ("rot"):
-              FunctionsC.RotateLocal(ref loadedObject, float.Parse(pair.Value, System.Globalization.CultureInfo.InvariantCulture));
+              FunctionsC.RotateLocal(ref loadedObject, pair.Value.ParseFloatInvariant());
               break;
             case ("co"):
               var co = loadedObject.GetComponent<CustomObstacle>();
               var split = pair.Value.Split('.');
               var type = (CustomObstacle.InteractType)System.Enum.Parse(typeof(CustomObstacle.InteractType), split[0]);
-              var index = int.Parse(split[1], System.Globalization.CultureInfo.InvariantCulture);
+              var index = split[1].ParseIntInvariant();
               var index2 = 0;
               if (split.Length > 2)
-                index2 = int.Parse(split[2], System.Globalization.CultureInfo.InvariantCulture);
+                index2 = split[2].ParseIntInvariant();
               if (co == null)
                 co = loadedObject.AddComponent<CustomObstacle>();
               co._type = type;
@@ -1651,8 +1651,8 @@ public class TileManager
     public ObjectData(string type, string x, string y)
     {
       _type = type;
-      _x = float.Parse(x, System.Globalization.CultureInfo.InvariantCulture) + (_offset.x + _objectoffset.x) * _Tile_spacing;
-      _z = float.Parse(y, System.Globalization.CultureInfo.InvariantCulture) + (_offset.y + _objectoffset.y) * _Tile_spacing;
+      _x = x.ParseFloatInvariant() + (_offset.x + _objectoffset.x) * _Tile_spacing;
+      _z = y.ParseFloatInvariant() + (_offset.y + _objectoffset.y) * _Tile_spacing;
     }
     public ObjectData(string type, string modifier0)
     {
@@ -1662,8 +1662,8 @@ public class TileManager
     public ObjectData(string type, string x, string y, string modifier0)
     {
       _type = type;
-      _x = float.Parse(x, System.Globalization.CultureInfo.InvariantCulture) + (_offset.x + _objectoffset.x) * _Tile_spacing;
-      _z = float.Parse(y, System.Globalization.CultureInfo.InvariantCulture) + (_offset.y + _objectoffset.y) * _Tile_spacing;
+      _x = x.ParseFloatInvariant() + (_offset.x + _objectoffset.x) * _Tile_spacing;
+      _z = y.ParseFloatInvariant() + (_offset.y + _objectoffset.y) * _Tile_spacing;
       _modifier0 = modifier0;
     }
 
@@ -4576,12 +4576,12 @@ public class TileManager
     string[] data_split = mapData.Split(' ');
     int data_iter = 0;
     // Get metadata
-    int width = int.Parse(data_split[data_iter++]),
-      height = int.Parse(data_split[data_iter++]);
+    int width = data_split[data_iter++].ParseIntInvariant(),
+      height = data_split[data_iter++].ParseIntInvariant();
     // Loop through tiles
     for (; data_iter - 2 < width * height; data_iter++)
     {
-      var up = int.Parse(data_split[data_iter]) == 1;
+      var up = data_split[data_iter].ParseIntInvariant() == 1;
 
       int current_column = ((data_iter - 2) % height),
         current_row = (int)((data_iter - 2) / height);
@@ -4659,7 +4659,7 @@ public class TileManager
       if (type.Trim().Length == 0 || type == "bdt")
         continue;
 
-      Vector3 position = new Vector3(float.Parse(split[2], System.Globalization.CultureInfo.InvariantCulture), float.Parse(split[1], System.Globalization.CultureInfo.InvariantCulture), 0f),
+      Vector3 position = new Vector3(split[2].ParseFloatInvariant(), split[1].ParseFloatInvariant(), 0f),
         scale = new Vector3(2.5f, 2.5f, 0.1f) / 3f;
       Transform object_new = null;
       switch (type)
@@ -4709,14 +4709,14 @@ public class TileManager
           object_new.gameObject.layer = 2;
           // Door
           if (split.Length < 7) break;
-          var position2 = new Vector3(float.Parse(split[6], System.Globalization.CultureInfo.InvariantCulture), float.Parse(split[5], System.Globalization.CultureInfo.InvariantCulture), 0f);
+          var position2 = new Vector3(split[6].ParseFloatInvariant(), split[5].ParseFloatInvariant(), 0f);
           var object_new2 = GameObject.CreatePrimitive(PrimitiveType.Cube).transform;
           ChangeColorAndDelete(object_new2, 1, GameResources._Door.transform.GetChild(0).GetChild(0).GetComponent<Renderer>().sharedMaterial.color);
           object_new2.parent = container_objects;
           object_new2.localScale = new Vector3(scale.x * 4f, scale.y * 0.8f, scale.z * 0.9f);
           object_new2.position = position2;
           var rot = object_new2.localRotation;
-          rot.eulerAngles = new Vector3(0f, 0f, 1f) * (float.Parse(split[8], System.Globalization.CultureInfo.InvariantCulture) + 90f);
+          rot.eulerAngles = new Vector3(0f, 0f, 1f) * (split[8].ParseFloatInvariant() + 90f);
           object_new2.localRotation = rot;
           object_new2.gameObject.layer = 11;
           break;
@@ -4732,14 +4732,14 @@ public class TileManager
           object_new.gameObject.layer = 2;
           scale *= 0.7f;
           // Door
-          position2 = new Vector3(float.Parse(split[5], System.Globalization.CultureInfo.InvariantCulture), float.Parse(split[4], System.Globalization.CultureInfo.InvariantCulture), 0f);
+          position2 = new Vector3(split[5].ParseFloatInvariant(), split[4].ParseFloatInvariant(), 0f);
           object_new2 = GameObject.CreatePrimitive(PrimitiveType.Cube).transform;
           ChangeColorAndDelete(object_new2, 1, GameResources._Door.transform.GetChild(0).GetChild(0).GetComponent<Renderer>().sharedMaterial.color);
           object_new2.parent = container_objects;
           object_new2.localScale = new Vector3(scale.x * 5f, scale.y * 0.8f, scale.z * 0.9f);
           object_new2.position = position2;
           rot = object_new2.localRotation;
-          rot.eulerAngles = new Vector3(0f, 0f, 1f) * (float.Parse(split[7], System.Globalization.CultureInfo.InvariantCulture) + 90f);
+          rot.eulerAngles = new Vector3(0f, 0f, 1f) * (split[7].ParseFloatInvariant() + 90f);
           object_new2.localRotation = rot;
           object_new2.gameObject.layer = 11;
           break;
@@ -4805,11 +4805,11 @@ public class TileManager
             {
               case ("rot"):
                 Quaternion rot = object_new.localRotation;
-                rot.eulerAngles = new Vector3(0f, 0f, 1f) * (float.Parse(property.Value, System.Globalization.CultureInfo.InvariantCulture) + 90f);
+                rot.eulerAngles = new Vector3(0f, 0f, 1f) * (property.Value.ParseFloatInvariant() + 90f);
                 object_new.localRotation = rot;
                 break;
               case ("rotspeed"):
-                float rotspeed = float.Parse(property.Value, System.Globalization.CultureInfo.InvariantCulture);
+                float rotspeed = property.Value.ParseFloatInvariant();
                 MapPreviewActor script = object_new.gameObject.AddComponent<MapPreviewActor>();
                 script._properties = new float[] { rotspeed };
                 script.Init(MapPreviewActor.ActorType.LASER);

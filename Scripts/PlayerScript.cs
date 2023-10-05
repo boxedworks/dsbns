@@ -453,7 +453,7 @@ public class PlayerScript : MonoBehaviour
 
       // Rating times
       var best_dev_time = TileManager._LevelTime_Dev;
-      var level_time_best = float.Parse(PlayerPrefs.GetFloat($"{Levels._CurrentLevelCollection_Name}_{Levels._CurrentLevelIndex}_time", -1f).ToString("0.000"));
+      var level_time_best = PlayerPrefs.GetFloat($"{Levels._CurrentLevelCollection_Name}_{Levels._CurrentLevelIndex}_time", -1f).ToStringTimer().ParseFloatInvariant();
 
       var medal_times = Levels.GetLevelRatingTimings(best_dev_time);
       var ratings = Levels.GetLevelRatings();
@@ -464,7 +464,7 @@ public class PlayerScript : MonoBehaviour
       var medal_format = "<color={0}>{1,-5}: {2,-6}</color>\n";
       foreach (var time in medal_times)
       {
-        var time_ = float.Parse(string.Format("{0:0.000}", time));
+        var time_ = time.ToStringTimer().ParseFloatInvariant();
         if (level_time_best != -1f && level_time_best <= time_ && medal_index == -1)
         {
           medal_index = index;
@@ -475,8 +475,8 @@ public class PlayerScript : MonoBehaviour
       // FX
       for (var i = medal_times.Length - 1; i >= 0; i--)
       {
-        var time_ = float.Parse(string.Format("{0:0.000}", medal_times[i]));
-        TileManager._Text_LevelTimer_Best.text += string.Format(medal_format, ratings[i].Item2, ratings[i].Item1, string.Format("{0:0.000}", time_) + (medal_index == i ? "*" : ""));
+        var time_ = medal_times[i].ToStringTimer().ParseFloatInvariant();
+        TileManager._Text_LevelTimer_Best.text += string.Format(medal_format, ratings[i].Item2, ratings[i].Item1, time_.ToStringTimer() + (medal_index == i ? "*" : ""));
       }
     }
 
@@ -2076,7 +2076,7 @@ public class PlayerScript : MonoBehaviour
         // Pick up points
         if (other.name.StartsWith("Money"))
         {
-          var amount = int.Parse(other.name.Split(' ')[1]);
+          var amount = other.name.Split(' ')[1].ParseIntInvariant();
           GameScript.SurvivalMode.GivePoints(_Id, amount);
           GameObject.Destroy(other.gameObject);
           if (Time.time - _LastMoneyPickupNoiseTime > 0.1f)

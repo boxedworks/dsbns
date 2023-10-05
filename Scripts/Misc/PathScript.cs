@@ -24,7 +24,7 @@ public class PathScript : MonoBehaviour
       _waitTimes_parsed = new float[waitTimes.Length];
       for (int i = 0; i < waitTimes.Length; i++)
       {
-        _waitTimes_parsed[i] = float.Parse(waitTimes[i], System.Globalization.CultureInfo.InvariantCulture);
+        _waitTimes_parsed[i] = waitTimes[i].ParseFloatInvariant();
       }
     }
 
@@ -37,7 +37,7 @@ public class PathScript : MonoBehaviour
         _lookTimes_parsed[u] = new float[lookTimes.Length];
         for (int i = 0; i < lookTimes.Length; i++)
         {
-          _lookTimes_parsed[u][i] = float.Parse(lookTimes[i], System.Globalization.CultureInfo.InvariantCulture);
+          _lookTimes_parsed[u][i] = lookTimes[i].ParseFloatInvariant();
         }
       }
     }

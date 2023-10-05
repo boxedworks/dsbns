@@ -116,7 +116,7 @@ public static class Shop
     {
 
       #if UNITY_EDITOR
-        return 999;
+        //return 999;
       #endif
 
       if ((Settings._Classic_0_TopRated?._value ?? false) && (Settings._Classic_1_TopRated?._value ?? false))

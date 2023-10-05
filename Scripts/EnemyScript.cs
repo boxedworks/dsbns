@@ -1850,8 +1850,8 @@ public class EnemyScript : MonoBehaviour
 
         // Check timers
         var can_save_timers = !Settings._Extras_UsingAnyImportant;
-        var level_time = float.Parse(TileManager._LevelTimer.ToString("0.000"));
-        var level_time_best = float.Parse(PlayerPrefs.GetFloat($"{Levels._CurrentLevelCollection_Name}_{Levels._CurrentLevelIndex}_time", -1f).ToString("0.000"));
+        var level_time = TileManager._LevelTimer.ToStringTimer().ParseFloatInvariant();
+        var level_time_best = PlayerPrefs.GetFloat($"{Levels._CurrentLevelCollection_Name}_{Levels._CurrentLevelIndex}_time", -1f).ToStringTimer().ParseFloatInvariant(); ;
 
         // Give player time and awards if alive after 0.5 seconds
         IEnumerator AwardPlayer()
@@ -1862,7 +1862,7 @@ public class EnemyScript : MonoBehaviour
 
           if (PlayerScript._All_Dead || gameId != GameScript._GameId)
           {
-            TileManager._Text_LevelTimer_Best.text += string.Format(" -> <s>{0:0.000}</s> (dead)", level_time);
+            TileManager._Text_LevelTimer_Best.text += string.Format(" -> <s>{0}</s> (dead)", level_time.ToStringTimer());
           }
           else
           {
@@ -1873,23 +1873,23 @@ public class EnemyScript : MonoBehaviour
               if (level_time_best == -1 || level_time < level_time_best)
               {
                 PlayerPrefs.SetFloat($"{Levels._CurrentLevelCollection_Name}_{Levels._CurrentLevelIndex}_time", level_time);
-                TileManager._Text_LevelTimer_Best.text += string.Format(" -> {0:0.000}", level_time);
+                TileManager._Text_LevelTimer_Best.text += string.Format(" -> {0}", level_time.ToStringTimer());
               }
             }
 
             // Cannot save score
             else
             {
-              TileManager._Text_LevelTimer_Best.text += string.Format(" -> <s>{0:0.000}</s> (extras on)", level_time);
+              TileManager._Text_LevelTimer_Best.text += string.Format(" -> <s>{0}</s> (extras on)", level_time.ToStringTimer());
             }
 
             // Show time difference between best time
             if (level_time_best != -1f && level_time != level_time_best)
             {
               if (level_time < level_time_best)
-                TileManager._Text_LevelTimer.text = string.Format($"{{0:0.000}} (<color=green>-{{1:0.000}}</color>)", level_time, level_time_best - level_time);
+                TileManager._Text_LevelTimer.text = string.Format($"{{0}} (<color=green>-{{1}}</color>)", level_time.ToStringTimer(), (level_time_best - level_time).ToStringTimer());
               else
-                TileManager._Text_LevelTimer.text = string.Format($"{{0:0.000}} (<color=red>+{{1:0.000}}</color>)", level_time, level_time - level_time_best);
+                TileManager._Text_LevelTimer.text = string.Format($"{{0}} (<color=red>+{{1}}</color>)", level_time.ToStringTimer(), (level_time - level_time_best).ToStringTimer());
             }
 
             // Time ratings
@@ -1904,7 +1904,7 @@ public class EnemyScript : MonoBehaviour
             var points_awarded_table = new int[] { -1, -1, -1, -1 };
             foreach (var time in medal_times)
             {
-              var time_ = float.Parse(string.Format("{0:0.000}", time));
+              var time_ = time.ToStringTimer().ParseFloatInvariant();
               if (level_time <= time_)
               {
 
@@ -1933,8 +1933,8 @@ public class EnemyScript : MonoBehaviour
             for (var i = medal_times.Length - 1; i >= 0; i--)
             {
               var time = medal_times[i];
-              var time_ = float.Parse(string.Format("{0:0.000}", time));
-              var timeText = string.Format("{0:0.000}", time_);
+              var time_ = string.Format("{0}", time.ToStringTimer()).ParseFloatInvariant();
+              var timeText = string.Format("{0}", time_.ToStringTimer());
 
               TileManager._Text_LevelTimer_Best.text += string.Format(medal_format, ratings[i].Item2, ratings[i].Item1, timeText + (ratingIndex == i ? "*" : ""));
 
@@ -2347,7 +2347,7 @@ public class EnemyScript : MonoBehaviour
     foreach (var time in medal_times)
     {
 
-      var time_ = float.Parse(string.Format("{0:0.000}", time));
+      var time_ = time.ToStringTimer().ParseFloatInvariant();
       Debug.Log($"{medal_index} ... {time_}");
 
       if (medalTime <= time_)

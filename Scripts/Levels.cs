@@ -146,7 +146,7 @@ public class Levels : MonoBehaviour
     var difficulty_save = Settings._DIFFICULTY;
     for (var difficulty = 0; difficulty < 2; difficulty++)
     {
-       Settings._DIFFICULTY = difficulty;
+      Settings._DIFFICULTY = difficulty;
 
       // Get directory to loop through
       var level_datas = _CurrentLevelCollection._levelData;
@@ -171,11 +171,11 @@ public class Levels : MonoBehaviour
         {
           if (d.StartsWith("bdt_"))
           {
-            dev_time = float.Parse(d.Split("_")[1]);
+            dev_time = d.Split("_")[1].ParseFloatInvariant();
             break;
           }
         }
-        var level_time_best = float.Parse(PlayerPrefs.GetFloat($"{_CurrentLevelCollection_Name}_{i}_time", -1f).ToString("0.000"));
+        var level_time_best = PlayerPrefs.GetFloat($"{_CurrentLevelCollection_Name}_{i}_time", -1f).ToStringTimer().ParseFloatInvariant();
 
         // Save data
         _CurrentLevel_LevelTimesData[difficulty].Add(i, System.Tuple.Create(dev_time, level_time_best));
@@ -245,7 +245,7 @@ public class Levels : MonoBehaviour
     var medal_index = -1;
     foreach (var time in rating_times)
     {
-      var time_ = float.Parse(string.Format("{0:0.000}", time));
+      var time_ = time.ToStringTimer().ParseFloatInvariant();
       if (player_time <= time_ && medal_index == -1)
       {
         return ratings[index];
@@ -260,17 +260,17 @@ public class Levels : MonoBehaviour
   {
     try
     {
-      var time_data = Levels._CurrentLevel_LevelTimesData[Settings._DIFFICULTY][level_index];
+      var time_data = _CurrentLevel_LevelTimesData[Settings._DIFFICULTY][level_index];
       return GetLevelRating(time_data.Item1, time_data.Item2);
     }
     catch
     {
-      if (Levels._CurrentLevel_LevelTimesData == null)
+      if (_CurrentLevel_LevelTimesData == null)
       {
         Debug.LogError("Levels times null");
         return null;
       }
-      Debug.LogError($"{level_index} / {Levels._CurrentLevel_LevelTimesData[Settings._DIFFICULTY].Count}");
+      Debug.LogError($"{level_index} / {_CurrentLevel_LevelTimesData[Settings._DIFFICULTY].Count}");
       return null;
     }
   }
@@ -497,7 +497,7 @@ public class Levels : MonoBehaviour
       (level_meta.Length > 2 && level_meta[2] != null ? $"!{level_meta[2]}" : "") +
 
       // Add theme
-      (level_meta.Length > 3 && level_meta[3] != null && int.Parse(level_meta[3]) > -1 ? $"*{level_meta[3]}" : "");
+      (level_meta.Length > 3 && level_meta[3] != null && level_meta[3].ParseIntInvariant() > -1 ? $"*{level_meta[3]}" : "");
 
   }
 
@@ -554,7 +554,7 @@ public class Levels : MonoBehaviour
         if (left_util_split.Length == 2)
         {
           var util = left_util_split[0];
-          var amount = int.Parse(left_util_split[1]);
+          var amount = left_util_split[1].ParseIntInvariant();
           for (var i = 0; i < amount; i++)
             utilities_left.Add((UtilityScript.UtilityType)System.Enum.Parse(typeof(UtilityScript.UtilityType), util));
         }
@@ -568,7 +568,7 @@ public class Levels : MonoBehaviour
         if (right_util_split.Length == 2)
         {
           var util = right_util_split[0];
-          var amount = int.Parse(right_util_split[1]);
+          var amount = right_util_split[1].ParseIntInvariant();
           for (var i = 0; i < amount; i++)
             utilities_right.Add((UtilityScript.UtilityType)System.Enum.Parse(typeof(UtilityScript.UtilityType), util));
         }

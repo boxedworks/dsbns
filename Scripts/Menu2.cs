@@ -2722,7 +2722,7 @@ public class Menu2
                 var level_theme = "unset";
                 if (level_meta[3] != null)
                 {
-                  var levelthemeindex = int.Parse(level_meta[3]);
+                  var levelthemeindex = level_meta[3].ParseIntInvariant();
                   if (levelthemeindex > -1)
                   {
                     level_theme = SceneThemes._SceneOrder_LevelEditor[levelthemeindex % SceneThemes._SceneOrder_LevelEditor.Length];
@@ -2736,7 +2736,7 @@ public class Menu2
                   if (level_meta[3] == null)
                     level_meta[3] = "0";
                   else
-                    level_meta[3] = ((int.Parse(level_meta[3]) + 1) % SceneThemes._SceneOrder_LevelEditor.Length) + "";
+                    level_meta[3] = ((level_meta[3].ParseIntInvariant() + 1) % SceneThemes._SceneOrder_LevelEditor.Length) + "";
 
                   Levels._LevelPack_Current._levelData[_CurrentMenu._dropdownParentIndex - 1] = Levels.ParseLevelMeta(level_meta);
                   Levels.LevelPack_Save();
@@ -3597,7 +3597,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
                 //if (GameScript._Singleton._IsDemo) level_unlocked = true;
                 var dev_time = Levels._CurrentLevel_LevelTimesData[Settings._DIFFICULTY][level_iter].Item1;
                 var level_time_best = Levels._CurrentLevel_LevelTimesData[Settings._DIFFICULTY][level_iter].Item2;
-                var text_levelTimeBest = level_time_best == -1f ? "-" : string.Format("{0:0.000}", level_time_best);
+                var text_levelTimeBest = level_time_best == -1f ? "-" : level_time_best.ToStringTimer();
 
                 var level_rating = Levels.GetLevelRating(dev_time, level_time_best);
                 var text_rating = level_time_best == -1f ? "-" : level_rating == null ? "?" : level_rating.Item1;
@@ -3613,7 +3613,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
                     _SaveLevelSelected = component0._dropdownIndex;
 
                     // Load level
-                    var levelIter = int.Parse(component0.GetDisplayText().Split(' ')[2].Trim().Substring(1)) - 1;
+                    var levelIter = component0.GetDisplayText().Split(' ')[2].Trim().Substring(1).ParseIntInvariant() - 1;
                     GameScript.NextLevel(levelIter);
 
                     // Play music
@@ -3636,7 +3636,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
 
                     component0._textColor = "white";
 
-                    var levelIter = int.Parse(component0.GetDisplayText().Split(' ')[2].Trim().Substring(1)) - 1;
+                    var levelIter = component0.GetDisplayText().Split(' ')[2].Trim().Substring(1).ParseIntInvariant() - 1;
                     GameScript._lp0 = TileManager.GetMapPreview(Levels._CurrentLevelCollection._levelData[levelIter]).transform;
                   });
                   actions_onCreated.Add((MenuComponent component0) => { });
@@ -3676,7 +3676,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
                 foreach (var selection in selections)
                 {
                   if (lastIter == 0) { lastIter++; continue; }
-                  var level_unlocked = Levels.LevelCompleted(int.Parse(selection.Split(' ')[0].Substring(1)) - 2);
+                  var level_unlocked = Levels.LevelCompleted(selection.Split(' ')[0].Substring(1).ParseIntInvariant() - 2);
                   if (!level_unlocked)
                   {
                     //Debug.Log($"Level not unlocked {selections[lastIter - 1]}");
@@ -3691,7 +3691,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
                 // Check for all completed
                 if (lastIter == levels_per_dir)
                 {
-                  var level_unlocked = Levels.LevelCompleted(int.Parse(selections[levels_per_dir - 1].Split(' ')[0].Substring(1)) - 1);
+                  var level_unlocked = Levels.LevelCompleted(selections[levels_per_dir - 1].Split(' ')[0].Substring(1).ParseIntInvariant() - 1);
                   if (level_unlocked)
                     match = selections[0];
                 }
@@ -5220,7 +5220,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
         mPause.AddComponent("extras*\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE);
         if (Shop.Unlocked(Shop.Unlocks.MODE_EXTRAS)
 #if UNITY_EDITOR
-          //|| true
+        //|| true
 #endif
         )
         {
@@ -5428,7 +5428,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
     .AddComponent("extras*\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE);
     if (Shop.Unlocked(Shop.Unlocks.MODE_EXTRAS)
 #if UNITY_EDITOR
-          //|| true
+        //|| true
 #endif
         )
     {
@@ -5686,7 +5686,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
             refreshText = refreshText.Split('>')[1].Split('<')[0];
           var resolutionText = component0._menu._menuComponentsSelectable[component._buttonIndex - 1].GetDisplayText(false).Split(':')[1].Trim();
           Settings._UseDefaultTargetFramerate = false;
-          Application.targetFrameRate = int.Parse(refreshText.Split('H')[0]);
+          Application.targetFrameRate = refreshText.Split('H')[0].ParseIntInvariant();
           Settings.SetResolution(resolutionText + " @ " + refreshText);
         });
             }
@@ -6712,7 +6712,7 @@ a gampad if plugged in.~1
         // Check if component should be visible; add dropdown placeholder for later
         if (visibility_conditions.Invoke()
 #if UNITY_EDITOR
-          //|| true
+        //|| true
 #endif
         )
         {
@@ -7318,7 +7318,7 @@ about extras</color>
         var nextNextChar = i < _TextBuffer.Length - 1 && i >= 0 ? _TextBuffer[i + 1] : ' ';
         if (nextChar == '~')
         {
-          _WaitTime = float.Parse(_TextBuffer[i + 1] + "", System.Globalization.CultureInfo.InvariantCulture);
+          _WaitTime = (_TextBuffer[i + 1] + "").ParseFloatInvariant();
           display = false;
           length++;
         }

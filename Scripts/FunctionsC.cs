@@ -1151,4 +1151,19 @@ public static class FunctionsC
 
   }
 
+  //
+  public static float ParseFloatInvariant(this string data)
+  {
+    return float.Parse(data, System.Globalization.CultureInfo.InvariantCulture);
+  }
+  public static int ParseIntInvariant(this string data)
+  {
+    return int.Parse(data, System.Globalization.CultureInfo.InvariantCulture);
+  }
+
+  public static string ToStringTimer(this float data)
+  {
+    return data.ToString("0.000", System.Globalization.CultureInfo.InvariantCulture);
+  }
+
 }

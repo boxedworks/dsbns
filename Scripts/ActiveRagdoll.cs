@@ -222,12 +222,15 @@ public class ActiveRagdoll
   {
     var upper = (side == Side.LEFT ? _transform_parts._arm_upper_l : _transform_parts._arm_upper_r).gameObject;
     if (upper.GetComponent<Rigidbody>()) return;
+
     var lower = (side == Side.LEFT ? _transform_parts._arm_lower_l : _transform_parts._arm_lower_r).gameObject;
     var side_mod = side == Side.LEFT ? -1f : 1f;
     var upper_rb = upper.AddComponent<Rigidbody>();
     var lower_rb = lower.AddComponent<Rigidbody>();
+
     upper_rb.interpolation = lower_rb.interpolation = RigidbodyInterpolation.Interpolate;
     upper_rb.mass = lower_rb.mass = 0.2f;
+
     var upper_joint = upper.AddComponent<HingeJoint>();
     upper_joint.axis = new Vector3(0f, 0f, 1f);
     upper_joint.useLimits = true;
@@ -1528,13 +1531,13 @@ public class ActiveRagdoll
       var rotationBlood = blood.transform.localRotation;
       rotationBlood.eulerAngles = new Vector3(0f, rotationBlood.eulerAngles.y, rotationBlood.eulerAngles.z);
       blood.transform.localRotation = rotationBlood;
-      blood.transform.Rotate(new Vector3(1f, 0f, 0f), UnityEngine.Random.value * -20f);
+      blood.transform.Rotate(new Vector3(1f, 0f, 0f), Random.value * -20f);
       rotationBlood = blood.transform.localRotation;
 
       // Giblets
       if (spawnGiblets)
       {
-        var bloodIndex = int.Parse(blood.name.Split('_')[1]);
+        var bloodIndex = blood.name.Split('_')[1].ParseIntInvariant();
         var gibletIndex = -1;
         switch (bloodIndex)
         {
@@ -1900,7 +1903,7 @@ public class ActiveRagdoll
   }
   public bool HasEmpty()
   {
-    return ((_itemL?.IsEmpty() ?? false) || (_itemR?.IsEmpty() ?? false));
+    return (_itemL?.IsEmpty() ?? false) || (_itemR?.IsEmpty() ?? false);
   }
   public bool HasItem(GameScript.ItemManager.Items item)
   {
@@ -2083,10 +2086,18 @@ public class ActiveRagdoll
 
     // Check if already dismembered
     if (joint == null) return false;
+
+    // Dismember
     var t = joint.transform;
     joint.gameObject.layer = 2;
     GameObject.Destroy(joint);
     t.parent = _hip.transform.parent;
+
+    // Make sure has collider (arm joint)
+    if (t.GetComponent<Collider>() == null)
+    {
+      t.gameObject.AddComponent<BoxCollider>().center = new Vector3(0f, 1f, 0f);
+    }
 
     // Set to render outside of camera
     _renderer.updateWhenOffscreen = true;

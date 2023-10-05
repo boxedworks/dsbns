@@ -1415,7 +1415,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       {
         TileManager._LevelTimer += (Menu2._InMenus ? Time.unscaledDeltaTime : Time.deltaTime);
         if (!Menu2._InMenus)
-          TileManager._Text_LevelTimer.text = string.Format("{0:0.000}", TileManager._LevelTimer);
+          TileManager._Text_LevelTimer.text = TileManager._LevelTimer.ToStringTimer();
       }
 
       // If more candles than can handle, hide some
@@ -1429,7 +1429,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     else
     {
       TileManager._LevelTimer += Time.deltaTime;
-      TileManager._Text_LevelTimer.text = string.Format("{0:0.000}", TileManager._LevelTimer);
+      TileManager._Text_LevelTimer.text = TileManager._LevelTimer.ToStringTimer();
     }
 
     // Update controllers
@@ -2888,7 +2888,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
               case "utility_left":
                 var split1 = val.Split(',');
                 var util = (UtilityScript.UtilityType)System.Enum.Parse(typeof(UtilityScript.UtilityType), split1[0], true);
-                var count = int.Parse(split1[1]);
+                var count = split1[1].ParseIntInvariant();
                 var utils = new UtilityScript.UtilityType[count];
                 for (var i = 0; i < count; i++)
                   utils[i] = util;
@@ -2897,14 +2897,14 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
               case "utility_right":
                 split1 = val.Split(',');
                 util = (UtilityScript.UtilityType)System.Enum.Parse(typeof(UtilityScript.UtilityType), split1[0], true);
-                count = int.Parse(split1[1]);
+                count = split1[1].ParseIntInvariant();
                 utils = new UtilityScript.UtilityType[count];
                 for (var i = 0; i < count; i++)
                   utils[i] = util;
                 _equipment._utilities_right = utils;
                 break;
               case "two_pairs":
-                _two_weapon_pairs = int.Parse(val) == 1;
+                _two_weapon_pairs = val.ParseIntInvariant() == 1;
                 break;
               case "perk":
                 var perk = (Shop.Perk.PerkType)System.Enum.Parse(typeof(Shop.Perk.PerkType), val, true);
