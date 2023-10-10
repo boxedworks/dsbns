@@ -183,6 +183,7 @@ public class CustomObstacle : MonoBehaviour
         new Material(_renderer.sharedMaterial),
       };
     }
+    Debug.Log(_renderer.sharedMaterial.GetType());
     Resources.UnloadAsset(_renderer.sharedMaterial);
 
     var use_type = _type;
@@ -729,10 +730,10 @@ public class CustomObstacle : MonoBehaviour
               if (akimbo)
                 return System.Tuple.Create(true, ActiveRagdoll.Side.LEFT, text);
               else
-                text = (text_needAkimbo);
+                text = text_needAkimbo;
             }
             else
-              text = (text_haveAlready);
+              text = text_haveAlready;
             return System.Tuple.Create(false, equip_side, text);
           }
           else if (akimbo && !Shop.IsTwoHanded(item_type_l))
@@ -747,10 +748,10 @@ public class CustomObstacle : MonoBehaviour
               if (akimbo)
                 return System.Tuple.Create(true, ActiveRagdoll.Side.RIGHT, text);
               else
-                text = (text_needAkimbo);
+                text = text_needAkimbo;
             }
             else
-              text = (text_haveAlready);
+              text = text_haveAlready;
             return System.Tuple.Create(false, equip_side, text);
           }
           else if (akimbo && !Shop.IsTwoHanded(item_type_r))
@@ -761,7 +762,7 @@ public class CustomObstacle : MonoBehaviour
         {
           if (item_type_l == item_type)
           {
-            text = (text_haveAlready);
+            text = text_haveAlready;
             return System.Tuple.Create(false, equip_side, text);
           }
           else

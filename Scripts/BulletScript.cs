@@ -109,13 +109,13 @@ public class BulletScript : MonoBehaviour
       if (dis > 1.5f) return;
       var loudness = (_sourceItem._silenced ? EnemyScript.Loudness.SUPERSOFT : EnemyScript.Loudness.SOFT);
       foreach (var e in EnemyScript.CheckSound(transform.position, loudness, _id, false))
-        e.Suspicious(_sourceRagdoll._hip.transform.position, loudness, 0.2f * Random.value);
+        e.Suspicious(_sourceRagdoll._Hip.transform.position, loudness, 0.2f * Random.value);
     }
   }
 
   public int GetRagdollID()
   {
-    return _sourceRagdoll._id;
+    return _sourceRagdoll._Id;
   }
 
   int _penatrationAmount;
@@ -133,7 +133,7 @@ public class BulletScript : MonoBehaviour
     bool TakeDamage(ActiveRagdoll r)
     {
 
-      var use_position = (_lastRagdollPosition == Vector3.zero ? _sourceItem._ragdoll._hip.transform.position : _lastRagdollPosition);
+      var use_position = (_lastRagdollPosition == Vector3.zero ? _sourceItem._ragdoll._Hip.transform.position : _lastRagdollPosition);
       var hitForce = MathC.Get2DVector(
         -(use_position - collider.transform.position).normalized * (4000f + (Random.value * 2000f)) * (_deflected ? Mathf.Clamp(_sourceItem._hit_force * 1.5f, 0.5f, 2f) : _sourceItem._hit_force)
       );
@@ -161,19 +161,19 @@ public class BulletScript : MonoBehaviour
         }
         ))
       {
-        _lastRagdollPosition = r._hip.position;
+        _lastRagdollPosition = r._Hip.position;
         if (_sourceItem._dismember && r._health <= 0) r.Dismember(r._spine, hitForce);
         _hitAmount += (int)damage;
         if (_hitAmount <= _penatrationAmount)
         {
-          if (_sourceRagdoll._playerScript?.HasPerk(Shop.Perk.PerkType.SMART_BULLETS) ?? false)
+          if (_sourceRagdoll._PlayerScript?.HasPerk(Shop.Perk.PerkType.SMART_BULLETS) ?? false)
           {
             var enemy = FunctionsC.GetClosestEnemyTo(transform.position, false);
             if (enemy != null && enemy._ragdoll != null)
             {
               if (_saveSmartVelocity == -1f)
                 _saveSmartVelocity = _rb.velocity.magnitude;
-              var new_vel = (enemy._ragdoll._hip.transform.position - _rb.position).normalized * _saveSmartVelocity;
+              var new_vel = (enemy._ragdoll._Hip.transform.position - _rb.position).normalized * _saveSmartVelocity;
               _rb.velocity = new_vel;
 
               _startTime = Time.time;
@@ -198,25 +198,25 @@ public class BulletScript : MonoBehaviour
       else if (collider.transform.parent.name == "FRYING_PAN")
       {
         var item = collider.transform.parent.GetComponent<ItemScript>();
-        if (item._ragdoll._id != _sourceRagdoll._id)
+        if (item._ragdoll._Id != _sourceRagdoll._Id)
         {
 
           var logic = true;
           if (_sourceItem._ragdoll._grappled)
           {
-            if (_sourceRagdoll._id == _sourceItem._ragdoll._id && item._ragdoll._id == _sourceRagdoll._grappler._id)
+            if (_sourceRagdoll._Id == _sourceItem._ragdoll._Id && item._ragdoll._Id == _sourceRagdoll._grappler._Id)
               logic = false;
           }
           if (logic)
           {
-            if ((item._ragdoll?._swinging ?? false))
+            if ((item._ragdoll?._IsSwinging ?? false))
             {
 
               Deflect(item, true);
 
 #if UNITY_STANDALONE
               // Check achievement
-              if (item._ragdoll._isPlayer && item._ragdoll._playerScript != null)
+              if (item._ragdoll._isPlayer && item._ragdoll._PlayerScript != null)
                 SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.BAT_DEFLECT);
 #endif
             }
@@ -302,23 +302,23 @@ public class BulletScript : MonoBehaviour
       if (r != null)
       {
         if (r._dead) return;
-        if (r._id == _lastRagdollId) return;
-        if ((r._grappler?._id ?? -1) == GetRagdollID()) return;
-        _lastRagdollId = r._id;
-        if (_sourceItem == null || (r._id == _sourceRagdoll._id)) return;
+        if (r._Id == _lastRagdollId) return;
+        if ((r._grappler?._Id ?? -1) == GetRagdollID()) return;
+        _lastRagdollId = r._Id;
+        if (_sourceItem == null || (r._Id == _sourceRagdoll._Id)) return;
 
         // If bullet hit is swinging and has a two-handed weapon (sword), reflect bullet
-        if (r._swinging && r.HasBulletDeflector())
+        if (r._IsSwinging && r.HasBulletDeflector())
         {
 
 #if UNITY_STANDALONE
           // Check achievement
-          if (r._isPlayer && r._playerScript != null)
+          if (r._isPlayer && r._PlayerScript != null)
             SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.BAT_DEFLECT);
 #endif
 
           // Deflect self
-          Deflect(r._itemL == null ? r._itemR : r._itemL);
+          Deflect(r._ItemL == null ? r._ItemR : r._ItemL);
           return;
         }
         if (TakeDamage(r)) return;
@@ -489,7 +489,7 @@ public class BulletScript : MonoBehaviour
 
     // Change direction
     var speed = rb.velocity.magnitude;
-    rb.velocity = -MathC.Get2DVector(rb.position - _sourceRagdoll._hip.position).normalized * speed * 1.6f;
+    rb.velocity = -MathC.Get2DVector(rb.position - _sourceRagdoll._Hip.position).normalized * speed * 1.6f;
 
     // Do not hurt person who just redirected
     _sourceRagdoll = redirectorItem._ragdoll;
@@ -506,6 +506,6 @@ public class BulletScript : MonoBehaviour
 
     // Recoil char
     if (recoil)
-      _sourceRagdoll.Recoil(-(_sourceItem.transform.position - _sourceRagdoll._controller.transform.position).normalized, _rb.velocity.magnitude / 30f);
+      _sourceRagdoll.Recoil(-(_sourceItem.transform.position - _sourceRagdoll._Controller.transform.position).normalized, _rb.velocity.magnitude / 30f);
   }
 }

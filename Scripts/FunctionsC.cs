@@ -54,8 +54,8 @@ public static class FunctionsC
     info._distance = 1000f;
     foreach (var player in PlayerScript.s_Players)
     {
-      if (player._ragdoll._dead || player._ragdoll._hip == null) continue;
-      var dist = MathC.Get2DDistance(player._ragdoll._hip.position, pos);
+      if (player._ragdoll._dead || player._ragdoll._Hip == null) continue;
+      var dist = MathC.Get2DDistance(player._ragdoll._Hip.position, pos);
       if (dist < info._distance)
       {
         info._distance = dist;
@@ -72,7 +72,7 @@ public static class FunctionsC
     foreach (var enemy in EnemyScript._Enemies_alive)
     {
       if (enemy.IsChaser() && !include_chaser) { continue; }
-      var dist = MathC.Get2DDistance(enemy.GetRagdoll()._hip.position, pos);
+      var dist = MathC.Get2DDistance(enemy.GetRagdoll()._Hip.position, pos);
       if (dist < info._distance)
       {
         info._distance = dist;
@@ -92,7 +92,7 @@ public static class FunctionsC
     foreach (var p in PlayerScript.s_Players)
     {
       if (p._ragdoll._dead) continue;
-      var dist = MathC.Get2DDistance(p._ragdoll._hip.position, pos);
+      var dist = MathC.Get2DDistance(p._ragdoll._Hip.position, pos);
       if (dist > info._distance)
       {
         info._distance = dist;
@@ -326,13 +326,13 @@ public static class FunctionsC
   public static ActiveRagdoll[] CheckRadius(Vector3 position, float radius, bool raycast = false)
   {
     var returnList = new List<ActiveRagdoll>();
-    foreach (var r in ActiveRagdoll._Ragdolls)
+    foreach (var r in ActiveRagdoll.s_Ragdolls)
     {
       // Sanitize
-      if (r._hip == null) continue;
+      if (r._Hip == null) continue;
 
       // Check radius
-      if (MathC.Get2DDistance(position, r._hip.position) > radius) continue;
+      if (MathC.Get2DDistance(position, r._Hip.position) > radius) continue;
       returnList.Add(r);
     }
     return returnList.ToArray();
@@ -366,10 +366,10 @@ public static class FunctionsC
 
       // Check for perk
       //if (!isStun)
-      if (r._isPlayer && r._id == source._id && r._playerScript.HasPerk(Shop.Perk.PerkType.EXPLOSION_RESISTANCE)) continue;
+      if (r._isPlayer && r._Id == source._Id && r._PlayerScript.HasPerk(Shop.Perk.PerkType.EXPLOSION_RESISTANCE)) continue;
 
       // Check dist
-      if (MathC.Get2DDistance(position, r._hip.position) < 0.3f) { }
+      if (MathC.Get2DDistance(position, r._Hip.position) < 0.3f) { }
 
       // Raycast to validate
       else
@@ -377,7 +377,7 @@ public static class FunctionsC
         r.ToggleRaycasting(true, true);
         var hit = new RaycastHit();
         var start_pos = new Vector3(position.x, -0.1f, position.z);
-        var dir = -(r._dead ? start_pos - r._hip.position : MathC.Get2DVector(start_pos - r._hip.position)).normalized;
+        var dir = -(r._dead ? start_pos - r._Hip.position : MathC.Get2DVector(start_pos - r._Hip.position)).normalized;
         if (!Physics.SphereCast(new Ray(start_pos, dir), 0.05f, out hit, radius + 5f, GameResources._Layermask_Ragdoll))
         {
           r.ToggleRaycasting(false, true);
@@ -425,7 +425,7 @@ public static class FunctionsC
           if (type == ExplosiveScript.ExplosionType.UPWARD) explosionForce = new Vector3(0f, 3000f, 0f);
           else if (type == ExplosiveScript.ExplosionType.AWAY)
           {
-            var away = -(position - r._hip.position).normalized;
+            var away = -(position - r._Hip.position).normalized;
             away.y = 0.2f;
             explosionForce = away * 3000f;
           }
@@ -448,7 +448,7 @@ public static class FunctionsC
           if (r._dead)
           {
             r.DismemberRandomTimes(explosionForce, Random.Range(1, 5));
-            r._hip.AddForce(explosionForce);
+            r._Hip.AddForce(explosionForce);
           }
         }
 

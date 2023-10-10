@@ -27,6 +27,8 @@ public class PlayerScript : MonoBehaviour
     RUNSPEED = 1.25f,
     ROTATIONSPEED = 2f;
 
+  float _swordRunLerper = 0.4f;
+
   bool mouseEnabled, _runToggle;
 
   public bool _HasExit, _CanDetect;
@@ -392,7 +394,7 @@ public class PlayerScript : MonoBehaviour
     }
     if (_itemRight != GameScript.ItemManager.Items.NONE)
       _ragdoll.EquipItem(_itemRight, ActiveRagdoll.Side.RIGHT);
-    else if (_ragdoll._itemL == null || !_ragdoll._itemL._twoHanded)
+    else if (_ragdoll._ItemL == null || !_ragdoll._ItemL._twoHanded)
     {
       _ragdoll.AddArmJoint(ActiveRagdoll.Side.RIGHT);
       _ragdoll.UnequipItem(ActiveRagdoll.Side.RIGHT);
@@ -490,13 +492,13 @@ public class PlayerScript : MonoBehaviour
       _rearrangeTime -= Time.deltaTime * (_agent.pathStatus != UnityEngine.AI.NavMeshPathStatus.PathComplete ? 10f : 1f);
       if (_rearrangeTime <= 0f && !s_Players[0]._ragdoll._dead)
       {
-        var pos = s_Players[0]._ragdoll._hip.position;
+        var pos = s_Players[0]._ragdoll._Hip.position;
         var dis = MathC.Get2DDistance(pos, transform.position);
         var maxD = 5f;
 
         if (dis < 2f)
         {
-          pos = _ragdoll._hip.position;
+          pos = _ragdoll._Hip.position;
           maxD = 6f;
         }
         if (GameScript._GameMode == GameScript.GameModes.CLASSIC)
@@ -509,12 +511,12 @@ public class PlayerScript : MonoBehaviour
             var moved = false;
             foreach (var bullet in ItemScript._BulletPool)
             {
-              if (!bullet.gameObject.activeSelf || bullet.GetRagdollID() == _ragdoll._id) continue;
-              if (MathC.Get2DDistance(_ragdoll._hip.position, bullet.transform.position) < minDist)
+              if (!bullet.gameObject.activeSelf || bullet.GetRagdollID() == _ragdoll._Id) continue;
+              if (MathC.Get2DDistance(_ragdoll._Hip.position, bullet.transform.position) < minDist)
               {
                 //_SlowmoTimer = Mathf.Clamp(_SlowmoTimer + 1f, 0f, 2f);
                 var dir = Quaternion.AngleAxis(-90, Vector3.up) * bullet._rb.velocity;
-                _agent.SetDestination(_ragdoll.transform.position + dir * 10f);
+                _agent.SetDestination(_ragdoll.Transform.position + dir * 10f);
                 moved = true;
                 break;
               }
@@ -554,7 +556,7 @@ public class PlayerScript : MonoBehaviour
           var next_enemy = EnemyScript._Enemies_alive[_targetIter++ % EnemyScript._Enemies_alive.Count];
           var next_ragdoll = next_enemy.GetRagdoll();
 
-          if (next_ragdoll != null && (_targetRagdoll == null || next_ragdoll._id != _targetRagdoll._id))
+          if (next_ragdoll != null && (_targetRagdoll == null || next_ragdoll._Id != _targetRagdoll._Id))
           {
             var path = new UnityEngine.AI.NavMeshPath();
             if (UnityEngine.AI.NavMesh.CalculatePath(transform.position, next_enemy.transform.position, TileManager._navMeshSurface2.agentTypeID, path))
@@ -571,11 +573,11 @@ public class PlayerScript : MonoBehaviour
 
         if (_targetRagdoll != null)
         {
-          transform.LookAt(_targetRagdoll._hip.transform.position);
+          transform.LookAt(_targetRagdoll._Hip.transform.position);
 
           _ragdoll.ToggleRaycasting(false);
           var hit = new RaycastHit();
-          if (Physics.SphereCast(new Ray(_ragdoll._transform_parts._head.transform.position, _ragdoll._hip.transform.forward * 100f + Vector3.up * 0.3f), 0.1f, out hit, GameResources._Layermask_Ragdoll))
+          if (Physics.SphereCast(new Ray(_ragdoll._transform_parts._head.transform.position, _ragdoll._Hip.transform.forward * 100f + Vector3.up * 0.3f), 0.1f, out hit, GameResources._Layermask_Ragdoll))
           {
             if (_targetRagdoll.IsSelf(hit.collider.gameObject))
             {
@@ -590,7 +592,7 @@ public class PlayerScript : MonoBehaviour
 
                 if (Time.time - s_autoUseRate < 0) break;
 
-                var item = (s_autoSide == ActiveRagdoll.Side.LEFT ? _ragdoll._itemL : _ragdoll._itemR);
+                var item = (s_autoSide == ActiveRagdoll.Side.LEFT ? _ragdoll._ItemL : _ragdoll._ItemR);
 
                 if (!item)
                 {
@@ -656,7 +658,7 @@ public class PlayerScript : MonoBehaviour
           {
             for (var i = 0; i < 2; i++)
             {
-              var item = i == 0 ? _ragdoll._itemL : _ragdoll._itemR;
+              var item = i == 0 ? _ragdoll._ItemL : _ragdoll._ItemR;
               if (item == null || item._type == GameScript.ItemManager.Items.NONE) continue;
               if (item.IsMelee()) continue;
               if (item.CanReload())
@@ -705,7 +707,7 @@ public class PlayerScript : MonoBehaviour
     // Move ring with hip
     if (!_ragdoll._dead)
     {
-      var hippos = _ragdoll._hip.position;
+      var hippos = _ragdoll._Hip.position;
       hippos.y = -1.38f;
       //if (Time.timeScale < 0.9f)
       //{
@@ -718,7 +720,7 @@ public class PlayerScript : MonoBehaviour
       _ring[0].transform.parent.LookAt(lookpos);
 
       // Check back at spawn
-      var spawnDist = Vector3.Distance(new Vector3(PlayerspawnScript._PlayerSpawns[0].transform.position.x, 0f, PlayerspawnScript._PlayerSpawns[0].transform.position.z), new Vector3(_ragdoll._hip.position.x, 0f, _ragdoll._hip.position.z));
+      var spawnDist = Vector3.Distance(new Vector3(PlayerspawnScript._PlayerSpawns[0].transform.position.x, 0f, PlayerspawnScript._PlayerSpawns[0].transform.position.z), new Vector3(_ragdoll._Hip.position.x, 0f, _ragdoll._Hip.position.z));
       if (_HasExit)
       {
         if (GameScript._inLevelEnd)
@@ -821,8 +823,8 @@ public class PlayerScript : MonoBehaviour
               if (p._ragdoll._dead || HasPerk(Shop.Perk.PerkType.NO_SLOWMO)) continue;
               foreach (var bullet in ItemScript._BulletPool)
               {
-                if (!bullet.gameObject.activeSelf || bullet.GetRagdollID() == p._ragdoll._id) continue;
-                if (MathC.Get2DDistance(p._ragdoll._hip.position, bullet.transform.position) < minDist)
+                if (!bullet.gameObject.activeSelf || bullet.GetRagdollID() == p._ragdoll._Id) continue;
+                if (MathC.Get2DDistance(p._ragdoll._Hip.position, bullet.transform.position) < minDist)
                 {
                   //_SlowmoTimer = Mathf.Clamp(_SlowmoTimer + 1f, 0f, 2f);
                   desiredTimeScale = slowTime;
@@ -946,8 +948,8 @@ public class PlayerScript : MonoBehaviour
           foreach (var p in s_Players)
           {
             if (p._ragdoll._dead && followAlive) continue;
-            sharedPos += new Vector3(p._ragdoll._hip.position.x, 0f, p._ragdoll._hip.position.z);
-            sharedForward += MathC.Get2DVector(p._ragdoll._hip.transform.forward).normalized * forwardMagnitude;
+            sharedPos += new Vector3(p._ragdoll._Hip.position.x, 0f, p._ragdoll._Hip.position.z);
+            sharedForward += MathC.Get2DVector(p._ragdoll._Hip.transform.forward).normalized * forwardMagnitude;
             if (lastPlayer == null) lastPlayer = p;
             var distance = Vector3.Distance(p.transform.position, lastPlayer.transform.position);
             //if (distance > biggestDist) biggestDist = distance;
@@ -1113,7 +1115,19 @@ public class PlayerScript : MonoBehaviour
       y = 0f,
       x2 = 0f,
       y2 = 0f;
-    var movespeed = MOVESPEED;
+
+    //
+    var useSword = false;
+    if ((_ragdoll._ItemL?._type ?? GameScript.ItemManager.Items.NONE) == GameScript.ItemManager.Items.SWORD)
+    {
+      useSword = true;
+
+      var triggerDown = _ragdoll._ItemL._TriggerDown;
+      _swordRunLerper += ((triggerDown ? 1.5f : 0.4f) - _swordRunLerper) * Time.deltaTime * 0.8f;
+    }
+
+    //
+    var movespeed = MOVESPEED * (useSword ? _swordRunLerper : 1f);
     var runKeyDown = false;
     if (Time.timeScale < 0.8f)
       unscaled_dt = unscaled_dt * Time.timeScale * 2f;
@@ -1145,7 +1159,7 @@ public class PlayerScript : MonoBehaviour
       /// Use items
       // Left item
       if (ControllerManager.GetMouseInput(0, ControllerManager.InputMode.DOWN))
-        if (!_ragdoll._itemL)
+        if (!_ragdoll._ItemL)
         {
           _ragdoll.UseRightDown();
           saveInput.y = 1f;
@@ -1156,7 +1170,7 @@ public class PlayerScript : MonoBehaviour
           saveInput.x = 1f;
         }
       if (ControllerManager.GetMouseInput(0, ControllerManager.InputMode.UP))
-        if (!_ragdoll._itemL)
+        if (!_ragdoll._ItemL)
         {
           _ragdoll.UseRightUp();
           saveInput.y = -1f;
@@ -1168,7 +1182,7 @@ public class PlayerScript : MonoBehaviour
         }
       // Right item
       if (ControllerManager.GetMouseInput(1, ControllerManager.InputMode.DOWN))
-        if (!_ragdoll._itemR)
+        if (!_ragdoll._ItemR)
         {
           _ragdoll.UseLeftDown();
           saveInput.x = 1f;
@@ -1179,7 +1193,7 @@ public class PlayerScript : MonoBehaviour
           saveInput.y = 1f;
         }
       if (ControllerManager.GetMouseInput(1, ControllerManager.InputMode.UP))
-        if (!_ragdoll._itemR)
+        if (!_ragdoll._ItemR)
         {
           _ragdoll.UseLeftUp();
           saveInput.x = -1f;
@@ -1314,11 +1328,11 @@ public class PlayerScript : MonoBehaviour
         float bias = 0.4f;
         min = 0f + bias;
         if (input.x >= 1f - bias && _lastInputTriggers.x < 1f - bias)
-          if (!_ragdoll._itemL && !_ragdoll._itemR)
+          if (!_ragdoll._ItemL && !_ragdoll._ItemR)
           {
             SwapLoadouts();
           }
-          else if (!_ragdoll._itemL)
+          else if (!_ragdoll._ItemL)
           {
             _ragdoll.UseRightDown();
             saveInput.y = 1f;
@@ -1329,7 +1343,7 @@ public class PlayerScript : MonoBehaviour
             saveInput.x = 1f;
           }
         else if (input.x <= min && _lastInputTriggers.x > min)
-          if (!_ragdoll._itemL)
+          if (!_ragdoll._ItemL)
           {
             _ragdoll.UseRightUp();
             saveInput.y = -1f;
@@ -1340,11 +1354,11 @@ public class PlayerScript : MonoBehaviour
             saveInput.x = -1f;
           }
         if (input.y >= 1f - bias && _lastInputTriggers.y < 1f - bias)
-          if (!_ragdoll._itemL && !_ragdoll._itemR)
+          if (!_ragdoll._ItemL && !_ragdoll._ItemR)
           {
             SwapLoadouts();
           }
-          else if (!_ragdoll._itemR)
+          else if (!_ragdoll._ItemR)
           {
             _ragdoll.UseLeftDown();
             saveInput.x = 1f;
@@ -1355,7 +1369,7 @@ public class PlayerScript : MonoBehaviour
             saveInput.y = 1f;
           }
         else if (input.y <= min && _lastInputTriggers.y > min)
-          if (!_ragdoll._itemR)
+          if (!_ragdoll._ItemR)
           {
             _ragdoll.UseLeftUp();
             saveInput.x = -1f;
@@ -1505,6 +1519,7 @@ public class PlayerScript : MonoBehaviour
     {
       _saveInput = xy;
       MovePlayer(unscaled_dt, movespeed, _saveInput);
+
       // Rotate player
       if (!mouseEnabled)
         RotatePlayer(new Vector2(x2, y2), xy);
@@ -1564,6 +1579,11 @@ public class PlayerScript : MonoBehaviour
 
       if (movepos.magnitude > 0.01f)
         FunctionsC.OnControllerInput();
+
+      //
+      if (_swordRunLerper > 0.9f)
+        if (savepos.magnitude < 0.03f)
+          _swordRunLerper = 0.4f;
     }
   }
 
@@ -1592,8 +1612,20 @@ public class PlayerScript : MonoBehaviour
     if (!checkCanSwap || _ragdoll.CanSwapWeapons())
     {
       _ragdoll.SwapItems(
-        System.Tuple.Create(_Profile._item_left, -1, -1f),
-        System.Tuple.Create(_Profile._item_right, -1, -1f),
+        new ActiveRagdoll.WeaponSwapData()
+        {
+          ItemType = _Profile._item_left,
+          ItemId = -1,
+          ItemClip = -1,
+          ItemUseItem = -1f
+        },
+        new ActiveRagdoll.WeaponSwapData()
+        {
+          ItemType = _Profile._item_right,
+          ItemId = -1,
+          ItemClip = -1,
+          ItemUseItem = -1f
+        },
         _Profile._equipmentIndex,
         checkCanSwap
       );
@@ -1635,6 +1667,7 @@ public class PlayerScript : MonoBehaviour
   }
 
   float[] _loadout_info;
+  int[] _item_info;
   public void SwapLoadouts()
   {
     if (!_ragdoll.CanSwapWeapons()) return;
@@ -1646,7 +1679,7 @@ public class PlayerScript : MonoBehaviour
     var useTime_l = -1f;
     var useTime_r = -1f;
 
-    // Save equipment info
+    // Save equipment info; save clip and use_time
     if (_loadout_info == null)
       _loadout_info = new float[4];
     else
@@ -1657,16 +1690,46 @@ public class PlayerScript : MonoBehaviour
       useTime_l = _loadout_info[2];
       useTime_r = _loadout_info[3];
     }
-    _loadout_info[0] = _ragdoll._itemL ? _ragdoll._itemL.Clip() : -1;
-    _loadout_info[1] = _ragdoll._itemR ? _ragdoll._itemR.Clip() : -1;
 
-    _loadout_info[2] = _ragdoll._itemL ? _ragdoll._itemL._useTime : -1f;
-    _loadout_info[3] = _ragdoll._itemR ? _ragdoll._itemR._useTime : -1f;
+    // Save item metadata; item id
+    var itemId_l = -1;
+    var itemId_r = -1;
+    if (_item_info == null)
+    {
+      _item_info = new int[] { -1, -1 };
+    }
+    else
+    {
+      itemId_l = _item_info[0];
+      itemId_r = _item_info[1];
+    }
+
+    // Save other item data for later
+    _item_info[0] = _ragdoll._ItemL?._ItemId ?? -1;
+    _item_info[1] = _ragdoll._ItemR?._ItemId ?? -1;
+
+    _loadout_info[0] = _ragdoll._ItemL?.Clip() ?? -1;
+    _loadout_info[1] = _ragdoll._ItemR?.Clip() ?? -1;
+
+    _loadout_info[2] = _ragdoll._ItemL?._useTime ?? -1f;
+    _loadout_info[3] = _ragdoll._ItemR?._useTime ?? -1f;
 
     _Profile._equipmentIndex++;
     _ragdoll.SwapItems(
-      System.Tuple.Create(_Profile._item_left, clip_l, useTime_l),
-      System.Tuple.Create(_Profile._item_right, clip_r, useTime_r),
+      new ActiveRagdoll.WeaponSwapData()
+      {
+        ItemType = _Profile._item_left,
+        ItemId = itemId_l,
+        ItemClip = clip_l,
+        ItemUseItem = useTime_l
+      },
+      new ActiveRagdoll.WeaponSwapData()
+      {
+        ItemType = _Profile._item_right,
+        ItemId = itemId_r,
+        ItemClip = clip_r,
+        ItemUseItem = useTime_r
+      },
       _Profile._equipmentIndex
     );
     _Profile.UpdateIcons();
@@ -1740,9 +1803,9 @@ public class PlayerScript : MonoBehaviour
   void ExtendArms()
   {
     bool extendleft = true, extendright = true;
-    if (_ragdoll._itemL && _ragdoll._itemL.IsMelee())
+    if (_ragdoll._ItemL && _ragdoll._ItemL.IsMelee())
       extendleft = false;
-    if (_ragdoll._itemR && _ragdoll._itemR.IsMelee())
+    if (_ragdoll._ItemR && _ragdoll._ItemR.IsMelee())
       extendright = false;
     if (extendleft)
       _ragdoll.LeftArmOut();
@@ -1792,15 +1855,15 @@ public class PlayerScript : MonoBehaviour
             GameScript.SurvivalMode.AddMoney(money);
             money.name = $"Money {points}";
             money.transform.parent = GameScript._s_Singleton.transform;
-            money.transform.position = _ragdoll._hip.position + _ragdoll._hip.transform.forward * 0.2f;
+            money.transform.position = _ragdoll._Hip.position + _ragdoll._Hip.transform.forward * 0.2f;
             var collider = money.GetComponent<Collider>();
-            var collider0 = _ragdoll._hip.GetComponents<Collider>()[1];
+            var collider0 = _ragdoll._Hip.GetComponents<Collider>()[1];
             //_ragdoll.IgnoreCollision(collider);
             Physics.IgnoreCollision(collider, collider0);
             collider.enabled = true;
             var rb = money.GetComponent<Rigidbody>();
             rb.isKinematic = false;
-            rb.AddForce(_ragdoll._hip.transform.forward * 100f);
+            rb.AddForce(_ragdoll._Hip.transform.forward * 100f);
             _ragdoll.PlaySound("Ragdoll/Throw");
 
             IEnumerator sizeChange()
@@ -1823,7 +1886,7 @@ public class PlayerScript : MonoBehaviour
         {
           _ragdoll.PlaySound("Ragdoll/Whistle", 0.85f, 1.2f);
 
-          EnemyScript.CheckSound(_ragdoll._hip.position + _ragdoll._hip.transform.forward * 3f, _ragdoll._hip.position, EnemyScript.Loudness.SOFT);
+          EnemyScript.CheckSound(_ragdoll._Hip.position + _ragdoll._Hip.transform.forward * 3f, _ragdoll._Hip.position, EnemyScript.Loudness.SOFT);
           _ragdoll.DisplayText("!");
 
           _LastWhistle = Time.time;
@@ -1876,7 +1939,7 @@ public class PlayerScript : MonoBehaviour
     foreach (var player in s_Players)
     {
       if (player?._ragdoll._dead ?? true) continue;
-      var distance0 = Vector2.Distance(position, new Vector2(player._ragdoll._controller.position.x, player._ragdoll._controller.position.z));
+      var distance0 = Vector2.Distance(position, new Vector2(player._ragdoll._Controller.position.x, player._ragdoll._Controller.position.z));
       if (distance0 < distance)
       {
         distance = distance0;
@@ -1947,7 +2010,7 @@ public class PlayerScript : MonoBehaviour
     if (source != null)
     {
       SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.DIE);
-      if (source._isPlayer && source._playerScript != null && source._playerScript._Id != _Id)
+      if (source._isPlayer && source._PlayerScript != null && source._PlayerScript._Id != _Id)
         SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.TEAM_KILL);
       if (damageSourceType == ActiveRagdoll.DamageSourceType.EXPLOSION)
         SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.EXPLODE);
@@ -1970,7 +2033,7 @@ public class PlayerScript : MonoBehaviour
         _ring[0].sharedMaterial.color = c;
         _ring[1].sharedMaterial.color = c;
         yield return new WaitForSeconds(0.05f);
-        if (this == null || _ragdoll == null || _ragdoll._hip == null) break;
+        if (this == null || _ragdoll == null || _ragdoll._Hip == null) break;
       }
       if (_ring != null) _ring[0].transform.parent.gameObject.SetActive(false);
     }
@@ -2052,7 +2115,7 @@ public class PlayerScript : MonoBehaviour
     _HasExit = false;
     GameScript._inLevelEnd = false;
     Powerup p = FunctionsC.SpawnPowerup(Powerup.PowerupType.END);
-    p.transform.position = _ragdoll._hip.transform.position;
+    p.transform.position = _ragdoll._Hip.transform.position;
     p.Init();
   }
 

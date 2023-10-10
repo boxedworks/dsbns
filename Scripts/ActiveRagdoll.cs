@@ -6,25 +6,25 @@ using System.Linq;
 
 public class ActiveRagdoll
 {
-  public static List<ActiveRagdoll> _Ragdolls;
-  public static int _ID;
-  public int _id;
-  public Transform transform, _controller;
+  public static List<ActiveRagdoll> s_Ragdolls;
+  public static int s_ID;
+  public int _Id;
+  public Transform Transform, _Controller;
   // Body parts
-  public Rigidbody _hip;
+  public Rigidbody _Hip;
   public HingeJoint _head, _spine, _arm_upper_l, _arm_upper_r, _arm_lower_l, _arm_lower_r, _leg_upper_l, _leg_upper_r, _leg_lower_l, _leg_lower_r;
+
   // Item info
-  public ItemScript _itemL, _itemR;
+  public ItemScript _ItemL, _ItemR;
 
-  public EnemyScript _enemyScript;
-  public PlayerScript _playerScript;
+  // Script references
+  public EnemyScript _EnemyScript;
+  public PlayerScript _PlayerScript;
 
-  public bool _forceRun;
-
-  public Vector3 _distance;
+  public Vector3 _Distance;
 
   // Color of the ragdoll
-  public Color _color;
+  public Color _Color;
 
   // If > 0f, provide a speed boost in the forward direction (used for double knives)
   float _forwardDashTimer;
@@ -45,21 +45,21 @@ public class ActiveRagdoll
     _diving,
     _canDie;
 
-  public bool _swinging
+  public bool _IsSwinging
   {
-    get { return (_itemL != null && _itemL._swinging) || (_itemR != null && _itemR._swinging); }
+    get { return (_ItemL?._IsSwinging ?? false) || (_ItemR?._IsSwinging ?? false); }
   }
-  public bool _items_in_use
+  public bool _HasItemsInUse
   {
-    get { return (_itemL != null && _itemL.Used()) || (_itemR != null && _itemR.Used()); }
+    get { return (_ItemL?.Used() ?? false) || (_ItemR?.Used() ?? false); }
   }
-  public bool _reloading
+  public bool _IsReloading
   {
-    get { return (_itemL != null && _itemL._reloading) || (_itemR != null && _itemR._reloading); }
+    get { return (_ItemL?._reloading ?? false) || (_ItemR?._reloading ?? false); }
   }
 
-  public Vector3 _force;
-  public float _forwardForce;
+  public Vector3 _ForceGlobal;
+  public float _ForceRecoil;
 
   // Height above ground
   static readonly public Vector3 _GROUNDHEIGHT = new Vector3(0f, 0.73f, 0f);
@@ -152,37 +152,37 @@ public class ActiveRagdoll
   public ActiveRagdoll(GameObject ragdoll, Transform follow)
   {
     // Assign unique ID
-    _id = _ID++;
+    _Id = s_ID++;
 
     // Add to static _Ragdolls list
-    if (_Ragdolls == null) _Ragdolls = new List<ActiveRagdoll>();
-    _Ragdolls.Add(this);
+    if (s_Ragdolls == null) s_Ragdolls = new List<ActiveRagdoll>();
+    s_Ragdolls.Add(this);
 
     // Defaults
-    _controller = follow;
+    _Controller = follow;
     ragdoll.name = "Ragdoll";
-    transform = ragdoll.transform;
+    Transform = ragdoll.transform;
     _time_dead = -1f;
 
     // Set materials
     if (_Materials_Ragdoll == null) _Materials_Ragdoll = new List<System.Tuple<Material, Material>>();
-    _renderer = transform.GetChild(0).GetComponent<SkinnedMeshRenderer>();
-    if (_id == _Materials_Ragdoll.Count) _Materials_Ragdoll.Add(new System.Tuple<Material, Material>(new Material(_renderer.sharedMaterials[0]), new Material(_renderer.sharedMaterials[1])));
+    _renderer = Transform.GetChild(0).GetComponent<SkinnedMeshRenderer>();
+    if (_Id == _Materials_Ragdoll.Count) _Materials_Ragdoll.Add(new System.Tuple<Material, Material>(new Material(_renderer.sharedMaterials[0]), new Material(_renderer.sharedMaterials[1])));
     Resources.UnloadAsset(_renderer.sharedMaterials[0]);
     Resources.UnloadAsset(_renderer.sharedMaterials[1]);
-    _renderer.sharedMaterials = new Material[] { _Materials_Ragdoll[_id].Item1, _Materials_Ragdoll[_id].Item2 };
+    _renderer.sharedMaterials = new Material[] { _Materials_Ragdoll[_Id].Item1, _Materials_Ragdoll[_Id].Item2 };
     // Register enemy / player script
-    _enemyScript = follow.GetComponent<EnemyScript>();
-    _playerScript = follow.GetComponent<PlayerScript>();
+    _EnemyScript = follow.GetComponent<EnemyScript>();
+    _PlayerScript = follow.GetComponent<PlayerScript>();
     // Set default health
     _health = 1;
     // Index body parts
-    _hip = ragdoll.transform.GetChild(1).GetChild(0).GetChild(0).GetComponent<Rigidbody>();
-    _leg_upper_l = _hip.transform.GetChild(0).GetComponent<HingeJoint>();
-    _leg_upper_r = _hip.transform.GetChild(1).GetComponent<HingeJoint>();
+    _Hip = ragdoll.transform.GetChild(1).GetChild(0).GetChild(0).GetComponent<Rigidbody>();
+    _leg_upper_l = _Hip.transform.GetChild(0).GetComponent<HingeJoint>();
+    _leg_upper_r = _Hip.transform.GetChild(1).GetComponent<HingeJoint>();
     _leg_lower_l = _leg_upper_l.transform.GetChild(0).GetComponent<HingeJoint>();
     _leg_lower_r = _leg_upper_r.transform.GetChild(0).GetComponent<HingeJoint>();
-    _spine = _hip.transform.GetChild(2).GetChild(0).GetComponent<HingeJoint>();
+    _spine = _Hip.transform.GetChild(2).GetChild(0).GetComponent<HingeJoint>();
     /*_arm_upper_l = _spine.transform.GetChild(0).GetChild(0).GetChild(0).GetComponent<HingeJoint>();
     _arm_upper_r = _spine.transform.GetChild(0).GetChild(1).GetChild(0).GetComponent<HingeJoint>();
     _arm_lower_l = _arm_upper_l.transform.GetChild(0).GetComponent<HingeJoint>();
@@ -192,7 +192,7 @@ public class ActiveRagdoll
     _parts = GetParts();
     _transform_parts = new Parts(this);
 
-    _color = Color.blue * 1.3f;
+    _Color = Color.blue * 1.3f;
 
     _rotSpeed = 1f;
 
@@ -292,14 +292,14 @@ public class ActiveRagdoll
   public void Update()
   {
 #if DEBUG
-    if (_itemR != null && _itemR.IsGun())
-      Debug.DrawRay(_itemR.transform.position, MathC.Get2DVector(_itemR.transform.forward) * 100f);
-    if (_itemL != null && _itemL.IsGun())
-      Debug.DrawRay(_itemL.transform.position, MathC.Get2DVector(_itemL.transform.forward) * 100f);
-    Debug.DrawRay(_hip.position, _hip.transform.forward * 100f, Color.yellow);
+    if (_ItemR != null && _ItemR.IsGun())
+      Debug.DrawRay(_ItemR.transform.position, MathC.Get2DVector(_ItemR.transform.forward) * 100f);
+    if (_ItemL != null && _ItemL.IsGun())
+      Debug.DrawRay(_ItemL.transform.position, MathC.Get2DVector(_ItemL.transform.forward) * 100f);
+    Debug.DrawRay(_Hip.position, _Hip.transform.forward * 100f, Color.yellow);
 #endif
 
-    var dt = (_playerScript != null ? Time.unscaledDeltaTime : Time.deltaTime);
+    var dt = (_PlayerScript != null ? Time.unscaledDeltaTime : Time.deltaTime);
 
     // Update grabbed rd
     if (_grapplee != null)
@@ -311,21 +311,21 @@ public class ActiveRagdoll
       else
       {
         // Get melee side
-        var left_weapon = _itemL != null && _itemL.IsMelee();
+        var left_weapon = _ItemL != null && _ItemL.IsMelee();
 
-        _grapplee._hip.position = _hip.position + _controller.forward * 0.45f + _controller.right * 0.09f * (left_weapon ? -1f : 1f);
-        _grapplee._hip.rotation = _hip.rotation;
+        _grapplee._Hip.position = _Hip.position + _Controller.forward * 0.45f + _Controller.right * 0.09f * (left_weapon ? -1f : 1f);
+        _grapplee._Hip.rotation = _Hip.rotation;
       }
     }
 
     // Update arm spread
     if (_spine != null)
     {
-      if (_itemL != null && _itemL._twoHanded) { }
+      if (_ItemL != null && _ItemL._twoHanded) { }
       else
       {
         var spread_speed = 20f * dt;
-        if (_itemL != null)
+        if (_ItemL != null)
           if (_la_limit - _la_targetLimit != 0f)
           {
             // Start z rotation of upper arm
@@ -340,7 +340,7 @@ public class ActiveRagdoll
             q.eulerAngles = localrot;
             arm_upper.localRotation = q;
           }
-        if (_itemR != null)
+        if (_ItemR != null)
           if (_ra_limit - _ra_targetLimit != 0f)
           {
             // Start z rotation of upper arm
@@ -360,45 +360,51 @@ public class ActiveRagdoll
 
     if (!_ragdolled)
     {
-      // Add gun recoil
-      if (_force.magnitude > 0f)
-      {
-        var force_normalize = _force.magnitude < 1f ? _force : _force.normalized;
-        var force_apply = _force * Time.deltaTime * 10f;
 
-        var agent = (_isPlayer ? _playerScript._agent : _enemyScript._agent);
+      // Add outside recoil
+      if (_ForceGlobal.magnitude > 0f)
+      {
+        var force_normalize = _ForceGlobal.magnitude < 1f ? _ForceGlobal : _ForceGlobal.normalized;
+        var force_apply = _ForceGlobal * Time.deltaTime * 10f;
+
+        var agent = _isPlayer ? _PlayerScript._agent : _EnemyScript._agent;
         agent.Move(force_apply);
-        _force -= force_apply;
+        _ForceGlobal -= force_apply;
       }
-      if (_forwardForce > 0f)
+
+      if (_ForceRecoil > 0f)
       {
         var max_velocity = 3.2f;
-        var force_normalized = _forwardForce > max_velocity ? max_velocity : _forwardForce;
-        var force_apply = force_normalized * MathC.Get2DVector(_hip.transform.forward) * Time.deltaTime * 10f;
+        var force_normalized = _ForceRecoil > max_velocity ? max_velocity : _ForceRecoil;
+        var force_apply = force_normalized * MathC.Get2DVector(_Hip.transform.forward) * Time.deltaTime * 10f;
 
-        var agent = (_isPlayer ? _playerScript._agent : _enemyScript._agent);
+        var agent = _isPlayer ? _PlayerScript._agent : _EnemyScript._agent;
         agent.Move(force_apply);
-        _forwardForce -= force_normalized;
+        _ForceRecoil -= force_normalized;
+
+        if (_ForceRecoil < 0.02f)
+          _ForceRecoil = 0f;
       }
+
       // Only update if enabled
       if (!_canReceiveInput) return;
 
       // If double knives or bat/sword, move forward when swinging
-      if (_swinging)
+      if (_IsSwinging)
       {
-        if ((_itemL != null && (_itemL._twoHanded || _itemL._runWhileUse)) || (_itemR != null && _itemR._runWhileUse) ||
-          (_itemL != null && _itemL._type == GameScript.ItemManager.Items.KNIFE && _itemR != null && _itemR._type == GameScript.ItemManager.Items.KNIFE))
+        if ((_ItemL != null && (_ItemL._twoHanded || _ItemL._runWhileUse)) || (_ItemR != null && _ItemR._runWhileUse) ||
+          (_ItemL != null && _ItemL._type == GameScript.ItemManager.Items.KNIFE && _ItemR != null && _ItemR._type == GameScript.ItemManager.Items.KNIFE))
         {
           var amount = 1.2f;
-          var dis = new Vector3(_controller.forward.x, 0f, _controller.forward.z).normalized * PlayerScript.MOVESPEED * amount * Time.deltaTime;
+          var dis = new Vector3(_Controller.forward.x, 0f, _Controller.forward.z).normalized * PlayerScript.MOVESPEED * amount * Time.deltaTime;
 
-          var agent = (_isPlayer ? _playerScript._agent : _enemyScript._agent);
+          var agent = (_isPlayer ? _PlayerScript._agent : _EnemyScript._agent);
           agent.Move(dis);
         }
       }
 
       // Check hip
-      if (_hip.transform.position.y > 0f)
+      if (_Hip.transform.position.y > 0f)
       {
         Debug.Log("defective ragdoll");
         Kill(null, DamageSourceType.MELEE, Vector3.zero);
@@ -407,29 +413,29 @@ public class ActiveRagdoll
     }
 
     // Move / rotate based on a rigidbody
-    var movePos = _controller.position + _GROUNDHEIGHT;
-    _distance = (movePos - _hip.position) * (Time.timeScale < 1f ? 0.3f : 1f);
+    var movePos = _Controller.position + _GROUNDHEIGHT;
+    _Distance = (movePos - _Hip.position) * (Time.timeScale < 1f ? 0.3f : 1f);
 
     // Moving ragdoll too fast will break joints, clamp to .35f magnitude
-    if (_distance.magnitude > 0.35f)
+    if (_Distance.magnitude > 0.35f)
     {
-      movePos = _hip.position + _distance.normalized * 0.35f;
-      _distance = (movePos - _hip.position) * (Time.timeScale < 1f ? 0.3f : 1f);
+      movePos = _Hip.position + _Distance.normalized * 0.35f;
+      _Distance = (movePos - _Hip.position) * (Time.timeScale < 1f ? 0.3f : 1f);
     }
 
     // If can't move, set movepos and distance to origin
     if (!_canMove || _grappled)
     {
-      movePos = _hip.position;
-      _distance = Vector3.zero;
+      movePos = _Hip.position;
+      _Distance = Vector3.zero;
     }
 
     // Stand if not moving, else iterate
-    if (_distance.magnitude < 0.005f)
+    if (_Distance.magnitude < 0.005f)
       _movementIter2 += (0.5f - _movementIter2) * dt * 12f;
     else
     {
-      _totalDistanceMoved += _distance.magnitude;
+      _totalDistanceMoved += _Distance.magnitude;
       var save = _movementIter2;
       _movementIter2 = Mathf.PingPong(_movementIter * 2.8f, 1f);
 
@@ -437,11 +443,11 @@ public class ActiveRagdoll
       if (!_ragdolled && !_grappled && ((save < 0.5f && _movementIter2 >= 0.5f) || (save > 0.5f && _movementIter2 <= 0.5f)))
       {
         // If player, send footstep sound to enemies to check for detection
-        if (_isPlayer && _playerScript._CanDetect && _distance.magnitude > 0.1f)
-          EnemyScript.CheckSound(_controller.position, (_distance.magnitude > 0.2f ? EnemyScript.Loudness.SOFT : (EnemyScript.Loudness.SUPERSOFT)));
+        if (_isPlayer && _PlayerScript._CanDetect && _Distance.magnitude > 0.1f)
+          EnemyScript.CheckSound(_Controller.position, (_Distance.magnitude > 0.2f ? EnemyScript.Loudness.SOFT : (EnemyScript.Loudness.SUPERSOFT)));
 
         // Sfx
-        SfxManager.PlayAudioSourceSimple(_controller.position, SceneThemes._footstep.clip, SceneThemes._footstep.volume, 0.9f, 1.1f, SfxManager.AudioClass.FOOTSTEP);
+        SfxManager.PlayAudioSourceSimple(_Controller.position, SceneThemes._footstep.clip, SceneThemes._footstep.volume, 0.9f, 1.1f, SfxManager.AudioClass.FOOTSTEP);
 
         // Footprint
         var footprint_pos = _footprint ? _leg_lower_l.transform.position : _leg_lower_r.transform.position;
@@ -450,8 +456,8 @@ public class ActiveRagdoll
         FunctionsC.PlayComplexParticleSystemAt(FunctionsC.ParticleSystemType.FOOTPRINT, footprint_pos);
       }
     }
-    var rot = _hip.rotation;
-    var f = _controller.rotation.eulerAngles.y;
+    var rot = _Hip.rotation;
+    var f = _Controller.rotation.eulerAngles.y;
     if (f > 180.0f)
       f -= 360.0f;
     rot.eulerAngles = new Vector3(rot.eulerAngles.x, f, rot.eulerAngles.z);
@@ -460,23 +466,23 @@ public class ActiveRagdoll
     if (Active())
     {
       // Move / rotate hip (base)
-      _hip.MovePosition(movePos);
+      _Hip.MovePosition(movePos);
       if (_isPlayer)
       {
         dt = Time.unscaledDeltaTime;
       }
 
-      _hip.MoveRotation(Quaternion.RotateTowards(_hip.rotation, rot, dt * 14f * _rotSpeed * Mathf.Abs(Quaternion.Angle(_hip.rotation, rot))));
+      _Hip.MoveRotation(Quaternion.RotateTowards(_Hip.rotation, rot, dt * 14f * _rotSpeed * Mathf.Abs(Quaternion.Angle(_Hip.rotation, rot))));
 
       // Use iter to move joints
-      _movementIter += (_distance.magnitude / 3f) * Time.deltaTime * 65f;
+      _movementIter += (_Distance.magnitude / 3f) * Time.deltaTime * 65f;
     }
     else
     {
-      _controller.position = _hip.position;
+      _Controller.position = _Hip.position;
 
       // Use iter to move joints
-      _movementIter += (_distance.magnitude / 10f) * Time.deltaTime * 50f;
+      _movementIter += (_Distance.magnitude / 10f) * Time.deltaTime * 50f;
 
       // Check stun FX
       if (!_dead && _stunned)
@@ -485,7 +491,7 @@ public class ActiveRagdoll
         {
           _confusedTimer = Time.time + Random.Range(0.2f, 0.5f);
           var p = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.CONFUSED)[0];
-          p.transform.position = _head != null ? _head.transform.position : _controller.position;
+          p.transform.position = _head != null ? _head.transform.position : _Controller.position;
           p.Play();
         }
       }
@@ -509,13 +515,13 @@ public class ActiveRagdoll
 
           RaycastHit hit;
           ToggleRaycasting(false);
-          if (Physics.SphereCast(_controller.position, 0.25f, _controller.forward, out hit, 0.5f, GameResources._Layermask_Ragdoll))
+          if (Physics.SphereCast(_Controller.position, 0.25f, _Controller.forward, out hit, 0.5f, GameResources._Layermask_Ragdoll))
           {
             var ragdoll = ActiveRagdoll.GetRagdoll(hit.collider.gameObject);
             if (ragdoll != null)
             {
               var hitForce = MathC.Get2DVector(
-                -(_hip.transform.position - ragdoll._hip.transform.position).normalized * (4000f + (Random.value * 2000f)) * 1f
+                -(_Hip.transform.position - ragdoll._Hip.transform.position).normalized * (4000f + (Random.value * 2000f)) * 1f
               );
               if (ragdoll.TakeDamage(
                 new RagdollDamageSource()
@@ -525,7 +531,7 @@ public class ActiveRagdoll
                   HitForce = hitForce,
 
                   Damage = 1,
-                  DamageSource = _hip.position,
+                  DamageSource = _Hip.position,
                   DamageSourceType = DamageSourceType.MELEE,
 
                   SpawnBlood = true,
@@ -603,11 +609,11 @@ public class ActiveRagdoll
 
   public void SetActive(bool toggle)
   {
-    transform.gameObject.SetActive(toggle);
+    Transform.gameObject.SetActive(toggle);
   }
   public bool IsActive()
   {
-    return transform.gameObject.activeSelf;
+    return Transform.gameObject.activeSelf;
   }
 
   // Remove all HingeJoints, Rigidbodies, and Colliders except for _Hip
@@ -618,7 +624,7 @@ public class ActiveRagdoll
     IEnumerator delayDisable()
     {
       yield return new WaitForSecondsRealtime(5f);
-      if (_hip != null) _hip.isKinematic = true;
+      if (_Hip != null) _Hip.isKinematic = true;
       foreach (var part in _parts)
       {
         if (part == null) continue;
@@ -640,7 +646,7 @@ public class ActiveRagdoll
         yield return new WaitForSecondsRealtime(0.05f);
       }
     }
-    _enemyScript.StartCoroutine(delayDisable());
+    _EnemyScript.StartCoroutine(delayDisable());
   }
 
   // Invisibility
@@ -656,7 +662,7 @@ public class ActiveRagdoll
 
     // Play FX
     PlaySound("Ragdoll/Combust", 0.9f, 1.1f);
-    FunctionsC.PlayComplexParticleSystemAt(FunctionsC.ParticleSystemType.SMOKEBALL, _hip.position);
+    FunctionsC.PlayComplexParticleSystemAt(FunctionsC.ParticleSystemType.SMOKEBALL, _Hip.position);
 
     // Set timer
     if (toggle)
@@ -668,49 +674,38 @@ public class ActiveRagdoll
   // Use item(s) in hand(s)
   public void UseLeft()
   {
-    _itemL?.UseDown();
+    var item = _ItemL;
+    if (item == null) return;
+
+    item.UseDown();
   }
   public void UseRight()
   {
-    _itemR?.UseDown();
+    var item = _ItemR;
+    if (item == null) return;
+
+    item.UseDown();
   }
 
   public void UseLeftDown()
   {
-    if (_itemL == null) return;
-    // Check if should hold weapon down / charge
-    {
-      bool two_handed = _itemL._twoHanded;
-      if (!two_handed)
-      {
-        _itemL.UseDown();
-        return;
-      }
-    }
+    if (_ItemL == null) return;
+    _ItemL.UseDown();
   }
   public void UseLeftUp()
   {
-    if (_itemL == null || _dead) return;
-    // Check if should release weapon down / charge
-    {
-      bool two_handed = _itemL._twoHanded;
-      if (!two_handed)
-      {
-        _itemL.UseUp();
-        return;
-      }
-      _itemL.UseDown();
-    }
+    if (_ItemL == null || _dead) return;
+    _ItemL.UseUp();
   }
   public void UseRightDown()
   {
-    if (_itemR != null)
-      _itemR.UseDown();
+    if (_ItemR != null)
+      _ItemR.UseDown();
   }
   public void UseRightUp()
   {
-    if (_itemR != null)
-      _itemR.UseUp();
+    if (_ItemR != null)
+      _ItemR.UseUp();
   }
 
   float _la_targetLimit = 0f, _ra_targetLimit = 0f,
@@ -744,7 +739,7 @@ public class ActiveRagdoll
     RIGHT
   }
 
-  public void EquipItem(GameScript.ItemManager.Items itemType, Side side, int clipSize = -1, float useTime = -1f)
+  public void EquipItem(GameScript.ItemManager.Items itemType, Side side, int clipSize = -1, float useTime = -1f, int itemId = -1)
   {
     if (itemType == GameScript.ItemManager.Items.NONE)
     {
@@ -786,20 +781,20 @@ public class ActiveRagdoll
     if (side == Side.LEFT || two_hands)
     {
       arm = _transform_parts._arm_lower_l;
-      _itemL = script;
+      _ItemL = script;
     }
     else
     {
       arm = _transform_parts._arm_lower_r;
-      _itemR = script;
+      _ItemR = script;
     }
     item.transform.parent = arm.GetChild(0);
-    script.OnEquip(this, side, clipSize, useTime);
+    script.OnEquip(this, side, clipSize, useTime, itemId);
   }
 
   public void UnequipItem(Side side)
   {
-    var item = (side == Side.LEFT ? _itemL : _itemR);
+    var item = (side == Side.LEFT ? _ItemL : _ItemR);
     if (side == Side.LEFT)
     {
       _transform_parts.SetDefault(_transform_parts._arm_upper_l);
@@ -812,8 +807,8 @@ public class ActiveRagdoll
     }
     if (item == null) return;
     GameObject.DestroyImmediate(item.gameObject);
-    if (side == Side.LEFT) _itemL = null;
-    else _itemR = null;
+    if (side == Side.LEFT) _ItemL = null;
+    else _ItemR = null;
   }
 
   // Switch item hands
@@ -822,16 +817,20 @@ public class ActiveRagdoll
     //_playerScript?.ResetLoadout();
 
     SwapItems(
-      System.Tuple.Create(
-        _itemR == null ? GameScript.ItemManager.Items.NONE : _itemR._type,
-        _itemR != null ? _itemR.Clip() : -1,
-        _itemR != null ? _itemR._useTime : -1f
-      ),
-      System.Tuple.Create(
-        _itemL == null ? GameScript.ItemManager.Items.NONE : _itemL._type,
-        _itemL != null ? _itemL.Clip() : -1,
-        _itemL != null ? _itemL._useTime : -1f
-      ),
+      new WeaponSwapData()
+      {
+        ItemType = _ItemR == null ? GameScript.ItemManager.Items.NONE : _ItemR._type,
+        ItemId = _ItemR._ItemId,
+        ItemClip = _ItemR != null ? _ItemR.Clip() : -1,
+        ItemUseItem = _ItemR != null ? _ItemR._useTime : -1f
+      },
+      new WeaponSwapData()
+      {
+        ItemType = _ItemL == null ? GameScript.ItemManager.Items.NONE : _ItemL._type,
+        ItemId = _ItemL._ItemId,
+        ItemClip = _ItemL != null ? _ItemL.Clip() : -1,
+        ItemUseItem = _ItemL != null ? _ItemL._useTime : -1f
+      },
       index
     );
   }
@@ -839,39 +838,74 @@ public class ActiveRagdoll
   float _lastItemSwap;
   public bool CanSwapWeapons()
   {
-    return !_dead && !_swinging && Time.time - _lastItemSwap > 0.5f && !_reloading && !_items_in_use;
+    return !_dead && !_IsSwinging && Time.time - _lastItemSwap > 0.5f && !_IsReloading && !_HasItemsInUse;
+  }
+
+  //
+  public bool TryDeflectMelee(ActiveRagdoll ragdollOther)
+  {
+
+    // Check weapons in order L / R
+    bool CheckHit(ItemScript item)
+    {
+      if (item == null) return false;
+      if (item._IsSwinging && !item.HasHitRagdoll(ragdollOther))
+      {
+        item.RegisterHitRagdoll(ragdollOther);
+        item.SetHitOverride();
+
+        return true;
+      }
+
+      return false;
+    }
+
+    //
+    if (CheckHit(_ItemL) || CheckHit(_ItemR))
+      return true;
+    return false;
   }
 
   // Change weapons mid-game
-  public void SwapItems(System.Tuple<GameScript.ItemManager.Items, int, float> item_left, System.Tuple<GameScript.ItemManager.Items, int, float> item_right, int index, bool checkCanSwap = true)
+  public struct WeaponSwapData
+  {
+    public GameScript.ItemManager.Items ItemType;
+    public int ItemClip, ItemId;
+    public float ItemUseItem;
+  }
+  public void SwapItems(WeaponSwapData item_left, WeaponSwapData item_right, int index, bool checkCanSwap = true)
   {
     if (!CanSwapWeapons() && checkCanSwap) return;
-    if (_itemL != null && _itemL._twoHanded || _itemR != null && _itemR._twoHanded)
+    if (_ItemL != null && _ItemL._twoHanded || _ItemR != null && _ItemR._twoHanded)
     {
       //DisplayText("two handed problems");
       //return;
     }
     _lastItemSwap = Time.time;
-    var itemL_type = item_left.Item1;
-    var itemL_clip = item_left.Item2;
-    var itemL_useTime = item_left.Item3;
-    var itemR_type = item_right.Item1;
-    var itemR_clip = item_right.Item2;
-    var itemR_useTime = item_right.Item3;
+
+    var itemL_type = item_left.ItemType;
+    var itemL_id = item_left.ItemId;
+    var itemL_clip = item_left.ItemClip;
+    var itemL_useTime = item_left.ItemUseItem;
+
+    var itemR_type = item_right.ItemType;
+    var itemR_id = item_right.ItemId;
+    var itemR_clip = item_right.ItemClip;
+    var itemR_useTime = item_right.ItemUseItem;
 
     // Equip items
     if (itemL_type != GameScript.ItemManager.Items.NONE)
-      EquipItem(itemL_type, Side.LEFT, itemL_clip, itemL_useTime);
+      EquipItem(itemL_type, Side.LEFT, itemL_clip, itemL_useTime, itemL_id);
     else
     {
       AddArmJoint(Side.LEFT);
       UnequipItem(Side.LEFT);
     }
     if (itemR_type != GameScript.ItemManager.Items.NONE)
-      EquipItem(itemR_type, Side.RIGHT, itemR_clip, itemR_useTime);
+      EquipItem(itemR_type, Side.RIGHT, itemR_clip, itemR_useTime, itemR_id);
     else
     {
-      if (_itemL == null || !_itemL._twoHanded)
+      if (_ItemL == null || !_ItemL._twoHanded)
       {
         AddArmJoint(Side.RIGHT);
         UnequipItem(Side.RIGHT);
@@ -882,13 +916,13 @@ public class ActiveRagdoll
     {
       if (index == 0)
       {
-        _playerScript._Profile._equipment._item_left0 = itemL_type;
-        _playerScript._Profile._equipment._item_right0 = itemR_type;
+        _PlayerScript._Profile._equipment._item_left0 = itemL_type;
+        _PlayerScript._Profile._equipment._item_right0 = itemR_type;
       }
       else
       {
-        _playerScript._Profile._equipment._item_left1 = itemL_type;
-        _playerScript._Profile._equipment._item_right1 = itemR_type;
+        _PlayerScript._Profile._equipment._item_left1 = itemL_type;
+        _PlayerScript._Profile._equipment._item_right1 = itemR_type;
       }
     }
 
@@ -902,26 +936,26 @@ public class ActiveRagdoll
     // Don't reload if dead
     if (_dead) return;
     // Left item
-    if (_itemL != null && _itemL.CanReload() && !_itemL.IsChargeWeapon())
+    if (_ItemL != null && _ItemL.CanReload() && !_ItemL.IsChargeWeapon())
     {
-      _itemL.Reload();
+      _ItemL.Reload();
       // Check player settings
-      if (_isPlayer && !_playerScript._Profile._reloadSidesSameTime) return;
+      if (_isPlayer && !_PlayerScript._Profile._reloadSidesSameTime) return;
       else
       {
         IEnumerator delayedReload()
         {
           yield return new WaitForSeconds(0.1f);
-          if (_itemR != null && _itemR.CanReload())
-            _itemR.Reload();
+          if (_ItemR != null && _ItemR.CanReload())
+            _ItemR.Reload();
         }
         GameScript._s_Singleton.StartCoroutine(delayedReload());
       }
     }
     //else if (_itemL != null && !_itemL._melee && _isPlayer) DisplayText("already reloading L");
     // Right item
-    if (_itemR != null && _itemR.CanReload() && !_itemR.IsChargeWeapon())
-      _itemR.Reload();
+    if (_ItemR != null && _ItemR.CanReload() && !_ItemR.IsChargeWeapon())
+      _ItemR.Reload();
     //else if (_itemR != null && !_itemR._melee && _isPlayer) DisplayText("already reloading R");
   }
 
@@ -938,7 +972,7 @@ public class ActiveRagdoll
   public void OnTriggerEnter(Collider other)
   {
     // Check player / enemy specific triggers
-    if (_isPlayer) _playerScript.OnTriggerEnter(other);
+    if (_isPlayer) _PlayerScript.OnTriggerEnter(other);
 
     // Check general triggers
     var u = other.GetComponent<CustomEntityUI>();
@@ -970,11 +1004,11 @@ public class ActiveRagdoll
       ExplosiveScript s = other.transform.parent.GetComponent<ExplosiveScript>();
       s.Trigger();
     }*/
-    if (_isPlayer) _playerScript.OnTriggerExit(other);
+    if (_isPlayer) _PlayerScript.OnTriggerExit(other);
   }
   public void OnTriggerStay(Collider other)
   {
-    if (_isPlayer) _playerScript.OnTriggerStay(other);
+    if (_isPlayer) _PlayerScript.OnTriggerStay(other);
   }
 
   // Handle body part noises
@@ -1063,17 +1097,17 @@ public class ActiveRagdoll
   Coroutine _color_Coroutine;
   public void ChangeColor(Color c, float lerpAmount = 0f)
   {
-    if (Color.Equals(_color, Color.blue * 1.3f))
-      _color = c;
+    if (Color.Equals(_Color, Color.blue * 1.3f))
+      _Color = c;
 
     // Gather mesh renderers by amount of materials and final color
-    var mesh = transform.GetChild(0).GetComponent<SkinnedMeshRenderer>();
+    var mesh = Transform.GetChild(0).GetComponent<SkinnedMeshRenderer>();
     if (lerpAmount == 0f)
     {
       Color startColor0 = mesh.sharedMaterials[0].color,
        startColor1 = mesh.sharedMaterials[1].color;
       SetLerpAmount(ref mesh, c, 1f, startColor0, startColor1);
-      _playerScript?.ChangeRingColor(c);
+      _PlayerScript?.ChangeRingColor(c);
       return;
     }
     if (_color_Coroutine != null)
@@ -1100,7 +1134,7 @@ public class ActiveRagdoll
     while (true)
     {
       yield return new WaitForSeconds(waitTime);
-      if (_hip == null) break;
+      if (_Hip == null) break;
       timer = Mathf.Clamp(timer + 0.07f, 0f, lerpAmount);
       SetLerpAmount(ref mesh, c, timer / lerpAmount, startColor0, startColor1);
       if (timer == lerpAmount) break;
@@ -1129,7 +1163,7 @@ public class ActiveRagdoll
     var spawnGiblets = ragdollDamageSource.SpawnGiblets;
 
     // If is robot, do not damage from bullet and play 'dink'
-    if (_enemyScript != null && _enemyScript._enemyType == EnemyScript.EnemyType.ROBOT && damage <= 10f)
+    if (_EnemyScript != null && _EnemyScript._enemyType == EnemyScript.EnemyType.ROBOT && damage <= 10f)
     {
       if (Time.time - _lastMetalHit > 0.05f && damageSourceType == DamageSourceType.BULLET)
       {
@@ -1137,7 +1171,7 @@ public class ActiveRagdoll
         PlaySound("Enemies/Metal_hit", 0.8f, 1.2f);
 
         var parts = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.BULLET_COLLIDE)[0];
-        parts.transform.position = _hip.position;
+        parts.transform.position = _Hip.position;
         parts.Play();
       }
       return false;
@@ -1157,7 +1191,7 @@ public class ActiveRagdoll
       if (_isPlayer)
       {
         // Fire player events
-        _playerScript.OnDamageTaken();
+        _PlayerScript.OnDamageTaken();
         PlaySound("Enemies/Ugh0");
 
         if (_hasArmor)
@@ -1170,7 +1204,7 @@ public class ActiveRagdoll
           {
             PlaySound("Enemies/Metal_hit", 0.8f, 1.2f);
             var parts = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.BULLET_COLLIDE)[0];
-            parts.transform.position = _hip.position;
+            parts.transform.position = _Hip.position;
             parts.Play();
           }
         }
@@ -1178,10 +1212,10 @@ public class ActiveRagdoll
           if (damageSourceType == DamageSourceType.FIRE)
           {
             PlaySound("Ragdoll/Combust");
-            FunctionsC.PlayComplexParticleSystemAt(FunctionsC.ParticleSystemType.FIREBALL, _hip.position);
+            FunctionsC.PlayComplexParticleSystemAt(FunctionsC.ParticleSystemType.FIREBALL, _Hip.position);
 
             var parts = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.BULLET_COLLIDE)[0];
-            parts.transform.position = _hip.position;
+            parts.transform.position = _Hip.position;
             parts.Play();
           }
           else
@@ -1205,14 +1239,14 @@ public class ActiveRagdoll
             else
 
             // Change color to normal for survival
-            if (_enemyScript?._survivalAttributes != null)
+            if (_EnemyScript?._survivalAttributes != null)
               ChangeColor(Color.green, 0.8f);
           }
           else if (_health > 0)
           {
             PlaySound("Enemies/Metal_hit", 0.8f, 1.2f);
             var parts = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.BULLET_COLLIDE)[0];
-            parts.transform.position = _hip.position;
+            parts.transform.position = _Hip.position;
             parts.Play();
           }
         }
@@ -1221,10 +1255,10 @@ public class ActiveRagdoll
           if (damageSourceType == DamageSourceType.FIRE)
           {
             PlaySound("Ragdoll/Combust", 0.9f, 1.1f);
-            FunctionsC.PlayComplexParticleSystemAt(FunctionsC.ParticleSystemType.FIREBALL, _hip.position);
-            FunctionsC.SpawnExplosionScar(_hip.position);
+            FunctionsC.PlayComplexParticleSystemAt(FunctionsC.ParticleSystemType.FIREBALL, _Hip.position);
+            FunctionsC.SpawnExplosionScar(_Hip.position);
             var parts = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.BULLET_COLLIDE)[0];
-            parts.transform.position = _hip.position;
+            parts.transform.position = _Hip.position;
             parts.Play();
           }
           else
@@ -1262,14 +1296,14 @@ public class ActiveRagdoll
             HitForce = Vector3.zero,
 
             Damage = 100,
-            DamageSource = _hip.position,
+            DamageSource = _Hip.position,
             DamageSourceType = DamageSourceType.MELEE,
 
             SpawnBlood = false,
             SpawnGiblets = false
           });
-        _grapplee._hip.AddForce(_controller.forward * (1000f + Random.value * 250f));
-        _grapplee._hip.AddTorque(new Vector3(Random.value < 0.5f ? -1f : 1f, 0f, 0f) * 10000000f);
+        _grapplee._Hip.AddForce(_Controller.forward * (1000f + Random.value * 250f));
+        _grapplee._Hip.AddTorque(new Vector3(Random.value < 0.5f ? -1f : 1f, 0f, 0f) * 10000000f);
 
         PlaySound("Ragdoll/Neck_snap", 0.85f, 1.2f);
       }
@@ -1277,17 +1311,17 @@ public class ActiveRagdoll
       // Else, gently let go (?)
       else
       {
-        _grapplee._controller.position = _grapplee._hip.position;
-        _grapplee._controller.rotation = _controller.rotation;
+        _grapplee._Controller.position = _grapplee._Hip.position;
+        _grapplee._Controller.rotation = _Controller.rotation;
 
-        var agent = _grapplee._isPlayer ? (_grapplee._playerScript?._agent) : (_grapplee._enemyScript?._agent);
+        var agent = _grapplee._isPlayer ? (_grapplee._PlayerScript?._agent) : (_grapplee._EnemyScript?._agent);
         if (agent != null)
         {
           agent.enabled = true;
         }
 
         // Check armor perk
-        if (_playerScript?.HasPerk(Shop.Perk.PerkType.GRAPPLE_MASTER) ?? false)
+        if (_PlayerScript?.HasPerk(Shop.Perk.PerkType.GRAPPLE_MASTER) ?? false)
         {
           if (_grapplee._hasArmor)
           {
@@ -1322,12 +1356,12 @@ public class ActiveRagdoll
           // Raycast for ragdoll
           RaycastHit hit;
           ToggleRaycasting(false);
-          var dir = _controller.forward;
+          var dir = _Controller.forward;
           if (i == 2)
-            dir += _controller.right * 0.25f;
+            dir += _Controller.right * 0.25f;
           else if (i == 1)
-            dir += -_controller.right * 0.25f;
-          if (Physics.SphereCast(_spine != null ? _spine.transform.position : _hip.transform.position, 0.3f, dir, out hit, 0.75f, GameResources._Layermask_Ragdoll))
+            dir += -_Controller.right * 0.25f;
+          if (Physics.SphereCast(_spine != null ? _spine.transform.position : _Hip.transform.position, 0.3f, dir, out hit, 0.75f, GameResources._Layermask_Ragdoll))
           {
             var ragdoll = ActiveRagdoll.GetRagdoll(hit.collider.gameObject);
             if (ragdoll == null)
@@ -1337,7 +1371,7 @@ public class ActiveRagdoll
             }
 
             // Check facing somewhat away dir
-            if ((_controller.forward - ragdoll._controller.forward).magnitude > 0.9f || (ragdoll._enemyScript?.IsChaser() ?? false))
+            if ((_Controller.forward - ragdoll._Controller.forward).magnitude > 0.9f || (ragdoll._EnemyScript?.IsChaser() ?? false))
             {
               ToggleRaycasting(true);
               break;
@@ -1375,21 +1409,21 @@ public class ActiveRagdoll
     _grapplee = other;
     other._grappled = true;
     other._grappler = this;
-    var agent = other._isPlayer ? (other._playerScript?._agent) : (other._enemyScript?._agent);
+    var agent = other._isPlayer ? (other._PlayerScript?._agent) : (other._EnemyScript?._agent);
     if (agent != null)
     {
       agent.enabled = false;
     }
 
     // Check armor perk
-    if (_playerScript?.HasPerk(Shop.Perk.PerkType.GRAPPLE_MASTER) ?? false)
+    if (_PlayerScript?.HasPerk(Shop.Perk.PerkType.GRAPPLE_MASTER) ?? false)
     {
       other.AddArmor();
       other._health = 3;
     }
 
     // Fire event
-    other._enemyScript?.OnGrappled();
+    other._EnemyScript?.OnGrappled();
   }
 
   public void Kill(ActiveRagdoll source, DamageSourceType damageSourceType, Vector3 hitForce)
@@ -1400,12 +1434,12 @@ public class ActiveRagdoll
     if (damageSourceType == DamageSourceType.FIRE)
     {
       _renderer.enabled = false;
-      _itemL?.gameObject.SetActive(false);
-      _itemR?.gameObject.SetActive(false);
+      _ItemL?.gameObject.SetActive(false);
+      _ItemR?.gameObject.SetActive(false);
     }
     // Add to part listener for audio
     else
-      AddPartListener(_hip);
+      AddPartListener(_Hip);
 
     // Die instantly
     if (!_canDie) return;
@@ -1419,7 +1453,7 @@ public class ActiveRagdoll
       {
         Grapple(true);
 
-        _grapplee?._enemyScript?.OnGrapplerRemoved();
+        _grapplee?._EnemyScript?.OnGrapplerRemoved();
       }
   }
 
@@ -1429,7 +1463,7 @@ public class ActiveRagdoll
     {
       var saveParent = system.transform.parent;
       system.transform.parent = system.transform.parent.parent;
-      system.transform.position = _hip.position;
+      system.transform.position = _Hip.position;
       EnemyScript.CheckSound(system.transform.position, EnemyScript.Loudness.SUPERSOFT);
       yield return new WaitForSeconds(0.05f);
       var emission2 = system.emission;
@@ -1440,8 +1474,8 @@ public class ActiveRagdoll
       {
         time -= 0.05f;
         yield return new WaitForSeconds(0.05f);
-        if (_hip == null) break;
-        system.transform.position = _hip.position;
+        if (_Hip == null) break;
+        system.transform.position = _Hip.position;
       }
       system.transform.parent = saveParent;
       if (Time.time - GameScript._LevelStartTime < 1f)
@@ -1454,13 +1488,13 @@ public class ActiveRagdoll
     }
 
     // Check follower
-    if (_enemyScript?.IsChaser() ?? false)
+    if (_EnemyScript?.IsChaser() ?? false)
     {
 
       void PlaySpark()
       {
         var particles_sparks = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.SPARKS_ROBOT)[0];
-        particles_sparks.transform.position = _hip.position;
+        particles_sparks.transform.position = _Hip.position;
         particles_sparks.transform.Rotate(new Vector3(0f, 1f, 0f) * (Random.value * 360f));
         particles_sparks.Play();
 
@@ -1469,9 +1503,9 @@ public class ActiveRagdoll
       IEnumerator PlaySparks()
       {
 
-        while (_hip != null)
+        while (_Hip != null)
         {
-          if (_hip != null)
+          if (_Hip != null)
             PlaySpark();
           yield return new WaitForSeconds(0.13f + Random.value * 0.7f);
         }
@@ -1497,7 +1531,7 @@ public class ActiveRagdoll
 
         var emissionconfetti = confetti.emission;
         emissionconfetti.enabled = false;
-        confetti.transform.position = _hip.position;
+        confetti.transform.position = _Hip.position;
         confetti.transform.LookAt(damageSource);
         confetti.transform.Rotate(new Vector3(0f, 1f, 0f) * 180f);
         var rotationConfetti = confetti.transform.localRotation;
@@ -1510,6 +1544,11 @@ public class ActiveRagdoll
 
         // Audio
         PlaySound("Ragdoll/Confetti", 0.6f, 1.2f);
+
+        // Achievement
+#if UNITY_STANDALONE
+        SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.EXTRA_USE_CONFETTI, true);
+#endif
       }
 
     }
@@ -1525,7 +1564,7 @@ public class ActiveRagdoll
 
       var emissionBlood = blood.emission;
       emissionBlood.enabled = false;
-      blood.transform.position = _hip.position;// + _hip.transform.forward * 0.2f;//point;
+      blood.transform.position = _Hip.position;// + _hip.transform.forward * 0.2f;//point;
       blood.transform.LookAt(damageSource);
       blood.transform.Rotate(new Vector3(0f, 1f, 0f) * 180f);
       var rotationBlood = blood.transform.localRotation;
@@ -1573,7 +1612,7 @@ public class ActiveRagdoll
         if (particlesGiblet == null || particlesGiblet.Length == 0) return;
 
         var giblets = particlesGiblet[0];
-        giblets.transform.position = _hip.position;
+        giblets.transform.position = _Hip.position;
         giblets.transform.LookAt(damageSource);
         giblets.transform.localRotation = rotationBlood;
 
@@ -1603,7 +1642,7 @@ public class ActiveRagdoll
     if (_dead) return;
 
     // If about to die, save hip rotation for later
-    if (!_ragdolled) _saveRot = _hip.rotation;
+    if (!_ragdolled) _saveRot = _Hip.rotation;
 
     // Check crown
     if (Settings._Extra_CrownMode._value != 0)
@@ -1617,14 +1656,14 @@ public class ActiveRagdoll
           source.AddCrown();
 
           if (source._isPlayer)
-            GameScript.s_CrownPlayer = source._playerScript._Profile._Id;
+            GameScript.s_CrownPlayer = source._PlayerScript._Profile._Id;
           else
-            GameScript.s_CrownEnemy = source._enemyScript._Id;
+            GameScript.s_CrownEnemy = source._EnemyScript._Id;
         }
       }
 
     // Invert values
-    _hip.isKinematic = !_hip.isKinematic;
+    _Hip.isKinematic = !_Hip.isKinematic;
     ToggleRaycasting(false);
     _ragdolled = !_ragdolled;
     if (!_ragdolled)
@@ -1641,8 +1680,8 @@ public class ActiveRagdoll
     else
     {
       Ragdoll(true);
-      _hip.AddForce(hitForce);
-      _controller.GetComponent<UnityEngine.AI.NavMeshAgent>().enabled = false;
+      _Hip.AddForce(hitForce);
+      _Controller.GetComponent<UnityEngine.AI.NavMeshAgent>().enabled = false;
       if (changeColor) ChangeColor(_isPlayer ? Color.black * 0.5f : Color.black, 0.8f);
     }
 
@@ -1651,13 +1690,13 @@ public class ActiveRagdoll
       // Record stats
       if (source?._isPlayer ?? false)
       {
-        Stats.RecordKill(source._playerScript._Id);
-        if (_isPlayer) Stats.RecordTeamkill(source._playerScript._Id);
+        Stats.RecordKill(source._PlayerScript._Id);
+        if (_isPlayer) Stats.RecordTeamkill(source._PlayerScript._Id);
       }
 
       // Fire function per script type
-      _enemyScript?.OnToggle(source, damageSourceType);
-      _playerScript?.OnToggle(source, damageSourceType);
+      _EnemyScript?.OnToggle(source, damageSourceType);
+      _PlayerScript?.OnToggle(source, damageSourceType);
 
       // Check extras
       if (Settings._Extras_CanUse)
@@ -1683,7 +1722,7 @@ public class ActiveRagdoll
         }
         if (explode_self)
         {
-          var explode_script = _hip.gameObject.AddComponent<ExplosiveScript>();
+          var explode_script = _Hip.gameObject.AddComponent<ExplosiveScript>();
           explode_script._explosionType = ExplosiveScript.ExplosionType.AWAY;
           explode_script._radius = 3 * 0.8f;
           explode_script.Trigger(source, (damageSourceType == DamageSourceType.MELEE ? 1f : 0.1f), false, true);
@@ -1691,16 +1730,16 @@ public class ActiveRagdoll
       }
 
       // Fire item functions
-      _itemL?.OnToggle();
-      _itemR?.OnToggle();
+      _ItemL?.OnToggle();
+      _ItemR?.OnToggle();
     }
   }
 
   public void RefillAmmo()
   {
-    _itemL?.SetClip();
-    _itemR?.SetClip();
-    _playerScript?.OnRefill();
+    _ItemL?.SetClip();
+    _ItemR?.SetClip();
+    _PlayerScript?.OnRefill();
   }
 
   // Stun the ragdoll
@@ -1708,7 +1747,7 @@ public class ActiveRagdoll
   float _stunTimer;
   public void Stun(float duration = 1.5f)
   {
-    if (_enemyScript?.IsChaser() ?? false) { return; }
+    if (_EnemyScript?.IsChaser() ?? false) { return; }
     _stunTimer = Time.time + duration;
   }
 
@@ -1742,20 +1781,20 @@ public class ActiveRagdoll
 
   public void Recoil(Vector3 dir, float force)
   {
-    _force += MathC.Get2DVector(dir) * force;
+    _ForceGlobal += MathC.Get2DVector(dir) * force;
     if (_grappler != null)
     {
-      _grappler._force += MathC.Get2DVector(dir) * force;
+      _grappler._ForceGlobal += MathC.Get2DVector(dir) * force;
     }
   }
   public void RecoilSimple(float force)
   {
-    Recoil(-_controller.forward, force);
+    Recoil(-_Controller.forward, force);
   }
 
   IEnumerator Rise()
   {
-    var startRot = _hip.rotation;
+    var startRot = _Hip.rotation;
 
     // Pick ragdoll back up using Lerp with current rotation and saved rotation from before fall
     var iter = 0f;
@@ -1763,13 +1802,13 @@ public class ActiveRagdoll
     {
       yield return new WaitForSeconds(0.005f);
       iter += 0.07f;
-      _hip.rotation = Quaternion.Lerp(startRot, _saveRot, iter);
+      _Hip.rotation = Quaternion.Lerp(startRot, _saveRot, iter);
     }
     iter = 1f;
-    _hip.rotation = Quaternion.Lerp(startRot, _saveRot, iter);
+    _Hip.rotation = Quaternion.Lerp(startRot, _saveRot, iter);
 
     // Set controller to position
-    _controller.position = new Vector3(_hip.position.x, _controller.position.y, _hip.position.z);
+    _Controller.position = new Vector3(_Hip.position.x, _Controller.position.y, _Hip.position.z);
     _reviving = false;
   }
 
@@ -1825,12 +1864,12 @@ public class ActiveRagdoll
     PlaySound("Enemies/Armor_break", 0.9f, 1.1f);
 
     var parts = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.BULLET_COLLIDE)[0];
-    parts.transform.position = _hip.position;
+    parts.transform.position = _Hip.position;
     parts.Play();
 
     var helmet = _head.transform.GetChild(0).gameObject;
     helmet.transform.parent =
-      save_til_die ? _controller.parent : GameResources._Container_Objects;
+      save_til_die ? _Controller.parent : GameResources._Container_Objects;
 
     var rb = helmet.AddComponent<Rigidbody>();
     helmet.GetComponent<BoxCollider>().enabled = true;
@@ -1856,7 +1895,7 @@ public class ActiveRagdoll
     if (GameScript._EditorEnabled) return;
 
     // Spawn enemy
-    var spawn_pos = _hip.position + transform.forward * 0.3f;
+    var spawn_pos = _Hip.position + Transform.forward * 0.3f;
     var enemy = EnemyScript.SpawnEnemyAt(
       new EnemyScript.SurvivalAttributes()
       {
@@ -1879,43 +1918,43 @@ public class ActiveRagdoll
 
   public bool HasWeapon()
   {
-    return (_itemL != null) || (_itemR != null);
+    return (_ItemL != null) || (_ItemR != null);
   }
   public bool HasTwohandedWeapon()
   {
-    return (_itemL != null && _itemL._twoHanded) || (_itemR != null && _itemR._twoHanded);
+    return (_ItemL != null && _ItemL._twoHanded) || (_ItemR != null && _ItemR._twoHanded);
   }
   public bool HasGun()
   {
-    return (_itemL != null && _itemL.IsGun()) || (_itemR != null && _itemR.IsGun());
+    return (_ItemL != null && _ItemL.IsGun()) || (_ItemR != null && _ItemR.IsGun());
   }
   public bool HasAutomatic()
   {
-    return (_itemL != null && _itemL._fireMode == ItemScript.FireMode.AUTOMATIC) || (_itemR != null && _itemR._fireMode == ItemScript.FireMode.AUTOMATIC);
+    return (_ItemL != null && _ItemL._fireMode == ItemScript.FireMode.AUTOMATIC) || (_ItemR != null && _ItemR._fireMode == ItemScript.FireMode.AUTOMATIC);
   }
   public bool HasSilencedWeapon()
   {
-    return (_itemL != null && _itemL._silenced) || (_itemR != null && _itemR._silenced);
+    return (_ItemL != null && _ItemL._silenced) || (_ItemR != null && _ItemR._silenced);
   }
   public bool HasMelee()
   {
-    return (_itemL?.IsMelee() ?? false) || (_itemR?.IsMelee() ?? false);
+    return (_ItemL?.IsMelee() ?? false) || (_ItemR?.IsMelee() ?? false);
   }
   public bool HasEmpty()
   {
-    return (_itemL?.IsEmpty() ?? false) || (_itemR?.IsEmpty() ?? false);
+    return (_ItemL?.IsEmpty() ?? false) || (_ItemR?.IsEmpty() ?? false);
   }
   public bool HasItem(GameScript.ItemManager.Items item)
   {
     return (
-      (_itemL?._type ?? GameScript.ItemManager.Items.NONE) == item ||
-      (_itemR?._type ?? GameScript.ItemManager.Items.NONE) == item);
+      (_ItemL?._type ?? GameScript.ItemManager.Items.NONE) == item ||
+      (_ItemR?._type ?? GameScript.ItemManager.Items.NONE) == item);
   }
   public bool HasBulletDeflector()
   {
     return
-      (_itemL?._IsBulletDeflector ?? false) ||
-      (_itemR?._IsBulletDeflector ?? false);
+      (_ItemL?._IsBulletDeflector ?? false) ||
+      (_ItemR?._IsBulletDeflector ?? false);
   }
 
   public bool Active()
@@ -1991,7 +2030,7 @@ public class ActiveRagdoll
     if (index == -1)
       return null;
     return _Ragdolls[index / 11];*/
-    foreach (var r in _Ragdolls)
+    foreach (var r in s_Ragdolls)
       if (r.IsSelf(o)) return r;
     return null;
   }
@@ -2004,7 +2043,7 @@ public class ActiveRagdoll
   /// <param name="text"></param>
   public void DisplayText(string text, float size = 0.75f)
   {
-    if (_enemyScript != null && _enemyScript.IsChaser()) return;
+    if (_EnemyScript != null && _EnemyScript.IsChaser()) return;
     if (_bubbleScript != null && (Time.time - _lastBubbleScriptTime) < (_isPlayer ? 0.5f : 1f))
     {
       _bubbleScript._textMesh.text = text;
@@ -2016,7 +2055,7 @@ public class ActiveRagdoll
     g.transform.position = _head.transform.position;
     // Get the TextBubbleScript and init with text, position, and colot
     TextBubbleScript bubbleScript = g.GetComponent<TextBubbleScript>();
-    bubbleScript.Init(text, _head.transform, _color).fontSize = 3.5f * size;
+    bubbleScript.Init(text, _head.transform, _Color).fontSize = 3.5f * size;
     // Save for later
     _lastBubbleScriptTime = Time.time;
     _bubbleScript = bubbleScript;
@@ -2040,12 +2079,12 @@ public class ActiveRagdoll
   GameObject[] GetParts()
   {
     // If hip is null, ActiveRagdoll is null. Throw exception
-    if (_hip == null)
+    if (_Hip == null)
       throw new System.NullReferenceException("Attempting to access a null ActiveRagdoll.");
     // Manually return body parts
     GameObject[] returnList = new GameObject[11];
     // Hip
-    returnList[0] = _hip.gameObject;
+    returnList[0] = _Hip.gameObject;
     // Upper leg l
     returnList[1] = returnList[0].transform.GetChild(0).gameObject;
     // Upper leg r
@@ -2091,7 +2130,7 @@ public class ActiveRagdoll
     var t = joint.transform;
     joint.gameObject.layer = 2;
     GameObject.Destroy(joint);
-    t.parent = _hip.transform.parent;
+    t.parent = _Hip.transform.parent;
 
     // Make sure has collider (arm joint)
     if (t.GetComponent<Collider>() == null)
@@ -2155,13 +2194,13 @@ public class ActiveRagdoll
 
   public void PlaySound(string soundPath, float min = 1f, float max = 1f, SfxManager.AudioClass audioClass = SfxManager.AudioClass.NONE, bool changePitch = true)
   {
-    SfxManager.PlayAudioSourceSimple(_controller.position, soundPath, min, max, audioClass, changePitch);
+    SfxManager.PlayAudioSourceSimple(_Controller.position, soundPath, min, max, audioClass, changePitch);
   }
 
   public static void Reset()
   {
-    _ID = 0;
-    _Ragdolls = null;
+    s_ID = 0;
+    s_Ragdolls = null;
     BodyPart_Handler.Reset();
     Jobs_Clean();
     SfxManager.Reset();
@@ -2169,25 +2208,25 @@ public class ActiveRagdoll
   }
   public static void SoftReset()
   {
-    if (PlayerScript.s_Players == null || _Ragdolls == null) return;
+    if (PlayerScript.s_Players == null || s_Ragdolls == null) return;
     // Remove current ragdolls if dead
-    for (var i = _Ragdolls.Count - 1; i > 0; i--)
+    for (var i = s_Ragdolls.Count - 1; i > 0; i--)
     {
-      var r = _Ragdolls[i];
+      var r = s_Ragdolls[i];
       if (r._dead && r._isPlayer)
       {
-        _Ragdolls.Remove(r);
-        PlayerScript.s_Players.Remove(r._playerScript);
-        if (r._controller == null)
+        s_Ragdolls.Remove(r);
+        PlayerScript.s_Players.Remove(r._PlayerScript);
+        if (r._Controller == null)
           continue;
-        GameObject.Destroy(r._controller.parent.gameObject);
+        GameObject.Destroy(r._Controller.parent.gameObject);
       }
     }
     // Add players' ragdolls
-    _Ragdolls.Clear();
+    s_Ragdolls.Clear();
     foreach (var p in PlayerScript.s_Players)
     {
-      _Ragdolls.Add(p._ragdoll);
+      s_Ragdolls.Add(p._ragdoll);
     }
   }
 }

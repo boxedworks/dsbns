@@ -50,7 +50,7 @@ public class UtilityScript : ItemScript
   int _customProjectileId;
   public void RegisterCustomProjectile(ItemScript source)
   {
-    _customProjectileId = source._id;
+    _customProjectileId = source._ItemId;
   }
 
   static Dictionary<UtilityType, List<UtilityScript>> _Utilities_Thrown;
@@ -64,15 +64,30 @@ public class UtilityScript : ItemScript
     }
   }
 
-  public static void Detonate_StickyBullets(ItemScript source)
+  public static void Detonate_UtilitiesById(ItemScript source, UtilityType utilityType, int count = -1)
   {
-    foreach (var bullet in _Utilities_Thrown[UtilityType.STICKY_GUN_BULLET])
+
+    var utilities = _Utilities_Thrown[utilityType];
+    var exploded = 0;
+    for (var i = 0; i < utilities.Count; i++)
     {
-      if (bullet._customProjectileId == source._id)
+      var utility = utilities[i];
+      if (utility._customProjectileId == source._ItemId)
       {
-        bullet.Explode(Random.Range(0.05f, 0.15f));
+        utility.Explode(Random.Range(0.05f, 0.15f));
+        utilities.RemoveAt(i);
+        i--;
+
+        if (count != -1 && ++exploded > count - 1)
+          break;
       }
     }
+  }
+  static public void ParentUtilitiesById(int itemIdOld, int itemIdNew, UtilityType utilityType)
+  {
+    foreach (var utility in _Utilities_Thrown[utilityType])
+      if (utility._customProjectileId == itemIdOld)
+        utility._customProjectileId = itemIdNew;
   }
 
   // Start is called before the first frame update
@@ -213,7 +228,7 @@ public class UtilityScript : ItemScript
       // Set explosion size
       if (_explosion != null && _utility_type != UtilityType.GRENADE)
       {
-        if (_ragdoll._isPlayer && _ragdoll._playerScript.HasPerk(Shop.Perk.PerkType.EXPLOSIONS_UP))
+        if (_ragdoll._isPlayer && _ragdoll._PlayerScript.HasPerk(Shop.Perk.PerkType.EXPLOSIONS_UP))
           explosion_radius *= 1.25f;
 
         var localscale = _ring.transform.localScale;
@@ -269,7 +284,7 @@ public class UtilityScript : ItemScript
             var killed = false;
             if (rag != null)
             {
-              if (rag._id == _ragdoll._id) return;
+              if (rag._Id == _ragdoll._Id) return;
               if (rag._dead) return;
               killed = true;
               transform.parent = c.transform;
@@ -281,7 +296,7 @@ public class UtilityScript : ItemScript
                   HitForce = new Vector3(0f, 1f, 0f),
 
                   Damage = 1,
-                  DamageSource = _ragdoll._hip.position,
+                  DamageSource = _ragdoll._Hip.position,
                   DamageSourceType = ActiveRagdoll.DamageSourceType.THROW_MELEE,
 
                   SpawnBlood = true,
@@ -321,7 +336,7 @@ public class UtilityScript : ItemScript
             // Books
             if (c.name == "Books")
             {
-              FunctionsC.BookManager.ExplodeBooks(c, _ragdoll.transform.position);
+              FunctionsC.BookManager.ExplodeBooks(c, _ragdoll.Transform.position);
               PlaySound(Audio.UTILITY_ACTION);
               return;
             }
@@ -344,13 +359,13 @@ public class UtilityScript : ItemScript
             var rag = ActiveRagdoll.GetRagdoll(c.gameObject);
             if (rag != null)
             {
-              if (rag._id == _ragdoll._id) return;
-              if (rag._id == (_ragdoll._grapplee?._id ?? -1)) return;
+              if (rag._Id == _ragdoll._Id) return;
+              if (rag._Id == (_ragdoll._grapplee?._Id ?? -1)) return;
               if (!rag._dead)
               {
                 // Check for same ragdoll
-                if (_hitRagdolls.Contains(rag._id)) return;
-                _hitRagdolls.Add(rag._id);
+                if (_hitRagdolls.Contains(rag._Id)) return;
+                _hitRagdolls.Add(rag._Id);
 
                 rag.TakeDamage(
                   new ActiveRagdoll.RagdollDamageSource()
@@ -360,7 +375,7 @@ public class UtilityScript : ItemScript
                     HitForce = new Vector3(0f, 1f, 0f),
 
                     Damage = 1,
-                    DamageSource = _ragdoll._hip.position,
+                    DamageSource = _ragdoll._Hip.position,
                     DamageSourceType = ActiveRagdoll.DamageSourceType.THROW_MELEE,
 
                     SpawnBlood = true,
@@ -422,7 +437,7 @@ public class UtilityScript : ItemScript
               var rag = ActiveRagdoll.GetRagdoll(c.collider.gameObject);
               if (rag != null)
               {
-                if (rag._id == _ragdoll._id) return;
+                if (rag._Id == _ragdoll._Id) return;
                 transform.parent = c.transform;
                 PlaySound(Audio.UTILITY_ACTION);
               }
@@ -472,7 +487,7 @@ public class UtilityScript : ItemScript
               var rag = ActiveRagdoll.GetRagdoll(c.collider.gameObject);
               if (rag != null)
               {
-                if (rag._id == _ragdoll._id) return;
+                if (rag._Id == _ragdoll._Id) return;
                 transform.parent = c.transform;
                 PlaySound(Audio.UTILITY_ACTION);
               }
@@ -535,7 +550,7 @@ public class UtilityScript : ItemScript
                 var rag = ActiveRagdoll.GetRagdoll(c.collider.gameObject);
                 if (rag != null)
                 {
-                  if (rag._id == _ragdoll._id) return;
+                  if (rag._Id == _ragdoll._Id) return;
                   transform.parent = c.transform;
                   GameObject.Destroy(_rb);
                   _explosion.enabled = false;
@@ -544,7 +559,7 @@ public class UtilityScript : ItemScript
             };
             _explosion._onExplode += () =>
             {
-              if (_unregister) _ragdoll._playerScript?._Profile.UtilityUse(_side);
+              if (_unregister) _ragdoll._PlayerScript?._Profile.UtilityUse(_side);
               // Hide ring
               if (_ring != null)
                 _ring.enabled = false;
@@ -569,7 +584,8 @@ public class UtilityScript : ItemScript
 
         case UtilityType.TEMP_SHIELD:
 
-          if(_ragdoll._grappling){
+          if (_ragdoll._grappling)
+          {
             _ragdoll.Grapple(false);
           }
 
@@ -595,13 +611,13 @@ public class UtilityScript : ItemScript
 
       // Increment clip
       _clip--;
-      if (incrementClip && _unregister) _ragdoll._playerScript?._Profile.UtilityUse(_side);
+      if (incrementClip && _unregister) _ragdoll._PlayerScript?._Profile.UtilityUse(_side);
 
       // Extra; infinite ammo
       if (_ragdoll._isPlayer && Settings._Extras_CanUse && Settings._Extra_PlayerAmmo._value == 3)
       {
         _clip++;
-        _ragdoll._playerScript.AddUtility(_utility_type, _side);
+        _ragdoll._PlayerScript.AddUtility(_utility_type, _side);
       }
     };
 
@@ -639,7 +655,7 @@ public class UtilityScript : ItemScript
           if (_downTime != 0f && !_thrown && !_explosion._triggered && !_explosion._exploded)
           {
             // Set scale
-            if (_ragdoll._isPlayer && _ragdoll._playerScript.HasPerk(Shop.Perk.PerkType.EXPLOSIONS_UP))
+            if (_ragdoll._isPlayer && _ragdoll._PlayerScript.HasPerk(Shop.Perk.PerkType.EXPLOSIONS_UP))
               explosion_radius *= 1.25f;
 
             var localscale = _ring.transform.localScale;
@@ -664,7 +680,7 @@ public class UtilityScript : ItemScript
               if (!_thrown)
               {
                 transform.position = _ragdoll._transform_parts._hip.position + _ragdoll._transform_parts._hip.forward * 0.3f;
-                if (_unregister) _ragdoll._playerScript?._Profile.UtilityUse(_side);
+                if (_unregister) _ragdoll._PlayerScript?._Profile.UtilityUse(_side);
               }
               // Disable rung
               _ring.enabled = false;
@@ -697,7 +713,7 @@ public class UtilityScript : ItemScript
   void Unregister()
   {
     if (_unregister)
-      _ragdoll._playerScript.NextUtility(_side, this);
+      _ragdoll._PlayerScript.NextUtility(_side, this);
   }
 
   // Throw the item
@@ -727,9 +743,9 @@ public class UtilityScript : ItemScript
     }
 
     //
-    var forward = _ragdoll._hip.transform.forward;
-    if (mode == 1) forward = _ragdoll._hip.transform.right;
-    else if (mode == 2) forward = -_ragdoll._hip.transform.right;
+    var forward = _ragdoll._Hip.transform.forward;
+    if (mode == 1) forward = _ragdoll._Hip.transform.right;
+    else if (mode == 2) forward = -_ragdoll._Hip.transform.right;
 
     // Rotation
     if (_spawnDirection != Vector3.zero)
@@ -748,13 +764,13 @@ public class UtilityScript : ItemScript
     _rb.AddForce(
       MathC.Get2DVector(forward * 250f * (_throwSpeed + Mathf.Clamp(_downTime, 0f, 4f)) +
       Vector3.up * 55f +
-      (_ragdoll._hip.velocity) * 1.3f) * _forceModifier);
+      (_ragdoll._Hip.velocity) * 1.3f) * _forceModifier);
     // Rotate
     if (_spin)
     {
       if (_spinYAxis)
         _rb.maxAngularVelocity = 50f + 10f * Random.value;
-      _rb.AddTorque(_spinYAxis ? Vector3.up * 100000f : _ragdoll._hip.transform.right * 300f);
+      _rb.AddTorque(_spinYAxis ? Vector3.up * 100000f : _ragdoll._Hip.transform.right * 300f);
     }
     else
     {

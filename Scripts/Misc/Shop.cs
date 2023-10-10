@@ -46,6 +46,7 @@ public static class Shop
       "press the &UD button to swap which hand each of your weapons are in",
       "you can find overall stats in the options menu",
       "if you have a one-handed melee weapon, press &RS behind an enemy!",
+      "if melee weapons clash, you can use them again instantly!",
 
       "equip mods to gain special attributes",
       "you can equip up to 4 mods",
@@ -115,9 +116,9 @@ public static class Shop
     get
     {
 
-      #if UNITY_EDITOR
-        //return 999;
-      #endif
+#if UNITY_EDITOR
+      //return 999;
+#endif
 
       if ((Settings._Classic_0_TopRated?._value ?? false) && (Settings._Classic_1_TopRated?._value ?? false))
         return 999;
@@ -545,6 +546,20 @@ public static class Shop
       s_UnlockString += $"- new unlock added to shop: <color=yellow>{unlock}</color>\n";
   }
 
+  //
+  public static bool AllExtrasUnlocked()
+  {
+    return
+    _Unlocks.Contains(Unlocks.EXTRA_BLOOD_FX) &&
+    _Unlocks.Contains(Unlocks.EXTRA_CHASE) &&
+    _Unlocks.Contains(Unlocks.EXTRA_ENEMY_OFF) &&
+    _Unlocks.Contains(Unlocks.EXTRA_EXPLODED) &&
+    _Unlocks.Contains(Unlocks.EXTRA_GRAVITY) &&
+    _Unlocks.Contains(Unlocks.EXTRA_HORDE) &&
+    _Unlocks.Contains(Unlocks.EXTRA_PLAYER_AMMO) &&
+    _Unlocks.Contains(Unlocks.EXTRA_TIME);
+  }
+
   static string s_unlockString;
   public static string s_UnlockString
   {
@@ -724,8 +739,8 @@ public static class Shop
           {
             if (player._Id == playerId)
             {
-              player._ragdoll._itemL?.AddLaserSight();
-              player._ragdoll._itemR?.AddLaserSight();
+              player._ragdoll._ItemL?.AddLaserSight();
+              player._ragdoll._ItemR?.AddLaserSight();
               return;
             }
           }

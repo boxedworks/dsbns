@@ -855,14 +855,14 @@ public class TileManager
       }
 
     // Make sure ragdolls are not null
-    if (ActiveRagdoll._Ragdolls != null)
-      for (var i = ActiveRagdoll._Ragdolls.Count - 1; i >= 0; i--)
+    if (ActiveRagdoll.s_Ragdolls != null)
+      for (var i = ActiveRagdoll.s_Ragdolls.Count - 1; i >= 0; i--)
       {
-        var r = ActiveRagdoll._Ragdolls[i];
-        if (r == null || r._hip == null)
+        var r = ActiveRagdoll.s_Ragdolls[i];
+        if (r == null || r._Hip == null)
         {
-          if (r._controller != null) GameObject.Destroy(r._controller);
-          ActiveRagdoll._Ragdolls.Remove(r);
+          if (r._Controller != null) GameObject.Destroy(r._Controller);
+          ActiveRagdoll.s_Ragdolls.Remove(r);
         }
       }
 
@@ -1809,11 +1809,11 @@ public class TileManager
 
     // Reload assets
     GameScript.ToggleExit(false);
-    for (var i = ActiveRagdoll._Ragdolls.Count - 1; i > -1; i--)
+    for (var i = ActiveRagdoll.s_Ragdolls.Count - 1; i > -1; i--)
     {
-      var rag = ActiveRagdoll._Ragdolls[i];
-      if (rag._controller == null) continue;
-      GameObject.DestroyImmediate(rag._controller.parent.gameObject);
+      var rag = ActiveRagdoll.s_Ragdolls[i];
+      if (rag._Controller == null) continue;
+      GameObject.DestroyImmediate(rag._Controller.parent.gameObject);
     }
     ActiveRagdoll.Reset();
     EnemyScript.Reset();
@@ -2316,7 +2316,7 @@ public class TileManager
       if (EnemyScript._Enemies_alive != null)
         foreach (var e in EnemyScript._Enemies_alive)
         {
-          if (e._isZombie)
+          if (e._IsZombie)
           {
             GameObject.Destroy(e.transform.parent.gameObject);
             continue;
@@ -2327,12 +2327,12 @@ public class TileManager
           var controller_visual = GiveEnemyVisual(ref controller);
           ChangeEnemyType(e, controller_visual.GetComponent<MeshRenderer>());
           controller.GetComponent<UnityEngine.AI.NavMeshAgent>().enabled = false;
-          GameObject.Destroy(e.GetRagdoll().transform.gameObject);
+          GameObject.Destroy(e.GetRagdoll().Transform.gameObject);
         }
       if (EnemyScript._Enemies_dead != null)
         foreach (var e in EnemyScript._Enemies_dead)
         {
-          if (e._isZombie)
+          if (e._IsZombie)
           {
             GameObject.Destroy(e.transform.parent.gameObject);
             continue;
@@ -2343,7 +2343,7 @@ public class TileManager
           var controller_visual = GiveEnemyVisual(ref controller);
           ChangeEnemyType(e, controller_visual.GetComponent<MeshRenderer>());
           controller.GetComponent<UnityEngine.AI.NavMeshAgent>().enabled = false;
-          GameObject.Destroy(e.GetRagdoll().transform.gameObject);
+          GameObject.Destroy(e.GetRagdoll().Transform.gameObject);
         }
     }
     // If survival, don't save enemy positions

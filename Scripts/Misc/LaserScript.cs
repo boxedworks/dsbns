@@ -96,7 +96,7 @@ public class LaserScript : CustomEntity
               HingeJoint j = null;// h.collider.GetComponent<HingeJoint>();
               if (j == null) j = r._spine;
               r.Dismember(j);
-              r._hip.velocity = Vector3.zero;
+              r._Hip.velocity = Vector3.zero;
               // Particles
               FunctionsC.PlayComplexParticleSystemAt(FunctionsC.ParticleSystemType.SMOKE, j.transform.position);
               // Sound
@@ -108,7 +108,7 @@ public class LaserScript : CustomEntity
               _canTrigger = false;
               foreach (EnemyScript e in EnemyScript._Enemies_alive)
               {
-                if (e.GetRagdoll()._id == r._id) continue;
+                if (e.GetRagdoll()._Id == r._Id) continue;
                 e.SetRagdollTarget(r);
                 e.TargetFound();
               }

@@ -121,7 +121,7 @@ public class Powerup : MonoBehaviour
         remove = false;
         if (r._isPlayer && !GameScript._s_Singleton._ExitOpen)
         {
-          SfxManager.PlayAudioSourceSimple(r._controller.position, "Etc/Ping");
+          SfxManager.PlayAudioSourceSimple(r._Controller.position, "Etc/Ping");
 
           /*if (EnemyScript.AllDead())
           {
@@ -155,7 +155,7 @@ public class Powerup : MonoBehaviour
           }
 
           GameScript.ToggleExit();
-          r._playerScript._HasExit = true;
+          r._PlayerScript._HasExit = true;
           _rb.constraints = RigidbodyConstraints.None;
           transform.parent = transform.parent.parent;
           //_audio.Stop();
@@ -183,7 +183,7 @@ public class Powerup : MonoBehaviour
 
     if (_activated)
     {
-      if (_activator == null || _activator._dead || _activator._hip == null)
+      if (_activator == null || _activator._dead || _activator._Hip == null)
       {
         Destroy(gameObject);
         return;
@@ -208,7 +208,7 @@ public class Powerup : MonoBehaviour
       {
         //Vector3 newPos = MathC.Get2DVector(_icon.transform.position - GameObject.Find("EndLight").transform.position);
         //if (newPos.magnitude > 1f) newPos.Normalize();
-        _icon.transform.position += (((_activator._controller.transform.position - _activator._hip.transform.forward + new Vector3(0f, 1f, 0f)) - _icon.transform.position) * Time.deltaTime * 4f);
+        _icon.transform.position += (((_activator._Controller.transform.position - _activator._Hip.transform.forward + new Vector3(0f, 1f, 0f)) - _icon.transform.position) * Time.deltaTime * 4f);
       }
 
     }

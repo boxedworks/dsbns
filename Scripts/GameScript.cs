@@ -548,7 +548,7 @@ public class GameScript : MonoBehaviour
           var p = PlayerScript.s_Players[i];
           if (p == null || p._ragdoll == null || p._ragdoll._dead)
           {
-            ActiveRagdoll._Ragdolls.Remove(p._ragdoll);
+            ActiveRagdoll.s_Ragdolls.Remove(p._ragdoll);
             GameObject.Destroy(p.transform.parent.gameObject);
             PlayerScript.s_Players.RemoveAt(i);
             p = PlayerspawnScript._PlayerSpawns[0].SpawnPlayer(false);
@@ -876,6 +876,7 @@ public class GameScript : MonoBehaviour
       // Get / save highest wave
       var highest_wave = PlayerPrefs.GetInt($"SURVIVAL_MAP_{Levels._CurrentLevelIndex}", 0);
       PlayerPrefs.SetInt($"SURVIVAL_MAP_{Levels._CurrentLevelIndex}", _Wave);
+
       // Unlock new map
       if (Levels._CurrentLevelIndex == 0 && highest_wave < 11 && _Wave == 11)
       {
@@ -926,7 +927,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
           var p = PlayerScript.s_Players[i];
           if (p == null || p._ragdoll == null || p._ragdoll._dead)
           {
-            ActiveRagdoll._Ragdolls.Remove(p._ragdoll);
+            ActiveRagdoll.s_Ragdolls.Remove(p._ragdoll);
             GameObject.Destroy(p.transform.parent.gameObject);
             PlayerScript.s_Players.RemoveAt(i);
             p = PlayerspawnScript._PlayerSpawns[0].SpawnPlayer(false);
@@ -1116,14 +1117,14 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
 
         // Check if others in front
         var hit = new RaycastHit();
-        if (Physics.SphereCast(new Ray(enemy_ragdoll._hip.transform.position, MathC.Get2DVector(enemy_ragdoll._hip.transform.forward) * 100f), 0.5f, out hit, 100f, GameResources._Layermask_Ragdoll))
+        if (Physics.SphereCast(new Ray(enemy_ragdoll._Hip.transform.position, MathC.Get2DVector(enemy_ragdoll._Hip.transform.forward) * 100f), 0.5f, out hit, 100f, GameResources._Layermask_Ragdoll))
         {
           enemy_ragdoll.ToggleRaycasting(true);
           if (hit.distance > 10f) return;
           var ragdoll = ActiveRagdoll.GetRagdoll(hit.collider.gameObject);
           if (ragdoll == null || ragdoll._isPlayer) return;
 
-          enemy_ragdoll._force += (enemy_ragdoll._hip.transform.right * (enemy_next._strafeRight ? 1f : -1f)) * Time.deltaTime * 3f;
+          enemy_ragdoll._ForceGlobal += (enemy_ragdoll._Hip.transform.right * (enemy_next._strafeRight ? 1f : -1f)) * Time.deltaTime * 3f;
           return;
         }
 
@@ -1252,7 +1253,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
           _WavePlaying = false;
 
           // Save highest wave
-          Debug.Log($"{Levels._CurrentLevelIndex} : {_Wave - 1}");
+          //Debug.Log($"{Levels._CurrentLevelIndex} : {_Wave - 1}");
 
           return;
         }
@@ -2297,8 +2298,8 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
           var isUtility = item_data.Item2;
           var side = item_data.Item3;
           if (!isUtility)
-            if (side == ActiveRagdoll.Side.LEFT) ammo = player._ragdoll._itemL != null ? player._ragdoll._itemL.Clip() : ammo;
-            else ammo = player._ragdoll._itemR != null ? player._ragdoll._itemR.Clip() : ammo;
+            if (side == ActiveRagdoll.Side.LEFT) ammo = player._ragdoll._ItemL != null ? player._ragdoll._ItemL.Clip() : ammo;
+            else ammo = player._ragdoll._ItemR != null ? player._ragdoll._ItemR.Clip() : ammo;
           else
             if (side == ActiveRagdoll.Side.LEFT) ammo = player._UtilitiesLeft != null ? player._UtilitiesLeft.Count : ammo;
           else ammo = player._UtilitiesRight != null ? player._UtilitiesRight.Count : ammo;
@@ -2488,7 +2489,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
           case ("ROCKET_FIST"):
             t.localPosition += new Vector3(-0.11f, -0.02f, 0f);
             t.localScale = new Vector3(0.13f, 0.13f, 0.13f);
-            t.localEulerAngles += new Vector3(90f, 0f, 0f);
+            t.localEulerAngles += new Vector3(6.8f, 0f, 0f);
             break;
           case ("AXE"):
             t.localPosition += new Vector3(-0.11f, 0.03f, 0f);
@@ -3302,7 +3303,10 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     // Display unlock messages
     if (Shop.s_UnlockString != string.Empty)
     {
-      TogglePause(Shop.s_UnlockString.Contains("new difficulty unlocked") || Shop.s_UnlockString.Contains("to unlock the optional extra settings") ? Menu2.MenuType.LEVELS : Menu2.MenuType.NONE);
+      var nextMenu = Shop.s_UnlockString.Contains("new difficulty unlocked") || Shop.s_UnlockString.Contains("to unlock the optional extra settings") ? Menu2.MenuType.LEVELS : Menu2.MenuType.NONE;
+      TogglePause(nextMenu);
+      if (nextMenu != Menu2.MenuType.NONE)
+        return;
     }
 
     // Check level completion behavior
