@@ -1213,10 +1213,6 @@ public class ActiveRagdoll
           {
             PlaySound("Ragdoll/Combust");
             FunctionsC.PlayComplexParticleSystemAt(FunctionsC.ParticleSystemType.FIREBALL, _Hip.position);
-
-            var parts = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.BULLET_COLLIDE)[0];
-            parts.transform.position = _Hip.position;
-            parts.Play();
           }
           else
             PlaySound("Ragdoll/Punch");
@@ -1257,9 +1253,6 @@ public class ActiveRagdoll
             PlaySound("Ragdoll/Combust", 0.9f, 1.1f);
             FunctionsC.PlayComplexParticleSystemAt(FunctionsC.ParticleSystemType.FIREBALL, _Hip.position);
             FunctionsC.SpawnExplosionScar(_Hip.position);
-            var parts = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.BULLET_COLLIDE)[0];
-            parts.transform.position = _Hip.position;
-            parts.Play();
           }
           else
             PlaySound("Ragdoll/Punch", 0.9f, 1.1f);
@@ -1422,8 +1415,10 @@ public class ActiveRagdoll
       other._health = 3;
     }
 
-    // Fire event
+    // Fire events
     other._EnemyScript?.OnGrappled();
+    _ItemL?.OnGrappled();
+    _ItemR?.OnGrappled();
   }
 
   public void Kill(ActiveRagdoll source, DamageSourceType damageSourceType, Vector3 hitForce)
@@ -1447,13 +1442,13 @@ public class ActiveRagdoll
     _dead = true;
     _time_dead = Time.unscaledTime;
 
-    // Check grappler
+    // Check grapplee
     if (_grapplee != null)
       if (!_grapplee._dead)
       {
+        var graplee = _grapplee;
         Grapple(true);
-
-        _grapplee?._EnemyScript?.OnGrapplerRemoved();
+        graplee?._EnemyScript?.OnGrapplerRemoved();
       }
   }
 
@@ -1622,7 +1617,7 @@ public class ActiveRagdoll
       GameScript._s_Singleton.StartCoroutine(BloodFollow(blood));
 
       // Audio
-      PlaySound("Ragdoll/Blood", 1.2f, 1.5f);
+      PlaySound($"Ragdoll/Blood{(/*Random.Range(0, 10) < 3 ? 1 : */0)}", 1.1f, 1.5f);
     }
   }
 

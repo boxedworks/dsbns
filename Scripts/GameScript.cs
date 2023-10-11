@@ -2507,13 +2507,14 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
             t.localEulerAngles += new Vector3(81f, 0f, 0f);
             break;
           case ("SWORD"):
-            t.localPosition += new Vector3(-0.2f, 0f, 0f);
+            t.localPosition += new Vector3(-0.2f, -0.05f, 0f);
             t.localScale = new Vector3(0.11f, 0.1f, 0.11f);
             t.localEulerAngles = new Vector3(8f, 0f, -75f);
             break;
           case ("PISTOL_SILENCED"):
           case ("PISTOL"):
           case ("DOUBLE_PISTOL"):
+          case ("CHARGE_PISTOL"):
             t.localPosition += new Vector3(-0.19f, 0.06f, 0f);
             t.localScale = new Vector3(0.14f, 0.14f, 0.14f);
             break;
@@ -2562,7 +2563,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
             t.localEulerAngles = new Vector3(-30f, 90f, 90f);
             break;
           case ("GRENADE_LAUNCHER"):
-            t.localPosition += new Vector3(-0.21f, 0.03f, 0f);
+            t.localPosition += new Vector3(-0.21f, 0.05f, 0f);
             t.localScale = new Vector3(0.11f, 0.11f, 0.11f);
             break;
           case ("SNIPER"):
@@ -2599,7 +2600,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
             t.localScale = new Vector3(0.6f, 0.6f, 0.6f);
             break;
           case ("STICKY_GUN"):
-            t.localPosition += new Vector3(0f, 0.01f, 0f);
+            t.localPosition += new Vector3(-0.06f, 0.03f, 0f);
             t.localScale = new Vector3(0.15f, 0.15f, 0.15f);
             break;
 
@@ -2955,6 +2956,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       FLAMETHROWER,
       ROCKET_FIST,
       STICKY_GUN,
+      CHARGE_PISTOL,
     }
 
     // Spawn a single item
@@ -3036,6 +3038,8 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         case Items.MACHINE_PISTOL:
           return 3;
         case Items.DOUBLE_PISTOL:
+          return 3;
+        case Items.CHARGE_PISTOL:
           return 3;
         case Items.GRENADE_HOLD:
           break;

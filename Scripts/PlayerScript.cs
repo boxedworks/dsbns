@@ -27,7 +27,7 @@ public class PlayerScript : MonoBehaviour
     RUNSPEED = 1.25f,
     ROTATIONSPEED = 2f;
 
-  float _swordRunLerper = 0.4f;
+  float _swordRunLerper = 0.7f;
 
   bool mouseEnabled, _runToggle;
 
@@ -794,7 +794,7 @@ public class PlayerScript : MonoBehaviour
         else
         {
           // Check player dist
-          float minDist = 1.5f, desiredTimeScale = 1f, slowTime = 0.05f, speedMod = 1f;
+          float minDist = 1.2f, desiredTimeScale = 1f, slowTime = 0.1f, speedMod = 1f;
 
           if (_SlowmoTimer > 0f)
           {
@@ -812,10 +812,10 @@ public class PlayerScript : MonoBehaviour
             if (!has_perk)
             {
               desiredTimeScale = slowTime;
-              speedMod = 4f;
             }
           }
           else
+
             // Loop through players
             foreach (var p in s_Players)
             {
@@ -828,12 +828,14 @@ public class PlayerScript : MonoBehaviour
                 {
                   //_SlowmoTimer = Mathf.Clamp(_SlowmoTimer + 1f, 0f, 2f);
                   desiredTimeScale = slowTime;
-                  speedMod = 6f;
                   break;
                 }
               }
             }
-          if (Time.timeScale > desiredTimeScale) speedMod *= 0.5f;
+          if (Time.timeScale > desiredTimeScale)
+            speedMod = 4f;
+          else
+            speedMod = 2f;
 
           var onealive = false;
           foreach (var player in s_Players)
@@ -841,8 +843,12 @@ public class PlayerScript : MonoBehaviour
           if (!onealive) desiredTimeScale = 0f;
 
           // Update timescale
-          Time.timeScale = Mathf.Clamp(Time.timeScale + (desiredTimeScale - Time.timeScale) * dt * 5f * speedMod, desiredTimeScale, 1f);
-          if (Time.timeScale < 0.01f) Time.timeScale = 0f;
+          Time.timeScale = Mathf.Clamp(Time.timeScale + (desiredTimeScale - Time.timeScale) * unscaled_dt * 5f * speedMod, slowTime, 1f);
+          Debug.Log(Time.timeScale);
+          if (Time.timeScale < 0.01f)
+            Time.timeScale = 0f;
+          else if (Time.timeScale > 0.99f)
+            Time.timeScale = 1f;
         }
         // Update sounds with Time.timescale
         var pitch = 1f + -0.7f * ((1f - Time.timeScale) / (0.8f));
@@ -1123,7 +1129,7 @@ public class PlayerScript : MonoBehaviour
       useSword = true;
 
       var triggerDown = _ragdoll._ItemL._TriggerDown;
-      _swordRunLerper += ((triggerDown ? 1.5f : 0.4f) - _swordRunLerper) * Time.deltaTime * 0.8f;
+      _swordRunLerper += ((triggerDown ? 1.5f : 0.7f) - _swordRunLerper) * Time.deltaTime * 0.8f;
     }
 
     //
@@ -1583,7 +1589,7 @@ public class PlayerScript : MonoBehaviour
       //
       if (_swordRunLerper > 0.9f)
         if (savepos.magnitude < 0.03f)
-          _swordRunLerper = 0.4f;
+          _swordRunLerper = 0.7f;
     }
   }
 

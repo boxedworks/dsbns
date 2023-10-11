@@ -94,15 +94,11 @@ public class ExplosiveScript : MonoBehaviour
     // Particles
     var particles = FunctionsC.GetParticleSystem(_explosionType != ExplosionType.STUN ? FunctionsC.ParticleSystemType.EXPLOSION : FunctionsC.ParticleSystemType.EXPLOSION_STUN);
     var main = particles[0].main;
-    main.startSpeed = new ParticleSystem.MinMaxCurve(2, Mathf.Lerp(5f, 10f, (_radius / 6f)));
+    main.startSpeed = new ParticleSystem.MinMaxCurve(2, Mathf.Lerp(5f, 10f, _radius / 6f));
     main = particles[1].main;
-    main.startSpeed = new ParticleSystem.MinMaxCurve(2, Mathf.Lerp(5f, 10f, (_radius / 6f)));
+    main.startSpeed = new ParticleSystem.MinMaxCurve(2, Mathf.Lerp(5f, 10f, _radius / 6f));
     var shape = particles[2].shape;
-    shape.radius = Mathf.Lerp(1f, 3f, (_radius / 6f));
-
-    var parts = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.BULLET_COLLIDE)[0];
-    parts.transform.position = transform.position;
-    parts.Play();
+    shape.radius = Mathf.Lerp(1f, 3f, _radius / 6f);
 
     // Check for nearby ragdolls
     FunctionsC.ApplyExplosionRadius(transform.position, _radius, _explosionType, source);

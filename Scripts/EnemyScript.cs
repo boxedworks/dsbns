@@ -461,13 +461,13 @@ public class EnemyScript : MonoBehaviour
           // Only attack if is alive, the target is alive, and (the target is in front, or has a machine gun, or has a melee weapon)
           if (!_ragdoll._dead)
           {
-            var useitem = (_leftweaponuse ? _ragdoll._ItemL : (_ragdoll._ItemR != null ? _ragdoll._ItemR : _ragdoll._ItemL));
+            var useItem = _leftweaponuse ? _ragdoll._ItemL : (_ragdoll._ItemR != null ? _ragdoll._ItemR : _ragdoll._ItemL);
 
             // Check for reload
-            if (_ragdoll.HasGun() && useitem.NeedsReload())
+            if (_ragdoll.HasGun() && useItem.NeedsReload())
             {
               _ragdoll.Reload();
-              _attackTime = Time.time + (0.5f + Random.value * 0.5f);
+              SetAttackTime(true);
             }
 
             // Attack if close enough or pointed at target
@@ -475,9 +475,9 @@ public class EnemyScript : MonoBehaviour
             {
               UseItem(true);
               if (HasMachineGun())
-                _attackTime = Time.time + useitem.UseRate();
+                _attackTime = Time.time + useItem.UseRate();
               else
-                _attackTime = Time.time + (0.2f + Random.value * (_ragdoll.HasSilencedWeapon() || _itemLeft == GameScript.ItemManager.Items.REVOLVER ? 0.1f : 0.5f));
+                _attackTime = Time.time + (/*0.2f + Random.value */ (_ragdoll.HasSilencedWeapon() || _itemLeft == GameScript.ItemManager.Items.REVOLVER ? 0.25f : 0.55f));
             }
           }
         }
@@ -814,26 +814,28 @@ public class EnemyScript : MonoBehaviour
                   // Only attack if is alive, the target is alive, and (the target is in front, or has a machine gun, or has a melee weapon)
                   if (!_ragdoll._dead && !_ragdollTarget._dead && (_targetDirectlyInFront || HasMachineGun() || !_ragdoll.HasGun()))
                   {
-                    var useitem = (_leftweaponuse ? _ragdoll._ItemL : (_ragdoll._ItemR != null ? _ragdoll._ItemR : _ragdoll._ItemL));
+                    var useitem = _leftweaponuse ? _ragdoll._ItemL : (_ragdoll._ItemR != null ? _ragdoll._ItemR : _ragdoll._ItemL);
 
                     // Check for reload
                     if (_ragdoll.HasGun() && useitem.NeedsReload())
                     {
                       _ragdoll.Reload();
-                      _attackTime = Time.time + (0.5f + Random.value * 0.5f);
+                      SetAttackTime(true);
                     }
 
                     // Attack if close enough or pointed at target
                     else if (
                       _ragdoll.HasGun() ||
-                      (!_ragdoll.HasGun() && dis < (_itemLeft == GameScript.ItemManager.Items.GRENADE_HOLD ? 1f : _itemLeft == GameScript.ItemManager.Items.BAT ? 1.2f : (_IsZombieReal ? 1.2f : 1.6f)))
+                      (!_ragdoll.HasGun() && dis < (_itemLeft == GameScript.ItemManager.Items.GRENADE_HOLD ? 1f : _itemLeft == GameScript.ItemManager.Items.BAT ? 1.2f : (_IsZombieReal ? 1.2f : 1.8f)))
                       )
                     {
                       UseItem(dis < 1.4f);
                       if (HasMachineGun())
                         _attackTime = Time.time + useitem.UseRate();
                       else
-                        _attackTime = Time.time + (0.2f + Random.value * (_ragdoll.HasSilencedWeapon() || _itemLeft == GameScript.ItemManager.Items.REVOLVER ? 0.1f : 0.5f));
+                      {
+                        _attackTime = Time.time + (/*0.2f + Random.value */ (_ragdoll.HasSilencedWeapon() || _itemLeft == GameScript.ItemManager.Items.REVOLVER ? 0.25f : 0.55f));
+                      }
                     }
                   }
                 }
@@ -1023,6 +1025,7 @@ public class EnemyScript : MonoBehaviour
     return (_enemyType == EnemyType.ROBOT);
   }
 
+  //
   bool _linkedDoorTriggered;
   public void OnGrappled()
   {
@@ -1033,6 +1036,36 @@ public class EnemyScript : MonoBehaviour
     }
   }
 
+  public void OnGrapplerRemoved()
+  {
+    _survivalAttributes = null;
+
+    // Set target to nearest player
+    var data = FunctionsC.GetClosestPlayerTo(transform.position);
+    if (data == null || data._ragdoll == null) return;
+    var closestPlayer = data._ragdoll;
+    SetRagdollTarget(closestPlayer);
+
+    SetRandomStrafe();
+    _ragdoll._rotSpeed = PlayerScript.ROTATIONSPEED * (0.8f + Random.value * 0.3f);
+    TargetFound(true, false);
+
+    SetAttackTime(true);
+  }
+
+  //
+  void SetAttackTime(bool reset = false)
+  {
+    if (_itemLeft == GameScript.ItemManager.Items.GRENADE_HOLD)
+    {
+      _attackTime = Time.time;
+      return;
+    }
+
+    _attackTime = Time.time + (0.5f + (!reset ? 0f : Random.value * 0.5f));
+  }
+
+  //
   void Move()
   {
 
@@ -1131,7 +1164,7 @@ public class EnemyScript : MonoBehaviour
 
         // Reset attack time
         else if (_time_lost > 2f)
-          _attackTime = Time.time + 0.2f;
+          SetAttackTime();
 
         // Check if target is in LOS
         bool found = false;
@@ -1433,16 +1466,21 @@ public class EnemyScript : MonoBehaviour
     // Make sure not already pursuing
     if (_state == State.PURSUIT || _state == State.PANICKED) return;
     _targetFound = true;
+
     // Stop waiting
     _waitAmount = 0f;
     _waitTimer = Time.time;
+
     // Reset lost timer
     _time_lost = 0f;
     _time_seen = 0f;
+
     // Chase!
     if (run) Run();
+
     // Set variable to move around other enemies
     SetRandomStrafe();
+
     // Check if should run away
     if (check_panic && CheckShouldPanic())
     {
@@ -1450,8 +1488,9 @@ public class EnemyScript : MonoBehaviour
       return;
     }
     ChangeState(State.PURSUIT);
+
     // Set next attack time
-    _attackTime = Time.time + 0.2f;
+    SetAttackTime();
   }
 
   public void SetRandomStrafe()
@@ -1755,21 +1794,6 @@ public class EnemyScript : MonoBehaviour
       _ragdoll._ItemL.transform.GetChild(0).GetComponent<Renderer>().enabled = false;
       _ragdoll._ItemR.transform.GetChild(0).GetComponent<Renderer>().enabled = false;
     }
-  }
-
-  public void OnGrapplerRemoved()
-  {
-    _survivalAttributes = null;
-
-    // Set target to nearest player
-    var data = FunctionsC.GetClosestPlayerTo(transform.position);
-    if (data == null || data._ragdoll == null) return;
-    var closestPlayer = data._ragdoll;
-    SetRagdollTarget(closestPlayer);
-
-    SetRandomStrafe();
-    _ragdoll._rotSpeed = PlayerScript.ROTATIONSPEED * (0.8f + Random.value * 0.3f);
-    TargetFound(true, false);
   }
 
   public static bool AllDead()

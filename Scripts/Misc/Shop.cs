@@ -188,6 +188,7 @@ public static class Shop
     ITEM_FLAMETHROWER,
     ITEM_ROCKET_FIST,
     ITEM_STICKY_GUN,
+    ITEM_CHARGE_PISTOL,
 
     ITEM_GRENADE_LAUNCHER,
 
@@ -297,9 +298,10 @@ public static class Shop
     //_Unlocks_Descriptions.Add(Unlocks.ITEM_BAT, new Tuple<string, int>("melee, two-handed, wide-sweep", 10));
     _Unlocks_Descriptions.Add(Unlocks.ITEM_SWORD, new Tuple<string, int>("melee, two-handed, wide-sweep", 25));
     _Unlocks_Descriptions.Add(Unlocks.ITEM_PISTOL_SILENCED, new Tuple<string, int>("handgun, silenced, fast-reload", 15));
-    _Unlocks_Descriptions.Add(Unlocks.ITEM_MACHINE_PISTOL, new Tuple<string, int>("handgun, 3-burst, fast-reload", 15));
-    _Unlocks_Descriptions.Add(Unlocks.ITEM_DOUBLE_PISTOL, new Tuple<string, int>("handgun, double-barrel", 15));
+    _Unlocks_Descriptions.Add(Unlocks.ITEM_MACHINE_PISTOL, new Tuple<string, int>("handgun, 3-burst, fast-reload", 10));
+    _Unlocks_Descriptions.Add(Unlocks.ITEM_DOUBLE_PISTOL, new Tuple<string, int>("handgun, double-barrel", 10));
     _Unlocks_Descriptions.Add(Unlocks.ITEM_REVOLVER, new Tuple<string, int>("handgun, powerful, slower-reload", 20));
+    _Unlocks_Descriptions.Add(Unlocks.ITEM_CHARGE_PISTOL, new Tuple<string, int>("handgun, silenced, charged", 10));
     _Unlocks_Descriptions.Add(Unlocks.ITEM_UZI, new Tuple<string, int>("gun, automatic, small-magazine", 15));
     _Unlocks_Descriptions.Add(Unlocks.ITEM_CROSSBOW, new Tuple<string, int>("bow, powerful, slow-reload", 15));
     _Unlocks_Descriptions.Add(Unlocks.ITEM_SHOTGUN_PUMP, new Tuple<string, int>("shotgun, silenced, reload", 15));
@@ -431,7 +433,7 @@ public static class Shop
     else
     {
       _Unlocks_Vault.Add("classic_0", new Unlocks[] { Unlocks.ITEM_AXE, Unlocks.UTILITY_GRENADE, Unlocks.MAX_EQUIPMENT_POINTS_2, Unlocks.LOADOUT_SLOT_X2_0 });
-      _Unlocks_Vault.Add("classic_1", new Unlocks[] { Unlocks.MOD_LASER_SIGHTS, Unlocks.MOD_NO_SLOWMO, Unlocks.UTILITY_KUNAI_EXPLOSIVE });
+      _Unlocks_Vault.Add("classic_1", new Unlocks[] { Unlocks.MOD_LASER_SIGHTS, Unlocks.MOD_NO_SLOWMO, Unlocks.UTILITY_KUNAI_EXPLOSIVE, Unlocks.ITEM_CHARGE_PISTOL });
       _Unlocks_Vault.Add("classic_2", new Unlocks[] { Unlocks.MODE_SURVIVAL, Unlocks.ITEM_RIFLE, Unlocks.ITEM_MACHINE_PISTOL, Unlocks.MAX_EQUIPMENT_POINTS_3, Unlocks.LOADOUT_SLOT_X2_1 });
       _Unlocks_Vault.Add("classic_3", new Unlocks[] { Unlocks.ITEM_DOUBLE_PISTOL, Unlocks.UTILITY_STOP_WATCH, Unlocks.UTILITY_TEMP_SHIELD, Unlocks.MOD_SPEED_UP });
       _Unlocks_Vault.Add("classic_4", new Unlocks[] { Unlocks.ITEM_AXE, Unlocks.ITEM_REVOLVER, Unlocks.UTILITY_C4, Unlocks.UTILITY_GRENADE_STUN, Unlocks.UTILITY_SHURIKEN_BIG });

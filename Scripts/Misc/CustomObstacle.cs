@@ -106,6 +106,7 @@ public class CustomObstacle : MonoBehaviour
       _BUYABLE_ITEM_TIERS[3].Add(System.Tuple.Create(GameScript.ItemManager.Items.SHOTGUN_PUMP, 150));
       _BUYABLE_ITEM_TIERS[3].Add(System.Tuple.Create(GameScript.ItemManager.Items.CROSSBOW, 85));
       _BUYABLE_ITEM_TIERS[3].Add(System.Tuple.Create(GameScript.ItemManager.Items.MACHINE_PISTOL, 75));
+      _BUYABLE_ITEM_TIERS[3].Add(System.Tuple.Create(GameScript.ItemManager.Items.CHARGE_PISTOL, 85));
 
       _BUYABLE_ITEM_TIERS.Add(4, new List<System.Tuple<GameScript.ItemManager.Items, int>>());
       _BUYABLE_ITEM_TIERS[4].Add(System.Tuple.Create(GameScript.ItemManager.Items.UZI, 160));
