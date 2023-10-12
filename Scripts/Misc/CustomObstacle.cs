@@ -111,7 +111,6 @@ public class CustomObstacle : MonoBehaviour
       _BUYABLE_ITEM_TIERS.Add(4, new List<System.Tuple<GameScript.ItemManager.Items, int>>());
       _BUYABLE_ITEM_TIERS[4].Add(System.Tuple.Create(GameScript.ItemManager.Items.UZI, 160));
       _BUYABLE_ITEM_TIERS[4].Add(System.Tuple.Create(GameScript.ItemManager.Items.REVOLVER, 250));
-      _BUYABLE_ITEM_TIERS[4].Add(System.Tuple.Create(GameScript.ItemManager.Items.GRENADE_LAUNCHER, 150));
       _BUYABLE_ITEM_TIERS[4].Add(System.Tuple.Create(GameScript.ItemManager.Items.SHOTGUN_DOUBLE, 275));
       _BUYABLE_ITEM_TIERS[4].Add(System.Tuple.Create(GameScript.ItemManager.Items.DMR, 200));
       _BUYABLE_ITEM_TIERS[4].Add(System.Tuple.Create(GameScript.ItemManager.Items.RIFLE_LEVER, 200));
@@ -158,6 +157,7 @@ public class CustomObstacle : MonoBehaviour
       _BUYABLE_UTILITY_TIERS[1].Add(System.Tuple.Create(UtilityScript.UtilityType.C4, 40));
       _BUYABLE_UTILITY_TIERS[1].Add(System.Tuple.Create(UtilityScript.UtilityType.STOP_WATCH, 40));
       _BUYABLE_UTILITY_TIERS[1].Add(System.Tuple.Create(UtilityScript.UtilityType.GRENADE_STUN, 30));
+      _BUYABLE_UTILITY_TIERS[1].Add(System.Tuple.Create(UtilityScript.UtilityType.MORTAR_STRIKE, 40));
     }
 
   }

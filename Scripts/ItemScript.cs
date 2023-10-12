@@ -9,13 +9,18 @@ public class ItemScript : MonoBehaviour
 {
   // Information about weapon holder
   public ActiveRagdoll _ragdoll;
-  ActiveRagdoll.Side _side;
+  protected ActiveRagdoll.Side _side;
+  public void SetSide(ActiveRagdoll.Side side)
+  {
+    _side = side;
+  }
 
   AudioSource _sfx0, _sfx1;
 
   public int _clipSize, _minimumClipToFire, _projectilesPerShot, _burstPerShot, _penatrationAmount;
   public bool _reloading, _melee, _twoHanded, _runWhileUse, _reloadOneAtTime, _silenced, _throwable, _dismember, _useOnRelease, _randomSpread, _chargeHold;
   public float _useTime, _reloadTime, _useRate, _downTime, _burstRate, _hit_force, _bullet_spread, _shoot_force, _shoot_forward_force;
+  float _downTimeSave;
   public FireMode _fireMode;
 
   float _upTime;
@@ -25,14 +30,13 @@ public class ItemScript : MonoBehaviour
   int _customProjectileIter;
   float _customProjectileVelocityMod;
 
-  int _last_magazineDropId;
-
   public bool _IsBulletDeflector { get { return _type == ItemType.FRYING_PAN || _type == ItemType.SWORD; } }
 
   // Custom components
   ParticleSystem[] _customParticles;
   Light[] _customLights;
 
+  //
   protected bool _disableOnRagdollDeath;
 
   public int ClipSize()
@@ -117,7 +121,7 @@ public class ItemScript : MonoBehaviour
 
   public ItemType _type;
 
-  List<int> _hitRagdolls;
+  protected List<int> _hitRagdolls;
   public bool HasHitRagdoll(ActiveRagdoll ragdoll)
   {
     return _hitRagdolls.Contains(ragdoll._Id);
@@ -309,8 +313,10 @@ public class ItemScript : MonoBehaviour
     if (_BulletPool == null)
     {
       _BulletPool = new BulletScript[30];
-      var bullets = new GameObject();
-      bullets.name = "Bullets";
+      var bullets = new GameObject
+      {
+        name = "Bullets"
+      };
       var rbs = new List<Collider>();
       for (var i = 0; i < _BulletPool.Length; i++)
       {
@@ -487,12 +493,12 @@ public class ItemScript : MonoBehaviour
           if (_type == ItemType.FRYING_PAN)
           {
             PlaySound(Audio.MELEE_HIT, 0.78f, 1.1f);
-            EnemyScript.CheckSound(_ragdoll._Hip.transform.position, EnemyScript.Loudness.SOFT);
+            EnemyScript.CheckSound(_ragdoll._Hip.position, EnemyScript.Loudness.SOFT);
           }
           else
           {
             PlaySound(Audio.MELEE_HIT);
-            EnemyScript.CheckSound(_ragdoll._Hip.transform.position, EnemyScript.Loudness.SUPERSOFT);
+            EnemyScript.CheckSound(_ragdoll._Hip.position, EnemyScript.Loudness.SUPERSOFT);
           }
 
           // If not two handed, stop checking
@@ -500,6 +506,19 @@ public class ItemScript : MonoBehaviour
             _damageAnything = false;
         }
         return;
+      }
+
+      //
+      void PlayBulletFX()
+      {
+        // Barrel smoke fx
+        var ps_gunsmoke = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.GUN_SMOKE);
+        foreach (var p_gunsmoke in ps_gunsmoke)
+        {
+          p_gunsmoke.transform.position = transform.position + transform.forward * (0.3f + (_type == ItemType.DMR || _type == ItemType.AK47 || _type == ItemType.M16 || _type == ItemType.RIFLE || _type == ItemType.RIFLE_LEVER || _type == ItemType.ROCKET_LAUNCHER || _type == ItemType.SHOTGUN_BURST || _type == ItemType.GRENADE_LAUNCHER || _type == ItemType.SHOTGUN_PUMP ? 0.35f : 0f));
+          p_gunsmoke.transform.LookAt(transform.position + transform.forward);
+          p_gunsmoke.Play();
+        }
       }
 
       // Shoot bullet(s)
@@ -559,13 +578,32 @@ public class ItemScript : MonoBehaviour
           bullet.SetSize(use_size);
           bullet.Reset(this, new_position);
 
+          // Laser
+          var bulletSpeedMod = 1f;
+          if (_type == ItemType.CHARGE_PISTOL)
+          {
+            bullet.SetColor(new Color(1f, 0.5f, 0.5f), Color.red);
+            bullet.SetLifetime(0.04f);
+            bullet.SetNoise(0.1f, 0.1f);
+            bulletSpeedMod = 1.25f;
+          }
+
+          // Normal bullet
+          else
+          {
+            bullet.SetColor(new Color(1f, 0.9f, 0f), new Color(1f, 0.07f, 0f));
+            bullet.SetLifetime(0.05f);
+            bullet.SetNoise(0.25f, 0.5f);
+          }
+
           // Physics
           rb = bullet._rb;
 
           rb.velocity = Vector3.zero;
           rb.transform.position = new_position;
           var f = MathC.Get2DVector(transform.forward).normalized;
-          var speedMod = 0.5f * (_type == ItemType.FLAMETHROWER ? 1f : (use_penatrationAmount > 0 ? 1.35f : 1f)) + (i == 0 ? 0f : (UnityEngine.Random.value * 0.15f) - (0.075f));
+          var speedMod = 0.5f * (_type == ItemType.FLAMETHROWER ? 1f : (use_penatrationAmount > 0 ? 1.35f : 1f)) + (i == 0 ? 0f : (UnityEngine.Random.value * 0.15f) - 0.075f);
+          speedMod *= bulletSpeedMod;
           var addforce = Vector3.zero;
           if (_projectilesPerShot > 1)
           {
@@ -593,14 +631,7 @@ public class ItemScript : MonoBehaviour
             bullet_casing.Emit(p, 1);
             SfxManager.PlayAudioSourceSimple(transform.position, "Ragdoll/Bullet_Casing", 0.8f, 1.2f);
 
-            // Barrel smoke fx
-            var ps_gunsmoke = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.GUN_SMOKE);
-            foreach (var p_gunsmoke in ps_gunsmoke)
-            {
-              p_gunsmoke.transform.position = transform.position + transform.forward * (0.3f + (_type == ItemType.DMR || _type == ItemType.AK47 || _type == ItemType.M16 || _type == ItemType.RIFLE || _type == ItemType.RIFLE_LEVER || _type == ItemType.ROCKET_LAUNCHER || _type == ItemType.SHOTGUN_BURST || _type == ItemType.GRENADE_LAUNCHER || _type == ItemType.SHOTGUN_PUMP ? 0.35f : 0f));
-              p_gunsmoke.transform.LookAt(transform.position + transform.forward);
-              p_gunsmoke.Play();
-            }
+            PlayBulletFX();
           }
         }
 
@@ -616,6 +647,7 @@ public class ItemScript : MonoBehaviour
           var new_position = new Vector3(spawn_pos.x, _ragdoll._spine.transform.position.y, spawn_pos.z);
           var forward = MathC.Get2DVector(transform.forward).normalized;
 
+          //
           var utility = _customProjectiles[_customProjectileIter++];
           utility._side = _side;
           utility._ragdoll = _ragdoll;
@@ -938,12 +970,14 @@ public class ItemScript : MonoBehaviour
       //
       _onUse?.Invoke();
       _useTime = _time;
+
       if (_melee)
       {
         // Update UI
         _swang = true;
         _ragdoll._PlayerScript?._Profile.ItemUse(_side);
       }
+
       // Play sound
       //if(_customProjetile != UtilityScript.UtilityType.NONE) playSound = false;
       if (playSound)
@@ -951,11 +985,11 @@ public class ItemScript : MonoBehaviour
         PlaySound(Audio.GUN_SHOOT);
         if (IsGun())
         {
-          EnemyScript.CheckSound(_ragdoll._Hip.transform.position, _silenced ? EnemyScript.Loudness.SUPERSOFT : EnemyScript.Loudness.NORMAL);
+          EnemyScript.CheckSound(_ragdoll._Hip.position, _silenced ? EnemyScript.Loudness.SUPERSOFT : EnemyScript.Loudness.NORMAL);
         }
         else
         {
-          EnemyScript.CheckSound(_ragdoll._Hip.transform.position, EnemyScript.Loudness.SUPERSOFT);
+          EnemyScript.CheckSound(_ragdoll._Hip.position, EnemyScript.Loudness.SUPERSOFT);
         }
       }
     }
@@ -1043,7 +1077,6 @@ public class ItemScript : MonoBehaviour
             Debug.Log($"mis-use time: {Time.time - _useTime}");
         }
       }
-
     }
 
     _triggerDown_last = _triggerDown;
@@ -1153,7 +1186,7 @@ public class ItemScript : MonoBehaviour
     transform.localScale = new Vector3(1f, 1f, 1f);
 
     // Set rotation
-    Vector3 dir = _ragdoll._Hip.transform.forward;
+    var dir = _ragdoll._Hip.transform.forward;
     dir.y = 0f;
     transform.forward = dir;
     //transform.Rotate(new Vector3(0f, 1f, 0f) * (side == ActiveRagdoll.Side.LEFT ? -2f : 2.25f));
@@ -1281,8 +1314,7 @@ public class ItemScript : MonoBehaviour
   }
 
   //
-  float _downTimeSave;
-  public void UseDown()
+  public virtual void UseDown()
   {
     //_ragdoll._playerScript?.ResetLoadout();
     //if (this == null) return;
@@ -1337,14 +1369,14 @@ public class ItemScript : MonoBehaviour
   void PlayEmpty()
   {
     PlaySound(Audio.GUN_EMPTY);
-    EnemyScript.CheckSound(_ragdoll._Hip.transform.position, EnemyScript.Loudness.SUPERSOFT);
+    EnemyScript.CheckSound(_ragdoll._Hip.position, EnemyScript.Loudness.SUPERSOFT);
     _triggerDown = false;
   }
 
   public void PlayBulletHit()
   {
     PlaySound(Audio.MELEE_HIT_BULLET, 0.8f, 1.2f);
-    EnemyScript.CheckSound(_ragdoll._Hip.transform.position, EnemyScript.Loudness.SOFT);
+    EnemyScript.CheckSound(_ragdoll._Hip.position, EnemyScript.Loudness.SOFT);
   }
 
   // Reload function
@@ -1360,7 +1392,7 @@ public class ItemScript : MonoBehaviour
 
     // Play noise and set clip
     PlaySound(Audio.GUN_RELOAD, reload_speed_mod - 0.1f, reload_speed_mod + 0.1f);
-    if (_ragdoll._isPlayer) EnemyScript.CheckSound(_ragdoll._Hip.transform.position, EnemyScript.Loudness.SUPERSOFT);
+    if (_ragdoll._isPlayer) EnemyScript.CheckSound(_ragdoll._Hip.position, EnemyScript.Loudness.SUPERSOFT);
     _clip = _reloadOneAtTime ? _clip + 1 : ClipSize();
 
     // Check special
@@ -1375,8 +1407,6 @@ public class ItemScript : MonoBehaviour
       {
         _reloading = false;
         if (!IsChargeWeapon()) _ragdoll._PlayerScript?._Profile.ItemReload(_side, _reloadOneAtTime);
-
-        _downTime = _triggerDown ? 0.01f : 0f;
       },
       (ProgressBar.instance instance) =>
       {
@@ -1424,6 +1454,7 @@ public class ItemScript : MonoBehaviour
   public bool CanReload()
   {
     if (_melee && !IsChargeWeapon()) return false;
+    if (!_melee && _useOnRelease && !IsChargeWeapon() && _triggerDownReal) return false;
     return _clip < ClipSize() && ((_time >= _useTime + (UseRate() * 0.6f)) || (_bursts > 0 && _fireMode == FireMode.BURST && _time >= _useTime + _burstRate * 0.3f)) && !_used && !_reloading;
   }
   public bool NeedsReload()
@@ -1570,7 +1601,8 @@ public class ItemScript : MonoBehaviour
       forward + -add
     );
     var hit = false;
-    var maxDistance = 0.5f * (_canMeleePenatrate ? 1.3f : 1f) * (_ragdoll._isPlayer ? 1f : _canMeleePenatrate ? 0.75f : 0.65f);
+    var canMeleePenatrate = _canMeleePenatrate && (_ragdoll._EnemyScript?._IsZombieReal ?? true);
+    var maxDistance = 0.6f * (canMeleePenatrate ? 1.3f : 1f) * (_ragdoll._isPlayer ? 1f : canMeleePenatrate ? 0.75f : 0.65f);
     if (Physics.SphereCast(ray, 0.4f, out raycastInfo._raycastHit, maxDistance, GameResources._Layermask_Ragdoll))
     {
       raycastInfo._ragdoll = ActiveRagdoll.GetRagdoll(raycastInfo._raycastHit.collider.gameObject);
@@ -1579,8 +1611,11 @@ public class ItemScript : MonoBehaviour
       raycastInfo._hitPoint = raycastInfo._raycastHit.point;
     }
 
+    //
     _ragdoll.ToggleRaycasting(true);
     _ragdoll._grappler?.ToggleRaycasting(true);
+
+    //
     return hit;
   }
 

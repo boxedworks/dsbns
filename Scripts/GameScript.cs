@@ -2566,6 +2566,10 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
             t.localPosition += new Vector3(-0.21f, 0.05f, 0f);
             t.localScale = new Vector3(0.11f, 0.11f, 0.11f);
             break;
+          case ("MORTAR_STRIKE"):
+            t.localPosition += new Vector3(-0.15f, 0.05f, 0f);
+            t.localScale = new Vector3(0.09f, 0.09f, 0.09f);
+            break;
           case ("SNIPER"):
             t.localPosition += new Vector3(-0.14f, 0.03f, 0f);
             t.localScale = new Vector3(0.09f, 0.11f, 0.08f);
@@ -3100,6 +3104,8 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
 
         case UtilityScript.UtilityType.GRENADE_STUN:
           return 1;
+        case UtilityScript.UtilityType.MORTAR_STRIKE:
+          return 3;
       }
       return 100;
     }

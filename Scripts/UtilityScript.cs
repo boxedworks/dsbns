@@ -23,10 +23,10 @@ public class UtilityScript : ItemScript
     GRENADE_STUN,
 
     STICKY_GUN_BULLET,
+    MORTAR_STRIKE,
   }
 
   public UtilityType _utility_type;
-  public ActiveRagdoll.Side _side;
 
   Rigidbody _rb;
   Collider _c;
@@ -45,8 +45,6 @@ public class UtilityScript : ItemScript
   float _throwSpeed,
     _expirationTimer;
 
-  List<int> _hitRagdolls;
-
   int _customProjectileId;
   public void RegisterCustomProjectile(ItemScript source)
   {
@@ -64,6 +62,11 @@ public class UtilityScript : ItemScript
     }
   }
 
+  //
+  Transform _mortarAim;
+  AudioSource _mortarAudioSource;
+
+  //
   public static void Detonate_UtilitiesById(ItemScript source, UtilityType utilityType, int count = -1)
   {
 
@@ -94,6 +97,14 @@ public class UtilityScript : ItemScript
   new void Start()
   {
     _disableOnRagdollDeath = false;
+
+    //
+    if (_utility_type == UtilityType.MORTAR_STRIKE)
+    {
+      _mortarAim = GameObject.Instantiate(GameObject.Find("ring")).transform;
+      GameObject.Destroy(_mortarAim.GetChild(1).gameObject);
+      //_mortarAim.localScale *= 0.5f;
+    }
   }
 
   MeshRenderer _ring;
@@ -168,6 +179,11 @@ public class UtilityScript : ItemScript
       case UtilityType.C4:
         explosion_radius = 3f;
         _expirationTimer = 90f;
+        break;
+
+      case UtilityType.MORTAR_STRIKE:
+        explosion_radius = 2f;
+        _throwSpeed = 0f;
         break;
 
       case UtilityType.SHURIKEN:
@@ -255,6 +271,35 @@ public class UtilityScript : ItemScript
           Throw();
           Unregister();
           break;
+
+        case UtilityType.MORTAR_STRIKE:
+
+          transform.GetChild(0).GetComponent<Renderer>().enabled = false;
+
+          _spawnLocation = _mortarAim.position;
+          _spawnLocation.y = -1.2f;
+          Throw();
+          Unregister();
+
+          Explode(2f);
+          PlaySound(Audio.UTILITY_EXTRA, 1f, 1f);
+
+          //
+          _explosion._onExplode += () =>
+          {
+            // Disable rung
+            _ring.enabled = false;
+          };
+
+          //
+          _mortarAim.position = new Vector3(0f, -100f, 0f);
+
+          _mortarAudioSource.loop = false;
+          _mortarAudioSource.Stop();
+          _mortarAudioSource = null;
+
+          break;
+
         case UtilityType.SHURIKEN:
           // Add kill on impact event
           _onCollisionEnter += (Collision c) =>
@@ -623,6 +668,8 @@ public class UtilityScript : ItemScript
 
     _onUpdate = () =>
     {
+
+      //
       if (_thrown)
       {
         _thrownTimer += Time.deltaTime;
@@ -638,6 +685,18 @@ public class UtilityScript : ItemScript
         }
       }
 
+      // Mortar aimer
+      if (_utility_type == UtilityType.MORTAR_STRIKE && _mortarAim != null)
+        if (_triggerDown)
+        {
+          var desiredPos = _ragdoll._Hip.position + MathC.Get2DVector(_ragdoll._Hip.transform.forward) * Mathf.Clamp(_downTime * 6f, 0f, 3f);
+          _mortarAim.position += (desiredPos - _mortarAim.position) * Time.deltaTime * 20f;
+
+          var scaleMod = 2f + Mathf.Sin(Time.time * 6f) * 0.1f;
+          _mortarAim.localScale = new Vector3(scaleMod, scaleMod, scaleMod);
+        }
+
+      //
       if (_ring != null)
       {
         // Show ring for cooked grenade
@@ -651,7 +710,7 @@ public class UtilityScript : ItemScript
       switch (_utility_type)
       {
         // Check for grenade cook
-        case (UtilityType.GRENADE):
+        case UtilityType.GRENADE:
           if (_downTime != 0f && !_thrown && !_explosion._triggered && !_explosion._exploded)
           {
             // Set scale
@@ -757,7 +816,8 @@ public class UtilityScript : ItemScript
       _ragdoll._spine.transform.position + forward * 0.5f + new Vector3(0f, (_explosion != null ? 0.25f : 0.1f), 0f);
 
     // Configure Rigidbody
-    _rb.isKinematic = false;
+    if (_utility_type != UtilityType.MORTAR_STRIKE)
+      _rb.isKinematic = false;
     _rb.collisionDetectionMode = CollisionDetectionMode.Continuous;
 
     // Add force
@@ -775,6 +835,24 @@ public class UtilityScript : ItemScript
     else
     {
       transform.LookAt(transform.position + forward);
+    }
+  }
+
+  //
+  public override void UseDown()
+  {
+    base.UseDown();
+
+    //
+    if (_utility_type == UtilityType.MORTAR_STRIKE && _mortarAim != null)
+    {
+      _mortarAim.position = _ragdoll._Hip.position;
+
+      if (_mortarAudioSource == null)
+      {
+        _mortarAudioSource = PlaySound(4, 1f, 1f);
+        _mortarAudioSource.loop = true;
+      }
     }
   }
 
@@ -850,7 +928,22 @@ public class UtilityScript : ItemScript
 
   private void OnDestroy()
   {
+    //
     if (_ring != null && _ring.transform.parent != null) GameObject.Destroy(_ring.transform.parent.gameObject);
+
+    //
+    if (_utility_type == UtilityType.MORTAR_STRIKE)
+    {
+      if (_mortarAim != null)
+        GameObject.Destroy(_mortarAim.gameObject);
+
+      if (_mortarAudioSource != null)
+      {
+        _mortarAudioSource.loop = false;
+        _mortarAudioSource.Stop();
+        _mortarAudioSource = null;
+      }
+    }
   }
 
   bool _stuck;

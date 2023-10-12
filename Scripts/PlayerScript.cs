@@ -309,7 +309,7 @@ public class PlayerScript : MonoBehaviour
   public void AddUtility(UtilityScript.UtilityType utility, ActiveRagdoll.Side side)
   {
     var util = UtilityScript.GetUtility(utility);
-    util._side = side;
+    util.SetSide(side);
     (side == ActiveRagdoll.Side.LEFT ? _UtilitiesLeft : _UtilitiesRight).Add(util);
     util.RegisterUtility(_ragdoll);
   }
@@ -844,7 +844,7 @@ public class PlayerScript : MonoBehaviour
 
           // Update timescale
           Time.timeScale = Mathf.Clamp(Time.timeScale + (desiredTimeScale - Time.timeScale) * unscaled_dt * 5f * speedMod, slowTime, 1f);
-          Debug.Log(Time.timeScale);
+          //Debug.Log(Time.timeScale);
           if (Time.timeScale < 0.01f)
             Time.timeScale = 0f;
           else if (Time.timeScale > 0.99f)

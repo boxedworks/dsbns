@@ -2170,15 +2170,6 @@ public class EnemyScript : MonoBehaviour
                         else
                           Settings._Classic_1_TopRated._value = true;
                       }
-
-                      // Check all times beaten
-                      if (Settings._Classic_0_TopRated._value && Settings._Classic_1_TopRated._value)
-                      {
-                        // Achievement
-#if UNITY_STANDALONE
-                        SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.TIME_BEAT_ALL);
-#endif
-                      }
                     }
                   }
                   //else
@@ -2375,6 +2366,15 @@ public class EnemyScript : MonoBehaviour
             }
           }
 
+          // Check all times beaten
+          if (Settings._Classic_0_TopRated._value && Settings._Classic_1_TopRated._value)
+          {
+            // Achievement
+#if UNITY_STANDALONE
+            SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.TIME_BEAT_ALL);
+#endif
+          }
+
           // Last killed settings
           if (last_killed && Settings._LevelEndcondition._value == 1)
           {
@@ -2537,29 +2537,26 @@ public class EnemyScript : MonoBehaviour
   }
   Loudness _lastLoudness = Loudness.SUPERSOFT;
   int lastBulletID;
-  public static EnemyScript[] CheckSound(Vector3 position, Loudness loudness, int bulletID = -1, bool setSuspicious = true)
+  public static void CheckSound(Vector3 position, Loudness loudness, int bulletID = -1, bool slowReaction = true)
   {
-    return CheckSound(position, position, loudness, bulletID, setSuspicious);
+    CheckSound(position, position, loudness, bulletID, slowReaction);
   }
   /// <summary>
   /// Noise of volume loudness is produced a position noisePosition.
   /// If an enemy is within range of noisePosition, they are suspicious at position sourcePosition
   /// </summary>
-  public static EnemyScript[] CheckSound(Vector3 noisePosition, Vector3 sourcePosition, Loudness loudness, int bulletID = -1, bool setSuspicious = true)
+  public static void CheckSound(Vector3 noisePosition, Vector3 sourcePosition, Loudness loudness, int bulletID = -1, bool slowReaction = true)
   {
-    if (_Enemies_alive == null || GameScript.IsSurvival()) return new EnemyScript[0];
+    if (_Enemies_alive == null || GameScript.IsSurvival()) return;
 
     // Decide distance
-    var minDistance = (loudness == Loudness.SUPERSOFT ? 1.5f : (loudness == Loudness.SOFT ? 3.5f : (loudness == Loudness.NORMAL ? 7f : 10f)));
+    var minDistance = loudness == Loudness.SUPERSOFT ? 1.5f : (loudness == Loudness.SOFT ? 3f : (loudness == Loudness.NORMAL ? 5f : 7.5f));
 
     // Check each enemy
-    var enemies = new List<EnemyScript>();
     foreach (var e in _Enemies_alive)
     {
       // If the ragdoll is dead continue
       if (e._ragdoll._dead || !e._reactToSound || e._IsZombie) continue;
-
-      //Debug.Log($"{e._state} .. {e._canMove} .. {MathC.Get2DDistance(noisePosition, e.transform.position)} < {minDistance} .. id:{bulletID}");
 
       // If ragdoll is chasing, continue
       if (e._state == State.PURSUIT)
@@ -2597,7 +2594,7 @@ public class EnemyScript : MonoBehaviour
       var dis = MathC.Get2DDistance(noisePosition, e.transform.position);
       if (dis < minDistance)
       {
-        if (Time.time - e._lastHeardTimer > 0.1f || EnemyScript.IsLouder(loudness, e._lastLoudness))
+        if (Time.time - e._lastHeardTimer > 0.1f || IsLouder(loudness, e._lastLoudness))
         {
           // Make sure wasn't too soon or same bullet
           if (bulletID != -1)
@@ -2609,15 +2606,14 @@ public class EnemyScript : MonoBehaviour
 
           e._lastLoudness = loudness;
           e._lastHeardTimer = Time.time;
-          if (setSuspicious)
-          {
+          if (slowReaction)
             e.Suspicious(sourcePosition, loudness);
-          }
-          enemies.Add(e);
+          else
+            e.Suspicious(sourcePosition, loudness, 0.2f * Random.value);
         }
       }
     }
-    return enemies.ToArray();
+    return;
   }
   static bool IsLouder(Loudness current, Loudness past)
   {

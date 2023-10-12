@@ -38,11 +38,11 @@ public class BulletScript : MonoBehaviour
     set { c = value; }
   }
 
-  ParticleSystem p;
-  ParticleSystem _p
+  ParticleSystem __particles;
+  ParticleSystem _particles
   {
-    get { if (p == null) p = transform.GetChild(0).GetComponent<ParticleSystem>(); return p; }
-    set { p = value; }
+    get { if (__particles == null) __particles = transform.GetChild(0).GetComponent<ParticleSystem>(); return __particles; }
+    set { __particles = value; }
   }
 
   float _startTime;
@@ -75,7 +75,7 @@ public class BulletScript : MonoBehaviour
     size.x = 1f * scale;
     _c.size = size;
     // Set particle system scale
-    var module = _p.main;
+    var module = _particles.main;
     module.startSize = 0.13f * scale;
   }
 
@@ -95,7 +95,6 @@ public class BulletScript : MonoBehaviour
     // Check max distance for special
     var dis = (_lastPos - _rb.position).magnitude;
     _distanceTraveled += dis;
-    //if (_maxDistance > 0f) Debug.Log($"{_lastPos} | {_rb.position} == {dis} | {_maxDistance}");
     if (_maxDistance > 0f && _distanceTraveled >= _maxDistance)
     {
       Hide();
@@ -107,9 +106,8 @@ public class BulletScript : MonoBehaviour
     {
       _lastPos = _rb.position;
       if (dis > 1.5f) return;
-      var loudness = (_sourceItem._silenced ? EnemyScript.Loudness.SUPERSOFT : EnemyScript.Loudness.SOFT);
-      foreach (var e in EnemyScript.CheckSound(transform.position, loudness, _id, false))
-        e.Suspicious(_sourceRagdoll._Hip.transform.position, loudness, 0.2f * Random.value);
+      var loudness = _sourceItem._silenced ? EnemyScript.Loudness.SUPERSOFT : EnemyScript.Loudness.SOFT;
+      EnemyScript.CheckSound(transform.position, loudness, _id, false);
     }
   }
 
@@ -118,11 +116,11 @@ public class BulletScript : MonoBehaviour
     return _sourceRagdoll._Id;
   }
 
-  int _penatrationAmount;
+  int _penatrationAmount, _penatrationAmountSave;
   float _initialForce;
   public void OnShot(int penatrationAmount, float force)
   {
-    _penatrationAmount = penatrationAmount;
+    _penatrationAmount = _penatrationAmountSave = penatrationAmount;
     _initialForce = force;
   }
 
@@ -166,7 +164,7 @@ public class BulletScript : MonoBehaviour
         _hitAmount += (int)damage;
         if (_hitAmount <= _penatrationAmount)
         {
-          if (_sourceRagdoll._PlayerScript?.HasPerk(Shop.Perk.PerkType.SMART_BULLETS) ?? false)
+          if ((_sourceRagdoll._PlayerScript?.HasPerk(Shop.Perk.PerkType.SMART_BULLETS) ?? false) && _sourceItem._type != GameScript.ItemManager.Items.FLAMETHROWER)
           {
             var enemy = FunctionsC.GetClosestEnemyTo(transform.position, false);
             if (enemy != null && enemy._ragdoll != null)
@@ -209,7 +207,7 @@ public class BulletScript : MonoBehaviour
           }
           if (logic)
           {
-            if ((item._ragdoll?._IsSwinging ?? false))
+            if (item._ragdoll?._IsSwinging ?? false)
             {
 
               Deflect(item, true);
@@ -229,6 +227,7 @@ public class BulletScript : MonoBehaviour
               parts.Emit(1);
 
               item._ragdoll.Recoil(-(_sourceItem.transform.position - item.transform.position).normalized, _rb.velocity.magnitude / 25f);
+              OnHideBullet();
               Hide();
             }
           }
@@ -251,6 +250,7 @@ public class BulletScript : MonoBehaviour
         if (damage_self == damage_othe)
         {
           Hide();
+          OnHideBullet();
           bullet_other.Hide();
 
           hit_bullet = true;
@@ -269,6 +269,7 @@ public class BulletScript : MonoBehaviour
         else
         {
           bullet_other._penatrationAmount -= damage_self;
+          OnHideBullet();
           Hide();
 
           hit_bullet = true;
@@ -371,9 +372,29 @@ public class BulletScript : MonoBehaviour
     }
 
     // Remove bullet
+    OnHideBullet();
     Hide();
   }
 
+  //
+  public void OnHideBullet()
+  {
+    return;
+    if (_sourceItem._type == GameScript.ItemManager.Items.CHARGE_PISTOL && _penatrationAmountSave == 1)
+    {
+
+      // Explode
+      var es = gameObject.AddComponent<ExplosiveScript>();
+      es._radius = 1.5f;
+      es.Start();
+      es.Explode(_sourceRagdoll, false, true);
+
+      GameObject.Destroy(es);
+    }
+
+  }
+
+  //
   public void PlaySparks(bool other_bullet = false)
   {
     if (other_bullet)
@@ -405,17 +426,17 @@ public class BulletScript : MonoBehaviour
     _lastPos = position;
     _triggered = false;
     _deflected = false;
-    _p.transform.parent = transform;
-    _p.transform.localPosition = new Vector3(0f, 0f, 0.5f);
+    _particles.transform.parent = transform;
+    _particles.transform.localPosition = new Vector3(0f, 0f, 0.5f);
     _lastRagdollPosition = Vector3.zero;
     _saveSmartVelocity = -1f;
 
     if (item._type != GameScript.ItemManager.Items.FLAMETHROWER && item._type != GameScript.ItemManager.Items.ROCKET_FIST)
     {
       // Delay the start of playing the system to keep particles from emitting across screen
-      if (_p != null)
+      if (_particles != null)
       {
-        _p.Play();
+        _particles.Play();
         _light.enabled = true;
       }
     }
@@ -443,23 +464,36 @@ public class BulletScript : MonoBehaviour
   public void SetColor(Color start, Color end)
   {
     var g = new Gradient();
-    var colors = _p.colorOverLifetime.color.gradient.colorKeys;
-    var alphas_original = _p.colorOverLifetime.color.gradient.alphaKeys;
+    var colors = _particles.colorOverLifetime.color.gradient.colorKeys;
+    var alphas_original = _particles.colorOverLifetime.color.gradient.alphaKeys;
     var alphas = new GradientAlphaKey[alphas_original.Length];
     System.Array.Copy(alphas_original, 0, alphas, 0, alphas_original.Length);
     g.SetKeys(new GradientColorKey[] { new GradientColorKey(start, 0f), new GradientColorKey(end, 1f) }, alphas);
 
-    var lifetime = _p.colorOverLifetime;
+    var lifetime = _particles.colorOverLifetime;
     lifetime.color = g;
 
     _light.color = start;
+  }
+
+  public void SetLifetime(float lifetime)
+  {
+    var particles = _particles.main;
+    particles.startLifetime = lifetime;
+  }
+
+  public void SetNoise(float strength, float frequency)
+  {
+    var particles = _particles.noise;
+    particles.strength = strength;
+    particles.frequency = frequency;
   }
 
   public void Hide()
   {
     _triggered = true;
     _light.enabled = false;
-    if (_p == null) return;
+    if (_particles == null) return;
     GameScript._s_Singleton.StartCoroutine(LagParticles(1f));
   }
   public static void HideAll()
@@ -473,11 +507,11 @@ public class BulletScript : MonoBehaviour
 
   IEnumerator LagParticles(float time)
   {
-    _p.transform.parent = transform.parent;
-    _p.Stop();
+    _particles.transform.parent = transform.parent;
+    _particles.Stop();
     gameObject.SetActive(false);
     yield return new WaitForSeconds(time);
-    _p.transform.parent = transform;
+    _particles.transform.parent = transform;
   }
 
   ActiveRagdoll _sourceRagdoll;

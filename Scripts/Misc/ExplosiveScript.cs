@@ -5,7 +5,7 @@ using UnityEngine;
 public class ExplosiveScript : MonoBehaviour
 {
 
-  public static List<ExplosiveScript> _Explosives;
+  public static List<ExplosiveScript> s_Explosives;
 
   public ExplosionType _explosionType;
   public float _radius;
@@ -33,8 +33,8 @@ public class ExplosiveScript : MonoBehaviour
   // Use this for initialization
   public void Start()
   {
-    if (_Explosives == null) _Explosives = new List<ExplosiveScript>();
-    _Explosives.Add(this);
+    if (s_Explosives == null) s_Explosives = new List<ExplosiveScript>();
+    s_Explosives.Add(this);
 
     _audio = GetComponent<AudioSource>();
 
@@ -75,7 +75,7 @@ public class ExplosiveScript : MonoBehaviour
 
   public void Explode(ActiveRagdoll source, bool disableGameobject = true, bool playSound = true)
   {
-    if (_Explosives == null || this == null || (disableGameobject && !transform.GetChild(0).gameObject.activeSelf)) return;
+    if (s_Explosives == null || this == null || (disableGameobject && !transform.GetChild(0).gameObject.activeSelf)) return;
 
     _onExplode?.Invoke();
 
@@ -83,7 +83,7 @@ public class ExplosiveScript : MonoBehaviour
     _exploded = true;
 
     // Remove from explosion list
-    _Explosives.Remove(this);
+    s_Explosives.Remove(this);
 
     // Show explosion scar
     FunctionsC.SpawnExplosionScar(new Vector3(transform.position.x, -1.23f, transform.position.z), _radius);
@@ -128,7 +128,7 @@ public class ExplosiveScript : MonoBehaviour
       }
 
       // Check for nearby explosives
-      foreach (var e in _Explosives)
+      foreach (var e in s_Explosives)
       {
         if (e == null) continue;
         if (e.name.Equals("Missle") || e.name.Equals("Grenade") || MathC.Get2DDistance(transform.position, e.transform.position) > _radius) continue;
@@ -164,6 +164,6 @@ public class ExplosiveScript : MonoBehaviour
 
   public static void Reset()
   {
-    _Explosives = null;
+    s_Explosives = null;
   }
 }

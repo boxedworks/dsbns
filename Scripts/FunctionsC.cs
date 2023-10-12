@@ -134,6 +134,7 @@ public static class FunctionsC
     BULLET_CASING_HOT,
     CONFUSED,
     EXPLOSION_STUN,
+    SMOKE_RING,
   }
   static int _ExplosionIter;
   public static ParticleSystem[] GetParticleSystem(ParticleSystemType particleType, int forceParticleIndex = -1)
@@ -220,6 +221,10 @@ public static class FunctionsC
       case ParticleSystemType.EXPLOSION_STUN:
         index = 24;
         hasChildren = true;
+        break;
+
+      case ParticleSystemType.SMOKE_RING:
+        index = 25;
         break;
 
     }
