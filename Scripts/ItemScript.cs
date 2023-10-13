@@ -563,14 +563,7 @@ public class ItemScript : MonoBehaviour
           }
 
           // Size
-          var use_size = use_penatrationAmount switch
-          {
-            0 => 0.9f,
-            1 => 1.1f,
-            2 => 1.5f,
-            3 => 1.9f,
-            _ => 2.3f
-          };
+          var use_size = Mathf.Clamp(0.9f + use_penatrationAmount * 0.2f, 0.9f, 2.5f);
           if (_type == ItemType.FLAMETHROWER) use_size = 2.1f;
           else if (_type == ItemType.ROCKET_FIST) use_size = 4.5f;
 

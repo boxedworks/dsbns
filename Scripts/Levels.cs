@@ -71,18 +71,20 @@ public class Levels : MonoBehaviour
           leveldata = ReadFromFile("levels_editor_local.txt");
 #endif
       }
+
       else
       {
         var loadPath = "Maps/" + _CurrentLevelCollection._name;
 
         // Check if developmental build; load from editor
-        //if (Debug.isDebugBuild && Directory.Exists("C:/Users/thoma/Desktop/Projects/Unity/PolySneak/Assets/Resources/"))
-        //  loadPath = "C:/Users/thoma/Desktop/Projects/Unity/PolySneak/Assets/Resources/" + loadPath + ".txt";
+        if (Debug.isDebugBuild && Directory.Exists("C:/Users/thoma/Desktop/Projects/Unity/PolySneak/Assets/Resources/"))
+        {
+          loadPath = "C:/Users/thoma/Desktop/Projects/Unity/PolySneak/Assets/Resources/" + loadPath + ".txt";
+          leveldata = ReadFromFile(loadPath);
+        }
 
-        // Load map data
-        leveldata = /*Debug.isDebugBuild && Directory.Exists("C:/Users/thoma/Desktop/Projects/Unity/PolySneak/Assets/Resources/") ?
-        ReadFromFile(loadPath) :*/
-          Resources.Load<TextAsset>(loadPath).text;
+        else
+          leveldata = Resources.Load<TextAsset>(loadPath).text;
       }
 
       //Debug.Log($"===== Loaded map data: \n\n{leveldata}");
@@ -223,6 +225,14 @@ public class Levels : MonoBehaviour
   }
   public static float[] GetLevelRatingTimings(float dev_time)
   {
+    if (dev_time == -1f)
+      return new float[]{
+      -1f,
+      -1f,
+      -1f,
+      -1f
+    };
+
     var medal_diamond = dev_time + 0.65f;
     return new float[]{
       medal_diamond,  // Diamond
@@ -290,8 +300,10 @@ public class Levels : MonoBehaviour
       WriteToFile("levels_editor_local.txt", _CurrentLevelCollection._levelData);
 #endif
     }
+
     else if (Debug.isDebugBuild)
     {
+
       // Save each map as a new line in file
       var write_path = "Assets/Resources/Maps/";
       var file_name = write_path + _CurrentLevelCollection._name + ".txt";

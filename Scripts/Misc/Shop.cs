@@ -117,7 +117,7 @@ public static class Shop
     {
 
 #if UNITY_EDITOR
-      return 999;
+//      return 999;
 #endif
 
       if ((Settings._Classic_0_TopRated?._value ?? false) && (Settings._Classic_1_TopRated?._value ?? false))
@@ -326,7 +326,7 @@ public static class Shop
       { Unlocks.UTILITY_SHURIKEN, new Tuple<string, int>("throwable, pick-up, small", 3) },
       { Unlocks.UTILITY_SHURIKEN_BIG, new Tuple<string, int>("throwable, pick-up, large", 25) },
       { Unlocks.UTILITY_KUNAI_EXPLOSIVE, new Tuple<string, int>("throwable, explodes, small", 15) },
-      { Unlocks.UTILITY_KUNAI_STICKY, new Tuple<string, int>("throwable, delalyed-explosion, small", 25) },
+      { Unlocks.UTILITY_KUNAI_STICKY, new Tuple<string, int>("throwable, delalyed-explosion, small", 20) },
       { Unlocks.UTILITY_GRENADE, new Tuple<string, int>("throwable, explosive, large-radius", 20) },
       { Unlocks.UTILITY_GRENADE_IMPACT, new Tuple<string, int>("throwable, contact-explosive", 20) },
       { Unlocks.UTILITY_GRENADE_STUN, new Tuple<string, int>("throwable, stun", 10) },
@@ -339,10 +339,10 @@ public static class Shop
 
       { Unlocks.MOD_LASER_SIGHTS, new Tuple<string, int>("-", 5) },
       { Unlocks.MOD_NO_SLOWMO, new Tuple<string, int>("-", 1) },
-      { Unlocks.MOD_FASTER_RELOAD, new Tuple<string, int>("-", 25) },
+      { Unlocks.MOD_FASTER_RELOAD, new Tuple<string, int>("-", 20) },
       { Unlocks.MOD_MAX_AMMO_UP, new Tuple<string, int>("-", 25) },
       { Unlocks.MOD_EXPLOSION_RESISTANCE, new Tuple<string, int>("-", 20) },
-      { Unlocks.MOD_EXPLOSIONS_UP, new Tuple<string, int>("-", 25) },
+      { Unlocks.MOD_EXPLOSIONS_UP, new Tuple<string, int>("-", 20) },
       { Unlocks.MOD_ARMOR_UP, new Tuple<string, int>("-", 0) },
       { Unlocks.MOD_PENETRATION_UP, new Tuple<string, int>("-", 0) },
       { Unlocks.MOD_SPEED_UP, new Tuple<string, int>("-", 10) },

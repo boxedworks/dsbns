@@ -1943,7 +1943,7 @@ public class EnemyScript : MonoBehaviour
       if (GameScript._GameMode == GameScript.GameModes.SURVIVAL)
       {
         if (source._isPlayer)
-          GameScript.SurvivalMode.GivePoints(source._PlayerScript._Id, 5 * (GameScript.SurvivalMode._Wave), true);
+          GameScript.SurvivalMode.GivePoints(source._PlayerScript._Id, 5 * GameScript.SurvivalMode._Wave, true);
       }
 
       else
@@ -1956,7 +1956,7 @@ public class EnemyScript : MonoBehaviour
         // Check timers
         var can_save_timers = !Settings._Extras_UsingAnyImportant;
         var level_time = TileManager._LevelTimer.ToStringTimer().ParseFloatInvariant();
-        var level_time_best = PlayerPrefs.GetFloat($"{Levels._CurrentLevelCollection_Name}_{Levels._CurrentLevelIndex}_time", -1f).ToStringTimer().ParseFloatInvariant(); ;
+        var level_time_best = PlayerPrefs.GetFloat($"{Levels._CurrentLevelCollection_Name}_{Levels._CurrentLevelIndex}_time", -1f).ToStringTimer().ParseFloatInvariant();
 
         // Give player time and awards if alive after 0.5 seconds
         IEnumerator AwardPlayer()
@@ -2041,7 +2041,7 @@ public class EnemyScript : MonoBehaviour
               var time_ = string.Format("{0}", time.ToStringTimer()).ParseFloatInvariant();
               var timeText = string.Format("{0}", time_.ToStringTimer());
 
-              TileManager._Text_LevelTimer_Best.text += string.Format(medal_format, ratings[i].Item2, ratings[i].Item1, timeText + (ratingIndex == i ? "*" : ""));
+              TileManager._Text_LevelTimer_Best.text += string.Format(medal_format, ratings[i].Item2, ratings[i].Item1, time == -1f ? "-" : timeText + (ratingIndex == i ? "*" : ""));
 
               // Show $$
               if (can_save_timers && Shop._AvailablePoints != 999 && points_awarded_table.Contains(i))
@@ -2086,10 +2086,10 @@ public class EnemyScript : MonoBehaviour
             {
 
               // Save best dev time
-              if (false && Debug.isDebugBuild)
+              if (/*false && */Debug.isDebugBuild)
               {
 
-                if (TileManager._LevelTime_Dev == -1 || level_time < TileManager._LevelTime_Dev)
+                if (TileManager._LevelTime_Dev == -1 /*|| level_time < TileManager._LevelTime_Dev*/)
                 {
                   TileManager._LevelTime_Dev = level_time;
 
@@ -2131,7 +2131,9 @@ public class EnemyScript : MonoBehaviour
                   Levels._CurrentLevelCollection._levelData[Levels._CurrentLevelIndex] = TileManager._CurrentMapData = string.Join(" ", level_data_new);
                   Levels.SaveLevels();
 
-                  //Debug.Log($"Set best dev time: {level_time}");
+                  PlayerPrefs.DeleteKey($"{Levels._CurrentLevelCollection_Name}_{Levels._CurrentLevelIndex}_time");
+
+                  Debug.Log($"Set best dev time: {level_time}");
                 }
 
               }

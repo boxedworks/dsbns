@@ -1651,17 +1651,17 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
                   }
 
                   // Reset local time
+                  PlayerPrefs.DeleteKey($"{Levels._CurrentLevelCollection_Name}_{Levels._CurrentLevelIndex}_time");
+                  Debug.Log("Reset best level time");
+                  if (Settings._DIFFICULTY == 0)
+                    Settings._Classic_0_TopRated._value = false;
                   else
-                  {
-                    PlayerPrefs.DeleteKey($"{Levels._CurrentLevelCollection_Name}_{Levels._CurrentLevelIndex}_time");
-                    Debug.Log("Reset best level time");
-                    if (Settings._DIFFICULTY == 0)
-                      Settings._Classic_0_TopRated._value = false;
-                    else
-                      Settings._Classic_1_TopRated._value = false;
+                    Settings._Classic_1_TopRated._value = false;
 
-                    Levels.BufferLevelTimeDatas();
-                  }
+                  Levels.BufferLevelTimeDatas();
+
+                  // Reload map
+                  ReloadMap(false, true);
                 }
               }
             }
@@ -1799,6 +1799,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     // Check last reload time
     if (checkReloadtime && Time.time - _LastReloadTime < 0.3f) return false;
     _LastReloadTime = Time.time;
+
     // Reload the map
     TileManager.ReloadMap();
     return true;
@@ -3442,11 +3443,10 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       {
         if (Settings._DifficultyUnlocked == 0)
         {
-          Settings._DIFFICULTY = 1;
-          Levels._CurrentLevelCollectionIndex = 1;
           Menu2._SaveMenuDir = -1;
           Settings._DifficultyUnlocked = 1;
           Shop.s_UnlockString += $"- new difficulty unlocked: <color=cyan>sneakier</color>\n";
+          Menu2.s_SetNextDifficultyOnMenu = true;
 
           // Achievement
 #if UNITY_STANDALONE

@@ -328,7 +328,7 @@ public static class Settings
     }
   }
 
-  public static float _VERSION = 1.32f;
+  public static float _VERSION = 1.4f;
 
   // Struct holding info what item pair gets unlocked at what level
   public class WeaponPair

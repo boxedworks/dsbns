@@ -478,7 +478,7 @@ public class PlayerScript : MonoBehaviour
       for (var i = medal_times.Length - 1; i >= 0; i--)
       {
         var time_ = medal_times[i].ToStringTimer().ParseFloatInvariant();
-        TileManager._Text_LevelTimer_Best.text += string.Format(medal_format, ratings[i].Item2, ratings[i].Item1, time_.ToStringTimer() + (medal_index == i ? "*" : ""));
+        TileManager._Text_LevelTimer_Best.text += string.Format(medal_format, ratings[i].Item2, ratings[i].Item1, medal_times[i] == -1f ? "-" : time_.ToStringTimer() + (medal_index == i ? "*" : ""));
       }
     }
 
@@ -504,7 +504,7 @@ public class PlayerScript : MonoBehaviour
         if (GameScript._GameMode == GameScript.GameModes.CLASSIC)
         {
 
-          if (!PlayerScript.HasExit())
+          if (!HasExit())
           {
 
             var minDist = 5f;
@@ -823,7 +823,16 @@ public class PlayerScript : MonoBehaviour
               if (p._ragdoll._dead || HasPerk(Shop.Perk.PerkType.NO_SLOWMO)) continue;
               foreach (var bullet in ItemScript._BulletPool)
               {
-                if (!bullet.gameObject.activeSelf || bullet.GetRagdollID() == p._ragdoll._Id) continue;
+
+                if (!bullet.gameObject.activeSelf) continue;
+
+                var bulletSourceId = bullet.GetRagdollID();
+                if (
+                  bulletSourceId == p._ragdoll._Id ||
+                  bulletSourceId == (p._ragdoll._grapplee?._Id ?? -1)
+                )
+                  continue;
+
                 if (MathC.Get2DDistance(p._ragdoll._Hip.position, bullet.transform.position) < minDist)
                 {
                   //_SlowmoTimer = Mathf.Clamp(_SlowmoTimer + 1f, 0f, 2f);

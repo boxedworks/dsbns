@@ -57,6 +57,8 @@ public class Menu2
 
   static int _SaveIndex;
 
+  public static bool s_SetNextDifficultyOnMenu;
+
   // Static container for all menus
   static Dictionary<MenuType, Menu2> _Menus;
   // Static iters for menu
@@ -3474,6 +3476,15 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
           string.Format($"<color={_COLOR_GRAY}>{format_subdirs}</color>", "levels", "highest wave", "") + "\n\n"
         );
 
+      // Load difficulty special
+      if (s_SetNextDifficultyOnMenu)
+      {
+        s_SetNextDifficultyOnMenu = false;
+
+        Settings._DIFFICULTY = 1;
+        Levels._CurrentLevelCollectionIndex = 1;
+      }
+
       // Load level times
       m._onSwitchTo += () =>
       {
@@ -6053,8 +6064,8 @@ go to the <color=yellow>SHOP</color> to buy something~1
         // Set dropdown data
         var selections = new List<string>();
         var actions = new List<System.Action<MenuComponent>>();
-        var selection_match = $"{selection} -";
-        selections.Add("type    - menus are typed out like using a keyboard [DEFAULT]");
+        var selection_match = $"{selection} ";
+        selections.Add("typed   - menus are typed out like using a keyboard [DEFAULT]");
         actions.Add((MenuComponent component0) =>
         {
           Settings._Option_FastText._value = false;
@@ -6076,13 +6087,16 @@ go to the <color=yellow>SHOP</color> to buy something~1
     .AddComponent("show tips\n\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
       .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
       {
+
         // Set display text
-        var selection = Settings._ShowTips ? "on" : "off";
+        var selection = Settings._ShowTips ? "on " : "off";
         component.SetDisplayText(string.Format(format_options, "show tips:", selection) + "\n");
+
         // Set dropdown data
         var selections = new List<string>();
         var actions = new List<System.Action<MenuComponent>>();
-        var selection_match = $"{selection} -";
+        var selection_match = $"{selection} ";
+
         selections.Add("on  - show game tips in some of the menus [DEFAULT]");
         actions.Add((MenuComponent component0) =>
         {
@@ -6090,6 +6104,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
           _CanRender = false;
           RenderMenu();
         });
+
         selections.Add("off - do not display tips in menus");
         actions.Add((MenuComponent component0) =>
         {
@@ -6097,6 +6112,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
           _CanRender = false;
           RenderMenu();
         });
+
         // Update dropdown data
         component.SetDropdownData("show tips\n\n", selections, actions, selection_match);
       })
@@ -6533,7 +6549,7 @@ a gampad if plugged in.~1
         // Set dropdown data
         var selections = new List<string>();
         var actions = new List<System.Action<MenuComponent>>();
-        var selection_match = $"{selection} -";
+        var selection_match = $"{selection} ";
         selections.Add("on  - controllers will vibrate when you die [DEFAULT]");
         actions.Add((MenuComponent component0) =>
         {
@@ -6636,8 +6652,8 @@ a gampad if plugged in.~1
         // Set dropdown data
         var selections = new List<string>();
         var actions = new List<System.Action<MenuComponent>>();
-        var selection_match = $"{selection} -";
-        selections.Add("both -        - press the reload button to reload weapons at the same time [DEFAULT]");
+        var selection_match = $"{selection} ";
+        selections.Add("both          - press the reload button to reload weapons at the same time [DEFAULT]");
         actions.Add((MenuComponent component0) =>
         {
           GameScript.PlayerProfile.s_CurrentSettingsProfile._reloadSidesSameTime = true;
@@ -6660,8 +6676,8 @@ a gampad if plugged in.~1
         // Set dropdown data
         var selections = new List<string>();
         var actions = new List<System.Action<MenuComponent>>();
-        var selection_match = $"{selection} -";
-        selections.Add("on - face the direction you are moving if not aiming [DEFAULT]");
+        var selection_match = $"{selection} ";
+        selections.Add("on  - face the direction you are moving if not aiming [DEFAULT]");
         actions.Add((MenuComponent component0) =>
         {
           GameScript.PlayerProfile.s_CurrentSettingsProfile._faceMovement = true;
@@ -7575,6 +7591,7 @@ about extras</color>
     _Menus[MenuType.PAUSE]._selectionIndex = 0;
     if (Shop.s_UnlockString != string.Empty)
     {
+      // Show unlock menu
       Shop.ShowUnlocks(afterUnlockMenu);
       CommonEvents._SwitchMenu(MenuType.GENERIC_MENU);
       PlayNoise(Noise.PURCHASE);
