@@ -139,9 +139,11 @@ public class Levels : MonoBehaviour
 
     if (_Ranks_Lowest == null)
     {
-      _Ranks_Lowest = new Dictionary<int, string>();
-      _Ranks_Lowest.Add(0, "****");
-      _Ranks_Lowest.Add(1, "****");
+      _Ranks_Lowest = new Dictionary<int, string>
+      {
+        { 0, "****" },
+        { 1, "****" }
+      };
     }
 
     // Loop through level collections

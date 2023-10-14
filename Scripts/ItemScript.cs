@@ -46,13 +46,13 @@ public class ItemScript : MonoBehaviour
     var clip_size = _clipSize;
 
     // Check perk
-    if (_ragdoll != null && _ragdoll._isPlayer && _ragdoll._PlayerScript.HasPerk(Shop.Perk.PerkType.MAX_AMMO_UP))
+    if (_ragdoll != null && _ragdoll._IsPlayer && _ragdoll._PlayerScript.HasPerk(Shop.Perk.PerkType.MAX_AMMO_UP))
       clip_size = Mathf.CeilToInt(_clipSize * 1.5f);
 
     // Check extra
     if (Settings._Extras_CanUse)
     {
-      if (_ragdoll?._isPlayer ?? false)
+      if (_ragdoll?._IsPlayer ?? false)
         switch (Settings._Extra_PlayerAmmo._value)
         {
           case 1:
@@ -68,12 +68,12 @@ public class ItemScript : MonoBehaviour
   }
   public float UseRate()
   {
-    if (!_melee && _ragdoll != null && _ragdoll._isPlayer && Shop.Perk.HasPerk(_ragdoll._PlayerScript._Id, Shop.Perk.PerkType.FIRE_RATE_UP))
+    if (!_melee && _ragdoll != null && _ragdoll._IsPlayer && Shop.Perk.HasPerk(_ragdoll._PlayerScript._Id, Shop.Perk.PerkType.FIRE_RATE_UP))
       return _useRate * 0.5f;
     return _useRate;
   }
 
-  bool _isZombie { get { return !_ragdoll._isPlayer && _ragdoll._EnemyScript._IsZombieReal; } }
+  bool _isZombie { get { return !_ragdoll._IsPlayer && _ragdoll._EnemyScript._IsZombieReal; } }
   bool _canMeleePenatrate { get { return _twoHanded || (_type == ItemType.AXE && !_isZombie) || _type == ItemType.ROCKET_FIST; } }
 
   float _time { get { return /*_ragdoll._isPlayer_twoHanded ? Time.unscaledTime : */Time.time; } }
@@ -105,7 +105,7 @@ public class ItemScript : MonoBehaviour
   // Check for perk
   public int GetPenatrationAmount()
   {
-    if (_ragdoll._isPlayer && Shop.Perk.HasPerk(_ragdoll._PlayerScript._Id, Shop.Perk.PerkType.PENETRATION_UP))
+    if (_ragdoll._IsPlayer && Shop.Perk.HasPerk(_ragdoll._PlayerScript._Id, Shop.Perk.PerkType.PENETRATION_UP))
       return _penatrationAmount + 1;
     return _penatrationAmount;
   }
@@ -240,7 +240,7 @@ public class ItemScript : MonoBehaviour
   //
   public void SetHitOverride()
   {
-    if (!_ragdoll._isPlayer) return;
+    if (!_ragdoll._IsPlayer) return;
     _hitAnthingOverride = true;
   }
 
@@ -346,7 +346,7 @@ public class ItemScript : MonoBehaviour
         IEnumerator DelayedExplode()
         {
           yield return new WaitForSeconds(0.2f);
-          if (!_ragdoll._dead)
+          if (!_ragdoll._IsDead)
             transform.GetChild(0).GetComponent<ExplosiveScript>().Trigger(_ragdoll, 0f);
         }
         StartCoroutine(DelayedExplode());
@@ -403,11 +403,14 @@ public class ItemScript : MonoBehaviour
           // Check graplee
           if (_ragdoll._grapplee == raycastInfo._ragdoll) return;
 
+          // Check zombie invisible 2nd weapon
+          if (_isZombie && _side == ActiveRagdoll.Side.RIGHT) return;
+
           // If is enemy, and isn't two handed, don't kill friendlies
-          if (!_ragdoll._isPlayer && !_canMeleePenatrate && !raycastInfo._ragdoll._isPlayer && !raycastInfo._ragdoll._grappled && !_ragdoll._grappled) return;
+          if (!_ragdoll._IsPlayer && !_canMeleePenatrate && !raycastInfo._ragdoll._IsPlayer && !raycastInfo._ragdoll._grappled && !_ragdoll._grappled) return;
 
           // If is player v player, is two handed, and hit enemy before, dont hit
-          if (_ragdoll._isPlayer && raycastInfo._ragdoll._isPlayer && _canMeleePenatrate && _hasHitEnemy) return;
+          if (_ragdoll._IsPlayer && raycastInfo._ragdoll._IsPlayer && _canMeleePenatrate && _hasHitEnemy) return;
 
           // If both are swinging, bounce back both and ignore
           if (_ragdoll._IsSwinging && raycastInfo._ragdoll._IsSwinging)
@@ -419,7 +422,7 @@ public class ItemScript : MonoBehaviour
             }
 
             // Zombie
-            else if (!raycastInfo._ragdoll._isPlayer && raycastInfo._ragdoll._EnemyScript._IsZombieReal)
+            else if (!raycastInfo._ragdoll._IsPlayer && raycastInfo._ragdoll._EnemyScript._IsZombieReal)
             {
             }
 
@@ -456,16 +459,13 @@ public class ItemScript : MonoBehaviour
           if (_twoHanded)
             _hitAnthing = true;
 
-          if (!_hasHitEnemy && !raycastInfo._ragdoll._isPlayer) _hasHitEnemy = true;
+          if (!_hasHitEnemy && !raycastInfo._ragdoll._IsPlayer) _hasHitEnemy = true;
 
           //
           if (_damageAnything) return;
 
           // Record ragdoll id to stop multiple hits
           _hitRagdolls.Add(raycastInfo._ragdoll._Id);
-
-          //
-          if (_isZombie && _side == ActiveRagdoll.Side.RIGHT) return;
 
           // Damage
           _damageAnything = true;
@@ -484,7 +484,7 @@ public class ItemScript : MonoBehaviour
                SpawnBlood = true,
                SpawnGiblets = _dismember
              });
-          if (raycastInfo._ragdoll._dead && _dismember)
+          if (raycastInfo._ragdoll._IsDead && _dismember)
           {
             raycastInfo._ragdoll.DismemberRandomTimes(force, 3);
           }
@@ -676,7 +676,7 @@ public class ItemScript : MonoBehaviour
       _clip--;
 
       // Extra; infinite ammo
-      if (_ragdoll._isPlayer && Settings._Extras_CanUse && Settings._Extra_PlayerAmmo._value == 3)
+      if (_ragdoll._IsPlayer && Settings._Extras_CanUse && Settings._Extra_PlayerAmmo._value == 3)
       {
         _clip++;
       }
@@ -803,17 +803,17 @@ public class ItemScript : MonoBehaviour
     }
 
     // Check for dead
-    if (_ragdoll._dead)
+    if (_ragdoll._IsDead)
     {
       OnDestroy();
       if (_disableOnRagdollDeath) this.enabled = false;
       return;
     }
 #if UNITY_EDITOR
-    if (_ragdoll == null) return;
+    /*if (_ragdoll == null) return;
     if (IsGun())
       Debug.DrawRay(transform.position, MathC.Get2DVector(transform.forward) * 100f, Color.red);
-    Debug.DrawRay(_ragdoll._Hip.position, _ragdoll._Hip.transform.forward * 100f, Color.cyan);
+    Debug.DrawRay(_ragdoll._Hip.position, _ragdoll._Hip.transform.forward * 100f, Color.cyan);*/
 #endif
 
     // Update laser sight
@@ -946,7 +946,7 @@ public class ItemScript : MonoBehaviour
 
 #if UNITY_STANDALONE
             // Grapple achievement
-            if (_ragdoll._isPlayer)
+            if (_ragdoll._IsPlayer)
               SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.GRAPPLE_NECK);
 #endif
 
@@ -992,7 +992,7 @@ public class ItemScript : MonoBehaviour
     {
       if (CanUse() && (_time >= _useTime + _burstRate) && _bursts < _burstPerShot)
       {
-        if (!_ragdoll._isPlayer && _downTime > 0.2f || _ragdoll._isPlayer)
+        if (!_ragdoll._IsPlayer && _downTime > 0.2f || _ragdoll._IsPlayer)
         {
           Local_Use(_melee && _bursts > 0 ? false : true);
           if ((_clip == 0 && !_melee) || _bursts++ >= _burstPerShot - 1)
@@ -1062,7 +1062,7 @@ public class ItemScript : MonoBehaviour
       // Check buffer use
       else
       {
-        if (_melee && _ragdoll._isPlayer)
+        if (_melee && _ragdoll._IsPlayer)
         {
           if (Time.time - _useTime <= 0.5f)
             _bufferUse = true;
@@ -1129,7 +1129,7 @@ public class ItemScript : MonoBehaviour
     _side = side;
 
     // Check for laser sight
-    if (!_melee && _ragdoll._isPlayer && _ragdoll._PlayerScript.HasPerk(Shop.Perk.PerkType.LASER_SIGHTS))
+    if (!_melee && _ragdoll._IsPlayer && _ragdoll._PlayerScript.HasPerk(Shop.Perk.PerkType.LASER_SIGHTS))
       AddLaserSight();
 
     // Set clip and use time if applicable
@@ -1142,6 +1142,14 @@ public class ItemScript : MonoBehaviour
       if (_type == ItemType.STICKY_GUN)
         UtilityScript.ParentUtilitiesById(itemId, _ItemId, UtilityScript.UtilityType.STICKY_GUN_BULLET);
     }
+
+    /*/ Gather bullets
+    if(!_melee){
+      foreach(var bullet in _BulletPool){
+        if(!bullet.gameObject.activeSelf)continue;
+        if(bullet.)
+      }
+    }*/
 
     // Save arm rots
     _original_rot_lower = _arm_lower.localEulerAngles;
@@ -1159,7 +1167,7 @@ public class ItemScript : MonoBehaviour
       // Upper arm
       SetRotationLocal(_arm_upper, new Vector3(
         29f,
-        (_side == ActiveRagdoll.Side.LEFT ? -50f : -21f),
+        _side == ActiveRagdoll.Side.LEFT ? -50f : -21f,
         (_side == ActiveRagdoll.Side.LEFT ? 1f : -1f) * 73f
       ));
 
@@ -1322,7 +1330,7 @@ public class ItemScript : MonoBehaviour
       ResetV();
 
     // Check timer
-    if (!PlayerScript._TimerStarted && (_ragdoll?._isPlayer ?? false))
+    if (!PlayerScript._TimerStarted && (_ragdoll?._IsPlayer ?? false))
     {
       PlayerScript.StartLevelTimer();
     }
@@ -1380,12 +1388,12 @@ public class ItemScript : MonoBehaviour
 
     // Check perk
     var reload_speed_mod = 1f;
-    if (_ragdoll._isPlayer && _ragdoll._PlayerScript.HasPerk(Shop.Perk.PerkType.FASTER_RELOAD))
+    if (_ragdoll._IsPlayer && _ragdoll._PlayerScript.HasPerk(Shop.Perk.PerkType.FASTER_RELOAD))
       reload_speed_mod = 1.4f;
 
     // Play noise and set clip
     PlaySound(Audio.GUN_RELOAD, reload_speed_mod - 0.1f, reload_speed_mod + 0.1f);
-    if (_ragdoll._isPlayer) EnemyScript.CheckSound(_ragdoll._Hip.position, EnemyScript.Loudness.SUPERSOFT);
+    if (_ragdoll._IsPlayer) EnemyScript.CheckSound(_ragdoll._Hip.position, EnemyScript.Loudness.SUPERSOFT);
     _clip = _reloadOneAtTime ? _clip + 1 : ClipSize();
 
     // Check special
@@ -1403,7 +1411,7 @@ public class ItemScript : MonoBehaviour
       },
       (ProgressBar.instance instance) =>
       {
-        if (_ragdoll._dead)
+        if (_ragdoll._IsDead)
           instance._enabled = false;
 
         /*/ Drop magazine
@@ -1595,11 +1603,11 @@ public class ItemScript : MonoBehaviour
     );
     var hit = false;
     var canMeleePenatrate = _canMeleePenatrate && (_ragdoll._EnemyScript?._IsZombieReal ?? true);
-    var maxDistance = 0.6f * (canMeleePenatrate ? 1.3f : 1f) * (_ragdoll._isPlayer ? 1f : canMeleePenatrate ? 0.75f : 0.65f);
+    var maxDistance = (!_ragdoll._IsPlayer && _ragdoll._EnemyScript._IsZombieReal) ? 0.6f : 0.6f * (canMeleePenatrate ? 1.3f : 1f) * (_ragdoll._IsPlayer ? 1f : (canMeleePenatrate ? 0.75f : 0.65f));
     if (Physics.SphereCast(ray, 0.4f, out raycastInfo._raycastHit, maxDistance, GameResources._Layermask_Ragdoll))
     {
       raycastInfo._ragdoll = ActiveRagdoll.GetRagdoll(raycastInfo._raycastHit.collider.gameObject);
-      if (raycastInfo._ragdoll != null && !raycastInfo._ragdoll._dead)
+      if (raycastInfo._ragdoll != null && !raycastInfo._ragdoll._IsDead)
         hit = true;
       raycastInfo._hitPoint = raycastInfo._raycastHit.point;
     }

@@ -200,13 +200,13 @@ public class GameScript : MonoBehaviour
     {
 
       // Count number of players to spawn.. only used if trying to stay persistant or players joined?
-      foreach (var p in PlayerScript.s_Players) if (p != null && !p._ragdoll._dead) _PlayerIter++;
+      foreach (var p in PlayerScript.s_Players) if (p != null && !p._ragdoll._IsDead) _PlayerIter++;
 
       // Remove null / dead players
       for (var i = PlayerScript.s_Players.Count - 1; i >= 0; i--)
       {
         var p = PlayerScript.s_Players[i];
-        if (p == null || p._ragdoll == null || !p._ragdoll._dead)
+        if (p == null || p._ragdoll == null || !p._ragdoll._IsDead)
           PlayerScript.s_Players.RemoveAt(i);
       }
     }
@@ -531,7 +531,7 @@ public class GameScript : MonoBehaviour
         {
           //if (i >= PlayerScript._Players.Count) continue;
           var p = PlayerScript.s_Players[i];
-          if (p == null || p._ragdoll == null || p._ragdoll._dead) continue;
+          if (p == null || p._ragdoll == null || p._ragdoll._IsDead) continue;
           alive_player = p;
           break;
         }
@@ -540,13 +540,13 @@ public class GameScript : MonoBehaviour
         if (alive_player == null) return;
 
         // Count number of players to spawn.. only used if trying to stay persistant or players joined?
-        foreach (var p in PlayerScript.s_Players) if (p != null && !p._ragdoll._dead) _PlayerIter++;
+        foreach (var p in PlayerScript.s_Players) if (p != null && !p._ragdoll._IsDead) _PlayerIter++;
 
         // Remove null / dead players
         for (var i = PlayerScript.s_Players.Count - 1; i >= 0; i--)
         {
           var p = PlayerScript.s_Players[i];
-          if (p == null || p._ragdoll == null || p._ragdoll._dead)
+          if (p == null || p._ragdoll == null || p._ragdoll._IsDead)
           {
             ActiveRagdoll.s_Ragdolls.Remove(p._ragdoll);
             GameObject.Destroy(p.transform.parent.gameObject);
@@ -877,23 +877,57 @@ public class GameScript : MonoBehaviour
       var highest_wave = PlayerPrefs.GetInt($"SURVIVAL_MAP_{Levels._CurrentLevelIndex}", 0);
       PlayerPrefs.SetInt($"SURVIVAL_MAP_{Levels._CurrentLevelIndex}", _Wave);
 
-      // Unlock new map
-      if (Levels._CurrentLevelIndex == 0 && highest_wave < 11 && _Wave == 11)
+      // Check survival achievements
+      // Map 1
+      if (Levels._CurrentLevelIndex == 0)
       {
-        TogglePause();
-        Menu2.PlayNoise(Menu2.Noise.PURCHASE);
-        Menu2.GenericMenu(new string[] {
+        if (highest_wave < 11 && _Wave == 11)
+        {
+#if UNITY_STANDALONE
+          SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.SURVIVAL_MAP0_10);
+#endif
+
+          // Unlock next map
+          TogglePause();
+          Menu2.PlayNoise(Menu2.Noise.PURCHASE);
+          Menu2.GenericMenu(new string[] {
 $@"<color={Menu2._COLOR_GRAY}>new survival map unlocked</color>
 
 you survived 10 waves and have unlocked a <color=yellow>new survival map</color>!
 "
         }, "nice", Menu2.MenuType.NONE, null, true, null,
-        (Menu2.MenuComponent c) =>
+          (Menu2.MenuComponent c) =>
+          {
+            TogglePause();
+            Menu2.HideMenus();
+          });
+        }
+
+        else if (highest_wave < 21 && _Wave == 21)
         {
-          TogglePause();
-          Menu2.HideMenus();
-        });
+#if UNITY_STANDALONE
+          SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.SURVIVAL_MAP0_20);
+#endif
+        }
       }
+
+      // Map 2
+      else if (Levels._CurrentLevelIndex == 1)
+      {
+        if (highest_wave < 11 && _Wave == 11)
+        {
+#if UNITY_STANDALONE
+          SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.SURVIVAL_MAP1_10);
+#endif
+        }
+        else if (highest_wave < 21 && _Wave == 21)
+        {
+#if UNITY_STANDALONE
+          SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.SURVIVAL_MAP1_20);
+#endif
+        }
+      }
+
 
       // Set random
       CustomObstacle.Randomize();
@@ -910,7 +944,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         {
           //if (i >= PlayerScript._Players.Count) continue;
           var p = PlayerScript.s_Players[i];
-          if (p == null || p._ragdoll == null || p._ragdoll._dead) continue;
+          if (p == null || p._ragdoll == null || p._ragdoll._IsDead) continue;
           alive_player = p;
           break;
         }
@@ -919,13 +953,13 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         if (alive_player == null) return;
 
         // Count number of players to spawn.. only used if trying to stay persistant or players joined?
-        foreach (var p in PlayerScript.s_Players) if (p != null && !p._ragdoll._dead) _PlayerIter++;
+        foreach (var p in PlayerScript.s_Players) if (p != null && !p._ragdoll._IsDead) _PlayerIter++;
 
         // Remove null / dead players
         for (var i = PlayerScript.s_Players.Count - 1; i >= 0; i--)
         {
           var p = PlayerScript.s_Players[i];
-          if (p == null || p._ragdoll == null || p._ragdoll._dead)
+          if (p == null || p._ragdoll == null || p._ragdoll._IsDead)
           {
             ActiveRagdoll.s_Ragdolls.Remove(p._ragdoll);
             GameObject.Destroy(p.transform.parent.gameObject);
@@ -1048,7 +1082,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         var player = PlayerScript.s_Players[_ClosestSpawns_PlayerIter++ % PlayerScript.s_Players.Count];
         var spawn = _Spawn_Points[_ClosestSpawns_SpawnIter++ % _Spawn_Points.Count];
 
-        if (player._ragdoll != null && !player._ragdoll._dead)
+        if (player._ragdoll != null && !player._ragdoll._IsDead)
         {
           // Calculate distance
           UnityEngine.AI.NavMeshQueryFilter filter = new UnityEngine.AI.NavMeshQueryFilter();
@@ -1122,7 +1156,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
           enemy_ragdoll.ToggleRaycasting(true);
           if (hit.distance > 10f) return;
           var ragdoll = ActiveRagdoll.GetRagdoll(hit.collider.gameObject);
-          if (ragdoll == null || ragdoll._isPlayer) return;
+          if (ragdoll == null || ragdoll._IsPlayer) return;
 
           enemy_ragdoll._ForceGlobal += (enemy_ragdoll._Hip.transform.right * (enemy_next._strafeRight ? 1f : -1f)) * Time.deltaTime * 3f;
           return;
@@ -1438,6 +1472,9 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
 
     // Update enemies
     EnemyScript.UpdateEnemies();
+
+    // Update aoe effects
+    FunctionsC.AoeHandler.Update();
 
     // Update music
     FunctionsC.MusicManager.Update();
@@ -2018,7 +2055,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         // Check for alive player
         if (PlayerScript.s_Players != null)
           foreach (PlayerScript p in PlayerScript.s_Players)
-            if (p._Id == _Id && !p._ragdoll._dead) p._ragdoll.ChangeColor(GetColor());
+            if (p._Id == _Id && !p._ragdoll._IsDead) p._ragdoll.ChangeColor(GetColor());
         // Save pref
         PlayerPrefs.SetInt($"{_playerPrefsPrefix}color", playerColor);
       }
@@ -3441,17 +3478,18 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     {
       if (Settings._DIFFICULTY == 0)
       {
-        if (Settings._DifficultyUnlocked == 0)
+
+        // Achievement
+#if UNITY_STANDALONE
+        SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.DIFFICULTY_1);
+#endif
+
+        if (Settings._DifficultyUnlocked <= 0)
         {
           Menu2._SaveMenuDir = -1;
           Settings._DifficultyUnlocked = 1;
           Shop.s_UnlockString += $"- new difficulty unlocked: <color=cyan>sneakier</color>\n";
           Menu2.s_SetNextDifficultyOnMenu = true;
-
-          // Achievement
-#if UNITY_STANDALONE
-          SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.DIFFICULTY_1);
-#endif
 
           return true;
         }
@@ -3464,8 +3502,13 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.DIFFICULTY_2);
 #endif
 
-        Shop.s_UnlockString += $"- you have beaten the classic mode!\n- try out the survival mode or try\n  to unlock the optional extra settings!";
-        return true;
+        if (Settings._DifficultyUnlocked <= 1)
+        {
+          Settings._DifficultyUnlocked = 2;
+
+          Shop.s_UnlockString += $"- you have beaten the classic mode!\n- try out the survival mode or try to unlock the optional extra settings!";
+          return true;
+        }
       }
 
     }
@@ -3526,7 +3569,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         // Teleport other players to them
         foreach (var p in PlayerScript.s_Players)
         {
-          if (p == null || p._ragdoll._dead || p._Id == hasGoal._Id) continue;
+          if (p == null || p._ragdoll._IsDead || p._Id == hasGoal._Id) continue;
           p.transform.position = hasGoal.transform.position;
         }
       }

@@ -468,7 +468,8 @@ public static class Shop
       { UtilityScript.UtilityType.TEMP_SHIELD, 6 },
       { UtilityScript.UtilityType.INVISIBILITY, 6 },
       { UtilityScript.UtilityType.DASH, 6 },
-      { UtilityScript.UtilityType.STICKY_GUN_BULLET, 50 }
+      { UtilityScript.UtilityType.STICKY_GUN_BULLET, 50 },
+      { UtilityScript.UtilityType.MORTAR_STRIKE, 6 }
     };
 
     //
@@ -580,7 +581,7 @@ public static class Shop
 
   public static void ShowUnlocks(Menu2.MenuType toMenu)
   {
-    Menu2.GenericMenu(new string[] { "new unlocks\n\n", s_UnlockString }, (UnityEngine.Random.value < 0.5f ? "wow" : "nice"), toMenu);
+    Menu2.GenericMenu(new string[] { "new unlocks\n\n", s_UnlockString }, UnityEngine.Random.value < 0.5f ? "wow" : "nice", toMenu);
     s_UnlockString = "";
   }
 

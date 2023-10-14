@@ -70,7 +70,7 @@ public class EnemyScript : MonoBehaviour
 
   void ScheduleSpherecasts()
   {
-    if (_ragdoll._dead) throw new System.Exception("Ragdoll dead in ScehduleSpherecast");
+    if (_ragdoll._IsDead) throw new System.Exception("Ragdoll dead in ScehduleSpherecast");
 
     // Register to handler to index this._id
     SpherecastHandler.Register(this);
@@ -400,7 +400,7 @@ public class EnemyScript : MonoBehaviour
   // Update is called once per frame
   void Handle()
   {
-    if (_ragdoll == null || !_ragdoll._canReceiveInput) return;
+    if (_ragdoll == null || !_ragdoll._CanReceiveInput) return;
     if (!_beganPatrolling)
     {
       _ragdoll.SetActive(true);
@@ -426,7 +426,7 @@ public class EnemyScript : MonoBehaviour
     }
 
     // Update line renderer under enemy
-    if (!_ragdoll._dead)
+    if (!_ragdoll._IsDead)
     {
       _ragdoll.ToggleRaycasting(true);
 
@@ -451,7 +451,7 @@ public class EnemyScript : MonoBehaviour
     {
 
       // Check for attacking
-      if (_ragdoll._grappled && _ragdoll._grappler._isPlayer)
+      if (_ragdoll._grappled && _ragdoll._grappler._IsPlayer)
       {
         DrawBackMelee();
 
@@ -459,7 +459,7 @@ public class EnemyScript : MonoBehaviour
         {
 
           // Only attack if is alive, the target is alive, and (the target is in front, or has a machine gun, or has a melee weapon)
-          if (!_ragdoll._dead)
+          if (!_ragdoll._IsDead)
           {
             var useItem = _leftweaponuse ? _ragdoll._ItemL : (_ragdoll._ItemR != null ? _ragdoll._ItemR : _ragdoll._ItemL);
 
@@ -746,7 +746,7 @@ public class EnemyScript : MonoBehaviour
 
                     // If player has the exit, chase closer
                     float close = 3.5f, far = 10f;
-                    if (_ragdollTarget._isPlayer && _ragdollTarget._PlayerScript._HasExit)
+                    if (_ragdollTarget._IsPlayer && _ragdollTarget._PlayerScript._HasExit)
                     {
                       close = 3f;
                       far = 4f;
@@ -812,7 +812,7 @@ public class EnemyScript : MonoBehaviour
                   if (_ragdoll._grappling) { _moveSpeed *= 0.9f; }
 
                   // Only attack if is alive, the target is alive, and (the target is in front, or has a machine gun, or has a melee weapon)
-                  if (!_ragdoll._dead && !_ragdollTarget._dead && (_targetDirectlyInFront || HasMachineGun() || !_ragdoll.HasGun()))
+                  if (!_ragdoll._IsDead && !_ragdollTarget._IsDead && (_targetDirectlyInFront || HasMachineGun() || !_ragdoll.HasGun()))
                   {
                     var useitem = _leftweaponuse ? _ragdoll._ItemL : (_ragdoll._ItemR != null ? _ragdoll._ItemR : _ragdoll._ItemL);
 
@@ -1184,7 +1184,7 @@ public class EnemyScript : MonoBehaviour
               found = CheckRay(h);
           }
         }
-        if (_ragdollTarget == null || _ragdollTarget._dead)
+        if (_ragdollTarget == null || _ragdollTarget._IsDead)
         {
           _targetInLOS = false;
           _targetDirectlyInFront = false;
@@ -1317,7 +1317,7 @@ public class EnemyScript : MonoBehaviour
       // Check if should alert self
       if (!frontMagnitudeCheck || (frontMagnitudeCheck && c))
       {
-        if (_ragdollTarget._dead)
+        if (_ragdollTarget._IsDead)
         {
           SetRagdollTarget(null);
           return false;
@@ -1331,7 +1331,7 @@ public class EnemyScript : MonoBehaviour
     }
     // Check if found another enemy
     var rag = ActiveRagdoll.GetRagdoll(h.collider.gameObject);
-    if (rag != null && !rag.IsSelf(_ragdoll._Hip.gameObject) && !rag._isPlayer)
+    if (rag != null && !rag.IsSelf(_ragdoll._Hip.gameObject) && !rag._IsPlayer)
     {
       var e = rag._Controller.GetComponent<EnemyScript>();
       // Delayed absorb
@@ -1346,10 +1346,10 @@ public class EnemyScript : MonoBehaviour
         }*/
       }
       // Move around enemy
-      if (_state != State.NEUTRAL && h.distance < 10f && _canMove && !e._ragdoll._dead)
+      if (_state != State.NEUTRAL && h.distance < 10f && _canMove && !e._ragdoll._IsDead)
       {
         //rag._enemyScript.AbsorbInfo(this);
-        if (h.distance < 2f && !rag._dead)
+        if (h.distance < 2f && !rag._IsDead)
           _agent.Move((_strafeRight ? transform.right : -transform.right) * 0.6f * Time.deltaTime * _moveSpeed_lerped);
       }
     }
@@ -1388,7 +1388,7 @@ public class EnemyScript : MonoBehaviour
   void ChaseTarget(bool checkTurnaround = true)
   {
     //if (_isZombie) return;
-    if (_chasingTarget || _ragdollTarget._dead || !_canMove) return;
+    if (_chasingTarget || _ragdollTarget._IsDead || !_canMove) return;
     StartCoroutine(ChaseTargetCo(checkTurnaround));
   }
 
@@ -1537,7 +1537,7 @@ public class EnemyScript : MonoBehaviour
   IEnumerator SuspiciousCo(Vector3 source, Loudness loudness, float wait)
   {
     yield return new WaitForSeconds(wait);
-    if (!_agent.enabled || _ragdoll._dead) { }
+    if (!_agent.enabled || _ragdoll._IsDead) { }
     else
     {
       _waitAmount = 0f;
@@ -1633,7 +1633,7 @@ public class EnemyScript : MonoBehaviour
     if (PlayerScript.s_Players == null) return null;
     foreach (PlayerScript p in PlayerScript.s_Players)
     {
-      if (!p._CanDetect || p._ragdoll._dead) continue;
+      if (!p._CanDetect || p._ragdoll._IsDead) continue;
       if (p._ragdoll.IsSelf(obj)) return p._ragdoll;
     }
     return null;
@@ -1782,7 +1782,7 @@ public class EnemyScript : MonoBehaviour
       IEnumerator delay_grappler()
       {
         yield return new WaitForSeconds(0.1f);
-        if (!(_ragdoll?._dead ?? true))
+        if (!(_ragdoll?._IsDead ?? true))
           _ragdoll.AddGrappler(false);
       }
       StartCoroutine(delay_grappler());
@@ -1806,7 +1806,7 @@ public class EnemyScript : MonoBehaviour
   {
 
     // Check achievement
-    if (source != null && source._isPlayer)
+    if (source != null && source._IsPlayer)
     {
 
 #if UNITY_STANDALONE
@@ -1851,7 +1851,7 @@ public class EnemyScript : MonoBehaviour
 #if UNITY_STANDALONE
 
     // Grapple achievement
-    if (!(source?._isPlayer ?? true) && source._grappled && (source._grappler?._isPlayer ?? false))
+    if (!(source?._IsPlayer ?? true) && source._grappled && (source._grappler?._IsPlayer ?? false))
       SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.GRAPPLE_KILL);
 #endif
 
@@ -1876,13 +1876,13 @@ public class EnemyScript : MonoBehaviour
       var e = _Enemies_dead[0];
       ActiveRagdoll.s_Ragdolls.Remove(e._ragdoll);
       _Enemies_dead.Remove(e);
-      GameObject.Destroy(e.transform.parent.gameObject);
+      Destroy(e.transform.parent.gameObject);
     }
 
     // Check to see if #bodies is too much
     if (_Enemies_dead.Count > 8)
       foreach (EnemyScript e in _Enemies_dead)
-        if (e._ragdoll._dead && !e._ragdoll._disabled)
+        if (e._ragdoll._IsDead && !e._ragdoll._IsDisabled)
         {
           e._ragdoll.Disable();
           break;
@@ -1904,10 +1904,7 @@ public class EnemyScript : MonoBehaviour
       // Register equip
       if (PlayerScript.s_Players != null)
         foreach (var p in PlayerScript.s_Players)
-        {
           p?.RegisterEquipment();
-        }
-
     }
 
     // Sneaky difficulty
@@ -1924,9 +1921,7 @@ public class EnemyScript : MonoBehaviour
         (_Enemies_alive.Count == 1 && _Enemies_alive[0].IsChaser()) ||
         _Enemies_alive.Count == 0
       )
-      {
         last_killed = true;
-      }
     }
 
     // Slowmo
@@ -1942,7 +1937,7 @@ public class EnemyScript : MonoBehaviour
       // Check mode
       if (GameScript._GameMode == GameScript.GameModes.SURVIVAL)
       {
-        if (source._isPlayer)
+        if (source._IsPlayer)
           GameScript.SurvivalMode.GivePoints(source._PlayerScript._Id, 5 * GameScript.SurvivalMode._Wave, true);
       }
 
@@ -2397,7 +2392,7 @@ public class EnemyScript : MonoBehaviour
         {
           if (!PlayerScript.HasExit())
           {
-            if (source._isPlayer)
+            if (source._IsPlayer)
             {
               Powerup._Powerups[0].Activate(source);
             }
@@ -2443,7 +2438,7 @@ public class EnemyScript : MonoBehaviour
     }
 
     // Increment survival score
-    if (GameScript._GameMode == GameScript.GameModes.SURVIVAL && source._isPlayer)
+    if (GameScript._GameMode == GameScript.GameModes.SURVIVAL && source._IsPlayer)
       GameScript.SurvivalMode.IncrementScore(source._PlayerScript._Id);
   }
 
@@ -2558,7 +2553,7 @@ public class EnemyScript : MonoBehaviour
     foreach (var e in _Enemies_alive)
     {
       // If the ragdoll is dead continue
-      if (e._ragdoll._dead || !e._reactToSound || e._IsZombie) continue;
+      if (e._ragdoll._IsDead || !e._reactToSound || e._IsZombie) continue;
 
       // If ragdoll is chasing, continue
       if (e._state == State.PURSUIT)

@@ -119,7 +119,7 @@ public class Powerup : MonoBehaviour
         break;
       case (Powerup.PowerupType.END):
         remove = false;
-        if (r._isPlayer && !GameScript._s_Singleton._ExitOpen)
+        if (r._IsPlayer && !GameScript._s_Singleton._ExitOpen)
         {
           SfxManager.PlayAudioSourceSimple(r._Controller.position, "Etc/Ping");
 
@@ -183,7 +183,7 @@ public class Powerup : MonoBehaviour
 
     if (_activated)
     {
-      if (_activator == null || _activator._dead || _activator._Hip == null)
+      if (_activator == null || _activator._IsDead || _activator._Hip == null)
       {
         Destroy(gameObject);
         return;

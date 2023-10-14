@@ -19,7 +19,7 @@ public class SceneThemes : MonoBehaviour
   }
   static SceneThemes m_Instance;
 
-  public static AudioSource _footstep;
+  public static AudioSource _footstep, _footstepBloody;
 
   [SerializeField]
   public Theme[] _Themes;
@@ -86,6 +86,7 @@ public class SceneThemes : MonoBehaviour
 
     // Set footstep FX per theme
     _footstep = GameObject.Find($"Footstep_{_Theme._tile}")?.GetComponent<AudioSource>();
+    _footstepBloody = FunctionsC.GetAudioSource("Ragdoll/Footstep_blood");
     if (_footstep == null) { _footstep = GameObject.Find("Footstep").GetComponent<AudioSource>(); }
     var color = _Theme._tileColorDown * 1.5f;
     color.a = 1f;

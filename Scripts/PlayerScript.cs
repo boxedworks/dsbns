@@ -95,7 +95,7 @@ public class PlayerScript : MonoBehaviour
     var health = (GameScript.IsSurvival() ? 3 : 1);
     _ragdoll = new ActiveRagdoll(ragdollObj, transform)
     {
-      _isPlayer = true,
+      _IsPlayer = true,
       _health = health
     };
     //_ragdoll._hip.gameObject.AddComponent<RagdollTriggerScript>();
@@ -125,7 +125,7 @@ public class PlayerScript : MonoBehaviour
       {
         if (p == null) continue;
         // If self, skip
-        if (p.transform.GetInstanceID() == transform.GetInstanceID() || p._ragdoll._dead) continue;
+        if (p.transform.GetInstanceID() == transform.GetInstanceID() || p._ragdoll._IsDead) continue;
         // If has same _PlayerID, increment id and set do not break while loop
         if (p._Id == _Id)
         {
@@ -161,7 +161,7 @@ public class PlayerScript : MonoBehaviour
     // Move ring with hip
     var hippos = transform.position;
     hippos.y = -1.38f;
-    if (!_ragdoll._dead)
+    if (!_ragdoll._IsDead)
       _ring[0].transform.parent.position = hippos;
     _ring[0].transform.parent.gameObject.SetActive(true);
 
@@ -271,7 +271,7 @@ public class PlayerScript : MonoBehaviour
     // Check extra
     if (Settings._Extras_CanUse)
     {
-      if (_ragdoll?._isPlayer ?? false)
+      if (_ragdoll?._IsPlayer ?? false)
         switch (Settings._Extra_PlayerAmmo._value)
         {
           case 1:
@@ -365,7 +365,7 @@ public class PlayerScript : MonoBehaviour
   {
     foreach (var p in s_Players)
     {
-      if (p == null || p._ragdoll == null || p._ragdoll._dead) continue;
+      if (p == null || p._ragdoll == null || p._ragdoll._IsDead) continue;
       p.AddLight();
     }
   }
@@ -447,7 +447,7 @@ public class PlayerScript : MonoBehaviour
       _Id == 0 && !_level_ratings_shown && !TileManager._Level_Complete && !GameScript._Paused &&
       (
         (!_TimerStarted && Time.time - GameScript._LevelStartTime > 3f) ||
-        (_ragdoll._dead && Time.unscaledTime - _ragdoll._time_dead > 3f)
+        (_ragdoll._IsDead && Time.unscaledTime - _ragdoll._time_dead > 3f)
       )
     )
     {
@@ -487,10 +487,10 @@ public class PlayerScript : MonoBehaviour
     {
       _isauto = !_isauto;
     }
-    if (_isauto && !_ragdoll._dead && !GameScript._Paused)
+    if (_isauto && !_ragdoll._IsDead && !GameScript._Paused)
     {
       _rearrangeTime -= Time.deltaTime * (_agent.pathStatus != UnityEngine.AI.NavMeshPathStatus.PathComplete ? 10f : 1f);
-      if (_rearrangeTime <= 0f && !s_Players[0]._ragdoll._dead)
+      if (_rearrangeTime <= 0f && !s_Players[0]._ragdoll._IsDead)
       {
         var pos = s_Players[0]._ragdoll._Hip.position;
         var dis = MathC.Get2DDistance(pos, transform.position);
@@ -549,7 +549,7 @@ public class PlayerScript : MonoBehaviour
 
       if (EnemyScript._Enemies_alive != null && EnemyScript._Enemies_alive.Count > 0)
       {
-        if (_targetRagdoll == null || _targetRagdoll._dead) _lastDistance = 10000f;
+        if (_targetRagdoll == null || _targetRagdoll._IsDead) _lastDistance = 10000f;
 
         for (var i = 0; i < 10; i++)
         {
@@ -705,7 +705,7 @@ public class PlayerScript : MonoBehaviour
     if (s_Players == null || this == null) return;
 
     // Move ring with hip
-    if (!_ragdoll._dead)
+    if (!_ragdoll._IsDead)
     {
       var hippos = _ragdoll._Hip.position;
       hippos.y = -1.38f;
@@ -776,7 +776,7 @@ public class PlayerScript : MonoBehaviour
             var num = 0;
             for (var i = 0; i < s_Players.Count; i++)
             {
-              if (!s_Players[i]._ragdoll._dead)
+              if (!s_Players[i]._ragdoll._IsDead)
               {
                 num++;
                 dirs += s_Players[i]._saveInput;
@@ -801,7 +801,7 @@ public class PlayerScript : MonoBehaviour
             var has_perk = false;
             foreach (var p in s_Players)
             {
-              if (p._ragdoll._dead) continue;
+              if (p._ragdoll._IsDead) continue;
               if (p.HasPerk(Shop.Perk.PerkType.NO_SLOWMO))
               {
                 has_perk = true;
@@ -820,7 +820,7 @@ public class PlayerScript : MonoBehaviour
             foreach (var p in s_Players)
             {
               // Check if player dead
-              if (p._ragdoll._dead || HasPerk(Shop.Perk.PerkType.NO_SLOWMO)) continue;
+              if (p._ragdoll._IsDead || HasPerk(Shop.Perk.PerkType.NO_SLOWMO)) continue;
               foreach (var bullet in ItemScript._BulletPool)
               {
 
@@ -848,7 +848,7 @@ public class PlayerScript : MonoBehaviour
 
           var onealive = false;
           foreach (var player in s_Players)
-            if (player._ragdoll != null && !player._ragdoll._dead) { onealive = true; break; }
+            if (player._ragdoll != null && !player._ragdoll._IsDead) { onealive = true; break; }
           if (!onealive) desiredTimeScale = 0f;
 
           // Update timescale
@@ -899,7 +899,7 @@ public class PlayerScript : MonoBehaviour
         }
         else if (zoom == 1)
         {
-          if (map_x > 9 || map_y > 6)
+          if (map_x > 10 || map_y > 6)
             center_camera = false;
         }
         else if (zoom == 2)
@@ -962,7 +962,7 @@ public class PlayerScript : MonoBehaviour
         {
           foreach (var p in s_Players)
           {
-            if (p._ragdoll._dead && followAlive) continue;
+            if (p._ragdoll._IsDead && followAlive) continue;
             sharedPos += new Vector3(p._ragdoll._Hip.position.x, 0f, p._ragdoll._Hip.position.z);
             sharedForward += MathC.Get2DVector(p._ragdoll._Hip.transform.forward).normalized * forwardMagnitude;
             if (lastPlayer == null) lastPlayer = p;
@@ -1221,7 +1221,7 @@ public class PlayerScript : MonoBehaviour
 
       // Check grapple
       if (
-        !_ragdoll._dead &&
+        !_ragdoll._IsDead &&
         _ragdoll.HasMelee() && !_ragdoll.HasTwohandedWeapon() &&
         ControllerManager.GetMouseInput(2, ControllerManager.InputMode.UP)
         )
@@ -1230,7 +1230,7 @@ public class PlayerScript : MonoBehaviour
       }
 
       // Move arms
-      if (!_ragdoll._dead && ControllerManager.GetKey(ControllerManager.Key.SPACE, ControllerManager.InputMode.HOLD))
+      if (!_ragdoll._IsDead && ControllerManager.GetKey(ControllerManager.Key.SPACE, ControllerManager.InputMode.HOLD))
         ExtendArms();
       else
         _ragdoll.ArmsDown();
@@ -1332,7 +1332,7 @@ public class PlayerScript : MonoBehaviour
       var gamepad = ControllerManager.GetPlayerGamepad(_Id);
       if (gamepad != null)
       {
-        if (!_ragdoll._dead && gamepad.buttonSouth.isPressed)
+        if (!_ragdoll._IsDead && gamepad.buttonSouth.isPressed)
           ExtendArms();
         else
           _ragdoll.ArmsDown();
@@ -1418,7 +1418,7 @@ public class PlayerScript : MonoBehaviour
 
         // Check grapple
         if (
-          !_ragdoll._dead &&
+          !_ragdoll._IsDead &&
           _ragdoll.HasMelee() && !_ragdoll.HasTwohandedWeapon() &&
           gamepad.rightStickButton.wasPressedThisFrame
           )
@@ -1604,7 +1604,7 @@ public class PlayerScript : MonoBehaviour
 
   public void ResetLoadout()
   {
-    if (_ragdoll._dead) return;
+    if (_ragdoll._IsDead) return;
     // Check changed loadout profile
     if (_Profile._LoadoutIndex != _saveLoadoutIndex)
     {
@@ -1770,16 +1770,16 @@ public class PlayerScript : MonoBehaviour
   public void ReloadMap()
   {
     var reset = true;
-    if (GameScript.IsSurvival() && !_ragdoll._dead)
+    if (GameScript.IsSurvival() && !_ragdoll._IsDead)
     {
 
       return;
     }
     // If dead, check if all other players dead
-    if (_ragdoll._dead)
+    if (_ragdoll._IsDead)
     {
       foreach (var p in s_Players)
-        if (!p._ragdoll._dead)
+        if (!p._ragdoll._IsDead)
         {
           reset = false;
           break;
@@ -1944,7 +1944,7 @@ public class PlayerScript : MonoBehaviour
     {
       return null;
     }
-    if (s_Players.Count == 1 && s_Players[0]._ragdoll != null && !s_Players[0]._ragdoll._dead)
+    if (s_Players.Count == 1 && s_Players[0]._ragdoll != null && !s_Players[0]._ragdoll._IsDead)
     {
       return s_Players[0];
     }
@@ -1953,7 +1953,7 @@ public class PlayerScript : MonoBehaviour
     PlayerScript closest_player = null;
     foreach (var player in s_Players)
     {
-      if (player?._ragdoll._dead ?? true) continue;
+      if (player?._ragdoll._IsDead ?? true) continue;
       var distance0 = Vector2.Distance(position, new Vector2(player._ragdoll._Controller.position.x, player._ragdoll._Controller.position.z));
       if (distance0 < distance)
       {
@@ -1989,7 +1989,7 @@ public class PlayerScript : MonoBehaviour
         gamepad.SetMotorSpeeds(0.2f, 0.2f);
 
         yield return new WaitForSecondsRealtime(1f);
-        if (_ragdoll != null && _ragdoll._dead) { }
+        if (_ragdoll != null && _ragdoll._IsDead) { }
         else
           gamepad.SetMotorSpeeds(0f, 0f);
       }
@@ -2025,7 +2025,7 @@ public class PlayerScript : MonoBehaviour
     if (source != null)
     {
       SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.DIE);
-      if (source._isPlayer && source._PlayerScript != null && source._PlayerScript._Id != _Id)
+      if (source._IsPlayer && source._PlayerScript != null && source._PlayerScript._Id != _Id)
         SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.TEAM_KILL);
       if (damageSourceType == ActiveRagdoll.DamageSourceType.EXPLOSION)
         SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.EXPLODE);
@@ -2057,7 +2057,7 @@ public class PlayerScript : MonoBehaviour
     // Slow motion on player death
     var lastplayer = true;
     foreach (var p0 in s_Players)
-      if (p0._Id != _Id && !p0._ragdoll._dead)
+      if (p0._Id != _Id && !p0._ragdoll._IsDead)
       {
         lastplayer = false;
         break;
@@ -2143,7 +2143,7 @@ public class PlayerScript : MonoBehaviour
   static float _LastMoneyPickupNoiseTime;
   public void OnTriggerEnter(Collider other)
   {
-    if (_ragdoll == null || _ragdoll._dead) return;
+    if (_ragdoll == null || _ragdoll._IsDead) return;
     switch (other.name)
     {
       case ("SHURIKEN"):

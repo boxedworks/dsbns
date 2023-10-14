@@ -581,6 +581,7 @@ public class TileManager
     ActiveRagdoll.Reset();
     EnemyScript.Reset();
     Powerup.Reset();
+    FunctionsC.AoeHandler.Reset();
     CustomEntityUI._ID = 0;
     EnemyScript._ID = 0;
 
@@ -670,7 +671,7 @@ public class TileManager
       {
         foreach (var p in Players)
         {
-          if (p._ragdoll._dead) continue;
+          if (p._ragdoll._IsDead) continue;
           usePos = p.transform.position;
           _lastUsePos = usePos;
         }
@@ -1822,6 +1823,7 @@ public class TileManager
     CustomObstacle.Reset();
     CustomEntityUI._ID = 0;
     ExplosiveScript.Reset();
+    FunctionsC.AoeHandler.Reset();
     ResetParticles();
 
     var objects = GameResources._Container_Objects;
@@ -2383,7 +2385,6 @@ public class TileManager
     else
     {
       _Pointer.gameObject.SetActive(true);
-      _Ring.gameObject.SetActive(true);
     }
     // Create line renderers for editor visual
     if (_LineRenderers == null)
@@ -2464,7 +2465,6 @@ public class TileManager
 
     // Disable display ring
     _Pointer.gameObject.SetActive(false);
-    _Ring.gameObject.SetActive(false);
     _Ring.position = new Vector3(0f, -100f, 0f);
 
     // Remove line renders
@@ -3878,9 +3878,11 @@ public class TileManager
     {
       Debug.LogError("Cause exception at LineRenderer_Update() => " + e.ToString());
     }
+
     // Set text based on object
     if (LevelEditorObject.GetCurrentObject()._textDisplayFunction != null)
       LevelEditorObject.GetCurrentObject()._textDisplayFunction(_SelectedObject != null ? _SelectedObject.gameObject : null);
+
     // Move Camera with mouse
     var mousepos = ControllerManager.GetMousePosition();
 
@@ -4067,6 +4069,13 @@ public class TileManager
         if (ControllerManager.GetMouseInput(0, ControllerManager.InputMode.DOWN))
         {
           _CurrentMode = EditorMode.NONE;
+
+          // Set new door origin after placement
+          if (_SelectedObject.name == _LEO_Door._name)
+          {
+            //_SelectedObject.GetComponent<DoorScript>().SpawnDoorEditor();
+          }
+
           return;
         }
 
@@ -4105,7 +4114,7 @@ public class TileManager
           _CurrentMode = EditorMode.MOVE;
 
         // Check for custom obstacles
-        if (CanCustomObject() && ControllerManager.GetKey(Key.SHIFT_L, ControllerManager.InputMode.HOLD))
+        if (CanCustomObject() && (ControllerManager.GetKey(Key.SHIFT_L, ControllerManager.InputMode.HOLD) || ControllerManager.GetKey(Key.SHIFT_R, ControllerManager.InputMode.HOLD)))
         {
           var co = _SelectedObject.GetComponent<CustomObstacle>();
           // Add / remove
@@ -4791,10 +4800,12 @@ public class TileManager
           ChangeColorAndDelete(object_new, 4, new Color(139f / 255f, 69f / 255f, 19f / 255f, 1f));
           break;
       }
+
       if (object_new != null)
       {
         object_new.gameObject.layer = 11;
         object_new.name = type;
+
         // Check additional properies
         if (split.Length > 3 && !type.Equals("e") && !type.Equals("button"))
         {
@@ -4804,20 +4815,21 @@ public class TileManager
             switch (property.Key)
             {
               case ("rot"):
-                Quaternion rot = object_new.localRotation;
+                var rot = object_new.localRotation;
                 rot.eulerAngles = new Vector3(0f, 0f, 1f) * (property.Value.ParseFloatInvariant() + 90f);
                 object_new.localRotation = rot;
                 break;
               case ("rotspeed"):
-                float rotspeed = property.Value.ParseFloatInvariant();
-                MapPreviewActor script = object_new.gameObject.AddComponent<MapPreviewActor>();
+                var rotspeed = property.Value.ParseFloatInvariant();
+                var script = object_new.gameObject.AddComponent<MapPreviewActor>();
                 script._properties = new float[] { rotspeed };
                 script.Init(MapPreviewActor.ActorType.LASER);
                 break;
             }
           }
         }
-        MeshRenderer r = object_new.GetComponent<MeshRenderer>();
+
+        var r = object_new.GetComponent<MeshRenderer>();
         r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
         r.receiveShadows = false;
         // Scale / set position
@@ -4828,16 +4840,18 @@ public class TileManager
       // Check for wait
       //if (data_iter % 25 == 0) yield return new WaitForSecondsRealtime(0.01f);
     }
+
     // Center all objects
     container_objects.localPosition = new Vector3(56.4f, 43.3f, 1f);
+
     // Center map in Transform
-    List<Transform> objects = new List<Transform>();
-    for (int i = background.childCount - 1; i >= 0; i--)
+    var objects = new List<Transform>();
+    for (var i = background.childCount - 1; i >= 0; i--)
     {
-      Transform child = background.GetChild(i);
+      var child = background.GetChild(i);
       objects.Add(child);
     }
-    for (int i = container_objects.childCount - 1; i >= 0; i--)
+    for (var i = container_objects.childCount - 1; i >= 0; i--)
     {
       Transform child = container_objects.GetChild(i);
       objects.Add(child);

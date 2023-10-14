@@ -659,7 +659,7 @@ public class Menu2
         SendInput(Input.SPACE);
         _CurrentMenu._selectionIndex = _CurrentMenu._menuComponentsSelectable[_CurrentMenu._menuComponentsSelectable.Count - _CurrentMenu._dropdownCount]._buttonIndex;
         SendInput(Input.SPACE);
-        SendInput(Input.SPACE);
+        //SendInput(Input.SPACE);
         if (util) SendInput(Input.BACK);
       }
       else if (text.Contains("mods") && !text.Split('\n')[0].Contains(" - "))
@@ -903,6 +903,7 @@ public class Menu2
     };
     foreach (var s in prompts)
       menu.AddComponent(s);
+
     // Add back button
     menu.AddComponent("\n");
     menu.AddComponent(backPrompt, MenuComponent.ComponentType.BUTTON_SIMPLE)
@@ -916,6 +917,7 @@ public class Menu2
       menu.AddEvent(afterSwitch);
     if (beforeSwitch != null)
       menu.AddEventFront(beforeSwitch);
+
     // Switch
     if (switchTo) SwitchMenu(MenuType.GENERIC_MENU);
   }
@@ -5029,7 +5031,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
             if (PlayerScript.s_Players != null)
               foreach (var player in PlayerScript.s_Players)
               {
-                if (player == null || player._ragdoll == null || player._ragdoll._dead) continue;
+                if (player == null || player._ragdoll == null || player._ragdoll._IsDead) continue;
                 if (player._Profile._LoadoutIndex == CurrentLoadout()._id)
                   player.EquipLoadout(CurrentLoadout()._id, false);
               }
@@ -5169,7 +5171,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
             if (PlayerScript.s_Players != null)
               foreach (var player in PlayerScript.s_Players)
               {
-                if (player == null || player._ragdoll == null || player._ragdoll._dead) continue;
+                if (player == null || player._ragdoll == null || player._ragdoll._IsDead) continue;
                 if (MathC.Get2DDistance(player.transform.position, PlayerspawnScript._PlayerSpawns[0].transform.position) > 1.2f)
                 {
                   obscured = true;

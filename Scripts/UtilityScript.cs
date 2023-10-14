@@ -102,6 +102,7 @@ public class UtilityScript : ItemScript
     if (_utility_type == UtilityType.MORTAR_STRIKE)
     {
       _mortarAim = GameObject.Instantiate(GameObject.Find("ring")).transform;
+      _mortarAim.name = "MortarAim";
       GameObject.Destroy(_mortarAim.GetChild(1).gameObject);
       //_mortarAim.localScale *= 0.5f;
     }
@@ -244,7 +245,7 @@ public class UtilityScript : ItemScript
       // Set explosion size
       if (_explosion != null && _utility_type != UtilityType.GRENADE)
       {
-        if (_ragdoll._isPlayer && _ragdoll._PlayerScript.HasPerk(Shop.Perk.PerkType.EXPLOSIONS_UP))
+        if (_ragdoll._IsPlayer && _ragdoll._PlayerScript.HasPerk(Shop.Perk.PerkType.EXPLOSIONS_UP))
           explosion_radius *= 1.25f;
 
         var localscale = _ring.transform.localScale;
@@ -330,7 +331,7 @@ public class UtilityScript : ItemScript
             if (rag != null)
             {
               if (rag._Id == _ragdoll._Id) return;
-              if (rag._dead) return;
+              if (rag._IsDead) return;
               killed = true;
               transform.parent = c.transform;
               rag.TakeDamage(
@@ -406,7 +407,7 @@ public class UtilityScript : ItemScript
             {
               if (rag._Id == _ragdoll._Id) return;
               if (rag._Id == (_ragdoll._grapplee?._Id ?? -1)) return;
-              if (!rag._dead)
+              if (!rag._IsDead)
               {
                 // Check for same ragdoll
                 if (_hitRagdolls.Contains(rag._Id)) return;
@@ -659,7 +660,7 @@ public class UtilityScript : ItemScript
       if (incrementClip && _unregister) _ragdoll._PlayerScript?._Profile.UtilityUse(_side);
 
       // Extra; infinite ammo
-      if (_ragdoll._isPlayer && Settings._Extras_CanUse && Settings._Extra_PlayerAmmo._value == 3)
+      if (_ragdoll._IsPlayer && Settings._Extras_CanUse && Settings._Extra_PlayerAmmo._value == 3)
       {
         _clip++;
         _ragdoll._PlayerScript.AddUtility(_utility_type, _side);
@@ -714,7 +715,7 @@ public class UtilityScript : ItemScript
           if (_downTime != 0f && !_thrown && !_explosion._triggered && !_explosion._exploded)
           {
             // Set scale
-            if (_ragdoll._isPlayer && _ragdoll._PlayerScript.HasPerk(Shop.Perk.PerkType.EXPLOSIONS_UP))
+            if (_ragdoll._IsPlayer && _ragdoll._PlayerScript.HasPerk(Shop.Perk.PerkType.EXPLOSIONS_UP))
               explosion_radius *= 1.25f;
 
             var localscale = _ring.transform.localScale;

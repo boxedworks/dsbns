@@ -184,8 +184,6 @@ public class CustomObstacle : MonoBehaviour
         new Material(_renderer.sharedMaterial),
       };
     }
-    Debug.Log(_renderer.sharedMaterial.GetType());
-    Resources.UnloadAsset(_renderer.sharedMaterial);
 
     var use_type = _type;
 
@@ -367,7 +365,7 @@ public class CustomObstacle : MonoBehaviour
   public void Interact(PlayerScript p, InteractSide side)
   {
     // If player is dead, do not buy
-    if (p == null || p._ragdoll == null || p._ragdoll._dead) return;
+    if (p == null || p._ragdoll == null || p._ragdoll._IsDead) return;
 
     // If text not visible, do not do anything
     if (!_text.gameObject.activeSelf) return;
@@ -969,7 +967,7 @@ public class CustomObstacle : MonoBehaviour
       var min_dist = 1000f;
       foreach (var player in PlayerScript.s_Players)
       {
-        if (player._ragdoll._dead || player == null) continue;
+        if (player._ragdoll._IsDead || player == null) continue;
         var path = new UnityEngine.AI.NavMeshPath();
         var filter = new UnityEngine.AI.NavMeshQueryFilter();
         filter.areaMask = 1;

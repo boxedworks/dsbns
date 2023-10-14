@@ -18,14 +18,11 @@ public class DoorScript : CustomEntity
     get { return _Button != null; }
   }
 
-  Vector3 _saveDoorPos;
-
   public bool _XScale, _Opened;
-  bool _original;
   public float _Speed;
 
   Light _l;
-  Collider _collider0, _collider1;
+  Collider _collider0;
   UnityEngine.AI.NavMeshObstacle _obstacle;
   ParticleSystem _psDust;
 
@@ -37,15 +34,11 @@ public class DoorScript : CustomEntity
   {
     _door = transform.GetChild(0).GetChild(0);
 
-    _saveDoorPos = _door.position;
-
     _collider0 = _door.GetComponent<Collider>();
-    _collider1 = _door.GetComponents<Collider>()[1];
     _obstacle = _door.GetComponent<UnityEngine.AI.NavMeshObstacle>();
 
     _psDust = transform.GetChild(0).GetChild(2).GetComponent<ParticleSystem>();
 
-    _original = _Opened;
     if (!_Opened)
     {
       SetDoorScale(1f);
@@ -132,15 +125,12 @@ public class DoorScript : CustomEntity
         _sfx = null;
       }
       _psDust.Stop();
-
-      if (!_Opened)
-        _obstacle.gameObject.isStatic = true;
     }
   }
 
   void SetDoorScale(float normalized)
   {
-    _door.position = Vector3.Lerp(_saveDoorPos, _saveDoorPos + new Vector3(0f, -2.1f, 0f), normalized);
+    _door.localPosition = Vector3.Lerp(new Vector3(0f, -0.336f, 0f), new Vector3(0f, -0.75f, 0f), normalized);
   }
 
   public void Toggle()
@@ -164,9 +154,6 @@ public class DoorScript : CustomEntity
     _obstacle.enabled = open;
 
     _opening = true;
-
-    if (_Opened)
-      _obstacle.gameObject.isStatic = false;
 
     if (_sfx == null)
     {

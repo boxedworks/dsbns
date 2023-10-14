@@ -76,7 +76,7 @@ public class LaserScript : CustomEntity
           {
             // Slice ragdoll in half and kill
             case (LaserType.KILL):
-              if (r._dead) break;
+              if (r._IsDead) break;
               // If ragdoll does not take damage, dismember
               if (!r.TakeDamage(
                 new ActiveRagdoll.RagdollDamageSource()

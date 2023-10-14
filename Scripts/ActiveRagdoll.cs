@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-using System.Linq;
+using System;
+
+using Random = UnityEngine.Random;
 
 public class ActiveRagdoll
 {
@@ -34,16 +36,16 @@ public class ActiveRagdoll
   public float _rotSpeed, _time_dead;
 
   bool _footprint;
+  float _bloodFootprintTimer;
 
-  public bool _ragdolled,
-    _reviving,
-    _isPlayer,
-    _dead,
-    _disabled,
-    _canMove,
-    _canReceiveInput,
-    _diving,
-    _canDie;
+  public bool _IsRagdolled,
+    _IsReviving,
+    _IsPlayer,
+    _IsDead,
+    _IsDisabled,
+    _CanMove,
+    _CanReceiveInput,
+    _CanDie;
 
   public bool _IsSwinging
   {
@@ -196,9 +198,9 @@ public class ActiveRagdoll
 
     _rotSpeed = 1f;
 
-    _canMove = _canReceiveInput = true;
+    _CanMove = _CanReceiveInput = true;
 
-    _canDie = true;
+    _CanDie = true;
 
     SetCollisionMode(CollisionDetectionMode.Continuous);
 
@@ -292,11 +294,11 @@ public class ActiveRagdoll
   public void Update()
   {
 #if DEBUG
-    if (_ItemR != null && _ItemR.IsGun())
+    /*if (_ItemR != null && _ItemR.IsGun())
       Debug.DrawRay(_ItemR.transform.position, MathC.Get2DVector(_ItemR.transform.forward) * 100f);
     if (_ItemL != null && _ItemL.IsGun())
       Debug.DrawRay(_ItemL.transform.position, MathC.Get2DVector(_ItemL.transform.forward) * 100f);
-    Debug.DrawRay(_Hip.position, _Hip.transform.forward * 100f, Color.yellow);
+    Debug.DrawRay(_Hip.position, _Hip.transform.forward * 100f, Color.yellow);*/
 #endif
 
     var dt = (_PlayerScript != null ? Time.unscaledDeltaTime : Time.deltaTime);
@@ -304,7 +306,7 @@ public class ActiveRagdoll
     // Update grabbed rd
     if (_grapplee != null)
     {
-      if (_grapplee._dead)
+      if (_grapplee._IsDead)
       {
         _grapplee = null;
       }
@@ -358,7 +360,7 @@ public class ActiveRagdoll
       }
     }
 
-    if (!_ragdolled)
+    if (!_IsRagdolled)
     {
 
       // Add outside recoil
@@ -367,7 +369,7 @@ public class ActiveRagdoll
         var force_normalize = _ForceGlobal.magnitude < 1f ? _ForceGlobal : _ForceGlobal.normalized;
         var force_apply = _ForceGlobal * Time.deltaTime * 10f;
 
-        var agent = _isPlayer ? _PlayerScript._agent : _EnemyScript._agent;
+        var agent = _IsPlayer ? _PlayerScript._agent : _EnemyScript._agent;
         agent.Move(force_apply);
         _ForceGlobal -= force_apply;
       }
@@ -378,7 +380,7 @@ public class ActiveRagdoll
         var force_normalized = _ForceRecoil > max_velocity ? max_velocity : _ForceRecoil;
         var force_apply = force_normalized * MathC.Get2DVector(_Hip.transform.forward) * Time.deltaTime * 10f;
 
-        var agent = _isPlayer ? _PlayerScript._agent : _EnemyScript._agent;
+        var agent = _IsPlayer ? _PlayerScript._agent : _EnemyScript._agent;
         agent.Move(force_apply);
         _ForceRecoil -= force_normalized;
 
@@ -387,18 +389,18 @@ public class ActiveRagdoll
       }
 
       // Only update if enabled
-      if (!_canReceiveInput) return;
+      if (!_CanReceiveInput) return;
 
       // If double knives or bat/sword, move forward when swinging
       if (_IsSwinging)
       {
-        if ((_ItemL != null && (_ItemL._twoHanded || _ItemL._runWhileUse)) || (_ItemR != null && _ItemR._runWhileUse) ||
-          (_ItemL != null && _ItemL._type == GameScript.ItemManager.Items.KNIFE && _ItemR != null && _ItemR._type == GameScript.ItemManager.Items.KNIFE))
+        if ((_ItemL != null && (_ItemL._twoHanded || _ItemL._runWhileUse)) || (_ItemR != null && _ItemR._runWhileUse) /*||
+          (_ItemL != null && _ItemL._type == GameScript.ItemManager.Items.KNIFE && _ItemR != null && _ItemR._type == GameScript.ItemManager.Items.KNIFE)*/)
         {
           var amount = 1.2f;
           var dis = new Vector3(_Controller.forward.x, 0f, _Controller.forward.z).normalized * PlayerScript.MOVESPEED * amount * Time.deltaTime;
 
-          var agent = (_isPlayer ? _PlayerScript._agent : _EnemyScript._agent);
+          var agent = _IsPlayer ? _PlayerScript._agent : _EnemyScript._agent;
           agent.Move(dis);
         }
       }
@@ -424,7 +426,7 @@ public class ActiveRagdoll
     }
 
     // If can't move, set movepos and distance to origin
-    if (!_canMove || _grappled)
+    if (!_CanMove || _grappled)
     {
       movePos = _Hip.position;
       _Distance = Vector3.zero;
@@ -440,22 +442,27 @@ public class ActiveRagdoll
       _movementIter2 = Mathf.PingPong(_movementIter * 2.8f, 1f);
 
       // Play footsteps  based on controller distance moved
-      if (!_ragdolled && !_grappled && ((save < 0.5f && _movementIter2 >= 0.5f) || (save > 0.5f && _movementIter2 <= 0.5f)))
+      if (!_IsRagdolled && !_grappled && ((save < 0.5f && _movementIter2 >= 0.5f) || (save > 0.5f && _movementIter2 <= 0.5f)))
       {
         // If player, send footstep sound to enemies to check for detection
-        if (_isPlayer && _PlayerScript._CanDetect && _Distance.magnitude > 0.1f)
+        if (_IsPlayer && _PlayerScript._CanDetect && _Distance.magnitude > 0.1f)
           EnemyScript.CheckSound(_Controller.position, (_Distance.magnitude > 0.2f ? EnemyScript.Loudness.SOFT : (EnemyScript.Loudness.SUPERSOFT)));
 
         // Sfx
-        SfxManager.PlayAudioSourceSimple(_Controller.position, SceneThemes._footstep.clip, SceneThemes._footstep.volume, 0.9f, 1.1f, SfxManager.AudioClass.FOOTSTEP);
+        var footstepAudioSource = false && _bloodFootprintTimer > 0f ? SceneThemes._footstepBloody : SceneThemes._footstep;
+        SfxManager.PlayAudioSourceSimple(_Controller.position, footstepAudioSource.clip, footstepAudioSource.volume, 0.89f, 1.11f, SfxManager.AudioClass.FOOTSTEP);
 
         // Footprint
         var footprint_pos = _footprint ? _leg_lower_l.transform.position : _leg_lower_r.transform.position;
         footprint_pos.y -= 0.4f;
         _footprint = !_footprint;
-        FunctionsC.PlayComplexParticleSystemAt(FunctionsC.ParticleSystemType.FOOTPRINT, footprint_pos);
+        FunctionsC.PlayComplexParticleSystemAt(_bloodFootprintTimer > 0f ? FunctionsC.ParticleSystemType.FOOTPRINT_BLOOD : FunctionsC.ParticleSystemType.FOOTPRINT, footprint_pos);
       }
     }
+    if (_bloodFootprintTimer > 0f)
+      _bloodFootprintTimer -= Time.deltaTime;
+
+    //
     var rot = _Hip.rotation;
     var f = _Controller.rotation.eulerAngles.y;
     if (f > 180.0f)
@@ -467,7 +474,7 @@ public class ActiveRagdoll
     {
       // Move / rotate hip (base)
       _Hip.MovePosition(movePos);
-      if (_isPlayer)
+      if (_IsPlayer)
       {
         dt = Time.unscaledDeltaTime;
       }
@@ -485,7 +492,7 @@ public class ActiveRagdoll
       _movementIter += (_Distance.magnitude / 10f) * Time.deltaTime * 50f;
 
       // Check stun FX
-      if (!_dead && _stunned)
+      if (!_IsDead && _stunned)
       {
         if (Time.time - _confusedTimer > 0f)
         {
@@ -607,6 +614,13 @@ public class ActiveRagdoll
     }
   }
 
+  // Bloody footprint increment
+  public void SetBloodTimer()
+  {
+    _bloodFootprintTimer = 1.5f;
+  }
+
+  //
   public void SetActive(bool toggle)
   {
     Transform.gameObject.SetActive(toggle);
@@ -619,8 +633,8 @@ public class ActiveRagdoll
   // Remove all HingeJoints, Rigidbodies, and Colliders except for _Hip
   public void Disable()
   {
-    if (_disabled) return;
-    _disabled = true;
+    if (_IsDisabled) return;
+    _IsDisabled = true;
     IEnumerator delayDisable()
     {
       yield return new WaitForSecondsRealtime(5f);
@@ -694,7 +708,7 @@ public class ActiveRagdoll
   }
   public void UseLeftUp()
   {
-    if (_ItemL == null || _dead) return;
+    if (_ItemL == null || _IsDead) return;
     _ItemL.UseUp();
   }
   public void UseRightDown()
@@ -754,9 +768,9 @@ public class ActiveRagdoll
       GameScript.ItemManager.SpawnItem(itemType);
       item = GameScript.ItemManager.GetItem(itemType);
     }
-    var script = item.GetComponent<ItemScript>();
+    var itemScript = item.GetComponent<ItemScript>();
 
-    bool two_hands = script._twoHanded;
+    bool two_hands = itemScript._twoHanded;
     var side_other = side == Side.LEFT ? Side.RIGHT : Side.LEFT;
 
     // Unequip if equipped already
@@ -770,7 +784,6 @@ public class ActiveRagdoll
     // Rotate / positon per specific item
     var rb = item.GetComponent<Rigidbody>();
     if (rb != null) GameObject.Destroy(rb);
-    float side_mod = side == Side.LEFT ? -1f : 1f;
 
     // Remove joints for better aiming
     RemoveArmJoint(side);
@@ -781,15 +794,15 @@ public class ActiveRagdoll
     if (side == Side.LEFT || two_hands)
     {
       arm = _transform_parts._arm_lower_l;
-      _ItemL = script;
+      _ItemL = itemScript;
     }
     else
     {
       arm = _transform_parts._arm_lower_r;
-      _ItemR = script;
+      _ItemR = itemScript;
     }
     item.transform.parent = arm.GetChild(0);
-    script.OnEquip(this, side, clipSize, useTime, itemId);
+    itemScript.OnEquip(this, side, clipSize, useTime, itemId);
   }
 
   public void UnequipItem(Side side)
@@ -838,7 +851,7 @@ public class ActiveRagdoll
   float _lastItemSwap;
   public bool CanSwapWeapons()
   {
-    return !_dead && !_IsSwinging && Time.time - _lastItemSwap > 0.5f && !_IsReloading && !_HasItemsInUse;
+    return !_IsDead && !_IsSwinging && Time.time - _lastItemSwap > 0.5f && !_IsReloading && !_HasItemsInUse;
   }
 
   //
@@ -912,7 +925,7 @@ public class ActiveRagdoll
       }
     }
 
-    if (_isPlayer)
+    if (_IsPlayer)
     {
       if (index == 0)
       {
@@ -934,13 +947,13 @@ public class ActiveRagdoll
   public void Reload()
   {
     // Don't reload if dead
-    if (_dead) return;
+    if (_IsDead) return;
     // Left item
     if (_ItemL != null && _ItemL.CanReload() && !_ItemL.IsChargeWeapon())
     {
       _ItemL.Reload();
       // Check player settings
-      if (_isPlayer && !_PlayerScript._Profile._reloadSidesSameTime) return;
+      if (_IsPlayer && !_PlayerScript._Profile._reloadSidesSameTime) return;
       else
       {
         IEnumerator delayedReload()
@@ -972,7 +985,7 @@ public class ActiveRagdoll
   public void OnTriggerEnter(Collider other)
   {
     // Check player / enemy specific triggers
-    if (_isPlayer) _PlayerScript.OnTriggerEnter(other);
+    if (_IsPlayer) _PlayerScript.OnTriggerEnter(other);
 
     // Check general triggers
     var u = other.GetComponent<CustomEntityUI>();
@@ -989,7 +1002,7 @@ public class ActiveRagdoll
     }
 
     // If ran into powerup, activate it
-    else if (other.name.Equals("Goal") && !_dead && _isPlayer)
+    else if (other.name.Equals("Goal") && !_IsDead && _IsPlayer)
     {
       other.transform.parent.GetComponent<Powerup>()
         .Activate(this);
@@ -1004,11 +1017,11 @@ public class ActiveRagdoll
       ExplosiveScript s = other.transform.parent.GetComponent<ExplosiveScript>();
       s.Trigger();
     }*/
-    if (_isPlayer) _PlayerScript.OnTriggerExit(other);
+    if (_IsPlayer) _PlayerScript.OnTriggerExit(other);
   }
   public void OnTriggerStay(Collider other)
   {
-    if (_isPlayer) _PlayerScript.OnTriggerStay(other);
+    if (_IsPlayer) _PlayerScript.OnTriggerStay(other);
   }
 
   // Handle body part noises
@@ -1178,7 +1191,7 @@ public class ActiveRagdoll
     }
 
     var save_health = _health;
-    if (!_dead)
+    if (!_IsDead)
     {
       _health -= damage;
 
@@ -1188,7 +1201,7 @@ public class ActiveRagdoll
       }
 
       // Player armor
-      if (_isPlayer)
+      if (_IsPlayer)
       {
         // Fire player events
         _PlayerScript.OnDamageTaken();
@@ -1307,7 +1320,7 @@ public class ActiveRagdoll
         _grapplee._Controller.position = _grapplee._Hip.position;
         _grapplee._Controller.rotation = _Controller.rotation;
 
-        var agent = _grapplee._isPlayer ? (_grapplee._PlayerScript?._agent) : (_grapplee._EnemyScript?._agent);
+        var agent = _grapplee._IsPlayer ? (_grapplee._PlayerScript?._agent) : (_grapplee._EnemyScript?._agent);
         if (agent != null)
         {
           agent.enabled = true;
@@ -1376,7 +1389,7 @@ public class ActiveRagdoll
           }
 
           yield return new WaitForSeconds(0.1f);
-          if (_dead) break;
+          if (_IsDead) break;
         }
       }
       GameScript._s_Singleton.StartCoroutine(TryGrapple());
@@ -1402,7 +1415,7 @@ public class ActiveRagdoll
     _grapplee = other;
     other._grappled = true;
     other._grappler = this;
-    var agent = other._isPlayer ? (other._PlayerScript?._agent) : (other._EnemyScript?._agent);
+    var agent = other._IsPlayer ? (other._PlayerScript?._agent) : (other._EnemyScript?._agent);
     if (agent != null)
     {
       agent.enabled = false;
@@ -1423,7 +1436,7 @@ public class ActiveRagdoll
 
   public void Kill(ActiveRagdoll source, DamageSourceType damageSourceType, Vector3 hitForce)
   {
-    if (_isPlayer && Settings._PLAYER_INVINCIBLE) return;
+    if (_IsPlayer && Settings._PLAYER_INVINCIBLE) return;
 
     // Disintegrate
     if (damageSourceType == DamageSourceType.FIRE)
@@ -1437,14 +1450,14 @@ public class ActiveRagdoll
       AddPartListener(_Hip);
 
     // Die instantly
-    if (!_canDie) return;
+    if (!_CanDie) return;
     Toggle(source, damageSourceType, hitForce);
-    _dead = true;
+    _IsDead = true;
     _time_dead = Time.unscaledTime;
 
     // Check grapplee
     if (_grapplee != null)
-      if (!_grapplee._dead)
+      if (!_grapplee._IsDead)
       {
         var graplee = _grapplee;
         Grapple(true);
@@ -1616,6 +1629,9 @@ public class ActiveRagdoll
 
       GameScript._s_Singleton.StartCoroutine(BloodFollow(blood));
 
+      // Bloody footprint
+      FunctionsC.AoeHandler.RegisterAoeEffect(FunctionsC.AoeHandler.AoeType.BLOOD, _Hip.position, 1f, 20f);
+
       // Audio
       PlaySound($"Ragdoll/Blood{(/*Random.Range(0, 10) < 3 ? 1 : */0)}", 1.1f, 1.5f);
     }
@@ -1634,10 +1650,10 @@ public class ActiveRagdoll
 
   public void Toggle(ActiveRagdoll source, DamageSourceType damageSourceType, Vector3 hitForce, bool changeColor = true)
   {
-    if (_dead) return;
+    if (_IsDead) return;
 
     // If about to die, save hip rotation for later
-    if (!_ragdolled) _saveRot = _Hip.rotation;
+    if (!_IsRagdolled) _saveRot = _Hip.rotation;
 
     // Check crown
     if (Settings._Extra_CrownMode._value != 0)
@@ -1650,7 +1666,7 @@ public class ActiveRagdoll
           RemoveCrown();
           source.AddCrown();
 
-          if (source._isPlayer)
+          if (source._IsPlayer)
             GameScript.s_CrownPlayer = source._PlayerScript._Profile._Id;
           else
             GameScript.s_CrownEnemy = source._EnemyScript._Id;
@@ -1660,8 +1676,8 @@ public class ActiveRagdoll
     // Invert values
     _Hip.isKinematic = !_Hip.isKinematic;
     ToggleRaycasting(false);
-    _ragdolled = !_ragdolled;
-    if (!_ragdolled)
+    _IsRagdolled = !_IsRagdolled;
+    if (!_IsRagdolled)
     {
       /*Ragdoll(false);
       _controller.GetComponent<UnityEngine.AI.NavMeshAgent>().enabled = true;
@@ -1677,16 +1693,16 @@ public class ActiveRagdoll
       Ragdoll(true);
       _Hip.AddForce(hitForce);
       _Controller.GetComponent<UnityEngine.AI.NavMeshAgent>().enabled = false;
-      if (changeColor) ChangeColor(_isPlayer ? Color.black * 0.5f : Color.black, 0.8f);
+      if (changeColor) ChangeColor(_IsPlayer ? Color.black * 0.5f : Color.black, 0.8f);
     }
 
     if (changeColor)
     {
       // Record stats
-      if (source?._isPlayer ?? false)
+      if (source?._IsPlayer ?? false)
       {
         Stats.RecordKill(source._PlayerScript._Id);
-        if (_isPlayer) Stats.RecordTeamkill(source._PlayerScript._Id);
+        if (_IsPlayer) Stats.RecordTeamkill(source._PlayerScript._Id);
       }
 
       // Fire function per script type
@@ -1707,12 +1723,12 @@ public class ActiveRagdoll
 
           // Enemies
           case 2:
-            explode_self = !_isPlayer;
+            explode_self = !_IsPlayer;
             break;
 
           // Players
           case 3:
-            explode_self = _isPlayer;
+            explode_self = _IsPlayer;
             break;
         }
         if (explode_self)
@@ -1804,7 +1820,7 @@ public class ActiveRagdoll
 
     // Set controller to position
     _Controller.position = new Vector3(_Hip.position.x, _Controller.position.y, _Hip.position.z);
-    _reviving = false;
+    _IsReviving = false;
   }
 
   bool _hasCrown;
@@ -1885,7 +1901,7 @@ public class ActiveRagdoll
 
     // Checks
     if (!HasMelee()) return;
-    if (_dead) return;
+    if (_IsDead) return;
     if (_grappling) return;
     if (GameScript._EditorEnabled) return;
 
@@ -1954,7 +1970,7 @@ public class ActiveRagdoll
 
   public bool Active()
   {
-    return !_ragdolled && !_reviving && !_stunned;
+    return !_IsRagdolled && !_IsReviving && !_stunned;
   }
 
   // Return a true if o is in _parts
@@ -1968,7 +1984,7 @@ public class ActiveRagdoll
 
   public void ToggleRaycasting(bool enable, bool override_ = false)
   {
-    if (_ragdolled && !override_) return;
+    if (_IsRagdolled && !override_) return;
     foreach (var part in _parts)
     {
       if (part == null) continue;
@@ -2039,7 +2055,7 @@ public class ActiveRagdoll
   public void DisplayText(string text, float size = 0.75f)
   {
     if (_EnemyScript != null && _EnemyScript.IsChaser()) return;
-    if (_bubbleScript != null && (Time.time - _lastBubbleScriptTime) < (_isPlayer ? 0.5f : 1f))
+    if (_bubbleScript != null && (Time.time - _lastBubbleScriptTime) < (_IsPlayer ? 0.5f : 1f))
     {
       _bubbleScript._textMesh.text = text;
       return;
@@ -2116,7 +2132,7 @@ public class ActiveRagdoll
   }
   public bool Dismember(HingeJoint joint, Vector3 force)
   {
-    if (!_canDie || !_dead) return false;
+    if (!_CanDie || !_IsDead) return false;
 
     // Check if already dismembered
     if (joint == null) return false;
@@ -2208,7 +2224,7 @@ public class ActiveRagdoll
     for (var i = s_Ragdolls.Count - 1; i > 0; i--)
     {
       var r = s_Ragdolls[i];
-      if (r._dead && r._isPlayer)
+      if (r._IsDead && r._IsPlayer)
       {
         s_Ragdolls.Remove(r);
         PlayerScript.s_Players.Remove(r._PlayerScript);

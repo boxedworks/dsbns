@@ -54,7 +54,7 @@ public static class FunctionsC
     info._distance = 1000f;
     foreach (var player in PlayerScript.s_Players)
     {
-      if (player._ragdoll._dead || player._ragdoll._Hip == null) continue;
+      if (player._ragdoll._IsDead || player._ragdoll._Hip == null) continue;
       var dist = MathC.Get2DDistance(player._ragdoll._Hip.position, pos);
       if (dist < info._distance)
       {
@@ -91,7 +91,7 @@ public static class FunctionsC
 
     foreach (var p in PlayerScript.s_Players)
     {
-      if (p._ragdoll._dead) continue;
+      if (p._ragdoll._IsDead) continue;
       var dist = MathC.Get2DDistance(p._ragdoll._Hip.position, pos);
       if (dist > info._distance)
       {
@@ -135,6 +135,7 @@ public static class FunctionsC
     CONFUSED,
     EXPLOSION_STUN,
     SMOKE_RING,
+    FOOTPRINT_BLOOD,
   }
   static int _ExplosionIter;
   public static ParticleSystem[] GetParticleSystem(ParticleSystemType particleType, int forceParticleIndex = -1)
@@ -227,6 +228,9 @@ public static class FunctionsC
         index = 25;
         break;
 
+      case ParticleSystemType.FOOTPRINT_BLOOD:
+        index = 26;
+        break;
     }
 
     if (forceParticleIndex != -1)
@@ -371,7 +375,7 @@ public static class FunctionsC
 
       // Check for perk
       //if (!isStun)
-      if (r._isPlayer && r._Id == source._Id && r._PlayerScript.HasPerk(Shop.Perk.PerkType.EXPLOSION_RESISTANCE)) continue;
+      if (r._IsPlayer && r._Id == source._Id && r._PlayerScript.HasPerk(Shop.Perk.PerkType.EXPLOSION_RESISTANCE)) continue;
 
       // Check dist
       if (MathC.Get2DDistance(position, r._Hip.position) < 0.3f) { }
@@ -382,7 +386,7 @@ public static class FunctionsC
         r.ToggleRaycasting(true, true);
         var hit = new RaycastHit();
         var start_pos = new Vector3(position.x, -0.1f, position.z);
-        var dir = -(r._dead ? start_pos - r._Hip.position : MathC.Get2DVector(start_pos - r._Hip.position)).normalized;
+        var dir = -(r._IsDead ? start_pos - r._Hip.position : MathC.Get2DVector(start_pos - r._Hip.position)).normalized;
         if (!Physics.SphereCast(new Ray(start_pos, dir), 0.05f, out hit, radius + 5f, GameResources._Layermask_Ragdoll))
         {
           r.ToggleRaycasting(false, true);
@@ -396,7 +400,7 @@ public static class FunctionsC
       // Increment exploded counter and award achievements
       if (!isStun)
       {
-        if (!r._dead)
+        if (!r._IsDead)
         {
           // Check for 3+ kills for slowmo
           if (exploded++ == 3)
@@ -450,7 +454,7 @@ public static class FunctionsC
               SpawnBlood = true,
               SpawnGiblets = true
             });
-          if (r._dead)
+          if (r._IsDead)
           {
             r.DismemberRandomTimes(explosionForce, Random.Range(1, 5));
             r._Hip.AddForce(explosionForce);
@@ -463,7 +467,7 @@ public static class FunctionsC
 
     // Retoggle raycasting
     foreach (var r in rags)
-      if (!r._dead) r.ToggleRaycasting(true);
+      if (!r._IsDead) r.ToggleRaycasting(true);
   }
 
   static Dictionary<string, Mesh> _Meshes;
@@ -1169,6 +1173,112 @@ public static class FunctionsC
   public static string ToStringTimer(this float data)
   {
     return data.ToString("0.000", System.Globalization.CultureInfo.InvariantCulture);
+  }
+
+  // Handle simple radial AOE effects
+  public static class AoeHandler
+  {
+
+    // Data types
+    public enum AoeType
+    {
+      NONE,
+
+      BLOOD
+    }
+
+    struct AoeEffect
+    {
+      public AoeType _Type;
+      public Vector3 _Position;
+
+      public float _Radius;
+      public float _Duration;
+    }
+
+    // Containers
+    static List<AoeEffect> s_aoeEffects;
+
+    // Reset
+    public static void Reset()
+    {
+      s_aoeEffects = new();
+    }
+
+    // Register a new AOE
+    public static void RegisterAoeEffect(AoeType type, Vector3 position, float radius, float duration)
+    {
+      s_aoeEffects.Add(new AoeEffect()
+      {
+        _Type = type,
+        _Position = position,
+        _Radius = radius,
+        _Duration = duration == -1f ? -1f : Time.time + duration
+      });
+    }
+
+    // Check ragdolls in AOE
+    static int s_i, s_u;
+    const int _MAX_ITERATIONS = 5;
+    public static void Update()
+    {
+      var iterations = 0;
+
+      var ragdolls = ActiveRagdoll.s_Ragdolls;
+      if ((s_aoeEffects?.Count ?? 0) == 0 || (ragdolls?.Count ?? 0) == 0) return;
+      var maxIterations = Mathf.Clamp(_MAX_ITERATIONS, 0, ragdolls.Count);
+      while (true)
+      {
+
+        var aoe = s_aoeEffects[s_i %= s_aoeEffects.Count];
+
+        // Check aoe expire
+        if (aoe._Duration != -1f && Time.time >= aoe._Duration)
+        {
+          s_aoeEffects.RemoveAt(s_i);
+
+          if (s_aoeEffects.Count == 0) break;
+          continue;
+        }
+
+        //Debug.DrawRay(aoe._Position, Vector3.up * 100f, Color.yellow);
+
+        // Check aoe effect
+        while (true)
+        {
+          var ragdoll = ragdolls[s_u % ragdolls.Count];
+
+          // Check distance in AOE
+          if (ragdoll._Hip == null) { }
+          else
+          {
+            var hipPosition = ragdoll._Hip.position;
+            if (MathC.Get2DDistance(hipPosition, aoe._Position) <= aoe._Radius)
+            {
+
+              // Set effect
+              ragdoll.SetBloodTimer();
+            }
+          }
+
+          //
+          if (iterations++ > maxIterations) break;
+          if (++s_u == ragdolls.Count)
+          {
+            s_u = 0;
+            break;
+          }
+        }
+
+        //
+        if (iterations > maxIterations) break;
+        if (++s_i == s_aoeEffects.Count)
+        {
+          s_i = 0;
+        }
+      }
+    }
+
   }
 
 }
