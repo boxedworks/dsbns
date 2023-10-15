@@ -876,7 +876,7 @@ public class UtilityScript : ItemScript
           {
             // Give player utility and update player UI
             player.AddUtility(_utility_type, side);
-            player._Profile.UtilityReload(side, true);
+            player._Profile.UtilityReload(side, 1);
 
             // Play noise
             player._ragdoll.PlaySound("Ragdoll/Pickup");
@@ -893,7 +893,7 @@ public class UtilityScript : ItemScript
 
       // Give player utility and update player UI
       player.AddUtility(_utility_type, side);
-      player._Profile.UtilityReload(side, true);
+      player._Profile.UtilityReload(side, 1);
 
       // Play noise
       player._ragdoll.PlaySound("Ragdoll/Pickup");

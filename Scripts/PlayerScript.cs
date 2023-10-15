@@ -2146,8 +2146,8 @@ public class PlayerScript : MonoBehaviour
     if (_ragdoll == null || _ragdoll._IsDead) return;
     switch (other.name)
     {
-      case ("SHURIKEN"):
-      case ("SHURIKEN_BIG"):
+      case "SHURIKEN":
+      case "SHURIKEN_BIG":
         other.GetComponent<UtilityScript>().PickUp(this);
         break;
       default:
@@ -2176,7 +2176,7 @@ public class PlayerScript : MonoBehaviour
     // Check interactable
     switch (other.name)
     {
-      case ("Interactable"):
+      case "Interactable":
         if (_currentInteractable != null) break;
         _currentInteractable = other.gameObject.GetComponent<CustomObstacle>();
         break;

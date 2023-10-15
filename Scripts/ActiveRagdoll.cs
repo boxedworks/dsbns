@@ -832,17 +832,17 @@ public class ActiveRagdoll
     SwapItems(
       new WeaponSwapData()
       {
-        ItemType = _ItemR == null ? GameScript.ItemManager.Items.NONE : _ItemR._type,
-        ItemId = _ItemR._ItemId,
-        ItemClip = _ItemR != null ? _ItemR.Clip() : -1,
-        ItemUseItem = _ItemR != null ? _ItemR._useTime : -1f
+        ItemType = _ItemR?._type ?? GameScript.ItemManager.Items.NONE,
+        ItemId = _ItemR?._ItemId ?? -1,
+        ItemClip = _ItemR?.Clip() ?? -1,
+        ItemUseItem = _ItemR?._useTime ?? -1f
       },
       new WeaponSwapData()
       {
-        ItemType = _ItemL == null ? GameScript.ItemManager.Items.NONE : _ItemL._type,
-        ItemId = _ItemL._ItemId,
-        ItemClip = _ItemL != null ? _ItemL.Clip() : -1,
-        ItemUseItem = _ItemL != null ? _ItemL._useTime : -1f
+        ItemType = _ItemL?._type ?? GameScript.ItemManager.Items.NONE,
+        ItemId = _ItemL?._ItemId ?? -1,
+        ItemClip = _ItemL?.Clip() ?? -1,
+        ItemUseItem = _ItemL?._useTime ?? -1f
       },
       index
     );
@@ -861,16 +861,17 @@ public class ActiveRagdoll
     // Check weapons in order L / R
     bool CheckHit(ItemScript item)
     {
-      if (item == null) return false;
-      if (item._IsSwinging && !item.HasHitRagdoll(ragdollOther))
-      {
-        item.RegisterHitRagdoll(ragdollOther);
-        item.SetHitOverride();
+      if (
+        item == null ||
+        !item._IsSwinging ||
+        item.HasHitRagdoll(ragdollOther)
+       )
+        return false;
 
-        return true;
-      }
+      item.RegisterHitRagdoll(ragdollOther);
+      item.SetHitOverride();
 
-      return false;
+      return true;
     }
 
     //
@@ -1009,6 +1010,15 @@ public class ActiveRagdoll
     }
   }
 
+
+  //
+  public void BounceFromPosition(Vector3 position, float force)
+  {
+    var bounceForce = (MathC.Get2DVector(_Hip.position) - MathC.Get2DVector(position)).normalized * force;
+    _ForceGlobal += bounceForce;
+  }
+
+  //
   public void OnTriggerExit(Collider other)
   {
     /*/ Explode mine stepping on

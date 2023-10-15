@@ -874,36 +874,42 @@ public class GameScript : MonoBehaviour
       _WavePlaying = false;
 
       // Get / save highest wave
-      var highest_wave = PlayerPrefs.GetInt($"SURVIVAL_MAP_{Levels._CurrentLevelIndex}", 0);
-      PlayerPrefs.SetInt($"SURVIVAL_MAP_{Levels._CurrentLevelIndex}", _Wave);
+      var highestWave = PlayerPrefs.GetInt($"SURVIVAL_MAP_{Levels._CurrentLevelIndex}", 0);
+      if (_Wave > highestWave)
+        PlayerPrefs.SetInt($"SURVIVAL_MAP_{Levels._CurrentLevelIndex}", _Wave);
 
       // Check survival achievements
       // Map 1
+      //Debug.Log($"{_Wave}: {highestWave}");
       if (Levels._CurrentLevelIndex == 0)
       {
-        if (highest_wave < 11 && _Wave == 11)
+        if (_Wave == 11)
         {
+
 #if UNITY_STANDALONE
           SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.SURVIVAL_MAP0_10);
 #endif
 
-          // Unlock next map
-          TogglePause();
-          Menu2.PlayNoise(Menu2.Noise.PURCHASE);
-          Menu2.GenericMenu(new string[] {
+          if (highestWave < 11)
+          {
+            // Unlock next map
+            TogglePause();
+            Menu2.PlayNoise(Menu2.Noise.PURCHASE);
+            Menu2.GenericMenu(new string[] {
 $@"<color={Menu2._COLOR_GRAY}>new survival map unlocked</color>
 
 you survived 10 waves and have unlocked a <color=yellow>new survival map</color>!
 "
         }, "nice", Menu2.MenuType.NONE, null, true, null,
-          (Menu2.MenuComponent c) =>
-          {
-            TogglePause();
-            Menu2.HideMenus();
-          });
+            (Menu2.MenuComponent c) =>
+            {
+              TogglePause();
+              Menu2.HideMenus();
+            });
+          }
         }
 
-        else if (highest_wave < 21 && _Wave == 21)
+        else if (_Wave == 21)
         {
 #if UNITY_STANDALONE
           SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.SURVIVAL_MAP0_20);
@@ -914,13 +920,13 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       // Map 2
       else if (Levels._CurrentLevelIndex == 1)
       {
-        if (highest_wave < 11 && _Wave == 11)
+        if (_Wave == 11)
         {
 #if UNITY_STANDALONE
           SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.SURVIVAL_MAP1_10);
 #endif
         }
-        else if (highest_wave < 21 && _Wave == 21)
+        else if (_Wave == 21)
         {
 #if UNITY_STANDALONE
           SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.SURVIVAL_MAP1_20);
@@ -1674,6 +1680,15 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
                   SurvivalMode._Wave++;
                   Debug.Log($"Survival wave incremented to: {SurvivalMode._Wave}");
                 }
+                if (ControllerManager.GetKey(ControllerManager.Key.PAGE_DOWN, ControllerManager.InputMode.DOWN))
+                {
+                  SurvivalMode._Wave--;
+                  Debug.Log($"Survival wave incremented to: {SurvivalMode._Wave}");
+                }
+                if (ControllerManager.GetKey(ControllerManager.Key.INSERT, ControllerManager.InputMode.DOWN))
+                {
+                  SurvivalMode.GivePoints(0, 100, false);
+                }
               }
 
               else
@@ -2364,17 +2379,26 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         if (_ammoVisible <= 0 || _ammoVisible - 1 >= _ammo.Length) return;
         _ammo[--_ammoVisible].gameObject.SetActive(false);
       }
-      public void Clip_Reload(bool one_at_at_time)
+      public void Clip_Reload(int amount)
       {
-        if (one_at_at_time)
+
+        // Reload all
+        if (amount <= 1)
         {
-          if (_ammoVisible >= _ammo.Length) return;
-          _ammo[_ammoVisible++].gameObject.SetActive(true);
-          return;
+          foreach (var t in _ammo)
+            t.gameObject.SetActive(true);
+          _ammoVisible = _ammoCount;
         }
-        foreach (var t in _ammo)
-          t.gameObject.SetActive(true);
-        _ammoVisible = _ammoCount;
+
+        // Reload not all
+        else
+        {
+          for (var i = 0; i < amount; i++)
+          {
+            if (_ammoVisible >= _ammo.Length) return;
+            _ammo[_ammoVisible++].gameObject.SetActive(true);
+          }
+        }
       }
 
       public void UpdateIconManual(int clip)
@@ -2395,9 +2419,9 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     {
       _weaponIcons[GetItemIcons(side)]?.Clip_Deincrement();
     }
-    public void ItemReload(ActiveRagdoll.Side side, bool one_at_a_time)
+    public void ItemReload(ActiveRagdoll.Side side, int amount)
     {
-      _weaponIcons[GetItemIcons(side)]?.Clip_Reload(one_at_a_time);
+      _weaponIcons[GetItemIcons(side)]?.Clip_Reload(amount);
     }
     public void ItemSetClip(ActiveRagdoll.Side side, int clip)
     {
@@ -2427,10 +2451,10 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       var utility = GetUtility(side);
       utility?.Clip_Deincrement();
     }
-    public void UtilityReload(ActiveRagdoll.Side side, bool one_at_a_time)
+    public void UtilityReload(ActiveRagdoll.Side side, int amount)
     {
       var utility = GetUtility(side);
-      utility?.Clip_Reload(one_at_a_time);
+      utility?.Clip_Reload(amount);
     }
 
     public bool CanUtilityReload(ActiveRagdoll.Side side)
@@ -3024,7 +3048,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       new_item.layer = 11;
       var script = new_item.GetComponent<ItemScript>();
       script._ragdoll = player != null ? player._ragdoll : null;
-      int clip = script.ClipSize();
+      int clip = script.GetClipSize();
       GameObject.Destroy(script);
       var collider = new_item.GetComponent<Collider>();
       if (collider) GameObject.Destroy(collider);
