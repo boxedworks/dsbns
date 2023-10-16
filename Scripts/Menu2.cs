@@ -659,7 +659,7 @@ public class Menu2
         SendInput(Input.SPACE);
         _CurrentMenu._selectionIndex = _CurrentMenu._menuComponentsSelectable[_CurrentMenu._menuComponentsSelectable.Count - _CurrentMenu._dropdownCount]._buttonIndex;
         SendInput(Input.SPACE);
-        //SendInput(Input.SPACE);
+        SendInput(Input.SPACE);
         if (util) SendInput(Input.BACK);
       }
       else if (text.Contains("mods") && !text.Split('\n')[0].Contains(" - "))
@@ -1173,6 +1173,19 @@ public class Menu2
     // Show options menu
     main_menu.AddComponent("options\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
       .AddEvent((MenuComponent component) => { CommonEvents._SwitchMenu(MenuType.OPTIONS); })
+      .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+      {
+        if (Settings._ForceKeyboard || Settings._IgnoreFirstController._value)
+        {
+          component.SetDisplayText("options*\n");
+          component._textColor = "red";
+        }
+        else
+        {
+          component.SetDisplayText("options\n");
+          component._textColor = "";
+        }
+      })
     // Show social menu
     .AddComponent("social\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
       .AddEvent((MenuComponent component) =>
@@ -3319,8 +3332,18 @@ public class Menu2
         }
       })
     .AddComponent($"{string.Format(format_controls, "toggle camera type:", "", "f3")} \n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-    .AddComponent($"{string.Format(format_controls, "next level:", "", "page up")} \n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-    .AddComponent($"{string.Format(format_controls, "previous level:", "", "page down")} \n", MenuComponent.ComponentType.BUTTON_SIMPLE)
+    .AddComponent($"{string.Format(format_controls, "next level:", " hold", "page up")} \n", MenuComponent.ComponentType.BUTTON_SIMPLE)
+      .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+      {
+        if (component._collider.transform.childCount == 0)
+          SpawnControlUI(component, FunctionsC.Control.DPAD_RIGHT);
+      })
+    .AddComponent($"{string.Format(format_controls, "previous level:", " hold", "page down")} \n", MenuComponent.ComponentType.BUTTON_SIMPLE)
+      .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+      {
+        if (component._collider.transform.childCount == 0)
+          SpawnControlUI(component, FunctionsC.Control.DPAD_LEFT);
+      })
     .AddComponent($"\n<color={_COLOR_GRAY}>mode - </color><color=yellow>CLASSIC</color>\n")
     .AddComponent($"{string.Format(format_controls, "cycle loadout left:", "", "z")} \n", MenuComponent.ComponentType.BUTTON_SIMPLE)
       .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
@@ -5226,16 +5249,25 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
         .AddEvent((MenuComponent component) =>
         {
           CommonEvents._SwitchMenu(MenuType.OPTIONS);
+        })
+        .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+        {
+          if (Settings._ForceKeyboard || Settings._IgnoreFirstController._value)
+          {
+            component.SetDisplayText("options*\n");
+            component._textColor = "red";
+          }
+          else
+          {
+            component.SetDisplayText("options\n");
+            component._textColor = "";
+          }
         });
 
       if (!GameScript.IsSurvival())
       {
         mPause.AddComponent("extras*\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE);
-        if (Shop.Unlocked(Shop.Unlocks.MODE_EXTRAS)
-#if UNITY_EDITOR
-        //|| true
-#endif
-        )
+        if (Shop.Unlocked(Shop.Unlocks.MODE_EXTRAS))
         {
           mPause.AddEvent((MenuComponent component) =>
           {
@@ -5437,27 +5469,23 @@ go to the <color=yellow>SHOP</color> to buy something~1
       {
         c._textColor = Shop.Unlocked(Shop.Unlocks.TUTORIAL_PART0) ? "white" : "yellow";
       })
+
     // Extras
     .AddComponent("extras*\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE);
-    if (Shop.Unlocked(Shop.Unlocks.MODE_EXTRAS)
-#if UNITY_EDITOR
-        //|| true
-#endif
-        )
+    menu_classic.AddEvent((MenuComponent component) =>
     {
-      menu_classic.AddEvent((MenuComponent component) => { CommonEvents._SwitchMenu(MenuType.EXTRAS); })
-        .AddEvent(EventType.ON_RENDER, (MenuComponent c) =>
-        {
-          c._textColor = Settings._Extras_UsingAny ? "magenta" : "yellow";
-        });
-    }
-    else
+      if (Shop.Unlocked(Shop.Unlocks.MODE_EXTRAS))
+        CommonEvents._SwitchMenu(MenuType.EXTRAS);
+    })
+    .AddEvent(EventType.ON_RENDER, (MenuComponent c) =>
     {
-      menu_classic.AddEvent(EventType.ON_RENDER, (MenuComponent c) =>
-      {
-        c._obscured = true;
-      });
-    }
+      c._textColor = Settings._Extras_UsingAny ? "magenta" : "yellow";
+    });
+    menu_classic.AddEvent(EventType.ON_RENDER, (MenuComponent c) =>
+    {
+      c._obscured = !Shop.Unlocked(Shop.Unlocks.MODE_EXTRAS);
+    });
+
     // Tutorial
     menu_classic.AddComponent("how to play\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
       .AddEvent((MenuComponent component) => { CommonEvents._SwitchMenu(MenuType.HOWTOPLAY_CLASSIC); })
@@ -5520,6 +5548,19 @@ go to the <color=yellow>SHOP</color> to buy something~1
       .AddEvent((MenuComponent component) => { CommonEvents._SwitchMenu(MenuType.CONTROLS); })
     .AddComponent("control options\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
       .AddEvent((MenuComponent component) => { CommonEvents._SwitchMenu(MenuType.OPTIONS_CONTROLS); })
+      .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+      {
+        if (Settings._ForceKeyboard || Settings._IgnoreFirstController._value)
+        {
+          component.SetDisplayText("control options*\n");
+          component._textColor = "red";
+        }
+        else
+        {
+          component.SetDisplayText("control options\n");
+          component._textColor = "";
+        }
+      })
     .AddComponent("overall stats - broke\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE, _COLOR_GRAY)
       .AddEvent((MenuComponent component) => { /*CommonEvents._SwitchMenu(MenuType.STATS); */})
     // Back button; switch menu per pause setting
@@ -6173,7 +6214,8 @@ go to the <color=yellow>SHOP</color> to buy something~1
         {
           if (Settings._DeleteSaveDataIter-- <= 0)
           {
-            // Save some settings
+
+            // Save specific settings to restore after data deletion (game/graphics/control settings)
             var save_music = Settings._VolumeMusic;
             var save_sfx = Settings._VolumeSFX;
             var save_res = Settings._ScreenResolution;
@@ -6186,6 +6228,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
             var save_blood = Settings._Blood;
             var save_forcekeyboard = Settings._ForceKeyboard;
             var save_rumble = Settings._ControllerRumble;
+            var save_ignoreFirstController = Settings._IgnoreFirstController;
 
             // Erase save data
             PlayerPrefs.DeleteAll();
@@ -6214,7 +6257,9 @@ go to the <color=yellow>SHOP</color> to buy something~1
             Settings._Blood = save_blood;
             Settings._ForceKeyboard = save_forcekeyboard;
             Settings._ControllerRumble = save_rumble;
+            Settings._IgnoreFirstController = save_ignoreFirstController;
             Shop.Init();
+
             foreach (var loadout in GameScript.ItemManager.Loadout._Loadouts)
             {
               loadout._two_weapon_pairs = false;
@@ -6225,6 +6270,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
               profile._LoadoutIndex = 0;
               profile.UpdateIcons();
             }
+
             // Erase level data
             for (int i = 0; i < Settings._LevelsCompleted.Count; i++)
               Settings._LevelsCompleted[Levels._LevelCollections[i]._name] = new List<int>();
@@ -6360,7 +6406,7 @@ menu.~1
 
 <color={_COLOR_GRAY}>notes</color>~1
 * if you die, you lose your items and upgrades.~1
-* you have two sets of weapons;~1 meaning you can hold 4 weapons total.~1
+* you have two weapon pairs;~1 meaning you can hold 4 weapons total.~1
 
 
 
@@ -6509,7 +6555,9 @@ a gampad if plugged in.~1
         // Set display text
         var selection = Settings._ForceKeyboard ? "on" : "off";
         var selection_match = Settings._ForceKeyboard ? "on  -" : "off -";
-        component.SetDisplayText(string.Format(format_options, "force keyboard:", selection));
+        var star = Settings._ForceKeyboard ? "*" : "";
+        component.SetDisplayText(string.Format(format_options, $"force keyboard{star}:", selection));
+        component._textColor = Settings._ForceKeyboard ? "red" : "";
 
         // Set dropdown data
         var selections = new List<string>();
@@ -6537,6 +6585,36 @@ a gampad if plugged in.~1
 
         // Update dropdown data
         component.SetDropdownData("force keyboard as controller - REMEMBER this setting\n\n", selections, actions, selection_match);
+      })
+
+    // Force keyboard toggle
+    .AddComponent("ignore first controller\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
+      .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+      {
+
+        // Set display text
+        var selection = Settings._IgnoreFirstController._value ? "on" : "off";
+        var selection_match = Settings._IgnoreFirstController._value ? "on  -" : "off -";
+        var star = Settings._IgnoreFirstController._value ? "*" : "";
+        component.SetDisplayText(string.Format(format_options, $"ignore first controller{star}:", selection));
+        component._textColor = Settings._IgnoreFirstController._value ? "red" : "";
+
+        // Set dropdown data
+        var selections = new List<string>();
+        var actions = new List<System.Action<MenuComponent>>();
+        selections.Add("on  - disable detection of the first plugged-in controller");
+        actions.Add((MenuComponent component0) =>
+        {
+          Settings._IgnoreFirstController._value = true;
+        });
+        selections.Add("off - use controllers normally [DEFAULT]");
+        actions.Add((MenuComponent component0) =>
+        {
+          Settings._IgnoreFirstController._value = false;
+        });
+
+        // Update dropdown data
+        component.SetDropdownData("ignore first controller - REMEMBER this setting\n- this setting should be used for specific weird cases\n\n", selections, actions, selection_match);
       })
 
     // Controller rumble

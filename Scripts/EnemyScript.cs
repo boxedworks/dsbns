@@ -428,7 +428,8 @@ public class EnemyScript : MonoBehaviour
     // Update line renderer under enemy
     if (!_ragdoll._IsDead)
     {
-      _ragdoll.ToggleRaycasting(true);
+      if (!_IsZombieReal)
+        _ragdoll.ToggleRaycasting(true);
 
       if (_lr.enabled && _lr.positionCount > 1)
       {
@@ -772,23 +773,21 @@ public class EnemyScript : MonoBehaviour
                     else
                     {
                       UnityEngine.AI.NavMeshHit hit;
-                      Vector3 pos = transform.position + (_ragdoll._Hip.position - _ragdollTarget._Hip.position).normalized * 5f;
-                      if (UnityEngine.AI.NavMesh.SamplePosition(pos, out hit, 4f, UnityEngine.AI.NavMesh.AllAreas))
+                      var samplePos = transform.position + (_ragdoll._Hip.position - _ragdollTarget._Hip.position).normalized * 5f;
+                      if (UnityEngine.AI.NavMesh.SamplePosition(samplePos, out hit, 4f, UnityEngine.AI.NavMesh.AllAreas))
                       {
-                        var save_destinatioin = _agent.destination;
                         var save_distance = FunctionsC.GetPathLength(_agent.path.corners);
-
                         var path = new UnityEngine.AI.NavMeshPath();
 
-                        if (UnityEngine.AI.NavMesh.CalculatePath(transform.position, pos, UnityEngine.AI.NavMesh.AllAreas, path))
+                        if (UnityEngine.AI.NavMesh.CalculatePath(transform.position, samplePos, UnityEngine.AI.NavMesh.AllAreas, path))
                         {
                           var new_distance = FunctionsC.GetPathLength(path.corners);
                           var diff = new_distance - save_distance;
                           if (diff > 0.5f && diff < 2.5f)
                             _agent.SetPath(path);
                         }
-
                       }
+
                     }
                   }
                 }
@@ -826,7 +825,7 @@ public class EnemyScript : MonoBehaviour
                     // Attack if close enough or pointed at target
                     else if (
                       _ragdoll.HasGun() ||
-                      (!_ragdoll.HasGun() && dis < (_itemLeft == GameScript.ItemManager.Items.GRENADE_HOLD ? 1f : _itemLeft == GameScript.ItemManager.Items.BAT ? 1.2f : (_IsZombieReal ? 1.2f : 1.8f)))
+                      (!_ragdoll.HasGun() && dis < (_itemLeft == GameScript.ItemManager.Items.GRENADE_HOLD ? 1f : _itemLeft == GameScript.ItemManager.Items.BAT ? 1.2f : (_IsZombieReal ? 0.6f : 1.8f)))
                       )
                     {
                       UseItem(dis < 1.4f);
@@ -1184,11 +1183,13 @@ public class EnemyScript : MonoBehaviour
               found = CheckRay(h);
           }
         }
+
         if (_ragdollTarget == null || _ragdollTarget._IsDead)
         {
           _targetInLOS = false;
           _targetDirectlyInFront = false;
           _targetInFront = false;
+
           // If ischaser and there are more players, chase them
           if (IsChaser() || _IsZombie)
           {
@@ -1409,9 +1410,11 @@ public class EnemyScript : MonoBehaviour
       var path_new = _agent.path;
       if (_agent.destination != _lastKnownPos)
       {
-        var filter = new UnityEngine.AI.NavMeshQueryFilter();
-        filter.areaMask = 1;
-        filter.agentTypeID = (_IsZombie && GameScript.IsSurvival() ? TileManager._navMeshSurface2.agentTypeID : TileManager._navMeshSurface.agentTypeID);
+        var filter = new UnityEngine.AI.NavMeshQueryFilter
+        {
+          areaMask = 1,
+          agentTypeID = _IsZombie && GameScript.IsSurvival() ? TileManager._navMeshSurface2.agentTypeID : TileManager._navMeshSurface.agentTypeID
+        };
         if (!UnityEngine.AI.NavMesh.CalculatePath(transform.position, _lastKnownPos, filter, path_new)) Debug.LogError("Failed to find path. (agent enabled): " + _agent.enabled);
         int useIter = 2;
         // Check if the enemy is about to redirect

@@ -503,19 +503,6 @@ public class ItemScript : MonoBehaviour
         return;
       }
 
-      //
-      void PlayBulletFX()
-      {
-        // Barrel smoke fx
-        var ps_gunsmoke = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.GUN_SMOKE);
-        foreach (var p_gunsmoke in ps_gunsmoke)
-        {
-          p_gunsmoke.transform.position = transform.position + transform.forward * (0.3f + (_type == ItemType.DMR || _type == ItemType.AK47 || _type == ItemType.M16 || _type == ItemType.RIFLE || _type == ItemType.RIFLE_LEVER || _type == ItemType.ROCKET_LAUNCHER || _type == ItemType.SHOTGUN_BURST || _type == ItemType.GRENADE_LAUNCHER || _type == ItemType.SHOTGUN_PUMP ? 0.35f : 0f));
-          p_gunsmoke.transform.LookAt(transform.position + transform.forward);
-          p_gunsmoke.Play();
-        }
-      }
-
       // Shoot bullet(s)
       var penatrationAmount = GetPenatrationAmount();
       for (var i = 0; i < _projectilesPerShot; i++)
@@ -528,18 +515,10 @@ public class ItemScript : MonoBehaviour
         // Normal bullet
         if (_customProjetile == UtilityScript.UtilityType.NONE)
         {
-          var bullet = _BulletPool[_BulletPool_Iter++ % _BulletPool.Length];
-
-          // Position
-          var spawn_pos = _forward.position;
-          if (_type == ItemType.ROCKET_FIST) spawn_pos = _ragdoll._Hip.position;
-          var new_position = new Vector3(spawn_pos.x, _ragdoll._spine.transform.position.y, spawn_pos.z);
-          bullet.gameObject.SetActive(true);
 
           // Special
           if (_type == ItemType.CHARGE_PISTOL)
           {
-
             if (_downTimeSave >= 1.25f)
             {
               use_penatrationAmount = 2;
@@ -554,73 +533,26 @@ public class ItemScript : MonoBehaviour
             {
               _shoot_force = 0.05f;
             }
-
           }
 
-          // Size
-          var use_size = Mathf.Clamp(0.9f + use_penatrationAmount * 0.2f, 0.9f, 2.5f);
-          if (_type == ItemType.FLAMETHROWER) use_size = 2.1f;
-          else if (_type == ItemType.ROCKET_FIST) use_size = 4.5f;
+          // Spawn bullet
+          var spawn_pos = _forward.position;
+          if (_type == ItemType.ROCKET_FIST)
+            spawn_pos = _ragdoll._Hip.position;
 
-          //
-          bullet.SetSize(use_size);
-          bullet.Reset(this, new_position);
+          var bullet = SpawnBulletTowards(
+            _ragdoll,
+            new Vector3(spawn_pos.x, _ragdoll._spine.transform.position.y, spawn_pos.z),
+            transform.forward,
+            _type,
+            use_penatrationAmount,
 
-          // Laser
-          var bulletSpeedMod = 1f;
-          if (_type == ItemType.CHARGE_PISTOL)
-          {
-            bullet.SetColor(new Color(1f, 0.5f, 0.5f), Color.red);
-            bullet.SetLifetime(0.04f);
-            bullet.SetNoise(0.1f, 0.1f);
-            bulletSpeedMod = 1.25f;
-          }
-
-          // Normal bullet
-          else
-          {
-            bullet.SetColor(new Color(1f, 0.9f, 0f), new Color(1f, 0.07f, 0f));
-            bullet.SetLifetime(0.05f);
-            bullet.SetNoise(0.25f, 0.5f);
-          }
-
-          // Physics
-          rb = bullet._rb;
-
-          rb.velocity = Vector3.zero;
-          rb.transform.position = new_position;
-          var f = MathC.Get2DVector(transform.forward).normalized;
-          var speedMod = 0.5f * (_type == ItemType.FLAMETHROWER ? 1f : (use_penatrationAmount > 0 ? 1.35f : 1f)) + (i == 0 ? 0f : (UnityEngine.Random.value * 0.15f) - 0.075f);
-          speedMod *= bulletSpeedMod;
-          var addforce = Vector3.zero;
-          if (_projectilesPerShot > 1)
-          {
-            float mod = 1f;
-            if (i % 2 == 1) mod = -1f;
-            if (!_randomSpread && i == 0 && _projectilesPerShot % 2 == 1) mod = 0f;
-            addforce = transform.right * _bullet_spread * (_randomSpread ? Random.value : 1f) * mod;
-          }
-          var force = MathC.Get2DVector(f + addforce) * 2100f * speedMod;
-          rb.transform.LookAt(rb.position + force);
-          rb.AddForce(force);
-
-          bullet.OnShot(use_penatrationAmount, force.magnitude);
-
-          // Bullet case
-          if ((_type != ItemType.CROSSBOW && _type != ItemType.FLAMETHROWER && _type != ItemType.ROCKET_FIST) && (_projectilesPerShot <= 2 || i == 0))
-          {
-            var bullet_casing = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.BULLET_CASING)[0];
-            var q = bullet_casing.transform.rotation;
-            q.eulerAngles = new Vector3(q.eulerAngles.x, Random.value * 360f, q.eulerAngles.z);
-            bullet_casing.transform.rotation = q;
-            var p = new ParticleSystem.EmitParams();
-            p.position = transform.position + Vector3.up * 0.5f;
-            p.rotation3D = q.eulerAngles;
-            bullet_casing.Emit(p, 1);
-            SfxManager.PlayAudioSourceSimple(transform.position, "Ragdoll/Bullet_Casing", 0.8f, 1.2f);
-
-            PlayBulletFX();
-          }
+            _randomSpread,
+            _bullet_spread,
+            _projectilesPerShot,
+            i
+          );
+          bullet.SetSourceItem(this);
         }
 
         // Custom projectile
@@ -1086,6 +1018,113 @@ public class ItemScript : MonoBehaviour
   }
 
   //
+  public static BulletScript SpawnBulletTowards(
+    ActiveRagdoll source,
+    Vector3 spawnPos,
+    Vector3 shootDirNormalized,
+    ItemType itemType,
+    int penatrationAmount,
+
+    bool randomSpread = false,
+    float bulletSpread = 0f,
+    int projectilesPerShot = 1,
+    int bulletIter = 0
+  )
+  {
+    var bullet = _BulletPool[_BulletPool_Iter++ % _BulletPool.Length];
+    bullet.gameObject.SetActive(true);
+
+    // Size
+    var use_size = Mathf.Clamp(0.9f + penatrationAmount * 0.2f, 0.9f, 2.5f);
+    if (itemType == ItemType.FLAMETHROWER) use_size = 2.1f;
+    else if (itemType == ItemType.ROCKET_FIST) use_size = 4.5f;
+
+    //
+    bullet.SetSize(use_size);
+    bullet.Reset(source, spawnPos);
+
+    // Laser
+    var bulletSpeedMod = 1f;
+    if (itemType == ItemType.CHARGE_PISTOL)
+    {
+      bullet.SetColor(new Color(1f, 0.5f, 0.5f), Color.red);
+      bullet.SetLifetime(0.04f);
+      bullet.SetNoise(0.1f, 0.1f);
+      bulletSpeedMod = 1.25f;
+    }
+
+    // Normal bullet
+    else
+    {
+      bullet.SetColor(new Color(1f, 0.9f, 0f), new Color(1f, 0.07f, 0f));
+      bullet.SetLifetime(0.05f);
+      bullet.SetNoise(0.25f, 0.5f);
+    }
+
+    // Physics
+    var rb = bullet._rb;
+
+    rb.velocity = Vector3.zero;
+    rb.transform.position = spawnPos;
+    var speedMod = 0.5f * (itemType == ItemType.FLAMETHROWER ? 1f : (penatrationAmount > 0 ? 1.35f : 1f)) + (bulletIter == 0 ? 0f : (UnityEngine.Random.value * 0.15f) - 0.075f);
+    speedMod *= bulletSpeedMod;
+    var addforce = Vector3.zero;
+    if (projectilesPerShot > 1)
+    {
+      float mod = 1f;
+      if (bulletIter % 2 == 1) mod = -1f;
+      if (!randomSpread && bulletIter == 0 && projectilesPerShot % 2 == 1) mod = 0f;
+      addforce = Quaternion.AngleAxis(90f, Vector3.up) * shootDirNormalized * bulletSpread * (randomSpread ? Random.value : 1f) * mod;
+    }
+    var force = MathC.Get2DVector(shootDirNormalized + addforce) * 2100f * speedMod;
+    rb.transform.LookAt(rb.position + force);
+    rb.AddForce(force);
+
+    bullet.OnShot(penatrationAmount, force.magnitude);
+
+    // Bullet casing
+    if (
+      itemType != ItemType.CROSSBOW &&
+      itemType != ItemType.FLAMETHROWER &&
+      itemType != ItemType.ROCKET_FIST &&
+      (projectilesPerShot <= 2 || bulletIter == 0)
+    )
+    {
+      var bullet_casing = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.BULLET_CASING)[0];
+      var q = bullet_casing.transform.rotation;
+      q.eulerAngles = new Vector3(q.eulerAngles.x, Random.value * 360f, q.eulerAngles.z);
+      bullet_casing.transform.rotation = q;
+      var p = new ParticleSystem.EmitParams();
+      p.position = spawnPos + Vector3.up * 0.5f;
+      p.rotation3D = q.eulerAngles;
+      bullet_casing.Emit(p, 1);
+      SfxManager.PlayAudioSourceSimple(spawnPos, "Ragdoll/Bullet_Casing", 0.8f, 1.2f);
+
+      // Gun embers
+      var ps_gunsmoke = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.GUN_SMOKE);
+      foreach (var p_gunsmoke in ps_gunsmoke)
+      {
+        p_gunsmoke.transform.position = spawnPos + shootDirNormalized * (0.3f + (
+          itemType == ItemType.DMR ||
+          itemType == ItemType.AK47 ||
+          itemType == ItemType.M16 ||
+          itemType == ItemType.RIFLE ||
+          itemType == ItemType.RIFLE_LEVER ||
+          itemType == ItemType.ROCKET_LAUNCHER ||
+          itemType == ItemType.SHOTGUN_BURST ||
+          itemType == ItemType.GRENADE_LAUNCHER ||
+          itemType == ItemType.SHOTGUN_PUMP
+          ? 0.35f : 0f));
+        p_gunsmoke.transform.LookAt(spawnPos + shootDirNormalized);
+        p_gunsmoke.Play();
+      }
+    }
+
+    //
+    return bullet;
+  }
+
+  //
   void StopUse()
   {
     _bursts = 0;
@@ -1193,7 +1232,7 @@ public class ItemScript : MonoBehaviour
     // Check zombie
     if (_isZombie)
     {
-      _burstPerShot = 6;
+      _burstPerShot = 3;
     }
   }
 
@@ -1396,7 +1435,11 @@ public class ItemScript : MonoBehaviour
     PlaySound(Audio.GUN_RELOAD, reload_speed_mod - 0.1f, reload_speed_mod + 0.1f);
     if (_ragdoll._IsPlayer) EnemyScript.CheckSound(_ragdoll._Hip.position, EnemyScript.Loudness.SUPERSOFT);
     var clipSave = _clip;
-    _clip = Mathf.Clamp(_reloadOneAtTime ? _clip + (_type == ItemType.CHARGE_PISTOL ? 2 : 1) : GetClipSize(), 0, GetClipSize());
+    _clip = Mathf.Clamp(
+      _reloadOneAtTime ? _clip + (_type == ItemType.CHARGE_PISTOL ? 2 : 1) : GetClipSize(),
+      0,
+      GetClipSize()
+    );
     var clipDiff = _clip - clipSave;
 
     // Check special
@@ -1589,10 +1632,10 @@ public class ItemScript : MonoBehaviour
     var add = Vector3.zero;
     switch (iter % 3)
     {
-      case (1):
+      case 1:
         add = _ragdoll._Hip.transform.right;
         break;
-      case (2):
+      case 2:
         add = -_ragdoll._Hip.transform.right;
         break;
     }
@@ -1606,7 +1649,7 @@ public class ItemScript : MonoBehaviour
     );
     var hit = false;
     var canMeleePenatrate = _canMeleePenatrate && (_ragdoll._EnemyScript?._IsZombieReal ?? true);
-    var maxDistance = (!_ragdoll._IsPlayer && _ragdoll._EnemyScript._IsZombieReal) ? 0.35f : 0.6f * (canMeleePenatrate ? 1.3f : 1f) * (_ragdoll._IsPlayer ? 1f : (canMeleePenatrate ? 0.75f : 0.65f));
+    var maxDistance = (!_ragdoll._IsPlayer && _ragdoll._EnemyScript._IsZombieReal) ? 0.275f : 0.6f * (canMeleePenatrate ? 1.3f : 1f) * (_ragdoll._IsPlayer ? 1f : (canMeleePenatrate ? 0.75f : 0.65f));
     if (Physics.SphereCast(ray, Mathf.Clamp(0.4f, 0.05f, maxDistance), out raycastInfo._raycastHit, maxDistance, GameResources._Layermask_Ragdoll))
     {
       raycastInfo._ragdoll = ActiveRagdoll.GetRagdoll(raycastInfo._raycastHit.collider.gameObject);

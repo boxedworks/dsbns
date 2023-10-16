@@ -47,14 +47,17 @@ public static class FunctionsC
     public float _distance;
   }
   // Return the closest player to a point
-  public static DistanceInfo GetClosestPlayerTo(Vector3 pos)
+  public static DistanceInfo GetClosestPlayerTo(Vector3 pos, int playerIdFilter = -1)
   {
     if (PlayerScript.s_Players == null) return null;
-    DistanceInfo info = new DistanceInfo();
-    info._distance = 1000f;
+
+    var info = new DistanceInfo
+    {
+      _distance = 1000f
+    };
     foreach (var player in PlayerScript.s_Players)
     {
-      if (player._ragdoll._IsDead || player._ragdoll._Hip == null) continue;
+      if (player._Id == playerIdFilter || player._ragdoll._IsDead || player._ragdoll._Hip == null) continue;
       var dist = MathC.Get2DDistance(player._ragdoll._Hip.position, pos);
       if (dist < info._distance)
       {

@@ -106,19 +106,19 @@ public class CustomObstacle : MonoBehaviour
       _BUYABLE_ITEM_TIERS[3].Add(System.Tuple.Create(GameScript.ItemManager.Items.SHOTGUN_PUMP, 150));
       _BUYABLE_ITEM_TIERS[3].Add(System.Tuple.Create(GameScript.ItemManager.Items.CROSSBOW, 85));
       _BUYABLE_ITEM_TIERS[3].Add(System.Tuple.Create(GameScript.ItemManager.Items.MACHINE_PISTOL, 75));
-      _BUYABLE_ITEM_TIERS[3].Add(System.Tuple.Create(GameScript.ItemManager.Items.CHARGE_PISTOL, 50));
+      _BUYABLE_ITEM_TIERS[3].Add(System.Tuple.Create(GameScript.ItemManager.Items.CHARGE_PISTOL, 85));
 
       _BUYABLE_ITEM_TIERS.Add(4, new List<System.Tuple<GameScript.ItemManager.Items, int>>());
       _BUYABLE_ITEM_TIERS[4].Add(System.Tuple.Create(GameScript.ItemManager.Items.UZI, 160));
       _BUYABLE_ITEM_TIERS[4].Add(System.Tuple.Create(GameScript.ItemManager.Items.REVOLVER, 250));
       _BUYABLE_ITEM_TIERS[4].Add(System.Tuple.Create(GameScript.ItemManager.Items.SHOTGUN_DOUBLE, 275));
-      _BUYABLE_ITEM_TIERS[4].Add(System.Tuple.Create(GameScript.ItemManager.Items.DMR, 200));
+      _BUYABLE_ITEM_TIERS[4].Add(System.Tuple.Create(GameScript.ItemManager.Items.DMR, 275));
       _BUYABLE_ITEM_TIERS[4].Add(System.Tuple.Create(GameScript.ItemManager.Items.RIFLE_LEVER, 200));
       _BUYABLE_ITEM_TIERS[4].Add(System.Tuple.Create(GameScript.ItemManager.Items.STICKY_GUN, 175));
 
       _BUYABLE_ITEM_TIERS.Add(5, new List<System.Tuple<GameScript.ItemManager.Items, int>>());
-      _BUYABLE_ITEM_TIERS[5].Add(System.Tuple.Create(GameScript.ItemManager.Items.AK47, 325));
-      _BUYABLE_ITEM_TIERS[5].Add(System.Tuple.Create(GameScript.ItemManager.Items.M16, 300));
+      _BUYABLE_ITEM_TIERS[5].Add(System.Tuple.Create(GameScript.ItemManager.Items.AK47, 450));
+      _BUYABLE_ITEM_TIERS[5].Add(System.Tuple.Create(GameScript.ItemManager.Items.M16, 350));
       _BUYABLE_ITEM_TIERS[5].Add(System.Tuple.Create(GameScript.ItemManager.Items.SHOTGUN_BURST, 325));
       _BUYABLE_ITEM_TIERS[5].Add(System.Tuple.Create(GameScript.ItemManager.Items.SWORD, 300));
       _BUYABLE_ITEM_TIERS[5].Add(System.Tuple.Create(GameScript.ItemManager.Items.AXE, 250));
@@ -133,31 +133,32 @@ public class CustomObstacle : MonoBehaviour
       _BUYABLE_PERK_TIERS[0].Add(System.Tuple.Create(Shop.Perk.PerkType.LASER_SIGHTS, 75));
 
       _BUYABLE_PERK_TIERS.Add(1, new List<System.Tuple<Shop.Perk.PerkType, int>>());
-      _BUYABLE_PERK_TIERS[1].Add(System.Tuple.Create(Shop.Perk.PerkType.EXPLOSION_RESISTANCE, 200));
-      _BUYABLE_PERK_TIERS[1].Add(System.Tuple.Create(Shop.Perk.PerkType.EXPLOSIONS_UP, 300));
-      _BUYABLE_PERK_TIERS[1].Add(System.Tuple.Create(Shop.Perk.PerkType.AKIMBO, 250));
+      _BUYABLE_PERK_TIERS[1].Add(System.Tuple.Create(Shop.Perk.PerkType.EXPLOSION_RESISTANCE, 250));
+      _BUYABLE_PERK_TIERS[1].Add(System.Tuple.Create(Shop.Perk.PerkType.EXPLOSIONS_UP, 350));
+      _BUYABLE_PERK_TIERS[1].Add(System.Tuple.Create(Shop.Perk.PerkType.AKIMBO, 400));
 
       _BUYABLE_PERK_TIERS.Add(2, new List<System.Tuple<Shop.Perk.PerkType, int>>());
-      _BUYABLE_PERK_TIERS[2].Add(System.Tuple.Create(Shop.Perk.PerkType.ARMOR_UP, 300));
-      _BUYABLE_PERK_TIERS[2].Add(System.Tuple.Create(Shop.Perk.PerkType.MAX_AMMO_UP, 350));
-      _BUYABLE_PERK_TIERS[2].Add(System.Tuple.Create(Shop.Perk.PerkType.FASTER_RELOAD, 400));
-      _BUYABLE_PERK_TIERS[2].Add(System.Tuple.Create(Shop.Perk.PerkType.SMART_BULLETS, 450));
+      _BUYABLE_PERK_TIERS[2].Add(System.Tuple.Create(Shop.Perk.PerkType.ARMOR_UP, 600));
+      _BUYABLE_PERK_TIERS[2].Add(System.Tuple.Create(Shop.Perk.PerkType.MAX_AMMO_UP, 500));
+      _BUYABLE_PERK_TIERS[2].Add(System.Tuple.Create(Shop.Perk.PerkType.FASTER_RELOAD, 500));
+      _BUYABLE_PERK_TIERS[2].Add(System.Tuple.Create(Shop.Perk.PerkType.SMART_BULLETS, 650));
     }
     if (_BUYABLE_UTILITY_TIERS == null)
     {
       _BUYABLE_UTILITY_TIERS = new Dictionary<int, List<System.Tuple<UtilityScript.UtilityType, int>>>();
 
       _BUYABLE_UTILITY_TIERS.Add(0, new List<System.Tuple<UtilityScript.UtilityType, int>>());
-      _BUYABLE_UTILITY_TIERS[0].Add(System.Tuple.Create(UtilityScript.UtilityType.GRENADE, 50));
+      _BUYABLE_UTILITY_TIERS[0].Add(System.Tuple.Create(UtilityScript.UtilityType.GRENADE, 90));
 
       _BUYABLE_UTILITY_TIERS.Add(1, new List<System.Tuple<UtilityScript.UtilityType, int>>());
-      _BUYABLE_UTILITY_TIERS[1].Add(System.Tuple.Create(UtilityScript.UtilityType.SHURIKEN, 20));
-      _BUYABLE_UTILITY_TIERS[1].Add(System.Tuple.Create(UtilityScript.UtilityType.GRENADE_IMPACT, 40));
-      _BUYABLE_UTILITY_TIERS[1].Add(System.Tuple.Create(UtilityScript.UtilityType.KUNAI_STICKY, 35));
+      _BUYABLE_UTILITY_TIERS[1].Add(System.Tuple.Create(UtilityScript.UtilityType.SHURIKEN, 35));
+      _BUYABLE_UTILITY_TIERS[1].Add(System.Tuple.Create(UtilityScript.UtilityType.GRENADE_IMPACT, 75));
+      _BUYABLE_UTILITY_TIERS[1].Add(System.Tuple.Create(UtilityScript.UtilityType.GRENADE_STUN, 30));
+      //_BUYABLE_UTILITY_TIERS[1].Add(System.Tuple.Create(UtilityScript.UtilityType.GRENADE_BULLET, 25));
+      _BUYABLE_UTILITY_TIERS[1].Add(System.Tuple.Create(UtilityScript.UtilityType.KUNAI_STICKY, 60));
       _BUYABLE_UTILITY_TIERS[1].Add(System.Tuple.Create(UtilityScript.UtilityType.C4, 40));
       _BUYABLE_UTILITY_TIERS[1].Add(System.Tuple.Create(UtilityScript.UtilityType.STOP_WATCH, 40));
-      _BUYABLE_UTILITY_TIERS[1].Add(System.Tuple.Create(UtilityScript.UtilityType.GRENADE_STUN, 30));
-      _BUYABLE_UTILITY_TIERS[1].Add(System.Tuple.Create(UtilityScript.UtilityType.MORTAR_STRIKE, 40));
+      _BUYABLE_UTILITY_TIERS[1].Add(System.Tuple.Create(UtilityScript.UtilityType.MORTAR_STRIKE, 45));
     }
 
   }
@@ -221,7 +222,7 @@ public class CustomObstacle : MonoBehaviour
     {
       if (random)
       {
-        var weapons = _BUYABLE_ITEM_TIERS[Random.Range(0, _BUYABLE_ITEM_TIERS.Count)];
+        var weapons = _BUYABLE_ITEM_TIERS[Random.Range(3, _BUYABLE_ITEM_TIERS.Count)];
         var weapon_index = Random.Range(0, weapons.Count);
         _weapon_info = weapons[weapon_index];
       }
@@ -255,7 +256,7 @@ public class CustomObstacle : MonoBehaviour
     {
       if (random)
       {
-        var utilities = _BUYABLE_UTILITY_TIERS[Random.Range(0, _BUYABLE_UTILITY_TIERS.Count)];
+        var utilities = _BUYABLE_UTILITY_TIERS[Random.Range(1, _BUYABLE_UTILITY_TIERS.Count)];
         var utility_index = Random.Range(0, utilities.Count);
         _utility_info = utilities[utility_index];
       }
@@ -289,7 +290,7 @@ public class CustomObstacle : MonoBehaviour
     {
       if (random)
       {
-        var perks = _BUYABLE_PERK_TIERS[Random.Range(0, _BUYABLE_PERK_TIERS.Count)];
+        var perks = _BUYABLE_PERK_TIERS[Random.Range(1, _BUYABLE_PERK_TIERS.Count)];
         var perk_index = Random.Range(0, perks.Count);
         _perk_info = perks[perk_index];
       }

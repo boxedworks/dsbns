@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using Steamworks;
 using UnityEngine;
 
 public class PlayerScript : MonoBehaviour
@@ -110,12 +111,15 @@ public class PlayerScript : MonoBehaviour
 
     // Get NavMeshAgent
     _agent = transform.GetComponent<UnityEngine.AI.NavMeshAgent>();
+
     // Add self to list of players
     if (s_Players == null)
       s_Players = new List<PlayerScript>();
     s_Players.Add(this);
+
     // Give unique _PlayerID and decide input based upon _PlayerID
     _Id = _PLAYERID++ % Settings._NumberPlayers;
+
     // Check all players to make sure no duplicate _PlayerID
     var loops = 0;
     while (true && loops++ < 5)
@@ -145,6 +149,7 @@ public class PlayerScript : MonoBehaviour
     // Assign color by _PlayerID
     var color = _Profile.GetColor();
     _ragdoll.ChangeColor(color);
+
     // Create ring
     var new_ring = Instantiate(TileManager._Ring.gameObject) as GameObject;
     _ring = new MeshRenderer[] { new_ring.transform.GetChild(0).GetComponent<MeshRenderer>(), new_ring.transform.GetChild(1).GetComponent<MeshRenderer>() };
@@ -189,6 +194,7 @@ public class PlayerScript : MonoBehaviour
     _agent.stoppingDistance = 0.5f;
 
     _taunt_times = new float[4];
+    _dpadPressed = new float[4];
 
     if (!TileManager._HasLocalLighting)
     {
@@ -440,6 +446,15 @@ public class PlayerScript : MonoBehaviour
       {
         StartLevelTimer();
       }
+    }
+
+    // Paused dpad reset
+    if (
+      GameScript._Paused &&
+      (_dpadPressed[0] != 0f || _dpadPressed[1] != 0f || _dpadPressed[2] != 0f || _dpadPressed[3] != 0f)
+    )
+    {
+      _dpadPressed = new float[4];
     }
 
     // Ratings
@@ -1036,9 +1051,9 @@ public class PlayerScript : MonoBehaviour
     return Shop.Perk.HasPerk(_Id, perk);
   }
 
-  Vector2 _lastInputTriggers, _lastInputDPad;
+  Vector2 _lastInputTriggers;
   public static float _SlowmoTimer;
-  float _lastWeaponUse;
+  float[] _dpadPressed;
 
   float _lastGoalLength = -1f, _goalTotal;
 
@@ -1165,9 +1180,11 @@ public class PlayerScript : MonoBehaviour
       // Mouse look
       var p = GameResources._Camera_Main.ScreenPointToRay(ControllerManager.GetMousePosition()).GetPoint(Vector3.Distance(GameResources._Camera_Main.transform.position, transform.position));
       transform.LookAt(new Vector3(p.x, transform.position.y, p.z));
+
       // Throw money
       if (ControllerManager.GetKey(ControllerManager.Key.V))
         Taunt(1);
+
       // Fire modes
       if (ControllerManager.GetKey(ControllerManager.Key.X))
         ToggleFireModes();
@@ -1396,20 +1413,64 @@ public class PlayerScript : MonoBehaviour
           }
         _lastInputTriggers = input;
 
-        // DPad - taunts
-        input = new Vector2(ControllerManager.GetControllerAxis(_Id, ControllerManager.Axis.DPAD_X),
-          ControllerManager.GetControllerAxis(_Id, ControllerManager.Axis.DPAD_Y));
-        if (input.y == -1f && _lastInputDPad.y != -1f)
+        // Save dpad press times
+        if (gamepad.dpad.up.wasPressedThisFrame)
+          _dpadPressed[0] = Time.unscaledTime;
+        else if (gamepad.dpad.down.wasPressedThisFrame)
+          _dpadPressed[1] = Time.unscaledTime;
+
+        if (gamepad.dpad.left.wasPressedThisFrame)
+          _dpadPressed[2] = Time.unscaledTime;
+        else if (gamepad.dpad.right.wasPressedThisFrame)
+          _dpadPressed[3] = Time.unscaledTime;
+
+        // Whistle / drop money
+        if (gamepad.dpad.down.wasReleasedThisFrame)
           Taunt(1);
 
-        // Change fire mode
-        else if (input.y == 1f && _lastInputDPad.y != 1f)
+        // Swap weapon hands
+        else if (gamepad.dpad.up.wasReleasedThisFrame)
           Taunt(0);
-        if (input.x == -1f && _lastInputDPad.x != -1f)
-          Taunt(2);
-        else if (input.x == 1f && _lastInputDPad.x != 1f)
-          Taunt(3);
-        _lastInputDPad = input;
+
+        // Buy specific weapon
+        var dpadHoldTime = 0.6f;
+        if (gamepad.dpad.left.wasReleasedThisFrame)
+        {
+          if (GameScript._GameMode == GameScript.GameModes.CLASSIC)
+          {
+            if (_dpadPressed[2] != 0f && Time.unscaledTime - _dpadPressed[2] < dpadHoldTime)
+              _Profile._LoadoutIndex--;
+          }
+          else
+            Taunt(2);
+          _dpadPressed[2] = 0f;
+        }
+        else if (gamepad.dpad.right.wasReleasedThisFrame)
+        {
+          if (GameScript._GameMode == GameScript.GameModes.CLASSIC)
+          {
+            if (_dpadPressed[3] != 0f && Time.unscaledTime - _dpadPressed[3] < dpadHoldTime)
+              _Profile._LoadoutIndex++;
+          }
+          else
+            Taunt(3);
+          _dpadPressed[3] = 0f;
+        }
+
+        // Change levels
+        else
+        {
+          if (_dpadPressed[2] != 0f && Time.unscaledTime - _dpadPressed[2] >= dpadHoldTime)
+          {
+            GameScript.PreviousLevelSafe();
+            _dpadPressed[2] = 0f;
+          }
+          else if (_dpadPressed[3] != 0f && Time.unscaledTime - _dpadPressed[3] >= dpadHoldTime)
+          {
+            GameScript.NextLevelSafe();
+            _dpadPressed[3] = 0f;
+          }
+        }
 
         // Check runkey
         if (_Profile._holdRun)
@@ -1834,6 +1895,7 @@ public class PlayerScript : MonoBehaviour
   void Taunt(int iter)
   {
     if (Menu2._InMenus) return;
+
     switch (iter)
     {
       case (1):
@@ -1841,6 +1903,7 @@ public class PlayerScript : MonoBehaviour
         break;
     }
     _taunt_times[iter] = Time.time;
+
     switch (iter)
     {
       // Up
@@ -1912,24 +1975,32 @@ public class PlayerScript : MonoBehaviour
           _tauntIter = -1;
           break;
         }*/
-
-
-
         break;
+
       // Left
       case (2):
-        //_profile._loadoutIter--;
+
+        if (GameScript._GameMode == GameScript.GameModes.CLASSIC)
+        {
+          _Profile._LoadoutIndex--;
+          break;
+        }
+
         // Check interactables
         if (_currentInteractable != null)
           _currentInteractable.Interact(this, CustomObstacle.InteractSide.LEFT);
         break;
+
       // Right
       case (3):
-        //_profile._loadoutIter++;
+
+        if (GameScript._GameMode == GameScript.GameModes.CLASSIC)
+        {
+          _Profile._LoadoutIndex++;
+          break;
+        }
+
         // Check interactables
-        //if (gamepad.buttonNorth.wasPressedThisFrame)
-        //  if (_currentInteractable != null)
-        //    _currentInteractable.Interact(this, ActiveRagdoll.Side.LEFT);
         if (_currentInteractable != null)
           _currentInteractable.Interact(this, CustomObstacle.InteractSide.RIGHT);
         break;
@@ -1941,13 +2012,9 @@ public class PlayerScript : MonoBehaviour
   {
 
     if (s_Players.Count == 0)
-    {
       return null;
-    }
     if (s_Players.Count == 1 && s_Players[0]._ragdoll != null && !s_Players[0]._ragdoll._IsDead)
-    {
       return s_Players[0];
-    }
 
     var distance = 10000f;
     PlayerScript closest_player = null;
@@ -1963,7 +2030,6 @@ public class PlayerScript : MonoBehaviour
     }
 
     return closest_player;
-
   }
 
   // Cycles through all players to see if one has the exit
@@ -2083,7 +2149,7 @@ public class PlayerScript : MonoBehaviour
         float pretimer = 0f, timer = 0f, supertimer = 0f, startpos = 5f;
         var flicker = false;
 
-        var tutorial_keyboard = ControllerManager._Gamepads.Count == 0;
+        var tutorial_keyboard = ControllerManager._NumberGamepads == 0;
         var tutorial_ui0 = tutorial_keyboard ? GameScript.TutorialInformation._Tutorial_Restart_Keyboard0 : GameScript.TutorialInformation._Tutorial_Restart_Controller0;
         var tutorial_ui1 = tutorial_keyboard ? GameScript.TutorialInformation._Tutorial_Restart_Keyboard1 : GameScript.TutorialInformation._Tutorial_Restart_Controller1;
 

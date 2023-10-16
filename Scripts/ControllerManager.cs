@@ -15,6 +15,8 @@ public static class ControllerManager
   {
     get
     {
+      if (Settings._IgnoreFirstController._value && _Gamepads.Count > 0)
+        return _Gamepads.Count - 1;
       return _Gamepads.Count;
     }
   }
@@ -185,18 +187,27 @@ public static class ControllerManager
   {
     if (_NumberGamepads == 0) return null;
     if (Settings._ForceKeyboard && playerID == 0) return null;
+
     if (Settings._ForceKeyboard)
       playerID--;
-    if (playerID >= _Gamepads.Count)
+
+    if (Settings._IgnoreFirstController._value)
+      playerID++;
+
+    if (playerID >= _NumberGamepads || playerID < 0)
       return null;
+
     return _Gamepads[playerID];
   }
+
   static PlayerScript GetPlayer(InputAction.CallbackContext obj)
   {
     if (PlayerScript.s_Players == null || PlayerScript.s_Players.Count == 0) return null;
+
     // Check keyboard
     if (obj.control.device.name.Equals("Keyboard") && (_NumberGamepads == 0 || Settings._ForceKeyboard))
       return PlayerScript.s_Players[0];
+
     // Check controllers
     foreach (var player in PlayerScript.s_Players)
     {

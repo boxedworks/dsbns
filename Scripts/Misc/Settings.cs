@@ -153,6 +153,7 @@ public static class Settings
       PlayerPrefs.SetInt($"{GameScript._GameMode}_DifficultyLevel", value);
     }
   }
+
   public static int _DIFFICULTY
   {
     get
@@ -165,6 +166,7 @@ public static class Settings
       PlayerPrefs.SetInt($"{GameScript._GameMode}_SavedDifficulty", DIFFICULTY);
     }
   }
+
   public static int _VolumeMusic
   {
     get
@@ -182,6 +184,7 @@ public static class Settings
       PlayerPrefs.SetInt("VolumeMusic", VolumeMusic);
     }
   }
+
   public static int _VolumeSFX
   {
     get
@@ -198,6 +201,7 @@ public static class Settings
     }
   }
 
+public static FunctionsC.SaveableStat_Bool _IgnoreFirstController;
 
   public static FunctionsC.SaveableStat_Bool _Toggle_Lightning;
   public static FunctionsC.SaveableStat_Int _CameraZoom, _LevelCompletion, _LevelEndcondition;
@@ -472,6 +476,7 @@ public static class Settings
 
     // Controller
     _ControllerRumble = PlayerPrefs.GetInt("controller_rumble", 1) == 1;
+    _IgnoreFirstController = new FunctionsC.SaveableStat_Bool("_IgnoreFirstController", false);
 
     // Extras
     _Extra_Gravity = PlayerPrefs.GetInt("extra_gravity", 0);

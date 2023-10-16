@@ -1246,6 +1246,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     }
     public static void GivePoints(int playerId, int points, bool recordPoints = false)
     {
+      if (_PlayerScores == null || playerId > _PlayerScores.Length - 1) return;
       _PlayerScores[playerId] += points;
       if (recordPoints) _PlayerScores_Total[playerId] += points;
     }
@@ -1743,29 +1744,13 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
 #endif
 
                 // Game logic
-                if (Settings._LevelCompletion._value == 4)
-                  LoadRandomLevel();
-                else if (Settings._LevelCompletion._value == 5)
-                  LoadRandomLevel(true);
-                else if (Levels._CurrentLevelIndex < (Levels._CurrentLevelCollection?._levelData.Length ?? 0) && Levels.LevelCompleted(Levels._CurrentLevelIndex))
-                {
-                  NextLevel(Levels._CurrentLevelIndex + 1);
-                  IncrementLevelMenu(1);
-                }
+                NextLevelSafe();
               }
 
               // Previous level
               else if (ControllerManager.GetKey(ControllerManager.Key.PAGE_DOWN, ControllerManager.InputMode.DOWN))
               {
-                if (Settings._LevelCompletion._value == 4)
-                  LoadRandomLevel();
-                else if (Settings._LevelCompletion._value == 5)
-                  LoadRandomLevel(true);
-                else if (Levels._CurrentLevelIndex > 0)
-                {
-                  NextLevel(Levels._CurrentLevelIndex - 1);
-                  IncrementLevelMenu(-1);
-                }
+                PreviousLevelSafe();
               }
             }
           }
@@ -2114,24 +2099,27 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
 
     public void HandleMenuInput()
     {
+
       // Accommodate for _ForceKeyboard; checking for -1 controllerID and controllerID > Gamepad.all.Count
       if (Settings._ForceKeyboard && _Id == 0)
         return;
       if (_Id + (Settings._ForceKeyboard ? -1 : 0) >= ControllerManager._NumberGamepads)
         return;
+
       // Check axis selections
-      for (int i = 0; i < 2; i++)
+      for (var i = 0; i < 2; i++)
       {
-        float y = 0;
+        var y = 0f;
         switch (i)
         {
-          case (0):
+          case 0:
             y = ControllerManager.GetControllerAxis(_Id, ControllerManager.Axis.LSTICK_Y);
             break;
-          case (1):
+          case 1:
             y = ControllerManager.GetControllerAxis(_Id, ControllerManager.Axis.DPAD_Y);
             break;
         }
+
         if (y > 0.75f)
         {
           if (_directionalAxis[i] <= 0f)
@@ -2140,6 +2128,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
             Up();
           }
         }
+
         else if (y < -0.75f)
         {
           if (_directionalAxis[i] >= 0f)
@@ -2148,6 +2137,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
             Down();
           }
         }
+
         else
           _directionalAxis[i] = 0f;
       }
@@ -2156,36 +2146,30 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
 
     public void HandleInput()
     {
+
       // Accommodate for _ForceKeyboard; checking for -1 controllerID and controllerID > Gamepad.all.Count
       if (Settings._ForceKeyboard && _Id == 0 || _Id + (Settings._ForceKeyboard ? -1 : 0) >= ControllerManager._NumberGamepads)
       {
+
         // Check loadout change
         if (ControllerManager.GetKey(ControllerManager.Key.Z))
           _LoadoutIndex--;
         if (ControllerManager.GetKey(ControllerManager.Key.C))
           _LoadoutIndex++;
+
         return;
       }
+
+      // Check in menus
+      if (!Menu2._InMenus)
+        return;
+
       // Check axis selections
-      var y = ControllerManager.GetControllerAxis(_Id, ControllerManager.Axis.DPAD_X);
-      if (y > 0.75f)
-      {
-        if (_directionalAxis[2] <= 0f)
-        {
-          _directionalAxis[2] = 1f;
-          _LoadoutIndex++;
-        }
-      }
-      else if (y < -0.75f)
-      {
-        if (_directionalAxis[2] >= 0f)
-        {
-          _directionalAxis[2] = -1f;
-          _LoadoutIndex--;
-        }
-      }
-      else
-        _directionalAxis[2] = 0f;
+      var gamepad = ControllerManager.GetPlayerGamepad(_Id);
+      if (gamepad.dpad.left.wasPressedThisFrame)
+        _LoadoutIndex--;
+      if (gamepad.dpad.right.wasPressedThisFrame)
+        _LoadoutIndex++;
     }
 
     void Up()
@@ -2383,7 +2367,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       {
 
         // Reload all
-        if (amount <= 1)
+        if (amount < 1)
         {
           foreach (var t in _ammo)
             t.gameObject.SetActive(true);
@@ -2636,8 +2620,9 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
             t.localPosition += new Vector3(-0.14f, 0.03f, 0f);
             t.localScale = new Vector3(0.09f, 0.11f, 0.08f);
             break;
-          case ("GRENADE_IMPACT"):
-          case ("GRENADE"):
+          case "GRENADE_IMPACT":
+          case "GRENADE":
+          case "GRENADE_BULLET":
             t.localPosition += new Vector3(-0.23f, 0.03f, 0f);
             t.localEulerAngles = new Vector3(0f, 0f, 0f);
             t.localScale = new Vector3(0.8f, 0.8f, 0.8f);
@@ -3142,30 +3127,21 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       {
         case UtilityScript.UtilityType.NONE:
           return 0;
-        case UtilityScript.UtilityType.GRENADE:
-          return 2;
-        case UtilityScript.UtilityType.GRENADE_IMPACT:
-          return 2;
-        case UtilityScript.UtilityType.C4:
-          return 2;
+        case UtilityScript.UtilityType.DASH:
         case UtilityScript.UtilityType.SHURIKEN:
-          return 1;
         case UtilityScript.UtilityType.SHURIKEN_BIG:
+        case UtilityScript.UtilityType.GRENADE_STUN:
+        case UtilityScript.UtilityType.GRENADE_BULLET:
           return 1;
+        case UtilityScript.UtilityType.GRENADE:
+        case UtilityScript.UtilityType.GRENADE_IMPACT:
+        case UtilityScript.UtilityType.C4:
         case UtilityScript.UtilityType.KUNAI_EXPLOSIVE:
         case UtilityScript.UtilityType.KUNAI_STICKY:
-          return 2;
         case UtilityScript.UtilityType.STOP_WATCH:
-          return 2;
         case UtilityScript.UtilityType.TEMP_SHIELD:
           return 2;
         case UtilityScript.UtilityType.INVISIBILITY:
-          return 3;
-        case UtilityScript.UtilityType.DASH:
-          return 1;
-
-        case UtilityScript.UtilityType.GRENADE_STUN:
-          return 1;
         case UtilityScript.UtilityType.MORTAR_STRIKE:
           return 3;
       }
@@ -3537,6 +3513,78 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
 
     }
 
+    return false;
+  }
+
+  public static bool NextLevelSafe()
+  {
+
+    if (
+      _EditorEnabled ||
+      _EditorTesting ||
+      IsSurvival() ||
+      TileManager._LoadingMap
+    )
+      return false;
+
+    //
+    if (Settings._LevelCompletion._value == 4)
+    {
+      LoadRandomLevel();
+      return true;
+    }
+
+    else if (Settings._LevelCompletion._value == 5)
+    {
+      LoadRandomLevel(true);
+      return true;
+    }
+
+    //
+    else if (Levels._CurrentLevelIndex < (Levels._CurrentLevelCollection?._levelData.Length ?? 0) && Levels.LevelCompleted(Levels._CurrentLevelIndex))
+    {
+      NextLevel(Levels._CurrentLevelIndex + 1);
+      IncrementLevelMenu(1);
+      return true;
+    }
+
+    //
+    return false;
+  }
+
+  public static bool PreviousLevelSafe()
+  {
+
+    if (
+      _EditorEnabled ||
+      _EditorTesting ||
+      IsSurvival() ||
+      TileManager._LoadingMap
+    )
+      return false;
+
+    //
+    if (Settings._LevelCompletion._value == 4)
+    {
+      LoadRandomLevel();
+      return true;
+    }
+
+    else if (Settings._LevelCompletion._value == 5)
+    {
+      LoadRandomLevel(true);
+      return true;
+    }
+
+    //
+    else if (Levels._CurrentLevelIndex > 0)
+    {
+      NextLevel(Levels._CurrentLevelIndex - 1);
+      IncrementLevelMenu(-1);
+      return true;
+    }
+
+    //
     return false;
   }
 

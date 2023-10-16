@@ -205,6 +205,7 @@ public static class Shop
     UTILITY_DASH,
 
     UTILITY_GRENADE_STUN,
+    UTILITY_GRENADE_BULLET,
     UTILITY_MORTAR_STRIKE,
 
     //PERK_PENETRATION_UP,
@@ -326,10 +327,11 @@ public static class Shop
       { Unlocks.UTILITY_SHURIKEN, new Tuple<string, int>("throwable, pick-up, small", 3) },
       { Unlocks.UTILITY_SHURIKEN_BIG, new Tuple<string, int>("throwable, pick-up, large", 25) },
       { Unlocks.UTILITY_KUNAI_EXPLOSIVE, new Tuple<string, int>("throwable, explodes, small", 15) },
-      { Unlocks.UTILITY_KUNAI_STICKY, new Tuple<string, int>("throwable, delalyed-explosion, small", 20) },
+      { Unlocks.UTILITY_KUNAI_STICKY, new Tuple<string, int>("throwable, delalyed-explosion, small", 15) },
       { Unlocks.UTILITY_GRENADE, new Tuple<string, int>("throwable, explosive, large-radius", 20) },
-      { Unlocks.UTILITY_GRENADE_IMPACT, new Tuple<string, int>("throwable, contact-explosive", 20) },
-      { Unlocks.UTILITY_GRENADE_STUN, new Tuple<string, int>("throwable, stun", 10) },
+      { Unlocks.UTILITY_GRENADE_IMPACT, new Tuple<string, int>("throwable, contact-explosive", 15) },
+      { Unlocks.UTILITY_GRENADE_STUN, new Tuple<string, int>("throwable, corner-killer", 10) },
+      { Unlocks.UTILITY_GRENADE_BULLET, new Tuple<string, int>("throwable, stun", 10) },
       { Unlocks.UTILITY_C4, new Tuple<string, int>("throwable, explosive, remote-controlled", 15) },
       { Unlocks.UTILITY_MORTAR_STRIKE, new Tuple<string, int>("ranged, explosive, remote-controlled", 20) },
       { Unlocks.UTILITY_STOP_WATCH, new Tuple<string, int>("useable, slows-time", 20) },
@@ -432,7 +434,7 @@ public static class Shop
     {
       _Unlocks_Vault.Add("classic_0", new Unlocks[] { Unlocks.ITEM_AXE, Unlocks.UTILITY_GRENADE, Unlocks.MAX_EQUIPMENT_POINTS_2, Unlocks.LOADOUT_SLOT_X2_0 });
       _Unlocks_Vault.Add("classic_1", new Unlocks[] { Unlocks.MOD_LASER_SIGHTS, Unlocks.MOD_NO_SLOWMO, Unlocks.UTILITY_KUNAI_EXPLOSIVE, Unlocks.ITEM_CHARGE_PISTOL });
-      _Unlocks_Vault.Add("classic_2", new Unlocks[] { Unlocks.MODE_SURVIVAL, Unlocks.ITEM_RIFLE, Unlocks.ITEM_MACHINE_PISTOL, Unlocks.MAX_EQUIPMENT_POINTS_3, Unlocks.LOADOUT_SLOT_X2_1 });
+      _Unlocks_Vault.Add("classic_2", new Unlocks[] { Unlocks.MODE_SURVIVAL, Unlocks.ITEM_RIFLE, Unlocks.ITEM_MACHINE_PISTOL, Unlocks.UTILITY_GRENADE_BULLET, Unlocks.MAX_EQUIPMENT_POINTS_3, Unlocks.LOADOUT_SLOT_X2_1 });
       _Unlocks_Vault.Add("classic_3", new Unlocks[] { Unlocks.ITEM_DOUBLE_PISTOL, Unlocks.UTILITY_STOP_WATCH, Unlocks.UTILITY_TEMP_SHIELD, Unlocks.MOD_SPEED_UP });
       _Unlocks_Vault.Add("classic_4", new Unlocks[] { Unlocks.ITEM_AXE, Unlocks.ITEM_REVOLVER, Unlocks.UTILITY_C4, Unlocks.UTILITY_GRENADE_STUN, Unlocks.UTILITY_SHURIKEN_BIG });
       _Unlocks_Vault.Add("classic_5", new Unlocks[] { Unlocks.ITEM_STICKY_GUN, Unlocks.UTILITY_GRENADE_IMPACT, Unlocks.MAX_EQUIPMENT_POINTS_4 });
@@ -469,7 +471,8 @@ public static class Shop
       { UtilityScript.UtilityType.INVISIBILITY, 6 },
       { UtilityScript.UtilityType.DASH, 6 },
       { UtilityScript.UtilityType.STICKY_GUN_BULLET, 50 },
-      { UtilityScript.UtilityType.MORTAR_STRIKE, 6 }
+      { UtilityScript.UtilityType.MORTAR_STRIKE, 6 },
+      { UtilityScript.UtilityType.GRENADE_BULLET, 6 },
     };
 
     //

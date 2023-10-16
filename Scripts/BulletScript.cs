@@ -426,23 +426,68 @@ public class BulletScript : MonoBehaviour
   public void SetSourceItem(ItemScript item)
   {
     _sourceItem = item;
-    _sourceItemRagdoll = _sourceItem._ragdoll;
-
-    _sourceLoudness = _sourceItem._silenced ? EnemyScript.Loudness.SUPERSOFT : EnemyScript.Loudness.SOFT;
-    _sourceHitForce = _sourceItem._hit_force;
-    _sourceDismember = _sourceItem._dismember;
-    _sourceType = _sourceItem._type;
-    _sourcePenetration = _sourceItem._penatrationAmount;
+    SetBulletData(
+      item._ragdoll,
+      _sourceItem._penatrationAmount,
+      _sourceItem._silenced,
+      _sourceItem._hit_force,
+      _sourceItem._dismember,
+      _sourceItem._type
+    );
   }
 
-  public void Reset(ItemScript item, Vector3 position)
+  public void SetBulletData(
+    ActiveRagdoll sourceRagdoll,
+    int penatrationAmount,
+    bool silenced,
+    float hitForce,
+    bool dismember,
+    GameScript.ItemManager.Items itemType
+  )
   {
-    SetSourceItem(item);
-    _sourceDamageRagdoll = item._ragdoll;
+    _sourceDamageRagdoll = _sourceItemRagdoll = sourceRagdoll;
+
+    _sourcePenetration = penatrationAmount;
+    _sourceLoudness = silenced ? EnemyScript.Loudness.SUPERSOFT : EnemyScript.Loudness.SOFT;
+    _sourceHitForce = hitForce;
+    _sourceDismember = dismember;
+    _sourceType = itemType;
+
+    // Special case
+    switch (_sourceType)
+    {
+      case GameScript.ItemManager.Items.FLAMETHROWER:
+        _maxDistance = 3.8f;
+        break;
+
+      case GameScript.ItemManager.Items.ROCKET_FIST:
+        _maxDistance = 0.9f;
+        break;
+
+      default:
+        _maxDistance = 0f;
+        break;
+    }
+
+    // Delay the start of playing the system to keep particles from emitting across screen
+    if (itemType != GameScript.ItemManager.Items.FLAMETHROWER && itemType != GameScript.ItemManager.Items.ROCKET_FIST)
+    {
+      if (_particles != null)
+      {
+        _particles.Play();
+        _light.enabled = true;
+      }
+    }
+  }
+
+  public void Reset(ActiveRagdoll damageSource, Vector3 spawnPosition)
+  {
     _id = _ID++;
+    _sourceDamageRagdoll = damageSource;
+
     _lastRagdollId = -1;
     _hitAmount = 0;
-    _lastPos = position;
+    _lastPos = spawnPosition;
     _triggered = false;
     _deflected = false;
     _particles.transform.parent = transform;
@@ -450,34 +495,12 @@ public class BulletScript : MonoBehaviour
     _lastRagdollPosition = Vector3.zero;
     _saveSmartVelocity = -1f;
 
-    if (item._type != GameScript.ItemManager.Items.FLAMETHROWER && item._type != GameScript.ItemManager.Items.ROCKET_FIST)
-    {
-      // Delay the start of playing the system to keep particles from emitting across screen
-      if (_particles != null)
-      {
-        _particles.Play();
-        _light.enabled = true;
-      }
-    }
-
     if (_rb != null)
       _rb.isKinematic = false;
 
     _startTime = Time.time;
 
     _distanceTraveled = 0f;
-    switch (_sourceType)
-    {
-      case (GameScript.ItemManager.Items.FLAMETHROWER):
-        _maxDistance = 3.8f;
-        break;
-      case (GameScript.ItemManager.Items.ROCKET_FIST):
-        _maxDistance = 0.9f;
-        break;
-      default:
-        _maxDistance = 0f;
-        break;
-    }
   }
 
   public void SetColor(Color start, Color end)

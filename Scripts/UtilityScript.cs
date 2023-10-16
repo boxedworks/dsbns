@@ -24,6 +24,7 @@ public class UtilityScript : ItemScript
 
     STICKY_GUN_BULLET,
     MORTAR_STRIKE,
+    GRENADE_BULLET
   }
 
   public UtilityType _utility_type;
@@ -175,6 +176,10 @@ public class UtilityScript : ItemScript
         explosion_radius = 2f;
         _throwSpeed = 2f;
         explosionType = ExplosiveScript.ExplosionType.STUN;
+        break;
+
+      case UtilityType.GRENADE_BULLET:
+        _throwSpeed = 2f;
         break;
 
       case UtilityType.C4:
@@ -562,14 +567,70 @@ public class UtilityScript : ItemScript
 
         case UtilityType.GRENADE_IMPACT:
         case UtilityType.GRENADE_STUN:
+
           // Add explode on impact event
           _onCollisionEnter += (Collision c) =>
           {
             Explode();
           };
+
           // Throw and queue next
           Throw();
           Unregister();
+
+          break;
+
+        //
+        case UtilityType.GRENADE_BULLET:
+
+          // Spawn bullet toward closes enemy on impact event
+          _onCollisionEnter += (Collision c) =>
+          {
+
+            var usePlayers = true;
+            var targetPosition = Vector3.zero;
+            if (!EnemyScript.AllDead())
+            {
+              var closestEnemy = FunctionsC.GetClosestEnemyTo(_rb.position, false);
+              if (closestEnemy._ragdoll != null)
+              {
+                usePlayers = false;
+                targetPosition = closestEnemy._ragdoll._Hip.position;
+              }
+            }
+            if (usePlayers)
+            {
+              var closestPlayer = FunctionsC.GetClosestPlayerTo(targetPosition);
+              if (closestPlayer._ragdoll != null)
+              {
+                targetPosition = closestPlayer._ragdoll._Hip.position;
+              }
+            }
+
+            var spawnDir = (targetPosition - _rb.position).normalized;
+            var bullet = SpawnBulletTowards(
+              _ragdoll,
+              new Vector3(_rb.position.x, _ragdoll._spine.transform.position.y, _rb.position.z) + spawnDir * 0.2f + MathC.Get2DVector(_throwPosition - _rb.position).normalized * 0.1f,
+              spawnDir,
+              GameScript.ItemManager.Items.NONE,
+              1
+            );
+            bullet.SetBulletData(
+              _ragdoll,
+              0,
+              true,
+              0.25f,
+              false,
+              GameScript.ItemManager.Items.PISTOL_SILENCED
+            );
+
+            gameObject.SetActive(false);
+          };
+
+          // Throw and queue next
+          Throw();
+          Unregister();
+
           break;
 
         case UtilityType.C4:
@@ -778,6 +839,7 @@ public class UtilityScript : ItemScript
 
   // Throw the item
   float _thrownTimer;
+  Vector3 _throwPosition;
   void Throw(int mode = 0)
   {
     // Set switch
@@ -813,7 +875,7 @@ public class UtilityScript : ItemScript
       forward = _spawnDirection;
     }
 
-    _rb.position = _spawnLocation != Vector3.zero ? _spawnLocation :
+    _rb.position = _throwPosition = _spawnLocation != Vector3.zero ? _spawnLocation :
       _ragdoll._spine.transform.position + forward * 0.5f + new Vector3(0f, (_explosion != null ? 0.25f : 0.1f), 0f);
 
     // Configure Rigidbody
