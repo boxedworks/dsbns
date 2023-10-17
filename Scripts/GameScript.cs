@@ -2622,10 +2622,14 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
             break;
           case "GRENADE_IMPACT":
           case "GRENADE":
-          case "GRENADE_BULLET":
             t.localPosition += new Vector3(-0.23f, 0.03f, 0f);
-            t.localEulerAngles = new Vector3(0f, 0f, 0f);
+            t.localEulerAngles = new Vector3(25f, -90f, 0f);
             t.localScale = new Vector3(0.8f, 0.8f, 0.8f);
+            break;
+          case "TACTICAL_BULLET":
+            t.localPosition += new Vector3(-0.13f, 0.03f, 0f);
+            t.localEulerAngles = new Vector3(17f, -90f, 0f);
+            t.localScale = new Vector3(1.2f, 1.2f, 1.2f);
             break;
           case ("C4"):
             t.localPosition += new Vector3(-0.17f, 0.0f, 0f);
@@ -3131,7 +3135,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         case UtilityScript.UtilityType.SHURIKEN:
         case UtilityScript.UtilityType.SHURIKEN_BIG:
         case UtilityScript.UtilityType.GRENADE_STUN:
-        case UtilityScript.UtilityType.GRENADE_BULLET:
+        case UtilityScript.UtilityType.TACTICAL_BULLET:
           return 1;
         case UtilityScript.UtilityType.GRENADE:
         case UtilityScript.UtilityType.GRENADE_IMPACT:
@@ -3263,6 +3267,12 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
   public static void OnLastEnemyKilled()
   {
     _s_Singleton._goalPickupTime = Time.time;
+
+    // Check achievements
+#if UNITY_STANDALONE
+    if (Settings._Extra_Superhot)
+      SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.EXTRA_SUPERH);
+#endif
   }
 
   //

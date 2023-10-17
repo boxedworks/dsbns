@@ -1382,15 +1382,14 @@ public class ActiveRagdoll
             var ragdoll = ActiveRagdoll.GetRagdoll(hit.collider.gameObject);
             if (ragdoll == null)
             {
-              ToggleRaycasting(true);
-              break;
+              continue;
             }
 
             // Check facing somewhat away dir
-            if ((_Controller.forward - ragdoll._Controller.forward).magnitude > 0.9f || (ragdoll._EnemyScript?.IsChaser() ?? false))
+            //Debug.Log((_Controller.forward - ragdoll._Controller.forward).magnitude);
+            if ((_Controller.forward - ragdoll._Controller.forward).magnitude > 1.1f || (ragdoll._EnemyScript?.IsChaser() ?? false))
             {
-              ToggleRaycasting(true);
-              break;
+              continue;
             }
 
             // Grab ragdoll
@@ -1401,6 +1400,9 @@ public class ActiveRagdoll
           yield return new WaitForSeconds(0.1f);
           if (_IsDead) break;
         }
+
+        // Clean up
+        ToggleRaycasting(true);
       }
       GameScript._s_Singleton.StartCoroutine(TryGrapple());
 
@@ -1411,9 +1413,6 @@ public class ActiveRagdoll
         _kickTimer_start = Time.time;
         _kicking = true;
       }*/
-
-      // Clean up
-      ToggleRaycasting(true);
     }
 
   }
@@ -1565,7 +1564,7 @@ public class ActiveRagdoll
 
         // Achievement
 #if UNITY_STANDALONE
-        SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.EXTRA_USE_CONFETTI, true);
+        SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.EXTRA_USE_CONFETTI);
 #endif
       }
 

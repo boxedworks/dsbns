@@ -24,7 +24,7 @@ public class UtilityScript : ItemScript
 
     STICKY_GUN_BULLET,
     MORTAR_STRIKE,
-    GRENADE_BULLET
+    TACTICAL_BULLET
   }
 
   public UtilityType _utility_type;
@@ -35,6 +35,8 @@ public class UtilityScript : ItemScript
   bool _thrown,
     _spinYAxis,
     _spin;
+
+  int _flag;
 
   ExplosiveScript _explosion;
 
@@ -178,8 +180,9 @@ public class UtilityScript : ItemScript
         explosionType = ExplosiveScript.ExplosionType.STUN;
         break;
 
-      case UtilityType.GRENADE_BULLET:
-        _throwSpeed = 2f;
+      case UtilityType.TACTICAL_BULLET:
+        _throwSpeed = 3f;
+        _spinYAxis = true;
         break;
 
       case UtilityType.C4:
@@ -193,7 +196,7 @@ public class UtilityScript : ItemScript
         break;
 
       case UtilityType.SHURIKEN:
-        _throwSpeed = 4f;
+        _throwSpeed = 3f;
         _spinYAxis = true;
         break;
 
@@ -242,7 +245,11 @@ public class UtilityScript : ItemScript
 
     // Gather components
     _rb = GetComponent<Rigidbody>();
-    _c = GetComponent<Collider>();
+
+    if (_utility_type == UtilityType.SHURIKEN_BIG)
+      _c = transform.GetChild(2).GetComponent<Collider>();
+    else
+      _c = GetComponent<Collider>();
 
     // Set use
     _onUse = () =>
@@ -274,6 +281,24 @@ public class UtilityScript : ItemScript
       switch (_utility_type)
       {
         case UtilityType.GRENADE:
+
+          //
+          _onTriggerEnter += (Collider c) =>
+          {
+
+            // Projectile handler
+            if (SimpleProjectileHandler(_c, c))
+              return;
+          };
+          _onCollisionEnter += (Collision c) =>
+          {
+
+            // Projectile handler
+            if (SimpleProjectileHandler(_c, c.collider))
+              return;
+          };
+
+          //
           Throw();
           Unregister();
           break;
@@ -307,30 +332,25 @@ public class UtilityScript : ItemScript
           break;
 
         case UtilityType.SHURIKEN:
+
+          //
+          _onTriggerEnter += (Collider c) =>
+          {
+
+            // Projectile handler
+            if (SimpleProjectileHandler(_c, c))
+              return;
+          };
+
           // Add kill on impact event
           _onCollisionEnter += (Collision c) =>
           {
-            if (!_c.enabled) return;
-            if (_rb == null) return;
 
-            // Bullet
-            if (c.gameObject.name == "Bullet")
-            {
+            // Projectile handler
+            if (SimpleProjectileHandler(_c, c.collider))
               return;
-            }
 
-            // Books
-            /*else if (c.gameObject.name == "Books")
-            {
-              FunctionsC.BookManager.ExplodeBooks(c.collider, _ragdoll.transform.position);
-            }*/
-
-            // other..
-            else if (c.gameObject.layer == 3)
-            {
-              return;
-            }
-
+            // Ragdoll
             var rag = ActiveRagdoll.GetRagdoll(c.collider.gameObject);
             var killed = false;
             if (rag != null)
@@ -359,12 +379,13 @@ public class UtilityScript : ItemScript
             EnemyScript.CheckSound(transform.position, killed ? EnemyScript.Loudness.SUPERSOFT : EnemyScript.Loudness.SOFT);
             transform.GetChild(1).GetComponent<ParticleSystem>().Stop();
             GameObject.Destroy(_rb);
+            _stuck = true;
 
             // Stop ignoring holder's ragdoll
             _ragdoll.IgnoreCollision(_c, false);
-            ((SphereCollider)_c).radius *= killed ? 10f : 4f;
             _c.isTrigger = true;
             PlaySound(Audio.UTILITY_HIT_FLOOR);
+
           };
           // Throw and queue next
           transform.GetChild(1).GetComponent<ParticleSystem>().Play();
@@ -377,36 +398,24 @@ public class UtilityScript : ItemScript
           Throw();
           Unregister();
           break;
+
         case UtilityType.SHURIKEN_BIG:
 
-          // Add kill on impact event
+          //
+          _onCollisionEnter += (Collision c) =>
+          {
+
+            // Projectile handler
+            if (SimpleProjectileHandler(_c, c.collider))
+              return;
+          };
           _onTriggerEnter += (Collider c) =>
           {
-            if (!_c.enabled || _rb == null) return;
-
-            // Books
-            if (c.name == "Books")
-            {
-              FunctionsC.BookManager.ExplodeBooks(c, _ragdoll.Transform.position);
-              PlaySound(Audio.UTILITY_ACTION);
+            // Projectile handler
+            if (SimpleProjectileHandler(_c, c))
               return;
-            }
 
-            // Bullet
-            else if (c.name == "Bullet")
-            {
-              var bullet = c.gameObject.GetComponent<BulletScript>();
-              bullet.Hide();
-              bullet.PlaySparks();
-              return;
-            }
-
-            // other..
-            else if (c.gameObject.layer == 3)
-            {
-              return;
-            }
-
+            // Ragdolls
             var rag = ActiveRagdoll.GetRagdoll(c.gameObject);
             if (rag != null)
             {
@@ -441,49 +450,76 @@ public class UtilityScript : ItemScript
             {
               transform.GetChild(1).GetComponent<ParticleSystem>().Stop();
               GameObject.Destroy(_rb);
+              _stuck = true;
+
               // Stop ignoring holder's ragdoll
-              _ragdoll.IgnoreCollision(_c, false);
-              ((SphereCollider)_c).radius *= 1.7f;
+              source.IgnoreCollision(transform.GetChild(2).GetComponent<Collider>(), false);
+              source.IgnoreCollision(transform.GetChild(3).GetComponent<Collider>(), false);
+              source.IgnoreCollision(transform.GetChild(4).GetComponent<Collider>(), false);
+
+              //((SphereCollider)_c).radius *= 1.7f;
               PlaySound(Audio.UTILITY_HIT_FLOOR);
               EnemyScript.CheckSound(transform.position, EnemyScript.Loudness.SOFT);
             }
           };
+
           // Throw and queue next
           transform.GetChild(1).GetComponent<ParticleSystem>().Play();
           Throw();
           Unregister();
           _hitRagdolls = new List<int>();
           break;
+
         case UtilityType.KUNAI_EXPLOSIVE:
-          // Add explode on impact event
+
+          //
+          _onTriggerEnter += (Collider c) =>
+          {
+
+            // Projectile handler
+            if (SimpleProjectileHandler(_c, c))
+              return;
+          };
           _onCollisionEnter += (Collision c) =>
           {
+
+            // Projectile handler
+            if (SimpleProjectileHandler(_c, c.collider))
+              return;
+
+            // Explode on impact
             Explode();
+
           };
+
           // Throw and queue next
           transform.GetChild(1).GetComponent<ParticleSystem>().Play();
           Throw();
           Unregister();
           break;
+
         case UtilityType.KUNAI_STICKY:
 
-          // Stick to enemy and delayed explode
+
+          //
+          _onTriggerEnter += (Collider c) =>
+          {
+
+            // Projectile handler
+            if (SimpleProjectileHandler(_c, c))
+              return;
+          };
           _onCollisionEnter += (Collision c) =>
           {
 
-            //Debug.Log($"{_stuck} {c.gameObject.name}");
+            // Projectile handler
+            if (SimpleProjectileHandler(_c, c.collider))
+              return;
 
+            // Stick to enemy and delayed explode
             if (!_stuck)
             {
               _stuck = true;
-
-              // Bullet
-              if (c.gameObject.name == "Bullet")
-              {
-                _exploded = false;
-                Explode();
-                return;
-              }
 
               var rag = ActiveRagdoll.GetRagdoll(c.collider.gameObject);
               if (rag != null)
@@ -503,12 +539,14 @@ public class UtilityScript : ItemScript
               Explode(1f);
             }
           };
+
           _explosion._onExplode += () =>
           {
             // Hide ring
             if (_ring != null)
               _ring.enabled = false;
           };
+
           // Throw and queue next
           transform.GetChild(1).GetComponent<ParticleSystem>().Play();
           Throw();
@@ -517,23 +555,25 @@ public class UtilityScript : ItemScript
 
         case UtilityType.STICKY_GUN_BULLET:
 
-          // Stick to enemy and delayed explode
+          //
+          _onTriggerEnter += (Collider c) =>
+          {
+
+            // Projectile handler
+            if (SimpleProjectileHandler(_c, c))
+              return;
+          };
           _onCollisionEnter += (Collision c) =>
           {
 
-            //Debug.Log($"{_stuck} {c.gameObject.name}");
+            // Projectile handler
+            if (SimpleProjectileHandler(_c, c.collider))
+              return;
 
+            // Stick to enemy and delayed explode
             if (!_stuck)
             {
               _stuck = true;
-
-              // Bullet
-              if (c.gameObject.name == "Bullet" || c.gameObject.name == "STICKY_GUN_BULLET")
-              {
-                _exploded = false;
-                Explode();
-                return;
-              }
 
               var rag = ActiveRagdoll.GetRagdoll(c.collider.gameObject);
               if (rag != null)
@@ -546,11 +586,6 @@ public class UtilityScript : ItemScript
                 PlaySound(Audio.UTILITY_HIT_FLOOR);
               transform.GetChild(1).GetComponent<ParticleSystem>().Stop();
               GameObject.Destroy(_rb);
-              //_rb.isKinematic = true;
-
-              // Stick on surface
-              //EnemyScript.CheckSound(transform.position, EnemyScript.Loudness.SOFT);
-              //Explode(1f);
             }
           };
           _explosion._onExplode += () =>
@@ -559,6 +594,7 @@ public class UtilityScript : ItemScript
             if (_ring != null)
               _ring.enabled = false;
           };
+
           // Throw and queue next
           transform.GetChild(1).GetComponent<ParticleSystem>().Play();
           Throw();
@@ -568,9 +604,21 @@ public class UtilityScript : ItemScript
         case UtilityType.GRENADE_IMPACT:
         case UtilityType.GRENADE_STUN:
 
-          // Add explode on impact event
+          //
+          _onTriggerEnter += (Collider c) =>
+          {
+
+            // Projectile handler
+            if (SimpleProjectileHandler(_c, c))
+              return;
+          };
           _onCollisionEnter += (Collision c) =>
           {
+            // Projectile handler
+            if (SimpleProjectileHandler(_c, c.collider))
+              return;
+
+            // Explode on impact
             Explode();
           };
 
@@ -581,55 +629,152 @@ public class UtilityScript : ItemScript
           break;
 
         //
-        case UtilityType.GRENADE_BULLET:
+        case UtilityType.TACTICAL_BULLET:
 
-          // Spawn bullet toward closes enemy on impact event
+          // Bullet FX
+          void TactBulletFX()
+          {
+            var particles = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.TACTICAL_BULLET)[0];
+            particles.transform.position = transform.position;
+            particles.Play();
+
+            EnemyScript.CheckSound(transform.position, EnemyScript.Loudness.SOFT);
+            PlaySound(3);
+          }
+          System.Action<ProjectileCollisionData> onDisable = (ProjectileCollisionData p) =>
+          {
+            TactBulletFX();
+          };
+
+          //
+          _onTriggerEnter += (Collider c) =>
+          {
+
+            // Projectile handler
+            if (SimpleProjectileHandler(_c, c, onDisable))
+              return;
+          };
           _onCollisionEnter += (Collision c) =>
           {
 
-            var usePlayers = true;
-            var targetPosition = Vector3.zero;
-            if (!EnemyScript.AllDead())
+            // Projectile handler
+            if (SimpleProjectileHandler(_c, c.collider, onDisable))
+              return;
+
+            // Spawn bullet toward closes enemy on impact event
+            if (_stuck) return;
+            _stuck = true;
+
+            //
+            var rag = ActiveRagdoll.GetRagdoll(c.collider.gameObject);
+            var killed = false;
+            if (rag != null)
             {
-              var closestEnemy = FunctionsC.GetClosestEnemyTo(_rb.position, false);
-              if (closestEnemy._ragdoll != null)
+              if (rag._Id == _ragdoll._Id || rag._IsDead) return;
+              transform.parent = c.transform;
+
+              killed = true;
+              rag.TakeDamage(
+                new ActiveRagdoll.RagdollDamageSource()
+                {
+                  Source = _ragdoll,
+
+                  HitForce = new Vector3(0f, 1f, 0f),
+
+                  Damage = 1,
+                  DamageSource = _ragdoll._Hip.position,
+                  DamageSourceType = ActiveRagdoll.DamageSourceType.THROW_MELEE,
+
+                  SpawnBlood = true,
+                  SpawnGiblets = false
+                });
+              PlaySound(Audio.UTILITY_ACTION);
+            }
+            else
+              PlaySound(Audio.UTILITY_HIT_FLOOR);
+            transform.GetChild(1).GetComponent<ParticleSystem>().Stop();
+            EnemyScript.CheckSound(transform.position, killed ? EnemyScript.Loudness.SUPERSOFT : EnemyScript.Loudness.SOFT);
+            GameObject.Destroy(_rb);
+
+            //
+            IEnumerator SpawnBulletCo(float delay)
+            {
+
+              var gameid = GameScript._GameId;
+              yield return new WaitForSeconds(delay);
+              if (gameid != GameScript._GameId) { }
+              else
               {
-                usePlayers = false;
-                targetPosition = closestEnemy._ragdoll._Hip.position;
+
+                for (var i = 0; i < _flag + 1; i++)
+                {
+
+                  //
+                  if (this == null || !gameObject.activeSelf) break;
+
+                  //
+                  var usePlayers = true;
+                  var targetPosition = Vector3.zero;
+                  if (!EnemyScript.AllDead())
+                  {
+                    var closestEnemy = FunctionsC.GetClosestEnemyTo(transform.position, false);
+                    if (closestEnemy._ragdoll != null)
+                    {
+                      usePlayers = false;
+                      targetPosition = closestEnemy._ragdoll._Hip.position;
+                    }
+                  }
+                  if (usePlayers)
+                  {
+                    var closestPlayer = FunctionsC.GetClosestPlayerTo(targetPosition, _ragdoll._PlayerScript._Id);
+                    if (closestPlayer._ragdoll != null)
+                    {
+                      targetPosition = closestPlayer._ragdoll._Hip.position;
+                    }
+                  }
+
+                  if (targetPosition != Vector3.zero)
+                  {
+
+                    var shootDir = (targetPosition - transform.position).normalized;
+                    var bullet = SpawnBulletTowards(
+                      _ragdoll,
+                      new Vector3(transform.position.x, _ragdoll._spine.transform.position.y, transform.position.z) + shootDir * 0.2f + MathC.Get2DVector(_throwPosition - transform.position).normalized * 0.2f,
+                      shootDir,
+                      GameScript.ItemManager.Items.NONE,
+                      0
+                    );
+                    bullet.SetBulletData(
+                      _ragdoll,
+                      true,
+                      0.25f,
+                      false,
+                      GameScript.ItemManager.Items.PISTOL_SILENCED,
+
+                      true
+                    );
+
+                  }
+
+                  // FX
+                  TactBulletFX();
+
+                  // Delay repeat
+                  if (_flag > 0 && i == 0)
+                    yield return new WaitForSeconds(0.3f);
+                }
+
+                if (this != null)
+                  gameObject.SetActive(false);
               }
             }
-            if (usePlayers)
-            {
-              var closestPlayer = FunctionsC.GetClosestPlayerTo(targetPosition);
-              if (closestPlayer._ragdoll != null)
-              {
-                targetPosition = closestPlayer._ragdoll._Hip.position;
-              }
-            }
-
-            var spawnDir = (targetPosition - _rb.position).normalized;
-            var bullet = SpawnBulletTowards(
-              _ragdoll,
-              new Vector3(_rb.position.x, _ragdoll._spine.transform.position.y, _rb.position.z) + spawnDir * 0.2f + MathC.Get2DVector(_throwPosition - _rb.position).normalized * 0.1f,
-              spawnDir,
-              GameScript.ItemManager.Items.NONE,
-              1
-            );
-            bullet.SetBulletData(
-              _ragdoll,
-              0,
-              true,
-              0.25f,
-              false,
-              GameScript.ItemManager.Items.PISTOL_SILENCED
-            );
-
-            gameObject.SetActive(false);
+            GameScript._s_Singleton.StartCoroutine(SpawnBulletCo(0.5f));
           };
 
           // Throw and queue next
           Throw();
           Unregister();
+          transform.GetChild(1).GetComponent<ParticleSystem>().Play();
 
           break;
 
@@ -640,17 +785,23 @@ public class UtilityScript : ItemScript
           if (!_thrown)
           {
             _stuck = false;
-            // Add stick on impact event
+
+            //
+            _onTriggerEnter += (Collider c) =>
+            {
+
+              // Projectile handler
+              if (SimpleProjectileHandler(_c, c))
+                return;
+            };
             _onCollisionEnter += (Collision c) =>
             {
 
-              // Bullet
-              if (c.gameObject.name == "Bullet")
-              {
-                Explode();
+              // Projectile handler
+              if (SimpleProjectileHandler(_c, c.collider))
                 return;
-              }
 
+              // Add stick on impact event
               if (!_stuck)
               {
                 _stuck = true;
@@ -664,16 +815,20 @@ public class UtilityScript : ItemScript
                 }
               }
             };
+
             _explosion._onExplode += () =>
             {
               if (_unregister) _ragdoll._PlayerScript?._Profile.UtilityUse(_side);
+
               // Hide ring
               if (_ring != null)
                 _ring.enabled = false;
             };
+
             // Throw
             Throw();
           }
+
           // Once thrown, detonate on use and queue next
           else
           {
@@ -734,8 +889,7 @@ public class UtilityScript : ItemScript
       //
       if (_thrown)
       {
-        _thrownTimer += Time.deltaTime;
-        if (_thrownTimer > _expirationTimer)
+        if (Time.time - _thrownTimer > _expirationTimer)
         {
           if (_utility_type == UtilityType.C4)
           {
@@ -771,6 +925,7 @@ public class UtilityScript : ItemScript
 
       switch (_utility_type)
       {
+
         // Check for grenade cook
         case UtilityType.GRENADE:
           if (_downTime != 0f && !_thrown && !_explosion._triggered && !_explosion._exploded)
@@ -800,13 +955,26 @@ public class UtilityScript : ItemScript
               // If not thrown, explode in hand
               if (!_thrown)
               {
-                transform.position = _ragdoll._transform_parts._hip.position + _ragdoll._transform_parts._hip.forward * 0.3f;
+                var spawnPos = _ragdoll._transform_parts._hip.position + _ragdoll._transform_parts._hip.forward * 0.3f;
+                spawnPos.y = BulletScript.s_BULLET_HEIGHT;
+                transform.position = spawnPos;
                 if (_unregister) _ragdoll._PlayerScript?._Profile.UtilityUse(_side);
               }
               // Disable rung
               _ring.enabled = false;
             };
           }
+          break;
+
+        // Bullet knife
+        case UtilityType.TACTICAL_BULLET:
+
+          if (_flag == 0 && _downTime > 1f)
+          {
+            _flag = 1;
+            PlaySound(4);
+          }
+
           break;
       }
     };
@@ -822,7 +990,13 @@ public class UtilityScript : ItemScript
     _ragdoll = source;
 
     // Ignore holder's ragdoll
-    if (_c != null)
+    if (_utility_type == UtilityType.SHURIKEN_BIG)
+    {
+      source.IgnoreCollision(transform.GetChild(2).GetComponent<Collider>());
+      source.IgnoreCollision(transform.GetChild(3).GetComponent<Collider>());
+      source.IgnoreCollision(transform.GetChild(4).GetComponent<Collider>());
+    }
+    else if (_c != null)
       source.IgnoreCollision(_c);
 
     // Register
@@ -845,6 +1019,7 @@ public class UtilityScript : ItemScript
     // Set switch
     if (_thrown) return;
     _thrown = true;
+    _thrownTimer = Time.time;
 
     // Check for max utils
     var utils_thrown = _Utilities_Thrown[_utility_type];
@@ -875,8 +1050,10 @@ public class UtilityScript : ItemScript
       forward = _spawnDirection;
     }
 
-    _rb.position = _throwPosition = _spawnLocation != Vector3.zero ? _spawnLocation :
+    var spawnPosition = _spawnLocation != Vector3.zero ? _spawnLocation :
       _ragdoll._spine.transform.position + forward * 0.5f + new Vector3(0f, (_explosion != null ? 0.25f : 0.1f), 0f);
+    spawnPosition.y = BulletScript.s_BULLET_HEIGHT;
+    _rb.position = _throwPosition = spawnPosition;
 
     // Configure Rigidbody
     if (_utility_type != UtilityType.MORTAR_STRIKE)
@@ -887,13 +1064,14 @@ public class UtilityScript : ItemScript
     _rb.AddForce(
       MathC.Get2DVector(forward * 250f * (_throwSpeed + Mathf.Clamp(_downTime, 0f, 4f)) +
       Vector3.up * 55f +
-      (_ragdoll._Hip.velocity) * 1.3f) * _forceModifier);
+      _ragdoll._Hip.velocity * 1.3f) * _forceModifier);
+
     // Rotate
     if (_spin)
     {
       if (_spinYAxis)
-        _rb.maxAngularVelocity = 50f + 10f * Random.value;
-      _rb.AddTorque(_spinYAxis ? Vector3.up * 100000f : _ragdoll._Hip.transform.right * 300f);
+        _rb.maxAngularVelocity = 45f + 5f * Random.value;
+      _rb.AddTorque(_spinYAxis ? Vector3.up * 1000f : _ragdoll._Hip.transform.right * 300f);
     }
     else
     {
@@ -923,7 +1101,7 @@ public class UtilityScript : ItemScript
   public void PickUp(PlayerScript player)
   {
     // Check if can pickup
-    if (_rb != null) return;
+    if (_rb != null || Time.time - _thrownTimer < 0.5f) return;
     var util_data = player.HasUtility(_utility_type);
     if (util_data.Item1)
     {
@@ -944,9 +1122,8 @@ public class UtilityScript : ItemScript
             player._ragdoll.PlaySound("Ragdoll/Pickup");
 
             // Disable and hide
-            _c.enabled = false;
-            transform.GetChild(0).GetComponent<Renderer>().enabled = false;
             GameObject.Destroy(gameObject, 2f);
+            gameObject.SetActive(false);
           }
         }
 
@@ -961,9 +1138,8 @@ public class UtilityScript : ItemScript
       player._ragdoll.PlaySound("Ragdoll/Pickup");
 
       // Disable and hide
-      _c.enabled = false;
-      transform.GetChild(0).GetComponent<Renderer>().enabled = false;
       GameObject.Destroy(gameObject, 2f);
+      gameObject.SetActive(false);
     }
   }
 
@@ -1042,4 +1218,215 @@ public class UtilityScript : ItemScript
     gameObject.transform.position = new Vector3(1000, -100f, 0f);
     return gameObject.GetComponent<UtilityScript>();
   }
+
+  //
+  public struct ProjectileCollisionData
+  {
+    public GameObject _GameObject;
+
+    public int _PenatrationAmount;
+    public System.Action<ProjectileCollisionData> _OnDisable;
+    public bool _IsBullet, _CanDestroyObjects;
+    public Vector3 _SpawnPosition;
+    public ActiveRagdoll _DamageSource;
+  }
+  public static void HandleProjectileCollision(ProjectileCollisionData p0, ProjectileCollisionData p1)
+  {
+    // Sanitize
+    if (!p0._GameObject.activeSelf || !p1._GameObject.activeSelf)
+      return;
+
+    //
+    var numBullets = 0;
+
+    // Destroy both
+    if (p0._PenatrationAmount == p1._PenatrationAmount)
+    {
+
+      p0._OnDisable?.Invoke(p0);
+      p1._OnDisable?.Invoke(p1);
+
+      p0._GameObject.SetActive(false);
+      p1._GameObject.SetActive(false);
+
+      if (p0._IsBullet) numBullets++;
+      if (p1._IsBullet) numBullets++;
+    }
+
+    // Destroy one
+    else
+    {
+
+      var greater = p0;
+      var lesser = p1;
+      if (p0._PenatrationAmount < p1._PenatrationAmount)
+      {
+        greater = p1;
+        lesser = p0;
+      }
+
+      lesser._OnDisable?.Invoke(lesser);
+      lesser._GameObject.SetActive(false);
+      if (lesser._IsBullet) numBullets++;
+
+      if (greater._IsBullet)
+      {
+        var bs = greater._GameObject.GetComponent<BulletScript>();
+        for (var i = 0; i < lesser._PenatrationAmount + 1; i++)
+          bs.RecordHit();
+      }
+
+      // Check achievement
+#if UNITY_STANDALONE
+      if (p0._IsBullet && p1._IsBullet && greater._DamageSource._IsPlayer)
+        SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.BULLET_DESTROY);
+#endif
+    }
+
+    //
+    BulletScript.PlayBulletEffect(0, p0._GameObject.transform.position, Vector3.zero);
+    if (numBullets > 0)
+      BulletScript.PlayBulletEffectDropBullets(p0._GameObject.transform.position, numBullets);
+  }
+
+  public static ProjectileCollisionData? GetProjectileCollisionData(Collider c)
+  {
+
+    var projectileData = new ProjectileCollisionData()
+    {
+      _GameObject = c.gameObject
+    };
+    switch (c.name.ToLower())
+    {
+
+      // Bullet
+      case "bullet":
+
+        var bulletScript = c.gameObject.GetComponent<BulletScript>();
+
+        projectileData._PenatrationAmount = bulletScript.GetPenatrationAmount(false);
+        projectileData._IsBullet = true;
+        projectileData._CanDestroyObjects = true;
+        projectileData._SpawnPosition = bulletScript.GetShootPosition();
+        projectileData._DamageSource = bulletScript.GetDamageSource();
+        break;
+
+      // Explode on disable
+      case "grenade":
+      case "grenade_impact":
+      case "grenade_sticky":
+      case "grenade_stun":
+      case "sticky_gun_bullet":
+      case "c4":
+      case "kunai_explosive":
+      case "kunai_sticky":
+        projectileData._PenatrationAmount = 0;
+        projectileData._OnDisable += (ProjectileCollisionData p) =>
+        {
+          p._GameObject.GetComponent<UtilityScript>().Explode();
+        };
+        break;
+
+      // Normal
+      case "shuriken":
+      case "tactical_bullet":
+        projectileData._PenatrationAmount = 0;
+        break;
+
+      // Shuriken big!
+      case "shuriken_big":
+        projectileData._GameObject = c.transform.parent.gameObject;
+        projectileData._PenatrationAmount = 99999;
+        projectileData._CanDestroyObjects = true;
+        break;
+
+      // Not found
+      default:
+        projectileData._GameObject = null;
+        break;
+
+    }
+
+    //
+    if (projectileData._GameObject != null)
+      if (!projectileData._IsBullet)
+      {
+        var utilityScript = projectileData._GameObject.GetComponent<UtilityScript>();
+
+        projectileData._SpawnPosition = utilityScript._throwPosition;
+        projectileData._DamageSource = utilityScript._ragdoll;
+      }
+
+    //
+    return projectileData._GameObject == null ? null : projectileData;
+  }
+
+  //
+  public static bool SimpleProjectileHandler(Collider c0, Collider c1, System.Action<ProjectileCollisionData> onDisable = null)
+  {
+    // Projectile handler
+    if (c1.gameObject.layer == 3)
+    {
+      var pSelf = GetProjectileCollisionData(c0);
+      var pOther = GetProjectileCollisionData(c1);
+      if (pSelf != null && pOther != null)
+      {
+
+        var pSelf_ = pSelf.Value;
+        var pOther_ = pOther.Value;
+
+        if (onDisable != null)
+          pSelf_._OnDisable += onDisable;
+
+        HandleProjectileCollision(pSelf_, pOther_);
+      }
+
+      return true;
+    }
+
+    // Books
+    else if (c1.name.ToLower() == "books")
+    {
+
+      var pSelf = GetProjectileCollisionData(c0);
+      if (pSelf != null)
+      {
+        var pSelf_ = pSelf.Value;
+        if (pSelf_._CanDestroyObjects)
+        {
+          FunctionsC.BookManager.ExplodeBooks(c1, pSelf_._SpawnPosition);
+
+          // Handle bullet
+          if (pSelf_._IsBullet)
+            pSelf_._GameObject.GetComponent<BulletScript>().RecordHitFull();
+
+          return true;
+        }
+      }
+    }
+
+    // TV
+    else if (c1.name.ToLower() == "television")
+    {
+
+      var pSelf = GetProjectileCollisionData(c0);
+      if (pSelf != null)
+      {
+        var pSelf_ = pSelf.Value;
+        if (pSelf_._CanDestroyObjects)
+        {
+          c1.GetComponent<TVScript>().Explode(pSelf_._DamageSource);
+
+          // Handle bullet
+          if (pSelf_._IsBullet)
+            pSelf_._GameObject.GetComponent<BulletScript>().RecordHitFull();
+
+          return true;
+        }
+      }
+    }
+
+    return false;
+  }
+
 }

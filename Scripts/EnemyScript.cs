@@ -2367,12 +2367,20 @@ public class EnemyScript : MonoBehaviour
           }
 
           // Check all times beaten
-          if (Settings._Classic_0_TopRated._value && Settings._Classic_1_TopRated._value)
+          if (Settings._Classic_0_TopRated._value)
           {
             // Achievement
 #if UNITY_STANDALONE
-            SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.TIME_BEAT_ALL);
+            SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.TIME_BEAT_SNEAKY);
 #endif
+
+            if (Settings._Classic_1_TopRated._value)
+            {
+              // Achievement
+#if UNITY_STANDALONE
+              SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.TIME_BEAT_ALL);
+#endif
+            }
           }
 
           // Last killed settings

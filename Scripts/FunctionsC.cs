@@ -139,6 +139,7 @@ public static class FunctionsC
     EXPLOSION_STUN,
     SMOKE_RING,
     FOOTPRINT_BLOOD,
+    TACTICAL_BULLET,
   }
   static int _ExplosionIter;
   public static ParticleSystem[] GetParticleSystem(ParticleSystemType particleType, int forceParticleIndex = -1)
@@ -233,6 +234,10 @@ public static class FunctionsC
 
       case ParticleSystemType.FOOTPRINT_BLOOD:
         index = 26;
+        break;
+
+      case ParticleSystemType.TACTICAL_BULLET:
+        index = 27;
         break;
     }
 

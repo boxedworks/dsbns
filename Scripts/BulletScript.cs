@@ -1,5 +1,4 @@
 ﻿using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class BulletScript : MonoBehaviour
@@ -11,11 +10,10 @@ public class BulletScript : MonoBehaviour
   EnemyScript.Loudness _sourceLoudness;
   float _sourceHitForce;
   GameScript.ItemManager.Items _sourceType;
-  int _sourcePenetration;
   bool _sourceDismember;
 
   //
-  bool _triggered;
+  bool _triggered, _canDamageSource;
 
   Vector3 _lastPos;
 
@@ -23,7 +21,7 @@ public class BulletScript : MonoBehaviour
   public static int _ID;
 
   int _hitAmount, _lastRagdollId;
-  Vector3 _lastRagdollPosition;
+  Vector3 _shootPosition;
 
   float _distanceTraveled;
   public float _maxDistance;
@@ -66,6 +64,9 @@ public class BulletScript : MonoBehaviour
     set { light = value; }
   }
 
+  //
+  public const float s_BULLET_HEIGHT = -0.2397795f;
+
   // Use this for initialization
   void Start()
   {
@@ -80,8 +81,9 @@ public class BulletScript : MonoBehaviour
   {
     // Set collider scale
     var size = _c.size;
-    size.x = 1f * scale;
+    size.x = 0.9f * scale;
     _c.size = size;
+
     // Set particle system scale
     var module = _particles.main;
     module.startSize = 0.13f * scale;
@@ -123,12 +125,20 @@ public class BulletScript : MonoBehaviour
     return _sourceDamageRagdoll._Id;
   }
 
-  int _penatrationAmount, _penatrationAmountSave;
+  int _penatrationAmount;
   float _initialForce;
   public void OnShot(int penatrationAmount, float force)
   {
-    _penatrationAmount = _penatrationAmountSave = penatrationAmount;
+    _penatrationAmount = penatrationAmount;
     _initialForce = force;
+    _shootPosition = transform.position;
+  }
+
+  public int GetPenatrationAmount(bool total)
+  {
+    if (total)
+      return _penatrationAmount;
+    return _penatrationAmount - _hitAmount;
   }
 
   float _saveSmartVelocity;
@@ -138,9 +148,8 @@ public class BulletScript : MonoBehaviour
     bool TakeDamage(ActiveRagdoll r)
     {
 
-      var use_position = _lastRagdollPosition == Vector3.zero ? _sourceDamageRagdoll._Hip.transform.position : _lastRagdollPosition;
       var hitForce = MathC.Get2DVector(
-        -(use_position - collider.transform.position).normalized * (4000f + (Random.value * 2000f)) * (_deflected ? Mathf.Clamp(_sourceHitForce * 1.5f, 0.5f, 2f) : _sourceHitForce)
+        -(_shootPosition - collider.transform.position).normalized * (4000f + (Random.value * 2000f)) * (_deflected ? Mathf.Clamp(_sourceHitForce * 1.5f, 0.5f, 2f) : _sourceHitForce)
       );
       var pen = _penatrationAmount + 1;
       var health = r._health;
@@ -158,19 +167,20 @@ public class BulletScript : MonoBehaviour
           HitForce = hitForce,
 
           Damage = (int)damage,
-          DamageSource = use_position,
+          DamageSource = _shootPosition,
           DamageSourceType = _sourceType == GameScript.ItemManager.Items.FLAMETHROWER ? ActiveRagdoll.DamageSourceType.FIRE : ActiveRagdoll.DamageSourceType.BULLET,
 
           SpawnBlood = _sourceType != GameScript.ItemManager.Items.FLAMETHROWER,
-          SpawnGiblets = _sourcePenetration > 1
+          SpawnGiblets = _penatrationAmount > 1
         }
         ))
       {
-        _lastRagdollPosition = r._Hip.position;
         if (_sourceDismember && r._health <= 0) r.Dismember(r._spine, hitForce);
         _hitAmount += (int)damage;
         if (_hitAmount <= _penatrationAmount)
         {
+
+          // Check smart bullets
           if ((_sourceDamageRagdoll._PlayerScript?.HasPerk(Shop.Perk.PerkType.SMART_BULLETS) ?? false) && _sourceType != GameScript.ItemManager.Items.FLAMETHROWER)
           {
             var enemy = FunctionsC.GetClosestEnemyTo(transform.position, false);
@@ -184,6 +194,7 @@ public class BulletScript : MonoBehaviour
               _startTime = Time.time;
             }
           }
+
           return true;
         }
       }
@@ -219,19 +230,22 @@ public class BulletScript : MonoBehaviour
 
               Deflect(item, true);
 
+
 #if UNITY_STANDALONE
-              // Check achievement
-              if (item._ragdoll._IsPlayer && item._ragdoll._PlayerScript != null)
+              // Check achievements
+              if (item._ragdoll._IsPlayer)
+              {
                 SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.BAT_DEFLECT);
+
+                if (item._type == GameScript.ItemManager.Items.FRYING_PAN && SceneThemes._Theme._name == "Hedge")
+                  SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.FRYING_PAN_RAIN);
+              }
 #endif
             }
             else
             {
               PlaySparks(true);
-
-              var parts = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.BULLET_CASING_HOT)[0];
-              parts.transform.position = transform.position;
-              parts.Emit(1);
+              PlayBulletEffectDropBullets(transform.position, 1);
 
               item._ragdoll.Recoil(-(_sourceItemRagdoll._Hip.position - item.transform.position).normalized, _rb.velocity.magnitude / 25f);
               OnHideBullet();
@@ -241,7 +255,7 @@ public class BulletScript : MonoBehaviour
         }
         return;
       }
-      else if (collider.name.Equals("Bullet"))
+      /*else if (collider.name.Equals("Bullet"))
       {
         // Check bullet damage
         var bullet_other = collider.GetComponent<BulletScript>();
@@ -251,8 +265,8 @@ public class BulletScript : MonoBehaviour
         var damage_self = _penatrationAmount;
         var damage_othe = bullet_other._penatrationAmount;
 
-        var hit_bullet = false;
-        var hotbullets = 0;
+        var didHitBullet = false;
+        var numHotBullets = 0;
 
         if (damage_self == damage_othe)
         {
@@ -260,8 +274,8 @@ public class BulletScript : MonoBehaviour
           OnHideBullet();
           bullet_other.Hide();
 
-          hit_bullet = true;
-          hotbullets = 2;
+          didHitBullet = true;
+          numHotBullets = 2;
         }
 
         else if (damage_self > damage_othe)
@@ -269,8 +283,8 @@ public class BulletScript : MonoBehaviour
           _penatrationAmount -= damage_othe;
           bullet_other.Hide();
 
-          hit_bullet = true;
-          hotbullets = 1;
+          didHitBullet = true;
+          numHotBullets = 1;
         }
 
         else
@@ -279,29 +293,18 @@ public class BulletScript : MonoBehaviour
           OnHideBullet();
           Hide();
 
-          hit_bullet = true;
-          hotbullets = 1;
+          didHitBullet = true;
+          numHotBullets = 1;
         }
 
         // Sparks
-        PlaySparks(hit_bullet);
-
-        // Hot bullets
-        if (hotbullets > 0)
-        {
-          var parts = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.BULLET_CASING_HOT)[0];
-          parts.transform.position = transform.position;
-          //parts.transform.LookAt(transform.position + -transform.forward);
-          parts.Emit(hotbullets);
-        }
-
+        PlaySparks(didHitBullet, numHotBullets);
         return;
-      }
+      }*/
 
-      // other..
-      else if (collider.gameObject.layer == 3)
+      // Projectile handler
+      else if (UtilityScript.SimpleProjectileHandler(_c, collider))
       {
-        collider.gameObject.GetComponent<UtilityScript>()?.Explode();
         return;
       }
 
@@ -313,16 +316,22 @@ public class BulletScript : MonoBehaviour
         if (r._Id == _lastRagdollId) return;
         if ((r._grappler?._Id ?? -1) == GetRagdollID()) return;
         _lastRagdollId = r._Id;
-        if (_sourceItemRagdoll == null || (r._Id == _sourceDamageRagdoll._Id)) return;
+        if (r._Id == _sourceDamageRagdoll._Id && !_canDamageSource) return;
 
         // If bullet hit is swinging and has a two-handed weapon (sword), reflect bullet
         if (r._IsSwinging && r.HasBulletDeflector())
         {
 
 #if UNITY_STANDALONE
-          // Check achievement
-          if (r._IsPlayer && r._PlayerScript != null)
+          // Check achievements
+          if (r._IsPlayer)
+          {
             SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.BAT_DEFLECT);
+
+            ItemScript swingingItem = (r._ItemR?._IsSwinging ?? false) ? r._ItemR : ((r._ItemL?._IsSwinging ?? false) ? r._ItemL : null);
+            if ((swingingItem?._type ?? GameScript.ItemManager.Items.NONE) == GameScript.ItemManager.Items.FRYING_PAN && SceneThemes._Theme._name == "Hedge")
+              SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.FRYING_PAN_RAIN);
+          }
 #endif
 
           // Deflect self
@@ -331,42 +340,21 @@ public class BulletScript : MonoBehaviour
         }
         if (TakeDamage(r)) return;
       }
-      //else if (c.gameObject.name.Equals("Spine_Middle") || c.gameObject.name.Equals("Arm_Lower_L") || c.gameObject.name.Equals("Arm_Lower_R"))
-      //  return;
+
       else
       {
-        if (collider.gameObject.name == "Books")
+        var s = collider.transform?.parent.GetComponent<ExplosiveScript>() ?? null;
+        if (s != null)
         {
-          FunctionsC.BookManager.ExplodeBooks(collider, _sourceItemRagdoll._Hip.position);
+          s.Explode(_sourceDamageRagdoll);
           if (++_hitAmount <= _penatrationAmount) return;
         }
 
         else
-        {
-          var tv = collider.GetComponent<TVScript>();
-          if (tv != null)
-          {
-            tv.Explode(_sourceDamageRagdoll);
-            if (++_hitAmount <= _penatrationAmount) return;
-          }
-
-          else
-          {
-
-            //Debug.Log(collider.gameObject.name);
-            var s = collider.transform?.parent.GetComponent<ExplosiveScript>() ?? null;
-            if (s != null)
-            {
-              s.Explode(_sourceDamageRagdoll);
-              if (++_hitAmount <= _penatrationAmount) return;
-            }
-
-            else
-              hit_wall = true;
-          }
-        }
+          hit_wall = true;
       }
     }
+
     else
     {
       hit_wall = true;
@@ -384,10 +372,33 @@ public class BulletScript : MonoBehaviour
   }
 
   //
+  public Vector3 GetShootPosition()
+  {
+    return _shootPosition;
+  }
+  public ActiveRagdoll GetDamageSource()
+  {
+    return _sourceDamageRagdoll;
+  }
+
+  //
+  public bool RecordHit()
+  {
+    return ++_hitAmount <= _penatrationAmount;
+  }
+  public void RecordHitFull()
+  {
+    if (++_hitAmount > _penatrationAmount)
+    {
+      Hide();
+    }
+  }
+
+  //
   public void OnHideBullet()
   {
     return;
-    if (_sourceType == GameScript.ItemManager.Items.CHARGE_PISTOL && _penatrationAmountSave == 1)
+    if (_sourceType == GameScript.ItemManager.Items.CHARGE_PISTOL && _penatrationAmount == 1)
     {
 
       // Explode
@@ -402,25 +413,54 @@ public class BulletScript : MonoBehaviour
   }
 
   //
-  public void PlaySparks(bool other_bullet = false)
+  public void PlaySparks(bool other_bullet = false, int drop_bullet_casings = 0)
   {
     if (other_bullet)
     {
-      SfxManager.PlayAudioSourceSimple(transform.position, "Etc/Bullet_ricochet");
-
-      var parts = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.BULLET_COLLIDE)[0];
-      parts.transform.position = transform.position;
-      parts.Play();
+      PlayBulletEffect(0, transform.position, transform.forward);
     }
     else
     {
-      SfxManager.PlayAudioSourceSimple(transform.position, "Etc/Bullet_impact");
-
-      var parts = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.SPARKS)[0];
-      parts.transform.position = transform.position;
-      parts.transform.LookAt(transform.position + -transform.forward);
-      parts.Play();
+      PlayBulletEffect(1, transform.position, transform.forward);
     }
+
+    // Hot bullet casings
+    if (drop_bullet_casings > 0)
+    {
+      PlayBulletEffectDropBullets(transform.position, drop_bullet_casings);
+    }
+  }
+
+  public static void PlayBulletEffect(int effectIter, Vector3 position, Vector3 forward)
+  {
+    switch (effectIter)
+    {
+      case 0:
+        SfxManager.PlayAudioSourceSimple(position, "Etc/Bullet_ricochet");
+
+        var parts = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.BULLET_COLLIDE)[0];
+        parts.transform.position = position;
+        parts.Play();
+
+        break;
+
+      case 1:
+        SfxManager.PlayAudioSourceSimple(position, "Etc/Bullet_impact");
+
+        parts = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.SPARKS)[0];
+        parts.transform.position = position;
+        parts.transform.LookAt(position + -forward);
+        parts.Play();
+
+        break;
+    }
+  }
+
+  public static void PlayBulletEffectDropBullets(Vector3 position, int numBullets)
+  {
+    var parts = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.BULLET_CASING_HOT)[0];
+    parts.transform.position = position;
+    parts.Emit(numBullets);
   }
 
   public void SetSourceItem(ItemScript item)
@@ -428,7 +468,6 @@ public class BulletScript : MonoBehaviour
     _sourceItem = item;
     SetBulletData(
       item._ragdoll,
-      _sourceItem._penatrationAmount,
       _sourceItem._silenced,
       _sourceItem._hit_force,
       _sourceItem._dismember,
@@ -438,20 +477,22 @@ public class BulletScript : MonoBehaviour
 
   public void SetBulletData(
     ActiveRagdoll sourceRagdoll,
-    int penatrationAmount,
     bool silenced,
     float hitForce,
     bool dismember,
-    GameScript.ItemManager.Items itemType
+    GameScript.ItemManager.Items itemType,
+
+    bool canDamageSource = false
   )
   {
     _sourceDamageRagdoll = _sourceItemRagdoll = sourceRagdoll;
 
-    _sourcePenetration = penatrationAmount;
     _sourceLoudness = silenced ? EnemyScript.Loudness.SUPERSOFT : EnemyScript.Loudness.SOFT;
     _sourceHitForce = hitForce;
     _sourceDismember = dismember;
     _sourceType = itemType;
+
+    _canDamageSource = canDamageSource;
 
     // Special case
     switch (_sourceType)
@@ -492,7 +533,6 @@ public class BulletScript : MonoBehaviour
     _deflected = false;
     _particles.transform.parent = transform;
     _particles.transform.localPosition = new Vector3(0f, 0f, 0.5f);
-    _lastRagdollPosition = Vector3.zero;
     _saveSmartVelocity = -1f;
 
     if (_rb != null)

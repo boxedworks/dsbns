@@ -2213,9 +2213,13 @@ public class PlayerScript : MonoBehaviour
     switch (other.name)
     {
       case "SHURIKEN":
-      case "SHURIKEN_BIG":
         other.GetComponent<UtilityScript>().PickUp(this);
         break;
+
+      case "SHURIKEN_BIG":
+        other.transform.parent.GetComponent<UtilityScript>().PickUp(this);
+        break;
+
       default:
         // Pick up points
         if (other.name.StartsWith("Money"))
