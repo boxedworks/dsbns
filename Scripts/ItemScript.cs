@@ -85,6 +85,8 @@ public class ItemScript : MonoBehaviour
   //
   protected int _clip, _bursts, _meleeIter;
   protected bool _triggerDown, _triggerDown_last, _used, _hitAnthing, _hitAnthingOverride, _hasHitEnemy;
+  public bool _HitAnything { get { return _hitAnthing; } }
+
   bool _triggerDownReal;
 
   bool _damageAnything;
@@ -369,7 +371,6 @@ public class ItemScript : MonoBehaviour
             isHit = false;
         }
 
-        var damageSource = _ragdoll;
         if (isHit)
         {
           //bool hitEnemy = !raycastInfo._ragdoll._isPlayer;
@@ -387,7 +388,6 @@ public class ItemScript : MonoBehaviour
 
             if ((dir - target_frwd).magnitude > 1f)
             {
-              damageSource = raycastInfo._ragdoll;
               raycastInfo._ragdoll = raycastInfo._ragdoll._grapplee;
             }
           }
@@ -414,29 +414,44 @@ public class ItemScript : MonoBehaviour
             }
 
             // Zombie
-            else if (!raycastInfo._ragdoll._IsPlayer && raycastInfo._ragdoll._EnemyScript._IsZombieReal)
+            else if (raycastInfo._ragdoll._IsEnemy && raycastInfo._ragdoll._EnemyScript._IsZombieReal)
             {
             }
 
             // Normal
-            else if (raycastInfo._ragdoll.TryDeflectMelee(_ragdoll))
+            else
             {
 
-              RegisterHitRagdoll(raycastInfo._ragdoll);
-              SetHitOverride();
+              var deflectData = raycastInfo._ragdoll.TryDeflectMelee(_ragdoll);
+              if (deflectData != null)
+              {
 
-              // Bounce both ragdolls backward
-              _ragdoll.BounceFromPosition(raycastInfo._ragdoll._Hip.position, 1.5f);
-              raycastInfo._ragdoll.BounceFromPosition(_ragdoll._Hip.position, 1.5f);
+                // Check zombie
+                if (_isZombie)
+                {
 
-              // Fx
-              SfxManager.PlayAudioSourceSimple(_ragdoll._Hip.position, "Ragdoll/MeleeClash", 0.85f, 1.15f, SfxManager.AudioClass.NONE, true);
+                  // Die self
+                  deflectData.MeleeDamageOther(_ragdoll);
+                  return;
+                }
 
-              var parts = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.BULLET_COLLIDE)[0];
-              parts.transform.position = (_ragdoll._Hip.position + raycastInfo._ragdoll._Hip.position) / 2f;
-              parts.Play();
+                //
+                RegisterHitRagdoll(raycastInfo._ragdoll);
+                SetHitOverride();
 
-              return;
+                // Bounce both ragdolls backward
+                _ragdoll.BounceFromPosition(raycastInfo._ragdoll._Hip.position, 1.5f);
+                raycastInfo._ragdoll.BounceFromPosition(_ragdoll._Hip.position, 1.5f);
+
+                // Fx
+                SfxManager.PlayAudioSourceSimple(_ragdoll._Hip.position, "Ragdoll/MeleeClash", 0.85f, 1.15f, SfxManager.AudioClass.NONE, true);
+
+                var parts = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.BULLET_COLLIDE)[0];
+                parts.transform.position = (_ragdoll._Hip.position + raycastInfo._ragdoll._Hip.position) / 2f;
+                parts.Play();
+
+                return;
+              }
             }
           }
 
@@ -460,25 +475,7 @@ public class ItemScript : MonoBehaviour
 
           // Damage
           _damageAnything = true;
-          var force = MathC.Get2DVector(-(_ragdoll._Hip.position - raycastInfo._raycastHit.point).normalized * (4000f + (Random.value * 2000f)) * _hit_force);
-          raycastInfo._ragdoll.TakeDamage(
-             new ActiveRagdoll.RagdollDamageSource()
-             {
-               Source = damageSource,
-
-               HitForce = force,
-
-               Damage = 1,
-               DamageSource = _ragdoll._Hip.position,
-               DamageSourceType = ActiveRagdoll.DamageSourceType.MELEE,
-
-               SpawnBlood = true,
-               SpawnGiblets = _dismember
-             });
-          if (raycastInfo._ragdoll._IsDead && _dismember)
-          {
-            raycastInfo._ragdoll.DismemberRandomTimes(force, 3);
-          }
+          MeleeDamageOther(raycastInfo._ragdoll);
 
           // Zombie knockback
           if (!_ragdoll._IsPlayer && _ragdoll._EnemyScript._IsZombieReal)
@@ -1140,6 +1137,32 @@ public class ItemScript : MonoBehaviour
       if ((_hitAnthing && _IsBulletDeflector) || _hitAnthingOverride)
         _useTime = -1f;
     }
+  }
+
+  //
+  public void MeleeDamageOther(ActiveRagdoll ragdoll)
+  {
+
+    // Damage
+    var hitForce = MathC.Get2DVector(-(_ragdoll._Hip.position - ragdoll._Hip.position).normalized * (3750f + (Random.value * 1750f)) * _hit_force);
+    ragdoll.TakeDamage(
+       new ActiveRagdoll.RagdollDamageSource()
+       {
+         Source = _ragdoll,
+
+         HitForce = hitForce,
+
+         Damage = 1,
+         DamageSource = _ragdoll._Hip.position,
+         DamageSourceType = ActiveRagdoll.DamageSourceType.MELEE,
+
+         SpawnBlood = true,
+         SpawnGiblets = _dismember
+       });
+
+    // Dismember
+    if (ragdoll._IsDead && _dismember)
+      ragdoll.DismemberRandomTimes(hitForce, 3);
   }
 
   //

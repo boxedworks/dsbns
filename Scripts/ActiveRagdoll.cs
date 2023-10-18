@@ -59,6 +59,7 @@ public class ActiveRagdoll
   {
     get { return (_ItemL?._reloading ?? false) || (_ItemR?._reloading ?? false); }
   }
+  public bool _IsEnemy { get { return !_IsPlayer; } }
 
   public Vector3 _ForceGlobal;
   public float _ForceRecoil;
@@ -855,12 +856,14 @@ public class ActiveRagdoll
   }
 
   //
-  public bool TryDeflectMelee(ActiveRagdoll ragdollOther)
+  public ItemScript TryDeflectMelee(ActiveRagdoll ragdollOther)
   {
 
     // Check weapons in order L / R
     bool CheckHit(ItemScript item)
     {
+
+      //
       if (
         item == null ||
         !item._IsSwinging ||
@@ -868,6 +871,7 @@ public class ActiveRagdoll
        )
         return false;
 
+      //
       item.RegisterHitRagdoll(ragdollOther);
       item.SetHitOverride();
 
@@ -875,9 +879,11 @@ public class ActiveRagdoll
     }
 
     //
-    if (CheckHit(_ItemL) || CheckHit(_ItemR))
-      return true;
-    return false;
+    if (CheckHit(_ItemL))
+      return _ItemL;
+    if (CheckHit(_ItemR))
+      return _ItemR;
+    return null;
   }
 
   // Change weapons mid-game

@@ -70,6 +70,7 @@ public class EnemyScript : MonoBehaviour
 
   void ScheduleSpherecasts()
   {
+    if (_IsZombieReal) return;
     if (_ragdoll._IsDead) throw new System.Exception("Ragdoll dead in ScehduleSpherecast");
 
     // Register to handler to index this._id
@@ -185,7 +186,9 @@ public class EnemyScript : MonoBehaviour
   Vector3 _lr_pos0, _lr_pos1;
 
   public bool _IsZombie { get { return _survivalAttributes != null; } }
-  public bool _IsZombieReal { get { return _IsZombie && GameScript._GameMode == GameScript.GameModes.SURVIVAL; } }
+  public bool _IsZombieReal { get { return _IsZombie && (GameScript._GameMode == GameScript.GameModes.SURVIVAL || _isZombieRealOverride); } }
+  bool _isZombieRealOverride;
+
   public class SurvivalAttributes
   {
     public GameScript.SurvivalMode.EnemyType _enemyType;
@@ -216,9 +219,8 @@ public class EnemyScript : MonoBehaviour
     _path.GetNearestPatrolPoint(transform.position);
 
     _survivalAttributes = survivalAttributes;
-    var isZombie = survivalAttributes != null;
 
-    if (!isZombie)
+    if (!_IsZombie)
     {
       if (_itemLeft == GameScript.ItemManager.Items.BAT)
         _waitLookPos = PlayerspawnScript._PlayerSpawns[0].transform.position;
@@ -235,7 +237,7 @@ public class EnemyScript : MonoBehaviour
 
     // Get NavAgent
     _agent = GetComponent<UnityEngine.AI.NavMeshAgent>();
-    if (isZombie && GameScript.IsSurvival())
+    if (_IsZombie && GameScript.IsSurvival())
       _agent.agentTypeID = TileManager._navMeshSurface2.agentTypeID;
     else
       _agent.agentTypeID = TileManager._navMeshSurface.agentTypeID;
@@ -2351,6 +2353,7 @@ public class EnemyScript : MonoBehaviour
                   // Award extra in shop
                   //Debug.Log($"Unlocked {extraUnlock}");
                   Shop.AddAvailableUnlock(extraUnlock, true);
+                  Shop.Unlock(extraUnlock);
 
                   // Achievements
 #if UNITY_STANDALONE
@@ -2515,7 +2518,7 @@ public class EnemyScript : MonoBehaviour
     return _ragdoll.HasAutomatic();
   }
 
-  public static EnemyScript SpawnEnemyAt(SurvivalAttributes survivalAttributes, Vector2 location, bool grappled = false)
+  public static EnemyScript SpawnEnemyAt(SurvivalAttributes survivalAttributes, Vector2 location, bool grappled = false, bool isZombieRealOverride = false)
   {
 
     var weapon = "knife";
@@ -2527,7 +2530,9 @@ public class EnemyScript : MonoBehaviour
     var enemy = TileManager.LoadObject($"e_0_0_li_{weapon}_");
     var e = enemy.transform.GetChild(0).GetComponent<EnemyScript>();
     e.transform.position = new Vector3(location.x, enemy.transform.position.y, location.y);
-    if (PlayerScript.s_Players != null && PlayerScript.s_Players.Count > 0 && PlayerScript.s_Players[0] != null) e.LookAt(PlayerScript.s_Players[0].transform.position);
+    if (PlayerScript.s_Players != null && PlayerScript.s_Players.Count > 0 && PlayerScript.s_Players[0] != null)
+      e.LookAt(PlayerScript.s_Players[0].transform.position);
+    e._isZombieRealOverride = isZombieRealOverride;
     e.Init(survivalAttributes, grappled);
     e.EquipStart();
 
@@ -2558,7 +2563,7 @@ public class EnemyScript : MonoBehaviour
     if (_Enemies_alive == null || GameScript.IsSurvival()) return;
 
     // Decide distance
-    var minDistance = loudness == Loudness.SUPERSOFT ? 1.5f : (loudness == Loudness.SOFT ? 3f : (loudness == Loudness.NORMAL ? 5f : 7.5f));
+    var minDistance = loudness == Loudness.SUPERSOFT ? 1.5f : (loudness == Loudness.SOFT ? 3f : (loudness == Loudness.NORMAL ? 6f : 9f));
 
     // Check each enemy
     foreach (var e in _Enemies_alive)

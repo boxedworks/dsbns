@@ -1226,9 +1226,13 @@ public class UtilityScript : ItemScript
 
     public int _PenatrationAmount;
     public System.Action<ProjectileCollisionData> _OnDisable;
-    public bool _IsBullet, _CanDestroyObjects;
+    public bool _CanDestroyObjects;
     public Vector3 _SpawnPosition;
     public ActiveRagdoll _DamageSource;
+
+    //
+    public BulletScript _BulletScript;
+    public bool _IsBullet { get { return _BulletScript != null; } }
   }
   public static void HandleProjectileCollision(ProjectileCollisionData p0, ProjectileCollisionData p1)
   {
@@ -1270,11 +1274,8 @@ public class UtilityScript : ItemScript
       if (lesser._IsBullet) numBullets++;
 
       if (greater._IsBullet)
-      {
-        var bs = greater._GameObject.GetComponent<BulletScript>();
         for (var i = 0; i < lesser._PenatrationAmount + 1; i++)
-          bs.RecordHit();
-      }
+          greater._BulletScript.RecordHit();
 
       // Check achievement
 #if UNITY_STANDALONE
@@ -1303,9 +1304,9 @@ public class UtilityScript : ItemScript
       case "bullet":
 
         var bulletScript = c.gameObject.GetComponent<BulletScript>();
+        projectileData._BulletScript = bulletScript;
 
         projectileData._PenatrationAmount = bulletScript.GetPenatrationAmount(false);
-        projectileData._IsBullet = true;
         projectileData._CanDestroyObjects = true;
         projectileData._SpawnPosition = bulletScript.GetShootPosition();
         projectileData._DamageSource = bulletScript.GetDamageSource();
@@ -1378,7 +1379,12 @@ public class UtilityScript : ItemScript
         if (onDisable != null)
           pSelf_._OnDisable += onDisable;
 
-        HandleProjectileCollision(pSelf_, pOther_);
+        // Make sure bullet can interact with
+        if (pSelf_._IsBullet && pOther_._IsBullet && !pSelf_._BulletScript.CanInteractWithOther(pOther_._BulletScript)) { }
+
+        //
+        else
+          HandleProjectileCollision(pSelf_, pOther_);
       }
 
       return true;
@@ -1398,7 +1404,7 @@ public class UtilityScript : ItemScript
 
           // Handle bullet
           if (pSelf_._IsBullet)
-            pSelf_._GameObject.GetComponent<BulletScript>().RecordHitFull();
+            pSelf_._BulletScript.RecordHitFull();
 
           return true;
         }
@@ -1419,7 +1425,7 @@ public class UtilityScript : ItemScript
 
           // Handle bullet
           if (pSelf_._IsBullet)
-            pSelf_._GameObject.GetComponent<BulletScript>().RecordHitFull();
+            pSelf_._BulletScript.RecordHitFull();
 
           return true;
         }

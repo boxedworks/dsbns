@@ -117,7 +117,7 @@ public static class Shop
     {
 
 #if UNITY_EDITOR
-//      return 999;
+      //      return 999;
 #endif
 
       if ((Settings._Classic_0_TopRated?._value ?? false) && (Settings._Classic_1_TopRated?._value ?? false))
@@ -439,21 +439,21 @@ public static class Shop
       _Unlocks_Vault.Add("classic_4", new Unlocks[] { Unlocks.ITEM_AXE, Unlocks.ITEM_REVOLVER, Unlocks.UTILITY_C4, Unlocks.UTILITY_GRENADE_STUN, Unlocks.UTILITY_SHURIKEN_BIG });
       _Unlocks_Vault.Add("classic_5", new Unlocks[] { Unlocks.ITEM_STICKY_GUN, Unlocks.UTILITY_GRENADE_IMPACT, Unlocks.MAX_EQUIPMENT_POINTS_4 });
       _Unlocks_Vault.Add("classic_6", new Unlocks[] { Unlocks.ITEM_FRYING_PAN, Unlocks.ITEM_CROSSBOW, Unlocks.ITEM_GRENADE_LAUNCHER, Unlocks.UTILITY_TACTICAL_BULLET });
-      _Unlocks_Vault.Add("classic_7", new Unlocks[] { Unlocks.UTILITY_KUNAI_STICKY, Unlocks.UTILITY_INVISIBILITY, Unlocks.MAX_EQUIPMENT_POINTS_5, Unlocks.LOADOUT_SLOT_X2_2 });
-      _Unlocks_Vault.Add("classic_8", new Unlocks[] { Unlocks.ITEM_UZI, Unlocks.ITEM_SHOTGUN_PUMP, Unlocks.MOD_GRAPPLE_MASTER });
+      _Unlocks_Vault.Add("classic_7", new Unlocks[] { Unlocks.UTILITY_KUNAI_STICKY, Unlocks.UTILITY_INVISIBILITY, Unlocks.LOADOUT_SLOT_X2_2 });
+      _Unlocks_Vault.Add("classic_8", new Unlocks[] { Unlocks.ITEM_UZI, Unlocks.ITEM_SHOTGUN_PUMP, Unlocks.MAX_EQUIPMENT_POINTS_5, Unlocks.MOD_GRAPPLE_MASTER });
       _Unlocks_Vault.Add("classic_9", new Unlocks[] { Unlocks.ITEM_RIFLE_LEVER, Unlocks.LOADOUT_SLOT_X2_3 });
       _Unlocks_Vault.Add("classic_10", new Unlocks[] { Unlocks.UTILITY_MORTAR_STRIKE, Unlocks.MOD_EXPLOSIONS_UP });
 
       _Unlocks_Vault.Add("classic_11", new Unlocks[] { Unlocks.MODE_EXTRAS, Unlocks.MAX_EQUIPMENT_POINTS_6, Unlocks.LOADOUT_SLOT_X2_4 });
       _Unlocks_Vault.Add("classic_12", new Unlocks[] { Unlocks.ITEM_SNIPER, Unlocks.ITEM_SWORD });
-      _Unlocks_Vault.Add("classic_13", new Unlocks[] { Unlocks.ITEM_DMR, Unlocks.MAX_EQUIPMENT_POINTS_7 });
-      _Unlocks_Vault.Add("classic_14", new Unlocks[] { Unlocks.ITEM_SHOTGUN_DOUBLE, Unlocks.MOD_EXPLOSION_RESISTANCE });
-      _Unlocks_Vault.Add("classic_15", new Unlocks[] { Unlocks.ITEM_M16, Unlocks.MAX_EQUIPMENT_POINTS_8, Unlocks.LOADOUT_SLOT_X2_5 });
+      _Unlocks_Vault.Add("classic_13", new Unlocks[] { Unlocks.ITEM_DMR });
+      _Unlocks_Vault.Add("classic_14", new Unlocks[] { Unlocks.ITEM_SHOTGUN_DOUBLE, Unlocks.MOD_EXPLOSION_RESISTANCE, Unlocks.MAX_EQUIPMENT_POINTS_7 });
+      _Unlocks_Vault.Add("classic_15", new Unlocks[] { Unlocks.ITEM_M16, Unlocks.LOADOUT_SLOT_X2_5 });
       _Unlocks_Vault.Add("classic_16", new Unlocks[] { Unlocks.MOD_FASTER_RELOAD });
-      _Unlocks_Vault.Add("classic_17", new Unlocks[] { Unlocks.ITEM_FLAMETHROWER, Unlocks.MOD_SMART_BULLETS, Unlocks.MAX_EQUIPMENT_POINTS_9 });
+      _Unlocks_Vault.Add("classic_17", new Unlocks[] { Unlocks.ITEM_FLAMETHROWER, Unlocks.MOD_SMART_BULLETS, Unlocks.MAX_EQUIPMENT_POINTS_8 });
       _Unlocks_Vault.Add("classic_18", new Unlocks[] { Unlocks.ITEM_AK47 });
-      _Unlocks_Vault.Add("classic_19", new Unlocks[] { Unlocks.MOD_MAX_AMMO_UP, Unlocks.MAX_EQUIPMENT_POINTS_10 });
-      _Unlocks_Vault.Add("classic_20", new Unlocks[] { Unlocks.ITEM_SHOTGUN_BURST });
+      _Unlocks_Vault.Add("classic_19", new Unlocks[] { Unlocks.MOD_MAX_AMMO_UP, Unlocks.MAX_EQUIPMENT_POINTS_9 });
+      _Unlocks_Vault.Add("classic_20", new Unlocks[] { Unlocks.ITEM_SHOTGUN_BURST, Unlocks.MAX_EQUIPMENT_POINTS_10 });
     }
 
     // Create utility cap
@@ -554,7 +554,12 @@ public static class Shop
     PlayerPrefs.SetInt($"Shop_UnlocksAvailable_{unlock}", 1);
 
     if (alert)
-      s_UnlockString += $"- new unlock added to shop: <color=yellow>{unlock}</color>\n";
+    {
+      if (unlock.ToString().StartsWith("EXTRA_"))
+        s_UnlockString += $"- new extra unlocked: <color=yellow>{unlock}</color>\n";
+      else
+        s_UnlockString += $"- new unlock added to shop: <color=yellow>{unlock}</color>\n";
+    }
   }
 
   //
@@ -568,6 +573,18 @@ public static class Shop
     _Unlocks.Contains(Unlocks.EXTRA_GRAVITY) &&
     _Unlocks.Contains(Unlocks.EXTRA_HORDE) &&
     _Unlocks.Contains(Unlocks.EXTRA_PLAYER_AMMO) &&
+    _Unlocks.Contains(Unlocks.EXTRA_TIME);
+  }
+  public static bool AnyExtrasUnlocked()
+  {
+    return
+    _Unlocks.Contains(Unlocks.EXTRA_BLOOD_FX) ||
+    _Unlocks.Contains(Unlocks.EXTRA_CHASE) ||
+    _Unlocks.Contains(Unlocks.EXTRA_ENEMY_OFF) ||
+    _Unlocks.Contains(Unlocks.EXTRA_EXPLODED) ||
+    _Unlocks.Contains(Unlocks.EXTRA_GRAVITY) ||
+    _Unlocks.Contains(Unlocks.EXTRA_HORDE) ||
+    _Unlocks.Contains(Unlocks.EXTRA_PLAYER_AMMO) ||
     _Unlocks.Contains(Unlocks.EXTRA_TIME);
   }
 

@@ -111,19 +111,19 @@ public class CustomObstacle : MonoBehaviour
       _BUYABLE_ITEM_TIERS.Add(4, new List<System.Tuple<GameScript.ItemManager.Items, int>>());
       _BUYABLE_ITEM_TIERS[4].Add(System.Tuple.Create(GameScript.ItemManager.Items.UZI, 160));
       _BUYABLE_ITEM_TIERS[4].Add(System.Tuple.Create(GameScript.ItemManager.Items.REVOLVER, 250));
-      _BUYABLE_ITEM_TIERS[4].Add(System.Tuple.Create(GameScript.ItemManager.Items.SHOTGUN_DOUBLE, 275));
-      _BUYABLE_ITEM_TIERS[4].Add(System.Tuple.Create(GameScript.ItemManager.Items.DMR, 275));
-      _BUYABLE_ITEM_TIERS[4].Add(System.Tuple.Create(GameScript.ItemManager.Items.RIFLE_LEVER, 200));
-      _BUYABLE_ITEM_TIERS[4].Add(System.Tuple.Create(GameScript.ItemManager.Items.STICKY_GUN, 175));
+      _BUYABLE_ITEM_TIERS[4].Add(System.Tuple.Create(GameScript.ItemManager.Items.SHOTGUN_DOUBLE, 350));
+      _BUYABLE_ITEM_TIERS[4].Add(System.Tuple.Create(GameScript.ItemManager.Items.DMR, 325));
+      _BUYABLE_ITEM_TIERS[4].Add(System.Tuple.Create(GameScript.ItemManager.Items.RIFLE_LEVER, 250));
+      _BUYABLE_ITEM_TIERS[4].Add(System.Tuple.Create(GameScript.ItemManager.Items.STICKY_GUN, 160));
 
       _BUYABLE_ITEM_TIERS.Add(5, new List<System.Tuple<GameScript.ItemManager.Items, int>>());
-      _BUYABLE_ITEM_TIERS[5].Add(System.Tuple.Create(GameScript.ItemManager.Items.AK47, 450));
-      _BUYABLE_ITEM_TIERS[5].Add(System.Tuple.Create(GameScript.ItemManager.Items.M16, 350));
-      _BUYABLE_ITEM_TIERS[5].Add(System.Tuple.Create(GameScript.ItemManager.Items.SHOTGUN_BURST, 325));
-      _BUYABLE_ITEM_TIERS[5].Add(System.Tuple.Create(GameScript.ItemManager.Items.SWORD, 300));
-      _BUYABLE_ITEM_TIERS[5].Add(System.Tuple.Create(GameScript.ItemManager.Items.AXE, 250));
-      _BUYABLE_ITEM_TIERS[5].Add(System.Tuple.Create(GameScript.ItemManager.Items.FLAMETHROWER, 300));
-      _BUYABLE_ITEM_TIERS[5].Add(System.Tuple.Create(GameScript.ItemManager.Items.SNIPER, 250));
+      _BUYABLE_ITEM_TIERS[5].Add(System.Tuple.Create(GameScript.ItemManager.Items.AK47, 500));
+      _BUYABLE_ITEM_TIERS[5].Add(System.Tuple.Create(GameScript.ItemManager.Items.M16, 400));
+      _BUYABLE_ITEM_TIERS[5].Add(System.Tuple.Create(GameScript.ItemManager.Items.SHOTGUN_BURST, 450));
+      _BUYABLE_ITEM_TIERS[5].Add(System.Tuple.Create(GameScript.ItemManager.Items.SWORD, 350));
+      _BUYABLE_ITEM_TIERS[5].Add(System.Tuple.Create(GameScript.ItemManager.Items.AXE, 200));
+      _BUYABLE_ITEM_TIERS[5].Add(System.Tuple.Create(GameScript.ItemManager.Items.FLAMETHROWER, 450));
+      _BUYABLE_ITEM_TIERS[5].Add(System.Tuple.Create(GameScript.ItemManager.Items.SNIPER, 300));
     }
     if (_BUYABLE_PERK_TIERS == null)
     {

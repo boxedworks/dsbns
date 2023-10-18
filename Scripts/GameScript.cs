@@ -880,17 +880,17 @@ public class GameScript : MonoBehaviour
 
       // Check survival achievements
       // Map 1
-      //Debug.Log($"{_Wave}: {highestWave}");
+      Debug.Log($"{_Wave}: {highestWave}");
       if (Levels._CurrentLevelIndex == 0)
       {
-        if (_Wave == 11)
+        if (_Wave == 10)
         {
 
 #if UNITY_STANDALONE
           SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.SURVIVAL_MAP0_10);
 #endif
 
-          if (highestWave < 11)
+          if (highestWave < 10)
           {
             // Unlock next map
             TogglePause();
@@ -909,7 +909,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
           }
         }
 
-        else if (_Wave == 21)
+        else if (_Wave == 20)
         {
 #if UNITY_STANDALONE
           SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.SURVIVAL_MAP0_20);
@@ -920,13 +920,13 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       // Map 2
       else if (Levels._CurrentLevelIndex == 1)
       {
-        if (_Wave == 11)
+        if (_Wave == 10)
         {
 #if UNITY_STANDALONE
           SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.SURVIVAL_MAP1_10);
 #endif
         }
-        else if (_Wave == 21)
+        else if (_Wave == 20)
         {
 #if UNITY_STANDALONE
           SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.SURVIVAL_MAP1_20);
@@ -1455,7 +1455,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       // Update level timer
       if (!TileManager._Level_Complete && PlayerScript._TimerStarted)
       {
-        TileManager._LevelTimer += (Menu2._InMenus ? Time.unscaledDeltaTime : Time.deltaTime);
+        TileManager._LevelTimer += Menu2._InMenus ? Time.unscaledDeltaTime : Time.deltaTime;
         if (!Menu2._InMenus)
           TileManager._Text_LevelTimer.text = TileManager._LevelTimer.ToStringTimer();
       }
@@ -3270,7 +3270,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
 
     // Check achievements
 #if UNITY_STANDALONE
-    if (Settings._Extra_Superhot)
+    if (Settings._Extra_Superhot && Settings._Extras_CanUse)
       SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.EXTRA_SUPERH);
 #endif
   }

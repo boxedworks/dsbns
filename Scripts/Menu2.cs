@@ -87,9 +87,11 @@ public class Menu2
     get { return Max_Height; }
     set
     {
+
       Max_Height = value;
-      float height = _Menu.GetChild(2).GetComponent<BoxCollider>().size.y;
+      var height = _Menu.GetChild(2).GetComponent<BoxCollider>().size.y;
       var distance = new Vector3(-6f, Mathf.Clamp(3.4f + (height * (Max_Height - _Start_Max_Height)), 3.4f, 1000f), -3.03f) - _Text.transform.localPosition;
+
       // Move text and boxcolliders
       if (distance.magnitude == 0f) return;
       _Text.transform.localPosition += distance;
@@ -598,7 +600,14 @@ public class Menu2
       var visible = component._visible;
 
       // Check for visibility changes
-      if (component._height > _Max_Height)
+      if (
+
+        // Too low
+        component._height > _Max_Height ||
+
+        // Too high
+        component._height - _Max_Height + _Start_Max_Height < -2
+      )
         component._visible = false;
       else
         component._visible = true;
@@ -3052,10 +3061,34 @@ public class Menu2
           }
           continue;
         }
+
         if (Shop.Unlocked(unlock))
         {
           if (display_mode == Shop.DisplayModes.AVAILABLE) continue;
         }
+
+        /*/ Reformat item types
+        string ReformatItemTypes(string input)
+        {
+
+          string ReformatItemType(string input_, string itemType, string color)
+          {
+
+            var splitWord = $"[{itemType}]";
+            if (input_.Contains(splitWord))
+            {
+              var inputSplit = input_.Split(splitWord);
+              return $"{inputSplit[0]}<color={color}>[{itemType}]</color>{inputSplit[1]}";
+            }
+
+            return input_;
+          }
+
+          //input = ReformatItemType(input, )
+
+          return input;
+        }*/
+
         // Check for able to equip
         var equip_cost_string = equip_cost == 0 ? "-" : equip_cost + "";
         if (display_mode == Shop.DisplayModes.PURCHASED)
@@ -3065,6 +3098,7 @@ public class Menu2
           m.AddComponent($"{string.Format(format_shop2, name, shop_details.Item1, cost, equip_cost_string, color, color, color)}\n", MenuComponent.ComponentType.BUTTON_SIMPLE);
           continue;
         }
+
         var set_text = true;
         var max_equip = GameScript.ItemManager.Loadout._POINTS_MAX;
         if (display_mode == Shop.DisplayModes.ALL && Shop.Unlocked(unlock))
@@ -3583,7 +3617,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
             // Obscur dir if first level not unlocked
             if (GameScript._GameMode != GameScript.GameModes.SURVIVAL)
             {
-              var first_level_iter = (component._buttonIndex) * levels_per_dir;
+              var first_level_iter = component._buttonIndex * levels_per_dir;
               if (first_level_iter > 0 && !Levels.LevelCompleted(first_level_iter - 1))
               {
                 component.SetDisplayText(string.Format(format_subdirs, $"****", $"-    ", "", "") + '\n');
@@ -3593,7 +3627,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
             // Obscur survival levels
             else
             {
-              if (component._buttonIndex > 0 && GameScript.SurvivalMode.GetHighestWave(component._buttonIndex - 1) <= 10)
+              if (component._buttonIndex > 0 && GameScript.SurvivalMode.GetHighestWave(component._buttonIndex - 1) < 10)
               {
                 component._obscured = true;
                 return;
@@ -7168,7 +7202,6 @@ a gampad if plugged in.~1
 about extras</color>
 
 -unlock extras by satisfying the requirements at the bottom of the extras menu
- then buying the extra in the <color=yellow>SHOP</color>
 
 -extras only work in the <color={_COLOR_GRAY}>CLASSIC</color> mode
 
@@ -7244,7 +7277,7 @@ about extras</color>
 
             // Difficulty
             var difficultyName = exInfo.difficulty == 0 ? "sneaky" : "sneakier";
-            var difficultyColor = exInfo.difficulty == 0 ? _COLOR_GRAY : "cyan";
+            var difficultyColor = exInfo.difficulty == 0 ? "white" : "cyan";
 
             // Extras
             var extrasText = "";
@@ -7255,10 +7288,19 @@ about extras</color>
                 extrasText += "horde";
               }
             }
+            var extrasColor = "white";
+            if (extrasText != "")
+              extrasColor = "magenta";
 
             // Formatting
-            var line0 = string.Format($"-<color={_COLOR_GRAY}>{{0, -9}}</color> : {{1, -14}} <color={_COLOR_GRAY}>{{2, -9}}</color> : <color={{3}}>{{4, -14}}</color> <color={_COLOR_GRAY}>{{5, -9}}</color> : <color={{6}}>{{7, -10}}</color>", "level", exInfo.level, "difficulty", difficultyColor, difficultyName, "rating", ratingInfo.Item2, ratingInfo.Item1);
-            var line1 = string.Format($"-<color={_COLOR_GRAY}>{{0, -9}}</color> : {{1, -42}} <color={_COLOR_GRAY}>{{2, -9}}</color> : {{3, -30}}", "loadout", exInfo.loadoutDesc, "extras", extrasText);
+            var line0 = string.Format(
+              $"-<color={_COLOR_GRAY}>{{0, -9}}</color> : {{1, -14}} <color={_COLOR_GRAY}>{{2, -9}}</color> : <color={{3}}>{{4, -14}}</color> <color={_COLOR_GRAY}>{{5, -9}}</color> : <color={{6}}>{{7, -10}}</color>",
+              "level", exInfo.level, "difficulty", difficultyColor, difficultyName, "rating", ratingInfo.Item2, ratingInfo.Item1
+            );
+            var line1 = string.Format(
+              $"-<color={_COLOR_GRAY}>{{0, -9}}</color> : {{1, -42}} <color={_COLOR_GRAY}>{{2, -9}}</color> : <color={extrasColor}>{{3, -30}}</color>",
+              "loadout", exInfo.loadoutDesc, "extras", extrasText
+            );
 
             c.SetDisplayText($@"
 <color={_COLOR_GRAY}>===================</color>

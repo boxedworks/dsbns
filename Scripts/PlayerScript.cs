@@ -34,7 +34,7 @@ public class PlayerScript : MonoBehaviour
 
   public bool _HasExit, _CanDetect;
 
-  float _spawnTimer, _invisible;
+  float _spawnTimer;
 
   public UnityEngine.AI.NavMeshAgent _agent;
 
@@ -185,7 +185,7 @@ public class PlayerScript : MonoBehaviour
     // Set camera position
     _camPos = GameResources._Camera_Main.transform.position;
 
-    _spawnTimer = 0.25f;
+    _spawnTimer = 0.2f;
     _CanDetect = true;
 
     _lastInputTriggers = new Vector2(-1f, -1f);
@@ -419,10 +419,8 @@ public class PlayerScript : MonoBehaviour
   {
     _TimerStarted = true;
 
-    if (PlayerScript.s_Players[0]._level_ratings_shown)
-    {
+    if (s_Players[0]._level_ratings_shown)
       TileManager._Text_LevelTimer_Best.text = TileManager._Text_LevelTimer_Best.text.Split("\n")[0];
-    }
   }
 
   float _lastDistance;
@@ -438,7 +436,7 @@ public class PlayerScript : MonoBehaviour
   {
 
     // Timer
-    if (!_TimerStarted && _Id == 0)
+    if (!_TimerStarted && _Id == 0 && _spawnTimer <= 0f)
     {
 
       var player_farthest = FunctionsC.GetFarthestPlayerFrom(PlayerspawnScript._PlayerSpawns[0].transform.position);
@@ -1055,7 +1053,7 @@ public class PlayerScript : MonoBehaviour
   public static float _SlowmoTimer;
   float[] _dpadPressed;
 
-  float _lastGoalLength = -1f, _goalTotal;
+  float _crazyZombieTimer;
 
   void HandleInput()
   {
@@ -1072,48 +1070,46 @@ public class PlayerScript : MonoBehaviour
 
     // Spawn enemies as player gets closer to goal; 3rd difficulty / game mode ?
     if (!GameScript.IsSurvival())
-      if (_Id == 0 && (Settings._Extra_CrazyZombies && Settings._Extras_CanUse) && Powerup._Powerups.Count > 0)
+      if (
+        _Id == 0 &&
+        Settings._Extra_CrazyZombies &&
+        Settings._Extras_CanUse &&
+        (Powerup._Powerups?.Count ?? 0) > 0 &&
+        EnemyScript._Enemies_alive.Count < EnemyScript._MAX_RAGDOLLS_ALIVE
+      )
       {
-        var dis_spawn = MathC.Get2DDistance(transform.position, PlayerspawnScript._PlayerSpawns[0].transform.position);
-        //Debug.Log("| " + dis_spawn + " " + (EnemyScript._Enemies_alive.Count < EnemyScript._MAX_RAGDOLLS_ALIVE));
-        if (dis_spawn > 3f && EnemyScript._Enemies_alive.Count < EnemyScript._MAX_RAGDOLLS_ALIVE)
-        {
-          var path = new UnityEngine.AI.NavMeshPath();
-          UnityEngine.AI.NavMesh.CalculatePath(transform.position, Powerup._Powerups[0].transform.position, TileManager._navMeshSurface.layerMask, path);
-          var length = 0f;
-          if (path.status == UnityEngine.AI.NavMeshPathStatus.PathComplete)
-          {
-            if (path.corners.Length != 0)
-            {
-              if (path.corners.Length == 1)
-                length = MathC.Get2DDistance(transform.position, path.corners[0]);
-              else
-                for (var i = 1; i < path.corners.Length; i++)
-                  length += (path.corners[i] - path.corners[i - 1]).magnitude;
-            }
-            if (_lastGoalLength != -1f)
-              _goalTotal += Mathf.Abs(_lastGoalLength - length);
-            _lastGoalLength = length;
 
-            if (_goalTotal > 1f)
+        var spawnDistance = MathC.Get2DDistance(transform.position, PlayerspawnScript._PlayerSpawns[0].transform.position);
+        if (spawnDistance > 3f)
+        {
+
+          _crazyZombieTimer += Time.deltaTime;
+          var czt = 0.2f;
+          if (_crazyZombieTimer >= czt)
+          {
+            if (EnemyScript._Enemies_alive.Count > 0)
             {
-              _goalTotal = 0f;
-              if (EnemyScript._Enemies_alive.Count > 0)
+              while (
+                _crazyZombieTimer >= czt &&
+                EnemyScript._Enemies_alive.Count < EnemyScript._MAX_RAGDOLLS_ALIVE
+              )
               {
-                for (var i = 0; i < 1; i++)
-                {
-                  var enemy = EnemyScript.SpawnEnemyAt(new EnemyScript.SurvivalAttributes()
+
+                _crazyZombieTimer -= czt;
+
+                var enemy = EnemyScript.SpawnEnemyAt(
+                  new EnemyScript.SurvivalAttributes()
                   {
                     _enemyType = GameScript.SurvivalMode.EnemyType.KNIFE_RUN
                   },
-                    new Vector2(PlayerspawnScript._PlayerSpawns[0].transform.position.x + 0.5f * Random.value, PlayerspawnScript._PlayerSpawns[0].transform.position.z + 0.5f * Random.value));
-                  enemy._moveSpeed = 0.5f + 0.15f * Random.value;
-                }
+                  new Vector2(PlayerspawnScript._PlayerSpawns[0].transform.position.x + 0.5f * Random.value, PlayerspawnScript._PlayerSpawns[0].transform.position.z + 0.5f * Random.value),
+                  false,
+                  true
+                );
+                enemy._moveSpeed = 0.5f + 0.15f * Random.value;
               }
             }
           }
-
-          //Debug.Log(length + " " + _goalTotal + " " + path.status.ToString());
         }
       }
 
@@ -1658,7 +1654,7 @@ public class PlayerScript : MonoBehaviour
 
       //
       if (_swordRunLerper > 0.9f)
-        if (savepos.magnitude < 0.03f)
+        if (savepos.magnitude < 0.025f)
           _swordRunLerper = 0.7f;
     }
   }

@@ -144,10 +144,10 @@ public class BulletScript : MonoBehaviour
   float _saveSmartVelocity;
   private void OnTriggerStay(Collider collider)
   {
+
     // Local function to apply ragdoll damage
     bool TakeDamage(ActiveRagdoll r)
     {
-
       var hitForce = MathC.Get2DVector(
         -(_shootPosition - collider.transform.position).normalized * (4000f + (Random.value * 2000f)) * (_deflected ? Mathf.Clamp(_sourceHitForce * 1.5f, 0.5f, 2f) : _sourceHitForce)
       );
@@ -155,8 +155,9 @@ public class BulletScript : MonoBehaviour
       var health = r._health;
       var max = Mathf.Clamp(pen - _hitAmount, 1f, 10f);
       var damage = Mathf.Clamp(health, 1f, max);
-      ActiveRagdoll damageSource = _sourceDamageRagdoll;
-      if (r._grappled && r._grappler._IsPlayer) { damageSource = r._grappler; }
+      var damageSource = _sourceDamageRagdoll;
+      if (r._grappled && r._grappler._IsPlayer)
+        damageSource = r._grappler;
 
       // Hurt ragdoll
       if (r.TakeDamage(
@@ -192,6 +193,8 @@ public class BulletScript : MonoBehaviour
               _rb.velocity = new_vel;
 
               _startTime = Time.time;
+
+              _canDamageSource = true;
             }
           }
 
@@ -202,6 +205,7 @@ public class BulletScript : MonoBehaviour
       return false;
     }
 
+    //
     var hit_wall = false;
     if (!collider.name.Equals("Tile"))
     {
@@ -255,52 +259,6 @@ public class BulletScript : MonoBehaviour
         }
         return;
       }
-      /*else if (collider.name.Equals("Bullet"))
-      {
-        // Check bullet damage
-        var bullet_other = collider.GetComponent<BulletScript>();
-        if (bullet_other._triggered || (bullet_other._sourceType == GameScript.ItemManager.Items.FLAMETHROWER)) return;
-        if (bullet_other.GetRagdollID() == GetRagdollID()) return;
-
-        var damage_self = _penatrationAmount;
-        var damage_othe = bullet_other._penatrationAmount;
-
-        var didHitBullet = false;
-        var numHotBullets = 0;
-
-        if (damage_self == damage_othe)
-        {
-          Hide();
-          OnHideBullet();
-          bullet_other.Hide();
-
-          didHitBullet = true;
-          numHotBullets = 2;
-        }
-
-        else if (damage_self > damage_othe)
-        {
-          _penatrationAmount -= damage_othe;
-          bullet_other.Hide();
-
-          didHitBullet = true;
-          numHotBullets = 1;
-        }
-
-        else
-        {
-          bullet_other._penatrationAmount -= damage_self;
-          OnHideBullet();
-          Hide();
-
-          didHitBullet = true;
-          numHotBullets = 1;
-        }
-
-        // Sparks
-        PlaySparks(didHitBullet, numHotBullets);
-        return;
-      }*/
 
       // Projectile handler
       else if (UtilityScript.SimpleProjectileHandler(_c, collider))
@@ -312,6 +270,7 @@ public class BulletScript : MonoBehaviour
       var r = ActiveRagdoll.GetRagdoll(collider.gameObject);
       if (r != null)
       {
+
         if (r._IsDead) return;
         if (r._Id == _lastRagdollId) return;
         if ((r._grappler?._Id ?? -1) == GetRagdollID()) return;
@@ -475,6 +434,18 @@ public class BulletScript : MonoBehaviour
     );
   }
 
+  public bool CanInteractWithOther(BulletScript other)
+  {
+    if (
+      other._triggered ||
+      (other._sourceType == GameScript.ItemManager.Items.FLAMETHROWER) ||
+      (!_canDamageSource && !other._canDamageSource && GetRagdollID() == other.GetRagdollID())
+    )
+      return false;
+
+    return true;
+  }
+
   public void SetBulletData(
     ActiveRagdoll sourceRagdoll,
     bool silenced,
@@ -609,6 +580,7 @@ public class BulletScript : MonoBehaviour
 
     // Do not hurt person who just redirected
     _sourceDamageRagdoll = redirectorItem._ragdoll;
+    _canDamageSource = false;
 
     //
     PlayerScript._SlowmoTimer += 1.3f;
