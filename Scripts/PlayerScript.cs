@@ -1654,7 +1654,7 @@ public class PlayerScript : MonoBehaviour
 
       //
       if (_swordRunLerper > 0.9f)
-        if (savepos.magnitude < 0.025f)
+        if (dis2.magnitude < 0.5f)
           _swordRunLerper = 0.7f;
     }
   }
