@@ -30,7 +30,7 @@ public class PlayerScript : MonoBehaviour
 
   float _swordRunLerper = 0.7f;
 
-  bool mouseEnabled, _runToggle;
+  bool mouseEnabled, _runToggle, _setCamera, _centerCamera;
 
   public bool _HasExit, _CanDetect;
 
@@ -198,7 +198,8 @@ public class PlayerScript : MonoBehaviour
 
     if (!TileManager._HasLocalLighting)
     {
-      AddLight();
+      if (!GameScript.s_Backrooms)
+        AddLight();
 
       RenderSettings.ambientLight = Color.black;
     }
@@ -898,60 +899,78 @@ public class PlayerScript : MonoBehaviour
       }
 
       // Center camera on map if it does not need to move
-      var center_camera = Settings._CameraType._value;
-      var map_x = TileManager._Map_Size_X;
-      var map_y = TileManager._Map_Size_Y;
-      //Debug.Log($"{map_x} {map_y}");
-      if (center_camera)
+      if (!_setCamera)
       {
-        var zoom = Settings._CameraZoom;
-        if (zoom == 0)
-        {
-          if (map_x > 7 || map_y > 4)
-            center_camera = false;
-        }
-        else if (zoom == 1)
-        {
-          if (map_x > 10 || map_y > 6)
-            center_camera = false;
-        }
-        else if (zoom == 2)
-        {
-          if (map_x > 14 || map_y > 8)
-            center_camera = false;
-        }
-        else if (zoom == 3)
-        {
-          var zoom_ = -1;
-          if (map_x <= 7 && map_y <= 4)
-          {
-            zoom_ = 0;
-          }
-          else if (map_x <= 9 && map_y <= 6)
-          {
-            zoom_ = 1;
-          }
-          else if (map_x <= 14 && map_y <= 8)
-          {
-            zoom_ = 2;
-          }
-          if (zoom_ > -1)
-          {
-            Settings._CameraZoom._value = zoom_;
-            Settings.SetPostProcessing();
-            Settings._CameraZoom._value = 3;
-          }
-          else
-          {
-            Settings._CameraZoom._value = 1;
-            Settings.SetPostProcessing();
-            Settings._CameraZoom._value = 3;
+        _setCamera = true;
 
-            center_camera = false;
+        _centerCamera = Settings._CameraType._value;
+        var map_x = TileManager._Map_Size_X;
+        var map_y = TileManager._Map_Size_Y;
+        //Debug.Log($"{map_x} {map_y}");
+
+        // Backrooms
+        if (GameScript.s_Backrooms)
+        {
+          _centerCamera = true;
+
+          Settings._CameraZoom._value = 1;
+          Settings.SetPostProcessing();
+          Settings._CameraZoom._value = 3;
+        }
+
+        else if (_centerCamera)
+        {
+
+          var zoom = Settings._CameraZoom;
+          if (zoom == 0)
+          {
+            if (map_x > 7 || map_y > 4)
+              _centerCamera = false;
+          }
+          else if (zoom == 1)
+          {
+            if (map_x > 10 || map_y > 6)
+              _centerCamera = false;
+          }
+          else if (zoom == 2)
+          {
+            if (map_x > 14 || map_y > 8)
+              _centerCamera = false;
+          }
+          else if (zoom == 3)
+          {
+            var zoom_ = -1;
+            if (map_x <= 7 && map_y <= 4)
+            {
+              zoom_ = 0;
+            }
+            else if (map_x <= 9 && map_y <= 6)
+            {
+              zoom_ = 1;
+            }
+            else if (map_x <= 14 && map_y <= 8)
+            {
+              zoom_ = 2;
+            }
+            if (zoom_ > -1)
+            {
+              Settings._CameraZoom._value = zoom_;
+              Settings.SetPostProcessing();
+              Settings._CameraZoom._value = 3;
+            }
+            else
+            {
+              Settings._CameraZoom._value = 1;
+              Settings.SetPostProcessing();
+              Settings._CameraZoom._value = 3;
+
+              _centerCamera = false;
+            }
           }
         }
       }
-      if (center_camera)
+
+      if (_centerCamera)
       {
         _camPos = TileManager._Floor.position;
         _camPos.z += -0.5f;

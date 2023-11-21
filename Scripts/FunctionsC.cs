@@ -120,7 +120,7 @@ public static class FunctionsC
     BULLET_CASING,
     SPARKS,
     EXPLOSION,
-    GUN_SMOKE,
+    GUN_FIRE,
     SMOKE,
     FIREBALL,
     SMOKEBALL,
@@ -165,7 +165,7 @@ public static class FunctionsC
         index = 3;
         hasChildren = true;
         break;
-      case ParticleSystemType.GUN_SMOKE:
+      case ParticleSystemType.GUN_FIRE:
         index = 4;
         hasChildren = true;
         break;

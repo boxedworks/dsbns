@@ -27,7 +27,7 @@ public class TextBubbleScript : MonoBehaviour {
 
     return _textMesh;
   }
-	
+
 	// Update is called once per frame
 	void Update () {
     // Check for null source
@@ -38,11 +38,13 @@ public class TextBubbleScript : MonoBehaviour {
     }
     // Move text up
     transform.position += Vector3.up * Time.deltaTime * 1f;
+
     // Move text with _source
-    Vector3 pos = transform.position;
+    var pos = transform.position;
     pos.x = _source.position.x;
     pos.z = _source.position.z;
     transform.position += (pos - transform.position) * Time.deltaTime * 4f;
+
     // Scale text size in and out
     float time = Time.time - _timeStart;
     Vector3 scale;

@@ -1383,11 +1383,6 @@ public class EnemyScript : MonoBehaviour
     _agent.SetDestination(newPos);
   }
 
-  void SetAgentDestination(Vector3 newDest)
-  {
-    _agent.SetDestination(newDest);
-  }
-
   void ChaseTarget(bool checkTurnaround = true)
   {
     //if (_isZombie) return;

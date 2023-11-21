@@ -550,6 +550,13 @@ public class ItemScript : MonoBehaviour
             i
           );
           bullet.SetSourceItem(this);
+
+          /*/ Check gun smoke on
+          if (_type == ItemType.REVOLVER)
+          {
+            _gunSmoke = transform.GetChild(3).GetComponent<ParticleSystem>();
+            _gunSmoke.Play();
+          }*/
         }
 
         // Custom projectile
@@ -619,11 +626,20 @@ public class ItemScript : MonoBehaviour
 
   float _meleeReleaseTimer, _meleeReleaseTimerOverfill, _meleeLerper;
   bool _meleeReleaseTrigger, _meleeComplexResetTrigger;
+  //ParticleSystem _gunSmoke;
   public void Update()
   {
     _onUpdate?.Invoke();
 
     if (_ragdoll == null) return;
+
+    /*/ Check gun smoke off
+    if (_type == ItemType.REVOLVER)
+    {
+
+      if (_gunSmoke != null && _gunSmoke.isPlaying && Time.time - _useTime > 5f)
+        transform.GetChild(3).GetComponent<ParticleSystem>().Stop();
+    }*/
 
     // Custom swing melee
     if (_melee && _useOnRelease)
@@ -1028,8 +1044,8 @@ public class ItemScript : MonoBehaviour
     int bulletIter = 0
   )
   {
-    var bullet = _BulletPool[_BulletPool_Iter++ % _BulletPool.Length];
-    bullet.gameObject.SetActive(true);
+    var newBullet = _BulletPool[_BulletPool_Iter++ % _BulletPool.Length];
+    newBullet.gameObject.SetActive(true);
 
     // Size
     var use_size = Mathf.Clamp(0.9f + penatrationAmount * 0.2f, 0.9f, 2.5f);
@@ -1037,32 +1053,31 @@ public class ItemScript : MonoBehaviour
     else if (itemType == ItemType.ROCKET_FIST) use_size = 4.5f;
 
     //
-    bullet.SetSize(use_size);
-    bullet.Reset(source, spawnPos);
+    newBullet.SetSize(use_size);
+    newBullet.Reset(source, spawnPos);
 
     // Laser
     var bulletSpeedMod = 1f;
     if (itemType == ItemType.CHARGE_PISTOL)
     {
-      bullet.SetColor(new Color(1f, 0.5f, 0.5f), Color.red);
-      bullet.SetLifetime(0.04f);
-      bullet.SetNoise(0.1f, 0.1f);
+      newBullet.SetColor(new Color(1f, 0.5f, 0.5f), Color.red);
+      newBullet.SetLifetime(0.04f);
+      newBullet.SetNoise(0.1f, 0.1f);
       bulletSpeedMod = 1.25f;
     }
 
     // Normal bullet
     else
     {
-      bullet.SetColor(new Color(1f, 0.9f, 0f), new Color(1f, 0.07f, 0f));
-      bullet.SetLifetime(0.05f);
-      bullet.SetNoise(0.25f, 0.5f);
+      newBullet.SetColor(new Color(1f, 0.9f, 0f), new Color(1f, 0.07f, 0f));
+      newBullet.SetLifetime(0.05f);
+      newBullet.SetNoise(0.25f, 0.5f);
     }
 
     // Physics
-    var rb = bullet._rb;
-
-    rb.velocity = Vector3.zero;
-    rb.transform.position = spawnPos;
+    var bulletRb = newBullet._rb;
+    bulletRb.velocity = Vector3.zero;
+    bulletRb.transform.position = spawnPos;
     var speedMod = 0.5f * (itemType == ItemType.FLAMETHROWER ? 1f : (penatrationAmount > 0 ? 1.35f : 1f)) + (bulletIter == 0 ? 0f : (UnityEngine.Random.value * 0.15f) - 0.075f);
     speedMod *= bulletSpeedMod;
     var addforce = Vector3.zero;
@@ -1073,11 +1088,11 @@ public class ItemScript : MonoBehaviour
       if (!randomSpread && bulletIter == 0 && projectilesPerShot % 2 == 1) mod = 0f;
       addforce = Quaternion.AngleAxis(90f, Vector3.up) * shootDirNormalized * bulletSpread * (randomSpread ? Random.value : 1f) * mod;
     }
-    var force = MathC.Get2DVector(shootDirNormalized + addforce) * 2100f * speedMod;
-    rb.transform.LookAt(rb.position + force);
-    rb.AddForce(force);
+    var bulletForce = MathC.Get2DVector(shootDirNormalized + addforce) * 2100f * speedMod;
+    bulletRb.transform.LookAt(bulletRb.position + bulletForce);
+    bulletRb.AddForce(bulletForce);
 
-    bullet.OnShot(penatrationAmount, force.magnitude);
+    newBullet.OnShot(penatrationAmount, bulletForce.magnitude);
 
     // Bullet casing
     if (
@@ -1088,20 +1103,23 @@ public class ItemScript : MonoBehaviour
     )
     {
       var bullet_casing = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.BULLET_CASING)[0];
-      var q = bullet_casing.transform.rotation;
-      q.eulerAngles = new Vector3(q.eulerAngles.x, Random.value * 360f, q.eulerAngles.z);
-      bullet_casing.transform.rotation = q;
-      var p = new ParticleSystem.EmitParams();
-      p.position = spawnPos + Vector3.up * 0.5f;
-      p.rotation3D = q.eulerAngles;
-      bullet_casing.Emit(p, 1);
+      var bulletRot = bullet_casing.transform.rotation;
+      bulletRot.eulerAngles = new Vector3(bulletRot.eulerAngles.x, Random.value * 360f, bulletRot.eulerAngles.z);
+      bullet_casing.transform.rotation = bulletRot;
+      var emitParams = new ParticleSystem.EmitParams
+      {
+        position = spawnPos + Vector3.up * 0.5f,
+        rotation3D = bulletRot.eulerAngles
+      };
+      bullet_casing.Emit(emitParams, 1);
       SfxManager.PlayAudioSourceSimple(spawnPos, "Ragdoll/Bullet_Casing", 0.8f, 1.2f);
 
       // Gun embers
-      var ps_gunsmoke = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.GUN_SMOKE);
-      foreach (var p_gunsmoke in ps_gunsmoke)
+      var ps_gunsmoke = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.GUN_FIRE);
+      Debug.Log(ps_gunsmoke.Length);
+      foreach (var psGunFire in ps_gunsmoke)
       {
-        p_gunsmoke.transform.position = spawnPos + shootDirNormalized * (0.3f + (
+        psGunFire.transform.position = spawnPos + shootDirNormalized * (0.3f + (
           itemType == ItemType.DMR ||
           itemType == ItemType.AK47 ||
           itemType == ItemType.M16 ||
@@ -1112,13 +1130,15 @@ public class ItemScript : MonoBehaviour
           itemType == ItemType.GRENADE_LAUNCHER ||
           itemType == ItemType.SHOTGUN_PUMP
           ? 0.35f : 0f));
-        p_gunsmoke.transform.LookAt(spawnPos + shootDirNormalized);
-        p_gunsmoke.Play();
+        psGunFire.transform.LookAt(spawnPos + shootDirNormalized);
+        //var mainmodule = p_gunsmoke.main;
+        //mainmodule.emitterVelocity = source._head?.GetComponent<Rigidbody>()?.velocity ?? Vector3.zero;
+        psGunFire.Play();
       }
     }
 
     //
-    return bullet;
+    return newBullet;
   }
 
   //

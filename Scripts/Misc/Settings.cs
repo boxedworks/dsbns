@@ -201,7 +201,7 @@ public static class Settings
     }
   }
 
-public static FunctionsC.SaveableStat_Bool _IgnoreFirstController;
+  public static FunctionsC.SaveableStat_Bool _IgnoreFirstController;
 
   public static FunctionsC.SaveableStat_Bool _Toggle_Lightning;
   public static FunctionsC.SaveableStat_Int _CameraZoom, _LevelCompletion, _LevelEndcondition;
@@ -743,12 +743,16 @@ public static FunctionsC.SaveableStat_Bool _IgnoreFirstController;
       {
         if (_CameraType._value)
         {
-          depthOfField.focusDistance.value = 6f;
+          depthOfField.focusDistance.value = 5.7f;
+          depthOfField.aperture.value = 1f;
+          depthOfField.focalLength.value = 177f;
         }
         else
         {
-          depthOfField.focusDistance.value = _CameraZoom == 1 ? 16f : _CameraZoom == 0 ? 10.35f : 22.4f;
+          depthOfField.focusDistance.value = _CameraZoom == 1 ? 13.8f : _CameraZoom == 0 ? 10f : 18.2f;
+          depthOfField.aperture.value = _CameraZoom == 2 ? 0.65f : (_CameraZoom == 2 ? 1.3f : 1f);
         }
+
       }
     }
   }

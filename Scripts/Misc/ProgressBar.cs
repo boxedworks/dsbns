@@ -40,6 +40,7 @@ public static class ProgressBar
     foreach(var progress_bar in _ProgressBars)
     {
       var p = progress_bar._parent;
+
       // If no parent, move offscreen
       if (p == null || !progress_bar._enabled || GameScript._Paused)
       {
@@ -47,11 +48,14 @@ public static class ProgressBar
         continue;
       }
       progress_bar._updateAction?.Invoke(progress_bar);
+
       // Else, update to parent's pos
-      progress_bar._transform.position = progress_bar._parent.position + new Vector3(0f, 1f, 0.2f);
+      progress_bar._transform.position = progress_bar._parent.position + new Vector3(0f, 0.2f, 0.2f);
+
       // Increment timer and update slider position
       progress_bar._timer -= Time.deltaTime;
       progress_bar._slider.localPosition = new Vector3(0.47f + (-0.47f * 2f * (progress_bar._timer / progress_bar._timer_start)), 0f, 0f);
+
       // If timer is up, set parent to null and fire action
       if(progress_bar._timer <= 0f)
       {

@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Steamworks;
 using UnityEngine;
 
 using Key = ControllerManager.Key;
@@ -898,6 +899,16 @@ public class TileManager
     foreach (var t in tiles_down)
       t._tile.transform.parent = _Map;
     CombineMeshes(true);
+
+    // Backrooms
+    if (GameScript.s_Backrooms)
+    {
+      GameObject.Find("Backrooms").transform.position = new Vector3(-40.5f, -2.3f, -53f);
+
+      GameObject.Destroy(GameObject.Find("Meshes_Tiles_Up"));
+      GameObject.Destroy(GameObject.Find("Meshes_Tiles_Down"));
+      GameObject.Destroy(GameObject.Find("Meshes_Tiles_Sides"));
+    }
 
     // Set level time
     GameScript._LevelStartTime = Time.time;
@@ -2486,6 +2497,8 @@ public class TileManager
 
   public static void SaveFileOverwrite(string mapdata, int mapindex)
   {
+    if (GameScript.s_Backrooms) return;
+
     Levels._LevelCollections[Levels._CurrentLevelCollectionIndex]._levelData[mapindex] = mapdata;
     Levels.SaveLevels();
   }

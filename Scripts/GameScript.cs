@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 using System.Linq;
+using UnityEngine.Tilemaps;
 
 public class GameScript : MonoBehaviour
 {
@@ -1447,12 +1448,16 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
   public Light _Thunder_Light;
 
   // Update is called once per frame
+  public static bool s_Backrooms;
+  public Light _GlobalLight;
   void Update()
   {
 
     if (!IsSurvival())
     {
       // Update level timer
+      if (s_Backrooms)
+        TileManager._Text_LevelTimer.text = "";
       if (!TileManager._Level_Complete && PlayerScript._TimerStarted)
       {
         TileManager._LevelTimer += Menu2._InMenus ? Time.unscaledDeltaTime : Time.deltaTime;
@@ -1466,6 +1471,15 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         CustomObstacle.HandleAll();
       }
 
+      // Check backrooms
+      if (ControllerManager.GetKey(ControllerManager.Key.B) && ControllerManager.GetKey(ControllerManager.Key.R, ControllerManager.InputMode.HOLD))
+      {
+        s_Backrooms = true;
+        NextLevel(
+"11 10 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 playerspawn_-29_-51.4_rot_0_ p_-29.25_-32.75_end_ +unnamed loaded map"
+);
+        GameObject.Find("GlobalLight").GetComponent<Light>().enabled = true;
+      }
     }
 
     else
