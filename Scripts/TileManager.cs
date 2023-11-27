@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Steamworks;
 using UnityEngine;
-
+using UnityEngine.AI;
 using Key = ControllerManager.Key;
 
 public class TileManager
@@ -890,6 +890,28 @@ public class TileManager
     else
       PlayerspawnScript._PlayerSpawns[0].transform.GetChild(1).gameObject.SetActive(true);
 
+    // Check special objects before build
+    var objectsToDisable = new List<GameObject>();
+    if (GameScript.s_Backrooms)
+    {
+
+      var mapObjects = GameObject.Find("Map_Objects").transform;
+      for (var i = 0; i < mapObjects.childCount; i++)
+      {
+
+        var child = mapObjects.GetChild(i);
+        if (child.name == "Table")
+        {
+          objectsToDisable.Add(child.gameObject);
+
+          OnObjectLoad(child.gameObject);
+        }
+      }
+
+      foreach (var obj in objectsToDisable)
+        obj.SetActive(false);
+    }
+
     // Bake navmesh
     _navMeshSurface.BuildNavMesh();
     if (GameScript.IsSurvival())
@@ -900,10 +922,14 @@ public class TileManager
       t._tile.transform.parent = _Map;
     CombineMeshes(true);
 
+    // Special objects after navmesh build
+    foreach (var obj in objectsToDisable)
+      obj.SetActive(true);
+
     // Backrooms
     if (GameScript.s_Backrooms)
     {
-      GameObject.Find("Backrooms").transform.position = new Vector3(-40.5f, -2.3f, -53f);
+      GameObject.Find("Backrooms").transform.position = new Vector3(-42.1f, -2.3f, -53.95f);
 
       GameObject.Destroy(GameObject.Find("Meshes_Tiles_Up"));
       GameObject.Destroy(GameObject.Find("Meshes_Tiles_Down"));
@@ -958,6 +984,29 @@ public class TileManager
     main_camera.farClipPlane = 35f;
   }
 
+  //
+  static void OnObjectLoad(GameObject loadedObject)
+  {
+
+    switch (loadedObject.name)
+    {
+
+      case "Table":
+
+        var collider = loadedObject.GetComponent<BoxCollider>();
+        var navmeshobj = loadedObject.AddComponent<NavMeshObstacle>();
+        navmeshobj.center = collider.center;
+        navmeshobj.size = collider.size;
+        navmeshobj.carving = true;
+        //navmeshobj.carveOnlyStationary = false;
+
+        break;
+
+    }
+
+  }
+
+  //
   static void CombineMeshes(bool combine_tiles)
   {
     var objects = _Map.GetChild(1);
@@ -967,7 +1016,8 @@ public class TileManager
     meshes.Add("Barrels", System.Tuple.Create(new List<GameObject>(), false));
     meshes.Add("Books", System.Tuple.Create(new List<GameObject>(), true));
     meshes.Add("Bookcases", System.Tuple.Create(new List<GameObject>(), true));
-    meshes.Add("Tables", System.Tuple.Create(new List<GameObject>(), false));
+    if (!GameScript.s_Backrooms)
+      meshes.Add("Tables", System.Tuple.Create(new List<GameObject>(), false));
     meshes.Add("Chairs", System.Tuple.Create(new List<GameObject>(), false));
     meshes.Add("Arches", System.Tuple.Create(new List<GameObject>(), false));
 
@@ -997,10 +1047,9 @@ public class TileManager
             meshes["Books"].Item1.Add(obj.GetChild(u + 1).GetChild(0).gameObject);
           break;
         case ("Table"):
-          meshes["Tables"].Item1.Add(obj.GetChild(0).gameObject);
-          break;
         case ("TableSmall"):
-          meshes["Tables"].Item1.Add(obj.GetChild(0).gameObject);
+          if (!GameScript.s_Backrooms)
+            meshes["Tables"].Item1.Add(obj.GetChild(0).gameObject);
           break;
         case ("Chair"):
           meshes["Chairs"].Item1.Add(obj.GetChild(0).gameObject);
@@ -1896,7 +1945,10 @@ public class TileManager
           continue;
         }
         if (levelObjectData.Length <= s.Length || !levelObjectData.Substring(0, s.Length).Equals(s)) continue;
-        LoadObject(levelObjectData);
+
+        var loadedObject = LoadObject(levelObjectData);
+        OnObjectLoad(loadedObject);
+
         break;
       }
     }

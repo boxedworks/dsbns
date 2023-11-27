@@ -10,28 +10,9 @@ public static class Settings
   public static bool _Slowmo_on_death = true,
     _Slowmo_on_lastkill = true,
     _PLAYER_INVINCIBLE = false;
-  static bool Blood = true,
-    ForceKeyboard = false,
-    ShowTips = true,
-    Fullscreen;
-
+  static bool Fullscreen;
 
   public static int _DeleteSaveDataIter, _DeleteStatsIter;
-
-  public static bool _Blood
-  {
-    set
-    {
-      if (_Blood == value) return;
-      Blood = value;
-      // Save pref
-      PlayerPrefs.SetInt("show_blood", _Blood ? 1 : 0);
-    }
-    get
-    {
-      return Blood;
-    }
-  }
 
   public static float _ForceKeyboardTimer = -0.5f;
   public static bool _ForceKeyboard
@@ -39,33 +20,15 @@ public static class Settings
     set
     {
       // Check same value
-      if (ForceKeyboard == value) return;
+      if (s_SaveData.Settings.ForceKeyboard == value) return;
 
       if (Time.unscaledTime - _ForceKeyboardTimer < 0.1f) return;
       _ForceKeyboardTimer = Time.unscaledTime;
-      ForceKeyboard = value;
-      // Save pref
-      PlayerPrefs.SetInt("force_keyboard", value ? 1 : 0);
+      s_SaveData.Settings.ForceKeyboard = value;
     }
     get
     {
-      return ForceKeyboard;
-    }
-  }
-  public static bool _ShowTips
-  {
-    set
-    {
-      // Check same value
-      if (ShowTips == value) return;
-
-      ShowTips = value;
-      // Save pref
-      PlayerPrefs.SetInt("show_tips", value ? 1 : 0);
-    }
-    get
-    {
-      return ShowTips;
+      return s_SaveData.Settings.ForceKeyboard;
     }
   }
   public static bool _Fullscreen
@@ -115,7 +78,7 @@ public static class Settings
     }
   }
 
-  public static FunctionsC.SaveableStat_Bool _CameraType, _Classic_0_TopRated, _Classic_1_TopRated, _Option_FastText;
+  public static FunctionsC.SaveableStat_Bool _CameraType, _Classic_0_TopRated, _Classic_1_TopRated;
   public static bool _CurrentDifficulty_NotTopRated { get { return (_DIFFICULTY == 0 && !_Classic_0_TopRated._value) || (_DIFFICULTY == 1 && !_Classic_1_TopRated._value); } }
 
   static bool ControllerRumble;
@@ -136,12 +99,8 @@ public static class Settings
   public static List<int> _LevelsCompleted_Current { get { return _LevelsCompleted[Levels._CurrentLevelCollection_Name]; } }
 
   public static int _NumberPlayers = -1,
-    _NumberControllers = -1,
-    _WeaponUnlocked = 0;
-  static int VolumeMusic = 5,
-    VolumeSFX = 5,
-    QualityLevel = -1,
-    DIFFICULTY;
+    _NumberControllers = -1;
+  static int DIFFICULTY;
   public static int _DifficultyUnlocked
   {
     get
@@ -171,33 +130,16 @@ public static class Settings
   {
     get
     {
-      return VolumeMusic;
+      return s_SaveData.Settings.VolumeMusic;
     }
     set
     {
-      VolumeMusic = value % 6;
-      if (VolumeMusic < 0)
-        VolumeMusic = 5;
-      // Update music volume
-      FunctionsC.MusicManager.s_TrackSource.volume = VolumeMusic / 5f * 0.8f;
-      // Save value
-      PlayerPrefs.SetInt("VolumeMusic", VolumeMusic);
-    }
-  }
+      s_SaveData.Settings.VolumeMusic = value % 6;
+      if (s_SaveData.Settings.VolumeMusic < 0)
+        s_SaveData.Settings.VolumeMusic = 5;
 
-  public static int _VolumeSFX
-  {
-    get
-    {
-      return VolumeSFX;
-    }
-    set
-    {
-      VolumeSFX = value % 6;
-      if (VolumeSFX < 0)
-        VolumeSFX = 5;
-      // Save value
-      PlayerPrefs.SetInt("VolumeSFX", VolumeSFX);
+      // Update music volume
+      FunctionsC.MusicManager.s_TrackSource.volume = s_SaveData.Settings.VolumeMusic / 5f * 0.8f;
     }
   }
 
@@ -210,19 +152,19 @@ public static class Settings
   {
     get
     {
-      return QualityLevel;
+      return s_SaveData.Settings.Quality;
     }
     set
     {
-      if (QualityLevel == value) return;
+      if (s_SaveData.Settings.Quality == value) return;
+
       // Use modulus to get remainder
-      QualityLevel = value % 6;
-      if (QualityLevel < 0)
-        QualityLevel = 6 - QualityLevel;
-      // Save pref
-      PlayerPrefs.SetInt("quality", QualityLevel);
+      s_SaveData.Settings.Quality = value % 6;
+      if (s_SaveData.Settings.Quality < 0)
+        s_SaveData.Settings.Quality = 6 - s_SaveData.Settings.Quality;
+
       // Update quality settings
-      QualitySettings.SetQualityLevel(QualityLevel);
+      QualitySettings.SetQualityLevel(s_SaveData.Settings.Quality);
     }
   }
   static bool VSync;
@@ -332,7 +274,7 @@ public static class Settings
     }
   }
 
-  public static float _VERSION = 1.4f;
+  public static float _VERSION = 1.41f;
 
   // Struct holding info what item pair gets unlocked at what level
   public class WeaponPair
@@ -350,7 +292,22 @@ public static class Settings
   public static void Init()
   {
 
-    // Load last version
+    // Load json
+    if (!System.IO.File.Exists("save.json"))
+    {
+      s_SaveData = new SaveData()
+      {
+        Settings = new SettingsData(),
+        LevelData = new LevelData(),
+      };
+    }
+    else
+    {
+      var jsonData = System.IO.File.ReadAllText("save.json");
+      s_SaveData = JsonUtility.FromJson<SaveData>(jsonData);
+    }
+
+    // Load last version (old)
     var oldversion = PlayerPrefs.GetFloat("VERSION", -1f);
     if (oldversion != -1f)
     {
@@ -367,77 +324,66 @@ public static class Settings
           Shop._AvailablePoints++;
         }
       }
+
+      // Check new json; convert
+      if (oldversion < 1.41f)
+      {
+
+        // Settings
+        s_SaveData.Settings.UseBlood = PlayerPrefs.GetInt("show_blood", 1) == 1;
+        s_SaveData.Settings.ForceKeyboard = PlayerPrefs.GetInt("force_keyboard", 0) == 1;
+        s_SaveData.Settings.ShowTips = PlayerPrefs.GetInt("show_tips", 1) == 1;
+        s_SaveData.Settings.TextSpeedFast = PlayerPrefs.GetInt("option_fasttext", 0) == 1;
+
+        s_SaveData.Settings.Quality = PlayerPrefs.GetInt("quality", 5);
+
+        s_SaveData.Settings.VolumeMusic = PlayerPrefs.GetInt("VolumeMusic", 3);
+        s_SaveData.Settings.VolumeSFX = PlayerPrefs.GetInt("VolumeSFX", 3);
+      }
+
+      // Stop using playerprefs
+      PlayerPrefs.SetFloat("VERSION", -1f);
     }
-    PlayerPrefs.SetFloat("VERSION", _VERSION);
+
+    // Set new version
+    s_SaveData.Version = _VERSION;
 
     // Register levels files by name
-    Levels._LevelCollections = new List<Levels.LevelCollection>();
-    var levelfilenames = new string[] { "levels0", "levels1", "levels_survival", "levels_editor_local", /*"levels_challenge"*/ };
-    foreach (var filename in levelfilenames)
+    Levels._LevelCollections = new();
+    foreach (var filename in new string[] { "levels0", "levels1", "levels_survival", "levels_editor_local", /*"levels_challenge"*/ })
       Levels._LevelCollections.Add(new Levels.LevelCollection()
       {
         _name = filename
       });
+
     // Load all level collections
-    for (int i = 0; i < Levels._LevelCollections.Count; i++)
+    for (var i = 0; i < Levels._LevelCollections.Count; i++)
     {
       Levels._CurrentLevelCollectionIndex = i;
       Levels.LoadLevels();
     }
+
     // Set starting level collection
     Levels._CurrentLevelCollectionIndex = DIFFICULTY;
 
     // Load level packs
     //Levels.InitLevelPacks();
 
-    // Weapon unlocks
-    _WeaponUnlocked = PlayerPrefs.GetInt("WeaponUnlocks", 0);
-    // What level collection and level pack weapons get unlocked
-    _WeaponPairInfo = new WeaponPair[]
-    {
-        new WeaponPair(0, 10),
-        new WeaponPair(0, 24),
-        new WeaponPair(0, 36),
-        new WeaponPair(1, 24),
-        new WeaponPair(1, 36),
-    };
-
     // Load completed levels
-    _LevelsCompleted = new Dictionary<string, List<int>>();
+    _LevelsCompleted = new();
     for (var u = 0; u < Levels._LevelCollections.Count; u++)
     {
-      var levels_loaded = new List<int>();
-      int threes = 0;
-      for (int i = 0; i < Levels._LevelCollections[u]._levelData.Length; i++)
+      var levelsCompleted = new List<int>();
+      for (var i = 0; i < Levels._LevelCollections[u]._levelData.Length; i++)
       {
-        threes++;
-        var data = PlayerPrefs.GetInt(Levels._LevelCollections[u]._name + "_" + i, 0);
-        if (data == 1)
-        {
-          levels_loaded.Add(i);
-          //Debug.Log($"{Levels._LevelCollections[u]._name} {i}");
-          if (threes == 3)
-          {
-            var iter = 0;
-            foreach (var p in _WeaponPairInfo)
-            {
-              if (u == p._levelCollectionIter && (i / 3) + 1 == p._levelPackIter)
-                while (iter >= _WeaponUnlocked)
-                  _WeaponUnlocked++;
-              iter++;
-            }
-          }
-        }
-        if (threes == 3) threes = 0;
-      }
-      _LevelsCompleted.Add(Levels._LevelCollections[u]._name, levels_loaded);
-    }
-    // Load general settings
-    _Blood = PlayerPrefs.GetInt("show_blood", 1) == 1;
-    _ForceKeyboard = PlayerPrefs.GetInt("force_keyboard", 0) == 1;
 
-    _Option_FastText = new FunctionsC.SaveableStat_Bool("option_fasttext", false);
-    _ShowTips = PlayerPrefs.GetInt("show_tips", 1) == 1;
+        // Check level completed
+        var levelCompleted = PlayerPrefs.GetInt(Levels._LevelCollections[u]._name + "_" + i, 0) == 1;
+        if (levelCompleted)
+          levelsCompleted.Add(i);
+      }
+      _LevelsCompleted.Add(Levels._LevelCollections[u]._name, levelsCompleted);
+    }
 
     // Load graphics settings
     _UseDefaultTargetFramerate = PlayerPrefs.GetInt("default_targetFramerate", 1) == 1;
@@ -450,12 +396,9 @@ public static class Settings
     SetResolution(got_resolution);
     _Fullscreen = PlayerPrefs.GetInt("screen_fullscreen", 1) == 1;
     UpdateResolution();
-    _QualityLevel = PlayerPrefs.GetInt("quality", 5);
     _VSync = PlayerPrefs.GetInt("vsync_setting", 0) == 1;
 
     // Load audio settings
-    _VolumeMusic = PlayerPrefs.GetInt("VolumeMusic", 3);
-    _VolumeSFX = PlayerPrefs.GetInt("VolumeSFX", 3);
     _Toggle_Lightning = new FunctionsC.SaveableStat_Bool("vfx_toggle_lightning", true);
 
     // Level settings
@@ -870,4 +813,53 @@ public static class Settings
   }
 
   public static Dictionary<Shop.Unlocks, UnlockCriteria> s_Extra_UnlockCriterea;
+
+  // JSON save
+  [System.Serializable]
+  public class SaveData
+  {
+
+    // Meta
+    public float Version;
+
+    //
+    public SettingsData Settings;
+    public LevelData LevelData;
+  }
+  public static SaveData s_SaveData;
+
+  //
+  [System.Serializable]
+  public class SettingsData
+  {
+
+    // General
+    public bool UseBlood = true;
+    public bool ForceKeyboard = false;
+    public bool ShowTips = true;
+    public bool TextSpeedFast = false;
+
+    // Controls
+
+    // Graphics
+    public int Quality;
+
+    // Audio
+    public int VolumeMusic;
+    public int VolumeSFX;
+  }
+
+  //
+  [System.Serializable]
+  public class LevelData
+  {
+
+  }
+
+  public static void SaveSaveData()
+  {
+    var json = JsonUtility.ToJson(s_SaveData);
+    System.IO.File.WriteAllText("save.json", json);
+  }
+
 }

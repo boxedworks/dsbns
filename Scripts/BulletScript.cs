@@ -322,7 +322,17 @@ public class BulletScript : MonoBehaviour
     // Wall hit sfx
     if (hit_wall)
     {
-      PlaySparks();
+
+      Debug.Log(collider.gameObject.name);
+
+      var impactType = BulletImpactType.NORMAL;
+      if (SceneThemes._Theme._name == "Hedge" || collider.gameObject.name == "BookcaseOpen_Bush" || collider.gameObject.name == "BookcaseBig_Bush")
+        impactType = BulletImpactType.BUSHES;
+      else if (collider.gameObject.name == "BookcaseOpen" || collider.gameObject.name == "BookcaseBig" || collider.gameObject.name == "Table_Flipped")
+        impactType = BulletImpactType.WOOD;
+
+
+      PlaySparks(false, 0, impactType);
     }
 
     // Remove bullet
@@ -372,15 +382,15 @@ public class BulletScript : MonoBehaviour
   }
 
   //
-  public void PlaySparks(bool other_bullet = false, int drop_bullet_casings = 0)
+  public void PlaySparks(bool other_bullet = false, int drop_bullet_casings = 0, BulletImpactType bulletImpactType = BulletImpactType.NORMAL)
   {
     if (other_bullet)
     {
-      PlayBulletEffect(0, transform.position, transform.forward);
+      PlayBulletEffect(0, transform.position, transform.forward, bulletImpactType);
     }
     else
     {
-      PlayBulletEffect(1, transform.position, transform.forward);
+      PlayBulletEffect(1, transform.position, transform.forward, bulletImpactType);
     }
 
     // Hot bullet casings
@@ -390,7 +400,14 @@ public class BulletScript : MonoBehaviour
     }
   }
 
-  public static void PlayBulletEffect(int effectIter, Vector3 position, Vector3 forward)
+  public enum BulletImpactType
+  {
+    NORMAL,
+
+    WOOD,
+    BUSHES,
+  }
+  public static void PlayBulletEffect(int effectIter, Vector3 position, Vector3 forward, BulletImpactType bulletImpactType = BulletImpactType.NORMAL)
   {
     switch (effectIter)
     {
@@ -404,7 +421,7 @@ public class BulletScript : MonoBehaviour
         break;
 
       case 1:
-        SfxManager.PlayAudioSourceSimple(position, "Etc/Bullet_impact");
+        SfxManager.PlayAudioSourceSimple(position, bulletImpactType == BulletImpactType.NORMAL ? "Etc/Bullet_impact" : (bulletImpactType == BulletImpactType.BUSHES ? "Etc/Bullet_impact_bushes" : "Etc/Bullet_impact_wood"));
 
         parts = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.SPARKS)[0];
         parts.transform.position = position;

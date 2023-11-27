@@ -1115,11 +1115,11 @@ public class ItemScript : MonoBehaviour
       SfxManager.PlayAudioSourceSimple(spawnPos, "Ragdoll/Bullet_Casing", 0.8f, 1.2f);
 
       // Gun embers
-      var ps_gunsmoke = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.GUN_FIRE);
-      Debug.Log(ps_gunsmoke.Length);
-      foreach (var psGunFire in ps_gunsmoke)
+      var ps_gunsmoke = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.GUN_FIRE)[0];
+      //Debug.Log(ps_gunsmoke.Length);
+      //foreach (var psGunFire in ps_gunsmoke)
       {
-        psGunFire.transform.position = spawnPos + shootDirNormalized * (0.3f + (
+        ps_gunsmoke.transform.position = spawnPos + shootDirNormalized * (0.3f + (
           itemType == ItemType.DMR ||
           itemType == ItemType.AK47 ||
           itemType == ItemType.M16 ||
@@ -1130,10 +1130,10 @@ public class ItemScript : MonoBehaviour
           itemType == ItemType.GRENADE_LAUNCHER ||
           itemType == ItemType.SHOTGUN_PUMP
           ? 0.35f : 0f));
-        psGunFire.transform.LookAt(spawnPos + shootDirNormalized);
+        ps_gunsmoke.transform.LookAt(spawnPos + shootDirNormalized);
         //var mainmodule = p_gunsmoke.main;
         //mainmodule.emitterVelocity = source._head?.GetComponent<Rigidbody>()?.velocity ?? Vector3.zero;
-        psGunFire.Play();
+        ps_gunsmoke.Play();
       }
     }
 

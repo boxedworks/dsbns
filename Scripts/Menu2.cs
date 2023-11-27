@@ -340,7 +340,7 @@ public class Menu2
           }
           else
           {
-            if (Settings._Option_FastText._value)
+            if (Settings.s_SaveData.Settings.TextSpeedFast)
             {
               _CanRender = false;
               RenderMenu();
@@ -977,7 +977,7 @@ public class Menu2
         .AddComponent(Shop.Tip.GetTip(GameScript._GameMode) + after_lines)
         .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
         {
-          component._visible = Settings._ShowTips;
+          component._visible = Settings.s_SaveData.Settings.ShowTips;
         });
       return _Menus[type]._menuComponent_last;
     }
@@ -985,7 +985,7 @@ public class Menu2
     {
       var onSwitch = new System.Action(() =>
       {
-        if (!Settings._ShowTips) return;
+        if (!Settings.s_SaveData.Settings.ShowTips) return;
         var last_c = _Menus[type]._menuComponents.Where(component => component.GetDisplayText(false).Contains("*tip")).Single();
         var afterNewLineCount = System.Text.RegularExpressions.Regex.Matches(last_c.GetDisplayText(false), "\n").Count;
         var tip = Shop.Tip.GetTip(GameScript._GameMode);
@@ -1085,7 +1085,7 @@ public class Menu2
           var parent = _Menu.GetChild(0);
           if (parent.childCount == 0) return;
           for (var i = parent.childCount - 1; i >= 0; i--)
-            if (!Settings._ShowTips)
+            if (!Settings.s_SaveData.Settings.ShowTips)
               parent.GetChild(i).gameObject.SetActive(false);
             else
             {
@@ -5859,11 +5859,11 @@ go to the <color=yellow>SHOP</color> to buy something~1
       .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
       {
         // Set display text
-        component.SetDisplayText(string.Format(format_options, "sfx volume:", $"{Settings._VolumeSFX}/5") + "\n");
+        component.SetDisplayText(string.Format(format_options, "sfx volume:", $"{Settings.s_SaveData.Settings.VolumeSFX}/5") + "\n");
         // Set dropdown data
         var selections = new List<string>();
         var actions = new List<System.Action<MenuComponent>>();
-        var selection_match = "" + Settings._VolumeSFX;
+        var selection_match = "" + Settings.s_SaveData.Settings.VolumeSFX;
         for (int i = 0; i < 6; i++)
         {
           // Add volume level
@@ -5871,7 +5871,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
           // Add action to update sfx volume
           actions.Add((MenuComponent component0) =>
           {
-            Settings._VolumeSFX = component0._dropdownIndex;
+            Settings.s_SaveData.Settings.VolumeSFX = component0._dropdownIndex;
           });
         }
         // Update dropdown data
@@ -5972,14 +5972,14 @@ go to the <color=yellow>SHOP</color> to buy something~1
       {
 
         // Set display text
-        var selection = Settings._Blood ? "on" : "off";
+        var selection = Settings.s_SaveData.Settings.UseBlood ? "on" : "off";
         component.SetDisplayText(string.Format(format_options, "blood:", selection) + '\n');
       })
 
       // Toggle blood
       .AddEvent((MenuComponent component) =>
       {
-        Settings._Blood = !Settings._Blood;
+        Settings.s_SaveData.Settings.UseBlood = !Settings.s_SaveData.Settings.UseBlood;
         _CanRender = false;
         RenderMenu();
       })
@@ -6135,7 +6135,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
       .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
       {
         // Set display text
-        var selection = !Settings._Option_FastText._value ? "typed" : "instant";
+        var selection = !Settings.s_SaveData.Settings.TextSpeedFast ? "typed" : "instant";
         component.SetDisplayText(string.Format(format_options, "menu speed:", selection));
 
         // Set dropdown data
@@ -6145,14 +6145,14 @@ go to the <color=yellow>SHOP</color> to buy something~1
         selections.Add("typed   - menus are typed out like using a keyboard [DEFAULT]");
         actions.Add((MenuComponent component0) =>
         {
-          Settings._Option_FastText._value = false;
+          Settings.s_SaveData.Settings.TextSpeedFast = false;
           _CanRender = false;
           RenderMenu();
         });
         selections.Add("instant - menus are displayed instantly");
         actions.Add((MenuComponent component0) =>
         {
-          Settings._Option_FastText._value = true;
+          Settings.s_SaveData.Settings.TextSpeedFast = true;
           _CanRender = false;
           RenderMenu();
         });
@@ -6166,7 +6166,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
       {
 
         // Set display text
-        var selection = Settings._ShowTips ? "on " : "off";
+        var selection = Settings.s_SaveData.Settings.ShowTips ? "on " : "off";
         component.SetDisplayText(string.Format(format_options, "show tips:", selection) + "\n");
 
         // Set dropdown data
@@ -6177,7 +6177,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
         selections.Add("on  - show game tips in some of the menus [DEFAULT]");
         actions.Add((MenuComponent component0) =>
         {
-          Settings._ShowTips = true;
+          Settings.s_SaveData.Settings.ShowTips = true;
           _CanRender = false;
           RenderMenu();
         });
@@ -6185,7 +6185,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
         selections.Add("off - do not display tips in menus");
         actions.Add((MenuComponent component0) =>
         {
-          Settings._ShowTips = false;
+          Settings.s_SaveData.Settings.ShowTips = false;
           _CanRender = false;
           RenderMenu();
         });
@@ -6249,23 +6249,6 @@ go to the <color=yellow>SHOP</color> to buy something~1
           if (Settings._DeleteSaveDataIter-- <= 0)
           {
 
-            // Save specific settings to restore after data deletion (game/graphics/control settings)
-            var save_music = Settings._VolumeMusic;
-            var save_sfx = Settings._VolumeSFX;
-            var save_res = Settings._ScreenResolution;
-            var save_fullscreen = Settings._Fullscreen;
-            var save_quality = Settings._QualityLevel;
-            var save_vsync = Settings._VSync;
-            var save_cameratype = Settings._CameraType._value;
-            var save_camerazoom = Settings._CameraZoom._value;
-            var save_menutextspeed = Settings._Option_FastText._value;
-            var save_blood = Settings._Blood;
-            var save_forcekeyboard = Settings._ForceKeyboard;
-            var save_rumble = Settings._ControllerRumble;
-            var save_ignoreFirstController = Settings._IgnoreFirstController;
-
-            // Erase save data
-            PlayerPrefs.DeleteAll();
 
             // Do not pause
             _InPause = false;
@@ -6276,22 +6259,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
 
             // Reload settings
             Settings.Init();
-            Settings._VolumeMusic = save_music;
-            Settings._VolumeSFX = save_sfx;
-            Settings.SetResolution("" + save_res);
-            Settings._Fullscreen = save_fullscreen;
-            Settings._QualityLevel = save_quality;
-            Settings._VSync = save_vsync;
-            Settings._CameraType.Reset();
-            Settings._CameraType._value = save_cameratype;
-            Settings._CameraZoom.Reset();
-            Settings._CameraZoom._value = save_camerazoom;
-            Settings._Option_FastText.Reset();
-            Settings._Option_FastText._value = save_menutextspeed;
-            Settings._Blood = save_blood;
-            Settings._ForceKeyboard = save_forcekeyboard;
-            Settings._ControllerRumble = save_rumble;
-            Settings._IgnoreFirstController = save_ignoreFirstController;
+            //Settings.SetResolution("" + save_res);
             Shop.Init();
 
             foreach (var loadout in GameScript.ItemManager.Loadout._Loadouts)
@@ -6332,7 +6300,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
 
     _Menus[MenuType.OPTIONS_GAME]._onSwitched += () =>
     {
-      if (!Settings._Blood)
+      if (!Settings.s_SaveData.Settings.UseBlood)
         TileManager.ResetParticles();
     };
 
@@ -7523,7 +7491,7 @@ about extras</color>
   // Draw current menu
   public static void RenderMenu()
   {
-    if (_CanRender && Settings._Option_FastText._value && _CurrentMenu._Type != MenuType.SPLASH)
+    if (_CanRender && Settings.s_SaveData.Settings.TextSpeedFast && _CurrentMenu._Type != MenuType.SPLASH)
       _CanRender = false;
     _CurrentMenu.Render();
   }
@@ -7695,7 +7663,7 @@ about extras</color>
     //if (audioSource_ != null)
     //  SfxManager.PlayAudioSource(audioSource_, SfxManager.AudioClass.NONE, false);
 
-    audioSource.volume = s_volumes[(int)noise] * (Settings._VolumeSFX / 5f);
+    audioSource.volume = s_volumes[(int)noise] * (Settings.s_SaveData.Settings.VolumeSFX / 5f);
     audioSource.PlayOneShot(audioSource.clip);
   }
 

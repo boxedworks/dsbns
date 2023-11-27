@@ -1539,7 +1539,7 @@ public class ActiveRagdoll
     }
 
     // Check global blood setting
-    if (!Settings._Blood) return;
+    if (!Settings.s_SaveData.Settings.UseBlood) return;
 
     /// Particles
     // Confetti

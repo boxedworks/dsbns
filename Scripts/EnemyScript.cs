@@ -76,7 +76,7 @@ public class EnemyScript : MonoBehaviour
     // Register to handler to index this._id
     SpherecastHandler.Register(this);
 
-    var origin = _ragdoll._head.transform.position;
+    var origin = _ragdoll._head.transform.position;// + new Vector3(0f, -0.3f, 0f);
     var radius = 0.2f;
 
     // 0; Cast at ragdolltarget

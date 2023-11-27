@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Steamworks;
 using UnityEngine;
+using UnityEngine.AI;
 
 public class PlayerScript : MonoBehaviour
 {
@@ -1542,8 +1543,94 @@ public class PlayerScript : MonoBehaviour
 
         // Check interactable
         if (gamepad.buttonEast.wasPressedThisFrame)
+        {
           if (_currentInteractable != null)
             _currentInteractable.Interact(this, CustomObstacle.InteractSide.DEFAULT);
+
+          else if (GameScript.s_Backrooms)
+          {
+
+            // Raycast table
+            var raycastinfo = new RaycastHit();
+            if (Physics.SphereCast(new Ray(_ragdoll._Hip.position, transform.forward), 0.2f, out raycastinfo, 1f, LayerMask.GetMask("ParticleCollision")))
+            {
+              if (raycastinfo.collider.name == "Table")
+              {
+                var table = raycastinfo.collider.gameObject;
+                var startRotation = table.transform.localRotation;
+                var startPosition = table.transform.position;
+
+                var distanceToTable = transform.position - table.transform.position;
+                distanceToTable.y = 0f;
+                distanceToTable = distanceToTable.normalized;
+                distanceToTable = Quaternion.Euler(0f, -table.transform.localEulerAngles.y, 0f) * distanceToTable;
+
+                var applyRotation = Vector3.zero;
+                var applyPosition = Vector3.zero;
+                if (distanceToTable.x < -0.5f)
+                {
+                  applyRotation = new Vector3(0f, 0f, 1f) * -90f;
+                  applyPosition = table.transform.right;
+                }
+                else if (distanceToTable.x > 0.5f)
+                {
+                  applyRotation = new Vector3(0f, 0f, 1f) * 90f;
+                  applyPosition = -table.transform.right;
+                }
+                else if (distanceToTable.z > 0.5f)
+                {
+                  applyRotation = new Vector3(1f, 0f, 0f) * -90f;
+                  applyPosition = -table.transform.forward * 2f;
+                }
+                else
+                {
+                  applyRotation = new Vector3(1f, 0f, 0f) * 90f;
+                  applyPosition = table.transform.forward * 2f;
+                }
+
+                var endRotation = startRotation * Quaternion.Euler(applyRotation);
+                var endPosition = startPosition + applyPosition;
+
+                table.name = "Table_Flipped";
+                SfxManager.PlayAudioSourceSimple(transform.position, "Etc/Table_flip");
+
+                IEnumerator FlipTable()
+                {
+
+                  var navmeshobs = table.GetComponent<NavMeshObstacle>();
+                  navmeshobs.carveOnlyStationary = false;
+
+                  var t = 0f;
+                  while (t < 1f)
+                  {
+                    t += 0.08f;
+                    table.transform.localRotation = Quaternion.Lerp(startRotation, endRotation, t);
+                    table.transform.position = Vector3.Lerp(startPosition, endPosition, t);
+
+                    yield return new WaitForSeconds(0.01f);
+
+                  }
+
+                  table.transform.localRotation = endRotation;
+                  table.transform.position = endPosition;
+
+                  navmeshobs.carveOnlyStationary = true;
+
+                  var parts = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.TABLE_FLIP)[0];
+                  parts.transform.position = table.transform.position;
+                  var angles = parts.transform.localEulerAngles;
+                  angles.y = table.transform.localEulerAngles.y;
+                  parts.transform.localEulerAngles = angles;
+                  parts.Play();
+
+                  EnemyScript.CheckSound(table.transform.position, EnemyScript.Loudness.NORMAL);
+                }
+                StartCoroutine(FlipTable());
+              }
+            }
+
+          }
+        }
 
         // Check reload
         if (_Profile._reloadSidesSameTime ? gamepad.buttonWest.isPressed : gamepad.buttonWest.wasPressedThisFrame)

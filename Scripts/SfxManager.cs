@@ -134,7 +134,7 @@ public static class SfxManager
 #if UNITY_EDITOR
     audioSource.gameObject.name = audioSource.clip.name;
 #endif
-    audioSource.volume *= (Settings._VolumeSFX / 5f);
+    audioSource.volume *= Settings.s_SaveData.Settings.VolumeSFX / 5f;
     audioSource.Play();
 
     s_audioClassCounts[audioClass]++;
@@ -201,7 +201,7 @@ public static class SfxManager
       }
 
       // Update volume and pitch
-      audioSource.volume = audioData._volume * (Settings._VolumeSFX / 5f);
+      audioSource.volume = audioData._volume * (Settings.s_SaveData.Settings.VolumeSFX / 5f);
       if (audioData._changePitch)
         audioSource.pitch = audioData._pitch * pitch;
     }
