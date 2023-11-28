@@ -4,9 +4,16 @@ using UnityEngine;
 
 using System.Linq;
 using UnityEngine.Tilemaps;
+using UnityEditor.Experimental.GraphView;
+using UnityEditor.Presets;
 
 public class GameScript : MonoBehaviour
 {
+  //
+  static Settings.SettingsSaveData SettingsModule { get { return Settings.s_SaveData.Settings; } }
+  static Settings.LevelSaveData LevelModule { get { return Settings.s_SaveData.LevelData; } }
+
+  //
   public static TextMesh _debugText;
 
   public static GameScript _s_Singleton;
@@ -48,9 +55,6 @@ public class GameScript : MonoBehaviour
   public void OnApplicationQuit()
   {
 
-    //
-    Settings.SaveSaveData();
-
     //if (!Application.isEditor) System.Diagnostics.Process.GetCurrentProcess().Kill();
     Application.Quit();
   }
@@ -82,17 +86,15 @@ public class GameScript : MonoBehaviour
   /// </summary>
   public static class TutorialInformation
   {
-    private static bool HasRestarted;
     public static bool _HasRestarted // Will be true when the player has restarted the game
     {
       set
       {
-        HasRestarted = value;
-        PlayerPrefs.SetInt("tut_hasRestarted", HasRestarted ? 1 : 0);
+        LevelModule.HasRestarted = value;
       }
       get
       {
-        return HasRestarted;
+        return LevelModule.HasRestarted;
       }
     }
 
@@ -107,8 +109,6 @@ public class GameScript : MonoBehaviour
       _Tutorial_Restart_Controller1 = GameObject.Find("RestartTutorial1").transform;
       _Tutorial_Restart_Keyboard0 = GameObject.Find("RestartTutorial2").transform;
       _Tutorial_Restart_Keyboard1 = GameObject.Find("RestartTutorial3").transform;
-      // Load saved info
-      HasRestarted = PlayerPrefs.GetInt("tut_hasRestarted") == 1;
     }
   }
 
@@ -122,19 +122,24 @@ public class GameScript : MonoBehaviour
 
     //
     GameResources.Init();
-    SfxManager.Init();
-    FunctionsC.Init();
-    TutorialInformation.Init();
-    ControllerManager.Init();
-    SceneThemes.Init();
-    ProgressBar.Init();
     Shop.Init();
-    Stats.Init();
-
+    FunctionsC.Init();
     s_Music = GameObject.Find("Music").GetComponent<AudioSource>();
     FunctionsC.MusicManager.Init();
 
+    //
     Settings.Init();
+    Settings.LevelSaveData.Save();
+    Settings.SettingsSaveData.Save();
+
+    //
+    SfxManager.Init();
+    ControllerManager.Init();
+    TutorialInformation.Init();
+    SceneThemes.Init();
+    ProgressBar.Init();
+    Stats.Init();
+
     UpdateLevelVault();
 
     SteamManager.SteamMenus.Init();
@@ -866,11 +871,6 @@ public class GameScript : MonoBehaviour
       _Timer_wave_start = Time.time;
     }
 
-    public static int GetHighestWave(int levelIndex)
-    {
-      return PlayerPrefs.GetInt($"SURVIVAL_MAP_{levelIndex}", 0);
-    }
-
     public static void OnWaveEnd()
     {
       _Time_wave_intermission = 4f;
@@ -878,13 +878,15 @@ public class GameScript : MonoBehaviour
       _WavePlaying = false;
 
       // Get / save highest wave
-      var highestWave = PlayerPrefs.GetInt($"SURVIVAL_MAP_{Levels._CurrentLevelIndex}", 0);
+      var highestWave = LevelModule.GetHighestSurvivalWave();
       if (_Wave > highestWave)
-        PlayerPrefs.SetInt($"SURVIVAL_MAP_{Levels._CurrentLevelIndex}", _Wave);
+      {
+        LevelModule.SetHighestSurvivalWave(_Wave);
+        Settings.LevelSaveData.Save();
+      }
 
       // Check survival achievements
       // Map 1
-      Debug.Log($"{_Wave}: {highestWave}");
       if (Levels._CurrentLevelIndex == 0)
       {
         if (_Wave == 10)
@@ -943,7 +945,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       CustomObstacle.Randomize();
 
       // Record stat
-      Stats.OverallStats._Waves_Played++;
+      //Stats.OverallStats._Waves_Played++;
 
       // Respawn players
       _PlayerIter = 0;
@@ -1581,7 +1583,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
 
           // Lightning timed with thunder volume
           if (
-            Settings._Toggle_Lightning._value &&
+            SettingsModule.UseLightning &&
             _Thunder_Light != null &&
             Time.time - _Thunder_Samples_Last > 0.05f
           )
@@ -1620,7 +1622,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         {
           // Check endgame
           var timeToEnd = 2.2f;
-          if (_inLevelEnd && !_GameEnded && (Settings._LevelCompletion._value != 2))
+          if (_inLevelEnd && !_GameEnded && (SettingsModule.LevelCompletionBehavior != Settings.SettingsSaveData.LevelCompletionBehaviorType.NOTHING))
           {
             _levelEndTimer += Time.deltaTime;
 
@@ -1722,12 +1724,14 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
                   }
 
                   // Reset local time
-                  PlayerPrefs.DeleteKey($"{Levels._CurrentLevelCollection_Name}_{Levels._CurrentLevelIndex}_time");
+                  LevelModule.SetLevelBestTime(-1f);
+                  Settings.LevelSaveData.Save();
+
                   Debug.Log("Reset best level time");
                   if (Settings._DIFFICULTY == 0)
-                    Settings._Classic_0_TopRated._value = false;
+                    LevelModule.IsTopRatedClassic0 = false;
                   else
-                    Settings._Classic_1_TopRated._value = false;
+                    LevelModule.IsTopRatedClassic1 = false;
 
                   Levels.BufferLevelTimeDatas();
 
@@ -1749,9 +1753,9 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
 
                 // Editor logic
 #if UNITY_EDITOR
-                if (Settings._LevelCompletion._value == 4)
+                if (SettingsModule.LevelCompletionBehavior == Settings.SettingsSaveData.LevelCompletionBehaviorType.RANDOM_LEVEL)
                   LoadRandomLevel();
-                else if (Settings._LevelCompletion._value == 5)
+                else if (SettingsModule.LevelCompletionBehavior == Settings.SettingsSaveData.LevelCompletionBehaviorType.RANDOM_LEVEL_ALL)
                   LoadRandomLevel(true);
                 else
                 {
@@ -1823,7 +1827,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         // Check camera change
         if (ControllerManager.GetKey(ControllerManager.Key.F3))
         {
-          Settings._CameraType._value = !Settings._CameraType._value;
+          SettingsModule.UseOrthographicCamera = !SettingsModule.UseOrthographicCamera;
           Settings.SetPostProcessing();
         }
 
@@ -1887,13 +1891,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     public static PlayerProfile[] s_Profiles;
 
     public int _Id;
-    string _playerPrefsPrefix
-    {
-      get
-      {
-        return $"PlayerProfile{_Id}_";
-      }
-    }
+    public Settings.SettingsSaveData.PlayerProfile _profileSettings { get { return SettingsModule.PlayerProfiles[_Id]; } }
 
     // The player this profile is attatched to
     public PlayerScript _Player
@@ -1910,26 +1908,31 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
 
     public float[] _directionalAxis;
 
-    int loadoutIndex;
     public int _LoadoutIndex
     {
-      get { return loadoutIndex; }
+      get { return _profileSettings.LoadoutIndex; }
       set
       {
-        if (Levels._HardcodedLoadout != null && !GameScript._EditorTesting) return;
+        if (Levels._HardcodedLoadout != null && !_EditorTesting) return;
         if (_GameMode != GameModes.CLASSIC) return;
         if (_Player?._ragdoll?._grappling ?? false) return;
+
         var iter = ItemManager.Loadout._Loadouts.Length;
-        var difference = value - loadoutIndex;
+        var difference = value - _LoadoutIndex;
+
+        var profileSettings = _profileSettings;
+
         while (iter >= 0)
         {
-          loadoutIndex = (loadoutIndex + difference) % ItemManager.Loadout._Loadouts.Length;
-          if (loadoutIndex < 0) loadoutIndex = ItemManager.Loadout._Loadouts.Length + loadoutIndex;
+          profileSettings.LoadoutIndex = (profileSettings.LoadoutIndex + difference) % ItemManager.Loadout._Loadouts.Length;
+          if (profileSettings.LoadoutIndex < 0) profileSettings.LoadoutIndex = ItemManager.Loadout._Loadouts.Length + profileSettings.LoadoutIndex;
           if (!_equipment.IsEmpty()) break;
           iter--;
         }
-        if (iter == -1 && _equipment.IsEmpty()) loadoutIndex = 0;
-        PlayerPrefs.SetInt($"{_playerPrefsPrefix}loadoutIndex", loadoutIndex);
+        if (iter == -1 && _equipment.IsEmpty()) profileSettings.LoadoutIndex = 0;
+
+        SettingsModule.UpdatePlayerProfile(_Id, profileSettings);
+
         UpdateIcons();
 
         // If in loadout menu, update colors
@@ -1966,15 +1969,14 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       }
     }
 
-    bool reloadSidesSameTime;
     public bool _reloadSidesSameTime
     {
-      get { return reloadSidesSameTime; }
+      get { return _profileSettings.ReloadSameTime; }
       set
       {
-        if (reloadSidesSameTime == value) return;
-        reloadSidesSameTime = value;
-        PlayerPrefs.SetInt($"{_playerPrefsPrefix}reloadSidesSameTime", value ? 1 : 0);
+        var profileSettings = _profileSettings;
+        profileSettings.ReloadSameTime = value;
+        SettingsModule.UpdatePlayerProfile(_Id, profileSettings);
       }
     }
 
@@ -2027,55 +2029,47 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
 
     public static Color[] _Colors = new Color[] { Color.blue, Color.red, Color.yellow, Color.cyan, Color.white, Color.black, new Color(1f, 0.6f, 0f) };
 
-    bool holdRun = true, faceMovement = false;
-    public bool _holdRun
-    {
-      get
-      {
-        return holdRun;
-      }
-      set
-      {
-        holdRun = value;
-        // Save pref
-        PlayerPrefs.SetInt($"{_playerPrefsPrefix}holdRun", holdRun ? 1 : 0);
-      }
-    }
     public bool _faceMovement
     {
       get
       {
-        return faceMovement;
+        return _profileSettings.FaceLookDirection;
       }
       set
       {
-        faceMovement = value;
-        // Save pref
-        PlayerPrefs.SetInt($"{_playerPrefsPrefix}faceDir", faceMovement ? 1 : 0);
+        var profileSettings = _profileSettings;
+        profileSettings.FaceLookDirection = value;
+        SettingsModule.UpdatePlayerProfile(_Id, profileSettings);
       }
     }
-    int playerColor;
+
     public int _playerColor
     {
       get
       {
-        return playerColor;
+        return _profileSettings.Color;
       }
       set
       {
+
+        var profileSettings = _profileSettings;
+
         // Clamp
-        playerColor = value % _Colors.Length;
-        if (playerColor < 0)
-          playerColor = _Colors.Length - 1;
+        profileSettings.Color = value % _Colors.Length;
+        if (profileSettings.Color < 0)
+          profileSettings.Color = _Colors.Length - 1;
+
         // Update UI
         Transform ui = GameResources._UI_Player;
         ui.GetChild(_Id).GetChild(0).GetComponent<TextMesh>().color = GetColor();
+
         // Check for alive player
         if (PlayerScript.s_Players != null)
           foreach (PlayerScript p in PlayerScript.s_Players)
             if (p._Id == _Id && !p._ragdoll._IsDead) p._ragdoll.ChangeColor(GetColor());
-        // Save pref
-        PlayerPrefs.SetInt($"{_playerPrefsPrefix}color", playerColor);
+
+        // Save
+        SettingsModule.UpdatePlayerProfile(_Id, profileSettings);
       }
     }
     Transform _UI { get { return GameResources._UI_Player.GetChild(_Id); } }
@@ -2090,9 +2084,6 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       s_Profiles[_Id] = this;
 
       _directionalAxis = new float[3];
-
-      // Load profile settings
-      LoadPrefs();
 
       // Check empty loadout
       ChangeLoadoutIfEmpty();
@@ -2203,37 +2194,28 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
 
     public Color GetColor()
     {
-      return _Colors[playerColor];
+      return _Colors[_profileSettings.Color];
     }
     public string GetColorName(bool visual = true)
     {
-      switch (playerColor)
+      switch (_profileSettings.Color)
       {
-        case (0):
+        case 0:
           return "blue";
-        case (1):
+        case 1:
           return "red";
-        case (2):
+        case 2:
           return "yellow";
-        case (3):
+        case 3:
           return visual ? "cyan" : "#00FFFF";
-        case (4):
+        case 4:
           return "white";
-        case (5):
+        case 5:
           return "black";
-        case (6):
+        case 6:
           return "orange";
       }
       return "";
-    }
-
-    public void LoadPrefs()
-    {
-      _playerColor = PlayerPrefs.GetInt($"{_playerPrefsPrefix}color", _Id);
-      _holdRun = PlayerPrefs.GetInt($"{_playerPrefsPrefix}holdRun", 1) == 1;
-      _faceMovement = PlayerPrefs.GetInt($"{_playerPrefsPrefix}faceDir", 1) == 1;
-      _LoadoutIndex = PlayerPrefs.GetInt($"{_playerPrefsPrefix}loadoutIndex", 0);
-      _reloadSidesSameTime = PlayerPrefs.GetInt($"{_playerPrefsPrefix}reloadSidesSameTime", 1) == 1;
     }
 
     // Create health icons
@@ -2824,7 +2806,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
 
       public static void Init()
       {
-        _Loadouts = new Loadout[Shop._s_LoadoutCount._value];
+        _Loadouts = new Loadout[Shop.s_ShopLoadoutCount];
         for (var i = 0; i < _Loadouts.Length; i++)
           _Loadouts[i] = new Loadout(i);
       }
@@ -2896,7 +2878,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       public bool CanEquipItem(ActiveRagdoll.Side side, int index, Items item)
       {
         var currentEquipValue = GetItemValue(side == ActiveRagdoll.Side.LEFT ? (index == 0 ? _equipment._item_left0 : _equipment._item_left1) : (index == 0 ? _equipment._item_right0 : _equipment._item_right1));
-        return (_available_points + currentEquipValue - GetItemValue(item) >= 0);
+        return _available_points + currentEquipValue - GetItemValue(item) >= 0;
       }
       public bool CanEquipUtility(ActiveRagdoll.Side side, UtilityScript.UtilityType utility)
       {
@@ -2907,7 +2889,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         {
           currentEquipValue = GetUtilityValue(currentUtilities[0]) * currentUtilities.Length;
         }
-        return (_available_points + currentEquipValue - GetUtilityValue(utility) >= 0);
+        return _available_points + currentEquipValue - GetUtilityValue(utility) >= 0;
       }
 
       // Save the loadout
@@ -2924,7 +2906,8 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
           savestring += $"perk:{perk}|";
         var pairs = _two_weapon_pairs ? 1 : 0;
         savestring += $"two_pairs:{pairs}|";
-        PlayerPrefs.SetString($"loadout:{_id}", savestring);
+
+        LevelModule.SetLoadout(_id, savestring);
       }
 
       public void Load()
@@ -2933,7 +2916,8 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
 
         try
         {
-          var loadstring = PlayerPrefs.GetString($"loadout:{_id}", "");
+          var loadstring = LevelModule.GetLoadout(_id);
+
           if (loadstring.Trim().Length == 0) return;
           // Parse load string
           foreach (var split in loadstring.Split('|'))
@@ -3253,7 +3237,8 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         if (PlayerScript.s_Players != null && Settings._NumberPlayers != PlayerScript.s_Players.Count) TileManager.ReloadMap();
       TileManager._Text_LevelNum.gameObject.SetActive(true);
       TileManager._Text_LevelTimer.gameObject.SetActive(true);
-      TileManager._Text_LevelTimer_Best.gameObject.SetActive(true);
+      if (_GameMode == GameModes.CLASSIC && !Levels._LevelPack_Playing && !_EditorTesting)
+        TileManager._Text_LevelTimer_Best.gameObject.SetActive(true);
       TileManager._Text_GameOver.gameObject.SetActive(true);
       TileManager._Text_Money.gameObject.SetActive(true);
       TileManager.UnHideMonies();
@@ -3262,7 +3247,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     TextBubbleScript.ToggleBubbles(!_Paused);
   }
 
-  // Determine unlocks for classic mode via PlayerPrefs
+  // Determine unlocks for classic mode via JSON save
   public static void UpdateLevelVault()
   {
 
@@ -3271,13 +3256,13 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     // Check difficulty 0
     var numDirs0 = Levels._LevelCollections[0]._levelData.Length / dirsPerLevel;
     for (var i = 0; i < numDirs0; i++)
-      if (PlayerPrefs.GetInt($"levels0_{(i * dirsPerLevel) + (dirsPerLevel - 1)}") == 1)
+      if (LevelModule.LevelData[0].Data[(i * dirsPerLevel) + (dirsPerLevel - 1)].Completed)
         Shop.AddAvailableUnlockVault($"classic_{i}");
 
     // Check difficulty 1
     var numDirs1 = Levels._LevelCollections[1]._levelData.Length / dirsPerLevel;
     for (var i = 0; i < numDirs1; i++)
-      if (PlayerPrefs.GetInt($"levels1_{(i * dirsPerLevel) + (dirsPerLevel - 1)}") == 1)
+      if (LevelModule.LevelData[1].Data[(i * dirsPerLevel) + (dirsPerLevel - 1)].Completed)
         Shop.AddAvailableUnlockVault($"classic_{(numDirs0) + i}");
   }
 
@@ -3288,7 +3273,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
 
     // Check achievements
 #if UNITY_STANDALONE
-    if (Settings._Extra_Superhot && Settings._Extras_CanUse)
+    if (LevelModule.ExtraTime == 1 && Settings._Extras_CanUse)
       SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.EXTRA_SUPERH);
 #endif
   }
@@ -3304,13 +3289,13 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     {
 
       // Check level completion behavior
-      switch (Settings._LevelCompletion._value)
+      switch (SettingsModule.LevelCompletionBehavior)
       {
 
         // Next level
-        case 0:
-        case 4:
-        case 5:
+        case Settings.SettingsSaveData.LevelCompletionBehaviorType.NEXT_LEVEL:
+        case Settings.SettingsSaveData.LevelCompletionBehaviorType.RANDOM_LEVEL:
+        case Settings.SettingsSaveData.LevelCompletionBehaviorType.RANDOM_LEVEL_ALL:
 
           // Check last level
           if (Levels._CurrentLevelIndex + 1 == Levels._CurrentLevelCollection._levelData.Length)
@@ -3335,13 +3320,13 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
           break;
 
         // Restart level
-        case 1:
+        case Settings.SettingsSaveData.LevelCompletionBehaviorType.RELOAD_LEVEL:
 
           TileManager.ReloadMap();
           break;
 
         // Previous level
-        case 3:
+        case Settings.SettingsSaveData.LevelCompletionBehaviorType.PREVIOUS_LEVEL:
 
           // Check last level
           if (Levels._CurrentLevelIndex == 0)
@@ -3386,11 +3371,11 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     }
 
     // Check level completion behavior
-    switch (Settings._LevelCompletion._value)
+    switch (SettingsModule.LevelCompletionBehavior)
     {
 
       // Next level
-      case 0:
+      case Settings.SettingsSaveData.LevelCompletionBehaviorType.NEXT_LEVEL:
         if (Levels._CurrentLevelIndex + 1 == Levels._CurrentLevelCollection._levelData.Length)
         {
           TogglePause();
@@ -3402,12 +3387,12 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         return;
 
       // Reload level
-      case 1:
+      case Settings.SettingsSaveData.LevelCompletionBehaviorType.RELOAD_LEVEL:
         TileManager.ReloadMap();
         break;
 
       // Previous level
-      case 3:
+      case Settings.SettingsSaveData.LevelCompletionBehaviorType.PREVIOUS_LEVEL:
         if (Levels._CurrentLevelIndex == 0)
         {
           TogglePause();
@@ -3419,12 +3404,12 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         break;
 
       // Random level
-      case 4:
+      case Settings.SettingsSaveData.LevelCompletionBehaviorType.RANDOM_LEVEL:
 
         LoadRandomLevel(false);
         break;
 
-      case 5:
+      case Settings.SettingsSaveData.LevelCompletionBehaviorType.RANDOM_LEVEL_ALL:
 
         LoadRandomLevel(true);
         break;
@@ -3444,7 +3429,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
 
     if (anyDifficulty)
       Settings._DIFFICULTY = Levels._CurrentLevelCollectionIndex = Random.Range(0, Settings._DifficultyUnlocked + 1);
-    NextLevel(Settings._LevelsCompleted_Current[Random.Range(0, Settings._LevelsCompleted_Current.Count)]);
+    NextLevel(Random.Range(0, Settings._LevelsCompleted_Current.Count));
   }
 
   // Increment level menu
@@ -3467,13 +3452,18 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
   public static bool MarkLevelCompleted()
   {
     // Stat
-    Stats.OverallStats._Levels_Completed++;
+    //Stats.OverallStats._Levels_Completed++;
 
     // Save level status
     if (!Levels.LevelCompleted(Levels._CurrentLevelIndex))
     {
-      Settings._LevelsCompleted_Current.Add(Levels._CurrentLevelIndex);
-      PlayerPrefs.SetInt($"{Levels._CurrentLevelCollection_Name}_{Levels._CurrentLevelIndex}", 1);
+
+      if (Levels._CurrentLevelCollectionIndex < 2)
+      {
+        var levelDat = LevelModule.LevelData[Levels._CurrentLevelCollectionIndex].Data[Levels._CurrentLevelIndex];
+        levelDat.Completed = true;
+        LevelModule.LevelData[Levels._CurrentLevelCollectionIndex].Data[Levels._CurrentLevelIndex] = levelDat;
+      }
 
       // Check mode-specific unlocks
       if (_GameMode == GameModes.CLASSIC)
@@ -3556,13 +3546,13 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       return false;
 
     //
-    if (Settings._LevelCompletion._value == 4)
+    if (SettingsModule.LevelCompletionBehavior == Settings.SettingsSaveData.LevelCompletionBehaviorType.RANDOM_LEVEL)
     {
       LoadRandomLevel();
       return true;
     }
 
-    else if (Settings._LevelCompletion._value == 5)
+    else if (SettingsModule.LevelCompletionBehavior == Settings.SettingsSaveData.LevelCompletionBehaviorType.RANDOM_LEVEL_ALL)
     {
       LoadRandomLevel(true);
       return true;
@@ -3592,13 +3582,13 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       return false;
 
     //
-    if (Settings._LevelCompletion._value == 4)
+    if (SettingsModule.LevelCompletionBehavior == Settings.SettingsSaveData.LevelCompletionBehaviorType.RANDOM_LEVEL)
     {
       LoadRandomLevel();
       return true;
     }
 
-    else if (Settings._LevelCompletion._value == 5)
+    else if (SettingsModule.LevelCompletionBehavior == Settings.SettingsSaveData.LevelCompletionBehaviorType.RANDOM_LEVEL_ALL)
     {
       LoadRandomLevel(true);
       return true;

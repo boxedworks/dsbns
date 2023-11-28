@@ -1,10 +1,15 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using UnityEngine;
 
 public class Menu2
 {
+  //
+  static Settings.SettingsSaveData SettingsModule { get { return Settings.s_SaveData.Settings; } }
+  static Settings.LevelSaveData LevelModule { get { return Settings.s_SaveData.LevelData; } }
+
   // Menu types
   public enum MenuType
   {
@@ -340,7 +345,7 @@ public class Menu2
           }
           else
           {
-            if (Settings.s_SaveData.Settings.TextSpeedFast)
+            if (SettingsModule.TextSpeedFast)
             {
               _CanRender = false;
               RenderMenu();
@@ -977,7 +982,7 @@ public class Menu2
         .AddComponent(Shop.Tip.GetTip(GameScript._GameMode) + after_lines)
         .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
         {
-          component._visible = Settings.s_SaveData.Settings.ShowTips;
+          component._visible = SettingsModule.ShowTips;
         });
       return _Menus[type]._menuComponent_last;
     }
@@ -985,7 +990,7 @@ public class Menu2
     {
       var onSwitch = new System.Action(() =>
       {
-        if (!Settings.s_SaveData.Settings.ShowTips) return;
+        if (!SettingsModule.ShowTips) return;
         var last_c = _Menus[type]._menuComponents.Where(component => component.GetDisplayText(false).Contains("*tip")).Single();
         var afterNewLineCount = System.Text.RegularExpressions.Regex.Matches(last_c.GetDisplayText(false), "\n").Count;
         var tip = Shop.Tip.GetTip(GameScript._GameMode);
@@ -1085,7 +1090,7 @@ public class Menu2
           var parent = _Menu.GetChild(0);
           if (parent.childCount == 0) return;
           for (var i = parent.childCount - 1; i >= 0; i--)
-            if (!Settings.s_SaveData.Settings.ShowTips)
+            if (!SettingsModule.ShowTips)
               parent.GetChild(i).gameObject.SetActive(false);
             else
             {
@@ -1184,7 +1189,7 @@ public class Menu2
       .AddEvent((MenuComponent component) => { CommonEvents._SwitchMenu(MenuType.OPTIONS); })
       .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
       {
-        if (Settings._ForceKeyboard || Settings._IgnoreFirstController._value)
+        if (Settings._ForceKeyboard || SettingsModule.IgnoreFirstController)
         {
           component.SetDisplayText("options*\n");
           component._textColor = "red";
@@ -1374,8 +1379,6 @@ public class Menu2
                 GameScript.NextLevel(level_data);
 
                 // Remove menus
-                Time.timeScale = 1f;
-                GameScript._Paused = false;
 
                 // Show editor menu
                 TileManager.EditorMenus._Menu_EditorTesting.gameObject.SetActive(true);
@@ -1388,13 +1391,14 @@ public class Menu2
                 GameScript.NextLevel(_CurrentMenu._dropdownParentIndex);
 
                 // Remove menus
+                TileManager._Text_LevelNum.gameObject.SetActive(true);
                 CommonEvents._RemoveDropdownSelections(component0);
                 _Menu.gameObject.SetActive(false);
                 _InMenus = false;
-                _InPause = false;
-                Time.timeScale = 1f;
-                GameScript._Paused = false;
               }
+              Time.timeScale = 1f;
+              GameScript._Paused = false;
+              TileManager._Text_LevelTimer.gameObject.SetActive(true);
 
               // Play music
               if (FunctionsC.MusicManager.s_CurrentTrack < 3)
@@ -2227,7 +2231,7 @@ public class Menu2
                       return;
 
                     // Load level pack info into level collection
-                    var workshop_folder = System.IO.Directory.GetFiles(file_loc);
+                    var workshop_folder = Directory.GetFiles(file_loc);
                     if (workshop_folder.Length != 1) return;
 
                     var filename = workshop_folder[0];
@@ -3052,7 +3056,7 @@ public class Menu2
           name = string.Format("{0,-20}{1,6}", name.Substring(5), "[mode]");
         }
 
-        if (!Shop._Unlocks_Available.Contains(unlock))
+        if (!Shop.UnlockAvailable(unlock))
         {
           if (display_mode == Shop.DisplayModes.ALL)
           {
@@ -3093,6 +3097,7 @@ public class Menu2
         var equip_cost_string = equip_cost == 0 ? "-" : equip_cost + "";
         if (display_mode == Shop.DisplayModes.PURCHASED)
         {
+          Debug.Log($"{unlock} == {Shop.Unlocked(unlock)}");
           if (!Shop.Unlocked(unlock)) { continue; }
           var color = "yellow";
           m.AddComponent($"{string.Format(format_shop2, name, shop_details.Item1, cost, equip_cost_string, color, color, color)}\n", MenuComponent.ComponentType.BUTTON_SIMPLE);
@@ -3191,8 +3196,13 @@ public class Menu2
                 // Unlock item
                 Shop.Unlock(unlock0);
                 Shop.Unlock(Shop.Unlocks.TUTORIAL_PART0);
+
                 // Increment points
                 Shop._AvailablePoints -= shop_info.Item2;
+
+                //
+                Settings.LevelSaveData.Save();
+
                 // Re-render menu
                 var save_selection = _CurrentMenu._selectionIndex;
                 SpawnMenu_Shop();
@@ -3462,7 +3472,6 @@ public class Menu2
       .AddEvent((MenuComponent component) =>
       {
         GameScript._GameMode = GameScript.GameModes.CLASSIC;
-        Settings._DIFFICULTY = PlayerPrefs.GetInt($"{GameScript._GameMode}_SavedDifficulty", 0);
         Levels._CurrentLevelCollectionIndex = Settings._DIFFICULTY;
         Settings.OnGamemodeChanged(Settings.GamemodeChange.CLASSIC);
 
@@ -3494,7 +3503,6 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
       {
         Levels._CurrentLevelCollectionIndex = 2;
         GameScript._GameMode = GameScript.GameModes.SURVIVAL;
-        Settings._DIFFICULTY = PlayerPrefs.GetInt($"{GameScript._GameMode}_SavedDifficulty", 0);
         CommonEvents._SwitchMenu(MenuType.GAMETYPE_SURVIVAL);
 
         Settings.OnGamemodeChanged(Settings.GamemodeChange.SURVIVAL);
@@ -3564,7 +3572,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
         var rank_lowest = "";
         if (GameScript._GameMode == GameScript.GameModes.SURVIVAL)
         {
-          wave = GameScript.SurvivalMode.GetHighestWave(i) + "";
+          wave = LevelModule.GetHighestSurvivalWave(i) + "";
           if (wave == "0")
             wave = "-";
         }
@@ -3627,7 +3635,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
             // Obscur survival levels
             else
             {
-              if (component._buttonIndex > 0 && GameScript.SurvivalMode.GetHighestWave(component._buttonIndex - 1) < 10)
+              if (component._buttonIndex > 0 && LevelModule.GetHighestSurvivalWave(component._buttonIndex - 1) < 10)
               {
                 component._obscured = true;
                 return;
@@ -3656,8 +3664,8 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
               // Load level on select
               for (var u = 0; u < levels_per_dir; u++)
               {
-                var level_iter = (component._buttonIndex) * levels_per_dir + u;
-                var level_unlocked = (level_iter == 0 ? true : Levels.LevelCompleted(level_iter - 1));
+                var level_iter = component._buttonIndex * levels_per_dir + u;
+                var level_unlocked = level_iter == 0 ? true : Levels.LevelCompleted(level_iter - 1);
 #if UNITY_EDITOR
                 //level_unlocked = true;
 #endif
@@ -3768,7 +3776,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
               }
 
               // Check for last level
-              if (_PreviousMenuType == MenuType.GAMETYPE_CLASSIC && Levels.LevelCompleted(143))
+              if (_PreviousMenuType == MenuType.GAMETYPE_CLASSIC && Levels.LevelCompleted(131))
                 match = selections[0];
 
               if (match == "")
@@ -3818,6 +3826,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
                 GameScript.NextLevel(_SaveMenuDir);
                 CommonEvents._RemoveDropdownSelections(component0);
                 // Remove menus
+                TileManager._Text_LevelTimer.gameObject.SetActive(true);
                 _Menu.gameObject.SetActive(false);
                 _InMenus = false;
               });
@@ -3921,8 +3930,8 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
           foreach (var component0 in _CurrentMenu._menuComponentsSelectable)
           {
             if (saveIndex0 == 0) { saveIndex0++; continue; }
-            var first_level_iter = (component0._buttonIndex) * levels_per_dir;
-            var last_level_iter = (component0._buttonIndex) * levels_per_dir + (levels_per_dir - 1);
+            var first_level_iter = component0._buttonIndex * levels_per_dir;
+            var last_level_iter = component0._buttonIndex * levels_per_dir + (levels_per_dir - 1);
             if (!Levels.LevelCompleted(first_level_iter - 1)) break;
             if (component0.GetDisplayText(false).Contains($"dir{dirs - 1}") && Levels.LevelCompleted(last_level_iter - 1))
             {
@@ -4141,6 +4150,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
           if (!loadout._equipment.IsEmpty())
           {
             Shop.Unlock(Shop.Unlocks.TUTORIAL_PART1);
+            Settings.LevelSaveData.Save();
             break;
           }
 
@@ -4197,12 +4207,16 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
       var list_perks = Shop.GetPerkList();
 
       var has_item = false;
-      foreach (var unlock in Shop._Unlocks)
+      foreach (var unlockDat in LevelModule.ShopUnlocksOrdered)
+      {
+        var unlock = unlockDat.Key;
+        if (unlockDat.Value.UnlockValue != Settings.LevelSaveData.ShopUnlock.UnlockValueType.UNLOCKED) continue;
         if (unlock.ToString().StartsWith("ITEM_"))
         {
           has_item = true;
           break;
         }
+      }
 
       var m = new Menu2(MenuType.EDIT_LOADOUT)
       {
@@ -4652,12 +4666,16 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
       }
       // Utilities
       var has_utility = false;
-      foreach (var unlock in Shop._Unlocks)
+      foreach (var unlockDat in LevelModule.ShopUnlocksOrdered)
+      {
+        var unlock = unlockDat.Key;
+        if (unlockDat.Value.UnlockValue != Settings.LevelSaveData.ShopUnlock.UnlockValueType.UNLOCKED) continue;
         if (unlock.ToString().StartsWith("UTILITY_"))
         {
           has_utility = true;
           break;
         }
+      }
       /*
 
 
@@ -4884,12 +4902,16 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
       if (Levels._EditingLoadout)
         has_perk = true;
       else
-        foreach (var unlock in Shop._Unlocks)
+        foreach (var unlockDat in LevelModule.ShopUnlocksOrdered)
+        {
+          var unlock = unlockDat.Key;
+          if (unlockDat.Value.UnlockValue != Settings.LevelSaveData.ShopUnlock.UnlockValueType.UNLOCKED) continue;
           if (unlock.ToString().StartsWith("MOD_"))
           {
             has_perk = true;
             break;
           }
+        }
       if (has_perk)
       {
         m.AddComponent("mods\n\n\n\n\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
@@ -5111,6 +5133,10 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
         _CanRender = false;
         RenderMenu();
       };
+      _Menus[MenuType.EDIT_LOADOUT]._onSwitched += () =>
+      {
+        Settings.LevelSaveData.Save();
+      };
     }
     SpawnMenu_LoadoutEditor();
 
@@ -5122,7 +5148,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
     }
     .AddComponent($"<color={_COLOR_GRAY}>overall stats</color>\n\n");
     var iter = 0;
-    foreach (var stat in Stats.OverallStats._Stats)
+    /*foreach (var stat in Stats.OverallStats._Stats)
     {
       if (iter == 3)
         mStats.AddComponent("\n=classic_mode\n\n");
@@ -5136,7 +5162,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
           component.SetDisplayText(string.Format(format_overallstats, stat0._name.Split(new string[] { "__" }, System.StringSplitOptions.None)[1], stat0._value).ToLower());
         });
       iter++;
-    }
+    }*/
     mStats.AddComponent("\n")
     .AddComponent("reset\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
       .AddEventFront((MenuComponent component) =>
@@ -5156,7 +5182,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
           {
 
             // Reset overall stats
-            Stats.OverallStats.Reset();
+            //Stats.OverallStats.Reset();
 
             // Press back button
             component0._menu._menuComponent_last._onSelected?.Invoke(component0._menu._menuComponent_last);
@@ -5286,7 +5312,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
         })
         .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
         {
-          if (Settings._ForceKeyboard || Settings._IgnoreFirstController._value)
+          if (Settings._ForceKeyboard || SettingsModule.IgnoreFirstController)
           {
             component.SetDisplayText("options*\n");
             component._textColor = "red";
@@ -5584,7 +5610,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
       .AddEvent((MenuComponent component) => { CommonEvents._SwitchMenu(MenuType.OPTIONS_CONTROLS); })
       .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
       {
-        if (Settings._ForceKeyboard || Settings._IgnoreFirstController._value)
+        if (Settings._ForceKeyboard || SettingsModule.IgnoreFirstController)
         {
           component.SetDisplayText("control options*\n");
           component._textColor = "red";
@@ -5773,7 +5799,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
           if (System.Text.RegularExpressions.Regex.Match(refreshText, "<color=").Success)
             refreshText = refreshText.Split('>')[1].Split('<')[0];
           var resolutionText = component0._menu._menuComponentsSelectable[component._buttonIndex - 1].GetDisplayText(false).Split(':')[1].Trim();
-          Settings._UseDefaultTargetFramerate = false;
+          SettingsModule.UseDefaultTargetFramerate = false;
           Application.targetFrameRate = refreshText.Split('H')[0].ParseIntInvariant();
           Settings.SetResolution(resolutionText + " @ " + refreshText);
         });
@@ -5784,7 +5810,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
           actions.Add((MenuComponent component0) =>
           {
             Application.targetFrameRate = -1;
-            Settings._UseDefaultTargetFramerate = true;
+            SettingsModule.UseDefaultTargetFramerate = true;
           });
           // Update dropdown data
           component.SetDropdownData("refresh rate\n*if having performance issues; change to a lower number than 'max'\n\n", selections, actions, selection_match);
@@ -5799,7 +5825,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
           // Set dropdown data
           var selections = new List<string>();
           var actions = new List<System.Action<MenuComponent>>();
-          var selection_match = "" + Settings._QualityLevel;
+          var selection_match = "" + SettingsModule.Quality;
           for (int i = 0; i < 6; i++)
           {
             // Add quality level
@@ -5807,7 +5833,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
             // Add action to update quality
             actions.Add((MenuComponent component0) =>
               {
-                Settings._QualityLevel = component0._dropdownIndex;
+                SettingsModule.Quality = component0._dropdownIndex;
               });
           }
           // Update dropdown data
@@ -5818,13 +5844,13 @@ go to the <color=yellow>SHOP</color> to buy something~1
         .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
         {
           // Set display text
-          var selection = Settings._VSync ? "on" : "off";
+          var selection = SettingsModule.UseVsync ? "on" : "off";
           component.SetDisplayText(string.Format(format_options, "vsync:", selection) + "\n");
         })
         // Toggle blood
         .AddEvent((MenuComponent component) =>
         {
-          Settings._VSync = !Settings._VSync;
+          SettingsModule.UseVsync = !SettingsModule.UseVsync;
           _CanRender = false;
           RenderMenu();
         });
@@ -5859,11 +5885,11 @@ go to the <color=yellow>SHOP</color> to buy something~1
       .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
       {
         // Set display text
-        component.SetDisplayText(string.Format(format_options, "sfx volume:", $"{Settings.s_SaveData.Settings.VolumeSFX}/5") + "\n");
+        component.SetDisplayText(string.Format(format_options, "sfx volume:", $"{SettingsModule.VolumeSFX}/5") + "\n");
         // Set dropdown data
         var selections = new List<string>();
         var actions = new List<System.Action<MenuComponent>>();
-        var selection_match = "" + Settings.s_SaveData.Settings.VolumeSFX;
+        var selection_match = "" + SettingsModule.VolumeSFX;
         for (int i = 0; i < 6; i++)
         {
           // Add volume level
@@ -5871,7 +5897,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
           // Add action to update sfx volume
           actions.Add((MenuComponent component0) =>
           {
-            Settings.s_SaveData.Settings.VolumeSFX = component0._dropdownIndex;
+            SettingsModule.VolumeSFX = component0._dropdownIndex;
           });
         }
         // Update dropdown data
@@ -5880,6 +5906,11 @@ go to the <color=yellow>SHOP</color> to buy something~1
 
     // Back button
     .AddBackButton(MenuType.OPTIONS);
+
+    _Menus[MenuType.OPTIONS_SETTINGS]._onSwitched += () =>
+    {
+      Settings.SettingsSaveData.Save();
+    };
 
     // Game options menu
     var menu_optionsGame = new Menu2(MenuType.OPTIONS_GAME)
@@ -5894,7 +5925,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
       {
 
         // Set display text
-        var type_text = Settings._CameraType._value ? "2D" : "3D";
+        var type_text = SettingsModule.UseOrthographicCamera ? "2D" : "3D";
         component.SetDisplayText(string.Format(format_options, "camera type:", $"{type_text}"));
 
         // Set dropdown data
@@ -5907,12 +5938,12 @@ go to the <color=yellow>SHOP</color> to buy something~1
           actions.Add((MenuComponent component0) =>
           {
             var is_ortho = component0._dropdownIndex == 1;
-            if (Settings._CameraZoom == 3 && is_ortho)
+            if (SettingsModule.CameraZoom == Settings.SettingsSaveData.CameraZoomType.AUTO && is_ortho)
             {
-              Settings._CameraZoom._value = 1;
+              SettingsModule.CameraZoom = Settings.SettingsSaveData.CameraZoomType.NORMAL;
             }
 
-            Settings._CameraType._value = is_ortho;
+            SettingsModule.UseOrthographicCamera = is_ortho;
             Settings.SetPostProcessing();
           });
         }
@@ -5926,7 +5957,8 @@ go to the <color=yellow>SHOP</color> to buy something~1
       {
 
         // Set display text
-        var zoom_text = Settings._CameraZoom == 0 ? "close" : Settings._CameraZoom == 1 ? "normal" : Settings._CameraZoom == 2 ? "far" : "auto [2D mode only]";
+        var zoom_text =
+          SettingsModule.CameraZoom == Settings.SettingsSaveData.CameraZoomType.CLOSE ? "close" : (SettingsModule.CameraZoom == Settings.SettingsSaveData.CameraZoomType.NORMAL ? "normal" : (SettingsModule.CameraZoom == Settings.SettingsSaveData.CameraZoomType.FAR ? "far" : "auto [2D mode only]"));
         component.SetDisplayText(string.Format(format_options, "camera zoom:", $"{zoom_text}") + "\n");
 
         // Set dropdown data
@@ -5943,12 +5975,12 @@ go to the <color=yellow>SHOP</color> to buy something~1
           {
             actions.Add((MenuComponent component0) =>
             {
-              if (!Settings._CameraType._value)
+              if (!SettingsModule.UseOrthographicCamera)
               {
-                Settings._CameraType._value = true;
+                SettingsModule.UseOrthographicCamera = true;
               }
 
-              Settings._CameraZoom._value = component0._dropdownIndex;
+              SettingsModule.CameraZoom = (Settings.SettingsSaveData.CameraZoomType)component0._dropdownIndex;
               Settings.SetPostProcessing();
             });
           }
@@ -5957,7 +5989,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
           else
             actions.Add((MenuComponent component0) =>
             {
-              Settings._CameraZoom._value = component0._dropdownIndex;
+              SettingsModule.CameraZoom = (Settings.SettingsSaveData.CameraZoomType)component0._dropdownIndex;
               Settings.SetPostProcessing();
             });
         }
@@ -5972,14 +6004,14 @@ go to the <color=yellow>SHOP</color> to buy something~1
       {
 
         // Set display text
-        var selection = Settings.s_SaveData.Settings.UseBlood ? "on" : "off";
+        var selection = SettingsModule.UseBlood ? "on" : "off";
         component.SetDisplayText(string.Format(format_options, "blood:", selection) + '\n');
       })
 
       // Toggle blood
       .AddEvent((MenuComponent component) =>
       {
-        Settings.s_SaveData.Settings.UseBlood = !Settings.s_SaveData.Settings.UseBlood;
+        SettingsModule.UseBlood = !SettingsModule.UseBlood;
         _CanRender = false;
         RenderMenu();
       })
@@ -6027,7 +6059,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
       {
 
         // Set display text
-        var selection = Settings._ShowDeathText._value ? "on" : "off";
+        var selection = SettingsModule.ShowDeathText ? "on" : "off";
         component.SetDisplayText(string.Format(format_options, "death text:", selection));
 
         // Set dropdown data
@@ -6037,14 +6069,14 @@ go to the <color=yellow>SHOP</color> to buy something~1
         selections.Add("on [DEFAULT]");
         actions.Add((MenuComponent component0) =>
         {
-          Settings._ShowDeathText._value = true;
+          SettingsModule.ShowDeathText = true;
           _CanRender = false;
           RenderMenu();
         });
         selections.Add("off");
         actions.Add((MenuComponent component0) =>
         {
-          Settings._ShowDeathText._value = false;
+          SettingsModule.ShowDeathText = false;
           _CanRender = false;
           RenderMenu();
         });
@@ -6059,21 +6091,21 @@ go to the <color=yellow>SHOP</color> to buy something~1
       {
         // Set display text
         var selection = "next level";
-        switch (Settings._LevelCompletion._value)
+        switch (SettingsModule.LevelCompletionBehavior)
         {
-          case 1:
+          case Settings.SettingsSaveData.LevelCompletionBehaviorType.RELOAD_LEVEL:
             selection = "reload level";
             break;
-          case 2:
+          case Settings.SettingsSaveData.LevelCompletionBehaviorType.NOTHING:
             selection = "nothing";
             break;
-          case 3:
+          case Settings.SettingsSaveData.LevelCompletionBehaviorType.PREVIOUS_LEVEL:
             selection = "previous level";
             break;
-          case 4:
+          case Settings.SettingsSaveData.LevelCompletionBehaviorType.RANDOM_LEVEL:
             selection = "random level (current difficulty)";
             break;
-          case 5:
+          case Settings.SettingsSaveData.LevelCompletionBehaviorType.RANDOM_LEVEL_ALL:
             selection = "random level (any difficulty)";
             break;
         }
@@ -6086,42 +6118,42 @@ go to the <color=yellow>SHOP</color> to buy something~1
         selections.Add("next level     - load the next level [DEFAULT]");
         actions.Add((MenuComponent component0) =>
         {
-          Settings._LevelCompletion._value = 0;
+          SettingsModule.LevelCompletionBehavior = Settings.SettingsSaveData.LevelCompletionBehaviorType.NEXT_LEVEL;
           _CanRender = false;
           RenderMenu();
         });
         selections.Add("reload level   - replay the same level");
         actions.Add((MenuComponent component0) =>
         {
-          Settings._LevelCompletion._value = 1;
+          SettingsModule.LevelCompletionBehavior = Settings.SettingsSaveData.LevelCompletionBehaviorType.RELOAD_LEVEL;
           _CanRender = false;
           RenderMenu();
         });
         selections.Add("nothing        - nothing is loaded or happens");
         actions.Add((MenuComponent component0) =>
         {
-          Settings._LevelCompletion._value = 2;
+          SettingsModule.LevelCompletionBehavior = Settings.SettingsSaveData.LevelCompletionBehaviorType.NOTHING;
           _CanRender = false;
           RenderMenu();
         });
         selections.Add("previous level - load the previous level");
         actions.Add((MenuComponent component0) =>
         {
-          Settings._LevelCompletion._value = 3;
+          SettingsModule.LevelCompletionBehavior = Settings.SettingsSaveData.LevelCompletionBehaviorType.PREVIOUS_LEVEL;
           _CanRender = false;
           RenderMenu();
         });
         selections.Add("random level (current difficulty) - load any unlocked level");
         actions.Add((MenuComponent component0) =>
         {
-          Settings._LevelCompletion._value = 4;
+          SettingsModule.LevelCompletionBehavior = Settings.SettingsSaveData.LevelCompletionBehaviorType.RANDOM_LEVEL;
           _CanRender = false;
           RenderMenu();
         });
         selections.Add("random level (any difficulty)     - load any unlocked level");
         actions.Add((MenuComponent component0) =>
         {
-          Settings._LevelCompletion._value = 5;
+          SettingsModule.LevelCompletionBehavior = Settings.SettingsSaveData.LevelCompletionBehaviorType.RANDOM_LEVEL_ALL;
           _CanRender = false;
           RenderMenu();
         });
@@ -6135,7 +6167,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
       .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
       {
         // Set display text
-        var selection = !Settings.s_SaveData.Settings.TextSpeedFast ? "typed" : "instant";
+        var selection = !SettingsModule.TextSpeedFast ? "typed" : "instant";
         component.SetDisplayText(string.Format(format_options, "menu speed:", selection));
 
         // Set dropdown data
@@ -6145,14 +6177,14 @@ go to the <color=yellow>SHOP</color> to buy something~1
         selections.Add("typed   - menus are typed out like using a keyboard [DEFAULT]");
         actions.Add((MenuComponent component0) =>
         {
-          Settings.s_SaveData.Settings.TextSpeedFast = false;
+          SettingsModule.TextSpeedFast = false;
           _CanRender = false;
           RenderMenu();
         });
         selections.Add("instant - menus are displayed instantly");
         actions.Add((MenuComponent component0) =>
         {
-          Settings.s_SaveData.Settings.TextSpeedFast = true;
+          SettingsModule.TextSpeedFast = true;
           _CanRender = false;
           RenderMenu();
         });
@@ -6166,7 +6198,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
       {
 
         // Set display text
-        var selection = Settings.s_SaveData.Settings.ShowTips ? "on " : "off";
+        var selection = SettingsModule.ShowTips ? "on " : "off";
         component.SetDisplayText(string.Format(format_options, "show tips:", selection) + "\n");
 
         // Set dropdown data
@@ -6177,7 +6209,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
         selections.Add("on  - show game tips in some of the menus [DEFAULT]");
         actions.Add((MenuComponent component0) =>
         {
-          Settings.s_SaveData.Settings.ShowTips = true;
+          SettingsModule.ShowTips = true;
           _CanRender = false;
           RenderMenu();
         });
@@ -6185,7 +6217,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
         selections.Add("off - do not display tips in menus");
         actions.Add((MenuComponent component0) =>
         {
-          Settings.s_SaveData.Settings.ShowTips = false;
+          SettingsModule.ShowTips = false;
           _CanRender = false;
           RenderMenu();
         });
@@ -6199,7 +6231,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
       .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
       {
         // Set display text
-        var display_toggle = Settings._Toggle_Lightning._value ? "on" : "off";
+        var display_toggle = SettingsModule.UseLightning ? "on" : "off";
         component.SetDisplayText(string.Format(format_options, "lightning:", $"{display_toggle}") + "\n");
         // Set dropdown data
         var selections = new List<string>();
@@ -6215,7 +6247,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
               // Add action to update sfx volume
               actions.Add((MenuComponent component0) =>
               {
-                Settings._Toggle_Lightning._value = true;
+                SettingsModule.UseLightning = true;
               });
               break;
             case 1:
@@ -6223,7 +6255,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
               // Add action to update sfx volume
               actions.Add((MenuComponent component0) =>
               {
-                Settings._Toggle_Lightning._value = false;
+                SettingsModule.UseLightning = false;
               });
               break;
           }
@@ -6254,13 +6286,14 @@ go to the <color=yellow>SHOP</color> to buy something~1
             _InPause = false;
             _SaveMenuDir = _SaveLevelSelected = -1;
 
-            // Reload tutorial
-            GameScript.TutorialInformation._HasRestarted = false;
+            // Erase save
+            if (System.IO.File.Exists("save.json.backup"))
+              System.IO.File.Delete("save.json.backup");
+            System.IO.File.Move("save.json", "save.json.backup");
 
             // Reload settings
-            Settings.Init();
-            //Settings.SetResolution("" + save_res);
             Shop.Init();
+            Settings.Init();
 
             foreach (var loadout in GameScript.ItemManager.Loadout._Loadouts)
             {
@@ -6273,13 +6306,9 @@ go to the <color=yellow>SHOP</color> to buy something~1
               profile.UpdateIcons();
             }
 
-            // Erase level data
-            for (int i = 0; i < Settings._LevelsCompleted.Count; i++)
-              Settings._LevelsCompleted[Levels._LevelCollections[i]._name] = new List<int>();
-            // Erase achievement saves
-            //SteamManager.Achievements.Reset();
             // Press back button
             component0._menu._menuComponent_last._onSelected?.Invoke(component0._menu._menuComponent_last);
+
             // Music
             if (FunctionsC.MusicManager.s_CurrentTrack == 1)
               FunctionsC.MusicManager.TransitionTo(0);
@@ -6300,8 +6329,10 @@ go to the <color=yellow>SHOP</color> to buy something~1
 
     _Menus[MenuType.OPTIONS_GAME]._onSwitched += () =>
     {
-      if (!Settings.s_SaveData.Settings.UseBlood)
+      if (!SettingsModule.UseBlood)
         TileManager.ResetParticles();
+
+      Settings.SettingsSaveData.Save();
     };
 
     // Credits
@@ -6595,11 +6626,11 @@ a gampad if plugged in.~1
       {
 
         // Set display text
-        var selection = Settings._IgnoreFirstController._value ? "on" : "off";
-        var selection_match = Settings._IgnoreFirstController._value ? "on  -" : "off -";
-        var star = Settings._IgnoreFirstController._value ? "*" : "";
+        var selection = SettingsModule.IgnoreFirstController ? "on" : "off";
+        var selection_match = SettingsModule.IgnoreFirstController ? "on  -" : "off -";
+        var star = SettingsModule.IgnoreFirstController ? "*" : "";
         component.SetDisplayText(string.Format(format_options, $"ignore first controller{star}:", selection));
-        component._textColor = Settings._IgnoreFirstController._value ? "red" : "";
+        component._textColor = SettingsModule.IgnoreFirstController ? "red" : "";
 
         // Set dropdown data
         var selections = new List<string>();
@@ -6607,12 +6638,12 @@ a gampad if plugged in.~1
         selections.Add("on  - disable detection of the first plugged-in controller");
         actions.Add((MenuComponent component0) =>
         {
-          Settings._IgnoreFirstController._value = true;
+          SettingsModule.IgnoreFirstController = true;
         });
         selections.Add("off - use controllers normally [DEFAULT]");
         actions.Add((MenuComponent component0) =>
         {
-          Settings._IgnoreFirstController._value = false;
+          SettingsModule.IgnoreFirstController = false;
         });
 
         // Update dropdown data
@@ -6625,7 +6656,7 @@ a gampad if plugged in.~1
       {
 
         // Set display text
-        var selection = Settings._ControllerRumble ? "on" : "off";
+        var selection = SettingsModule.ControllerRumble ? "on" : "off";
         component.SetDisplayText(string.Format(format_options, "controller vibration:", selection) + '\n');
 
         // Set dropdown data
@@ -6635,12 +6666,12 @@ a gampad if plugged in.~1
         selections.Add("on  - controllers will vibrate when you die [DEFAULT]");
         actions.Add((MenuComponent component0) =>
         {
-          Settings._ControllerRumble = true;
+          SettingsModule.ControllerRumble = true;
         });
         selections.Add("off - controllers will never vibrate");
         actions.Add((MenuComponent component0) =>
         {
-          Settings._ControllerRumble = false;
+          SettingsModule.ControllerRumble = false;
         });
 
         // Update dropdown data
@@ -6777,6 +6808,10 @@ a gampad if plugged in.~1
     // Tip
     //ModifyMenu_TipComponents(MenuType.OPTIONS_CONTROLS, 16, 1);
     //ModifyMenu_TipSwitch(MenuType.OPTIONS_CONTROLS);
+    _Menus[MenuType.OPTIONS_CONTROLS]._onSwitched += () =>
+    {
+      Settings.SettingsSaveData.Save();
+    };
 
     /// Extras
     // Extra hint unlock info
@@ -6884,22 +6919,22 @@ a gampad if plugged in.~1
       // Gravity direction
       AddExtraSelection(
         "gravity",
-        () => { return Settings._Extra_Gravity == 1 ? "inverted" : Settings._Extra_Gravity == 2 ? "north" : Settings._Extra_Gravity == 3 ? "none" : "normal"; },
+        () => { return LevelModule.ExtraGravity == 1 ? "inverted" : LevelModule.ExtraGravity == 2 ? "north" : LevelModule.ExtraGravity == 3 ? "none" : "normal"; },
         new DropdownSelectionComponent[] {
           new DropdownSelectionComponent("normal", "normal gravity", (MenuComponent component) => {
-            Settings._Extra_Gravity = 0;
+            LevelModule.ExtraGravity = 0;
             Physics.gravity = new Vector3(0f, -9.81f, 0f);
           }),
           new DropdownSelectionComponent("inverted", "gravity go up!", (MenuComponent component) => {
-            Settings._Extra_Gravity = 1;
+            LevelModule.ExtraGravity = 1;
             Physics.gravity = new Vector3(0f, 9.81f, 0f);
           }),
           new DropdownSelectionComponent("north", "gravity go... up?", (MenuComponent component) => {
-            Settings._Extra_Gravity = 2;
+            LevelModule.ExtraGravity = 2;
             Physics.gravity = new Vector3(0f, 0f, 9.81f);
           }),
           new DropdownSelectionComponent("none", "no gravity...", (MenuComponent component) => {
-            Settings._Extra_Gravity = 3;
+            LevelModule.ExtraGravity = 3;
             Physics.gravity = Vector3.zero;
           }),
         },
@@ -6914,7 +6949,7 @@ a gampad if plugged in.~1
         "chaser",
         () =>
         {
-          switch (Settings._Extra_RemoveBatGuy._value)
+          switch (LevelModule.ExtraRemoveChaser)
           {
             case 0:
               return "on";
@@ -6927,13 +6962,13 @@ a gampad if plugged in.~1
         },
         new DropdownSelectionComponent[] {
         new DropdownSelectionComponent("on", "in sneakier difficulty, a person with a bat will chase you", (MenuComponent component) => {
-          Settings._Extra_RemoveBatGuy._value = 0;
+          LevelModule.ExtraRemoveChaser = 0;
         }),
         new DropdownSelectionComponent("on - always", "a person with a bat will chase you in any difficulty", (MenuComponent component) => {
-          Settings._Extra_RemoveBatGuy._value = 1;
+          LevelModule.ExtraRemoveChaser = 1;
         }),
         new DropdownSelectionComponent("off", "...that guy won't exist", (MenuComponent component) => {
-          Settings._Extra_RemoveBatGuy._value = 2;
+          LevelModule.ExtraRemoveChaser = 2;
         }),
         },
         "modify the chasing guy",
@@ -6948,7 +6983,7 @@ a gampad if plugged in.~1
         "player ammo",
         () =>
         {
-          switch (Settings._Extra_PlayerAmmo._value)
+          switch (LevelModule.ExtraPlayerAmmo)
           {
             case 0:
               return "1x";
@@ -6963,16 +6998,16 @@ a gampad if plugged in.~1
         },
         new DropdownSelectionComponent[] {
           new DropdownSelectionComponent("1x", "", (MenuComponent component) => {
-            Settings._Extra_PlayerAmmo._value = 0;
+            LevelModule.ExtraPlayerAmmo = 0;
           }),
           new DropdownSelectionComponent("2x", "", (MenuComponent component) => {
-            Settings._Extra_PlayerAmmo._value = 1;
+            LevelModule.ExtraPlayerAmmo = 1;
           }),
                     new DropdownSelectionComponent("0.5x", "", (MenuComponent component) => {
-            Settings._Extra_PlayerAmmo._value = 2;
+            LevelModule.ExtraPlayerAmmo = 2;
           }),
                     new DropdownSelectionComponent("infinite", "", (MenuComponent component) => {
-            Settings._Extra_PlayerAmmo._value = 3;
+            LevelModule.ExtraPlayerAmmo = 3;
           }),
         },
         "change the max ammo of your weapons / utilities",
@@ -6986,13 +7021,13 @@ a gampad if plugged in.~1
       // Superhot
       AddExtraSelection(
         "time",
-        () => { return Settings._Extra_Superhot ? "movement" : "normal"; },
+        () => { return LevelModule.ExtraTime == 1 ? "movement" : "normal"; },
         new DropdownSelectionComponent[] {
         new DropdownSelectionComponent("normal", "time is normal", (MenuComponent component) => {
-            Settings._Extra_Superhot = false;
+            LevelModule.ExtraTime = 0;
         }),
         new DropdownSelectionComponent("movement", "time only moves when you move", (MenuComponent component) => {
-            Settings._Extra_Superhot = true;
+            LevelModule.ExtraTime = 1;
         }),
         },
         "set the speed that time passes",
@@ -7004,13 +7039,13 @@ a gampad if plugged in.~1
       // Crazy zombies
       AddExtraSelection(
         "horde",
-        () => { return Settings._Extra_CrazyZombies ? "on" : "off"; },
+        () => { return LevelModule.ExtraHorde == 1 ? "on" : "off"; },
         new DropdownSelectionComponent[] {
         new DropdownSelectionComponent("off", "no horde", (MenuComponent component) => {
-            Settings._Extra_CrazyZombies = false;
+            LevelModule.ExtraHorde = 0;
         }),
         new DropdownSelectionComponent("on", "a horde spawns until you pick up the cube", (MenuComponent component) => {
-            Settings._Extra_CrazyZombies = true;
+            LevelModule.ExtraHorde = 1;
         }),
         },
         "toggle a horde mode",
@@ -7024,7 +7059,7 @@ a gampad if plugged in.~1
         "enemy off",
         () =>
         {
-          switch (Settings._Extra_EnemyMultiplier._value)
+          switch (LevelModule.ExtraEnemyMultiplier)
           {
             case 0:
               return "1x";
@@ -7037,13 +7072,13 @@ a gampad if plugged in.~1
         },
         new DropdownSelectionComponent[] {
         new DropdownSelectionComponent("1x", "normal amount of enemies", (MenuComponent component) => {
-          Settings._Extra_EnemyMultiplier._value = 0;
+          LevelModule.ExtraEnemyMultiplier = 0;
         }),
         /*new DropdownSelectionComponent("2x", "double the amount of enemies...", (MenuComponent component) => {
-          Settings._Extra_EnemyMultiplier._value = 1;
+          LevelModule.ExtraEnemyMultiplier = 1;
         }),*/
         new DropdownSelectionComponent("0x", "no enemies", (MenuComponent component) => {
-          Settings._Extra_EnemyMultiplier._value = 2;
+          LevelModule.ExtraEnemyMultiplier = 2;
         }),
         },
         "modify the number of enemies spawned",
@@ -7057,7 +7092,7 @@ a gampad if plugged in.~1
         "blood fx`",
         () =>
         {
-          switch (Settings._Extra_BloodType._value)
+          switch (LevelModule.ExtraBloodType)
           {
             case 0:
               return "normal";
@@ -7068,10 +7103,10 @@ a gampad if plugged in.~1
         },
         new DropdownSelectionComponent[] {
         new DropdownSelectionComponent("normal", "blood", (MenuComponent component) => {
-          Settings._Extra_BloodType._value = 0;
+          LevelModule.ExtraBloodType = 0;
         }),
         new DropdownSelectionComponent("confetti", "party time", (MenuComponent component) => {
-          Settings._Extra_BloodType._value = 1;
+          LevelModule.ExtraBloodType = 1;
         }),
         },
         "change what blood looks like",
@@ -7085,7 +7120,7 @@ a gampad if plugged in.~1
         "explode death",
         () =>
         {
-          switch (Settings._Extra_BodyExplode._value)
+          switch (LevelModule.ExtraBodyExplode)
           {
             case 0:
               return "off";
@@ -7100,16 +7135,16 @@ a gampad if plugged in.~1
         },
         new DropdownSelectionComponent[] {
         new DropdownSelectionComponent("off", "", (MenuComponent component) => {
-          Settings._Extra_BodyExplode._value = 0;
+          LevelModule.ExtraBodyExplode = 0;
         }),
         new DropdownSelectionComponent("all", "", (MenuComponent component) => {
-          Settings._Extra_BodyExplode._value = 1;
+          LevelModule.ExtraBodyExplode = 1;
         }),
         new DropdownSelectionComponent("enemies", "", (MenuComponent component) => {
-          Settings._Extra_BodyExplode._value = 2;
+          LevelModule.ExtraBodyExplode = 2;
         }),
         new DropdownSelectionComponent("players", "", (MenuComponent component) => {
-          Settings._Extra_BodyExplode._value = 3;
+          LevelModule.ExtraBodyExplode = 3;
         }),
         },
         "explode on death",
@@ -7491,7 +7526,7 @@ about extras</color>
   // Draw current menu
   public static void RenderMenu()
   {
-    if (_CanRender && Settings.s_SaveData.Settings.TextSpeedFast && _CurrentMenu._Type != MenuType.SPLASH)
+    if (_CanRender && SettingsModule.TextSpeedFast && _CurrentMenu._Type != MenuType.SPLASH)
       _CanRender = false;
     _CurrentMenu.Render();
   }
@@ -7663,7 +7698,7 @@ about extras</color>
     //if (audioSource_ != null)
     //  SfxManager.PlayAudioSource(audioSource_, SfxManager.AudioClass.NONE, false);
 
-    audioSource.volume = s_volumes[(int)noise] * (Settings.s_SaveData.Settings.VolumeSFX / 5f);
+    audioSource.volume = s_volumes[(int)noise] * (SettingsModule.VolumeSFX / 5f);
     audioSource.PlayOneShot(audioSource.clip);
   }
 

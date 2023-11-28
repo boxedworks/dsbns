@@ -8,6 +8,10 @@ using Random = UnityEngine.Random;
 
 public class ActiveRagdoll
 {
+  //
+  static Settings.LevelSaveData LevelModule { get { return Settings.s_SaveData.LevelData; } }
+
+  //
   public static List<ActiveRagdoll> s_Ragdolls;
   public static int s_ID;
   public int _Id;
@@ -1543,7 +1547,7 @@ public class ActiveRagdoll
 
     /// Particles
     // Confetti
-    var useConfetti = Settings._Extra_BloodType._value == 1;
+    var useConfetti = LevelModule.ExtraBloodType == 1;
     if (useConfetti)
     {
       var particlesConfetti = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.CONFETTI);
@@ -1671,7 +1675,7 @@ public class ActiveRagdoll
     if (!_IsRagdolled) _saveRot = _Hip.rotation;
 
     // Check crown
-    if (Settings._Extra_CrownMode._value != 0)
+    if (LevelModule.ExtraCrownMode != 0)
       if (_hasCrown)
       {
         GameScript.s_CrownPlayer = GameScript.s_CrownEnemy = -1;
@@ -1728,7 +1732,7 @@ public class ActiveRagdoll
       if (Settings._Extras_CanUse)
       {
         var explode_self = false;
-        switch (Settings._Extra_BodyExplode._value)
+        switch (LevelModule.ExtraBodyExplode)
         {
 
           // All

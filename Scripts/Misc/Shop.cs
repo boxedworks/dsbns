@@ -7,7 +7,10 @@ using UnityEngine;
 
 public static class Shop
 {
+  //
+  static Settings.LevelSaveData LevelModule { get { return Settings.s_SaveData.LevelData; } }
 
+  //
   public static class Tip
   {
 
@@ -110,7 +113,6 @@ public static class Shop
 
   }
 
-  static int AvailablePoints;
   public static int _AvailablePoints
   {
     get
@@ -120,25 +122,22 @@ public static class Shop
       //      return 999;
 #endif
 
-      if ((Settings._Classic_0_TopRated?._value ?? false) && (Settings._Classic_1_TopRated?._value ?? false))
+      if (LevelModule.IsTopRatedClassic0 && LevelModule.IsTopRatedClassic1)
         return 999;
-      return AvailablePoints;
+      return LevelModule.ShopPoints;
     }
     set
     {
-      AvailablePoints = value;
-      PlayerPrefs.SetInt("Shop_availablePoints", AvailablePoints);
+      LevelModule.ShopPoints = value;
     }
   }
 
-  static int DisplayMode;
   public static int _DisplayMode
   {
-    get { return DisplayMode; }
+    get { return LevelModule.ShopDisplayMode; }
     set
     {
-      DisplayMode = value % 3;
-      PlayerPrefs.SetInt("Shop_DisplayMode", DisplayMode);
+      LevelModule.ShopDisplayMode = value % 3;
     }
   }
   public enum DisplayModes
@@ -148,14 +147,12 @@ public static class Shop
     PURCHASED,
   }
 
-  static int LoadoutDisplayMode;
   public static int _LoadoutDisplayMode
   {
-    get { return LoadoutDisplayMode; }
+    get { return LevelModule.ShopLoadoutDisplayMode; }
     set
     {
-      LoadoutDisplayMode = value % 2;
-      PlayerPrefs.SetInt("Shop_LoadoutDisplayMode", DisplayMode);
+      LevelModule.ShopLoadoutDisplayMode = value % 2;
     }
   }
 
@@ -259,21 +256,15 @@ public static class Shop
     TUTORIAL_PART1
   }
 
-  static int Max_Equipment_Points;
   public static int _Max_Equipment_Points
   {
-    get { return Max_Equipment_Points; }
+    get { return s_ShopEquipmentPoints; }
     set
     {
-      Max_Equipment_Points = value;
-      PlayerPrefs.SetInt("Shop_maxEquipmentPoints", value);
+      s_ShopEquipmentPoints = value;
     }
   }
 
-  public static FunctionsC.SaveableStat_Int _s_LoadoutCount;
-
-  public static List<Unlocks> _Unlocks_Available,
-    _Unlocks;
   public static Dictionary<Unlocks, Tuple<string, int>> _Unlocks_Descriptions;
   static Dictionary<string, Unlocks[]> _Unlocks_Vault;
   public static Unlocks[] _Unlocks_Ignore_Shop;
@@ -282,17 +273,7 @@ public static class Shop
 
   public static void Init()
   {
-    DisplayMode = PlayerPrefs.GetInt("Shop_DisplayMode", 0);
-    LoadoutDisplayMode = PlayerPrefs.GetInt("Shop_LoadoutDisplayMode", 0);
-
     Perk.Init();
-
-    _AvailablePoints = PlayerPrefs.GetInt("Shop_availablePoints", 3);
-    _Max_Equipment_Points = PlayerPrefs.GetInt("Shop_maxEquipmentPoints", 1);
-    _s_LoadoutCount = new FunctionsC.SaveableStat_Int("Shop_LoadoutCount", 3);
-
-    _Unlocks = new List<Unlocks>();
-    _Unlocks_Available = new List<Unlocks>();
 
     _Unlocks_Descriptions = new Dictionary<Unlocks, Tuple<string, int>>
     {
@@ -393,33 +374,13 @@ public static class Shop
       Unlocks.EXTRA_CROWNMODE,
     };
 
-    // Load available / purchased unlocks
+    /*/ Load available / purchased unlocks
     var shopPointsTotaled = 0;
     foreach (var pair in _Unlocks_Descriptions)
-    {
-      var unlock = pair.Key;
-      if (PlayerPrefs.GetInt($"Shop_UnlocksAvailable_{unlock}", 0) == 1)
-        AddAvailableUnlock(unlock);
-      if (PlayerPrefs.GetInt($"Shop_Unlocks_{unlock}", 0) == 1)
-        Unlock(unlock);
-
       shopPointsTotaled += pair.Value.Item2;
-    }
 #if UNITY_EDITOR
     Debug.Log($"Total points: ({_AvailablePoints}) {shopPointsTotaled} / {((1 * 11 * 2) + (10 * 12 * 2)) * 4}");
-#endif
-
-    // Set starter unlocks
-    AddAvailableUnlock(Unlocks.ITEM_KNIFE);
-    AddAvailableUnlock(Unlocks.UTILITY_SHURIKEN);
-
-    AddAvailableUnlock(Unlocks.MAX_EQUIPMENT_POINTS_0);
-    AddAvailableUnlock(Unlocks.MAX_EQUIPMENT_POINTS_1);
-    AddAvailableUnlock(Unlocks.ITEM_PISTOL_SILENCED);
-
-    //AddAvailableUnlock(Unlocks.MODE_EXTRAS);
-
-    //AddAvailableUnlock(Unlocks.ITEM_ROCKET_FIST);
+#endif*/
 
     // Add unlocks to vault
     _Unlocks_Vault = new Dictionary<string, Unlocks[]>();
@@ -499,9 +460,6 @@ public static class Shop
       GameScript.ItemManager.Items.SWORD,
       GameScript.ItemManager.Items.BAT
     };
-
-    // Unlock string
-    s_unlockString = PlayerPrefs.GetString("UnlockString", "");
   }
 
   // Get a list of items with ItemManager.Items enum
@@ -546,13 +504,32 @@ public static class Shop
     return _ActualTwoHanded_Dictionary.Contains(item);
   }
 
+  // Check available / unlocked
+  public static bool UnlockLocked(Unlocks unlock)
+  {
+    return LevelModule.ShopUnlocksOrdered.ContainsKey(unlock) && LevelModule.ShopUnlocksOrdered[unlock].UnlockValue == Settings.LevelSaveData.ShopUnlock.UnlockValueType.LOCKED;
+  }
+  public static bool UnlockAvailable(Unlocks unlock)
+  {
+    return LevelModule.ShopUnlocksOrdered.ContainsKey(unlock) && LevelModule.ShopUnlocksOrdered[unlock].UnlockValue != Settings.LevelSaveData.ShopUnlock.UnlockValueType.LOCKED;
+  }
+  public static bool UnlockUnlocked(Unlocks unlock)
+  {
+    return LevelModule.ShopUnlocksOrdered.ContainsKey(unlock) && LevelModule.ShopUnlocksOrdered[unlock].UnlockValue == Settings.LevelSaveData.ShopUnlock.UnlockValueType.UNLOCKED;
+  }
+
+
   // Append unlock
   public static void AddAvailableUnlock(Unlocks unlock, bool alert = false)
   {
-    if (_Unlocks_Available.Contains(unlock)) return;
-    _Unlocks_Available.Add(unlock);
-    PlayerPrefs.SetInt($"Shop_UnlocksAvailable_{unlock}", 1);
+    if (!UnlockLocked(unlock)) return;
 
+    var unlockDat = LevelModule.ShopUnlocksOrdered[unlock];
+    unlockDat.UnlockValue = Settings.LevelSaveData.ShopUnlock.UnlockValueType.AVAILABLE;
+    LevelModule.ShopUnlocksOrdered[unlock] = unlockDat;
+    LevelModule.SyncShopUnlocks();
+
+    // Check notify player
     if (alert)
     {
       if (unlock.ToString().StartsWith("EXTRA_"))
@@ -566,36 +543,34 @@ public static class Shop
   public static bool AllExtrasUnlocked()
   {
     return
-    _Unlocks.Contains(Unlocks.EXTRA_BLOOD_FX) &&
-    _Unlocks.Contains(Unlocks.EXTRA_CHASE) &&
-    _Unlocks.Contains(Unlocks.EXTRA_ENEMY_OFF) &&
-    _Unlocks.Contains(Unlocks.EXTRA_EXPLODED) &&
-    _Unlocks.Contains(Unlocks.EXTRA_GRAVITY) &&
-    _Unlocks.Contains(Unlocks.EXTRA_HORDE) &&
-    _Unlocks.Contains(Unlocks.EXTRA_PLAYER_AMMO) &&
-    _Unlocks.Contains(Unlocks.EXTRA_TIME);
+    UnlockUnlocked(Unlocks.EXTRA_BLOOD_FX) &&
+    UnlockUnlocked(Unlocks.EXTRA_CHASE) &&
+    UnlockUnlocked(Unlocks.EXTRA_ENEMY_OFF) &&
+    UnlockUnlocked(Unlocks.EXTRA_EXPLODED) &&
+    UnlockUnlocked(Unlocks.EXTRA_GRAVITY) &&
+    UnlockUnlocked(Unlocks.EXTRA_HORDE) &&
+    UnlockUnlocked(Unlocks.EXTRA_PLAYER_AMMO) &&
+    UnlockUnlocked(Unlocks.EXTRA_TIME);
   }
   public static bool AnyExtrasUnlocked()
   {
     return
-    _Unlocks.Contains(Unlocks.EXTRA_BLOOD_FX) ||
-    _Unlocks.Contains(Unlocks.EXTRA_CHASE) ||
-    _Unlocks.Contains(Unlocks.EXTRA_ENEMY_OFF) ||
-    _Unlocks.Contains(Unlocks.EXTRA_EXPLODED) ||
-    _Unlocks.Contains(Unlocks.EXTRA_GRAVITY) ||
-    _Unlocks.Contains(Unlocks.EXTRA_HORDE) ||
-    _Unlocks.Contains(Unlocks.EXTRA_PLAYER_AMMO) ||
-    _Unlocks.Contains(Unlocks.EXTRA_TIME);
+    UnlockUnlocked(Unlocks.EXTRA_BLOOD_FX) ||
+    UnlockUnlocked(Unlocks.EXTRA_CHASE) ||
+    UnlockUnlocked(Unlocks.EXTRA_ENEMY_OFF) ||
+    UnlockUnlocked(Unlocks.EXTRA_EXPLODED) ||
+    UnlockUnlocked(Unlocks.EXTRA_GRAVITY) ||
+    UnlockUnlocked(Unlocks.EXTRA_HORDE) ||
+    UnlockUnlocked(Unlocks.EXTRA_PLAYER_AMMO) ||
+    UnlockUnlocked(Unlocks.EXTRA_TIME);
   }
 
-  static string s_unlockString;
   public static string s_UnlockString
   {
-    get { return s_unlockString; }
+    get { return LevelModule.ShopUnlockString; }
     set
     {
-      s_unlockString = value;
-      PlayerPrefs.SetString("UnlockString", value);
+      LevelModule.ShopUnlockString = value;
     }
   }
 
@@ -608,45 +583,46 @@ public static class Shop
   // Unlock from available unlocks
   public static void Unlock(Unlocks unlock)
   {
-    if (_Unlocks.Contains(unlock)) return;
+    if (UnlockUnlocked(unlock)) return;
     if (!_Unlocks_Descriptions.ContainsKey(unlock)) throw new Exception();
-    _Unlocks.Add(unlock);
 
-    if (PlayerPrefs.GetInt($"Shop_Unlocks_{unlock}", 0) == 0)
+    var unlockDat = LevelModule.ShopUnlocksOrdered[unlock];
+    unlockDat.UnlockValue = Settings.LevelSaveData.ShopUnlock.UnlockValueType.UNLOCKED;
+    LevelModule.ShopUnlocksOrdered[unlock] = unlockDat;
+    LevelModule.SyncShopUnlocks();
+
+    switch (unlock)
     {
-      switch (unlock)
-      {
 
-        // Add equipment points
-        case Unlocks.MAX_EQUIPMENT_POINTS_0:
-        case Unlocks.MAX_EQUIPMENT_POINTS_1:
-        case Unlocks.MAX_EQUIPMENT_POINTS_2:
-        case Unlocks.MAX_EQUIPMENT_POINTS_3:
-        case Unlocks.MAX_EQUIPMENT_POINTS_4:
-        case Unlocks.MAX_EQUIPMENT_POINTS_5:
-        case Unlocks.MAX_EQUIPMENT_POINTS_6:
-        case Unlocks.MAX_EQUIPMENT_POINTS_7:
-        case Unlocks.MAX_EQUIPMENT_POINTS_8:
-        case Unlocks.MAX_EQUIPMENT_POINTS_9:
-        case Unlocks.MAX_EQUIPMENT_POINTS_10:
-          _Max_Equipment_Points++;
-          break;
+      // Add equipment points
+      case Unlocks.MAX_EQUIPMENT_POINTS_0:
+      case Unlocks.MAX_EQUIPMENT_POINTS_1:
+      case Unlocks.MAX_EQUIPMENT_POINTS_2:
+      case Unlocks.MAX_EQUIPMENT_POINTS_3:
+      case Unlocks.MAX_EQUIPMENT_POINTS_4:
+      case Unlocks.MAX_EQUIPMENT_POINTS_5:
+      case Unlocks.MAX_EQUIPMENT_POINTS_6:
+      case Unlocks.MAX_EQUIPMENT_POINTS_7:
+      case Unlocks.MAX_EQUIPMENT_POINTS_8:
+      case Unlocks.MAX_EQUIPMENT_POINTS_9:
+      case Unlocks.MAX_EQUIPMENT_POINTS_10:
+        _Max_Equipment_Points++;
+        break;
 
-        // Add loadout slots
-        case Unlocks.LOADOUT_SLOT_X2_0:
-        case Unlocks.LOADOUT_SLOT_X2_1:
-        case Unlocks.LOADOUT_SLOT_X2_2:
-        case Unlocks.LOADOUT_SLOT_X2_3:
-        case Unlocks.LOADOUT_SLOT_X2_4:
-        case Unlocks.LOADOUT_SLOT_X2_5:
-          _s_LoadoutCount._value += 2;
-          GameScript.ItemManager.Loadout.Init();
-          break;
-      }
-      // Save pref
-      PlayerPrefs.SetInt($"Shop_Unlocks_{unlock}", 1);
+      // Add loadout slots
+      case Unlocks.LOADOUT_SLOT_X2_0:
+      case Unlocks.LOADOUT_SLOT_X2_1:
+      case Unlocks.LOADOUT_SLOT_X2_2:
+      case Unlocks.LOADOUT_SLOT_X2_3:
+      case Unlocks.LOADOUT_SLOT_X2_4:
+      case Unlocks.LOADOUT_SLOT_X2_5:
+        s_ShopLoadoutCount += 2;
+        GameScript.ItemManager.Loadout.Init();
+        break;
     }
   }
+
+  public static int s_ShopLoadoutCount, s_ShopEquipmentPoints;
 
   public static int GetUtilityCount(UtilityScript.UtilityType utility)
   {
@@ -680,7 +656,7 @@ public static class Shop
       return true;
 
     // Check if unlocked
-    return _Unlocks.Contains(unlock);
+    return UnlockUnlocked(unlock);
   }
 
   public static class Perk

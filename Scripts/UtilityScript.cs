@@ -4,6 +4,10 @@ using UnityEngine;
 
 public class UtilityScript : ItemScript
 {
+  //
+  static Settings.LevelSaveData LevelModule { get { return Settings.s_SaveData.LevelData; } }
+
+  //
   public enum UtilityType
   {
     NONE,
@@ -876,7 +880,7 @@ public class UtilityScript : ItemScript
       if (incrementClip && _unregister) _ragdoll._PlayerScript?._Profile.UtilityUse(_side);
 
       // Extra; infinite ammo
-      if (_ragdoll._IsPlayer && Settings._Extras_CanUse && Settings._Extra_PlayerAmmo._value == 3)
+      if (_ragdoll._IsPlayer && Settings._Extras_CanUse && LevelModule.ExtraPlayerAmmo == 3)
       {
         _clip++;
         _ragdoll._PlayerScript.AddUtility(_utility_type, _side);
@@ -918,6 +922,7 @@ public class UtilityScript : ItemScript
         // Show ring for cooked grenade
         if (_utility_type == UtilityType.GRENADE && extra && !_thrown)
           _ring.transform.position = _ragdoll._transform_parts._hip.position + _ragdoll._transform_parts._hip.forward * 0.3f;
+
         // Normal ring behavior
         else
           _ring.transform.position = transform.position;
@@ -960,6 +965,7 @@ public class UtilityScript : ItemScript
                 transform.position = spawnPos;
                 if (_unregister) _ragdoll._PlayerScript?._Profile.UtilityUse(_side);
               }
+
               // Disable rung
               _ring.enabled = false;
             };
@@ -1053,7 +1059,7 @@ public class UtilityScript : ItemScript
     var spawnPosition = _spawnLocation != Vector3.zero ? _spawnLocation :
       _ragdoll._spine.transform.position + forward * 0.5f + new Vector3(0f, (_explosion != null ? 0.25f : 0.1f), 0f);
     spawnPosition.y = BulletScript.s_BULLET_HEIGHT;
-    _rb.position = _throwPosition = spawnPosition;
+    transform.position = _throwPosition = spawnPosition;
 
     // Configure Rigidbody
     if (_utility_type != UtilityType.MORTAR_STRIKE)

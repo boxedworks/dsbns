@@ -23,7 +23,7 @@
   }
 
   // Static class holding overall game stats
-  public static class OverallStats
+  /*public static class OverallStats
   {
     public static FunctionsC.SaveableStat_Int _Kills, _Deaths, _Team_Kills,
       // Classic mode
@@ -70,7 +70,7 @@
       foreach (var stat in _Stats)
         stat.Reset();
     }
-  }
+  }*/
 
   // Holds player stats
   public static Stat[] _Stats;
@@ -80,7 +80,7 @@
   {
     Reset_Local();
 
-    OverallStats.Init();
+    //OverallStats.Init();
   }
 
   public static void Reset_Local()
@@ -92,22 +92,22 @@
 
   public static void Reset_Overall()
   {
-    OverallStats.Reset();
+    //OverallStats.Reset();
   }
 
   public static void RecordKill(int playerId)
   {
     _Stats[playerId]._kills++;
-    OverallStats._Kills++;
+    //OverallStats._Kills++;
   }
   public static void RecordDeath(int playerId)
   {
     _Stats[playerId]._deaths++;
-    OverallStats._Deaths++;
+    //OverallStats._Deaths++;
   }
   public static void RecordTeamkill(int playerId)
   {
     _Stats[playerId]._teamkills++;
-    OverallStats._Team_Kills++;
+    //OverallStats._Team_Kills++;
   }
 }

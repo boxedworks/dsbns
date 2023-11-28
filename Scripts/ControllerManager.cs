@@ -3,7 +3,10 @@ using UnityEngine.InputSystem;
 
 public static class ControllerManager
 {
+  //
+  static Settings.SettingsSaveData SettingsModule { get { return Settings.s_SaveData.Settings; } }
 
+  //
   public static UnityEngine.InputSystem.Utilities.ReadOnlyArray<Gamepad> _Gamepads
   {
     get
@@ -15,7 +18,7 @@ public static class ControllerManager
   {
     get
     {
-      if (Settings._IgnoreFirstController._value && _Gamepads.Count > 0)
+      if (SettingsModule.IgnoreFirstController && _Gamepads.Count > 0)
         return _Gamepads.Count - 1;
       return _Gamepads.Count;
     }
@@ -191,7 +194,7 @@ public static class ControllerManager
     if (Settings._ForceKeyboard)
       playerID--;
 
-    if (Settings._IgnoreFirstController._value)
+    if (SettingsModule.IgnoreFirstController)
       playerID++;
 
     if (playerID >= _NumberGamepads || playerID < 0)

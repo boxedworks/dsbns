@@ -7,7 +7,10 @@ using UnityEngine;
 
 public class Levels : MonoBehaviour
 {
+  //
+  static Settings.LevelSaveData LevelModule { get { return Settings.s_SaveData.LevelData; } }
 
+  //
   public static List<LevelCollection> _LevelCollections;
   public class LevelCollection
   {
@@ -179,7 +182,7 @@ public class Levels : MonoBehaviour
             break;
           }
         }
-        var level_time_best = PlayerPrefs.GetFloat($"{_CurrentLevelCollection_Name}_{i}_time", -1f).ToStringTimer().ParseFloatInvariant();
+        var level_time_best = LevelModule.GetLevelBestTime(-1, i);
 
         // Save data
         _CurrentLevel_LevelTimesData[difficulty].Add(i, System.Tuple.Create(dev_time, level_time_best));
@@ -211,9 +214,10 @@ public class Levels : MonoBehaviour
     Settings._DIFFICULTY = difficulty_save;
   }
 
-  public static bool LevelCompleted(int leveliter)
+  public static bool LevelCompleted(int levelIter)
   {
-    return Settings._LevelsCompleted[_CurrentLevelCollection_Name].Contains(leveliter);
+    if(_CurrentLevelCollectionIndex > 1) return false;
+    return LevelModule.LevelData[_CurrentLevelCollectionIndex].Data[levelIter].Completed;
   }
 
   public static System.Tuple<string, string>[] GetLevelRatings()

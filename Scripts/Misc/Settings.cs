@@ -5,12 +5,16 @@ using UnityEngine;
 // Holds settings you may see in a game menu
 public static class Settings
 {
+  //
+  static SettingsSaveData SettingsModule { get { return s_SaveData.Settings; } }
+  static LevelSaveData LevelModule { get { return s_SaveData.LevelData; } }
+
+  //
   static Resolution ScreenResolution;
 
   public static bool _Slowmo_on_death = true,
     _Slowmo_on_lastkill = true,
     _PLAYER_INVINCIBLE = false;
-  static bool Fullscreen;
 
   public static int _DeleteSaveDataIter, _DeleteStatsIter;
 
@@ -19,34 +23,28 @@ public static class Settings
   {
     set
     {
-      // Check same value
-      if (s_SaveData.Settings.ForceKeyboard == value) return;
-
       if (Time.unscaledTime - _ForceKeyboardTimer < 0.1f) return;
       _ForceKeyboardTimer = Time.unscaledTime;
-      s_SaveData.Settings.ForceKeyboard = value;
+      SettingsModule.ForceKeyboard = value;
     }
     get
     {
-      return s_SaveData.Settings.ForceKeyboard;
+      return SettingsModule.ForceKeyboard;
     }
   }
   public static bool _Fullscreen
   {
     set
     {
-      // Don't update if value has not changed
-      if (Fullscreen == value) return;
       // Set value
-      Fullscreen = value;
-      // Save pref
-      PlayerPrefs.SetInt("screen_fullscreen", value ? 1 : 0);
+      SettingsModule.Fullscreen = value;
+
       // Update graphics
       UpdateResolution();
     }
     get
     {
-      return Fullscreen;
+      return SettingsModule.Fullscreen;
     }
   }
   public static Resolution _ScreenResolution
@@ -54,8 +52,10 @@ public static class Settings
     set
     {
       ScreenResolution = value;
-      // Update pref
-      PlayerPrefs.SetString("screen_resolution", "" + value);
+
+      // Update json
+      SettingsModule.ScreenResolution = $"{value}";
+
       // Update res
       UpdateResolution();
     }
@@ -64,52 +64,28 @@ public static class Settings
       return ScreenResolution;
     }
   }
-  static bool UseDefaultTargetFramerate;
-  public static bool _UseDefaultTargetFramerate
-  {
-    set
-    {
-      UseDefaultTargetFramerate = value;
-      PlayerPrefs.SetInt("default_targetFramerate", UseDefaultTargetFramerate ? 1 : 0);
-    }
-    get
-    {
-      return UseDefaultTargetFramerate;
-    }
-  }
 
-  public static FunctionsC.SaveableStat_Bool _CameraType, _Classic_0_TopRated, _Classic_1_TopRated;
-  public static bool _CurrentDifficulty_NotTopRated { get { return (_DIFFICULTY == 0 && !_Classic_0_TopRated._value) || (_DIFFICULTY == 1 && !_Classic_1_TopRated._value); } }
+  public static bool _CurrentDifficulty_NotTopRated { get { return (_DIFFICULTY == 0 && !LevelModule.IsTopRatedClassic0) || (_DIFFICULTY == 1 && !LevelModule.IsTopRatedClassic1); } }
 
-  static bool ControllerRumble;
-  public static bool _ControllerRumble
-  {
-    set
-    {
-      ControllerRumble = value;
-      PlayerPrefs.SetInt("controller_rumble", ControllerRumble ? 1 : 0);
-    }
-    get
-    {
-      return ControllerRumble;
-    }
-  }
-
-  public static Dictionary<string, List<int>> _LevelsCompleted;
-  public static List<int> _LevelsCompleted_Current { get { return _LevelsCompleted[Levels._CurrentLevelCollection_Name]; } }
+  public static List<LevelSaveData.LevelStructData> _LevelsCompleted_Current { get { return LevelModule.LevelData[Levels._CurrentLevelCollectionIndex].Data; } }
 
   public static int _NumberPlayers = -1,
     _NumberControllers = -1;
-  static int DIFFICULTY;
   public static int _DifficultyUnlocked
   {
     get
     {
-      return PlayerPrefs.GetInt($"{GameScript._GameMode}_DifficultyLevel", 0);
+      if (GameScript._GameMode == GameScript.GameModes.CLASSIC)
+        return LevelModule.HighestDifficultyUnlockedClassic;
+      else
+        return LevelModule.HighestDifficultyUnlockedSurvival;
     }
     set
     {
-      PlayerPrefs.SetInt($"{GameScript._GameMode}_DifficultyLevel", value);
+      if (GameScript._GameMode == GameScript.GameModes.CLASSIC)
+        LevelModule.HighestDifficultyUnlockedClassic = value;
+      else
+        LevelModule.HighestDifficultyUnlockedSurvival = value;
     }
   }
 
@@ -117,12 +93,13 @@ public static class Settings
   {
     get
     {
-      return DIFFICULTY;
+      if (GameScript._GameMode == GameScript.GameModes.CLASSIC)
+        return LevelModule.Difficulty;
+      else return 0;
     }
     set
     {
-      DIFFICULTY = value;
-      PlayerPrefs.SetInt($"{GameScript._GameMode}_SavedDifficulty", DIFFICULTY);
+      LevelModule.Difficulty = value;
     }
   }
 
@@ -130,121 +107,53 @@ public static class Settings
   {
     get
     {
-      return s_SaveData.Settings.VolumeMusic;
+      return SettingsModule.VolumeMusic;
     }
     set
     {
-      s_SaveData.Settings.VolumeMusic = value % 6;
-      if (s_SaveData.Settings.VolumeMusic < 0)
-        s_SaveData.Settings.VolumeMusic = 5;
+      SettingsModule.VolumeMusic = value % 6;
+      if (SettingsModule.VolumeMusic < 0)
+        SettingsModule.VolumeMusic = 5;
 
       // Update music volume
-      FunctionsC.MusicManager.s_TrackSource.volume = s_SaveData.Settings.VolumeMusic / 5f * 0.8f;
+      FunctionsC.MusicManager.s_TrackSource.volume = SettingsModule.VolumeMusic / 5f * 0.8f;
     }
   }
-
-  public static FunctionsC.SaveableStat_Bool _IgnoreFirstController;
-
-  public static FunctionsC.SaveableStat_Bool _Toggle_Lightning;
-  public static FunctionsC.SaveableStat_Int _CameraZoom, _LevelCompletion, _LevelEndcondition;
 
   public static int _QualityLevel
   {
     get
     {
-      return s_SaveData.Settings.Quality;
+      return SettingsModule.Quality;
     }
     set
     {
-      if (s_SaveData.Settings.Quality == value) return;
-
       // Use modulus to get remainder
-      s_SaveData.Settings.Quality = value % 6;
-      if (s_SaveData.Settings.Quality < 0)
-        s_SaveData.Settings.Quality = 6 - s_SaveData.Settings.Quality;
+      SettingsModule.Quality = value % 6;
+      if (SettingsModule.Quality < 0)
+        SettingsModule.Quality = 6 - SettingsModule.Quality;
 
       // Update quality settings
-      QualitySettings.SetQualityLevel(s_SaveData.Settings.Quality);
+      QualitySettings.SetQualityLevel(SettingsModule.Quality);
     }
   }
-  static bool VSync;
   public static bool _VSync
   {
     get
     {
-      return VSync;
+      return SettingsModule.UseVsync;
     }
     set
     {
-      if (VSync == value) return;
       // Use modulus to get remainder
-      VSync = value;
-      // Save pref
-      PlayerPrefs.SetInt("vsync_setting", value ? 1 : 0);
+      SettingsModule.UseVsync = value;
+
       // Update quality settings
       QualitySettings.vSyncCount = value ? 1 : 0;
     }
   }
 
-  public static FunctionsC.SaveableStat_Bool _ShowDeathText;
-
   // Extras
-  static int Extra_Gravity;
-  public static int _Extra_Gravity
-  {
-    get
-    {
-      return Extra_Gravity;
-    }
-    set
-    {
-      if (Extra_Gravity == value) return;
-      Extra_Gravity = value;
-
-      // Save pref
-      PlayerPrefs.SetInt("extra_gravity", value);
-    }
-  }
-  static bool Extra_Superhot;
-  public static bool _Extra_Superhot
-  {
-    get
-    {
-      return Extra_Superhot;
-    }
-    set
-    {
-      if (Extra_Superhot == value) return;
-      Extra_Superhot = value;
-
-      // Save pref
-      PlayerPrefs.SetInt("extra_superhot", value ? 1 : 0);
-    }
-  }
-  static bool Extra_CrazyZombies;
-  public static bool _Extra_CrazyZombies
-  {
-    get
-    {
-      return Extra_CrazyZombies;
-    }
-    set
-    {
-      if (Extra_CrazyZombies == value) return;
-      Extra_CrazyZombies = value;
-
-      // Save pref
-      PlayerPrefs.SetInt("extra_crazyzombies", value ? 1 : 0);
-    }
-  }
-
-  public static FunctionsC.SaveableStat_Int
-    _Extra_RemoveBatGuy,
-    _Extra_EnemyMultiplier,
-    _Extra_PlayerAmmo, _Extra_EnemyAmmo,
-    _Extra_BodyExplode,
-    _Extra_BloodType,
-    _Extra_CrownMode;
   public static bool _Extras_CanUse { get { return GameScript._GameMode == GameScript.GameModes.CLASSIC && !_LevelEditorEnabled; } }
   public static bool _Extras_UsingAny
   {
@@ -252,7 +161,7 @@ public static class Settings
     {
       return
         _Extras_UsingAnyImportant ||
-        _Extra_BloodType._value != 0
+        LevelModule.ExtraBloodType != 0
       ;
     }
   }
@@ -261,15 +170,15 @@ public static class Settings
     get
     {
       return
-        _Extra_Superhot ||
-        _Extra_CrazyZombies ||
-        _Extra_RemoveBatGuy._value != 0 ||
-        Extra_Gravity != 0 ||
-        _Extra_EnemyMultiplier._value != 0 ||
-        _Extra_PlayerAmmo._value != 0 ||
-        _Extra_EnemyAmmo._value != 0 ||
-        _Extra_BodyExplode._value != 0 ||
-        _Extra_CrownMode._value != 0
+        LevelModule.ExtraTime != 0 ||
+        LevelModule.ExtraHorde != 0 ||
+        LevelModule.ExtraRemoveChaser != 0 ||
+        LevelModule.ExtraGravity != 0 ||
+        LevelModule.ExtraEnemyMultiplier != 0 ||
+        LevelModule.ExtraPlayerAmmo != 0 ||
+        LevelModule.ExtraEnemyAmmo != 0 ||
+        LevelModule.ExtraBodyExplode != 0 ||
+        LevelModule.ExtraCrownMode != 0
       ;
     }
   }
@@ -292,62 +201,6 @@ public static class Settings
   public static void Init()
   {
 
-    // Load json
-    if (!System.IO.File.Exists("save.json"))
-    {
-      s_SaveData = new SaveData()
-      {
-        Settings = new SettingsData(),
-        LevelData = new LevelData(),
-      };
-    }
-    else
-    {
-      var jsonData = System.IO.File.ReadAllText("save.json");
-      s_SaveData = JsonUtility.FromJson<SaveData>(jsonData);
-    }
-
-    // Load last version (old)
-    var oldversion = PlayerPrefs.GetFloat("VERSION", -1f);
-    if (oldversion != -1f)
-    {
-      // Fix really old saves... by deleting them :)
-      if (oldversion < 1.1f)
-        PlayerPrefs.DeleteAll();
-
-      // Fix shop point buy bug
-      if (oldversion < 1.24f)
-      {
-        if (PlayerPrefs.GetInt($"levels0_0", 0) == 1)
-        {
-          Shop._AvailablePoints = PlayerPrefs.GetInt("Shop_availablePoints", 3);
-          Shop._AvailablePoints++;
-        }
-      }
-
-      // Check new json; convert
-      if (oldversion < 1.41f)
-      {
-
-        // Settings
-        s_SaveData.Settings.UseBlood = PlayerPrefs.GetInt("show_blood", 1) == 1;
-        s_SaveData.Settings.ForceKeyboard = PlayerPrefs.GetInt("force_keyboard", 0) == 1;
-        s_SaveData.Settings.ShowTips = PlayerPrefs.GetInt("show_tips", 1) == 1;
-        s_SaveData.Settings.TextSpeedFast = PlayerPrefs.GetInt("option_fasttext", 0) == 1;
-
-        s_SaveData.Settings.Quality = PlayerPrefs.GetInt("quality", 5);
-
-        s_SaveData.Settings.VolumeMusic = PlayerPrefs.GetInt("VolumeMusic", 3);
-        s_SaveData.Settings.VolumeSFX = PlayerPrefs.GetInt("VolumeSFX", 3);
-      }
-
-      // Stop using playerprefs
-      PlayerPrefs.SetFloat("VERSION", -1f);
-    }
-
-    // Set new version
-    s_SaveData.Version = _VERSION;
-
     // Register levels files by name
     Levels._LevelCollections = new();
     foreach (var filename in new string[] { "levels0", "levels1", "levels_survival", "levels_editor_local", /*"levels_challenge"*/ })
@@ -363,76 +216,214 @@ public static class Settings
       Levels.LoadLevels();
     }
 
-    // Set starting level collection
-    Levels._CurrentLevelCollectionIndex = DIFFICULTY;
+    // Load json
+    s_SaveData = new SaveData();
+    SettingsSaveData.Load();
+    LevelSaveData.Load();
 
-    // Load level packs
-    //Levels.InitLevelPacks();
 
-    // Load completed levels
-    _LevelsCompleted = new();
-    for (var u = 0; u < Levels._LevelCollections.Count; u++)
+    // Load last version (old)
+    var oldversion_OLD = PlayerPrefs.GetFloat("VERSION", -1f);
+    if (oldversion_OLD != -1f)
     {
-      var levelsCompleted = new List<int>();
-      for (var i = 0; i < Levels._LevelCollections[u]._levelData.Length; i++)
+      // Fix really old saves... by deleting them :)
+      if (oldversion_OLD < 1.1f)
+        PlayerPrefs.DeleteAll();
+
+      // Fix shop point buy bug
+      if (oldversion_OLD < 1.24f)
+      {
+        if (PlayerPrefs.GetInt($"levels0_0", 0) == 1)
+        {
+          Shop._AvailablePoints = PlayerPrefs.GetInt("Shop_availablePoints", 3);
+          Shop._AvailablePoints++;
+        }
+      }
+
+      // Check new json; convert
+      if (oldversion_OLD < 1.41f)
       {
 
-        // Check level completed
-        var levelCompleted = PlayerPrefs.GetInt(Levels._LevelCollections[u]._name + "_" + i, 0) == 1;
-        if (levelCompleted)
-          levelsCompleted.Add(i);
+        // Settings
+        SettingsModule.UseBlood = PlayerPrefs.GetInt("show_blood", 1) == 1;
+        SettingsModule.ForceKeyboard = PlayerPrefs.GetInt("force_keyboard", 0) == 1;
+        SettingsModule.ShowTips = PlayerPrefs.GetInt("show_tips", 1) == 1;
+        SettingsModule.ShowDeathText = PlayerPrefs.GetInt("showDeathText", 1) == 1;
+        SettingsModule.TextSpeedFast = PlayerPrefs.GetInt("option_fasttext", 0) == 1;
+
+        SettingsModule.ControllerRumble = PlayerPrefs.GetInt("controller_rumble", 1) == 1;
+        SettingsModule.IgnoreFirstController = PlayerPrefs.GetInt("_IgnoreFirstController", 0) == 1;
+
+        SettingsModule.Quality = PlayerPrefs.GetInt("quality", 5);
+        SettingsModule.ScreenResolution = PlayerPrefs.GetString("screen_resolution", $"{GetSafeMaxResolution()}");
+        SettingsModule.Fullscreen = PlayerPrefs.GetInt("screen_fullscreen", 1) == 1;
+        SettingsModule.UseVsync = PlayerPrefs.GetInt("vsync_setting", 0) == 1;
+        SettingsModule.UseDefaultTargetFramerate = PlayerPrefs.GetInt("default_targetFramerate", 1) == 1;
+        SettingsModule.UseOrthographicCamera = PlayerPrefs.GetInt("CameraType_ortho", 1) == 1;
+        SettingsModule.CameraZoom = (SettingsSaveData.CameraZoomType)PlayerPrefs.GetInt("CameraZoom", 1);
+
+        SettingsModule.VolumeMusic = PlayerPrefs.GetInt("VolumeMusic", 3);
+        SettingsModule.VolumeSFX = PlayerPrefs.GetInt("VolumeSFX", 3);
+
+        SettingsModule.LevelCompletionBehavior = (SettingsSaveData.LevelCompletionBehaviorType)PlayerPrefs.GetInt("LevelCompletion", 0);
+
+        SettingsModule.PlayerProfiles = new();
+        for (var i = 0; i < 4; i++)
+          SettingsModule.PlayerProfiles.Add(new SettingsSaveData.PlayerProfile()
+          {
+            Id = i,
+
+            LoadoutIndex = PlayerPrefs.GetInt($"PlayerProfile{i}_loadoutIndex", 0),
+
+            Color = PlayerPrefs.GetInt($"PlayerProfile{i}_color", i),
+            ReloadSameTime = PlayerPrefs.GetInt($"PlayerProfile{i}_reloadSidesSameTime", 1) == 1,
+            FaceLookDirection = PlayerPrefs.GetInt($"PlayerProfile{i}_faceDir", 1) == 1
+          });
+
+        SettingsModule.UseLightning = PlayerPrefs.GetInt("vfx_toggle_lightning", 1) == 1;
+
+        // Level data
+        LevelModule.IsTopRatedClassic0 = PlayerPrefs.GetInt("_Classic_0_TopRated", 0) == 1;
+        LevelModule.IsTopRatedClassic1 = PlayerPrefs.GetInt("_Classic_1_TopRated", 0) == 1;
+
+        LevelModule.HighestDifficultyUnlockedClassic = PlayerPrefs.GetInt("CLASSIC_DifficultyLevel", 0);
+        LevelModule.HighestDifficultyUnlockedSurvival = PlayerPrefs.GetInt("SURVIVAL_DifficultyLevel", 0);
+
+        LevelModule.Difficulty = PlayerPrefs.GetInt("CLASSIC_SavedDifficulty", 0);
+
+        LevelModule.LevelData = new();
+        for (var i = 0; i < 2; i++)
+        {
+
+          LevelModule.LevelData.Add(new());
+          LevelModule.LevelData[i] = new LevelSaveData.LevelStructDataWrapper()
+          {
+            Data = new()
+          };
+          for (var u = 0; u < Levels._LevelCollections[i]._levelData.Length; u++)
+          {
+            LevelModule.LevelData[i].Data.Add(new LevelSaveData.LevelStructData()
+            {
+              LevelNumber = u,
+              Completed = PlayerPrefs.GetInt($"{Levels._LevelCollections[i]._name}_{u}", 0) == 1,
+              BestCompletionTime = PlayerPrefs.GetFloat($"{Levels._LevelCollections[i]._name}_{u}_time", -1f).ToStringTimer()
+            });
+          }
+        }
+
+        for (var i = 0; i < Levels._LevelCollections[2]._levelData.Length; i++)
+        {
+          var highestWave = PlayerPrefs.GetInt($"SURVIVAL_MAP_{i}", 0);
+          if (highestWave > 0)
+            LevelModule.SurvivalHighestWave.Add(highestWave);
+        }
+
+        LevelModule.ShopPoints = PlayerPrefs.GetInt("Shop_availablePoints", 3);
+        LevelModule.ShopDisplayMode = PlayerPrefs.GetInt("Shop_DisplayMode", 0);
+        LevelModule.ShopLoadoutDisplayMode = PlayerPrefs.GetInt("Shop_LoadoutDisplayMode", 0);
+        LevelModule.ShopUnlockString = PlayerPrefs.GetString("UnlockString", "");
+
+        foreach (Shop.Unlocks unlock in System.Enum.GetValues(typeof(Shop.Unlocks)))
+        {
+
+          var unlockUnlocked = PlayerPrefs.GetInt($"Shop_Unlocks_{unlock}", 0) == 1;
+          var unlockAvailable = PlayerPrefs.GetInt($"Shop_UnlocksAvailable_{unlock}", 0) == 1;
+
+          LevelModule.ShopUnlocks.Add(new LevelSaveData.ShopUnlock()
+          {
+            Unlock = unlock,
+            UnlockValue = unlockUnlocked ? LevelSaveData.ShopUnlock.UnlockValueType.UNLOCKED : (unlockAvailable ? LevelSaveData.ShopUnlock.UnlockValueType.AVAILABLE : LevelSaveData.ShopUnlock.UnlockValueType.LOCKED)
+          });
+        }
+
+        for (var i = 0; i < 15; i++)
+        {
+          var saveString = PlayerPrefs.GetString($"loadout:{i}", "");
+          if (saveString != "")
+            LevelModule.LoadoutData.Add(new LevelSaveData.LoadoutStructData()
+            {
+              Id = i,
+
+              SaveString = saveString
+            });
+        }
+
+        LevelModule.ExtraGravity = PlayerPrefs.GetInt("extra_gravity", 0);
+        LevelModule.ExtraTime = PlayerPrefs.GetInt("extra_superhot", 0);
+        LevelModule.ExtraHorde = PlayerPrefs.GetInt("extra_crazyzombies", 0);
+        LevelModule.ExtraRemoveChaser = PlayerPrefs.GetInt("extra_batguy", 0);
+        LevelModule.ExtraBloodType = PlayerPrefs.GetInt("extra_bloodtype", 0);
+        LevelModule.ExtraEnemyMultiplier = PlayerPrefs.GetInt("extra_emulti", 0);
+        LevelModule.ExtraBodyExplode = PlayerPrefs.GetInt("extra_bodyexplode", 0);
+        LevelModule.ExtraEnemyAmmo = PlayerPrefs.GetInt("extra_enemyammo", 0);
+        LevelModule.ExtraPlayerAmmo = PlayerPrefs.GetInt("extra_playerammo", 0);
+
+        LevelModule.HasRestarted = PlayerPrefs.GetInt("tut_hasRestarted", 0) == 1;
+
+        SettingsSaveData.Save();
+        LevelSaveData.Save();
       }
-      _LevelsCompleted.Add(Levels._LevelCollections[u]._name, levelsCompleted);
+
+      PlayerPrefs.DeleteAll();
     }
 
+    // Set new version
+    var versionLast = SettingsModule.Version.ParseFloatInvariant();
+    var versionCurrent = _VERSION;
+    if (versionLast < versionCurrent)
+    {
+
+    }
+    SettingsModule.Version = $"{_VERSION}";
+
+    // Set volumes
+    _VolumeMusic = SettingsModule.VolumeMusic;
+
     // Load graphics settings
-    _UseDefaultTargetFramerate = PlayerPrefs.GetInt("default_targetFramerate", 1) == 1;
-    var max = GetSafeMaxResolution();
-    //Debug.Log("got safe max resolution: " + max);
-
-    var got_resolution = PlayerPrefs.GetString("screen_resolution", "" + max);
-    //Debug.Log("got loaded resolution: " + got_resolution);
-
-    SetResolution(got_resolution);
-    _Fullscreen = PlayerPrefs.GetInt("screen_fullscreen", 1) == 1;
+    SetResolution(SettingsModule.ScreenResolution);
     UpdateResolution();
-    _VSync = PlayerPrefs.GetInt("vsync_setting", 0) == 1;
 
-    // Load audio settings
-    _Toggle_Lightning = new FunctionsC.SaveableStat_Bool("vfx_toggle_lightning", true);
-
-    // Level settings
-    _LevelCompletion = new FunctionsC.SaveableStat_Int("LevelCompletion", 0);
-    _LevelEndcondition = new FunctionsC.SaveableStat_Int("LevelEndcondition", 0);
-
-    //Camera
-    _CameraZoom = new FunctionsC.SaveableStat_Int("CameraZoom", 1);
-    _CameraType = new FunctionsC.SaveableStat_Bool("CameraType_ortho", false);
+    // Camera
     SetPostProcessing();
 
-    //
-    _ShowDeathText = new FunctionsC.SaveableStat_Bool("showDeathText", true);
+    // Set starting level collection
+    Levels._CurrentLevelCollectionIndex = LevelModule.Difficulty;
 
-    // Top ratings
-    _Classic_0_TopRated = new FunctionsC.SaveableStat_Bool("_Classic_0_TopRated", false);
-    _Classic_1_TopRated = new FunctionsC.SaveableStat_Bool("_Classic_1_TopRated", false);
+    // Load missing / new shop items
+    Shop.s_ShopLoadoutCount = 3;
+    Shop._Max_Equipment_Points = 1;
+    LevelModule.OrderShopUnlocks();
+    foreach (Shop.Unlocks unlock in System.Enum.GetValues(typeof(Shop.Unlocks)))
+    {
 
-    // Controller
-    _ControllerRumble = PlayerPrefs.GetInt("controller_rumble", 1) == 1;
-    _IgnoreFirstController = new FunctionsC.SaveableStat_Bool("_IgnoreFirstController", false);
+      if (!LevelModule.ShopUnlocksOrdered.ContainsKey(unlock))
+        LevelModule.ShopUnlocks.Add(new LevelSaveData.ShopUnlock()
+        {
+          Unlock = unlock,
+          UnlockValue = LevelSaveData.ShopUnlock.UnlockValueType.LOCKED
+        });
+      else
+      {
+        if (LevelModule.ShopUnlocksOrdered[unlock].UnlockValue == LevelSaveData.ShopUnlock.UnlockValueType.UNLOCKED)
+        {
+          var unlockDat = LevelModule.ShopUnlocksOrdered[unlock];
+          unlockDat.UnlockValue = LevelSaveData.ShopUnlock.UnlockValueType.LOCKED;
+          LevelModule.ShopUnlocksOrdered[unlock] = unlockDat;
+          Shop.Unlock(unlock);
+        }
+      }
+    }
+    LevelModule.OrderShopUnlocks();
+
+    // Set starter unlocks
+    Shop.AddAvailableUnlock(Shop.Unlocks.ITEM_KNIFE);
+    Shop.AddAvailableUnlock(Shop.Unlocks.UTILITY_SHURIKEN);
+
+    Shop.AddAvailableUnlock(Shop.Unlocks.MAX_EQUIPMENT_POINTS_0);
+    Shop.AddAvailableUnlock(Shop.Unlocks.MAX_EQUIPMENT_POINTS_1);
+    Shop.AddAvailableUnlock(Shop.Unlocks.ITEM_PISTOL_SILENCED);
 
     // Extras
-    _Extra_Gravity = PlayerPrefs.GetInt("extra_gravity", 0);
-    _Extra_Superhot = PlayerPrefs.GetInt("extra_superhot", 0) == 1;
-    _Extra_CrazyZombies = PlayerPrefs.GetInt("extra_crazyzombies", 0) == 1;
-    _Extra_RemoveBatGuy = new FunctionsC.SaveableStat_Int("extra_batguy", 0);
-    _Extra_EnemyMultiplier = new FunctionsC.SaveableStat_Int("extra_emulti", 0);
-    _Extra_PlayerAmmo = new FunctionsC.SaveableStat_Int("extra_playerammo", 0);
-    _Extra_EnemyAmmo = new FunctionsC.SaveableStat_Int("extra_enemyammo", 0);
-    _Extra_BodyExplode = new FunctionsC.SaveableStat_Int("extra_bodyexplode", 0);
-    _Extra_BloodType = new FunctionsC.SaveableStat_Int("extra_bloodtype", 0);
-    _Extra_CrownMode = new FunctionsC.SaveableStat_Int("extra_crownmode", 0);
-
     s_Extra_UnlockCriterea = new Dictionary<Shop.Unlocks, UnlockCriteria>();
 
     // Gravity
@@ -600,31 +591,31 @@ public static class Settings
   public static int[] GetExtrasSnapshot()
   {
     return new int[]{
-        Settings._Extra_CrazyZombies ? 1 : 0,
-        Settings._Extra_CrownMode._value,
-        Settings._Extra_EnemyAmmo._value,
-        Settings._Extra_EnemyMultiplier._value,
-        Settings._Extra_Gravity,
-        Settings._Extra_PlayerAmmo._value,
-        Settings._Extra_RemoveBatGuy._value,
-        Settings._Extra_Superhot ? 1 : 0,
-        Settings._Extra_BloodType._value,
-        Settings._Extra_BodyExplode._value
+        LevelModule.ExtraHorde,
+        LevelModule.ExtraCrownMode,
+        LevelModule.ExtraPlayerAmmo,
+        LevelModule.ExtraEnemyAmmo,
+        LevelModule.ExtraEnemyMultiplier,
+        LevelModule.ExtraGravity,
+        LevelModule.ExtraRemoveChaser,
+        LevelModule.ExtraTime,
+        LevelModule.ExtraBloodType,
+        LevelModule.ExtraBodyExplode
       };
   }
 
   public static void AllExtrasOff()
   {
-    Settings._Extra_CrazyZombies = false;
-    Settings._Extra_CrownMode._value = 0;
-    Settings._Extra_EnemyAmmo._value = 0;
-    Settings._Extra_EnemyMultiplier._value = 0;
-    Settings._Extra_Gravity = 0;
-    Settings._Extra_PlayerAmmo._value = 0;
-    Settings._Extra_RemoveBatGuy._value = 0;
-    Settings._Extra_Superhot = false;
-    Settings._Extra_BloodType._value = 0;
-    Settings._Extra_BodyExplode._value = 0;
+    LevelModule.ExtraHorde = 0;
+    LevelModule.ExtraCrownMode = 0;
+    LevelModule.ExtraEnemyAmmo = 0;
+    LevelModule.ExtraPlayerAmmo = 0;
+    LevelModule.ExtraEnemyMultiplier = 0;
+    LevelModule.ExtraGravity = 0;
+    LevelModule.ExtraRemoveChaser = 0;
+    LevelModule.ExtraTime = 0;
+    LevelModule.ExtraBloodType = 0;
+    LevelModule.ExtraBodyExplode = 0;
   }
 
   public enum GamemodeChange
@@ -641,7 +632,7 @@ public static class Settings
     switch (gamemode)
     {
       case GamemodeChange.CLASSIC:
-        switch (_Extra_Gravity)
+        switch (LevelModule.ExtraGravity)
         {
           case 0: Physics.gravity = new Vector3(0f, -9.81f, 0f); break;
           case 1: Physics.gravity = new Vector3(0f, 9.81f, 0f); break;
@@ -663,10 +654,11 @@ public static class Settings
   public static void SetPostProcessing()
   {
     // Camera settings
-    if (_CameraType._value)
+    if (SettingsModule.UseOrthographicCamera)
     {
       GameResources._Camera_Main.orthographic = true;
-      GameResources._Camera_Main.orthographicSize = _CameraZoom == 1 ? 7.6f : _CameraZoom == 0 ? 5.9f : 10.8f;
+      GameResources._Camera_Main.orthographicSize =
+        SettingsModule.CameraZoom == SettingsSaveData.CameraZoomType.NORMAL ? 7.6f : (SettingsModule.CameraZoom == SettingsSaveData.CameraZoomType.CLOSE ? 5.9f : 10.8f);
       GameResources._Camera_Main.transform.eulerAngles = new Vector3(88f, 0f, 0f);
     }
     else
@@ -684,18 +676,31 @@ public static class Settings
       profile.profile.TryGetSettings(out depthOfField);
       if (depthOfField != null)
       {
-        if (_CameraType._value)
+        depthOfField.focalLength.value = 177f;
+
+        if (SettingsModule.UseOrthographicCamera)
         {
           depthOfField.focusDistance.value = 5.7f;
           depthOfField.aperture.value = 1f;
-          depthOfField.focalLength.value = 177f;
         }
         else
         {
-          depthOfField.focusDistance.value = _CameraZoom == 1 ? 13.8f : _CameraZoom == 0 ? 10f : 18.2f;
-          depthOfField.aperture.value = _CameraZoom == 2 ? 0.65f : (_CameraZoom == 2 ? 1.3f : 1f);
+          switch (SettingsModule.CameraZoom)
+          {
+            case SettingsSaveData.CameraZoomType.CLOSE:
+              depthOfField.focusDistance.value = 10.2f;
+              depthOfField.aperture.value = 1f;
+              break;
+            case SettingsSaveData.CameraZoomType.NORMAL:
+              depthOfField.focusDistance.value = 14.3f;
+              depthOfField.aperture.value = 0.5f;
+              break;
+            case SettingsSaveData.CameraZoomType.FAR:
+              depthOfField.focusDistance.value = 18.2f;
+              depthOfField.aperture.value = 0.35f;
+              break;
+          }
         }
-
       }
     }
   }
@@ -734,7 +739,7 @@ public static class Settings
       if ("" + res == resolution)
       {
         _ScreenResolution = res;
-        Application.targetFrameRate = _UseDefaultTargetFramerate ? -1 : _ScreenResolution.refreshRate;
+        Application.targetFrameRate = SettingsModule.UseDefaultTargetFramerate ? -1 : _ScreenResolution.refreshRate;
 
         //Debug.LogError($"Found supported resolution and set");
         return;
@@ -815,51 +820,336 @@ public static class Settings
   public static Dictionary<Shop.Unlocks, UnlockCriteria> s_Extra_UnlockCriterea;
 
   // JSON save
-  [System.Serializable]
   public class SaveData
   {
 
-    // Meta
-    public float Version;
-
     //
-    public SettingsData Settings;
-    public LevelData LevelData;
+    public SettingsSaveData Settings;
+    public LevelSaveData LevelData;
   }
   public static SaveData s_SaveData;
 
   //
   [System.Serializable]
-  public class SettingsData
+  public class SettingsSaveData
   {
+
+    // Meta
+    public string Version = $"{_VERSION}";
 
     // General
     public bool UseBlood = true;
     public bool ForceKeyboard = false;
     public bool ShowTips = true;
+    public bool ShowDeathText = true;
     public bool TextSpeedFast = false;
 
     // Controls
+    public bool ControllerRumble = true;
+    public bool IgnoreFirstController = false;
 
     // Graphics
-    public int Quality;
+    public int Quality = 5;
+    public string ScreenResolution = $"{GetSafeMaxResolution()}";
+    public bool Fullscreen = true;
+    public bool UseVsync = false;
+    public bool UseDefaultTargetFramerate = true;
+    public bool UseOrthographicCamera = true;
+
+    public enum CameraZoomType
+    {
+      CLOSE,
+      NORMAL,
+      FAR,
+      AUTO,
+    }
+    public CameraZoomType CameraZoom;
 
     // Audio
-    public int VolumeMusic;
-    public int VolumeSFX;
+    public int VolumeMusic = 3;
+    public int VolumeSFX = 3;
+
+    // Level
+    public enum LevelCompletionBehaviorType
+    {
+      NEXT_LEVEL,
+
+      RELOAD_LEVEL,
+      NOTHING,
+      PREVIOUS_LEVEL,
+      RANDOM_LEVEL,
+      RANDOM_LEVEL_ALL
+    }
+    public LevelCompletionBehaviorType LevelCompletionBehavior = LevelCompletionBehaviorType.NEXT_LEVEL;
+
+    public enum LevelEndConditionType
+    {
+      RETURN_TO_START,
+      LAST_ENEMY_KILLED,
+    }
+    public LevelEndConditionType LevelEndCondition = LevelEndConditionType.RETURN_TO_START;
+
+    // Player profiles
+    [System.Serializable]
+    public struct PlayerProfile
+    {
+      public int Id;
+
+      public int LoadoutIndex;
+
+      public int Color;
+      public bool FaceLookDirection;
+      public bool ReloadSameTime;
+    }
+    public List<PlayerProfile> PlayerProfiles;
+
+    public void UpdatePlayerProfile(int id, PlayerProfile playerProfile)
+    {
+      PlayerProfiles[id] = playerProfile;
+    }
+
+    // Etc
+    public bool UseLightning = true;
+
+    //
+    public static void Load()
+    {
+      // Load json
+      if (!System.IO.File.Exists("settings.json"))
+      {
+        s_SaveData.Settings = new SettingsSaveData();
+
+        // Player profiles
+        SettingsModule.PlayerProfiles = new();
+        for (var i = 0; i < 4; i++)
+          SettingsModule.PlayerProfiles.Add(new PlayerProfile()
+          {
+            Id = i,
+
+            LoadoutIndex = 0,
+
+            Color = i,
+            ReloadSameTime = true,
+            FaceLookDirection = true
+          });
+      }
+      else
+      {
+        var jsonData = System.IO.File.ReadAllText("settings.json");
+        s_SaveData.Settings = JsonUtility.FromJson<SettingsSaveData>(jsonData);
+      }
+    }
+    public static void Save()
+    {
+      var json = JsonUtility.ToJson(SettingsModule);
+      System.IO.File.WriteAllText("settings.json", json);
+    }
   }
 
   //
   [System.Serializable]
-  public class LevelData
+  public class LevelSaveData
   {
 
-  }
+    // Meta
+    public bool IsTopRatedClassic0 = false, IsTopRatedClassic1 = false;
+    public int HighestDifficultyUnlockedClassic = 0, HighestDifficultyUnlockedSurvival = 0;
 
-  public static void SaveSaveData()
-  {
-    var json = JsonUtility.ToJson(s_SaveData);
-    System.IO.File.WriteAllText("save.json", json);
+    // Classic
+    public int Difficulty = 0;
+
+    [System.Serializable]
+    public struct LevelStructData
+    {
+      public int LevelNumber;
+      public bool Completed;
+      public string BestCompletionTime;
+    }
+    [System.Serializable]
+    public struct LevelStructDataWrapper
+    {
+      public List<LevelStructData> Data;
+    }
+    public List<LevelStructDataWrapper> LevelData;
+
+    public float GetLevelBestTime(int levelCollectionIndex = -1, int levelIndex = -1)
+    {
+      if (levelCollectionIndex == -1)
+        levelCollectionIndex = Levels._CurrentLevelCollectionIndex;
+      if (levelIndex == -1)
+        levelIndex = Levels._CurrentLevelIndex;
+
+      if (levelCollectionIndex > 1)
+        return -1f;
+
+      return LevelData[levelCollectionIndex].Data[levelIndex].BestCompletionTime.ParseFloatInvariant();
+    }
+    public void SetLevelBestTime(float time, int levelCollectionIndex = -1, int levelIndex = -1)
+    {
+      if (levelCollectionIndex == -1)
+        levelCollectionIndex = Levels._CurrentLevelCollectionIndex;
+      if (levelIndex == -1)
+        levelIndex = Levels._CurrentLevelIndex;
+
+      if (levelCollectionIndex > 1)
+        return;
+
+      var levelDat = LevelData[levelCollectionIndex].Data[levelIndex];
+      levelDat.BestCompletionTime = time.ToStringTimer();
+      LevelData[levelCollectionIndex].Data[levelIndex] = levelDat;
+    }
+
+    // Survival
+    public List<int> SurvivalHighestWave;
+
+    public int GetHighestSurvivalWave(int levelIndex = -1)
+    {
+      if (levelIndex == -1)
+        levelIndex = Levels._CurrentLevelIndex;
+
+      if (levelIndex >= SurvivalHighestWave.Count) return 0;
+      return SurvivalHighestWave[levelIndex];
+    }
+    public void SetHighestSurvivalWave(int highestWave, int levelIndex = -1)
+    {
+      if (levelIndex == -1)
+        levelIndex = Levels._CurrentLevelIndex;
+
+      if (levelIndex < SurvivalHighestWave.Count)
+        SurvivalHighestWave[levelIndex] = highestWave;
+      else
+        SurvivalHighestWave.Add(highestWave);
+    }
+
+    // Shop
+    public int ShopPoints = 3;
+    public int ShopDisplayMode = 0;
+    public int ShopLoadoutDisplayMode = 0;
+    public string ShopUnlockString;
+
+    [System.Serializable]
+    public struct ShopUnlock
+    {
+      public Shop.Unlocks Unlock;
+      public enum UnlockValueType
+      {
+        LOCKED,
+        AVAILABLE,
+        UNLOCKED
+      }
+      public UnlockValueType UnlockValue;
+    }
+    public List<ShopUnlock> ShopUnlocks;
+    [System.NonSerialized]
+    public Dictionary<Shop.Unlocks, ShopUnlock> ShopUnlocksOrdered;
+    public void OrderShopUnlocks()
+    {
+      ShopUnlocksOrdered = new();
+      foreach (var entry in LevelModule.ShopUnlocks)
+        ShopUnlocksOrdered.Add(entry.Unlock, entry);
+    }
+    public void SyncShopUnlocks()
+    {
+      ShopUnlocks = new List<ShopUnlock>(ShopUnlocksOrdered.Values);
+    }
+
+    // Loadouts
+    [System.Serializable]
+    public struct LoadoutStructData
+    {
+      public int Id;
+
+      public string SaveString;
+    }
+    public List<LoadoutStructData> LoadoutData;
+
+    public string GetLoadout(int id)
+    {
+      if (id < LoadoutData.Count)
+        return LoadoutData[id].SaveString;
+      else
+        return "";
+    }
+    public void SetLoadout(int id, string saveString)
+    {
+      if (id < LoadoutData.Count)
+      {
+        var loadoutDat = LoadoutData[id];
+        loadoutDat.SaveString = saveString;
+        LoadoutData[id] = loadoutDat;
+      }
+      else
+      {
+        LoadoutData.Add(new LoadoutStructData()
+        {
+          Id = id,
+
+          SaveString = saveString
+        });
+      }
+    }
+
+    // Extras
+    public int
+      ExtraGravity = 0,
+      ExtraTime = 0,
+      ExtraHorde = 0,
+      ExtraRemoveChaser = 0,
+      ExtraBloodType = 0,
+      ExtraEnemyMultiplier = 0,
+      ExtraBodyExplode = 0,
+      ExtraEnemyAmmo = 0, ExtraPlayerAmmo = 0,
+      ExtraCrownMode = 0;
+
+    // Etc
+    public bool HasRestarted = false;
+
+    //
+    public static void Load()
+    {
+      // Load json
+      if (!System.IO.File.Exists("save.json"))
+      {
+        s_SaveData.LevelData = new LevelSaveData();
+
+        // Empty level data
+        LevelModule.LevelData = new();
+        for (var i = 0; i < 2; i++)
+        {
+
+          LevelModule.LevelData.Add(new());
+          LevelModule.LevelData[i] = new LevelStructDataWrapper()
+          {
+            Data = new()
+          };
+          for (var u = 0; u < Levels._LevelCollections[i]._levelData.Length; u++)
+          {
+            LevelModule.LevelData[i].Data.Add(new LevelStructData()
+            {
+              LevelNumber = u,
+              Completed = false,
+              BestCompletionTime = "-1.000"
+            });
+          }
+        }
+
+        LevelModule.SurvivalHighestWave = new();
+
+        //
+        LevelModule.ShopUnlocks = new();
+        LevelModule.LoadoutData = new();
+      }
+      else
+      {
+        var jsonData = System.IO.File.ReadAllText("save.json");
+        s_SaveData.LevelData = JsonUtility.FromJson<LevelSaveData>(jsonData);
+      }
+    }
+    public static void Save()
+    {
+      var json = JsonUtility.ToJson(LevelModule);
+      System.IO.File.WriteAllText("save.json", json);
+    }
   }
 
 }

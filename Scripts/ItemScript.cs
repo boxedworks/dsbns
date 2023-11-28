@@ -7,6 +7,9 @@ using ItemType = GameScript.ItemManager.Items;
 
 public class ItemScript : MonoBehaviour
 {
+  //
+  static Settings.LevelSaveData LevelModule { get { return Settings.s_SaveData.LevelData; } }
+
   // Information about weapon holder
   public ActiveRagdoll _ragdoll;
   protected ActiveRagdoll.Side _side;
@@ -53,7 +56,7 @@ public class ItemScript : MonoBehaviour
     if (Settings._Extras_CanUse)
     {
       if (_ragdoll?._IsPlayer ?? false)
-        switch (Settings._Extra_PlayerAmmo._value)
+        switch (LevelModule.ExtraPlayerAmmo)
         {
           case 1:
             clip_size = Mathf.CeilToInt(_clipSize * 2f);
@@ -607,7 +610,7 @@ public class ItemScript : MonoBehaviour
       _clip--;
 
       // Extra; infinite ammo
-      if (_ragdoll._IsPlayer && Settings._Extras_CanUse && Settings._Extra_PlayerAmmo._value == 3)
+      if (_ragdoll._IsPlayer && Settings._Extras_CanUse && LevelModule.ExtraPlayerAmmo == 3)
       {
         _clip++;
       }

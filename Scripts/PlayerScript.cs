@@ -8,7 +8,10 @@ public class PlayerScript : MonoBehaviour
 {
   // Singleton
   public static List<PlayerScript> s_Players;
+  static Settings.SettingsSaveData SettingsModule { get { return Settings.s_SaveData.Settings; } }
+  static Settings.LevelSaveData LevelModule { get { return Settings.s_SaveData.LevelData; } }
 
+  //
   public static bool _All_Dead;
 
   public static int _PLAYERID = 0;
@@ -86,7 +89,7 @@ public class PlayerScript : MonoBehaviour
 
     _SlowmoTimer = 0f;
     Time.timeScale = 1f;
-    _spawnRunCheck = !Settings._Extra_Superhot;
+    _spawnRunCheck = LevelModule.ExtraTime == 0;
     //_camHeight = Vector3.Distance(GameResources._Camera_Main.transform.position, transform.position);
 
     // Setup ragdoll
@@ -253,7 +256,7 @@ public class PlayerScript : MonoBehaviour
     }
 
     // Check crown
-    if (Settings._Extra_CrownMode._value != 0)
+    if (LevelModule.ExtraCrownMode != 0)
       if (GameScript.s_CrownPlayer == _Profile._Id)
       {
         _ragdoll.AddCrown();
@@ -280,7 +283,7 @@ public class PlayerScript : MonoBehaviour
     if (Settings._Extras_CanUse)
     {
       if (_ragdoll?._IsPlayer ?? false)
-        switch (Settings._Extra_PlayerAmmo._value)
+        switch (LevelModule.ExtraPlayerAmmo)
         {
           case 1:
             amount = Mathf.CeilToInt(amount * 2f);
@@ -470,7 +473,7 @@ public class PlayerScript : MonoBehaviour
 
       // Rating times
       var best_dev_time = TileManager._LevelTime_Dev;
-      var level_time_best = PlayerPrefs.GetFloat($"{Levels._CurrentLevelCollection_Name}_{Levels._CurrentLevelIndex}_time", -1f).ToStringTimer().ParseFloatInvariant();
+      var level_time_best = LevelModule.GetLevelBestTime();
 
       var medal_times = Levels.GetLevelRatingTimings(best_dev_time);
       var ratings = Levels.GetLevelRatings();
@@ -781,7 +784,7 @@ public class PlayerScript : MonoBehaviour
       {
 
         // Update time via player speed
-        var time_move = Settings._Extra_Superhot && Settings._Extras_CanUse;
+        var time_move = LevelModule.ExtraTime == 1 && Settings._Extras_CanUse;
         if (time_move)
         {
           if (_spawnTimer <= 0f)
@@ -893,8 +896,8 @@ public class PlayerScript : MonoBehaviour
 
     if (_Id == 0 && GameScript._s_Singleton._UseCamera)
     {
-      var camera_height = Settings._CameraZoom == 1 ? 14f : Settings._CameraZoom == 0 ? 10f : 18f;
-      if (Settings._CameraType._value)
+      var camera_height = SettingsModule.CameraZoom == Settings.SettingsSaveData.CameraZoomType.NORMAL ? 14f : SettingsModule.CameraZoom == Settings.SettingsSaveData.CameraZoomType.CLOSE ? 10f : 18f;
+      if (SettingsModule.UseOrthographicCamera)
       {
         camera_height = 14f;
       }
@@ -904,7 +907,7 @@ public class PlayerScript : MonoBehaviour
       {
         _setCamera = true;
 
-        _centerCamera = Settings._CameraType._value;
+        _centerCamera = SettingsModule.UseOrthographicCamera;
         var map_x = TileManager._Map_Size_X;
         var map_y = TileManager._Map_Size_Y;
         //Debug.Log($"{map_x} {map_y}");
@@ -914,31 +917,31 @@ public class PlayerScript : MonoBehaviour
         {
           _centerCamera = true;
 
-          Settings._CameraZoom._value = 1;
+          SettingsModule.CameraZoom = Settings.SettingsSaveData.CameraZoomType.NORMAL;
           Settings.SetPostProcessing();
-          Settings._CameraZoom._value = 3;
+          SettingsModule.CameraZoom = Settings.SettingsSaveData.CameraZoomType.AUTO;
         }
 
         else if (_centerCamera)
         {
 
-          var zoom = Settings._CameraZoom;
-          if (zoom == 0)
+          var zoom = SettingsModule.CameraZoom;
+          if (zoom == Settings.SettingsSaveData.CameraZoomType.CLOSE)
           {
             if (map_x > 7 || map_y > 4)
               _centerCamera = false;
           }
-          else if (zoom == 1)
+          else if (zoom == Settings.SettingsSaveData.CameraZoomType.NORMAL)
           {
             if (map_x > 10 || map_y > 6)
               _centerCamera = false;
           }
-          else if (zoom == 2)
+          else if (zoom == Settings.SettingsSaveData.CameraZoomType.FAR)
           {
             if (map_x > 14 || map_y > 8)
               _centerCamera = false;
           }
-          else if (zoom == 3)
+          else if (zoom == Settings.SettingsSaveData.CameraZoomType.AUTO)
           {
             var zoom_ = -1;
             if (map_x <= 7 && map_y <= 4)
@@ -955,15 +958,15 @@ public class PlayerScript : MonoBehaviour
             }
             if (zoom_ > -1)
             {
-              Settings._CameraZoom._value = zoom_;
+              SettingsModule.CameraZoom = (Settings.SettingsSaveData.CameraZoomType)zoom_;
               Settings.SetPostProcessing();
-              Settings._CameraZoom._value = 3;
+              SettingsModule.CameraZoom = Settings.SettingsSaveData.CameraZoomType.AUTO;
             }
             else
             {
-              Settings._CameraZoom._value = 1;
+              SettingsModule.CameraZoom = Settings.SettingsSaveData.CameraZoomType.NORMAL;
               Settings.SetPostProcessing();
-              Settings._CameraZoom._value = 3;
+              SettingsModule.CameraZoom = Settings.SettingsSaveData.CameraZoomType.AUTO;
 
               _centerCamera = false;
             }
@@ -1011,9 +1014,9 @@ public class PlayerScript : MonoBehaviour
         sharedPos.y = transform.position.y + camera_height;
         sharedForward /= Mathf.Clamp(counter, 1, counter);
 
-        if (Settings._CameraZoom == 2)
+        if (SettingsModule.CameraZoom == Settings.SettingsSaveData.CameraZoomType.FAR)
           sharedForward = Vector3.zero;
-        else if (Settings._CameraZoom == 0)
+        else if (SettingsModule.CameraZoom == 0)
           sharedForward /= 1.4f;
 
         var changePos = Vector3.zero;
@@ -1037,7 +1040,7 @@ public class PlayerScript : MonoBehaviour
       }
 
       _camPos.y = camera_height;
-      if (Settings._CameraType._value)
+      if (SettingsModule.UseOrthographicCamera)
       {
         //_camPos.z -= 1.9f;
       }
@@ -1092,7 +1095,7 @@ public class PlayerScript : MonoBehaviour
     if (!GameScript.IsSurvival())
       if (
         _Id == 0 &&
-        Settings._Extra_CrazyZombies &&
+        LevelModule.ExtraHorde == 1 &&
         Settings._Extras_CanUse &&
         (Powerup._Powerups?.Count ?? 0) > 0 &&
         EnemyScript._Enemies_alive.Count < EnemyScript._MAX_RAGDOLLS_ALIVE
@@ -1269,11 +1272,11 @@ public class PlayerScript : MonoBehaviour
         _ragdoll.ArmsDown();
 
       // Check runkey
-      if (_Profile._holdRun)
+      /*if (_Profile._holdRun)
       {
         runKeyDown = (ControllerManager.ShiftHeld());
       }
-      else
+      else*/
       {
         runKeyDown = ControllerManager.ShiftHeld();
       }
@@ -1489,9 +1492,10 @@ public class PlayerScript : MonoBehaviour
         }
 
         // Check runkey
-        if (_Profile._holdRun)
+        /*if (_Profile._holdRun)
           runKeyDown = gamepad.leftStickButton.wasPressedThisFrame;
-        else runKeyDown = gamepad.leftStickButton.isPressed;
+        else */
+        runKeyDown = gamepad.leftStickButton.isPressed;
 
         // Check grapple
         if (
@@ -1552,7 +1556,7 @@ public class PlayerScript : MonoBehaviour
 
             // Raycast table
             var raycastinfo = new RaycastHit();
-            if (Physics.SphereCast(new Ray(_ragdoll._Hip.position, transform.forward), 0.2f, out raycastinfo, 1f, LayerMask.GetMask("ParticleCollision")))
+            if (Physics.SphereCast(new Ray(_ragdoll._Hip.position, transform.forward), 0.2f, out raycastinfo, 0.7f, LayerMask.GetMask("ParticleCollision")))
             {
               if (raycastinfo.collider.name == "Table")
               {
@@ -1952,8 +1956,8 @@ public class PlayerScript : MonoBehaviour
     {
       if (GameScript.ReloadMap(true, true))
       {
-        // Save playerpref
-        if (!GameScript.TutorialInformation._HasRestarted) GameScript.TutorialInformation._HasRestarted = true;
+        if (!GameScript.TutorialInformation._HasRestarted)
+          GameScript.TutorialInformation._HasRestarted = true;
       }
     }
   }
@@ -2149,7 +2153,7 @@ public class PlayerScript : MonoBehaviour
     _Profile.UpdateHealthUI();
 
     // Controller rumble
-    if (!mouseEnabled && Settings._ControllerRumble)
+    if (!mouseEnabled && SettingsModule.ControllerRumble)
     {
       IEnumerator rumble()
       {
@@ -2171,7 +2175,7 @@ public class PlayerScript : MonoBehaviour
     Stats.RecordDeath(_Id);
 
     // Controller rumble
-    if (!mouseEnabled && Settings._ControllerRumble)
+    if (!mouseEnabled && SettingsModule.ControllerRumble)
     {
       IEnumerator rumble()
       {
@@ -2241,7 +2245,7 @@ public class PlayerScript : MonoBehaviour
       var saveinfo = GameScript.TutorialInformation._HasRestarted;
 
       // Embarass player ultimately leading to the return of the title
-      if (Settings._ShowDeathText._value)
+      if (SettingsModule.ShowDeathText)
         TileManager.ShowGameOverText("NOT SNEAKY.", "white", "red");
 
       // Coroutine to show controls

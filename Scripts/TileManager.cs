@@ -7,6 +7,11 @@ using Key = ControllerManager.Key;
 
 public class TileManager
 {
+  //
+  static Settings.SettingsSaveData SettingsModule { get { return Settings.s_SaveData.Settings; } }
+  static Settings.LevelSaveData LevelModule { get { return Settings.s_SaveData.LevelData; } }
+
+  //
   static int _s_mapIndex;
 
   public static List<Tile> _Tiles;
@@ -42,6 +47,7 @@ public class TileManager
 
   public static void ShowGameOverText(string text, string color_base, string color_flash, int flashes = 8)
   {
+    var gameid = GameScript._GameId;
     IEnumerator ShowTextCo()
     {
       //SfxManager.PlayAudioSourceSimple(GameResources._Camera_Main.transform.GetChild(1).position, "Etc/HiHat", 0.95f, 1f, SfxManager.AudioClass.NONE, false, false);
@@ -58,6 +64,10 @@ public class TileManager
       }
       if (_Text_GameOver.text != "")
         _Text_GameOver.text = $"<color={color_base}>{text}</color>";
+
+      // Check game ended
+      if (gameid != GameScript._GameId)
+        _Text_GameOver.gameObject.SetActive(false);
     }
     GameScript._s_Singleton.StartCoroutine(ShowTextCo());
     _Text_GameOver.gameObject.SetActive(true);
@@ -66,7 +76,7 @@ public class TileManager
   {
     _Text_GameOver.text = "";
 
-    var best_time = PlayerPrefs.GetFloat($"{Levels._CurrentLevelCollection_Name}_{Levels._CurrentLevelIndex}_time", -1f);
+    var best_time = LevelModule.GetLevelBestTime();
     _Text_LevelTimer_Best.text = best_time == -1f ? "-" : best_time.ToStringTimer();
 
     ResetMonies();
@@ -1176,7 +1186,7 @@ public class TileManager
           }
 
       // If difficulty is 0, never check for bat person
-      var chaser_extra = Settings._Extras_CanUse ? Settings._Extra_RemoveBatGuy._value : 0;
+      var chaser_extra = Settings._Extras_CanUse ? LevelModule.ExtraRemoveChaser : 0;
       if (Settings._DIFFICULTY == 0 && chaser_extra != 1)
         hasBat = true;
       if (!hasBat && chaser_extra != 2)
@@ -1239,16 +1249,18 @@ public class TileManager
 
         if (!enemy_original)
         {
-          var setting = Settings._Extras_CanUse ? Settings._Extra_EnemyMultiplier._value : 0;
+          var multiplierSetting = Settings._Extras_CanUse ? LevelModule.ExtraEnemyMultiplier : 0;
 
           // None
-          if (setting == 2)
+          if (multiplierSetting == 2)
           {
             var dummy = new GameObject("dummy enemy");
             dummy.transform.parent = _Map.GetChild(1);
             return dummy;
           }
-          else if (setting == 1)
+
+          // Double (wip)
+          else if (multiplierSetting == 1)
           {
             var posx = object_data_split[1].ParseFloatInvariant();
             var posy = object_data_split[2].ParseFloatInvariant();
@@ -2494,11 +2506,11 @@ public class TileManager
     //Time.timeScale = 1f;
 
     // Camera zoom
-    if (Settings._CameraZoom._value == 3)
+    if (SettingsModule.CameraZoom == Settings.SettingsSaveData.CameraZoomType.AUTO)
     {
-      Settings._CameraZoom._value = 1;
+      SettingsModule.CameraZoom = Settings.SettingsSaveData.CameraZoomType.NORMAL;
       Settings.SetPostProcessing();
-      Settings._CameraZoom._value = 3;
+      SettingsModule.CameraZoom = Settings.SettingsSaveData.CameraZoomType.AUTO;
     }
 
     // Set player spawn layer
