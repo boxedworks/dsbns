@@ -593,6 +593,7 @@ public class TileManager
     EnemyScript.Reset();
     Powerup.Reset();
     FunctionsC.AoeHandler.Reset();
+    CandleScript.Reset();
     CustomEntityUI._ID = 0;
     EnemyScript._ID = 0;
 
@@ -895,14 +896,14 @@ public class TileManager
     GameResources._Camera_Main.transform.position = campos;
 
     // Hide playerspawn
-    if (GameScript._GameMode == GameScript.GameModes.SURVIVAL && !GameScript._EditorEnabled)
+    if (GameScript.s_GameMode == GameScript.GameModes.SURVIVAL && !GameScript._EditorEnabled)
       PlayerspawnScript._PlayerSpawns[0].transform.GetChild(1).gameObject.SetActive(false);
     else
       PlayerspawnScript._PlayerSpawns[0].transform.GetChild(1).gameObject.SetActive(true);
 
     // Check special objects before build
     var objectsToDisable = new List<GameObject>();
-    if (GameScript.s_Backrooms)
+    if (GameScript.s_InteractableObjects)
     {
 
       var mapObjects = GameObject.Find("Map_Objects").transform;
@@ -910,11 +911,18 @@ public class TileManager
       {
 
         var child = mapObjects.GetChild(i);
-        if (child.name == "Table")
+        switch (child.name)
         {
-          objectsToDisable.Add(child.gameObject);
 
-          OnObjectLoad(child.gameObject);
+          case "Table":
+          case "Books":
+          case "Chair":
+
+            objectsToDisable.Add(child.gameObject);
+            OnObjectLoad(child.gameObject);
+
+            break;
+
         }
       }
 
@@ -939,7 +947,7 @@ public class TileManager
     // Backrooms
     if (GameScript.s_Backrooms)
     {
-      GameObject.Find("Backrooms").transform.position = new Vector3(-42.1f, -2.3f, -53.95f);
+      GameObject.Find("Backrooms").transform.position = new Vector3(-42.49f, -2.3f, -53.95f);
 
       GameObject.Destroy(GameObject.Find("Meshes_Tiles_Up"));
       GameObject.Destroy(GameObject.Find("Meshes_Tiles_Down"));
@@ -1006,9 +1014,19 @@ public class TileManager
         var collider = loadedObject.GetComponent<BoxCollider>();
         var navmeshobj = loadedObject.AddComponent<NavMeshObstacle>();
         navmeshobj.center = collider.center;
-        navmeshobj.size = collider.size;
+        navmeshobj.size = collider.size * 0.8f;
         navmeshobj.carving = true;
         //navmeshobj.carveOnlyStationary = false;
+
+        break;
+
+      case "Chair":
+
+        var rb = loadedObject.AddComponent<Rigidbody>();
+        rb.mass = 3f;
+        rb.interpolation = RigidbodyInterpolation.Interpolate;
+
+        ActiveRagdoll.Rigidbody_Handler.AddListener(rb, ActiveRagdoll.Rigidbody_Handler.RigidbodyType.WOOD);
 
         break;
 
@@ -1026,8 +1044,7 @@ public class TileManager
     meshes.Add("Barrels", System.Tuple.Create(new List<GameObject>(), false));
     meshes.Add("Books", System.Tuple.Create(new List<GameObject>(), true));
     meshes.Add("Bookcases", System.Tuple.Create(new List<GameObject>(), true));
-    if (!GameScript.s_Backrooms)
-      meshes.Add("Tables", System.Tuple.Create(new List<GameObject>(), false));
+    meshes.Add("Tables", System.Tuple.Create(new List<GameObject>(), false));
     meshes.Add("Chairs", System.Tuple.Create(new List<GameObject>(), false));
     meshes.Add("Arches", System.Tuple.Create(new List<GameObject>(), false));
 
@@ -1043,36 +1060,39 @@ public class TileManager
       var obj = objects.GetChild(i);
       switch (obj.name)
       {
-        case ("Barrel"):
+        case "Barrel":
           meshes["Barrels"].Item1.Add(obj.GetChild(0).gameObject);
           break;
-        case ("BookcaseOpen"):
+        case "BookcaseOpen":
           meshes["Bookcases"].Item1.Add(obj.GetChild(0).GetChild(0).gameObject);
           for (var u = 0; u < 3; u++)
             meshes["Books"].Item1.Add(obj.GetChild(u + 1).GetChild(0).gameObject);
           break;
-        case ("BookcaseBig"):
+        case "BookcaseBig":
           meshes["Bookcases"].Item1.Add(obj.GetChild(0).GetChild(0).gameObject);
           for (var u = 0; u < 3; u++)
             meshes["Books"].Item1.Add(obj.GetChild(u + 1).GetChild(0).gameObject);
           break;
-        case ("Table"):
-        case ("TableSmall"):
-          if (!GameScript.s_Backrooms)
+        case "Table":
+          if (!GameScript.s_InteractableObjects)
             meshes["Tables"].Item1.Add(obj.GetChild(0).gameObject);
           break;
-        case ("Chair"):
-          meshes["Chairs"].Item1.Add(obj.GetChild(0).gameObject);
+        case "TableSmall":
+          meshes["Tables"].Item1.Add(obj.GetChild(0).gameObject);
           break;
-        case ("Arch"):
+        case "Chair":
+          if (!GameScript.s_InteractableObjects)
+            meshes["Chairs"].Item1.Add(obj.GetChild(0).gameObject);
+          break;
+        case "Arch":
           meshes["Arches"].Item1.Add(obj.GetChild(0).gameObject);
           break;
-        case ("NavMeshBarrier"):
+        case "NavMeshBarrier":
           var t = obj.GetChild(0);
           for (var u = 0; u < t.childCount; u++)
             meshes["NavmeshBarriers"].Item1.Add(t.GetChild(u).gameObject);
           break;
-        case ("TileWall"):
+        case "TileWall":
           meshes["Walls"].Item1.Add(obj.GetChild(0).gameObject);
           t = obj.GetChild(1);
           for (int u = 0; u < t.childCount; u++)
@@ -1080,17 +1100,17 @@ public class TileManager
           break;
 
         // Forest theme
-        case ("Barrel_Rock"):
+        case "Barrel_Rock":
           meshes["Rocks"].Item1.Add(obj.GetChild(0).gameObject);
           break;
 
-        case ("BookcaseOpen_Bush"):
+        case "BookcaseOpen_Bush":
           meshes["Bushes"].Item1.Add(obj.GetChild(0).gameObject);
           break;
-        case ("BookcaseBig_Bush"):
+        case "BookcaseBig_Bush":
           meshes["Bushes"].Item1.Add(obj.GetChild(0).gameObject);
           break;
-        case ("Table_Bush"):
+        case "Table_Bush":
           meshes["Bushes"].Item1.Add(obj.GetChild(0).gameObject);
           break;
       }
@@ -1199,7 +1219,7 @@ public class TileManager
     }
 
     // Display level #
-    if (GameScript._GameMode == GameScript.GameModes.CLASSIC && !GameScript._EditorTesting)
+    if (GameScript.s_GameMode == GameScript.GameModes.CLASSIC && !GameScript._EditorTesting)
     {
       var hardmodeadd = Settings._DIFFICULTY == 1 ? "*" : "";
       _Text_LevelNum.text = $"{Levels._CurrentLevelIndex + 1}{hardmodeadd}";
@@ -1926,7 +1946,7 @@ public class TileManager
     for (var i = mapObjects.childCount - 1; i >= 0; i--)
     {
       var mapObject = mapObjects.GetChild(i).gameObject;
-      if (GameScript._GameMode != GameScript.GameModes.SURVIVAL && mapObject.name.Contains("Candel"))
+      if (GameScript.s_GameMode != GameScript.GameModes.SURVIVAL && mapObject.name.Contains("Candel"))
       {
         candles.Add(mapObject);
         continue;
@@ -1935,7 +1955,7 @@ public class TileManager
     }
 
     // Reload certain objects
-    var reloadObjectTypes = new string[] { "e_", "door_", "p_", "button_", "playerspawn_", (GameScript._GameMode == GameScript.GameModes.SURVIVAL ? "candel" : "__") };
+    var reloadObjectTypes = new string[] { "e_", "door_", "p_", "button_", "playerspawn_", (GameScript.s_GameMode == GameScript.GameModes.SURVIVAL ? "candel" : "__") };
     foreach (var levelObjectData in s_levelObjectData)
     {
       var loaded = false;
@@ -2513,6 +2533,10 @@ public class TileManager
       SettingsModule.CameraZoom = Settings.SettingsSaveData.CameraZoomType.AUTO;
     }
 
+    // Check backrooms
+    if (GameScript.s_Backrooms)
+      GameResources._Camera_Main.transform.localPosition = new Vector3(-26.1f, GameResources._Camera_Main.transform.localPosition.y, -70.5f);
+
     // Set player spawn layer
     PlayerspawnScript._PlayerSpawns[0].gameObject.layer = 0;
   }
@@ -2650,7 +2674,7 @@ public class TileManager
       new LevelEditorObject.MovementSettings()
       {
         _target = LevelEditorObject.TransformTarget.PARENT,
-        _localPos = -0.86f
+        _localPos = 0f
       }, null, null, null, null,
       (LevelEditorObject leo, GameObject g, Vector3 offset, Vector3 pos_use) =>
       {
@@ -4971,7 +4995,7 @@ public class TileManager
       container.parent = GameResources._Camera_Main.transform;
       container.localPosition = new Vector3(2.8f, 1.5f, 6f);
     }
-    else if (GameScript._GameMode == GameScript.GameModes.CLASSIC)
+    else if (GameScript.s_GameMode == GameScript.GameModes.CLASSIC)
       container.localPosition = new Vector3(8.88f, -7.26f, 0f);
     else
       container.localPosition = new Vector3(8.88f, -3.78f, 0f);

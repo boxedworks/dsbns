@@ -380,6 +380,9 @@ public static class FunctionsC
     // SFX
     PlayComplexParticleSystemAt(type != ExplosiveScript.ExplosionType.STUN ? FunctionsC.ParticleSystemType.EXPLOSION : FunctionsC.ParticleSystemType.EXPLOSION_STUN, position + new Vector3(0f, 0.2f, 0f));
 
+    // Send explosion to rigidbodies
+    ActiveRagdoll.Rigidbody_Handler.ApplyExplosion(position, radius);
+
     // Loop through ragdolls to raycast and affect
     var exploded = 0;
     var isStun = type == ExplosiveScript.ExplosionType.STUN;
@@ -787,7 +790,7 @@ public static class FunctionsC
       if (Menu2._CurrentMenu._Type == Menu2.MenuType.MAIN) return 0;
 
       // SURVIVAL mode music
-      if (GameScript._GameMode == GameScript.GameModes.SURVIVAL)
+      if (GameScript.s_GameMode == GameScript.GameModes.SURVIVAL)
       {
         if (s_CurrentTrack == 0 || s_CurrentTrack == 1 || s_CurrentTrack == 2)
           s_CurrentTrack = 3;

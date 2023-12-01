@@ -10,7 +10,7 @@
     {
       get
       {
-        if (GameScript._GameMode != GameScript.GameModes.SURVIVAL) return -1;
+        if (GameScript.s_GameMode != GameScript.GameModes.SURVIVAL) return -1;
         return GameScript.SurvivalMode.GetTotalPoints(_id);
       }
     }

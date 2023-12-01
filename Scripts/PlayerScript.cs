@@ -519,7 +519,7 @@ public class PlayerScript : MonoBehaviour
           pos = _ragdoll._Hip.position;
           maxD = 6f;
         }
-        if (GameScript._GameMode == GameScript.GameModes.CLASSIC)
+        if (GameScript.s_GameMode == GameScript.GameModes.CLASSIC)
         {
 
           if (!HasExit())
@@ -884,6 +884,13 @@ public class PlayerScript : MonoBehaviour
     }
     // Update ragdoll
     _ragdoll.Update();
+  }
+
+  //
+  public static void ResetCamera()
+  {
+    if (s_Players.Count > 0)
+      s_Players[0]._setCamera = false;
   }
 
   // Lerp camera - taking into account more than one player
@@ -1327,9 +1334,12 @@ public class PlayerScript : MonoBehaviour
 
       // Check interactable
       if (ControllerManager.GetKey(ControllerManager.Key.F))
+      {
         if (_currentInteractable != null)
           _currentInteractable.Interact(this, CustomObstacle.InteractSide.DEFAULT);
-
+        else
+          FlipTable();
+      }
       // Check reload
       if (ControllerManager.GetKey(ControllerManager.Key.R, _Profile._reloadSidesSameTime ? ControllerManager.InputMode.HOLD : ControllerManager.InputMode.DOWN))
         Reload();
@@ -1455,7 +1465,7 @@ public class PlayerScript : MonoBehaviour
         var dpadHoldTime = 0.6f;
         if (gamepad.dpad.left.wasReleasedThisFrame)
         {
-          if (GameScript._GameMode == GameScript.GameModes.CLASSIC)
+          if (GameScript.s_GameMode == GameScript.GameModes.CLASSIC)
           {
             if (_dpadPressed[2] != 0f && Time.unscaledTime - _dpadPressed[2] < dpadHoldTime)
               _Profile._LoadoutIndex--;
@@ -1466,7 +1476,7 @@ public class PlayerScript : MonoBehaviour
         }
         else if (gamepad.dpad.right.wasReleasedThisFrame)
         {
-          if (GameScript._GameMode == GameScript.GameModes.CLASSIC)
+          if (GameScript.s_GameMode == GameScript.GameModes.CLASSIC)
           {
             if (_dpadPressed[3] != 0f && Time.unscaledTime - _dpadPressed[3] < dpadHoldTime)
               _Profile._LoadoutIndex++;
@@ -1550,90 +1560,8 @@ public class PlayerScript : MonoBehaviour
         {
           if (_currentInteractable != null)
             _currentInteractable.Interact(this, CustomObstacle.InteractSide.DEFAULT);
-
-          else if (GameScript.s_Backrooms)
-          {
-
-            // Raycast table
-            var raycastinfo = new RaycastHit();
-            if (Physics.SphereCast(new Ray(_ragdoll._Hip.position, transform.forward), 0.2f, out raycastinfo, 0.7f, LayerMask.GetMask("ParticleCollision")))
-            {
-              if (raycastinfo.collider.name == "Table")
-              {
-                var table = raycastinfo.collider.gameObject;
-                var startRotation = table.transform.localRotation;
-                var startPosition = table.transform.position;
-
-                var distanceToTable = transform.position - table.transform.position;
-                distanceToTable.y = 0f;
-                distanceToTable = distanceToTable.normalized;
-                distanceToTable = Quaternion.Euler(0f, -table.transform.localEulerAngles.y, 0f) * distanceToTable;
-
-                var applyRotation = Vector3.zero;
-                var applyPosition = Vector3.zero;
-                if (distanceToTable.x < -0.5f)
-                {
-                  applyRotation = new Vector3(0f, 0f, 1f) * -90f;
-                  applyPosition = table.transform.right;
-                }
-                else if (distanceToTable.x > 0.5f)
-                {
-                  applyRotation = new Vector3(0f, 0f, 1f) * 90f;
-                  applyPosition = -table.transform.right;
-                }
-                else if (distanceToTable.z > 0.5f)
-                {
-                  applyRotation = new Vector3(1f, 0f, 0f) * -90f;
-                  applyPosition = -table.transform.forward * 2f;
-                }
-                else
-                {
-                  applyRotation = new Vector3(1f, 0f, 0f) * 90f;
-                  applyPosition = table.transform.forward * 2f;
-                }
-
-                var endRotation = startRotation * Quaternion.Euler(applyRotation);
-                var endPosition = startPosition + applyPosition;
-
-                table.name = "Table_Flipped";
-                SfxManager.PlayAudioSourceSimple(transform.position, "Etc/Table_flip");
-
-                IEnumerator FlipTable()
-                {
-
-                  var navmeshobs = table.GetComponent<NavMeshObstacle>();
-                  navmeshobs.carveOnlyStationary = false;
-
-                  var t = 0f;
-                  while (t < 1f)
-                  {
-                    t += 0.08f;
-                    table.transform.localRotation = Quaternion.Lerp(startRotation, endRotation, t);
-                    table.transform.position = Vector3.Lerp(startPosition, endPosition, t);
-
-                    yield return new WaitForSeconds(0.01f);
-
-                  }
-
-                  table.transform.localRotation = endRotation;
-                  table.transform.position = endPosition;
-
-                  navmeshobs.carveOnlyStationary = true;
-
-                  var parts = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.TABLE_FLIP)[0];
-                  parts.transform.position = table.transform.position;
-                  var angles = parts.transform.localEulerAngles;
-                  angles.y = table.transform.localEulerAngles.y;
-                  parts.transform.localEulerAngles = angles;
-                  parts.Play();
-
-                  EnemyScript.CheckSound(table.transform.position, EnemyScript.Loudness.NORMAL);
-                }
-                StartCoroutine(FlipTable());
-              }
-            }
-
-          }
+          else
+            FlipTable();
         }
 
         // Check reload
@@ -2086,7 +2014,7 @@ public class PlayerScript : MonoBehaviour
       // Left
       case (2):
 
-        if (GameScript._GameMode == GameScript.GameModes.CLASSIC)
+        if (GameScript.s_GameMode == GameScript.GameModes.CLASSIC)
         {
           _Profile._LoadoutIndex--;
           break;
@@ -2100,7 +2028,7 @@ public class PlayerScript : MonoBehaviour
       // Right
       case (3):
 
-        if (GameScript._GameMode == GameScript.GameModes.CLASSIC)
+        if (GameScript.s_GameMode == GameScript.GameModes.CLASSIC)
         {
           _Profile._LoadoutIndex++;
           break;
@@ -2205,7 +2133,7 @@ public class PlayerScript : MonoBehaviour
 #endif
 
     // Survival
-    if (GameScript._GameMode == GameScript.GameModes.SURVIVAL)
+    if (GameScript.s_GameMode == GameScript.GameModes.SURVIVAL)
       GameScript.SurvivalMode.OnPlayerDead(_Id);
 
     // Remove ring
@@ -2409,6 +2337,194 @@ public class PlayerScript : MonoBehaviour
     if (_Equipment._utilities_right != null && _Equipment._utilities_right.Length > 0 && _Equipment._utilities_right[0] == utility && side == ActiveRagdoll.Side.RIGHT)
       return System.Tuple.Create(true, ActiveRagdoll.Side.RIGHT);
     return System.Tuple.Create(false, side);
+  }
+
+  void FlipTable()
+  {
+    if (!GameScript.s_InteractableObjects) return;
+
+    // Raycast table
+    var raycastinfo = new RaycastHit();
+    if (Physics.SphereCast(new Ray(_ragdoll._Hip.position + -transform.forward * 0.2f + -Vector3.up * 0.3f, transform.forward), 0.15f, out raycastinfo, 0.6f, LayerMask.GetMask("ParticleCollision")))
+    {
+      if (raycastinfo.collider.name == "Table")
+      {
+        var table = raycastinfo.collider.gameObject;
+
+        var startRotation = table.transform.localRotation;
+        var startPosition = table.transform.position;
+
+        var distanceToTable = transform.position - table.transform.position;
+        distanceToTable.y = 0f;
+        distanceToTable = distanceToTable.normalized;
+        distanceToTable = Quaternion.Euler(0f, -table.transform.localEulerAngles.y, 0f) * distanceToTable;
+
+        var applyRotation = Vector3.zero;
+        var applyPosition = Vector3.zero;
+        if (distanceToTable.x < -0.5f)
+        {
+          applyRotation = new Vector3(0f, 0f, 1f) * -90f;
+          applyPosition = table.transform.right;
+        }
+        else if (distanceToTable.x > 0.5f)
+        {
+          applyRotation = new Vector3(0f, 0f, 1f) * 90f;
+          applyPosition = -table.transform.right;
+        }
+        else if (distanceToTable.z > 0.5f)
+        {
+          applyRotation = new Vector3(1f, 0f, 0f) * -90f;
+          applyPosition = -table.transform.forward * 2f;
+        }
+        else
+        {
+          applyRotation = new Vector3(1f, 0f, 0f) * 90f;
+          applyPosition = table.transform.forward * 2f;
+        }
+
+        var applyPositionRotated = Quaternion.Euler(0f, 90f, 0f) * applyPosition.normalized;
+        var rotateLongways = applyRotation.x != 0f;
+
+        // Check can flip (no tv or lights)
+        var canFlip = true;
+
+        var tableOrigin = table.transform.position;
+        var tableScale = new Vector3(1f, 0f, 2f);
+
+        bool PositionInBounds(Vector3 position)
+        {
+          var hitOriginDiff = tableOrigin - position;
+          var hitOriginRotated = tableOrigin + Quaternion.Euler(0f, -table.transform.eulerAngles.y, 0f) * hitOriginDiff;
+          if (
+            hitOriginRotated.x < tableOrigin.x - tableScale.x * 0.5f ||
+            hitOriginRotated.x > tableOrigin.x + tableScale.x * 0.5f ||
+            hitOriginRotated.z < tableOrigin.z - tableScale.z * 0.5f ||
+            hitOriginRotated.z > tableOrigin.z + tableScale.z * 0.5f
+          )
+            return false;
+          return true;
+        }
+
+        // Check candles
+        foreach (var candle in CandleScript.s_Candles)
+        {
+          if (PositionInBounds(candle.transform.position))
+          {
+            canFlip = false;
+            break;
+          }
+        }
+
+        // Raycast to get stuff on top of table
+        var hitsTableTop = Physics.SphereCastAll(new Ray(table.transform.position, Vector3.up), 1f, 2f, LayerMask.GetMask("ParticleCollision"));
+        var books = new List<Collider>();
+        foreach (var hit in hitsTableTop)
+        {
+
+          // Check collider is actually on top
+          if (!PositionInBounds(hit.transform.position))
+            continue;
+
+          //
+          switch (hit.collider.name)
+          {
+            case "Television":
+              canFlip = false;
+              break;
+            case "Books":
+              books.Add(hit.collider);
+              break;
+          }
+
+          if (!canFlip)
+            break;
+        }
+
+        if (!canFlip)
+        {
+          _ragdoll.DisplayText("it's too heavy..");
+        }
+        else
+        {
+
+          // Check space available in front of table
+          var hitsTableFront = Physics.SphereCastAll(new Ray(table.transform.position + -applyPositionRotated * (rotateLongways ? 0.5f : 1f) + applyPosition, applyPositionRotated), 0.2f, rotateLongways ? 1f : 2f, LayerMask.GetMask("ParticleCollision"));
+          var spaceInFront = hitsTableFront.Length == 0;
+          var spaceInFrontDis = 10f;
+          if (!spaceInFront)
+          {
+            foreach (var hit in hitsTableFront)
+            {
+
+              switch (hit.collider.gameObject.name)
+              {
+                case "Books":
+                case "Television":
+                  continue;
+              }
+              var dis = MathC.Get2DDistance(hit.point == Vector3.zero ? hit.transform.position : hit.point, table.transform.position);
+              if (dis < spaceInFrontDis)
+                spaceInFrontDis = dis;
+
+            }
+            spaceInFrontDis *= 0.5f;
+          }
+
+          var endRotation = startRotation * Quaternion.Euler(applyRotation);
+          var endPosition = startPosition + applyPosition.normalized * (spaceInFront ? applyPosition.magnitude : Mathf.Clamp(spaceInFrontDis, 0f, applyPosition.magnitude));
+
+          //
+          table.name = "Table_Flipped";
+          SfxManager.PlayAudioSourceSimple(transform.position, "Etc/Table_flip");
+
+          IEnumerator FlipTable()
+          {
+
+            var navmeshobs = table.GetComponent<NavMeshObstacle>();
+            navmeshobs.carveOnlyStationary = false;
+
+            // Explode books
+            foreach (var book in books)
+              FunctionsC.BookManager.ExplodeBooks(book, transform.position);
+
+            var t = 0f;
+            var lastTime = Time.time;
+            while (t < 1f)
+            {
+              t += (Time.time - lastTime) * 3.5f;
+              lastTime = Time.time;
+
+              table.transform.localRotation = Quaternion.Lerp(startRotation, endRotation, t);
+              table.transform.position = Vector3.Lerp(startPosition, endPosition, t);
+
+              yield return new WaitForSecondsRealtime(0.01f);
+
+            }
+
+            table.transform.localRotation = endRotation;
+            table.transform.position = endPosition;
+
+            navmeshobs.carveOnlyStationary = true;
+
+            var parts = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.TABLE_FLIP)[0];
+            var partsPos = table.transform.position;
+            partsPos.y = -1.1f;
+            parts.transform.position = partsPos;
+            var angles = parts.transform.localEulerAngles;
+            angles.y = table.transform.localEulerAngles.y;
+            parts.transform.localEulerAngles = angles;
+
+            var partsShapeModule = parts.shape;
+            partsShapeModule.scale = new Vector3(0.37f, rotateLongways ? 0.37f : 1f, 1f);
+
+            parts.Play();
+
+            EnemyScript.CheckSound(table.transform.position, EnemyScript.Loudness.NORMAL);
+          }
+          StartCoroutine(FlipTable());
+        }
+      }
+    }
   }
 
   public static class AutoPlayer

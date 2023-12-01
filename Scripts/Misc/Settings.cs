@@ -75,14 +75,14 @@ public static class Settings
   {
     get
     {
-      if (GameScript._GameMode == GameScript.GameModes.CLASSIC)
+      if (GameScript.s_GameMode == GameScript.GameModes.CLASSIC)
         return LevelModule.HighestDifficultyUnlockedClassic;
       else
         return LevelModule.HighestDifficultyUnlockedSurvival;
     }
     set
     {
-      if (GameScript._GameMode == GameScript.GameModes.CLASSIC)
+      if (GameScript.s_GameMode == GameScript.GameModes.CLASSIC)
         LevelModule.HighestDifficultyUnlockedClassic = value;
       else
         LevelModule.HighestDifficultyUnlockedSurvival = value;
@@ -93,7 +93,7 @@ public static class Settings
   {
     get
     {
-      if (GameScript._GameMode == GameScript.GameModes.CLASSIC)
+      if (GameScript.s_GameMode == GameScript.GameModes.CLASSIC)
         return LevelModule.Difficulty;
       else return 0;
     }
@@ -154,7 +154,7 @@ public static class Settings
   }
 
   // Extras
-  public static bool _Extras_CanUse { get { return GameScript._GameMode == GameScript.GameModes.CLASSIC && !_LevelEditorEnabled; } }
+  public static bool _Extras_CanUse { get { return GameScript.s_GameMode == GameScript.GameModes.CLASSIC && !_LevelEditorEnabled; } }
   public static bool _Extras_UsingAny
   {
     get
@@ -669,37 +669,65 @@ public static class Settings
 
     // PP
     var profiles = GameObject.Find("PProfiles").transform;
-    for (var u = 0; u < 7; u++)
+    //for (var u = 0; u < 7; u++)
+    var u = 5;
     {
       var profile = profiles.GetChild(u).GetComponent<UnityEngine.Rendering.PostProcessing.PostProcessVolume>();
+
+      // Bloom
+      UnityEngine.Rendering.PostProcessing.Bloom bloom = null;
+      profile.profile.TryGetSettings(out bloom);
+      if (bloom != null)
+      {
+        bloom.intensity.value = SettingsModule.BloomAmount switch
+        {
+          0 => 0f,
+          1 => 1f,
+          2 => 1.94f
+        };
+      }
+
+      // DOF
       UnityEngine.Rendering.PostProcessing.DepthOfField depthOfField = null;
       profile.profile.TryGetSettings(out depthOfField);
       if (depthOfField != null)
       {
-        depthOfField.focalLength.value = 177f;
 
-        if (SettingsModule.UseOrthographicCamera)
+        if (SettingsModule.DepthOfFieldAmount > 0)
         {
-          depthOfField.focusDistance.value = 5.7f;
-          depthOfField.aperture.value = 1f;
+          depthOfField.enabled.value = true;
+          depthOfField.focalLength.value = 177f;
+
+          var apertureMod = SettingsModule.DepthOfFieldAmount == 1 ? 1.7f : 1f;
+
+          if (SettingsModule.UseOrthographicCamera)
+          {
+            depthOfField.focusDistance.value = 5.65f;
+            depthOfField.aperture.value = 0.7f * apertureMod;
+          }
+          else
+          {
+            switch (SettingsModule.CameraZoom)
+            {
+              case SettingsSaveData.CameraZoomType.CLOSE:
+                depthOfField.focusDistance.value = 10.2f;
+                depthOfField.aperture.value = 1f * apertureMod;
+                break;
+              case SettingsSaveData.CameraZoomType.NORMAL:
+                depthOfField.focusDistance.value = 14.3f;
+                depthOfField.aperture.value = 0.5f * apertureMod;
+                break;
+              case SettingsSaveData.CameraZoomType.FAR:
+                depthOfField.focusDistance.value = 18.2f;
+                depthOfField.aperture.value = 0.35f * apertureMod;
+                break;
+            }
+          }
         }
+
         else
         {
-          switch (SettingsModule.CameraZoom)
-          {
-            case SettingsSaveData.CameraZoomType.CLOSE:
-              depthOfField.focusDistance.value = 10.2f;
-              depthOfField.aperture.value = 1f;
-              break;
-            case SettingsSaveData.CameraZoomType.NORMAL:
-              depthOfField.focusDistance.value = 14.3f;
-              depthOfField.aperture.value = 0.5f;
-              break;
-            case SettingsSaveData.CameraZoomType.FAR:
-              depthOfField.focusDistance.value = 18.2f;
-              depthOfField.aperture.value = 0.35f;
-              break;
-          }
+          depthOfField.enabled.value = false;
         }
       }
     }
@@ -855,6 +883,9 @@ public static class Settings
     public bool UseVsync = false;
     public bool UseDefaultTargetFramerate = true;
     public bool UseOrthographicCamera = true;
+
+    public int BloomAmount = 2;
+    public int DepthOfFieldAmount = 2;
 
     public enum CameraZoomType
     {

@@ -32,9 +32,6 @@ public class ActiveRagdoll
   // Color of the ragdoll
   public Color _Color;
 
-  // If > 0f, provide a speed boost in the forward direction (used for double knives)
-  float _forwardDashTimer;
-
   // What frame the hinge 'animations' are on
   float _movementIter, _movementIter2;
   public float _rotSpeed, _time_dead;
@@ -331,7 +328,7 @@ public class ActiveRagdoll
       if (_ItemL != null && _ItemL._twoHanded) { }
       else
       {
-        var spread_speed = 20f * dt;
+        var spread_speed = 20f * dt * (Time.timeScale < 0.75f ? 0.17f : 1f);
         if (_ItemL != null)
           if (_la_limit - _la_targetLimit != 0f)
           {
@@ -395,20 +392,6 @@ public class ActiveRagdoll
 
       // Only update if enabled
       if (!_CanReceiveInput) return;
-
-      // If double knives or bat/sword, move forward when swinging
-      if (_IsSwinging)
-      {
-        if ((_ItemL != null && (_ItemL._twoHanded || _ItemL._runWhileUse)) || (_ItemR != null && _ItemR._runWhileUse) /*||
-          (_ItemL != null && _ItemL._type == GameScript.ItemManager.Items.KNIFE && _ItemR != null && _ItemR._type == GameScript.ItemManager.Items.KNIFE)*/)
-        {
-          var amount = 1.2f;
-          var dis = new Vector3(_Controller.forward.x, 0f, _Controller.forward.z).normalized * PlayerScript.MOVESPEED * amount * Time.deltaTime;
-
-          var agent = _IsPlayer ? _PlayerScript._agent : _EnemyScript._agent;
-          agent.Move(dis);
-        }
-      }
 
       // Check hip
       if (_Hip.transform.position.y > 0f)
@@ -484,7 +467,7 @@ public class ActiveRagdoll
         dt = Time.unscaledDeltaTime;
       }
 
-      _Hip.MoveRotation(Quaternion.RotateTowards(_Hip.rotation, rot, dt * 14f * _rotSpeed * Mathf.Abs(Quaternion.Angle(_Hip.rotation, rot))));
+      _Hip.MoveRotation(Quaternion.RotateTowards(_Hip.rotation, rot, dt * (Time.timeScale < 0.75f && _IsPlayer ? 4f : 14f) * _rotSpeed * Mathf.Abs(Quaternion.Angle(_Hip.rotation, rot))));
 
       // Use iter to move joints
       _movementIter += (_Distance.magnitude / 3f) * Time.deltaTime * 65f;
@@ -1025,7 +1008,7 @@ public class ActiveRagdoll
   public void BounceFromPosition(Vector3 position, float force)
   {
     var bounceForce = (MathC.Get2DVector(_Hip.position) - MathC.Get2DVector(position)).normalized * force;
-    _ForceGlobal += bounceForce;
+    _ForceGlobal = bounceForce;
   }
 
   //
@@ -1045,75 +1028,123 @@ public class ActiveRagdoll
   }
 
   // Handle body part noises
-  public static class BodyPart_Handler
+  public static class Rigidbody_Handler
   {
-    static List<System.Tuple<Rigidbody, ActiveRagdoll, float, float>> _Rbs;
+    static List<RigidbodyData> _Rbs;
+    struct RigidbodyData
+    {
+      public Rigidbody Rigidbody;
+      public RigidbodyType RigidbodyType;
+      public float MagnitudeOld;
+      public float LastSoundFX;
+    }
+
     static int _RbsIndex;
+
+    public enum RigidbodyType
+    {
+      BODY,
+      WOOD,
+    }
 
     //
     public static void Init()
     {
-      _Rbs = new List<System.Tuple<Rigidbody, ActiveRagdoll, float, float>>();
+      _Rbs = new List<RigidbodyData>();
     }
 
     //
     public static void Update()
     {
-      //Debug.Log(_Rbs.Count);
       // If no rbs, ignore
       if (_Rbs.Count == 0) return;
 
-      for (var u = 0; u < (int)Mathf.Clamp(3, 1, _Rbs.Count); u++)
+      for (var u = Mathf.Clamp(3, 1, _Rbs.Count) - 1; u >= 0; u--)
       {
 
         // Gather data
         var index = _RbsIndex++ % _Rbs.Count;
-        var rb_data = _Rbs[index];
-        var rag = rb_data.Item2;
+        var rbData = _Rbs[index];
 
         // Check for null and remove
-        if (rb_data.Item1 == null || rb_data.Item2 == null)
+        var rb = rbData.Rigidbody;
+        if (rb == null)
         {
-          //Debug.Log("removed");
           _Rbs.RemoveAt(index);
-          return;
+          continue;
         }
 
         //
-        var rb = rb_data.Item1;
         var mag = rb.velocity.magnitude;
-        var mag_old = rb_data.Item3;
-        var last_sound = rb_data.Item4;
-
-        //Debug.Log($"{mag_old} .. {mag} .. {rb.velocity}");
+        var mag_old = rbData.MagnitudeOld;
+        var lastSound = rbData.LastSoundFX;
+        var bodyType = rbData.RigidbodyType;
 
         //
-        var min = 4.5f;
-        var max = 0.8f;
+        var min = 3.5f;
         if (mag > mag_old && mag > min)
         {
-          _Rbs[index] = System.Tuple.Create(rb, rag, mag, last_sound);
-          return;
+          rbData.MagnitudeOld = mag;
+          rbData.LastSoundFX = lastSound;
+
+          _Rbs[index] = rbData;
+
+          //Debug.Log($"buildup: {rb.name} {mag_old} .. {mag}");
+          continue;
         }
 
         //
-        if (mag < (mag_old > 13f ? max * 2f : max) && Time.time - last_sound > 0.25f && mag_old > mag && mag_old > 1f)
+        if (Time.time - lastSound > 0.25f && mag_old > mag && mag_old > 0.5f)
         {
-          _Rbs[index] = System.Tuple.Create(rb, rag, mag, Time.time);
+          rbData.MagnitudeOld = mag;
+          rbData.LastSoundFX = Time.time;
+
+          _Rbs[index] = rbData;
 
           //Debug.Log($"sound: {rb.name} {mag_old} .. {mag}");
 
-          var soundName = mag_old > 13f ? "Thud_loud" : "Thud";
-          SfxManager.PlayAudioSourceSimple(rb.position, $"Ragdoll/{soundName}", 0.7f, 1.25f, SfxManager.AudioClass.NONE);
+          switch (bodyType)
+          {
 
-          //FunctionsC.PlayComplexParticleSystemAt(FunctionsC.ParticleSystemType.SMOKE_WHITE, rb.position);
+            case RigidbodyType.BODY:
+              var soundName = mag_old > 7f ? "Thud_loud" : "Thud";
+              SfxManager.PlayAudioSourceSimple(rb.position, $"Ragdoll/{soundName}", 0.7f, 1.25f, SfxManager.AudioClass.NONE);
+              break;
+            case RigidbodyType.WOOD:
+              soundName = mag_old > 6f ? "Wood_hard" : "Wood_soft";
+              SfxManager.PlayAudioSourceSimple(rb.position, $"Etc/{soundName}", 0.7f, 1.25f, SfxManager.AudioClass.NONE);
+              break;
+
+          }
+
         }
       }
     }
 
-    public static void AddListener(Rigidbody rb, ActiveRagdoll rag)
+    public static void AddListener(Rigidbody rb, RigidbodyType rigidbodyType)
     {
-      _Rbs.Add(System.Tuple.Create(rb, rag, 0f, 0f));
+      _Rbs.Add(
+        new RigidbodyData()
+        {
+          Rigidbody = rb,
+          RigidbodyType = rigidbodyType,
+
+          MagnitudeOld = 0f,
+          LastSoundFX = 0f
+        });
+    }
+
+    public static void ApplyExplosion(Vector3 position, float radius)
+    {
+      foreach (var bodyData in _Rbs)
+      {
+        if (bodyData.RigidbodyType == RigidbodyType.BODY) continue;
+
+        var dir = MathC.Get2DVector(bodyData.Rigidbody.position - position);
+        var dist = dir.magnitude;
+        if (dist > radius) continue;
+        bodyData.Rigidbody.AddForce(dir.normalized * 3000f);
+      }
     }
 
     public static void Reset()
@@ -1124,7 +1155,7 @@ public class ActiveRagdoll
 
   void AddPartListener(Rigidbody rb)
   {
-    BodyPart_Handler.AddListener(rb, this);
+    Rigidbody_Handler.AddListener(rb, Rigidbody_Handler.RigidbodyType.BODY);
   }
 
   Coroutine _color_Coroutine;
@@ -1139,6 +1170,7 @@ public class ActiveRagdoll
     {
       Color startColor0 = mesh.sharedMaterials[0].color,
        startColor1 = mesh.sharedMaterials[1].color;
+
       SetLerpAmount(ref mesh, c, 1f, startColor0, startColor1);
       _PlayerScript?.ChangeRingColor(c);
       return;
@@ -1159,17 +1191,23 @@ public class ActiveRagdoll
   }
   IEnumerator LerpColor(SkinnedMeshRenderer mesh, Color c, float lerpAmount)
   {
-    float timer = 0f, waitTime = 0.05f;
+    var timer = 0f;
+    var timeLast = Time.time;
+
     // Skin
     Color startColor0 = mesh.sharedMaterials[1].color,
-    // Clothes
+      // Clothes
       startColor1 = mesh.sharedMaterials[0].color;
+
     while (true)
     {
-      yield return new WaitForSeconds(waitTime);
+      yield return new WaitForSecondsRealtime(0.02f);
       if (_Hip == null) break;
-      timer = Mathf.Clamp(timer + 0.07f, 0f, lerpAmount);
+
+      timer = Mathf.Clamp(timer + (Time.time - timeLast) * 1f, 0f, lerpAmount);
+      timeLast = Time.time;
       SetLerpAmount(ref mesh, c, timer / lerpAmount, startColor0, startColor1);
+
       if (timer == lerpAmount) break;
     }
     _color_Coroutine = null;
@@ -1491,25 +1529,33 @@ public class ActiveRagdoll
       var saveParent = system.transform.parent;
       system.transform.parent = system.transform.parent.parent;
       system.transform.position = _Hip.position;
+
       EnemyScript.CheckSound(system.transform.position, EnemyScript.Loudness.SUPERSOFT);
       yield return new WaitForSeconds(0.05f);
+
       var emission2 = system.emission;
       emission2.enabled = true;
       system.Play();
       var time = system.main.duration;
+      var timeLast = Time.time;
       while (time > 0f)
       {
-        time -= 0.05f;
-        yield return new WaitForSeconds(0.05f);
+        time -= (Time.time - timeLast) * 1f;
+        timeLast = Time.time;
+
+        yield return new WaitForSecondsRealtime(0.02f);
         if (_Hip == null) break;
+
         system.transform.position = _Hip.position;
       }
+
       system.transform.parent = saveParent;
       if (Time.time - GameScript._LevelStartTime < 1f)
       {
         system.Stop();
         system.Clear();
       }
+
       //if(this != null)
       //  EnemyScript.CheckSound(system.transform.position, EnemyScript.Loudness.SOFT);
     }
@@ -1787,11 +1833,11 @@ public class ActiveRagdoll
     var joints = GetJoints();
     if (toggle)
     {
-      _saveRagdollState = new System.Tuple<bool, bool>[joints.Length];
+      _saveRagdollState = new Tuple<bool, bool>[joints.Length];
       for (var i = 0; i < joints.Length; i++)
       {
         if (joints[i] == null) continue;
-        _saveRagdollState[i] = new System.Tuple<bool, bool>(joints[i].useSpring, joints[i].useLimits);
+        _saveRagdollState[i] = new Tuple<bool, bool>(joints[i].useSpring, joints[i].useLimits);
         joints[i].useSpring = false;
         joints[i].useLimits = true;
       }
@@ -1813,9 +1859,7 @@ public class ActiveRagdoll
   {
     _ForceGlobal += MathC.Get2DVector(dir) * force;
     if (_grappler != null)
-    {
       _grappler._ForceGlobal += MathC.Get2DVector(dir) * force;
-    }
   }
   public void RecoilSimple(float force)
   {
@@ -2231,7 +2275,7 @@ public class ActiveRagdoll
   {
     s_ID = 0;
     s_Ragdolls = null;
-    BodyPart_Handler.Reset();
+    Rigidbody_Handler.Reset();
     Jobs_Clean();
     SfxManager.Reset();
     UtilityScript.Reset();

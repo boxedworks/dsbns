@@ -120,6 +120,8 @@ public class ItemScript : MonoBehaviour
   Vector3 _save_rot_lower, _save_rot_upper,
     _original_rot_lower, _original_rot_upper;
 
+  Vector3 _swordLerp0, _swordLerpDesired0, _swordLerp1, _swordLerpDesired1;
+
   // Audio
   public AudioClip[] _sfx_clip;
   public float[] _sfx_volume;
@@ -707,14 +709,27 @@ public class ItemScript : MonoBehaviour
           break;
 
         case ItemType.SWORD:
+
+          _swordLerpDesired0 = swinging || _meleeComplexResetTrigger ? new Vector3(70f, 250f, 0f) : new Vector3(0f, 0f, 0f);
+          _swordLerpDesired1 = swinging || _meleeComplexResetTrigger ? new Vector3(40f, 0f, 0f) : new Vector3(0f, 0f, 0f);
+
+          _swordLerp0 += (_swordLerpDesired0 - _swordLerp0) * Time.deltaTime * 50f;
+          _swordLerp1 += (_swordLerpDesired1 - _swordLerp1) * Time.deltaTime * 50f;
+
           SetRotationLocal(
             _arm_upper,
             Vector3.Lerp(
-              _save_rot_upper + (swinging || _meleeComplexResetTrigger ? new Vector3(70f, 250f, 0f) : new Vector3(0f, 0f, 0f)),
+              _save_rot_upper + _swordLerp0,
               _save_rot_upper + (swingingRelease ? new Vector3(70f, 250f, 0f) : new Vector3(-20f, -10f, 0f)),
               _meleeLerper
           ));
-          SetRotationLocal(_arm_lower, Vector3.Lerp(_save_rot_lower, _save_rot_upper + (swinging || _meleeComplexResetTrigger ? new Vector3(40f, 0f, 0f) : new Vector3(0f, 0f, 0f)), _meleeLerper));
+          SetRotationLocal(
+            _arm_lower,
+            Vector3.Lerp(
+              _save_rot_lower,
+              _save_rot_upper + _swordLerp1,
+              _meleeLerper
+          ));
           break;
       }
     }
@@ -999,7 +1014,23 @@ public class ItemScript : MonoBehaviour
           if (_fireMode == FireMode.SEMI) { _triggerDown = false; }
           Local_Use();
         }
-        if (_melee) _IsSwinging = true;
+        if (_melee)
+        {
+
+          switch (_type)
+          {
+            case ItemType.SWORD:
+            case ItemType.BAT:
+              _ragdoll.RecoilSimple(_downTimeSave > 1f ? -2.1f : -1.75f);
+              break;
+            case ItemType.KNIFE:
+            case ItemType.AXE:
+              _ragdoll.RecoilSimple(-1f);
+              break;
+          }
+
+          _IsSwinging = true;
+        }
       }
 
       // Check buffer use

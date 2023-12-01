@@ -2,11 +2,6 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-using System.Linq;
-using UnityEngine.Tilemaps;
-using UnityEditor.Experimental.GraphView;
-using UnityEditor.Presets;
-
 public class GameScript : MonoBehaviour
 {
   //
@@ -55,6 +50,8 @@ public class GameScript : MonoBehaviour
   public void OnApplicationQuit()
   {
 
+    Settings.SettingsSaveData.Save();
+
     //if (!Application.isEditor) System.Diagnostics.Process.GetCurrentProcess().Kill();
     Application.Quit();
   }
@@ -75,7 +72,7 @@ public class GameScript : MonoBehaviour
     SURVIVAL,
     CHALLENGE
   }
-  public static GameModes _GameMode;
+  public static GameModes s_GameMode;
 
   public static int s_CrownPlayer, s_CrownEnemy;
 
@@ -148,7 +145,7 @@ public class GameScript : MonoBehaviour
     SteamManager.Workshop_GetUserItems(true);
 #endif
 
-    ActiveRagdoll.BodyPart_Handler.Init();
+    ActiveRagdoll.Rigidbody_Handler.Init();
 
     GameResources._Camera_Main.farClipPlane = 10f;
 
@@ -1170,7 +1167,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
           var ragdoll = ActiveRagdoll.GetRagdoll(hit.collider.gameObject);
           if (ragdoll == null || ragdoll._IsPlayer) return;
 
-          enemy_ragdoll._ForceGlobal += (enemy_ragdoll._Hip.transform.right * (enemy_next._strafeRight ? 1f : -1f)) * Time.deltaTime * 3f;
+          enemy_ragdoll._ForceGlobal += enemy_ragdoll._Hip.transform.right * (enemy_next._strafeRight ? 1f : -1f) * Time.deltaTime * 3f;
           return;
         }
 
@@ -1454,6 +1451,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
 
   // Update is called once per frame
   public static bool s_Backrooms;
+  public static bool s_InteractableObjects { get { return s_GameMode == GameModes.CLASSIC; } }
   public Light _GlobalLight;
   void Update()
   {
@@ -1480,9 +1478,9 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       if (ControllerManager.GetKey(ControllerManager.Key.B) && ControllerManager.GetKey(ControllerManager.Key.R, ControllerManager.InputMode.HOLD))
       {
         s_Backrooms = true;
-        NextLevel(
-"11 10 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 playerspawn_-29_-51.4_rot_0_ e_-42.9_-32.9_li_knife_w_-42.9_-32.9_l_-43.4_-32.3_canmove_false_canhear_false_ e_-29_-41.8_li_pistol_w_-29_-41.8_l_-29_-40.9_canmove_true_canhear_true_ p_-29.25_-32.75_end_ +unnamed loaded map"
-);
+        var clipboardData = ClipboardHelper.clipBoard;
+        var levelData = clipboardData.EndsWith("loaded map") ? clipboardData : "11 10 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 playerspawn_-29_-51.4_rot_0_ e_-42.9_-32.9_li_knife_w_-42.9_-32.9_l_-43.4_-32.3_canmove_false_canhear_false_ e_-29_-41.8_li_pistol_w_-29_-41.8_l_-29_-40.9_canmove_true_canhear_true_ p_-29.25_-32.75_end_ +unnamed loaded map";
+        NextLevel(levelData);
         GameObject.Find("GlobalLight").GetComponent<Light>().enabled = true;
       }
     }
@@ -1565,7 +1563,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       if (!_Paused)
       {
         // Update ragdoll body sounds
-        ActiveRagdoll.BodyPart_Handler.Update();
+        ActiveRagdoll.Rigidbody_Handler.Update();
 
         // Check thunder sfx
         if (SceneThemes._Theme._rain)
@@ -1828,7 +1826,10 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         if (ControllerManager.GetKey(ControllerManager.Key.F3))
         {
           SettingsModule.UseOrthographicCamera = !SettingsModule.UseOrthographicCamera;
+          if (SettingsModule.CameraZoom == Settings.SettingsSaveData.CameraZoomType.AUTO)
+            SettingsModule.CameraZoom = Settings.SettingsSaveData.CameraZoomType.NORMAL;
           Settings.SetPostProcessing();
+          PlayerScript.ResetCamera();
         }
 
         if (_EditorEnabled)
@@ -1863,10 +1864,6 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     TileManager.ReloadMap();
     return true;
   }
-
-  float[] _controlAxis = new float[4];
-  static bool _checkmouse;
-  static Vector2 _lastmousepos;
 
   // Assists with controls
   public class PlayerProfile
@@ -1914,7 +1911,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       set
       {
         if (Levels._HardcodedLoadout != null && !_EditorTesting) return;
-        if (_GameMode != GameModes.CLASSIC) return;
+        if (s_GameMode != GameModes.CLASSIC) return;
         if (_Player?._ragdoll?._grappling ?? false) return;
 
         var iter = ItemManager.Loadout._Loadouts.Length;
@@ -1926,12 +1923,16 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         {
           profileSettings.LoadoutIndex = (profileSettings.LoadoutIndex + difference) % ItemManager.Loadout._Loadouts.Length;
           if (profileSettings.LoadoutIndex < 0) profileSettings.LoadoutIndex = ItemManager.Loadout._Loadouts.Length + profileSettings.LoadoutIndex;
+          SettingsModule.UpdatePlayerProfile(_Id, profileSettings);
+
           if (!_equipment.IsEmpty()) break;
           iter--;
         }
-        if (iter == -1 && _equipment.IsEmpty()) profileSettings.LoadoutIndex = 0;
-
-        SettingsModule.UpdatePlayerProfile(_Id, profileSettings);
+        if (iter == -1 && _equipment.IsEmpty())
+        {
+          profileSettings.LoadoutIndex = 0;
+          SettingsModule.UpdatePlayerProfile(_Id, profileSettings);
+        }
 
         UpdateIcons();
 
@@ -1962,7 +1963,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         if (Levels._HardcodedLoadout != null && !GameScript._EditorTesting) return Levels._HardcodedLoadout;
 
         // SURVIVAL mode
-        if (_GameMode == GameModes.SURVIVAL && SurvivalMode._PlayerLoadouts != null) return SurvivalMode._PlayerLoadouts[_Id];
+        if (s_GameMode == GameModes.SURVIVAL && SurvivalMode._PlayerLoadouts != null) return SurvivalMode._PlayerLoadouts[_Id];
 
         // CLASSIC mode
         return ItemManager.Loadout._Loadouts[_LoadoutIndex];
@@ -3233,11 +3234,11 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     {
       Time.timeScale = 1f;
       // Check player amount change
-      if (_GameMode != GameModes.SURVIVAL)
+      if (s_GameMode != GameModes.SURVIVAL)
         if (PlayerScript.s_Players != null && Settings._NumberPlayers != PlayerScript.s_Players.Count) TileManager.ReloadMap();
       TileManager._Text_LevelNum.gameObject.SetActive(true);
       TileManager._Text_LevelTimer.gameObject.SetActive(true);
-      if (_GameMode == GameModes.CLASSIC && !Levels._LevelPack_Playing && !_EditorTesting)
+      if (s_GameMode == GameModes.CLASSIC && !Levels._LevelPack_Playing && !_EditorTesting)
         TileManager._Text_LevelTimer_Best.gameObject.SetActive(true);
       TileManager._Text_GameOver.gameObject.SetActive(true);
       TileManager._Text_Money.gameObject.SetActive(true);
@@ -3466,7 +3467,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       }
 
       // Check mode-specific unlocks
-      if (_GameMode == GameModes.CLASSIC)
+      if (s_GameMode == GameModes.CLASSIC)
       {
         // Award shop point
         //Shop._AvailablePoints++;
@@ -3688,7 +3689,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
 
   public static bool IsSurvival()
   {
-    return _GameMode == GameModes.SURVIVAL;
+    return s_GameMode == GameModes.SURVIVAL;
   }
 
   // When called, the player can exit / complete the level

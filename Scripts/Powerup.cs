@@ -31,6 +31,7 @@ public class Powerup : MonoBehaviour
   private void Start()
   {
     //Init();
+    transform.position = new Vector3(transform.position.x, 0f, transform.position.z);
   }
 
   // Use this for initialization

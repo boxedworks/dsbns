@@ -190,7 +190,7 @@ public class EnemyScript : MonoBehaviour
   Vector3 _lr_pos0, _lr_pos1;
 
   public bool _IsZombie { get { return _survivalAttributes != null; } }
-  public bool _IsZombieReal { get { return _IsZombie && (GameScript._GameMode == GameScript.GameModes.SURVIVAL || _isZombieRealOverride); } }
+  public bool _IsZombieReal { get { return _IsZombie && (GameScript.s_GameMode == GameScript.GameModes.SURVIVAL || _isZombieRealOverride); } }
   bool _isZombieRealOverride;
 
   public class SurvivalAttributes
@@ -367,7 +367,7 @@ public class EnemyScript : MonoBehaviour
     // Check null
     if (_Enemies_alive == null || _Enemies_alive.Count == 0 || GameScript._EditorEnabled) return;
     if (Menu2._InMenus || TileManager._LoadingMap || PlayerScript.s_Players == null || PlayerScript.s_Players.Count == 0) return;
-    if (GameScript._GameMode != GameScript.GameModes.SURVIVAL)
+    if (GameScript.s_GameMode != GameScript.GameModes.SURVIVAL)
     {
       // Set up handler
       var count = (_Enemies_alive.Count) * SpherecastHandler._NumSpherecasts;
@@ -1363,15 +1363,6 @@ public class EnemyScript : MonoBehaviour
     return false;
   }
 
-  /*Coroutine _delayedAbsorb;
-  IEnumerator DelayedAbsorb(EnemyScript s, float waitTime, RaycastHit h)
-  {
-    yield return new WaitForSeconds(waitTime);
-    if (!_ragdoll._dead)
-      AbsorbInfo(s);
-    _delayedAbsorb = null;
-  }*/
-
   #region Patrol Functions
   void SetCurrentPatrolPoint()
   {
@@ -1939,7 +1930,7 @@ public class EnemyScript : MonoBehaviour
         PlayerScript._SlowmoTimer += 1.3f;
 
       // Check mode
-      if (GameScript._GameMode == GameScript.GameModes.SURVIVAL)
+      if (GameScript.s_GameMode == GameScript.GameModes.SURVIVAL)
       {
         if (source._IsPlayer)
           GameScript.SurvivalMode.GivePoints(source._PlayerScript._Id, 5 * GameScript.SurvivalMode._Wave, true);
@@ -1951,7 +1942,7 @@ public class EnemyScript : MonoBehaviour
         // Level timer
         TileManager._Level_Complete = true;
 
-        if (GameScript._GameMode == GameScript.GameModes.CLASSIC && !GameScript._EditorTesting && !Levels._LevelPack_Playing)
+        if (GameScript.s_GameMode == GameScript.GameModes.CLASSIC && !GameScript._EditorTesting && !Levels._LevelPack_Playing)
         {
 
           var levelComplete = Levels._CurrentLevelCollectionIndex > 1 ? false : LevelModule.LevelData[Levels._CurrentLevelCollectionIndex].Data[Levels._CurrentLevelIndex].Completed;
@@ -2473,7 +2464,7 @@ public class EnemyScript : MonoBehaviour
     }
 
     // Increment survival score
-    if (GameScript._GameMode == GameScript.GameModes.SURVIVAL && source._IsPlayer)
+    if (GameScript.s_GameMode == GameScript.GameModes.SURVIVAL && source._IsPlayer)
       GameScript.SurvivalMode.IncrementScore(source._PlayerScript._Id);
   }
 

@@ -979,7 +979,7 @@ public class Menu2
       var after_lines = "";
       while (afterNewLineCount-- > 0) after_lines += "\n";
       _Menus[type].AddComponent(lines)
-        .AddComponent(Shop.Tip.GetTip(GameScript._GameMode) + after_lines)
+        .AddComponent(Shop.Tip.GetTip(GameScript.s_GameMode) + after_lines)
         .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
         {
           component._visible = SettingsModule.ShowTips;
@@ -993,7 +993,7 @@ public class Menu2
         if (!SettingsModule.ShowTips) return;
         var last_c = _Menus[type]._menuComponents.Where(component => component.GetDisplayText(false).Contains("*tip")).Single();
         var afterNewLineCount = System.Text.RegularExpressions.Regex.Matches(last_c.GetDisplayText(false), "\n").Count;
-        var tip = Shop.Tip.GetTip(GameScript._GameMode);
+        var tip = Shop.Tip.GetTip(GameScript.s_GameMode);
 
         // Check if tip has buttons to display
         if (tip.Contains("&"))
@@ -1335,7 +1335,7 @@ public class Menu2
 
       // Add local levels
       Levels._CurrentLevelCollectionIndex = 3;
-      GameScript._GameMode = GameScript.GameModes.CLASSIC;
+      GameScript.s_GameMode = GameScript.GameModes.CLASSIC;
 
       var leveldata = Levels._LevelPack_SelectingLevelsFromPack ? Levels._LevelPack_Current._levelData : Levels._CurrentLevelCollection._levelData;
 
@@ -2347,7 +2347,7 @@ public class Menu2
 
         // Set current level collection to editor levels
         Levels._CurrentLevelCollectionIndex = 3;
-        GameScript._GameMode = GameScript.GameModes.CLASSIC;
+        GameScript.s_GameMode = GameScript.GameModes.CLASSIC;
 
         // Set up loadout editing
         if (Levels._HardcodedLoadout == null)
@@ -3359,6 +3359,12 @@ public class Menu2
         if (component._collider.transform.childCount == 0)
           SpawnControlUI(component, FunctionsC.Control.A);
       })
+    .AddComponent($"{string.Format(format_controls, "flip table:", "", "f")} \n", MenuComponent.ComponentType.BUTTON_SIMPLE)
+      .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+      {
+        if (component._collider.transform.childCount == 0)
+          SpawnControlUI(component, FunctionsC.Control.B);
+      })
     .AddComponent($"{string.Format(format_controls, "swap weapons' hand:", "", "g")} \n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
       .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
       {
@@ -3420,7 +3426,7 @@ public class Menu2
       })
     .AddComponent("\n")
     .AddComponent($"\n<color={_COLOR_GRAY}>mode - </color><color=yellow>SURVIVAL</color>\n")
-        .AddComponent($"{string.Format(format_controls, "purchase (auto):", "", "f")} \n", MenuComponent.ComponentType.BUTTON_SIMPLE)
+    .AddComponent($"{string.Format(format_controls, "purchase (auto):", "", "f")} \n", MenuComponent.ComponentType.BUTTON_SIMPLE)
       .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
       {
         if (component._collider.transform.childCount == 0)
@@ -3471,7 +3477,7 @@ public class Menu2
     .AddComponent(string.Format(format_mode, "classic", "hand-placed enemies, choose loadouts"), MenuComponent.ComponentType.BUTTON_SIMPLE)
       .AddEvent((MenuComponent component) =>
       {
-        GameScript._GameMode = GameScript.GameModes.CLASSIC;
+        GameScript.s_GameMode = GameScript.GameModes.CLASSIC;
         Levels._CurrentLevelCollectionIndex = Settings._DIFFICULTY;
         Settings.OnGamemodeChanged(Settings.GamemodeChange.CLASSIC);
 
@@ -3502,7 +3508,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
       .AddEvent((MenuComponent component) =>
       {
         Levels._CurrentLevelCollectionIndex = 2;
-        GameScript._GameMode = GameScript.GameModes.SURVIVAL;
+        GameScript.s_GameMode = GameScript.GameModes.SURVIVAL;
         CommonEvents._SwitchMenu(MenuType.GAMETYPE_SURVIVAL);
 
         Settings.OnGamemodeChanged(Settings.GamemodeChange.SURVIVAL);
@@ -3531,13 +3537,13 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
     var levels_per_dir = 12;
     void SpawnMenu_Levels()
     {
-      var format_subdirs = GameScript._GameMode == GameScript.GameModes.CLASSIC ? "{0,-7}{1,15}{2,15}{3,33}" : "{0,-20}{1,20}{2,40}";
+      var format_subdirs = GameScript.s_GameMode == GameScript.GameModes.CLASSIC ? "{0,-7}{1,15}{2,15}{3,33}" : "{0,-20}{1,20}{2,40}";
       // Create new menu
       var m = new Menu2(MenuType.LEVELS)
       {
 
       }
-      .AddComponent(GameScript._GameMode == GameScript.GameModes.CLASSIC ?
+      .AddComponent(GameScript.s_GameMode == GameScript.GameModes.CLASSIC ?
           string.Format($"<color={_COLOR_GRAY}>{format_subdirs}</color>", "levels", "rank", "", "") + "\n\n"
         :
           string.Format($"<color={_COLOR_GRAY}>{format_subdirs}</color>", "levels", "highest wave", "") + "\n\n"
@@ -3559,24 +3565,24 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
       };
 
       // Set level directory options
-      if (GameScript._GameMode == GameScript.GameModes.CLASSIC)
+      if (GameScript.s_GameMode == GameScript.GameModes.CLASSIC)
       {
         dirs = Mathf.CeilToInt((float)Levels._CurrentLevelCollection._levelData.Length / levels_per_dir);
       }
-      else if (GameScript._GameMode == GameScript.GameModes.CHALLENGE || GameScript._GameMode == GameScript.GameModes.SURVIVAL)
+      else if (GameScript.s_GameMode == GameScript.GameModes.CHALLENGE || GameScript.s_GameMode == GameScript.GameModes.SURVIVAL)
         dirs = Levels._CurrentLevelCollection._levelData.Length;
 
       for (var i = 0; i < dirs; i++)
       {
         var wave = "-";
         var rank_lowest = "";
-        if (GameScript._GameMode == GameScript.GameModes.SURVIVAL)
+        if (GameScript.s_GameMode == GameScript.GameModes.SURVIVAL)
         {
           wave = LevelModule.GetHighestSurvivalWave(i) + "";
           if (wave == "0")
             wave = "-";
         }
-        else if (GameScript._GameMode == GameScript.GameModes.CLASSIC)
+        else if (GameScript.s_GameMode == GameScript.GameModes.CLASSIC)
         {
           // Get lowest rank from all levels in dir
           for (var u = i == 0 ? 1 : 0; u < 12; u++)
@@ -3601,7 +3607,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
         }
 
         var display_text =
-          GameScript._GameMode == GameScript.GameModes.CLASSIC ?
+          GameScript.s_GameMode == GameScript.GameModes.CLASSIC ?
             string.Format(format_subdirs, $"\\dir{i}", $"{rank_lowest}    ", "", "") + '\n'
           :
             string.Format(format_subdirs, $"\\dir{i}", $"{wave}    ", "") + '\n';
@@ -3623,7 +3629,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
           .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
           {
             // Obscur dir if first level not unlocked
-            if (GameScript._GameMode != GameScript.GameModes.SURVIVAL)
+            if (GameScript.s_GameMode != GameScript.GameModes.SURVIVAL)
             {
               var first_level_iter = component._buttonIndex * levels_per_dir;
               if (first_level_iter > 0 && !Levels.LevelCompleted(first_level_iter - 1))
@@ -3652,7 +3658,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
             component._obscured = false;
 
             // Load CLASSIC levels
-            if (GameScript._GameMode == GameScript.GameModes.CLASSIC)
+            if (GameScript.s_GameMode == GameScript.GameModes.CLASSIC)
             {
               // Update dropdown data
               var selections = new List<string>();
@@ -3789,7 +3795,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
             }
 
             // CHALLENGE levels; WIP
-            else if (GameScript._GameMode == GameScript.GameModes.CHALLENGE)
+            else if (GameScript.s_GameMode == GameScript.GameModes.CHALLENGE)
             {
               // Update dropdown data
               var prompt = $"=== {string.Format(format_subdirs, "level", "time", "preview")}\n\n";
@@ -3814,7 +3820,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
             }
 
             // SURVIVAL
-            else if (GameScript._GameMode == GameScript.GameModes.SURVIVAL)
+            else if (GameScript.s_GameMode == GameScript.GameModes.SURVIVAL)
             {
               // Update dropdown data
               var prompt = $"=== {string.Format(format_subdirs, "", "", "")}\n\n";
@@ -3836,7 +3842,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
           });
       }
       // Add 'level settings' if CLASSIC mode
-      if (GameScript._GameMode == GameScript.GameModes.CLASSIC)
+      if (GameScript.s_GameMode == GameScript.GameModes.CLASSIC)
       {
         m.AddComponent($"\n<color={_COLOR_GRAY}>level settings</color>\n\n")
         .AddComponent("difficulty\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
@@ -3856,7 +3862,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
             void Local_SetDifficulty(int difficulty)
             {
               Settings._DIFFICULTY = difficulty;
-              Levels._CurrentLevelCollectionIndex = (GameScript._GameMode == GameScript.GameModes.SURVIVAL ? 2 : 0 + difficulty);
+              Levels._CurrentLevelCollectionIndex = (GameScript.s_GameMode == GameScript.GameModes.SURVIVAL ? 2 : 0 + difficulty);
               _SaveMenuDir = -1;
               _CanRender = false;
               Levels.BufferLevelTimeDatas();
@@ -3909,7 +3915,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
       {
         _SaveMenuDir = -1;
         _SaveLevelSelected = -1;
-        CommonEvents._SwitchMenu(GameScript._GameMode == GameScript.GameModes.CLASSIC ? MenuType.GAMETYPE_CLASSIC : MenuType.GAMETYPE_SURVIVAL);
+        CommonEvents._SwitchMenu(GameScript.s_GameMode == GameScript.GameModes.CLASSIC ? MenuType.GAMETYPE_CLASSIC : MenuType.GAMETYPE_SURVIVAL);
       });
 
       // Destroy map preview on dropdown removed
@@ -5236,7 +5242,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
           });
       }
 
-      else if (GameScript._GameMode != GameScript.GameModes.SURVIVAL)
+      else if (GameScript.s_GameMode != GameScript.GameModes.SURVIVAL)
       {
         // Switch to store
         mPause.AddComponent("shop\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
@@ -5417,8 +5423,8 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
 
       // Add pause menu stats (?)
       var format_stats = "=<color={0}>{1,-15}</color>{2,-11}{3,-11}{4,-11}{5,-11}\n";
-      mPause.AddComponent((GameScript._GameMode == GameScript.GameModes.SURVIVAL ? "\n" : "") + $"\n\n<color={_COLOR_GRAY}>current session stats</color>\n")
-        .AddComponent(string.Format(format_stats, "white", "===", "kills", "deaths", Settings._NumberPlayers > 1 ? "teamkills" : "", GameScript._GameMode == GameScript.GameModes.SURVIVAL ? "points" : "") + "\n");      // Gather player stats
+      mPause.AddComponent((GameScript.s_GameMode == GameScript.GameModes.SURVIVAL ? "\n" : "") + $"\n\n<color={_COLOR_GRAY}>current session stats</color>\n")
+        .AddComponent(string.Format(format_stats, "white", "===", "kills", "deaths", Settings._NumberPlayers > 1 ? "teamkills" : "", GameScript.s_GameMode == GameScript.GameModes.SURVIVAL ? "points" : "") + "\n");      // Gather player stats
       for (var i = 0; i < 4; i++)
       {
         if (i >= Settings._NumberPlayers)
@@ -5427,7 +5433,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
           continue;
         }
         var stat = Stats._Stats[i];
-        mPause.AddComponent(string.Format(format_stats, GameScript.PlayerProfile.s_Profiles[i].GetColorName(), $"P{i + 1}/", $"{stat._kills}", $"{stat._deaths}", Settings._NumberPlayers > 1 ? $"{stat._teamkills}" : "", GameScript._GameMode == GameScript.GameModes.SURVIVAL ? $"{stat._points}" : ""));
+        mPause.AddComponent(string.Format(format_stats, GameScript.PlayerProfile.s_Profiles[i].GetColorName(), $"P{i + 1}/", $"{stat._kills}", $"{stat._deaths}", Settings._NumberPlayers > 1 ? $"{stat._teamkills}" : "", GameScript.s_GameMode == GameScript.GameModes.SURVIVAL ? $"{stat._points}" : ""));
       };
       // Set the onback function to be resume
       _Menus[MenuType.PAUSE]._onBack = () =>
@@ -5442,7 +5448,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
         SpawnMenu_Pause();
       };
       // Tip
-      ModifyMenu_TipComponents(MenuType.PAUSE, (GameScript._GameMode == GameScript.GameModes.SURVIVAL ? 5 : 3));
+      ModifyMenu_TipComponents(MenuType.PAUSE, (GameScript.s_GameMode == GameScript.GameModes.SURVIVAL ? 5 : 3));
       ModifyMenu_TipSwitch(MenuType.PAUSE);
     }
     SpawnMenu_Pause();
@@ -5822,6 +5828,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
         {
           // Set display text
           component.SetDisplayText(string.Format(format_options, "quality level:", Settings._QualityLevel + ""));
+
           // Set dropdown data
           var selections = new List<string>();
           var actions = new List<System.Action<MenuComponent>>();
@@ -5830,24 +5837,28 @@ go to the <color=yellow>SHOP</color> to buy something~1
           {
             // Add quality level
             selections.Add((i).ToString());
+
             // Add action to update quality
             actions.Add((MenuComponent component0) =>
               {
                 SettingsModule.Quality = component0._dropdownIndex;
               });
           }
+
           // Update dropdown data
           component.SetDropdownData("quality level\n*if having performance issues; change to a lower number than 5\n\n", selections, actions, selection_match);
         })
       // VSync
       .AddComponent("vsync\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
+
+        // Set display text
         .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
         {
-          // Set display text
           var selection = SettingsModule.UseVsync ? "on" : "off";
           component.SetDisplayText(string.Format(format_options, "vsync:", selection) + "\n");
         })
-        // Toggle blood
+
+        // Toggle
         .AddEvent((MenuComponent component) =>
         {
           SettingsModule.UseVsync = !SettingsModule.UseVsync;
@@ -5856,8 +5867,77 @@ go to the <color=yellow>SHOP</color> to buy something~1
         });
     }
 
-    // Music volume dropdown
+    // Post-processing
     menu_optionsSettings
+
+    // Bloom
+    .AddComponent("bloom\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
+      .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+      {
+        // Set display text
+        var selection_match = SettingsModule.BloomAmount == 0 ? "off" : (SettingsModule.BloomAmount == 1 ? "low" : "normal");
+        component.SetDisplayText(string.Format(format_options, "bloom:", selection_match));
+
+        // Set dropdown data
+        var selections = new List<string>();
+        var actions = new List<System.Action<MenuComponent>>();
+        for (var i = 0; i < 3; i++)
+        {
+          selections.Add(i switch
+          {
+            0 => "normal",
+            1 => "low",
+            2 => "off"
+          });
+          actions.Add((MenuComponent component0) =>
+          {
+            SettingsModule.BloomAmount = 2 - component0._dropdownIndex;
+            Settings.SetPostProcessing();
+            _CanRender = false;
+            RenderMenu();
+          });
+        }
+
+        component.SetDropdownData("bloom\n*makes bright things brighter\n\n", selections, actions, selection_match);
+      })
+
+    // DOF
+    .AddComponent("depth of field\n\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
+      .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+      {
+        // Set display text
+        var selection_match = SettingsModule.DepthOfFieldAmount switch
+        {
+          0 => "off",
+          1 => "low",
+          2 => "normal"
+        };
+        component.SetDisplayText(string.Format(format_options, "depth of field:", selection_match) + '\n');
+
+        // Set dropdown data
+        var selections = new List<string>();
+        var actions = new List<System.Action<MenuComponent>>();
+        for (var i = 0; i < 3; i++)
+        {
+          selections.Add(i switch
+          {
+            0 => "normal",
+            1 => "low",
+            2 => "off",
+          });
+          actions.Add((MenuComponent component0) =>
+          {
+            SettingsModule.DepthOfFieldAmount = 2 - component0._dropdownIndex;
+            Settings.SetPostProcessing();
+            _CanRender = false;
+            RenderMenu();
+          });
+        }
+
+        component.SetDropdownData("depth of field\n*adds a blur effect\n\n", selections, actions, selection_match);
+      })
+
+    // Music volume dropdown
     .AddComponent("music volume\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
       .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
       {
@@ -5982,6 +6062,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
 
               SettingsModule.CameraZoom = (Settings.SettingsSaveData.CameraZoomType)component0._dropdownIndex;
               Settings.SetPostProcessing();
+              PlayerScript.ResetCamera();
             });
           }
 
@@ -5991,6 +6072,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
             {
               SettingsModule.CameraZoom = (Settings.SettingsSaveData.CameraZoomType)component0._dropdownIndex;
               Settings.SetPostProcessing();
+              PlayerScript.ResetCamera();
             });
         }
 
@@ -6558,7 +6640,7 @@ a gampad if plugged in.~1
         // Normal pause
         else
         {
-          var switchMenu = _Menus[MenuType.PAUSE]._selectionIndex == (GameScript._GameMode == GameScript.GameModes.CLASSIC ? 6 : 3) ? MenuType.LEVELS : MenuType.MAIN;
+          var switchMenu = _Menus[MenuType.PAUSE]._selectionIndex == (GameScript.s_GameMode == GameScript.GameModes.CLASSIC ? 6 : 3) ? MenuType.LEVELS : MenuType.MAIN;
           CommonEvents._SwitchMenu(switchMenu);
           _InPause = false;
         }
@@ -7213,12 +7295,12 @@ about extras</color>
 -you <color={_COLOR_GRAY}>cannot get level rankings or $$</color> if you have any extras enabled (besides
  extras with ` next to them)
  "
-}, "neat", MenuType.EXTRAS, null, true, null, (MenuComponent m) =>
-{
-  _Menus[MenuType.EXTRAS]._selectionIndex = _Menus[MenuType.EXTRAS]._menuComponentsSelectable.Count - 3;
-  _CanRender = true;
-  RenderMenu();
-});
+    }, "neat", MenuType.EXTRAS, null, true, null, (MenuComponent m) =>
+    {
+      _Menus[MenuType.EXTRAS]._selectionIndex = _Menus[MenuType.EXTRAS]._menuComponentsSelectable.Count - 3;
+      _CanRender = true;
+      RenderMenu();
+    });
         })
         .AddEvent(EventType.ON_FOCUS, (MenuComponent c) =>
         {
@@ -7758,7 +7840,7 @@ about extras</color>
     if (Settings._NumberPlayers == 0)
       _Menus[MenuType.CONTROLLERS_CHANGED]._menuComponents[1].SetDisplayText("looks like your controller got unplugged! plug it back in to resume or\npress 'ok' to play with keyboard instead\n\n");
     else
-      if (GameScript._GameMode == GameScript.GameModes.SURVIVAL)
+      if (GameScript.s_GameMode == GameScript.GameModes.SURVIVAL)
       _Menus[MenuType.CONTROLLERS_CHANGED]._menuComponents[1].SetDisplayText("looks like a controller got unplugged! plug it back in to resume or\npress 'ok' to resume the game (you must manually restart in survival mode)\n\n");
     else
       _Menus[MenuType.CONTROLLERS_CHANGED]._menuComponents[1].SetDisplayText("looks like a controller got unplugged! plug it back in to resume or\npress 'ok' to restart the level and play with less people\n\n");

@@ -5,6 +5,12 @@ using UnityEngine;
 public class CandleScript : MonoBehaviour
 {
 
+  public static List<CandleScript> s_Candles;
+  public static void Reset()
+  {
+    s_Candles = new();
+  }
+
   Light _light;
   float _baseIntensity = 1.6f,
     _start_time;
@@ -27,16 +33,18 @@ public class CandleScript : MonoBehaviour
   // Use this for initialization
   void Start()
   {
+    s_Candles.Add(this);
+
     _light = transform.GetChild(2).GetComponent<Light>();
 
     _baseIntensity = _light.intensity;
     _light.intensity = 0f;
 
-    if (GameScript._GameMode != GameScript.GameModes.SURVIVAL)
+    if (GameScript.s_GameMode != GameScript.GameModes.SURVIVAL)
       _enabled = true;
 
-    _normalizedEnable = GameScript._GameMode == GameScript.GameModes.CLASSIC ? 1f : 0f;
-    if (GameScript._GameMode == GameScript.GameModes.SURVIVAL)
+    _normalizedEnable = GameScript.s_GameMode == GameScript.GameModes.CLASSIC ? 1f : 0f;
+    if (GameScript.s_GameMode == GameScript.GameModes.SURVIVAL)
       _light.range = 8.3f;
   }
 

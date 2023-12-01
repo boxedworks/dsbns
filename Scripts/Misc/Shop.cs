@@ -584,7 +584,7 @@ public static class Shop
   public static void Unlock(Unlocks unlock)
   {
     if (UnlockUnlocked(unlock)) return;
-    if (!_Unlocks_Descriptions.ContainsKey(unlock)) throw new Exception();
+    if (!_Unlocks_Descriptions.ContainsKey(unlock)) throw new Exception($"No description for unlock: {unlock}");
 
     var unlockDat = LevelModule.ShopUnlocksOrdered[unlock];
     unlockDat.UnlockValue = Settings.LevelSaveData.ShopUnlock.UnlockValueType.UNLOCKED;
@@ -719,7 +719,7 @@ public static class Shop
 
     public static void BuyPerk(int playerId, PerkType perk)
     {
-      if (GameScript._GameMode != GameScript.GameModes.SURVIVAL) return;
+      if (GameScript.s_GameMode != GameScript.GameModes.SURVIVAL) return;
 
       GameScript.PlayerProfile.s_Profiles[playerId]._equipment._perks.Add(perk);
       GameScript.PlayerProfile.s_Profiles[playerId].UpdatePerkIcons();
