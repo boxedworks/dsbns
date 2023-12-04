@@ -299,19 +299,6 @@ public class BulletScript : MonoBehaviour
         }
         if (TakeDamage(r)) return;
       }
-
-      else
-      {
-        var s = collider.transform?.parent.GetComponent<ExplosiveScript>() ?? null;
-        if (s != null)
-        {
-          s.Explode(_sourceDamageRagdoll);
-          if (++_hitAmount <= _penatrationAmount) return;
-        }
-
-        else
-          hit_wall = true;
-      }
     }
 
     else
@@ -323,7 +310,7 @@ public class BulletScript : MonoBehaviour
     if (hit_wall)
     {
 
-      Debug.Log(collider.gameObject.name);
+      //Debug.Log(collider.gameObject.name);
 
       var impactType = BulletImpactType.NORMAL;
       if (SceneThemes._Theme._name == "Hedge" || collider.gameObject.name == "BookcaseOpen_Bush" || collider.gameObject.name == "BookcaseBig_Bush")

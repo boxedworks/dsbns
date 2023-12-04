@@ -104,6 +104,7 @@ public class CustomObstacle : MonoBehaviour
       _BUYABLE_ITEM_TIERS.Add(3, new List<System.Tuple<GameScript.ItemManager.Items, int>>());
       _BUYABLE_ITEM_TIERS[3].Add(System.Tuple.Create(GameScript.ItemManager.Items.DOUBLE_PISTOL, 100));
       _BUYABLE_ITEM_TIERS[3].Add(System.Tuple.Create(GameScript.ItemManager.Items.SHOTGUN_PUMP, 150));
+      //_BUYABLE_ITEM_TIERS[3].Add(System.Tuple.Create(GameScript.ItemManager.Items.RAPIER, 75));
       _BUYABLE_ITEM_TIERS[3].Add(System.Tuple.Create(GameScript.ItemManager.Items.CROSSBOW, 85));
       _BUYABLE_ITEM_TIERS[3].Add(System.Tuple.Create(GameScript.ItemManager.Items.MACHINE_PISTOL, 75));
       _BUYABLE_ITEM_TIERS[3].Add(System.Tuple.Create(GameScript.ItemManager.Items.CHARGE_PISTOL, 85));
@@ -120,7 +121,7 @@ public class CustomObstacle : MonoBehaviour
       _BUYABLE_ITEM_TIERS[5].Add(System.Tuple.Create(GameScript.ItemManager.Items.AK47, 500));
       _BUYABLE_ITEM_TIERS[5].Add(System.Tuple.Create(GameScript.ItemManager.Items.M16, 400));
       _BUYABLE_ITEM_TIERS[5].Add(System.Tuple.Create(GameScript.ItemManager.Items.SHOTGUN_BURST, 450));
-      _BUYABLE_ITEM_TIERS[5].Add(System.Tuple.Create(GameScript.ItemManager.Items.SWORD, 350));
+      _BUYABLE_ITEM_TIERS[5].Add(System.Tuple.Create(GameScript.ItemManager.Items.KATANA, 350));
       _BUYABLE_ITEM_TIERS[5].Add(System.Tuple.Create(GameScript.ItemManager.Items.AXE, 200));
       _BUYABLE_ITEM_TIERS[5].Add(System.Tuple.Create(GameScript.ItemManager.Items.FLAMETHROWER, 450));
       _BUYABLE_ITEM_TIERS[5].Add(System.Tuple.Create(GameScript.ItemManager.Items.SNIPER, 300));
@@ -159,6 +160,7 @@ public class CustomObstacle : MonoBehaviour
       _BUYABLE_UTILITY_TIERS[1].Add(System.Tuple.Create(UtilityScript.UtilityType.C4, 40));
       _BUYABLE_UTILITY_TIERS[1].Add(System.Tuple.Create(UtilityScript.UtilityType.STOP_WATCH, 40));
       _BUYABLE_UTILITY_TIERS[1].Add(System.Tuple.Create(UtilityScript.UtilityType.MORTAR_STRIKE, 45));
+      _BUYABLE_UTILITY_TIERS[1].Add(System.Tuple.Create(UtilityScript.UtilityType.MOLOTOV, 65));
     }
 
   }

@@ -186,9 +186,6 @@ public class EnemyScript : MonoBehaviour
 
   public State _state;
 
-  LineRenderer _lr;
-  Vector3 _lr_pos0, _lr_pos1;
-
   public bool _IsZombie { get { return _survivalAttributes != null; } }
   public bool _IsZombieReal { get { return _IsZombie && (GameScript.s_GameMode == GameScript.GameModes.SURVIVAL || _isZombieRealOverride); } }
   bool _isZombieRealOverride;
@@ -295,27 +292,9 @@ public class EnemyScript : MonoBehaviour
           break;
       }
 
-    _lr = _ragdoll._head.gameObject.AddComponent<LineRenderer>();
-    _lr.startWidth = 0.3f;
-    _lr.endWidth = 0f;
-    Resources.UnloadAsset(_lr.sharedMaterial);
-    _lr.sharedMaterial = GameResources.s_Blood0.sharedMaterial;
-    _lr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-    var gradient = new Gradient();
-    gradient.SetKeys(
-        new GradientColorKey[] { new GradientColorKey(_ragdoll._Color, 0.0f), new GradientColorKey(Color.black, 1.0f) },
-        new GradientAlphaKey[] { new GradientAlphaKey(1f, 0.0f), new GradientAlphaKey(1f, 1.0f) }
-        );
-    _lr.colorGradient = gradient;
-    _lr_pos0 = _lr_pos1 = transform.position;
-    _lr.positionCount = 2;
-    _lr.SetPositions(new Vector3[] { _lr_pos0, _lr_pos1 });
-
     // Check zombie configs
     if (_IsZombie)
     {
-      // Disable line renderer
-      _lr.enabled = false;
 
       //
       if (_IsZombieReal)
@@ -436,22 +415,6 @@ public class EnemyScript : MonoBehaviour
     {
       if (!_IsZombieReal)
         _ragdoll.ToggleRaycasting(true);
-
-      if (_lr.enabled && _lr.positionCount > 1)
-      {
-        _lr_pos0 = _ragdoll._head.gameObject.transform.position;
-        _lr_pos1 = _lr_pos0 + _ragdoll._Hip.transform.forward * 3f;
-        var cPos1 = _lr.GetPosition(1);
-        cPos1 += (_lr_pos1 - cPos1) * Time.deltaTime * 5f;
-        var offset = -new Vector3(0f, 1f, 0f);
-        cPos1 = new Vector3(cPos1.x, _lr_pos0.y, cPos1.z);
-        if (Mathf.Abs((_lr_pos1 - _lr_pos0).magnitude) > 2f)
-        {
-          var dir = (cPos1 - _lr_pos0);
-          cPos1 = _lr_pos0 + dir.normalized * 2f;
-        }
-        _lr.SetPositions(new Vector3[] { _lr_pos0 + offset, cPos1 + offset });
-      }
     }
 
     if (!_agent.enabled)
@@ -716,7 +679,9 @@ public class EnemyScript : MonoBehaviour
 
               if (_targetInLOS)
               {
-                var dis = MathC.Get2DDistance(_ragdoll._Hip.position, _ragdollTarget._Hip.position);
+                var dir = MathC.Get2DVector(_ragdollTarget._Hip.position - _ragdoll._Hip.position);
+                var dis = dir.magnitude;
+                dir = dir.normalized;
 
                 // If can't move, has gun, and player gets too close, start to chase
                 if (!_canMove)
@@ -743,7 +708,7 @@ public class EnemyScript : MonoBehaviour
                 if (_ragdoll.HasGun())
                 {
                   if (_targetInFront)
-                    lookAtPos = new Vector3(_ragdollTarget._Hip.position.x, transform.position.y, _ragdollTarget._Hip.position.z);
+                    lookAtPos = new Vector3(_ragdollTarget._Hip.position.x, transform.position.y, _ragdollTarget._Hip.position.z) + dir;
                   else
                     lookAtPos = _lastKnownPos;
 
@@ -831,7 +796,7 @@ public class EnemyScript : MonoBehaviour
                     // Attack if close enough or pointed at target
                     else if (
                       _ragdoll.HasGun() ||
-                      (!_ragdoll.HasGun() && dis < (_itemLeft == GameScript.ItemManager.Items.GRENADE_HOLD ? 1f : _itemLeft == GameScript.ItemManager.Items.BAT ? 1.2f : (_IsZombieReal ? 0.6f : 1.8f)))
+                      (!_ragdoll.HasGun() && dis < (_itemLeft == GameScript.ItemManager.Items.GRENADE_HOLD ? 1f : _itemLeft == GameScript.ItemManager.Items.BAT ? 1.2f : (_IsZombieReal ? 0.6f : 2.1f)))
                       )
                     {
                       UseItem(dis < 1.4f);
@@ -1098,7 +1063,8 @@ public class EnemyScript : MonoBehaviour
     if (_ragdoll?._grappled ?? true) return;
 
     var forward = transform.forward;
-    transform.LookAt(lookAtPos == Vector3.zero ? new Vector3(_agent.steeringTarget.x, transform.position.y, _agent.steeringTarget.z) : lookAtPos);
+    if ((_ragdoll.HasMelee() && !_ragdoll._IsSwinging) || !_ragdoll.HasMelee())
+      transform.LookAt(lookAtPos == Vector3.zero ? new Vector3(_agent.steeringTarget.x, transform.position.y, _agent.steeringTarget.z) : lookAtPos);
     if (_IsZombie) return;
     var val = Mathf.Clamp(Mathf.Abs((transform.forward - forward).magnitude), 0f, 10f);
     if (val < 0.05f || val > 1f) val = 0f;
@@ -1857,10 +1823,6 @@ public class EnemyScript : MonoBehaviour
     }
 
     if (Time.time - _ragdoll._lastBubbleScriptTime < 0.4f) _ragdoll.DisplayText("");
-
-    // Remove line renderers
-    _lr.positionCount = 0;
-    _lr.SetPositions(new Vector3[] { });
 
     // Swap containers
     _Enemies_alive.Remove(this);

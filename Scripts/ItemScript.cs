@@ -33,7 +33,7 @@ public class ItemScript : MonoBehaviour
   int _customProjectileIter;
   float _customProjectileVelocityMod;
 
-  public bool _IsBulletDeflector { get { return _type == ItemType.FRYING_PAN || _type == ItemType.SWORD; } }
+  public bool _IsBulletDeflector { get { return _type == ItemType.FRYING_PAN || _type == ItemType.KATANA; } }
 
   // Custom components
   ParticleSystem[] _customParticles;
@@ -41,6 +41,8 @@ public class ItemScript : MonoBehaviour
 
   //
   protected bool _disableOnRagdollDeath;
+
+  bool _meleeStartSwinging;
 
   public int GetClipSize()
   {
@@ -467,8 +469,8 @@ public class ItemScript : MonoBehaviour
             return;
           }*/
 
-          if (_twoHanded)
-            _hitAnthing = true;
+          //if (_twoHanded)
+          _hitAnthing = true;
 
           if (!_hasHitEnemy && !raycastInfo._ragdoll._IsPlayer) _hasHitEnemy = true;
 
@@ -494,7 +496,7 @@ public class ItemScript : MonoBehaviour
           }
           else
           {
-            PlaySound(Audio.MELEE_HIT);
+            PlaySound(raycastInfo._ragdoll._IsEnemy && raycastInfo._ragdoll._EnemyScript.IsChaser() ? Audio.MELEE_HIT_METAL : Audio.MELEE_HIT);
             EnemyScript.CheckSound(_ragdoll._Hip.position, EnemyScript.Loudness.SUPERSOFT);
           }
 
@@ -673,7 +675,7 @@ public class ItemScript : MonoBehaviour
         {
           _meleeReleaseTimer = 0f;
 
-          if (_type == ItemType.SWORD)
+          if (_type == ItemType.KATANA)
             _meleeComplexResetTrigger = true;
         }
 
@@ -698,6 +700,7 @@ public class ItemScript : MonoBehaviour
       switch (_type)
       {
         case ItemType.KNIFE:
+        case ItemType.RAPIER:
           SetRotationLocal(_arm_upper, Vector3.Lerp(_save_rot_upper, _save_rot_upper + new Vector3(-60f, -130f * sideMod, -20f * sideMod), _meleeLerper));
           SetRotationLocal(_arm_lower, Vector3.Lerp(_save_rot_lower, _save_rot_lower + new Vector3(110f, 0f, 0f), _meleeLerper));
           break;
@@ -708,7 +711,7 @@ public class ItemScript : MonoBehaviour
           SetRotationLocal(_arm_lower, Vector3.Lerp(_save_rot_lower, _save_rot_lower + new Vector3(55f, 0f, 0f), _meleeLerper));
           break;
 
-        case ItemType.SWORD:
+        case ItemType.KATANA:
 
           _swordLerpDesired0 = swinging || _meleeComplexResetTrigger ? new Vector3(70f, 250f, 0f) : new Vector3(0f, 0f, 0f);
           _swordLerpDesired1 = swinging || _meleeComplexResetTrigger ? new Vector3(40f, 0f, 0f) : new Vector3(0f, 0f, 0f);
@@ -731,6 +734,14 @@ public class ItemScript : MonoBehaviour
               _meleeLerper
           ));
           break;
+      }
+
+      // Check melee dodge
+      if (!_meleeStartSwinging && _downTime != 0f && CanUse())
+      {
+        _meleeStartSwinging = true;
+
+        _ragdoll.OnMeleeStart();
       }
     }
 
@@ -981,7 +992,7 @@ public class ItemScript : MonoBehaviour
           {
             if (IsChargeWeapon()) _burstPerShot = _clip;
             _used = true;
-            _ragdoll._ForceRecoil += _shoot_forward_force * _clip;
+            _ragdoll.RecoilSimple(_shoot_forward_force * _clip);
           }
 
           // Melee animation
@@ -1019,13 +1030,14 @@ public class ItemScript : MonoBehaviour
 
           switch (_type)
           {
-            case ItemType.SWORD:
+            case ItemType.KATANA:
             case ItemType.BAT:
-              _ragdoll.RecoilSimple(_downTimeSave > 1f ? -2.1f : -1.75f);
+            case ItemType.RAPIER:
+              _ragdoll.RecoilSimple(_downTimeSave > 1f ? -2f : -1.65f);
               break;
             case ItemType.KNIFE:
             case ItemType.AXE:
-              _ragdoll.RecoilSimple(-1f);
+              _ragdoll.RecoilSimple(-0.8f);
               break;
           }
 
@@ -1186,6 +1198,7 @@ public class ItemScript : MonoBehaviour
     if (_melee)
     {
       _IsSwinging = false;
+      _meleeStartSwinging = false;
 
       // If hit anything and two handed, allow to use immediatly
       if ((_hitAnthing && _IsBulletDeflector) || _hitAnthingOverride)
@@ -1267,7 +1280,7 @@ public class ItemScript : MonoBehaviour
     _original_rot_upper = _arm_upper.localEulerAngles;
 
     // Set arm pos per weapon
-    if (_type == ItemType.SWORD || _type == ItemType.BAT)
+    if (_type == ItemType.KATANA || _type == ItemType.BAT)
     {
       AnimData.Init();
       AnimData._Bat._start.Set(_ragdoll, transform.GetChild(0));
@@ -1721,17 +1734,29 @@ public class ItemScript : MonoBehaviour
     var forward = _ragdoll._Controller.forward;
     forward.y = 0f;
     var ray = new Ray(
-      _ragdoll._Hip.position - _ragdoll._Hip.transform.forward * 0.1f + Vector3.up * 0.3f + add * 0.1f,
-      forward + -add
+      _ragdoll._Hip.position - _ragdoll._Hip.transform.forward * 0.1f + Vector3.up * 0.4f + add * 0.1f,
+      forward + -add * (_twoHanded ? 1f : 0.2f)
     );
     var hit = false;
     var canMeleePenatrate = _canMeleePenatrate && (_ragdoll._EnemyScript?._IsZombieReal ?? true);
     var maxDistance = (!_ragdoll._IsPlayer && _ragdoll._EnemyScript._IsZombieReal) ? 0.275f : 0.6f * (canMeleePenatrate ? 1.3f : 1f) * (_ragdoll._IsPlayer ? 1f : (canMeleePenatrate ? 0.75f : 0.65f));
-    if (Physics.SphereCast(ray, Mathf.Clamp(0.4f, 0.05f, maxDistance), out raycastInfo._raycastHit, maxDistance, GameResources._Layermask_Ragdoll))
+    if (_type == ItemType.RAPIER)
+      maxDistance *= 2.4f;
+    if (Physics.SphereCast(ray, Mathf.Clamp(0.22f, 0.05f, maxDistance), out raycastInfo._raycastHit, maxDistance, GameResources._Layermask_Ragdoll))
     {
-      raycastInfo._ragdoll = ActiveRagdoll.GetRagdoll(raycastInfo._raycastHit.collider.gameObject);
-      if (raycastInfo._ragdoll != null && !raycastInfo._ragdoll._IsDead)
-        hit = true;
+      //Debug.Log(raycastInfo._raycastHit.collider.gameObject.name);
+      //Debug.DrawLine(ray.origin, raycastInfo._raycastHit.point, Color.red, 5f);
+
+      if (raycastInfo._raycastHit.collider.gameObject.name == "Books")
+      {
+        FunctionsC.BookManager.ExplodeBooks(raycastInfo._raycastHit.collider, _ragdoll._Hip.position);
+      }
+      else
+      {
+        raycastInfo._ragdoll = ActiveRagdoll.GetRagdoll(raycastInfo._raycastHit.collider.gameObject);
+        if (raycastInfo._ragdoll != null && !raycastInfo._ragdoll._IsDead)
+          hit = true;
+      }
       raycastInfo._hitPoint = raycastInfo._raycastHit.point;
     }
 

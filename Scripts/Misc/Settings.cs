@@ -326,8 +326,11 @@ public static class Settings
         foreach (Shop.Unlocks unlock in System.Enum.GetValues(typeof(Shop.Unlocks)))
         {
 
-          var unlockUnlocked = PlayerPrefs.GetInt($"Shop_Unlocks_{unlock}", 0) == 1;
-          var unlockAvailable = PlayerPrefs.GetInt($"Shop_UnlocksAvailable_{unlock}", 0) == 1;
+          // Speacial case; changed name
+          var unlockString = unlock == Shop.Unlocks.ITEM_KATANA ? "ITEM_SWORD" : $"{unlock}";
+
+          var unlockUnlocked = PlayerPrefs.GetInt($"Shop_Unlocks_{unlockString}", 0) == 1;
+          var unlockAvailable = PlayerPrefs.GetInt($"Shop_UnlocksAvailable_{unlockString}", 0) == 1;
 
           LevelModule.ShopUnlocks.Add(new LevelSaveData.ShopUnlock()
           {
@@ -550,7 +553,7 @@ public static class Settings
           extras = null,
           loadoutDesc = "sword, shuriken x4",
           items = new GameScript.ItemManager.Items[] {
-            GameScript.ItemManager.Items.SWORD,
+            GameScript.ItemManager.Items.KATANA,
             },
           utilities = new UtilityScript.UtilityType[]{
             UtilityScript.UtilityType.SHURIKEN,

@@ -3881,7 +3881,10 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
             actions.Add((MenuComponent component0) =>
             {
               if (Settings._DIFFICULTY != 0)
+              {
                 Local_SetDifficulty(0);
+                Settings.LevelSaveData.Save();
+              }
             });
             actions_onCreated.Add((MenuComponent component0) => { });
             var difficultyUnlocked = Settings._DifficultyUnlocked > 0;
@@ -3895,7 +3898,10 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
               actions.Add((MenuComponent component0) =>
               {
                 if (Settings._DIFFICULTY != 1)
+                {
                   Local_SetDifficulty(1);
+                  Settings.LevelSaveData.Save();
+                }
               });
               actions_onCreated.Add((MenuComponent component0) => { });
             }
@@ -4298,7 +4304,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
               component.SetDisplayText(string.Format(loadoutEquip_format, "left hand", $"{item_name}", $"{item_cost}") + "\n", true);
 
             // Check for two handed
-            component._obscured = (CurrentLoadout()._equipment._item_right0 == GameScript.ItemManager.Items.SWORD);
+            component._obscured = (CurrentLoadout()._equipment._item_right0 == GameScript.ItemManager.Items.KATANA);
 
             // Set dropdown data
             var selections = new List<string>();
@@ -4327,9 +4333,9 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
                 var item_selected = (GameScript.ItemManager.Items)System.Enum.Parse(typeof(GameScript.ItemManager.Items), component0.GetDisplayText(false).Trim().Split(' ')[2].Split('>')[2]);
                 var item_other = CurrentLoadout()._equipment._item_right0;
                 // Check for two handed
-                if (((item_selected == GameScript.ItemManager.Items.BAT || item_selected == GameScript.ItemManager.Items.SWORD) &&
+                if (((item_selected == GameScript.ItemManager.Items.BAT || item_selected == GameScript.ItemManager.Items.KATANA) &&
                   (item_other != GameScript.ItemManager.Items.NONE)) ||
-                  ((item_other == GameScript.ItemManager.Items.BAT || item_other == GameScript.ItemManager.Items.SWORD) &&
+                  ((item_other == GameScript.ItemManager.Items.BAT || item_other == GameScript.ItemManager.Items.KATANA) &&
                   (item_selected != GameScript.ItemManager.Items.NONE))
                   )
                   CurrentLoadout()._equipment._item_right0 = GameScript.ItemManager.Items.NONE;
@@ -4393,7 +4399,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
               component.SetDisplayText(string.Format(loadoutEquip_format, "right hand", $"{item_name}", $"{item_cost}") + "\n\n", true);
 
             // Check for two handed
-            component._obscured = (CurrentLoadout()._equipment._item_left0 == GameScript.ItemManager.Items.SWORD);
+            component._obscured = (CurrentLoadout()._equipment._item_left0 == GameScript.ItemManager.Items.KATANA);
 
             // Set dropdown data
             var selections = new List<string>();
@@ -4422,9 +4428,9 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
                 var item_selected = (GameScript.ItemManager.Items)System.Enum.Parse(typeof(GameScript.ItemManager.Items), component0.GetDisplayText(false).Trim().Split(' ')[2].Split('>')[2]);
                 var item_other = CurrentLoadout()._equipment._item_left0;
                 // Check for two handed
-                if (((item_selected == GameScript.ItemManager.Items.BAT || item_selected == GameScript.ItemManager.Items.SWORD) &&
+                if (((item_selected == GameScript.ItemManager.Items.BAT || item_selected == GameScript.ItemManager.Items.KATANA) &&
                   (item_other != GameScript.ItemManager.Items.NONE)) ||
-                  ((item_other == GameScript.ItemManager.Items.BAT || item_other == GameScript.ItemManager.Items.SWORD) &&
+                  ((item_other == GameScript.ItemManager.Items.BAT || item_other == GameScript.ItemManager.Items.KATANA) &&
                   (item_selected != GameScript.ItemManager.Items.NONE))
                   )
                   CurrentLoadout()._equipment._item_left0 = GameScript.ItemManager.Items.NONE;
@@ -4491,7 +4497,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
                 component.SetDisplayText(string.Format(loadoutEquip_format, "left hand", $"{item_name}", $"{item_cost}") + "\n", true);
 
               // Check for two handed
-              component._obscured = (CurrentLoadout()._equipment._item_right1 == GameScript.ItemManager.Items.SWORD);
+              component._obscured = (CurrentLoadout()._equipment._item_right1 == GameScript.ItemManager.Items.KATANA);
 
               // Set dropdown data
               var selections = new List<string>();
@@ -4520,9 +4526,9 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
                   var item_selected = (GameScript.ItemManager.Items)System.Enum.Parse(typeof(GameScript.ItemManager.Items), component0.GetDisplayText(false).Trim().Split(' ')[2].Split('>')[2]);
                   var item_other = CurrentLoadout()._equipment._item_right1;
                   // Check for two handed
-                  if (((item_selected == GameScript.ItemManager.Items.BAT || item_selected == GameScript.ItemManager.Items.SWORD) &&
+                  if (((item_selected == GameScript.ItemManager.Items.BAT || item_selected == GameScript.ItemManager.Items.KATANA) &&
                     (item_other != GameScript.ItemManager.Items.NONE)) ||
-                    ((item_other == GameScript.ItemManager.Items.BAT || item_other == GameScript.ItemManager.Items.SWORD) &&
+                    ((item_other == GameScript.ItemManager.Items.BAT || item_other == GameScript.ItemManager.Items.KATANA) &&
                     (item_selected != GameScript.ItemManager.Items.NONE))
                     )
                     CurrentLoadout()._equipment._item_right1 = GameScript.ItemManager.Items.NONE;
@@ -4586,7 +4592,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
                 component.SetDisplayText(string.Format(loadoutEquip_format, "right hand", $"{item_name}", $"{item_cost}") + "\n\n", true);
 
               // Check for two handed
-              component._obscured = (CurrentLoadout()._equipment._item_left1 == GameScript.ItemManager.Items.SWORD);
+              component._obscured = (CurrentLoadout()._equipment._item_left1 == GameScript.ItemManager.Items.KATANA);
 
               // Set dropdown data
               var selections = new List<string>();
@@ -4615,9 +4621,9 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
                   var item_selected = (GameScript.ItemManager.Items)System.Enum.Parse(typeof(GameScript.ItemManager.Items), component0.GetDisplayText(false).Trim().Split(' ')[2].Split('>')[2]);
                   var item_other = CurrentLoadout()._equipment._item_left1;
                   // Check for two handed
-                  if (((item_selected == GameScript.ItemManager.Items.BAT || item_selected == GameScript.ItemManager.Items.SWORD) &&
+                  if (((item_selected == GameScript.ItemManager.Items.BAT || item_selected == GameScript.ItemManager.Items.KATANA) &&
                     (item_other != GameScript.ItemManager.Items.NONE)) ||
-                    ((item_other == GameScript.ItemManager.Items.BAT || item_other == GameScript.ItemManager.Items.SWORD) &&
+                    ((item_other == GameScript.ItemManager.Items.BAT || item_other == GameScript.ItemManager.Items.KATANA) &&
                     (item_selected != GameScript.ItemManager.Items.NONE))
                     )
                     CurrentLoadout()._equipment._item_left1 = GameScript.ItemManager.Items.NONE;

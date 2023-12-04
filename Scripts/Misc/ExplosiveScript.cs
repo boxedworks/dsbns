@@ -89,7 +89,11 @@ public class ExplosiveScript : MonoBehaviour
     FunctionsC.SpawnExplosionScar(new Vector3(transform.position.x, -1.23f, transform.position.z), _radius);
 
     // Hide mesh
-    if (disableGameobject) transform.GetChild(0).gameObject.SetActive(false);
+    if (disableGameobject)
+    {
+      //transform.GetChild(0).gameObject.SetActive(false);
+      GameObject.Destroy(gameObject);
+    }
 
     // Particles
     var particles = FunctionsC.GetParticleSystem(_explosionType != ExplosionType.STUN ? FunctionsC.ParticleSystemType.EXPLOSION : FunctionsC.ParticleSystemType.EXPLOSION_STUN);

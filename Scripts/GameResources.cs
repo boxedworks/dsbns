@@ -139,6 +139,11 @@ public static class GameResources
 
     s_Blood0 = GameObject.Find("Blood_0").GetComponent<Renderer>();
 
+    //
+    //if (GameScript._s_Singleton.ReplacementShader != null)
+    //  _Camera_Main.SetReplacementShader(GameScript._s_Singleton.ReplacementShader, "");
+
+    //
     _Loaded = true;
   }
 }

@@ -28,7 +28,9 @@ public class UtilityScript : ItemScript
 
     STICKY_GUN_BULLET,
     MORTAR_STRIKE,
-    TACTICAL_BULLET
+    TACTICAL_BULLET,
+
+    MOLOTOV,
   }
 
   public UtilityType _utility_type;
@@ -175,6 +177,10 @@ public class UtilityScript : ItemScript
 
       case UtilityType.GRENADE_IMPACT:
         explosion_radius = 3f;
+        _throwSpeed = 2f;
+        break;
+
+      case UtilityType.MOLOTOV:
         _throwSpeed = 2f;
         break;
 
@@ -629,6 +635,42 @@ public class UtilityScript : ItemScript
           // Throw and queue next
           Throw();
           Unregister();
+
+          break;
+
+        //
+        case UtilityType.MOLOTOV:
+
+          //
+          _onTriggerEnter += (Collider c) =>
+          {
+
+            // Projectile handler
+            if (SimpleProjectileHandler(_c, c))
+              return;
+          };
+          _onCollisionEnter += (Collision c) =>
+          {
+            // Projectile handler
+            if (SimpleProjectileHandler(_c, c.collider))
+              return;
+
+            // Explode on impact
+            Explode();
+          };
+
+          // Throw and queue next
+          Throw();
+          Unregister();
+
+          // Ring
+          _ring = GameObject.Instantiate(TileManager._Ring.gameObject).transform.GetChild(0).GetComponent<MeshRenderer>();
+          _ring.transform.parent.gameObject.SetActive(true);
+
+          var localscale = _ring.transform.localScale;
+          localscale *= 2f * 1.1f;
+          localscale.z = 2f;
+          _ring.transform.localScale = localscale;
 
           break;
 
@@ -1154,7 +1196,45 @@ public class UtilityScript : ItemScript
   {
     if (_exploded) return;
     _exploded = true;
-    if (_explosion == null) return;
+    if (_explosion == null)
+    {
+
+      if (_utility_type == UtilityType.MOLOTOV)
+      {
+
+        // Play noise
+        PlaySound(Audio.UTILITY_ACTION);
+        EnemyScript.CheckSound(_rb.position, EnemyScript.Loudness.SOFT);
+
+        // Hide
+        if (_ring != null)
+          _ring.enabled = false;
+        _c.enabled = false;
+        transform.GetChild(0).gameObject.SetActive(false);
+        GameObject.Destroy(gameObject, 6.6f);
+
+        // Fire AOE on impact
+        _rb.isKinematic = true;
+        FunctionsC.AoeHandler.RegisterAoeEffect(
+          _ragdoll,
+          FunctionsC.AoeHandler.AoeType.FIRE,
+          _rb.position,
+          2f * 0.6f,
+          5f
+        );
+        var particles = transform.GetChild(1).GetComponent<ParticleSystem>();
+        particles.transform.parent = transform.parent;
+        var pos = particles.transform.position;
+        pos.y = -1.19f;
+        particles.transform.position = pos;
+        particles.transform.localEulerAngles = new Vector3(270f, 0f, 0f);
+        particles.Play();
+        GameObject.Destroy(particles.gameObject, 6.5f);
+
+      }
+
+      return;
+    }
 
     // Explode effect
     if (delay > 0f)
@@ -1327,6 +1407,7 @@ public class UtilityScript : ItemScript
       case "c4":
       case "kunai_explosive":
       case "kunai_sticky":
+      case "molotov":
         projectileData._PenatrationAmount = 0;
         projectileData._OnDisable += (ProjectileCollisionData p) =>
         {
@@ -1349,6 +1430,8 @@ public class UtilityScript : ItemScript
 
       // Not found
       default:
+
+        Debug.LogWarning($"Unhandled projectile: {c.gameObject.name}");
         projectileData._GameObject = null;
         break;
 

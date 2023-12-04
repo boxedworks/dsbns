@@ -243,16 +243,24 @@ public class GameScript : MonoBehaviour
       while (true)
       {
         yield return new WaitForSecondsRealtime(0.01f);
+
         // Check goal exists
         if (goal == null)
           break;
-        float mod = Mathf.PingPong(Time.time * 1f, 1f);
+        var mod = Mathf.PingPong(Time.time * 1f, 1f);
         Vector3 pos;
+
         // Spawn tutorial arrow after 5 seconds
         if (Time.time - _LevelStartTime > 5f)
           if (!goal._activated && !goal._activated2)
           {
-            pos = goal.transform.position + new Vector3(1.5f + Easings.CircularEaseOut(mod), 0f);
+            pos = goal.transform.position + new Vector3(1.5f + Easings.CircularEaseOut(mod), 0f) + (SettingsModule.UseOrthographicCamera ? new Vector3(0f, 0f, SettingsModule.CameraZoom switch
+            {
+              Settings.SettingsSaveData.CameraZoomType.AUTO => 0.8f,
+              Settings.SettingsSaveData.CameraZoomType.CLOSE => 0.8f,
+              Settings.SettingsSaveData.CameraZoomType.NORMAL => -0.2f,
+              Settings.SettingsSaveData.CameraZoomType.FAR => -1.2f
+            }) : Vector3.zero);
             pos.y = ypos;
             TutorialInformation._TutorialArrow.position = pos;
             m.sharedMaterial.mainTextureOffset = new Vector2(0f, Time.time);
@@ -260,7 +268,13 @@ public class GameScript : MonoBehaviour
           }
           else if (!goal._activated2)
           {
-            pos = PlayerspawnScript._PlayerSpawns[0].transform.position + new Vector3(1.5f + Easings.CircularEaseOut(mod), 0f);
+            pos = PlayerspawnScript._PlayerSpawns[0].transform.position + new Vector3(1.5f + Easings.CircularEaseOut(mod), 0f) + (SettingsModule.UseOrthographicCamera ? new Vector3(0f, 0f, SettingsModule.CameraZoom switch
+            {
+              Settings.SettingsSaveData.CameraZoomType.AUTO => -0.8f,
+              Settings.SettingsSaveData.CameraZoomType.CLOSE => -0.8f,
+              Settings.SettingsSaveData.CameraZoomType.NORMAL => 0.2f,
+              Settings.SettingsSaveData.CameraZoomType.FAR => 1.2f
+            }) : Vector3.zero);
             pos.y = ypos;
             TutorialInformation._TutorialArrow.position += (pos - TutorialInformation._TutorialArrow.position) * 0.05f;
             m.sharedMaterial.mainTextureOffset = new Vector2(0f, Time.time);
@@ -2553,7 +2567,8 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
             t.localScale = new Vector3(0.11f, 0.12f, 0.11f);
             t.localEulerAngles += new Vector3(81f, 0f, 0f);
             break;
-          case ("SWORD"):
+          case "KATANA":
+          case "RAPIER":
             t.localPosition += new Vector3(-0.2f, -0.05f, 0f);
             t.localScale = new Vector3(0.11f, 0.1f, 0.11f);
             t.localEulerAngles = new Vector3(8f, 0f, -75f);
@@ -2623,6 +2638,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
             break;
           case "GRENADE_IMPACT":
           case "GRENADE":
+          case "MOLOTOV":
             t.localPosition += new Vector3(-0.23f, 0.03f, 0f);
             t.localEulerAngles = new Vector3(25f, -90f, 0f);
             t.localScale = new Vector3(0.8f, 0.8f, 0.8f);
@@ -2927,6 +2943,12 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
             var split0 = split.Split(':');
             var variable = split0[0];
             var val = split0[1];
+
+            // Special case
+            if (val == "SWORD")
+              val = "KATANA";
+
+            //
             switch (variable)
             {
               case "item_left0":
@@ -3006,7 +3028,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       AK47,
       M16,
       ROCKET_LAUNCHER,
-      SWORD,
+      KATANA,
       FRYING_PAN,
       AXE,
       CROSSBOW,
@@ -3015,6 +3037,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       ROCKET_FIST,
       STICKY_GUN,
       CHARGE_PISTOL,
+      RAPIER,
     }
 
     // Spawn a single item
@@ -3121,8 +3144,10 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
           return 3;
         case Items.ROCKET_LAUNCHER:
           break;
-        case Items.SWORD:
+        case Items.KATANA:
           return 4;
+        case Items.RAPIER:
+          return 3;
         case Items.STICKY_GUN:
           return 3;
       }
@@ -3143,6 +3168,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         case UtilityScript.UtilityType.GRENADE:
         case UtilityScript.UtilityType.GRENADE_IMPACT:
         case UtilityScript.UtilityType.C4:
+        case UtilityScript.UtilityType.MOLOTOV:
         case UtilityScript.UtilityType.KUNAI_EXPLOSIVE:
         case UtilityScript.UtilityType.KUNAI_STICKY:
         case UtilityScript.UtilityType.STOP_WATCH:

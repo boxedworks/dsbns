@@ -63,7 +63,6 @@ public class ActiveRagdoll
   public bool _IsEnemy { get { return !_IsPlayer; } }
 
   public Vector3 _ForceGlobal;
-  public float _ForceRecoil;
 
   // Height above ground
   static readonly public Vector3 _GROUNDHEIGHT = new Vector3(0f, 0.73f, 0f);
@@ -376,20 +375,6 @@ public class ActiveRagdoll
         _ForceGlobal -= force_apply;
       }
 
-      if (_ForceRecoil > 0f)
-      {
-        var max_velocity = 3.2f;
-        var force_normalized = _ForceRecoil > max_velocity ? max_velocity : _ForceRecoil;
-        var force_apply = force_normalized * MathC.Get2DVector(_Hip.transform.forward) * Time.deltaTime * 10f;
-
-        var agent = _IsPlayer ? _PlayerScript._agent : _EnemyScript._agent;
-        agent.Move(force_apply);
-        _ForceRecoil -= force_normalized;
-
-        if (_ForceRecoil < 0.02f)
-          _ForceRecoil = 0f;
-      }
-
       // Only update if enabled
       if (!_CanReceiveInput) return;
 
@@ -451,6 +436,7 @@ public class ActiveRagdoll
       _bloodFootprintTimer -= Time.deltaTime;
 
     //
+    var posSave = _Hip.position;
     var rot = _Hip.rotation;
     var f = _Controller.rotation.eulerAngles.y;
     if (f > 180.0f)
@@ -471,6 +457,21 @@ public class ActiveRagdoll
 
       // Use iter to move joints
       _movementIter += (_Distance.magnitude / 3f) * Time.deltaTime * 65f;
+
+      // Check melee movement
+      var moveDir = (movePos - posSave).normalized;
+      if (
+        _IsPlayer &&
+        Time.time - _meleeStartTime < 0.25f &&
+        _PlayerScript.GetInput().magnitude > 0.7f &&
+        (moveDir - _Controller.forward).magnitude > 1.4f)
+      {
+        _meleeStartTime = -1f;
+
+        _ForceGlobal += MathC.Get2DVector(moveDir * 0.75f);
+
+        SfxManager.PlayAudioSourceSimple(_Hip.position, "Ragdoll/Quickstep", 0.85f, 1.15f, SfxManager.AudioClass.NONE, true);
+      }
     }
     else
     {
@@ -846,6 +847,14 @@ public class ActiveRagdoll
   public ItemScript TryDeflectMelee(ActiveRagdoll ragdollOther)
   {
 
+    // Check facing each other
+    var forwardSelf = _Hip.transform.forward;
+    var forwardOther = ragdollOther._Hip.transform.forward;
+    var forwardMagnitude = (forwardOther - forwardSelf).magnitude;
+    //Debug.Log(forwardMagnitude);
+    if (forwardMagnitude < 1.7f)
+      return null;
+
     // Check weapons in order L / R
     bool CheckHit(ItemScript item)
     {
@@ -1003,12 +1012,21 @@ public class ActiveRagdoll
     }
   }
 
+  //
+  float _meleeStartTime;
+  public void OnMeleeStart()
+  {
+    _meleeStartTime = Time.time;
+  }
 
   //
-  public void BounceFromPosition(Vector3 position, float force)
+  public void BounceFromPosition(Vector3 position, float force, bool overright = true)
   {
     var bounceForce = (MathC.Get2DVector(_Hip.position) - MathC.Get2DVector(position)).normalized * force;
-    _ForceGlobal = bounceForce;
+    if (overright)
+      _ForceGlobal = bounceForce;
+    else
+      _ForceGlobal += bounceForce;
   }
 
   //
@@ -1142,7 +1160,7 @@ public class ActiveRagdoll
 
         var dir = MathC.Get2DVector(bodyData.Rigidbody.position - position);
         var dist = dir.magnitude;
-        if (dist > radius) continue;
+        if (dist > radius * 1.5f) continue;
         bodyData.Rigidbody.AddForce(dir.normalized * 3000f);
       }
     }
@@ -1279,7 +1297,8 @@ public class ActiveRagdoll
             parts.Play();
           }
         }
-        else if (_health > 0)
+        else
+        {
           if (damageSourceType == DamageSourceType.FIRE)
           {
             PlaySound("Ragdoll/Combust");
@@ -1287,7 +1306,7 @@ public class ActiveRagdoll
           }
           else
             PlaySound("Ragdoll/Punch");
-
+        }
       }
       // Enemy armor
       else
@@ -1491,6 +1510,13 @@ public class ActiveRagdoll
     _ItemR?.OnGrappled();
   }
 
+  public void HideCompletely()
+  {
+    _renderer.enabled = false;
+    _ItemL?.gameObject.SetActive(false);
+    _ItemR?.gameObject.SetActive(false);
+  }
+
   public void Kill(ActiveRagdoll source, DamageSourceType damageSourceType, Vector3 hitForce)
   {
     if (_IsPlayer && Settings._PLAYER_INVINCIBLE) return;
@@ -1498,10 +1524,9 @@ public class ActiveRagdoll
     // Disintegrate
     if (damageSourceType == DamageSourceType.FIRE)
     {
-      _renderer.enabled = false;
-      _ItemL?.gameObject.SetActive(false);
-      _ItemR?.gameObject.SetActive(false);
+      HideCompletely();
     }
+
     // Add to part listener for audio
     else
       AddPartListener(_Hip);
@@ -1695,7 +1720,7 @@ public class ActiveRagdoll
       GameScript._s_Singleton.StartCoroutine(BloodFollow(blood));
 
       // Bloody footprint
-      FunctionsC.AoeHandler.RegisterAoeEffect(FunctionsC.AoeHandler.AoeType.BLOOD, _Hip.position, 1f, 20f);
+      FunctionsC.AoeHandler.RegisterAoeEffect(this, FunctionsC.AoeHandler.AoeType.BLOOD, _Hip.position, 1f, 20f);
 
       // Audio
       PlaySound($"Ragdoll/Blood{(/*Random.Range(0, 10) < 3 ? 1 : */0)}", 1.1f, 1.5f);
@@ -1827,7 +1852,7 @@ public class ActiveRagdoll
     _stunTimer = Time.time + duration;
   }
 
-  System.Tuple<bool, bool>[] _saveRagdollState;
+  Tuple<bool, bool>[] _saveRagdollState;
   public void Ragdoll(bool toggle)
   {
     var joints = GetJoints();
@@ -1863,7 +1888,7 @@ public class ActiveRagdoll
   }
   public void RecoilSimple(float force)
   {
-    Recoil(-_Controller.forward, force);
+    Recoil(_grappled ? -_Hip.transform.forward : -_Controller.forward, force);
   }
 
   IEnumerator Rise()

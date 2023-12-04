@@ -312,8 +312,6 @@ public static class FunctionsC
     return particles;
   }
 
-  static Dictionary<AudioSource, System.Tuple<float, float>> s_playingAudio;
-
   // Find folder
   static public AudioSource GetAudioSource(string soundPath)
   {
@@ -345,7 +343,7 @@ public static class FunctionsC
   }
 
   // Return a list a ragdolls if they are a distance (radius) from a point (distance)
-  public static ActiveRagdoll[] CheckRadius(Vector3 position, float radius, bool raycast = false)
+  public static ActiveRagdoll[] GetRagdollsInRadius(Vector3 position, float radius, bool raycast = false)
   {
     var returnList = new List<ActiveRagdoll>();
     foreach (var r in ActiveRagdoll.s_Ragdolls)
@@ -367,67 +365,76 @@ public static class FunctionsC
   }
 
   // Apply damage and force in a radius to Ragdolls
-  public static void ApplyExplosionRadius(Vector3 position, float radius, ExplosiveScript.ExplosionType type, ActiveRagdoll source)
+  public static void ApplyExplosionRadius(Vector3 posAt, float explosionRadius, ExplosiveScript.ExplosionType explosionType, ActiveRagdoll explosionSource)
   {
 
     // Gather ragdolls in radius
-    var rags = CheckRadius(position, radius);
+    var ragdolls = GetRagdollsInRadius(posAt, explosionRadius * 2f);
 
     // Toggle raycasting for rags
-    foreach (var r in rags)
-      r.ToggleRaycasting(false);
+    foreach (var ragdoll in ragdolls)
+      ragdoll.ToggleRaycasting(false);
 
     // SFX
-    PlayComplexParticleSystemAt(type != ExplosiveScript.ExplosionType.STUN ? FunctionsC.ParticleSystemType.EXPLOSION : FunctionsC.ParticleSystemType.EXPLOSION_STUN, position + new Vector3(0f, 0.2f, 0f));
+    PlayComplexParticleSystemAt(explosionType != ExplosiveScript.ExplosionType.STUN ? ParticleSystemType.EXPLOSION : ParticleSystemType.EXPLOSION_STUN, posAt + new Vector3(0f, 0.2f, 0f));
 
-    // Send explosion to rigidbodies
-    ActiveRagdoll.Rigidbody_Handler.ApplyExplosion(position, radius);
+    // Send explosion to rigidbody handler
+    ActiveRagdoll.Rigidbody_Handler.ApplyExplosion(posAt, explosionRadius);
 
     // Loop through ragdolls to raycast and affect
-    var exploded = 0;
-    var isStun = type == ExplosiveScript.ExplosionType.STUN;
-    foreach (var r in rags)
+    var numKilled = 0;
+    var isStunExplosion = explosionType == ExplosiveScript.ExplosionType.STUN;
+    var posOrigin = new Vector3(posAt.x, -0.1f, posAt.z);
+    foreach (var ragdoll in ragdolls)
     {
+
+      var explosionDist = MathC.Get2DDistance(posAt, ragdoll._Hip.position);
+
+      // Force backward
+      if (explosionDist > explosionRadius)
+      {
+        ragdoll.BounceFromPosition(posAt, (1f - (explosionDist - explosionRadius) / (explosionRadius * 1.0f)) * 2.5f, false);
+        continue;
+      }
 
       // Check for perk
       //if (!isStun)
-      if (r._IsPlayer && r._Id == source._Id && r._PlayerScript.HasPerk(Shop.Perk.PerkType.EXPLOSION_RESISTANCE)) continue;
+      if (ragdoll._IsPlayer && ragdoll._Id == explosionSource._Id && ragdoll._PlayerScript.HasPerk(Shop.Perk.PerkType.EXPLOSION_RESISTANCE)) continue;
 
       // Check dist
-      if (MathC.Get2DDistance(position, r._Hip.position) < 0.3f) { }
+      if (explosionDist < 0.3f) { }
 
       // Raycast to validate
       else
       {
-        r.ToggleRaycasting(true, true);
-        var hit = new RaycastHit();
-        var start_pos = new Vector3(position.x, -0.1f, position.z);
-        var dir = -(r._IsDead ? start_pos - r._Hip.position : MathC.Get2DVector(start_pos - r._Hip.position)).normalized;
-        if (!Physics.SphereCast(new Ray(start_pos, dir), 0.05f, out hit, radius + 5f, GameResources._Layermask_Ragdoll))
+        ragdoll.ToggleRaycasting(true, true);
+        var raycastHit = new RaycastHit();
+        var dir = -(ragdoll._IsDead ? posOrigin - ragdoll._Hip.position : MathC.Get2DVector(posOrigin - ragdoll._Hip.position)).normalized;
+        if (!Physics.SphereCast(new Ray(posOrigin, dir), 0.05f, out raycastHit, explosionRadius + 5f, GameResources._Layermask_Ragdoll))
         {
-          r.ToggleRaycasting(false, true);
+          ragdoll.ToggleRaycasting(false, true);
           continue;
         }
 
-        r.ToggleRaycasting(false, true);
-        if (!r.IsSelf(hit.collider.gameObject)) continue;
+        ragdoll.ToggleRaycasting(false, true);
+        if (!ragdoll.IsSelf(raycastHit.collider.gameObject)) continue;
       }
 
       // Increment exploded counter and award achievements
-      if (!isStun)
+      if (!isStunExplosion)
       {
-        if (!r._IsDead)
+        if (!ragdoll._IsDead && ragdoll._health <= 3)
         {
           // Check for 3+ kills for slowmo
-          if (exploded++ == 3)
+          if (numKilled++ == 3)
             PlayerScript._SlowmoTimer += 2f;
 
 #if UNITY_STANDALONE
-          if (exploded == 5)
+          if (numKilled == 5)
             SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.DEMO_LEVEL_0);
-          else if (exploded == 10)
+          else if (numKilled == 10)
             SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.DEMO_LEVEL_1);
-          else if (exploded == 25)
+          else if (numKilled == 25)
             SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.DEMO_LEVEL_2);
 #endif
         }
@@ -437,9 +444,9 @@ public static class FunctionsC
       {
 
         // Stun
-        if (isStun)
+        if (isStunExplosion)
         {
-          r.Stun();
+          ragdoll.Stun();
         }
 
         // Explosion
@@ -447,33 +454,46 @@ public static class FunctionsC
         {
           // Explosion force type
           var explosionForce = Vector3.zero;
-          if (type == ExplosiveScript.ExplosionType.UPWARD) explosionForce = new Vector3(0f, 3000f, 0f);
-          else if (type == ExplosiveScript.ExplosionType.AWAY)
+          if (explosionType == ExplosiveScript.ExplosionType.UPWARD) explosionForce = new Vector3(0f, 3000f, 0f);
+          else if (explosionType == ExplosiveScript.ExplosionType.AWAY)
           {
-            var away = -(position - r._Hip.position).normalized;
-            away.y = 0.2f;
-            explosionForce = away * 3000f;
+            var dirAway = -(posAt - ragdoll._Hip.position).normalized;
+            dirAway.y = 0.2f;
+            explosionForce = dirAway * 3000f;
           }
 
+          //
+          var disintigrateCompletely = false;//explosionDist < 0.6f;
+          var spawnBlood = !disintigrateCompletely;
+
           // Assign damage
-          r.TakeDamage(
+          ragdoll.TakeDamage(
             new ActiveRagdoll.RagdollDamageSource()
             {
-              Source = source,
+              Source = explosionSource,
 
               HitForce = explosionForce,
 
               Damage = 3,
               DamageSource = Vector3.zero,
-              DamageSourceType = ActiveRagdoll.DamageSourceType.EXPLOSION,
+              DamageSourceType = disintigrateCompletely ? ActiveRagdoll.DamageSourceType.FIRE : ActiveRagdoll.DamageSourceType.EXPLOSION,
 
-              SpawnBlood = true,
-              SpawnGiblets = true
+              SpawnBlood = spawnBlood,
+              SpawnGiblets = spawnBlood
             });
-          if (r._IsDead)
+
+          if (ragdoll._IsDead)
           {
-            r.DismemberRandomTimes(explosionForce, Random.Range(1, 5));
-            r._Hip.AddForce(explosionForce);
+
+            if (disintigrateCompletely)
+            {
+              ragdoll.HideCompletely();
+            }
+            else
+            {
+              ragdoll.DismemberRandomTimes(explosionForce, Random.Range(1, 5));
+              ragdoll._Hip.AddForce(explosionForce);
+            }
           }
         }
 
@@ -482,7 +502,7 @@ public static class FunctionsC
     }
 
     // Retoggle raycasting
-    foreach (var r in rags)
+    foreach (var r in ragdolls)
       if (!r._IsDead) r.ToggleRaycasting(true);
   }
 
@@ -560,6 +580,7 @@ public static class FunctionsC
     master_mesh.CombineMeshes(combine, false, true);
     master_filter.sharedMesh = master_mesh;
     master_renderer.sharedMaterials = master_materials.ToArray();
+
     // Clean up submeshes
     for (var i = master_filters.Count - 1; i >= 0; i--)
     {
@@ -1030,16 +1051,19 @@ public static class FunctionsC
     {
       NONE,
 
-      BLOOD
+      BLOOD,
+      FIRE
     }
 
     struct AoeEffect
     {
-      public AoeType _Type;
-      public Vector3 _Position;
+      public AoeType Type;
+      public Vector3 Position;
 
-      public float _Radius;
-      public float _Duration;
+      public float Radius;
+      public float Duration;
+
+      public ActiveRagdoll Source;
     }
 
     // Containers
@@ -1052,34 +1076,37 @@ public static class FunctionsC
     }
 
     // Register a new AOE
-    public static void RegisterAoeEffect(AoeType type, Vector3 position, float radius, float duration)
+    public static void RegisterAoeEffect(ActiveRagdoll source, AoeType type, Vector3 position, float radius, float duration)
     {
       s_aoeEffects.Add(new AoeEffect()
       {
-        _Type = type,
-        _Position = position,
-        _Radius = radius,
-        _Duration = duration == -1f ? -1f : Time.time + duration
+        Source = source,
+
+        Type = type,
+        Position = position,
+        Radius = radius,
+        Duration = duration == -1f ? -1f : Time.time + duration
       });
     }
 
     // Check ragdolls in AOE
     static int s_i, s_u;
-    const int _MAX_ITERATIONS = 5;
+    const int _MAX_ITERATIONS = 6;
     public static void Update()
     {
       var iterations = 0;
 
       var ragdolls = ActiveRagdoll.s_Ragdolls;
       if ((s_aoeEffects?.Count ?? 0) == 0 || (ragdolls?.Count ?? 0) == 0) return;
-      var maxIterations = Mathf.Clamp(_MAX_ITERATIONS, 0, ragdolls.Count);
+      var maxIterations = Mathf.Clamp(_MAX_ITERATIONS, 1, ragdolls.Count);
       while (true)
       {
 
-        var aoe = s_aoeEffects[s_i %= s_aoeEffects.Count];
+        s_i %= s_aoeEffects.Count;
+        var aoe = s_aoeEffects[s_i];
 
         // Check aoe expire
-        if (aoe._Duration != -1f && Time.time >= aoe._Duration)
+        if (aoe.Duration != -1f && Time.time >= aoe.Duration)
         {
           s_aoeEffects.RemoveAt(s_i);
 
@@ -1092,39 +1119,91 @@ public static class FunctionsC
         // Check aoe effect
         while (true)
         {
-          var ragdoll = ragdolls[s_u % ragdolls.Count];
+          s_u %= ragdolls.Count;
+          var ragdoll = ragdolls[s_u];
 
           // Check distance in AOE
-          if (ragdoll._Hip == null) { }
+          if (ragdoll._IsDead || ragdoll._Hip == null) { }
           else
           {
             var hipPosition = ragdoll._Hip.position;
-            if (MathC.Get2DDistance(hipPosition, aoe._Position) <= aoe._Radius)
+            if (MathC.Get2DDistance(hipPosition, aoe.Position) <= aoe.Radius)
             {
 
               // Set effect
-              ragdoll.SetBloodTimer();
+              switch (aoe.Type)
+              {
+                case AoeType.BLOOD:
+                  ragdoll.SetBloodTimer();
+                  break;
+
+                case AoeType.FIRE:
+                  ragdoll.TakeDamage(new ActiveRagdoll.RagdollDamageSource()
+                  {
+                    Damage = 1,
+                    Source = aoe.Source,
+                    DamageSourceType = ActiveRagdoll.DamageSourceType.FIRE,
+                  });
+                  break;
+              }
             }
           }
 
           //
-          if (iterations++ > maxIterations) break;
-          if (++s_u == ragdolls.Count)
+          s_u++;
+          iterations++;
+
+          if (s_u >= ragdolls.Count)
           {
             s_u = 0;
+            s_i++;
             break;
           }
+          if (iterations > maxIterations) break;
         }
 
         //
         if (iterations > maxIterations) break;
-        if (++s_i == s_aoeEffects.Count)
-        {
-          s_i = 0;
-        }
       }
     }
 
+  }
+
+  //
+  public static class TrashCollector
+  {
+
+    //
+    static List<System.Tuple<GameObject, float>> s_trash;
+    public static void Reset()
+    {
+      s_trash = new();
+    }
+
+    //
+    static int s_incrementalIter;
+    public static void Update()
+    {
+
+      // Make sure there is trash
+      if ((s_trash?.Count ?? 0) == 0) return;
+
+      // Remove trash after time
+      var trashIndex = s_incrementalIter++ % s_trash.Count;
+      var trash = s_trash[trashIndex];
+      if (Time.time - trash.Item2 > 10f)
+      {
+        GameObject.Destroy(trash.Item1);
+        s_trash.RemoveAt(trashIndex);
+      }
+
+    }
+
+    //
+    public static void RegisterTrash(GameObject g)
+    {
+      s_trash.Add(System.Tuple.Create(g, Time.time));
+    }
   }
 
 }

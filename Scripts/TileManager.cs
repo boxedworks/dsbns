@@ -2062,11 +2062,15 @@ public class TileManager
     var addSettings = leoobj._addSettings;
     var loaded = LoadObject(addSettings._data);
 
+    // Check special
+    if (loaded.name == "Chair")
+      loaded.layer = 8;
+
     // Fire onAdd function
     addSettings._onAdd?.Invoke(loaded);
 
     // Set move mode
-    _SelectedObject = loaded.transform;
+    LevelEditorObject.Select(loaded);
     _CurrentMode = EditorMode.MOVE;
   }
 
@@ -2184,7 +2188,7 @@ public class TileManager
     _EditorSwitchTime = Time.unscaledTime;
 
     // Reload current map
-    _Dev_Time_Save = TileManager._LevelTime_Dev;
+    _Dev_Time_Save = _LevelTime_Dev;
     //Debug.Log("saved dev time: " + _Dev_Time_Save);
 
     LoadMap(_CurrentMapData, true);
@@ -2378,22 +2382,23 @@ public class TileManager
     // Reload map objects
     Transform objects = GameResources._Container_Objects,
       navmesh_mods = _Map.GetChild(1);
-    for (int i = objects.childCount - 1; i >= 0; i--)
+    for (var i = objects.childCount - 1; i >= 0; i--)
       GameObject.Destroy(objects.GetChild(i).gameObject);
-    for (int i = navmesh_mods.childCount - 1; i >= 0; i--)
+    for (var i = navmesh_mods.childCount - 1; i >= 0; i--)
       GameObject.Destroy(navmesh_mods.GetChild(i).gameObject);
-    string[] notloadObjects = new string[] { "e_", "playerspawn_" };
-    foreach (string data in s_levelObjectData)
+    var notloadObjects = new string[] { "e_", "playerspawn_" };
+    foreach (var data in s_levelObjectData)
     {
-      bool found = false;
-      foreach (string data_type in notloadObjects)
+      var found = false;
+      foreach (var data_type in notloadObjects)
         if (data.Length > data_type.Length && data.Substring(0, data_type.Length).Equals(data_type))
         {
           found = true;
           break;
         }
       if (found) continue;
-      GameObject new_object = LoadObject(data);
+
+      var new_object = LoadObject(data);
       if (new_object == null) continue;
 
       // Laser script
@@ -2402,8 +2407,12 @@ public class TileManager
 
       // Button
       if (new_object.name == "Button") new_object.layer = 0;
-      Powerup.OnEditorEnable();
+
+      // Chair
+      if (new_object.name == "Chair") new_object.layer = 8;
     }
+    Powerup.OnEditorEnable();
+
     // Get camera zoom
     _CameraZoom = GameResources._Camera_Main.transform.position.y;
 
@@ -2455,9 +2464,11 @@ public class TileManager
     }
     // Clear ragdolls
     ActiveRagdoll.Reset();
+
     // Show player spawn
     foreach (PlayerspawnScript s in PlayerspawnScript._PlayerSpawns)
       s._visual.SetActive(true);
+
     // Enable pointer and ring
     if (_Pointer == null)
     {
@@ -3919,6 +3930,7 @@ public class TileManager
       return returnString;
     };
 
+    static int _selectedObjectSaveLayer;
     public static void Select(GameObject selection)
     {
       if (_CurrentMode == EditorMode.MOVE || _IsLinking)
@@ -3931,8 +3943,15 @@ public class TileManager
         return;
       }
       if (GetCurrentObject()._name.Equals(_LEO_Tile._name)) return;
+
       // Normal selection
+      if (_SelectedObject != null)
+        _SelectedObject.gameObject.layer = _selectedObjectSaveLayer;
+
       _SelectedObject = selection.transform;
+      _selectedObjectSaveLayer = _SelectedObject.gameObject.layer;
+      _SelectedObject.gameObject.layer = 2;
+
       ClearText();
       UpdateText();
       _Ring.position = _SelectedObject.position;
@@ -4110,10 +4129,12 @@ public class TileManager
             found = true;
             continue;
           }
+
           // Else, found a new mode
           found = true;
           break;
         }
+
         // Unhide objects
         foreach (var pair in hiddenLayer)
           pair.Key.layer = pair.Value;

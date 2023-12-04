@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
 
 public static class Shop
@@ -178,8 +175,9 @@ public static class Shop
     ITEM_SHOTGUN_BURST,
     ITEM_AK47,
     ITEM_M16,
+
     ITEM_BAT,
-    ITEM_SWORD,
+    ITEM_KATANA,
     ITEM_AXE,
 
     ITEM_FLAMETHROWER,
@@ -253,7 +251,10 @@ public static class Shop
     EXTRA_CROWNMODE,
 
     TUTORIAL_PART0,
-    TUTORIAL_PART1
+    TUTORIAL_PART1,
+
+    ITEM_RAPIER,
+    UTILITY_MOLOTOV,
   }
 
   public static int _Max_Equipment_Points
@@ -281,7 +282,8 @@ public static class Shop
       { Unlocks.ITEM_FRYING_PAN, new Tuple<string, int>("melee, fast, block", 10) },
       { Unlocks.ITEM_AXE, new Tuple<string, int>("melee, slower, wide-sweep", 10) },
       //_Unlocks_Descriptions.Add(Unlocks.ITEM_BAT, new Tuple<string, int>("melee, two-handed, wide-sweep", 10));
-      { Unlocks.ITEM_SWORD, new Tuple<string, int>("melee, two-handed, wide-sweep", 25) },
+      { Unlocks.ITEM_RAPIER, new Tuple<string, int>("melee, one-handed, lunge", 15) },
+      { Unlocks.ITEM_KATANA, new Tuple<string, int>("melee, two-handed, wide-sweep", 20) },
       { Unlocks.ITEM_PISTOL_SILENCED, new Tuple<string, int>("handgun, silenced, fast-reload", 15) },
       { Unlocks.ITEM_MACHINE_PISTOL, new Tuple<string, int>("handgun, 3-burst, fast-reload", 10) },
       { Unlocks.ITEM_DOUBLE_PISTOL, new Tuple<string, int>("handgun, double-barrel", 10) },
@@ -290,10 +292,10 @@ public static class Shop
       { Unlocks.ITEM_UZI, new Tuple<string, int>("gun, automatic, small-magazine", 15) },
       { Unlocks.ITEM_CROSSBOW, new Tuple<string, int>("bow, powerful, slow-reload", 15) },
       { Unlocks.ITEM_SHOTGUN_PUMP, new Tuple<string, int>("shotgun, silenced, reload", 15) },
-      { Unlocks.ITEM_SHOTGUN_DOUBLE, new Tuple<string, int>("shotgun, powerful, reload", 20) },
+      { Unlocks.ITEM_SHOTGUN_DOUBLE, new Tuple<string, int>("shotgun, powerful, reload", 15) },
       { Unlocks.ITEM_SHOTGUN_BURST, new Tuple<string, int>("shotgun, two-burst, reload", 20) },
       { Unlocks.ITEM_AK47, new Tuple<string, int>("rifle, automatic, slow-reload", 20) },
-      { Unlocks.ITEM_M16, new Tuple<string, int>("rifle, burst, slow-reload", 20) },
+      { Unlocks.ITEM_M16, new Tuple<string, int>("rifle, burst, slow-reload", 15) },
       { Unlocks.ITEM_RIFLE, new Tuple<string, int>("rifle, semi-automatic, slow-fire", 10) },
       { Unlocks.ITEM_RIFLE_LEVER, new Tuple<string, int>("rifle, semi-automatic, fast-fire", 20) },
       { Unlocks.ITEM_DMR, new Tuple<string, int>("rifle, semi-automatic, slow-reload", 25) },
@@ -309,12 +311,13 @@ public static class Shop
       { Unlocks.UTILITY_SHURIKEN_BIG, new Tuple<string, int>("throwable, pick-up, large", 25) },
       { Unlocks.UTILITY_KUNAI_EXPLOSIVE, new Tuple<string, int>("throwable, explodes, small", 15) },
       { Unlocks.UTILITY_KUNAI_STICKY, new Tuple<string, int>("throwable, delalyed-explosion, small", 15) },
-      { Unlocks.UTILITY_GRENADE, new Tuple<string, int>("throwable, explosive, large-radius", 20) },
+      { Unlocks.UTILITY_TACTICAL_BULLET, new Tuple<string, int>("throwable, stun", 10) },
+      { Unlocks.UTILITY_GRENADE, new Tuple<string, int>("throwable, explosive, large-radius", 15) },
       { Unlocks.UTILITY_GRENADE_IMPACT, new Tuple<string, int>("throwable, contact-explosive", 15) },
       { Unlocks.UTILITY_GRENADE_STUN, new Tuple<string, int>("throwable, corner-killer", 10) },
-      { Unlocks.UTILITY_TACTICAL_BULLET, new Tuple<string, int>("throwable, stun", 10) },
       { Unlocks.UTILITY_C4, new Tuple<string, int>("throwable, explosive, remote-controlled", 15) },
-      { Unlocks.UTILITY_MORTAR_STRIKE, new Tuple<string, int>("ranged, explosive, remote-controlled", 20) },
+      //{ Unlocks.UTILITY_MOLOTOV, new Tuple<string, int>("throwable, fire, duration", 10) },
+      { Unlocks.UTILITY_MORTAR_STRIKE, new Tuple<string, int>("ranged, explosive, remote-controlled", 15) },
       { Unlocks.UTILITY_STOP_WATCH, new Tuple<string, int>("useable, slows-time", 20) },
       { Unlocks.UTILITY_INVISIBILITY, new Tuple<string, int>("useable, short-invisibility", 15) },
       { Unlocks.UTILITY_TEMP_SHIELD, new Tuple<string, int>("useable, shield, requires-melee", 15) },
@@ -325,10 +328,10 @@ public static class Shop
       { Unlocks.MOD_FASTER_RELOAD, new Tuple<string, int>("-", 20) },
       { Unlocks.MOD_MAX_AMMO_UP, new Tuple<string, int>("-", 25) },
       { Unlocks.MOD_EXPLOSION_RESISTANCE, new Tuple<string, int>("-", 20) },
-      { Unlocks.MOD_EXPLOSIONS_UP, new Tuple<string, int>("-", 20) },
+      { Unlocks.MOD_EXPLOSIONS_UP, new Tuple<string, int>("-", 25) },
       { Unlocks.MOD_ARMOR_UP, new Tuple<string, int>("-", 0) },
       { Unlocks.MOD_PENETRATION_UP, new Tuple<string, int>("-", 0) },
-      { Unlocks.MOD_SPEED_UP, new Tuple<string, int>("-", 10) },
+      { Unlocks.MOD_SPEED_UP, new Tuple<string, int>("-", 15) },
       { Unlocks.MOD_SMART_BULLETS, new Tuple<string, int>("-", 20) },
       { Unlocks.MOD_GRAPPLE_MASTER, new Tuple<string, int>("-", 5) },
       { Unlocks.MAX_EQUIPMENT_POINTS_0, new Tuple<string, int>("equipment points (+1)", 5) },
@@ -368,19 +371,21 @@ public static class Shop
       Unlocks.TUTORIAL_PART0,
       Unlocks.TUTORIAL_PART1,
 
+      Unlocks.UTILITY_MOLOTOV,
+
       Unlocks.MOD_ARMOR_UP,
       Unlocks.MOD_PENETRATION_UP,
 
       Unlocks.EXTRA_CROWNMODE,
     };
 
-    /*/ Load available / purchased unlocks
+    // Load available / purchased unlocks
     var shopPointsTotaled = 0;
     foreach (var pair in _Unlocks_Descriptions)
       shopPointsTotaled += pair.Value.Item2;
 #if UNITY_EDITOR
-    Debug.Log($"Total points: ({_AvailablePoints}) {shopPointsTotaled} / {((1 * 11 * 2) + (10 * 12 * 2)) * 4}");
-#endif*/
+    Debug.Log($"Total points: ({/*_AvailablePoints*/-1}) {shopPointsTotaled} / {((1 * 11 * 2) + (10 * 12 * 2)) * 4}");
+#endif
 
     // Add unlocks to vault
     _Unlocks_Vault = new Dictionary<string, Unlocks[]>();
@@ -398,15 +403,15 @@ public static class Shop
       _Unlocks_Vault.Add("classic_2", new Unlocks[] { Unlocks.MODE_SURVIVAL, Unlocks.ITEM_RIFLE, Unlocks.ITEM_MACHINE_PISTOL, Unlocks.MAX_EQUIPMENT_POINTS_3, Unlocks.LOADOUT_SLOT_X2_1 });
       _Unlocks_Vault.Add("classic_3", new Unlocks[] { Unlocks.ITEM_DOUBLE_PISTOL, Unlocks.UTILITY_STOP_WATCH, Unlocks.UTILITY_TEMP_SHIELD, Unlocks.MOD_SPEED_UP });
       _Unlocks_Vault.Add("classic_4", new Unlocks[] { Unlocks.ITEM_AXE, Unlocks.ITEM_REVOLVER, Unlocks.UTILITY_C4, Unlocks.UTILITY_GRENADE_STUN, Unlocks.UTILITY_SHURIKEN_BIG });
-      _Unlocks_Vault.Add("classic_5", new Unlocks[] { Unlocks.ITEM_STICKY_GUN, Unlocks.UTILITY_GRENADE_IMPACT, Unlocks.MAX_EQUIPMENT_POINTS_4 });
+      _Unlocks_Vault.Add("classic_5", new Unlocks[] { Unlocks.ITEM_RAPIER, Unlocks.ITEM_STICKY_GUN, Unlocks.UTILITY_GRENADE_IMPACT, Unlocks.MAX_EQUIPMENT_POINTS_4 });
       _Unlocks_Vault.Add("classic_6", new Unlocks[] { Unlocks.ITEM_FRYING_PAN, Unlocks.ITEM_CROSSBOW, Unlocks.ITEM_GRENADE_LAUNCHER, Unlocks.UTILITY_TACTICAL_BULLET });
       _Unlocks_Vault.Add("classic_7", new Unlocks[] { Unlocks.UTILITY_KUNAI_STICKY, Unlocks.UTILITY_INVISIBILITY, Unlocks.LOADOUT_SLOT_X2_2 });
-      _Unlocks_Vault.Add("classic_8", new Unlocks[] { Unlocks.ITEM_UZI, Unlocks.ITEM_SHOTGUN_PUMP, Unlocks.MAX_EQUIPMENT_POINTS_5, Unlocks.MOD_GRAPPLE_MASTER });
+      _Unlocks_Vault.Add("classic_8", new Unlocks[] { Unlocks.ITEM_UZI, Unlocks.ITEM_SHOTGUN_PUMP, Unlocks.MOD_GRAPPLE_MASTER, Unlocks.MAX_EQUIPMENT_POINTS_5 });
       _Unlocks_Vault.Add("classic_9", new Unlocks[] { Unlocks.ITEM_RIFLE_LEVER, Unlocks.LOADOUT_SLOT_X2_3 });
       _Unlocks_Vault.Add("classic_10", new Unlocks[] { Unlocks.UTILITY_MORTAR_STRIKE, Unlocks.MOD_EXPLOSIONS_UP });
 
       _Unlocks_Vault.Add("classic_11", new Unlocks[] { Unlocks.MODE_EXTRAS, Unlocks.MAX_EQUIPMENT_POINTS_6, Unlocks.LOADOUT_SLOT_X2_4 });
-      _Unlocks_Vault.Add("classic_12", new Unlocks[] { Unlocks.ITEM_SNIPER, Unlocks.ITEM_SWORD });
+      _Unlocks_Vault.Add("classic_12", new Unlocks[] { Unlocks.ITEM_SNIPER, Unlocks.ITEM_KATANA });
       _Unlocks_Vault.Add("classic_13", new Unlocks[] { Unlocks.ITEM_DMR });
       _Unlocks_Vault.Add("classic_14", new Unlocks[] { Unlocks.ITEM_SHOTGUN_DOUBLE, Unlocks.MOD_EXPLOSION_RESISTANCE, Unlocks.MAX_EQUIPMENT_POINTS_7 });
       _Unlocks_Vault.Add("classic_15", new Unlocks[] { Unlocks.ITEM_M16, Unlocks.LOADOUT_SLOT_X2_5 });
@@ -434,12 +439,13 @@ public static class Shop
       { UtilityScript.UtilityType.STICKY_GUN_BULLET, 50 },
       { UtilityScript.UtilityType.MORTAR_STRIKE, 6 },
       { UtilityScript.UtilityType.TACTICAL_BULLET, 6 },
+      { UtilityScript.UtilityType.MOLOTOV, 6 },
     };
 
     //
     _TwoHanded_Dictionary = new List<GameScript.ItemManager.Items>
     {
-      GameScript.ItemManager.Items.SWORD,
+      GameScript.ItemManager.Items.KATANA,
       GameScript.ItemManager.Items.BAT,
       GameScript.ItemManager.Items.DMR,
       GameScript.ItemManager.Items.RIFLE,
@@ -457,7 +463,7 @@ public static class Shop
 
     _ActualTwoHanded_Dictionary = new List<GameScript.ItemManager.Items>
     {
-      GameScript.ItemManager.Items.SWORD,
+      GameScript.ItemManager.Items.KATANA,
       GameScript.ItemManager.Items.BAT
     };
   }

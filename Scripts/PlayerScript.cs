@@ -23,6 +23,11 @@ public class PlayerScript : MonoBehaviour
   float _camRotX;
 
   Vector2 _saveInput;
+  public Vector2 GetInput()
+  {
+    return _saveInput;
+  }
+
   bool _spawnRunCheck;
 
   public GameScript.ItemManager.Items _itemLeft, _itemRight;
@@ -1174,7 +1179,7 @@ public class PlayerScript : MonoBehaviour
 
     //
     var useSword = false;
-    if ((_ragdoll._ItemL?._type ?? GameScript.ItemManager.Items.NONE) == GameScript.ItemManager.Items.SWORD)
+    if ((_ragdoll._ItemL?._type ?? GameScript.ItemManager.Items.NONE) == GameScript.ItemManager.Items.KATANA)
     {
       useSword = true;
 
@@ -1265,11 +1270,22 @@ public class PlayerScript : MonoBehaviour
       // Check grapple
       if (
         !_ragdoll._IsDead &&
-        _ragdoll.HasMelee() && !_ragdoll.HasTwohandedWeapon() &&
+        (
+          (_ragdoll.HasMelee() && !_ragdoll.HasTwohandedWeapon()) ||
+          (_ragdoll._ItemL == null && _ragdoll._ItemR != null && !_ragdoll._ItemR._twoHanded) ||
+          (_ragdoll._ItemR == null && _ragdoll._ItemL != null && !_ragdoll._ItemL._twoHanded)
+        ) &&
         ControllerManager.GetMouseInput(2, ControllerManager.InputMode.UP)
         )
       {
         _ragdoll.Grapple(true);
+      }
+      if (_ragdoll._grappling)
+      {
+        if (_ragdoll._ItemL == null && ControllerManager.GetMouseInput(0, ControllerManager.InputMode.UP))
+          _ragdoll.Grapple(false);
+        if (_ragdoll._ItemR == null && ControllerManager.GetMouseInput(1, ControllerManager.InputMode.UP))
+          _ragdoll.Grapple(false);
       }
 
       // Move arms
@@ -1510,11 +1526,22 @@ public class PlayerScript : MonoBehaviour
         // Check grapple
         if (
           !_ragdoll._IsDead &&
-          _ragdoll.HasMelee() && !_ragdoll.HasTwohandedWeapon() &&
+          (
+            (_ragdoll.HasMelee() && !_ragdoll.HasTwohandedWeapon()) ||
+            (_ragdoll._ItemL == null && !(_ragdoll._ItemR?._twoHanded ?? false)) ||
+            (_ragdoll._ItemR == null && !(_ragdoll._ItemL?._twoHanded ?? false))
+          ) &&
           gamepad.rightStickButton.wasPressedThisFrame
-          )
+        )
         {
           _ragdoll.Grapple(true);
+        }
+        if (_ragdoll._grappling)
+        {
+          if (_ragdoll._ItemL == null && gamepad.leftTrigger.wasReleasedThisFrame)
+            _ragdoll.Grapple(false);
+          if (_ragdoll._ItemR == null && gamepad.rightTrigger.wasReleasedThisFrame)
+            _ragdoll.Grapple(false);
         }
 
         // Check utilities
@@ -1700,6 +1727,7 @@ public class PlayerScript : MonoBehaviour
   public void ResetLoadout()
   {
     if (_ragdoll._IsDead) return;
+
     // Check changed loadout profile
     if (_Profile._LoadoutIndex != _saveLoadoutIndex)
     {
@@ -2139,7 +2167,7 @@ public class PlayerScript : MonoBehaviour
     // Remove ring
     IEnumerator fadeRing()
     {
-      Color c = _Profile.GetColor();
+      var c = _Profile.GetColor();
       float t = 1f, startA = c.a;
       while (t >= 0f)
       {
