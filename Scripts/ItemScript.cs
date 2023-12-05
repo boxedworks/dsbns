@@ -1033,11 +1033,12 @@ public class ItemScript : MonoBehaviour
             case ItemType.KATANA:
             case ItemType.BAT:
             case ItemType.RAPIER:
-              _ragdoll.RecoilSimple(_downTimeSave > 1f ? -2f : -1.65f);
+              _ragdoll.RecoilSimple(_downTimeSave > 1f ? -1.85f : -1.35f);
               break;
             case ItemType.KNIFE:
             case ItemType.AXE:
-              _ragdoll.RecoilSimple(-0.8f);
+            case ItemType.FRYING_PAN:
+              _ragdoll.RecoilSimple(-0.65f);
               break;
           }
 
@@ -1739,7 +1740,7 @@ public class ItemScript : MonoBehaviour
     );
     var hit = false;
     var canMeleePenatrate = _canMeleePenatrate && (_ragdoll._EnemyScript?._IsZombieReal ?? true);
-    var maxDistance = (!_ragdoll._IsPlayer && _ragdoll._EnemyScript._IsZombieReal) ? 0.275f : 0.6f * (canMeleePenatrate ? 1.3f : 1f) * (_ragdoll._IsPlayer ? 1f : (canMeleePenatrate ? 0.75f : 0.65f));
+    var maxDistance = (!_ragdoll._IsPlayer && _ragdoll._EnemyScript._IsZombieReal) ? 0.25f : 0.6f * (canMeleePenatrate ? 1.3f : 1f);
     if (_type == ItemType.RAPIER)
       maxDistance *= 2.4f;
     if (Physics.SphereCast(ray, Mathf.Clamp(0.22f, 0.05f, maxDistance), out raycastInfo._raycastHit, maxDistance, GameResources._Layermask_Ragdoll))

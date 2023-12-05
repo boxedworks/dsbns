@@ -468,7 +468,7 @@ public class ActiveRagdoll
       {
         _meleeStartTime = -1f;
 
-        _ForceGlobal += MathC.Get2DVector(moveDir * 0.75f);
+        _ForceGlobal += MathC.Get2DVector(moveDir * 0.5f);
 
         SfxManager.PlayAudioSourceSimple(_Hip.position, "Ragdoll/Quickstep", 0.85f, 1.15f, SfxManager.AudioClass.NONE, true);
       }
@@ -1884,7 +1884,7 @@ public class ActiveRagdoll
   {
     _ForceGlobal += MathC.Get2DVector(dir) * force;
     if (_grappler != null)
-      _grappler._ForceGlobal += MathC.Get2DVector(dir) * force;
+      _grappler._ForceGlobal += MathC.Get2DVector(dir) * force * 0.75f;
   }
   public void RecoilSimple(float force)
   {
@@ -1983,15 +1983,28 @@ public class ActiveRagdoll
     _hasArmor = false;
   }
 
+  //
+  public bool _CanGrapple
+  {
+    get
+    {
+      return (
+        HasMelee() && !HasTwohandedWeapon()) ||
+        (_ItemL == null && !(_ItemR?._twoHanded ?? false)) ||
+        (_ItemR == null && !(_ItemL?._twoHanded ?? false)
+      );
+    }
+  }
+
   // Add a grappler
   public void AddGrappler(bool playSound = true)
   {
 
     // Checks
-    if (!HasMelee()) return;
     if (_IsDead) return;
     if (_grappling) return;
     if (GameScript._EditorEnabled) return;
+    if (!_CanGrapple) return;
 
     // Spawn enemy
     var spawn_pos = _Hip.position + Transform.forward * 0.3f;
@@ -2000,7 +2013,7 @@ public class ActiveRagdoll
       {
         _enemyType = GameScript.SurvivalMode.EnemyType.KNIFE_RUN
       },
-      new Vector2(spawn_pos.x, spawn_pos.y),
+      new Vector2(spawn_pos.x, spawn_pos.z),
       true
     );
 
@@ -2021,11 +2034,11 @@ public class ActiveRagdoll
   }
   public bool HasTwohandedWeapon()
   {
-    return (_ItemL != null && _ItemL._twoHanded) || (_ItemR != null && _ItemR._twoHanded);
+    return (_ItemL?._twoHanded ?? false) || (_ItemR?._twoHanded ?? false);
   }
   public bool HasGun()
   {
-    return (_ItemL != null && _ItemL.IsGun()) || (_ItemR != null && _ItemR.IsGun());
+    return (_ItemL?.IsGun() ?? false) || (_ItemR?.IsGun() ?? false);
   }
   public bool HasAutomatic()
   {

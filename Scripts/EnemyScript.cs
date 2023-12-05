@@ -767,7 +767,7 @@ public class EnemyScript : MonoBehaviour
                 else
                   ChaseTarget();
 
-                // Check melle
+                // Check melee
                 if (!_IsZombieReal || dis < 4f)
                   DrawBackMelee();
 
@@ -796,7 +796,7 @@ public class EnemyScript : MonoBehaviour
                     // Attack if close enough or pointed at target
                     else if (
                       _ragdoll.HasGun() ||
-                      (!_ragdoll.HasGun() && dis < (_itemLeft == GameScript.ItemManager.Items.GRENADE_HOLD ? 1f : _itemLeft == GameScript.ItemManager.Items.BAT ? 1.2f : (_IsZombieReal ? 0.6f : 2.1f)))
+                      (!_ragdoll.HasGun() && dis < (_itemLeft == GameScript.ItemManager.Items.GRENADE_HOLD ? 1f : _itemLeft == GameScript.ItemManager.Items.BAT ? 1.2f : (_IsZombieReal ? 0.6f : 1.8f)))
                       )
                     {
                       UseItem(dis < 1.4f);
@@ -2492,7 +2492,7 @@ public class EnemyScript : MonoBehaviour
     return _ragdoll.HasAutomatic();
   }
 
-  public static EnemyScript SpawnEnemyAt(SurvivalAttributes survivalAttributes, Vector2 location, bool grappled = false, bool isZombieRealOverride = false)
+  public static EnemyScript SpawnEnemyAt(SurvivalAttributes survivalAttributes, Vector2 spawnAtPos, bool grappled = false, bool isZombieRealOverride = false)
   {
 
     var weapon = "knife";
@@ -2503,7 +2503,7 @@ public class EnemyScript : MonoBehaviour
 
     var enemy = TileManager.LoadObject($"e_0_0_li_{weapon}_");
     var e = enemy.transform.GetChild(0).GetComponent<EnemyScript>();
-    e.transform.position = new Vector3(location.x, enemy.transform.position.y, location.y);
+    e.transform.position = new Vector3(spawnAtPos.x, enemy.transform.position.y, spawnAtPos.y);
     if (PlayerScript.s_Players != null && PlayerScript.s_Players.Count > 0 && PlayerScript.s_Players[0] != null)
       e.LookAt(PlayerScript.s_Players[0].transform.position);
     e._isZombieRealOverride = isZombieRealOverride;

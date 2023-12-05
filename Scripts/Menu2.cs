@@ -5839,7 +5839,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
           var selections = new List<string>();
           var actions = new List<System.Action<MenuComponent>>();
           var selection_match = "" + SettingsModule.Quality;
-          for (int i = 0; i < 6; i++)
+          for (var i = 0; i < 6; i++)
           {
             // Add quality level
             selections.Add((i).ToString());
@@ -5847,7 +5847,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
             // Add action to update quality
             actions.Add((MenuComponent component0) =>
               {
-                SettingsModule.Quality = component0._dropdownIndex;
+                Settings._QualityLevel = component0._dropdownIndex;
               });
           }
 
@@ -5867,7 +5867,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
         // Toggle
         .AddEvent((MenuComponent component) =>
         {
-          SettingsModule.UseVsync = !SettingsModule.UseVsync;
+          Settings._VSync = !Settings._VSync;
           _CanRender = false;
           RenderMenu();
         });
@@ -7448,9 +7448,9 @@ about extras</color>
     {
 
     }
-    .AddComponent("<color=yellow>difficulty beaten</color>\n\n")
-    .AddComponent(difficulty == 0 ? "you have unlocked a new difficulty for the CLASSIC mode!\n\nchange difficulty in the level selection menu.\n\n" : "you have beaten the hardest difficulty!\n\ncheck out the survival mode!\n\n")
-    .AddBackButton(MenuType.LEVELS, difficulty == 0 ? "cool" : "wow");
+      .AddComponent("<color=yellow>difficulty beaten</color>\n\n")
+      .AddComponent(difficulty == 0 ? "you have unlocked a new difficulty for the CLASSIC mode!\n\nchange difficulty in the level selection menu.\n\n" : "you have beaten the hardest difficulty!\n\ncheck out the survival mode!\n\n")
+      .AddBackButton(MenuType.LEVELS, difficulty == 0 ? "cool" : "wow");
     SwitchMenu(MenuType.DIFFICULTY_COMPLETE);
   }
 

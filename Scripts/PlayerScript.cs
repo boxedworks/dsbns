@@ -1270,11 +1270,7 @@ public class PlayerScript : MonoBehaviour
       // Check grapple
       if (
         !_ragdoll._IsDead &&
-        (
-          (_ragdoll.HasMelee() && !_ragdoll.HasTwohandedWeapon()) ||
-          (_ragdoll._ItemL == null && _ragdoll._ItemR != null && !_ragdoll._ItemR._twoHanded) ||
-          (_ragdoll._ItemR == null && _ragdoll._ItemL != null && !_ragdoll._ItemL._twoHanded)
-        ) &&
+        _ragdoll._CanGrapple &&
         ControllerManager.GetMouseInput(2, ControllerManager.InputMode.UP)
         )
       {
@@ -1526,11 +1522,7 @@ public class PlayerScript : MonoBehaviour
         // Check grapple
         if (
           !_ragdoll._IsDead &&
-          (
-            (_ragdoll.HasMelee() && !_ragdoll.HasTwohandedWeapon()) ||
-            (_ragdoll._ItemL == null && !(_ragdoll._ItemR?._twoHanded ?? false)) ||
-            (_ragdoll._ItemR == null && !(_ragdoll._ItemL?._twoHanded ?? false))
-          ) &&
+          _ragdoll._CanGrapple &&
           gamepad.rightStickButton.wasPressedThisFrame
         )
         {

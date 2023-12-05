@@ -2585,6 +2585,7 @@ public class TileManager
 
     // Disable light
     GameScript.ToggleCameraLight(false);
+
     // Hide player spawn(s)
     foreach (PlayerspawnScript s in PlayerspawnScript._PlayerSpawns)
       s._visual.SetActive(false);

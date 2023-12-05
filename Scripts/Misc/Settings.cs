@@ -385,8 +385,8 @@ public static class Settings
     // Load graphics settings
     SetResolution(SettingsModule.ScreenResolution);
     UpdateResolution();
-
-    // Camera
+    _QualityLevel = SettingsModule.Quality;
+    _VSync = SettingsModule.UseVsync;
     SetPostProcessing();
 
     // Set starting level collection
@@ -673,7 +673,7 @@ public static class Settings
     // PP
     var profiles = GameObject.Find("PProfiles").transform;
     //for (var u = 0; u < 7; u++)
-    var u = 5;
+    var u = 0;
     {
       var profile = profiles.GetChild(u).GetComponent<UnityEngine.Rendering.PostProcessing.PostProcessVolume>();
 
@@ -685,8 +685,8 @@ public static class Settings
         bloom.intensity.value = SettingsModule.BloomAmount switch
         {
           0 => 0f,
-          1 => 1f,
-          2 => 1.94f
+          1 => 1.1f,
+          2 => 1.8f
         };
       }
 
@@ -701,7 +701,7 @@ public static class Settings
           depthOfField.enabled.value = true;
           depthOfField.focalLength.value = 177f;
 
-          var apertureMod = SettingsModule.DepthOfFieldAmount == 1 ? 1.7f : 1f;
+          var apertureMod = SettingsModule.DepthOfFieldAmount == 1 ? 1.6f : 1.1f;
 
           if (SettingsModule.UseOrthographicCamera)
           {

@@ -148,9 +148,7 @@ public class SceneThemes : MonoBehaviour
       for (var x = 0; x < r.sharedMaterials.Length; x++)
         r.sharedMaterials[x].color = _Theme._innerWallColor;
     }
-    // Check for new ppprofile
-    var newprofile = (oldtheme != null && oldtheme._profile != _Theme._profile);
-    var profiles = Camera.main.transform.GetChild(4);
+
     // Change Tile theme / move fog
     int i = 0, iter_tile = 0;
     foreach (var t in TileManager._Tiles)
@@ -176,10 +174,6 @@ public class SceneThemes : MonoBehaviour
       if (i++ % 50 == 0)
       {
         yield return new WaitForSecondsRealtime(0.005f);
-        var normalized = ((float)i) / ((float)TileManager._Tiles.Count);
-        profiles.GetChild(_Theme._profile).localPosition = Vector3.Lerp(profiles.GetChild(_Theme._profile).localPosition, new Vector3(0f, 0f, 0f), normalized);
-        if (newprofile)
-          profiles.GetChild(oldtheme._profile).localPosition = Vector3.Lerp(profiles.GetChild(oldtheme._profile).localPosition, new Vector3(15f, 0f, 0f), normalized);
       }
     }
 
@@ -188,11 +182,6 @@ public class SceneThemes : MonoBehaviour
       RenderSettings.fogStartDistance = FOG_END;
     else if (fog_movement == -1)
       RenderSettings.fogStartDistance = FOG_START;
-
-    // Set profile
-    profiles.GetChild(_Theme._profile).localPosition = Vector3.Lerp(profiles.GetChild(_Theme._profile).localPosition, new Vector3(0f, 0f, 0f), 1f);
-    if (newprofile)
-      profiles.GetChild(oldtheme._profile).localPosition = Vector3.Lerp(profiles.GetChild(oldtheme._profile).localPosition, new Vector3(15f, 0f, 0f), 1f);
 
     // Remove fog
     if (fog_movement == -1)
