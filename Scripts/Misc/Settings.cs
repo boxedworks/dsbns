@@ -327,7 +327,14 @@ public static class Settings
         {
 
           // Speacial case; changed name
-          var unlockString = unlock == Shop.Unlocks.ITEM_KATANA ? "ITEM_SWORD" : $"{unlock}";
+          var unlockString = unlock switch
+          {
+            Shop.Unlocks.ITEM_KATANA => "ITEM_SWORD",
+            Shop.Unlocks.ITEM_PISTOL_CHARGE => "ITEM_PISTOL_CHARGE",
+            Shop.Unlocks.ITEM_PISTOL_DOUBLE => "ITEM_DOUBLE_PISTOL",
+            Shop.Unlocks.ITEM_PISTOL_MACHINE => "ITEM_MACHINE_PISTOL",
+            _ => $"{unlock}"
+          };
 
           var unlockUnlocked = PlayerPrefs.GetInt($"Shop_Unlocks_{unlockString}", 0) == 1;
           var unlockAvailable = PlayerPrefs.GetInt($"Shop_UnlocksAvailable_{unlockString}", 0) == 1;
@@ -362,9 +369,6 @@ public static class Settings
         LevelModule.ExtraPlayerAmmo = PlayerPrefs.GetInt("extra_playerammo", 0);
 
         LevelModule.HasRestarted = PlayerPrefs.GetInt("tut_hasRestarted", 0) == 1;
-
-        SettingsSaveData.Save();
-        LevelSaveData.Save();
       }
 
       PlayerPrefs.DeleteAll();
@@ -588,6 +592,9 @@ public static class Settings
         }
     );
 
+    //
+    SettingsSaveData.Save();
+    LevelSaveData.Save();
   }
 
   // Take snapshot of extras

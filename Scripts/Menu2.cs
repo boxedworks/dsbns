@@ -6800,21 +6800,24 @@ a gampad if plugged in.~1
       .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
       {
         var colors = new string[] { "blue", "red", "yellow", "cyan", "white", "black", "orange" };
+
         // Set display text
         component.SetDisplayText(string.Format(format_options, "color:", colors[GameScript.PlayerProfile.s_CurrentSettingsProfile._playerColor]));
+
         // Set dropdown data
         var selections = new List<string>();
         var actions = new List<System.Action<MenuComponent>>();
         var selection_match = colors[GameScript.PlayerProfile.s_CurrentSettingsProfile._playerColor];
-        for (int i = 0; i < GameScript.PlayerProfile._Colors.Length; i++)
+        for (var i = 0; i < GameScript.PlayerProfile._Colors.Length; i++)
         {
           selections.Add($"{colors[i]}");
+
           // Add action to update profile color
           actions.Add((MenuComponent component0) =>
-    {
-      GameScript.PlayerProfile.s_CurrentSettingsProfile._playerColor = component0._dropdownIndex;
-      GameScript.PlayerProfile.s_CurrentSettingsProfile.CreateHealthUI(GameScript.PlayerProfile.s_CurrentSettingsProfile._Player == null ? 1 : GameScript.PlayerProfile.s_CurrentSettingsProfile._Player._ragdoll._health);
-    });
+          {
+            GameScript.PlayerProfile.s_CurrentSettingsProfile._playerColor = component0._dropdownIndex;
+            GameScript.PlayerProfile.s_CurrentSettingsProfile.CreateHealthUI(GameScript.PlayerProfile.s_CurrentSettingsProfile._Player == null ? 1 : GameScript.PlayerProfile.s_CurrentSettingsProfile._Player._ragdoll._health);
+          });
         }
         // Update dropdown data
         component.SetDropdownData("color select\n\n", selections, actions, selection_match);

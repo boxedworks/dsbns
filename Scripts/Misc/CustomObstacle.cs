@@ -102,18 +102,19 @@ public class CustomObstacle : MonoBehaviour
       _BUYABLE_ITEM_TIERS[2].Add(System.Tuple.Create(GameScript.ItemManager.Items.RIFLE, 40));
 
       _BUYABLE_ITEM_TIERS.Add(3, new List<System.Tuple<GameScript.ItemManager.Items, int>>());
-      _BUYABLE_ITEM_TIERS[3].Add(System.Tuple.Create(GameScript.ItemManager.Items.DOUBLE_PISTOL, 100));
+      _BUYABLE_ITEM_TIERS[3].Add(System.Tuple.Create(GameScript.ItemManager.Items.PISTOL_DOUBLE, 100));
       _BUYABLE_ITEM_TIERS[3].Add(System.Tuple.Create(GameScript.ItemManager.Items.SHOTGUN_PUMP, 150));
       //_BUYABLE_ITEM_TIERS[3].Add(System.Tuple.Create(GameScript.ItemManager.Items.RAPIER, 75));
       _BUYABLE_ITEM_TIERS[3].Add(System.Tuple.Create(GameScript.ItemManager.Items.CROSSBOW, 85));
-      _BUYABLE_ITEM_TIERS[3].Add(System.Tuple.Create(GameScript.ItemManager.Items.MACHINE_PISTOL, 75));
-      _BUYABLE_ITEM_TIERS[3].Add(System.Tuple.Create(GameScript.ItemManager.Items.CHARGE_PISTOL, 85));
+      _BUYABLE_ITEM_TIERS[3].Add(System.Tuple.Create(GameScript.ItemManager.Items.PISTOL_MACHINE, 75));
+      _BUYABLE_ITEM_TIERS[3].Add(System.Tuple.Create(GameScript.ItemManager.Items.PISTOL_CHARGE, 85));
 
       _BUYABLE_ITEM_TIERS.Add(4, new List<System.Tuple<GameScript.ItemManager.Items, int>>());
       _BUYABLE_ITEM_TIERS[4].Add(System.Tuple.Create(GameScript.ItemManager.Items.UZI, 160));
       _BUYABLE_ITEM_TIERS[4].Add(System.Tuple.Create(GameScript.ItemManager.Items.REVOLVER, 250));
       _BUYABLE_ITEM_TIERS[4].Add(System.Tuple.Create(GameScript.ItemManager.Items.SHOTGUN_DOUBLE, 350));
       _BUYABLE_ITEM_TIERS[4].Add(System.Tuple.Create(GameScript.ItemManager.Items.DMR, 325));
+      _BUYABLE_ITEM_TIERS[4].Add(System.Tuple.Create(GameScript.ItemManager.Items.RIFLE_CHARGE, 300));
       _BUYABLE_ITEM_TIERS[4].Add(System.Tuple.Create(GameScript.ItemManager.Items.RIFLE_LEVER, 250));
       _BUYABLE_ITEM_TIERS[4].Add(System.Tuple.Create(GameScript.ItemManager.Items.STICKY_GUN, 160));
 

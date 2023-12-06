@@ -49,6 +49,7 @@ public static class GameResources
 
   public static Transform _Container_Objects, _UI_Player;
   public static Camera _Camera_Main, _Camera_Menu;
+  public static MeshRenderer _CameraFader;
 
   public static int _Layermask_Ragdoll;
 
@@ -63,6 +64,7 @@ public static class GameResources
     _Player = Resources.Load("Player") as GameObject;
     _Enemy = Resources.Load("Enemy") as GameObject;
     _Ragdoll = Resources.Load("Ragdoll") as GameObject;
+
     _Bullet = Resources.Load("Bullet") as GameObject;
     _Door = Resources.Load("Door") as GameObject;
     _Button = Resources.Load("Button") as GameObject;
@@ -125,6 +127,8 @@ public static class GameResources
 
     _Camera_Main = GameObject.Find("Main Camera").GetComponent<Camera>();
     _Camera_Menu = GameObject.Find("Menu Camera").GetComponent<Camera>();
+
+    _CameraFader = GameObject.Find("Fader").GetComponent<MeshRenderer>();
 
     _Container_Objects = GameObject.Find("Objects").transform;
     _UI_Player = _Camera_Main.transform.GetChild(0).GetChild(2);

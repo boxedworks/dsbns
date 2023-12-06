@@ -565,15 +565,18 @@ public class TileManager
 
     // Lerp camera
     var time = 1f;
-    var main_camera = GameResources._Camera_Main;
-    var start_clip = 15.5f;
+    var material = GameResources._CameraFader.sharedMaterial;
+    var color = material.color;
     while (time > 0f)
     {
-      main_camera.farClipPlane = Mathf.Lerp(10f, start_clip, time);
-      yield return new WaitForSecondsRealtime(0.005f);
+      color.a = 1f - time;
+      material.color = color;
+
+      yield return new WaitForSecondsRealtime(0.001f);
       time -= 0.06f;
     }
-    main_camera.farClipPlane = 10f;
+    color.a = 1f;
+    material.color = color;
 
     // Show unlocks
     if (!Menu2._InMenus && Shop.s_UnlockString != string.Empty)
@@ -957,9 +960,6 @@ public class TileManager
     // Set level time
     GameScript._LevelStartTime = Time.time;
 
-    // Lerp cam distance
-    GameScript._s_Singleton.StartCoroutine(LerpCam());
-
     // Init all enemies
     EnemyScript.HardInitAll();
 
@@ -986,20 +986,20 @@ public class TileManager
 
     GameScript._Coroutine_load = null;
     _LoadingMap = false;
-  }
 
-  static IEnumerator LerpCam()
-  {
-    // Lerp camera
-    var time = 1f;
-    var main_camera = GameResources._Camera_Main;
+    // Lerp cam distance
+    time = 1f;
+    material = GameResources._CameraFader.sharedMaterial;
     while (time > 0f)
     {
-      main_camera.farClipPlane = Mathf.Lerp(35f, 10f, time / 1f);
-      yield return new WaitForSecondsRealtime(0.005f);
-      time -= 0.02f;
+      color.a = time;
+      material.color = color;
+
+      yield return new WaitForSecondsRealtime(0.001f);
+      time -= 0.06f;
     }
-    main_camera.farClipPlane = 35f;
+    color.a = 0f;
+    material.color = color;
   }
 
   //

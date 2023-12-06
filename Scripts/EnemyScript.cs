@@ -1063,7 +1063,7 @@ public class EnemyScript : MonoBehaviour
     if (_ragdoll?._grappled ?? true) return;
 
     var forward = transform.forward;
-    if ((_ragdoll.HasMelee() && !_ragdoll._IsSwinging) || !_ragdoll.HasMelee())
+    if ((_ragdoll.HasMelee() && !_ragdoll._IsSwinging) || !_ragdoll.HasMelee() || IsChaser())
       transform.LookAt(lookAtPos == Vector3.zero ? new Vector3(_agent.steeringTarget.x, transform.position.y, _agent.steeringTarget.z) : lookAtPos);
     if (_IsZombie) return;
     var val = Mathf.Clamp(Mathf.Abs((transform.forward - forward).magnitude), 0f, 10f);

@@ -1023,10 +1023,7 @@ public class ActiveRagdoll
   public void BounceFromPosition(Vector3 position, float force, bool overright = true)
   {
     var bounceForce = (MathC.Get2DVector(_Hip.position) - MathC.Get2DVector(position)).normalized * force;
-    if (overright)
-      _ForceGlobal = bounceForce;
-    else
-      _ForceGlobal += bounceForce;
+    Recoil(bounceForce, 1f, overright);
   }
 
   //
@@ -1880,8 +1877,16 @@ public class ActiveRagdoll
     }
   }
 
-  public void Recoil(Vector3 dir, float force)
+  public void Recoil(Vector3 dir, float force, bool overright = true)
   {
+    if (overright)
+    {
+      _ForceGlobal = MathC.Get2DVector(dir) * force;
+      if (_grappler != null)
+        _grappler._ForceGlobal = MathC.Get2DVector(dir) * force * 0.75f;
+      return;
+    }
+
     _ForceGlobal += MathC.Get2DVector(dir) * force;
     if (_grappler != null)
       _grappler._ForceGlobal += MathC.Get2DVector(dir) * force * 0.75f;

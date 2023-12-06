@@ -162,7 +162,8 @@ public class ItemScript : MonoBehaviour
   // Play SFX via enum
   protected int GetAudioSource(Audio audio)
   {
-    int iter = 0;
+
+    var iter = 0;
     switch (audio)
     {
       case Audio.GUN_SHOOT:
@@ -170,7 +171,7 @@ public class ItemScript : MonoBehaviour
         {
           iter = -1;
         }
-        else if (_type == ItemType.CHARGE_PISTOL)
+        else if (_type == ItemType.PISTOL_CHARGE || _type == ItemType.RIFLE_CHARGE)
         {
           if (_downTimeSave >= 1.25f)
             iter = 6;
@@ -332,11 +333,18 @@ public class ItemScript : MonoBehaviour
     }
 
     // Check special types
-    if (_type == ItemType.FLAMETHROWER)
+    switch (_type)
     {
-      // Gather components
-      _customParticles = new ParticleSystem[] { transform.GetChild(4).gameObject.GetComponent<ParticleSystem>() };
-      _customLights = new Light[] { transform.GetChild(5).gameObject.GetComponent<Light>() };
+      case ItemType.FLAMETHROWER:
+        _customParticles = new ParticleSystem[] { transform.GetChild(4).gameObject.GetComponent<ParticleSystem>() };
+        _customLights = new Light[] { transform.GetChild(5).gameObject.GetComponent<Light>() };
+        break;
+      case ItemType.PISTOL_CHARGE:
+      case ItemType.RIFLE_CHARGE:
+        _customParticles = new ParticleSystem[] {
+          transform.GetChild(3).gameObject.GetComponent<ParticleSystem>(),
+        };
+        break;
     }
 
     // Set onuse
@@ -357,6 +365,15 @@ public class ItemScript : MonoBehaviour
       // Check invisible
       if (_ragdoll._invisible)
         _ragdoll.SetInvisible(false);
+
+      //
+      switch (_type)
+      {
+        case ItemType.PISTOL_CHARGE:
+        case ItemType.RIFLE_CHARGE:
+          _customParticles[0].Stop();
+          break;
+      }
 
       // Melee
       if (_melee)
@@ -395,6 +412,7 @@ public class ItemScript : MonoBehaviour
 
             if ((dir - target_frwd).magnitude > 1f)
             {
+              RegisterHitRagdoll(raycastInfo._ragdoll);
               raycastInfo._ragdoll = raycastInfo._ragdoll._grapplee;
             }
           }
@@ -447,7 +465,7 @@ public class ItemScript : MonoBehaviour
                 SetHitOverride();
 
                 // Bounce both ragdolls backward
-                _ragdoll.BounceFromPosition(raycastInfo._ragdoll._Hip.position, 1.5f);
+                _ragdoll.BounceFromPosition(raycastInfo._ragdoll._grappled ? raycastInfo._ragdoll._grappler._Hip.position : raycastInfo._ragdoll._Hip.position, 1.5f);
                 raycastInfo._ragdoll.BounceFromPosition(_ragdoll._Hip.position, 1.5f);
 
                 // Fx
@@ -521,22 +539,52 @@ public class ItemScript : MonoBehaviour
         {
 
           // Special
-          if (_type == ItemType.CHARGE_PISTOL)
+          switch (_type)
           {
-            if (_downTimeSave >= 1.25f)
-            {
-              use_penatrationAmount = 2;
-              _shoot_force = 0.6f;
-            }
-            else if (_downTimeSave >= 0.5f)
-            {
-              use_penatrationAmount = 1;
-              _shoot_force = 0.25f;
-            }
-            else
-            {
-              _shoot_force = 0.05f;
-            }
+            case ItemType.PISTOL_CHARGE:
+              if (_downTimeSave >= 1.25f)
+              {
+                use_penatrationAmount = 2;
+                _hit_force = 0.6f;
+                _shoot_force = 0.6f;
+              }
+              else if (_downTimeSave >= 0.5f)
+              {
+                use_penatrationAmount = 1;
+                _hit_force = 0.3f;
+                _shoot_force = 0.25f;
+              }
+              else
+              {
+                _hit_force = 0f;
+                _shoot_force = 0.05f;
+              }
+              break;
+
+            case ItemType.RIFLE_CHARGE:
+              if (_downTimeSave >= 1.25f)
+              {
+                use_penatrationAmount = 1;
+                _hit_force = 0.3f;
+                _shoot_force = 0.35f;
+              }
+              else if (_downTimeSave >= 0.5f)
+              {
+                use_penatrationAmount = 3;
+                _hit_force = 0.8f;
+                _shoot_force = 1f;
+              }
+              else
+              {
+                use_penatrationAmount = 1;
+                _hit_force = 0.3f;
+                _shoot_force = 0.35f;
+
+                _burstPerShot = 0;
+                _burstRate = 0f;
+                _fireMode = FireMode.SEMI;
+              }
+              break;
           }
 
           // Spawn bullet
@@ -816,7 +864,7 @@ public class ItemScript : MonoBehaviour
 
     // Increment down timer
     var downTimeLast = _downTime;
-    if (_triggerDown) _downTime += Time.deltaTime;
+    if (_triggerDown && CanUse(false)) _downTime += Time.deltaTime;
     else _upTime += Time.deltaTime;
 
     // Check special cases
@@ -863,20 +911,53 @@ public class ItemScript : MonoBehaviour
     }
 
     // Charge pistol
-    if (_type == ItemType.CHARGE_PISTOL)
+    //if (!_used && CanUse(false))
+    if (_type == ItemType.PISTOL_CHARGE || _type == ItemType.RIFLE_CHARGE)
     {
 
       if (downTimeLast < 0.02f && _downTime >= 0.02f)
       {
         PlaySound(3, 0.8f, 0.8f);
+
+        _burstPerShot = 0;
+        _burstRate = 0f;
+        _fireMode = FireMode.SEMI;
       }
       else if (downTimeLast < 0.5f && _downTime >= 0.5f)
       {
         PlaySound(4, 1f, 1f);
+
+        var emission = _customParticles[0].emission;
+        emission.rateOverTime = 5;
+        _customParticles[0].Play();
+
+        _burstPerShot = 0;
+        _burstRate = 0f;
+        _fireMode = FireMode.SEMI;
       }
       else if (downTimeLast < 1.25f && _downTime >= 1.25f)
       {
         PlaySound(4, 1.2f, 1.2f);
+
+        var emission = _customParticles[0].emission;
+        emission.rateOverTime = 25;
+
+        if (_type == ItemType.RIFLE_CHARGE)
+        {
+          _burstPerShot = _clip;
+          _burstRate = 0.13f;
+          _fireMode = FireMode.BURST;
+
+          /*if (_clip < _burstPerShot)
+          {
+            _ragdoll._PlayerScript?._Profile.ItemReload(_side, _burstPerShot - _clip);
+            _clip = _burstPerShot;
+          }*/
+
+          //
+          UseUp();
+        }
+
       }
 
     }
@@ -1105,7 +1186,7 @@ public class ItemScript : MonoBehaviour
 
     // Laser
     var bulletSpeedMod = 1f;
-    if (itemType == ItemType.CHARGE_PISTOL)
+    if (itemType == ItemType.PISTOL_CHARGE || itemType == ItemType.RIFLE_CHARGE)
     {
       newBullet.SetColor(new Color(1f, 0.5f, 0.5f), Color.red);
       newBullet.SetLifetime(0.04f);
@@ -1486,7 +1567,7 @@ public class ItemScript : MonoBehaviour
       ResetV();
   }
   // Can you use the item?
-  public bool CanUse()
+  public bool CanUse(bool playEmpty = true)
   {
     if (_melee)
       return (_time >= _useTime + UseRate()) || (_bursts > 0 && _fireMode == FireMode.BURST && _time >= _useTime + _burstRate);
@@ -1494,7 +1575,8 @@ public class ItemScript : MonoBehaviour
     // Check clip
     if (_clip > 0)
       return ((_time >= _useTime + UseRate()) || (_fireMode == FireMode.BURST && _bursts > 0 && _time >= _useTime + _burstRate)) && (!_used || _fireMode == FireMode.BURST) && (!_reloading || IsChargeWeapon());
-    PlayEmpty();
+    if (playEmpty)
+      PlayEmpty();
     return false;
   }
 
@@ -1527,7 +1609,7 @@ public class ItemScript : MonoBehaviour
     if (_ragdoll._IsPlayer) EnemyScript.CheckSound(_ragdoll._Hip.position, EnemyScript.Loudness.SUPERSOFT);
     var clipSave = _clip;
     _clip = Mathf.Clamp(
-      _reloadOneAtTime ? _clip + (_type == ItemType.CHARGE_PISTOL ? 2 : 1) : GetClipSize(),
+      _reloadOneAtTime ? _clip + 1 : GetClipSize(),
       0,
       GetClipSize()
     );
@@ -1732,7 +1814,7 @@ public class ItemScript : MonoBehaviour
     }
 
     // Cast ray from startPos to dir (cast a ray from the handle forwards)
-    var forward = _ragdoll._Controller.forward;
+    var forward = _ragdoll._grappled ? _ragdoll._grappler._Controller.forward : _ragdoll._Controller.forward;
     forward.y = 0f;
     var ray = new Ray(
       _ragdoll._Hip.position - _ragdoll._Hip.transform.forward * 0.1f + Vector3.up * 0.4f + add * 0.1f,
@@ -1740,10 +1822,10 @@ public class ItemScript : MonoBehaviour
     );
     var hit = false;
     var canMeleePenatrate = _canMeleePenatrate && (_ragdoll._EnemyScript?._IsZombieReal ?? true);
-    var maxDistance = (!_ragdoll._IsPlayer && _ragdoll._EnemyScript._IsZombieReal) ? 0.25f : 0.6f * (canMeleePenatrate ? 1.3f : 1f);
+    var maxDistance = (!_ragdoll._IsPlayer && _ragdoll._EnemyScript._IsZombieReal) ? 0.25f : 0.7f * (canMeleePenatrate ? 1.3f : 1f);
     if (_type == ItemType.RAPIER)
-      maxDistance *= 2.4f;
-    if (Physics.SphereCast(ray, Mathf.Clamp(0.22f, 0.05f, maxDistance), out raycastInfo._raycastHit, maxDistance, GameResources._Layermask_Ragdoll))
+      maxDistance *= 2.35f;
+    if (Physics.SphereCast(ray, Mathf.Clamp(0.23f, 0.05f, maxDistance), out raycastInfo._raycastHit, maxDistance, GameResources._Layermask_Ragdoll))
     {
       //Debug.Log(raycastInfo._raycastHit.collider.gameObject.name);
       //Debug.DrawLine(ray.origin, raycastInfo._raycastHit.point, Color.red, 5f);

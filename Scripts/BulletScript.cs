@@ -354,7 +354,7 @@ public class BulletScript : MonoBehaviour
   public void OnHideBullet()
   {
     return;
-    if (_sourceType == GameScript.ItemManager.Items.CHARGE_PISTOL && _penatrationAmount == 1)
+    if (_sourceType == GameScript.ItemManager.Items.PISTOL_CHARGE && _penatrationAmount == 1)
     {
 
       // Explode

@@ -147,7 +147,11 @@ public class GameScript : MonoBehaviour
 
     ActiveRagdoll.Rigidbody_Handler.Init();
 
-    GameResources._Camera_Main.farClipPlane = 10f;
+    GameResources._Camera_Main.farClipPlane = 35f;
+    var material = GameResources._CameraFader.sharedMaterial;
+    var color = material.color;
+    color.a = 0f;
+    material.color = color;
 
     // Init loadouts
     ItemManager.Loadout.Init();
@@ -2074,17 +2078,17 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         if (profileSettings.Color < 0)
           profileSettings.Color = _Colors.Length - 1;
 
+        // Save
+        SettingsModule.UpdatePlayerProfile(_Id, profileSettings);
+
         // Update UI
-        Transform ui = GameResources._UI_Player;
+        var ui = GameResources._UI_Player;
         ui.GetChild(_Id).GetChild(0).GetComponent<TextMesh>().color = GetColor();
 
         // Check for alive player
         if (PlayerScript.s_Players != null)
           foreach (PlayerScript p in PlayerScript.s_Players)
             if (p._Id == _Id && !p._ragdoll._IsDead) p._ragdoll.ChangeColor(GetColor());
-
-        // Save
-        SettingsModule.UpdatePlayerProfile(_Id, profileSettings);
       }
     }
     Transform _UI { get { return GameResources._UI_Player.GetChild(_Id); } }
@@ -2104,6 +2108,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       ChangeLoadoutIfEmpty();
 
       // Update profile equipment icons
+      _playerColor = _playerColor;
       UpdateIcons();
       CreateHealthUI(1);
     }
@@ -2573,14 +2578,18 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
             t.localScale = new Vector3(0.11f, 0.1f, 0.11f);
             t.localEulerAngles = new Vector3(8f, 0f, -75f);
             break;
-          case ("PISTOL_SILENCED"):
-          case ("PISTOL"):
-          case ("DOUBLE_PISTOL"):
-          case ("CHARGE_PISTOL"):
+          case "PISTOL_SILENCED":
+          case "PISTOL":
+          case "PISTOL_DOUBLE":
+          case "PISTOL_CHARGE":
             t.localPosition += new Vector3(-0.19f, 0.06f, 0f);
             t.localScale = new Vector3(0.14f, 0.14f, 0.14f);
             break;
-          case ("MACHINE_PISTOL"):
+          case "RIFLE_CHARGE":
+            t.localPosition += new Vector3(0.03f, 0.06f, 0f);
+            t.localScale = new Vector3(0.14f, 0.14f, 0.14f);
+            break;
+          case "PISTOL_MACHINE":
             t.localPosition += new Vector3(-0.19f, 0.08f, 0f);
             t.localScale = new Vector3(0.14f, 0.14f, 0.14f);
             break;
@@ -2945,8 +2954,14 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
             var val = split0[1];
 
             // Special case
-            if (val == "SWORD")
-              val = "KATANA";
+            val = val switch
+            {
+              "SWORD" => "KATANA",
+              "CHARGE_PISTOL" => "PISTOL_CHARGE",
+              "DOUBLE_PISTOL" => "PISTOL_DOUBLE",
+              "MACHINE_PISTOL" => "PISTOL_MACHINE",
+              _ => val
+            };
 
             //
             switch (variable)
@@ -3022,8 +3037,8 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       SHOTGUN_BURST,
       PISTOL,
       PISTOL_SILENCED,
-      MACHINE_PISTOL,
-      DOUBLE_PISTOL,
+      PISTOL_MACHINE,
+      PISTOL_DOUBLE,
       GRENADE_HOLD,
       AK47,
       M16,
@@ -3036,8 +3051,9 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       FLAMETHROWER,
       ROCKET_FIST,
       STICKY_GUN,
-      CHARGE_PISTOL,
+      PISTOL_CHARGE,
       RAPIER,
+      RIFLE_CHARGE,
     }
 
     // Spawn a single item
@@ -3092,64 +3108,41 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       {
         case Items.NONE:
           return 0;
-        case Items.REVOLVER:
-          return 4;
-        case Items.UZI:
-          return 4;
         case Items.KNIFE:
           return 1;
         case Items.FRYING_PAN:
-          return 3;
         case Items.AXE:
-          return 3;
-        case Items.BAT:
-          return 4;
         case Items.ROCKET_FIST:
-          return 3;
-        case Items.SHOTGUN_PUMP:
-          return 4;
-        case Items.SHOTGUN_DOUBLE:
-          return 4;
-        case Items.SHOTGUN_BURST:
-          return 5;
-        case Items.PISTOL:
-          break;
+        case Items.RAPIER:
         case Items.PISTOL_SILENCED:
-          return 3;
-        case Items.MACHINE_PISTOL:
-          return 3;
-        case Items.DOUBLE_PISTOL:
-          return 3;
-        case Items.CHARGE_PISTOL:
-          return 3;
-        case Items.GRENADE_HOLD:
-          break;
-        case Items.AK47:
-          return 5;
-        case Items.FLAMETHROWER:
-          return 5;
-        case Items.M16:
-          return 5;
+        case Items.PISTOL_MACHINE:
+        case Items.PISTOL_DOUBLE:
+        case Items.PISTOL_CHARGE:
+        case Items.STICKY_GUN:
         case Items.RIFLE:
-          return 3;
-        case Items.RIFLE_LEVER:
-          return 4;
-        case Items.DMR:
-          return 5;
-        case Items.SNIPER:
-          return 4;
-        case Items.CROSSBOW:
-          return 4;
         case Items.GRENADE_LAUNCHER:
           return 3;
-        case Items.ROCKET_LAUNCHER:
-          break;
+        case Items.RIFLE_LEVER:
+        case Items.RIFLE_CHARGE:
+        case Items.SNIPER:
+        case Items.CROSSBOW:
         case Items.KATANA:
+        case Items.SHOTGUN_DOUBLE:
+        case Items.SHOTGUN_PUMP:
+        case Items.BAT:
+        case Items.UZI:
+        case Items.REVOLVER:
           return 4;
-        case Items.RAPIER:
-          return 3;
-        case Items.STICKY_GUN:
-          return 3;
+        case Items.FLAMETHROWER:
+        case Items.AK47:
+        case Items.SHOTGUN_BURST:
+        case Items.M16:
+        case Items.DMR:
+          return 5;
+        case Items.ROCKET_LAUNCHER:
+        case Items.GRENADE_HOLD:
+        case Items.PISTOL:
+          break;
       }
       return -1;
     }
