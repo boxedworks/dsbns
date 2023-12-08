@@ -532,8 +532,6 @@ public class ItemScript : MonoBehaviour
 
         var use_penatrationAmount = penatrationAmount;
 
-        Rigidbody rb = null;
-
         // Normal bullet
         if (_customProjetile == UtilityScript.UtilityType.NONE)
         {
@@ -1211,7 +1209,7 @@ public class ItemScript : MonoBehaviour
     var addforce = Vector3.zero;
     if (projectilesPerShot > 1)
     {
-      float mod = 1f;
+      var mod = 1f;
       if (bulletIter % 2 == 1) mod = -1f;
       if (!randomSpread && bulletIter == 0 && projectilesPerShot % 2 == 1) mod = 0f;
       addforce = Quaternion.AngleAxis(90f, Vector3.up) * shootDirNormalized * bulletSpread * (randomSpread ? Random.value : 1f) * mod;
@@ -1825,7 +1823,7 @@ public class ItemScript : MonoBehaviour
     var maxDistance = (!_ragdoll._IsPlayer && _ragdoll._EnemyScript._IsZombieReal) ? 0.25f : 0.7f * (canMeleePenatrate ? 1.3f : 1f);
     if (_type == ItemType.RAPIER)
       maxDistance *= 2.35f;
-    if (Physics.SphereCast(ray, Mathf.Clamp(0.23f, 0.05f, maxDistance), out raycastInfo._raycastHit, maxDistance, GameResources._Layermask_Ragdoll))
+    if (Physics.SphereCast(ray, Mathf.Clamp(_ragdoll._IsEnemy && _ragdoll._EnemyScript.IsChaser() ? 0.4f : 0.23f, 0.05f, maxDistance), out raycastInfo._raycastHit, maxDistance, GameResources._Layermask_Ragdoll))
     {
       //Debug.Log(raycastInfo._raycastHit.collider.gameObject.name);
       //Debug.DrawLine(ray.origin, raycastInfo._raycastHit.point, Color.red, 5f);

@@ -1396,6 +1396,12 @@ public class UtilityScript : ItemScript
         projectileData._CanDestroyObjects = true;
         projectileData._SpawnPosition = bulletScript.GetShootPosition();
         projectileData._DamageSource = bulletScript.GetDamageSource();
+
+        projectileData._OnDisable += (ProjectileCollisionData p) =>
+        {
+          p._BulletScript.Hide();
+          p._BulletScript.OnHideBullet();
+        };
         break;
 
       // Explode on disable

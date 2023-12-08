@@ -518,50 +518,9 @@ public class TileManager
   static IEnumerator LoadMapCo(string data, bool doubleSizeInit = false, bool appendToEditMaps = false)
   {
 
+    //
     _s_mapIndex++;
-
-    //Debug.Log("Loading map with data:\n== BEGIN ==\n" + data + "\n== END ==");
-
-    var level_meta = Levels.GetLevelMeta(data);
-
-    // Check for editor maps
-    _CurrentLevel_Name = level_meta[1] == null ? "unnamed loaded map" : level_meta[1];
-    _CurrentLevel_Loadout = level_meta[2];
-    _CurrentLevel_Theme = level_meta[3] != null ? level_meta[3].ParseIntInvariant() : -1;
-
-    if (_CurrentLevel_Loadout != null)
-    {
-      Levels._HardcodedLoadout = new GameScript.ItemManager.Loadout()
-      {
-        _equipment = new GameScript.PlayerProfile.Equipment()
-      };
-      Levels.GetHardcodedLoadout(_CurrentLevel_Loadout);
-    }
-    else
-      Levels._HardcodedLoadout = null;
-
-    // Split data by space
-    var data_split = level_meta[0].Split(' ');
-    var data_iter = 0;
-    // Load map
-    int width = 0,
-      height = 0;
-    //var reversed = data.Contains("__reversed_");
-    try
-    {
-      width = data_split[data_iter++].ParseIntInvariant();
-      height = data_split[data_iter++].ParseIntInvariant();
-    }
-    // If fails to load map, just load the first level
-    catch (System.FormatException e)
-    {
-      Menu2.QuickEnableMenus();
-
-      GameScript._Coroutine_load = null;
-      _LoadingMap = false;
-
-      throw new System.FormatException("Cannot load level with data: " + data + "\n" + e.StackTrace);
-    }
+    var mapsaveindex = _s_mapIndex;
 
     // Lerp camera
     var time = 1f;
@@ -579,179 +538,232 @@ public class TileManager
     material.color = color;
 
     // Show unlocks
+    _LoadingMap = false;
     if (!Menu2._InMenus && Shop.s_UnlockString != string.Empty)
       GameScript.TogglePause(Menu2.MenuType.NONE);
 
-    // Remove prior enemies / objects
-    RemoveGameObjects();
-    ResetParticles();
+    while (GameScript._Paused)
+      yield return new WaitForSeconds(0.05f);
 
-    // Set tilemap size
-    _Map_Size_X = width;
-    _Map_Size_Y = height;
-    ResizeInit((int)((width + 2) * (doubleSizeInit ? 1.4f : 1f)), (int)((height + 2) * (doubleSizeInit ? 1.4f : 1f)));
-
-    // Remove stuff
-    ActiveRagdoll.Reset();
-    EnemyScript.Reset();
-    Powerup.Reset();
-    FunctionsC.AoeHandler.Reset();
-    CandleScript.Reset();
-    CustomEntityUI._ID = 0;
-    EnemyScript._ID = 0;
-
-    // Set theme
-    if (Levels._LevelPack_Playing)
-    {
-      if (_CurrentLevel_Theme != -1)
-        SceneThemes.ChangeMapTheme(SceneThemes._SceneOrder_LevelEditor[_CurrentLevel_Theme % SceneThemes._SceneOrder_LevelEditor.Length]);
-      else
-        SceneThemes.ChangeMapTheme(SceneThemes._Instance._ThemeOrder[3]);
-    }
-    else if (GameScript.IsSurvival())
-      SceneThemes.ChangeMapTheme(SceneThemes._Instance._ThemeOrder[2]);
-    else if (GameScript._EditorTesting)
-      SceneThemes.ChangeMapTheme(SceneThemes._Instance._ThemeOrder[2]);
+    if (_s_mapIndex != mapsaveindex) { }
     else
     {
-      if (Levels._CurrentLevelIndex < 12 && Levels._CurrentLevelIndex > (Settings._DIFFICULTY == 1 ? 8 : 7))
-        SceneThemes.ChangeMapTheme(SceneThemes._Instance._ThemeOrder[1]);
+
+      _LoadingMap = true;
+
+      //Debug.Log("Loading map with data:\n== BEGIN ==\n" + data + "\n== END ==");
+
+      var level_meta = Levels.GetLevelMeta(data);
+
+      // Check for editor maps
+      _CurrentLevel_Name = level_meta[1] == null ? "unnamed loaded map" : level_meta[1];
+      _CurrentLevel_Loadout = level_meta[2];
+      _CurrentLevel_Theme = level_meta[3] != null ? level_meta[3].ParseIntInvariant() : -1;
+
+      if (_CurrentLevel_Loadout != null)
+      {
+        Levels._HardcodedLoadout = new GameScript.ItemManager.Loadout()
+        {
+          _equipment = new GameScript.PlayerProfile.Equipment()
+        };
+        Levels.GetHardcodedLoadout(_CurrentLevel_Loadout);
+      }
       else
-        SceneThemes.ChangeMapTheme(SceneThemes._Instance._ThemeOrder[(Levels._CurrentLevelIndex / 12) % 12]);
-    }
-    data_iter = width * height + 2;
+        Levels._HardcodedLoadout = null;
 
-    // Find the desired offset of the map based off of the player spawn point and the desiredStartPos
-    string spawnpoint_data = null;
-    _HasLocalLighting = false;
-    var endofobjects = false;
-    string best_time = null;
-    for (; data_iter < data_split.Length;)
-    {
+      // Split data by space
+      var data_split = level_meta[0].Split(' ');
+      var data_iter = 0;
+      // Load map
+      int width = 0,
+        height = 0;
+      //var reversed = data.Contains("__reversed_");
+      try
+      {
+        width = data_split[data_iter++].ParseIntInvariant();
+        height = data_split[data_iter++].ParseIntInvariant();
+      }
+      // If fails to load map, just load the first level
+      catch (System.FormatException e)
+      {
+        Menu2.QuickEnableMenus();
 
-      for (var i = 0; i < 30 && data_iter < data_split.Length; i++)
+        GameScript._Coroutine_load = null;
+        _LoadingMap = false;
+
+        throw new System.FormatException("Cannot load level with data: " + data + "\n" + e.StackTrace);
+      }
+
+      // Remove prior enemies / objects
+      RemoveGameObjects();
+      ResetParticles();
+
+      // Set tilemap size
+      _Map_Size_X = width;
+      _Map_Size_Y = height;
+      ResizeInit((int)((width + 2) * (doubleSizeInit ? 1.4f : 1f)), (int)((height + 2) * (doubleSizeInit ? 1.4f : 1f)));
+
+      // Remove stuff
+      ActiveRagdoll.Reset();
+      EnemyScript.Reset();
+      Powerup.Reset();
+      FunctionsC.AoeHandler.Reset();
+      CandleScript.Reset();
+      CustomEntityUI._ID = 0;
+      EnemyScript._ID = 0;
+
+      // Set theme
+      if (Levels._LevelPack_Playing)
+      {
+        if (_CurrentLevel_Theme != -1)
+          SceneThemes.ChangeMapTheme(SceneThemes._SceneOrder_LevelEditor[_CurrentLevel_Theme % SceneThemes._SceneOrder_LevelEditor.Length]);
+        else
+          SceneThemes.ChangeMapTheme(SceneThemes._Instance._ThemeOrder[3]);
+      }
+      else if (GameScript.IsSurvival())
+        SceneThemes.ChangeMapTheme(SceneThemes._Instance._ThemeOrder[2]);
+      else if (GameScript._EditorTesting)
+        SceneThemes.ChangeMapTheme(SceneThemes._Instance._ThemeOrder[2]);
+      else
+      {
+        if (Levels._CurrentLevelIndex < 12 && Levels._CurrentLevelIndex > (Settings._DIFFICULTY == 1 ? 8 : 7))
+          SceneThemes.ChangeMapTheme(SceneThemes._Instance._ThemeOrder[1]);
+        else
+          SceneThemes.ChangeMapTheme(SceneThemes._Instance._ThemeOrder[(Levels._CurrentLevelIndex / 12) % 12]);
+      }
+      data_iter = width * height + 2;
+
+      // Find the desired offset of the map based off of the player spawn point and the desiredStartPos
+      string spawnpoint_data = null;
+      _HasLocalLighting = false;
+      var endofobjects = false;
+      string best_time = null;
+      for (; data_iter < data_split.Length;)
       {
 
-        // Check if data is valid
-        var data_ = data_split[data_iter++].Trim();
-        if (data_.Length <= 1) continue;
-
-        // Check for name of map
-        if (data_.Contains("+"))
+        for (var i = 0; i < 30 && data_iter < data_split.Length; i++)
         {
-          endofobjects = true;
+
+          // Check if data is valid
+          var data_ = data_split[data_iter++].Trim();
+          if (data_.Length <= 1) continue;
+
+          // Check for name of map
+          if (data_.Contains("+"))
+          {
+            endofobjects = true;
+            break;
+          }
+
+          // Add to level data for reloading
+          s_levelObjectData.Add(data_);
+
+          // Check if data is the spawnpoint data; save it for later
+          if (data_.Contains("playerspawn_"))
+            spawnpoint_data = data_;
+          else if (data_.Contains("candel"))
+            _HasLocalLighting = true;
+          else if (data_.Contains("bdt_"))
+          {
+            best_time = data_;
+          }
+        }
+
+        if (endofobjects)
           break;
-        }
+      }
+      /*/ Turn on light if has no local lighting
+      if(!hasLocalLighting && GameScript._CameraLight.intensity == 0f)
+        GameScript.ToggleCameraLight(true);
+      else if(hasLocalLighting && GameScript._CameraLight.intensity != 0f)
+        GameScript.ToggleCameraLight(false);    */
 
-        // Add to level data for reloading
-        s_levelObjectData.Add(data_);
+      Vector2 offset = new Vector2(0, 0),
+        difference = Vector2.zero;
+      if (spawnpoint_data != null)
+      {
 
-        // Check if data is the spawnpoint data; save it for later
-        if (data_.Contains("playerspawn_"))
-          spawnpoint_data = data_;
-        else if (data_.Contains("candel"))
-          _HasLocalLighting = true;
-        else if (data_.Contains("bdt_"))
+        // Find the local start position of the new map
+        var splitData = spawnpoint_data.Split('_');
+        var spawnpos_tilepos = TransformPositionOntoTiles(splitData[1].ParseFloatInvariant(), splitData[2].ParseFloatInvariant());
+
+        // Check for null players
+        if (Players != null)
+          for (var i = Players.Count - 1; i >= 0; i--)
+            if (Players[i] == null) Players.Remove(Players[i]);
+
+        // Find the local end position of the new map
+        var usePos = Vector3.zero;
+        if (Players != null && Players.Count > 0)
         {
-          best_time = data_;
+          foreach (var p in Players)
+          {
+            if (p._ragdoll._IsDead) continue;
+            usePos = p.transform.position;
+            _lastUsePos = usePos;
+          }
         }
-      }
-
-      if (endofobjects)
-        break;
-    }
-    /*/ Turn on light if has no local lighting
-    if(!hasLocalLighting && GameScript._CameraLight.intensity == 0f)
-      GameScript.ToggleCameraLight(true);
-    else if(hasLocalLighting && GameScript._CameraLight.intensity != 0f)
-      GameScript.ToggleCameraLight(false);    */
-
-    Vector2 offset = new Vector2(0, 0),
-      difference = Vector2.zero;
-    if (spawnpoint_data != null)
-    {
-
-      // Find the local start position of the new map
-      var splitData = spawnpoint_data.Split('_');
-      var spawnpos_tilepos = TransformPositionOntoTiles(splitData[1].ParseFloatInvariant(), splitData[2].ParseFloatInvariant());
-
-      // Check for null players
-      if (Players != null)
-        for (var i = Players.Count - 1; i >= 0; i--)
-          if (Players[i] == null) Players.Remove(Players[i]);
-
-      // Find the local end position of the new map
-      var usePos = Vector3.zero;
-      if (Players != null && Players.Count > 0)
-      {
-        foreach (var p in Players)
+        if (usePos.Equals(Vector3.zero))
         {
-          if (p._ragdoll._IsDead) continue;
-          usePos = p.transform.position;
-          _lastUsePos = usePos;
+          if (_lastUsePos.Equals(Vector3.zero))
+            _lastUsePos = new Vector3(_lastSpawnPos.x, 0f, _lastSpawnPos.y);
+          usePos = _lastUsePos;
+        }
+        _lastSpawnPos = spawnpos_tilepos;
+        var endpoint_tilepos = TransformPositionOntoTiles(usePos.x, usePos.z);
+        endpoint_tilepos = new Vector2(Mathf.Abs(endpoint_tilepos.x), Mathf.Abs(endpoint_tilepos.y));
+
+        var newStartPos = (endpoint_tilepos + new Vector2(1, 1));
+        difference = newStartPos - new Vector2(_Width / 2, _Height / 2);
+
+        // Offset the map so the start position is always in the center
+        //if (difference != Vector2.zero)
+        //  yield return OffsetMap(difference);
+        _last_objectoffset = _objectoffset;
+      }
+
+      // Set best time
+      if (_Dev_Time_Save != -1f)
+      {
+        _LevelTime_Dev = _Dev_Time_Save;
+        _Dev_Time_Save = -1f;
+      }
+      else if (!Settings._LevelEditorEnabled)
+      {
+        if (best_time != null)
+        {
+          _LevelTime_Dev = best_time.Split('_')[1].ParseFloatInvariant();
+          //Debug.Log("Loaded best dev time: " + TileManager._LevelTime_Dev);
+        }
+        else
+        {
+          _LevelTime_Dev = -1f;
+          //Debug.LogWarning("No best time set for classic level");
         }
       }
-      if (usePos.Equals(Vector3.zero))
+
+
+      // Clean up old meshes
+      var names = new string[] { "Meshes_Tiles_Up", "Meshes_Tiles_Down", "Meshes_Tiles_Sides" };
+      foreach (var name in names)
       {
-        if (_lastUsePos.Equals(Vector3.zero))
-          _lastUsePos = new Vector3(_lastSpawnPos.x, 0f, _lastSpawnPos.y);
-        usePos = _lastUsePos;
+        GameObject old = GameObject.Find(name);
+        if (old != null) GameObject.Destroy(old);
       }
-      _lastSpawnPos = spawnpos_tilepos;
-      var endpoint_tilepos = TransformPositionOntoTiles(usePos.x, usePos.z);
-      endpoint_tilepos = new Vector2(Mathf.Abs(endpoint_tilepos.x), Mathf.Abs(endpoint_tilepos.y));
 
-      var newStartPos = (endpoint_tilepos + new Vector2(1, 1));
-      difference = newStartPos - new Vector2(_Width / 2, _Height / 2);
+      // Get List of tiles to toggle
+      List<Tile> tiles_down = new List<Tile>(),
+        tiles_up = new List<Tile>();
+      data_iter = 2;
+      _offset = new Vector2(1, 1);
 
-      // Offset the map so the start position is always in the center
-      //if (difference != Vector2.zero)
-      //  yield return OffsetMap(difference);
-      _last_objectoffset = _objectoffset;
-    }
+      // Color tiles
+      _Materials_Tiles.Item1.color = SceneThemes._Theme._tileColorUp;
+      _Materials_Tiles.Item2.color = SceneThemes._Theme._tileColorDown;
 
-    // Set best time
-    if (_Dev_Time_Save != -1f)
-    {
-      _LevelTime_Dev = _Dev_Time_Save;
-      _Dev_Time_Save = -1f;
-    }
-    else if (!Settings._LevelEditorEnabled)
-    {
-      if (best_time != null)
+      // Holds offsets for checking i a 3x3 around a tile
+      Vector2Int[] tile_offsets = new Vector2Int[]
       {
-        _LevelTime_Dev = best_time.Split('_')[1].ParseFloatInvariant();
-        //Debug.Log("Loaded best dev time: " + TileManager._LevelTime_Dev);
-      }
-      else
-      {
-        _LevelTime_Dev = -1f;
-        //Debug.LogWarning("No best time set for classic level");
-      }
-    }
-
-
-    // Clean up old meshes
-    var names = new string[] { "Meshes_Tiles_Up", "Meshes_Tiles_Down", "Meshes_Tiles_Sides" };
-    foreach (var name in names)
-    {
-      GameObject old = GameObject.Find(name);
-      if (old != null) GameObject.Destroy(old);
-    }
-
-    // Get List of tiles to toggle
-    List<Tile> tiles_down = new List<Tile>(),
-      tiles_up = new List<Tile>();
-    data_iter = 2;
-    _offset = new Vector2(1, 1);
-
-    // Color tiles
-    _Materials_Tiles.Item1.color = SceneThemes._Theme._tileColorUp;
-    _Materials_Tiles.Item2.color = SceneThemes._Theme._tileColorDown;
-
-    // Holds offsets for checking i a 3x3 around a tile
-    Vector2Int[] tile_offsets = new Vector2Int[]
-    {
       new Vector2Int(0, 1),
       new Vector2Int(0, -1),
       new Vector2Int(-1, 0),
@@ -760,246 +772,250 @@ public class TileManager
       new Vector2Int(-1, -1),
       new Vector2Int(-1, 1),
       new Vector2Int(1, -1),
-    };
+      };
 
-    // Holds positions for down and up
-    Vector3 pos_up = new Vector3(0f, Tile._StartY + Tile._AddY, 0f),
-     pos_down = new Vector3(0f, Tile._StartY, 0f);
-    // Check if
-    var waititer = 0;
-    for (var w = 0; w < _Width; w++)
-    {
-      for (var h = 0; h < _Height; h++)
+      // Holds positions for down and up
+      Vector3 pos_up = new Vector3(0f, Tile._StartY + Tile._AddY, 0f),
+       pos_down = new Vector3(0f, Tile._StartY, 0f);
+      // Check if
+      var waititer = 0;
+      for (var w = 0; w < _Width; w++)
       {
-        var useData = 1;
-        if (w < _offset.x || w >= width + _offset.x || h < _offset.y || h >= height + _offset.y) { }
-        else
-          useData = data_split[data_iter++].ParseIntInvariant();
-        var tile = _Tiles[w * _Height + h];
-        // Down
-        if (useData == 0)
+        for (var h = 0; h < _Height; h++)
         {
-          var r = tile._tile.GetComponent<MeshRenderer>();
-          r.sharedMaterial = _Materials_Tiles.Item2;
-          tile._tile.transform.localPosition = new Vector3(tile._tile.transform.localPosition.x, pos_down.y, tile._tile.transform.localPosition.z);
-          tiles_down.Add(tile);
+          var useData = 1;
+          if (w < _offset.x || w >= width + _offset.x || h < _offset.y || h >= height + _offset.y) { }
+          else
+            useData = data_split[data_iter++].ParseIntInvariant();
+          var tile = _Tiles[w * _Height + h];
+          // Down
+          if (useData == 0)
+          {
+            var r = tile._tile.GetComponent<MeshRenderer>();
+            r.sharedMaterial = _Materials_Tiles.Item2;
+            tile._tile.transform.localPosition = new Vector3(tile._tile.transform.localPosition.x, pos_down.y, tile._tile.transform.localPosition.z);
+            tiles_down.Add(tile);
+          }
+          // Up
+          else
+          {
+            var r = tile._tile.GetComponent<MeshRenderer>();
+            r.sharedMaterial = _Materials_Tiles.Item1;
+            tile._tile.transform.localPosition = new Vector3(tile._tile.transform.localPosition.x, pos_up.y, tile._tile.transform.localPosition.z);
+            tiles_up.Add(tile);
+          }
         }
-        // Up
+        if (waititer++ % 20 == 0) yield return new WaitForSeconds(0.01f);
+      }
+      while (SceneThemes._ChangingTheme) yield return new WaitForSeconds(0.1f);
+      yield return new WaitForSeconds(0.1f);
+      // Set inner walls and tile visibility
+      foreach (var tile in tiles_up)
+      {
+        // Gather tiles around tile; see if it is near a down tile
+        var next_to_tiles = new List<Vector2Int>();
+        foreach (var pos in tile_offsets)
+        {
+          var tile_next = Tile.GetTile((int)tile._pos.x + pos.x, (int)tile._pos.y + pos.y);
+          if (tile_next == null) continue;
+
+          if (tiles_down.Contains(tile_next))
+            next_to_tiles.Add(pos);
+        }
+
+        // Check visibility
+        if (next_to_tiles.Count == 0)
+          tile._tile.gameObject.SetActive(false);
+        // Check inner walls
         else
         {
-          var r = tile._tile.GetComponent<MeshRenderer>();
-          r.sharedMaterial = _Materials_Tiles.Item1;
-          tile._tile.transform.localPosition = new Vector3(tile._tile.transform.localPosition.x, pos_up.y, tile._tile.transform.localPosition.z);
-          tiles_up.Add(tile);
+          for (int i = 0; i < 4; i++)
+            tile._tile.transform.GetChild(0).GetChild(i).gameObject.SetActive(next_to_tiles.Contains(tile_offsets[i]));
         }
       }
-      if (waititer++ % 20 == 0) yield return new WaitForSeconds(0.01f);
-    }
-    while (SceneThemes._ChangingTheme) yield return new WaitForSeconds(0.1f);
-    yield return new WaitForSeconds(0.1f);
-    // Set inner walls and tile visibility
-    foreach (var tile in tiles_up)
-    {
-      // Gather tiles around tile; see if it is near a down tile
-      var next_to_tiles = new List<Vector2Int>();
-      foreach (var pos in tile_offsets)
-      {
-        var tile_next = Tile.GetTile((int)tile._pos.x + pos.x, (int)tile._pos.y + pos.y);
-        if (tile_next == null) continue;
 
-        if (tiles_down.Contains(tile_next))
-          next_to_tiles.Add(pos);
+      // Load objects
+      var candles = new List<GameObject>();
+      for (var i = 0; i < s_levelObjectData.Count;)
+      {
+        for (var u = 0; i < s_levelObjectData.Count && u < 15; u++)
+        {
+          var objectData = s_levelObjectData[i++];
+          var objectLoaded = LoadObject(objectData);
+          if (objectLoaded == null)
+          {
+
+            // Check bdt load
+            if (objectData.StartsWith("bdt_"))
+            {
+              continue;
+            }
+
+            // Throw object parse error
+            GameScript._Coroutine_load = null;
+            _LoadingMap = false;
+
+            throw new System.NullReferenceException("Error parsing object data: " + objectData);
+          }
+          else
+          {
+
+            if (objectLoaded.name.Equals(_LEO_CandelBarrel._name) || objectLoaded.name.Equals(_LEO_CandelBig._name) || objectLoaded.name.Equals(_LEO_CandelTable._name))
+            {
+              candles.Add(objectLoaded);
+            }
+
+          }
+        }
+        yield return new WaitForSeconds(0.01f);
       }
 
-      // Check visibility
-      if (next_to_tiles.Count == 0)
-        tile._tile.gameObject.SetActive(false);
-      // Check inner walls
+      // Check for light max
+      if (!GameScript.IsSurvival())
+        if (candles.Count > 4)
+        {
+          Debug.LogWarning("Max light sources! Adding light dimmers");
+          foreach (var candle in candles)
+          {
+            var customObstacle = candle.AddComponent<CustomObstacle>();
+            customObstacle.InitCandle();
+
+            var candleScript = candle.GetComponent<CandleScript>();
+            candleScript._NormalizedEnable = 0f;
+          }
+        }
+
+      // Make sure ragdolls are not null
+      if (ActiveRagdoll.s_Ragdolls != null)
+        for (var i = ActiveRagdoll.s_Ragdolls.Count - 1; i >= 0; i--)
+        {
+          var r = ActiveRagdoll.s_Ragdolls[i];
+          if (r == null || r._Hip == null)
+          {
+            if (r._Controller != null) GameObject.Destroy(r._Controller);
+            ActiveRagdoll.s_Ragdolls.Remove(r);
+          }
+        }
+
+      // Set floor pos to center of map
+      var floorPos = _Floor.position;
+      var center = _Tiles[0]._tile.transform.position + (_Tiles[_Width * _Height - 1]._tile.transform.position - _Tiles[0]._tile.transform.position) * 0.5f;
+
+      floorPos.x = center.x;
+      floorPos.z = center.z;
+      _Floor.position = floorPos;
+      _Floor.localScale = new Vector3(_Width * 0.5f, 1f, _Height * 0.5f);
+
+      // Set camera pos to playerspawn
+      var campos = GameResources._Camera_Main.transform.position;
+      var playerspawnpos = PlayerspawnScript._PlayerSpawns[0].transform.position;
+      campos.x = playerspawnpos.x;
+      campos.z = playerspawnpos.z + 3.6f;
+      GameResources._Camera_Main.transform.position = campos;
+
+      // Hide playerspawn
+      if (GameScript.s_GameMode == GameScript.GameModes.SURVIVAL && !GameScript._EditorEnabled)
+        PlayerspawnScript._PlayerSpawns[0].transform.GetChild(1).gameObject.SetActive(false);
       else
-      {
-        for (int i = 0; i < 4; i++)
-          tile._tile.transform.GetChild(0).GetChild(i).gameObject.SetActive(next_to_tiles.Contains(tile_offsets[i]));
-      }
-    }
+        PlayerspawnScript._PlayerSpawns[0].transform.GetChild(1).gameObject.SetActive(true);
 
-    // Load objects
-    var candles = new List<GameObject>();
-    for (var i = 0; i < s_levelObjectData.Count;)
-    {
-      for (var u = 0; i < s_levelObjectData.Count && u < 15; u++)
+      // Check special objects before build
+      var objectsToDisable = new List<GameObject>();
+      if (GameScript.s_InteractableObjects)
       {
-        var objectData = s_levelObjectData[i++];
-        var objectLoaded = LoadObject(objectData);
-        if (objectLoaded == null)
+
+        var mapObjects = GameObject.Find("Map_Objects").transform;
+        for (var i = 0; i < mapObjects.childCount; i++)
         {
 
-          // Check bdt load
-          if (objectData.StartsWith("bdt_"))
+          var child = mapObjects.GetChild(i);
+          switch (child.name)
           {
-            continue;
+
+            case "Table":
+            case "Books":
+            case "Chair":
+
+              objectsToDisable.Add(child.gameObject);
+              OnObjectLoad(child.gameObject);
+
+              break;
+
           }
-
-          // Throw object parse error
-          GameScript._Coroutine_load = null;
-          _LoadingMap = false;
-
-          throw new System.NullReferenceException("Error parsing object data: " + objectData);
         }
-        else
-        {
 
-          if (objectLoaded.name.Equals(_LEO_CandelBarrel._name) || objectLoaded.name.Equals(_LEO_CandelBig._name) || objectLoaded.name.Equals(_LEO_CandelTable._name))
-          {
-            candles.Add(objectLoaded);
-          }
-
-        }
-      }
-      yield return new WaitForSeconds(0.01f);
-    }
-
-    // Check for light max
-    if (!GameScript.IsSurvival())
-      if (candles.Count > 4)
-      {
-        Debug.LogWarning("Max light sources! Adding light dimmers");
-        foreach (var candle in candles)
-        {
-          var customObstacle = candle.AddComponent<CustomObstacle>();
-          customObstacle.InitCandle();
-        }
+        foreach (var obj in objectsToDisable)
+          obj.SetActive(false);
       }
 
-    // Make sure ragdolls are not null
-    if (ActiveRagdoll.s_Ragdolls != null)
-      for (var i = ActiveRagdoll.s_Ragdolls.Count - 1; i >= 0; i--)
-      {
-        var r = ActiveRagdoll.s_Ragdolls[i];
-        if (r == null || r._Hip == null)
-        {
-          if (r._Controller != null) GameObject.Destroy(r._Controller);
-          ActiveRagdoll.s_Ragdolls.Remove(r);
-        }
-      }
+      // Bake navmesh
+      _navMeshSurface.BuildNavMesh();
+      if (GameScript.IsSurvival())
+        _navMeshSurface2.BuildNavMesh();
 
-    // Set floor pos to center of map
-    var floorPos = _Floor.position;
-    var center = _Tiles[0]._tile.transform.position + (_Tiles[_Width * _Height - 1]._tile.transform.position - _Tiles[0]._tile.transform.position) * 0.5f;
+      // Combine meshes
+      foreach (var t in tiles_down)
+        t._tile.transform.parent = _Map;
+      CombineMeshes(true);
 
-    floorPos.x = center.x;
-    floorPos.z = center.z;
-    _Floor.position = floorPos;
-    _Floor.localScale = new Vector3(_Width * 0.5f, 1f, _Height * 0.5f);
-
-    // Set camera pos to playerspawn
-    var campos = GameResources._Camera_Main.transform.position;
-    var playerspawnpos = PlayerspawnScript._PlayerSpawns[0].transform.position;
-    campos.x = playerspawnpos.x;
-    campos.z = playerspawnpos.z + 3.6f;
-    GameResources._Camera_Main.transform.position = campos;
-
-    // Hide playerspawn
-    if (GameScript.s_GameMode == GameScript.GameModes.SURVIVAL && !GameScript._EditorEnabled)
-      PlayerspawnScript._PlayerSpawns[0].transform.GetChild(1).gameObject.SetActive(false);
-    else
-      PlayerspawnScript._PlayerSpawns[0].transform.GetChild(1).gameObject.SetActive(true);
-
-    // Check special objects before build
-    var objectsToDisable = new List<GameObject>();
-    if (GameScript.s_InteractableObjects)
-    {
-
-      var mapObjects = GameObject.Find("Map_Objects").transform;
-      for (var i = 0; i < mapObjects.childCount; i++)
-      {
-
-        var child = mapObjects.GetChild(i);
-        switch (child.name)
-        {
-
-          case "Table":
-          case "Books":
-          case "Chair":
-
-            objectsToDisable.Add(child.gameObject);
-            OnObjectLoad(child.gameObject);
-
-            break;
-
-        }
-      }
-
+      // Special objects after navmesh build
       foreach (var obj in objectsToDisable)
-        obj.SetActive(false);
-    }
+        obj.SetActive(true);
 
-    // Bake navmesh
-    _navMeshSurface.BuildNavMesh();
-    if (GameScript.IsSurvival())
-      _navMeshSurface2.BuildNavMesh();
-
-    // Combine meshes
-    foreach (var t in tiles_down)
-      t._tile.transform.parent = _Map;
-    CombineMeshes(true);
-
-    // Special objects after navmesh build
-    foreach (var obj in objectsToDisable)
-      obj.SetActive(true);
-
-    // Backrooms
-    if (GameScript.s_Backrooms)
-    {
-      GameObject.Find("Backrooms").transform.position = new Vector3(-42.49f, -2.3f, -53.95f);
-
-      GameObject.Destroy(GameObject.Find("Meshes_Tiles_Up"));
-      GameObject.Destroy(GameObject.Find("Meshes_Tiles_Down"));
-      GameObject.Destroy(GameObject.Find("Meshes_Tiles_Sides"));
-    }
-
-    // Set level time
-    GameScript._LevelStartTime = Time.time;
-
-    // Init all enemies
-    EnemyScript.HardInitAll();
-
-    // Spawn players / hide menus
-    if (_s_mapIndex > 1)
-    {
-      if (Menu2._InMenus)
+      // Backrooms
+      if (GameScript.s_Backrooms)
       {
-        Menu2.HideMenus();
+        GameObject.Find("Backrooms").transform.position = new Vector3(-42.49f, -2.3f, -53.95f);
+
+        GameObject.Destroy(GameObject.Find("Meshes_Tiles_Up"));
+        GameObject.Destroy(GameObject.Find("Meshes_Tiles_Down"));
+        GameObject.Destroy(GameObject.Find("Meshes_Tiles_Sides"));
       }
 
-      // Spawn player
-      GameScript.SpawnPlayers();
-    }
+      // Set level time
+      GameScript._LevelStartTime = Time.time;
 
-    // Refill player ammo
-    if (Players != null)
-      foreach (var p in Players) p._ragdoll.RefillAmmo();
-    OnMapLoad();
+      // Init all enemies
+      EnemyScript.HardInitAll();
 
-    // Append to maps
-    if (appendToEditMaps)
-      Menu2.AppendToEditMaps($"{level_meta[0]} +{_CurrentLevel_Name}" + (level_meta[2] == null ? "" : $"!{level_meta[2]}") + (level_meta[3] == null ? "" : $"*{level_meta[3]}"));
+      // Spawn players / hide menus
+      if (_s_mapIndex > 1)
+      {
+        if (Menu2._InMenus)
+        {
+          Menu2.HideMenus();
+        }
 
-    GameScript._Coroutine_load = null;
-    _LoadingMap = false;
+        // Spawn player
+        GameScript.SpawnPlayers();
+      }
 
-    // Lerp cam distance
-    time = 1f;
-    material = GameResources._CameraFader.sharedMaterial;
-    while (time > 0f)
-    {
-      color.a = time;
+      // Refill player ammo
+      if (Players != null)
+        foreach (var p in Players) p._ragdoll.RefillAmmo();
+      OnMapLoad();
+
+      // Append to maps
+      if (appendToEditMaps)
+        Menu2.AppendToEditMaps($"{level_meta[0]} +{_CurrentLevel_Name}" + (level_meta[2] == null ? "" : $"!{level_meta[2]}") + (level_meta[3] == null ? "" : $"*{level_meta[3]}"));
+
+      GameScript._Coroutine_load = null;
+      _LoadingMap = false;
+
+      // Lerp cam distance
+      time = 1f;
+      material = GameResources._CameraFader.sharedMaterial;
+      while (time > 0f)
+      {
+        color.a = time;
+        material.color = color;
+
+        yield return new WaitForSecondsRealtime(0.001f);
+        time -= 0.06f;
+      }
+      color.a = 0f;
       material.color = color;
-
-      yield return new WaitForSecondsRealtime(0.001f);
-      time -= 0.06f;
     }
-    color.a = 0f;
-    material.color = color;
   }
 
   //
@@ -1014,7 +1030,7 @@ public class TileManager
         var collider = loadedObject.GetComponent<BoxCollider>();
         var navmeshobj = loadedObject.AddComponent<NavMeshObstacle>();
         navmeshobj.center = collider.center;
-        navmeshobj.size = collider.size * 0.8f;
+        navmeshobj.size = collider.size * 0.85f;
         navmeshobj.carving = true;
         //navmeshobj.carveOnlyStationary = false;
 
@@ -1900,6 +1916,12 @@ public class TileManager
     // Hide text
     HideGameOverText();
 
+    // Camera
+    var material = GameResources._CameraFader.sharedMaterial;
+    var color = material.color;
+    color.a = 1f;
+    material.color = color;
+
     // Reload assets
     GameScript.ToggleExit(false);
     for (var i = ActiveRagdoll.s_Ragdolls.Count - 1; i > -1; i--)
@@ -1995,6 +2017,9 @@ public class TileManager
         {
           var customObstacle = candle.AddComponent<CustomObstacle>();
           customObstacle.InitCandle();
+
+          var candleScript = candle.GetComponent<CandleScript>();
+          candleScript._NormalizedEnable = 0f;
         }
 
       }
@@ -2013,9 +2038,35 @@ public class TileManager
     // Init enemies
     EnemyScript.HardInitAll();
 
+    // Move camera
+    var campos = GameResources._Camera_Main.transform.position;
+    var playerspawnpos = PlayerspawnScript._PlayerSpawns[0].transform.position;
+    campos.x = playerspawnpos.x;
+    campos.z = playerspawnpos.z + 3.6f;
+    GameResources._Camera_Main.transform.position = campos;
+
     // Spawn player
     GameScript.SpawnPlayers();
     OnMapLoad();
+
+    // Lerp camera
+    IEnumerator LerpCamera()
+    {
+      var time = 1f;
+      var material = GameResources._CameraFader.sharedMaterial;
+      var color = material.color;
+      while (time > 0f)
+      {
+        color.a = time;
+        material.color = color;
+
+        yield return new WaitForSecondsRealtime(0.001f);
+        time -= 0.07f;
+      }
+      color.a = 0f;
+      material.color = color;
+    }
+    GameScript._s_Singleton.StartCoroutine(LerpCamera());
   }
 
   public static void ResetParticles()
@@ -2540,9 +2591,11 @@ public class TileManager
     if (SettingsModule.CameraZoom == Settings.SettingsSaveData.CameraZoomType.AUTO)
     {
       SettingsModule.CameraZoom = Settings.SettingsSaveData.CameraZoomType.NORMAL;
-      Settings.SetPostProcessing();
+      Settings.SetPostProcessing(true);
       SettingsModule.CameraZoom = Settings.SettingsSaveData.CameraZoomType.AUTO;
     }
+    else
+      Settings.SetPostProcessing(true);
 
     // Check backrooms
     if (GameScript.s_Backrooms)
@@ -2572,6 +2625,7 @@ public class TileManager
     {
       LoadMap(mapData);
     }
+    Settings.SetPostProcessing();
 
     // Disable display ring
     _Pointer.gameObject.SetActive(false);

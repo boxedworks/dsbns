@@ -260,7 +260,7 @@ public static class Settings
         SettingsModule.UseVsync = PlayerPrefs.GetInt("vsync_setting", 0) == 1;
         SettingsModule.UseDefaultTargetFramerate = PlayerPrefs.GetInt("default_targetFramerate", 1) == 1;
         SettingsModule.UseOrthographicCamera = PlayerPrefs.GetInt("CameraType_ortho", 1) == 1;
-        SettingsModule.CameraZoom = (SettingsSaveData.CameraZoomType)PlayerPrefs.GetInt("CameraZoom", 1);
+        SettingsModule.CameraZoom = (SettingsSaveData.CameraZoomType)PlayerPrefs.GetInt("CameraZoom", SettingsModule.UseOrthographicCamera ? 3 : 1);
 
         SettingsModule.VolumeMusic = PlayerPrefs.GetInt("VolumeMusic", 3);
         SettingsModule.VolumeSFX = PlayerPrefs.GetInt("VolumeSFX", 3);
@@ -661,7 +661,7 @@ public static class Settings
     _LevelEditorEnabled = gamemode == GamemodeChange.LEVEL_EDITOR;
   }
 
-  public static void SetPostProcessing()
+  public static void SetPostProcessing(bool forceOffDOF = false)
   {
     // Camera settings
     if (SettingsModule.UseOrthographicCamera)
@@ -703,7 +703,7 @@ public static class Settings
       if (depthOfField != null)
       {
 
-        if (SettingsModule.DepthOfFieldAmount > 0)
+        if (SettingsModule.DepthOfFieldAmount > 0 && !forceOffDOF)
         {
           depthOfField.enabled.value = true;
           depthOfField.focalLength.value = 177f;
@@ -904,7 +904,7 @@ public static class Settings
       FAR,
       AUTO,
     }
-    public CameraZoomType CameraZoom;
+    public CameraZoomType CameraZoom = CameraZoomType.AUTO;
 
     // Audio
     public int VolumeMusic = 3;

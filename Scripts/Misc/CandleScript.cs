@@ -12,7 +12,7 @@ public class CandleScript : MonoBehaviour
   }
 
   Light _light;
-  float _baseIntensity = 1.6f,
+  float _baseIntensity = 1.75f,
     _start_time;
 
   public bool _enabled;
@@ -27,7 +27,7 @@ public class CandleScript : MonoBehaviour
     set { particles = value; }
   }
 
-  public float _normalizedEnable;
+  public float _NormalizedEnable;
   float normalizedEnable;
 
   // Use this for initialization
@@ -37,13 +37,10 @@ public class CandleScript : MonoBehaviour
 
     _light = transform.GetChild(2).GetComponent<Light>();
 
-    _baseIntensity = _light.intensity;
-    _light.intensity = 0f;
-
     if (GameScript.s_GameMode != GameScript.GameModes.SURVIVAL)
       _enabled = true;
 
-    _normalizedEnable = GameScript.s_GameMode == GameScript.GameModes.CLASSIC ? 1f : 0f;
+    _NormalizedEnable = GameScript.s_GameMode == GameScript.GameModes.CLASSIC ? 1f : 0f;
     if (GameScript.s_GameMode == GameScript.GameModes.SURVIVAL)
       _light.range = 8.3f;
   }
@@ -58,9 +55,9 @@ public class CandleScript : MonoBehaviour
     if (_enabled)
       _light.intensity = Mathf.Clamp((Time.time - 1f) - _start_time, 0f, 1f) * _baseIntensity * normalizedEnable;
     if (Time.time - GameScript._LevelStartTime < 0.25f)
-      normalizedEnable = _normalizedEnable;
+      normalizedEnable = _NormalizedEnable;
     else
-      normalizedEnable += (_normalizedEnable - normalizedEnable) * Time.deltaTime * 2f;
+      normalizedEnable += (_NormalizedEnable - normalizedEnable) * Time.deltaTime * 2f;
 
     // Particle FX
     if (normalizedEnable < 0.35f && _particles.isPlaying)

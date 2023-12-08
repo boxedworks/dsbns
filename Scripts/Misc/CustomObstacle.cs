@@ -397,10 +397,10 @@ public class CustomObstacle : MonoBehaviour
 
         var equip_side = ActiveRagdoll.Side.RIGHT;
 
-        var akimbo = Shop.Perk.HasPerk(p._Id, Shop.Perk.PerkType.AKIMBO);
+        var hasAkimbo = Shop.Perk.HasPerk(p._Id, Shop.Perk.PerkType.AKIMBO);
 
         // Check if can equip
-        var equip_info = CheckEquip(p, item_type, side, akimbo, 0);
+        var equip_info = CheckEquip(p, item_type, side, hasAkimbo, 0);
         if (!equip_info.Item1)
         {
           var text = equip_info.Item3;
@@ -430,7 +430,7 @@ public class CustomObstacle : MonoBehaviour
               foreach (var current_item in items)
               {
                 // Try to equip in other slots
-                var equip_info2 = CheckEquip(p, current_item, InteractSide.DEFAULT, akimbo, 1);
+                var equip_info2 = CheckEquip(p, current_item, InteractSide.DEFAULT, hasAkimbo, 1);
                 var equip_side2 = equip_info2.Item2;
 
                 var current_item2 = (equip_side2 == ActiveRagdoll.Side.LEFT ? p._Profile._item_left_other : p._Profile._item_right_other);
@@ -452,7 +452,7 @@ public class CustomObstacle : MonoBehaviour
           if (current_item != GameScript.ItemManager.Items.NONE)
           {
             // Try to equip in other slots
-            var equip_info2 = CheckEquip(p, current_item, InteractSide.DEFAULT, akimbo, 1);
+            var equip_info2 = CheckEquip(p, current_item, InteractSide.DEFAULT, hasAkimbo, 1);
             var equip_side2 = equip_info2.Item2;
 
             var current_item2 = (equip_side2 == ActiveRagdoll.Side.LEFT ? p._Profile._item_left_other : p._Profile._item_right_other);
@@ -705,7 +705,7 @@ public class CustomObstacle : MonoBehaviour
     // Ragdoll text
     var text = "";
 
-    var text_needAkimbo = "i can't hold both";
+    var text_needAkimbo = "i can't hold both. unless...";
     var text_haveAlready = "i have this already";
 
     // DEFAULT
@@ -1000,9 +1000,9 @@ public class CustomObstacle : MonoBehaviour
         //Debug.Log(min_dist);
         var min = GameScript.IsSurvival() ? 5.5f : 7;
         var max = GameScript.IsSurvival() ? 8.5f : 12f;
-        if (min_dist < min) _candleScript._normalizedEnable = 1f;
-        else if (min_dist > max) _candleScript._normalizedEnable = 0f;
-        else _candleScript._normalizedEnable = 1f - ((min_dist - min) / (max - min));
+        if (min_dist < min) _candleScript._NormalizedEnable = 1f;
+        else if (min_dist > max) _candleScript._NormalizedEnable = 0f;
+        else _candleScript._NormalizedEnable = 1f - ((min_dist - min) / (max - min));
       }
     }
     if (_text != null && _text.gameObject != null)

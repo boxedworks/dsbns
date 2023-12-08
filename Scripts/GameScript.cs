@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Data.SqlTypes;
 using UnityEngine;
 
 public class GameScript : MonoBehaviour
@@ -49,7 +50,11 @@ public class GameScript : MonoBehaviour
 
   public void OnApplicationQuit()
   {
-
+    // Check window swap
+    if (Screen.fullScreen != SettingsModule.Fullscreen)
+    {
+      SettingsModule.Fullscreen = Screen.fullScreen;
+    }
     Settings.SettingsSaveData.Save();
 
     //if (!Application.isEditor) System.Diagnostics.Process.GetCurrentProcess().Kill();
@@ -1206,7 +1211,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
           if (candle._index == index || candle._index == index2)
           {
             var can = candle.gameObject.GetComponent<CandleScript>();
-            can._normalizedEnable = 0f;
+            can._NormalizedEnable = 0f;
             can.On();
           }
 
@@ -1474,6 +1479,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
   void Update()
   {
 
+    //
     if (!IsSurvival())
     {
       // Update level timer
@@ -1871,6 +1877,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     }
   }
 
+  //
   static float _LastReloadTime;
   public static bool ReloadMap(bool checkReloadtime = true, bool sendMultiplayerInfo = false)
   {
@@ -2129,6 +2136,23 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     public void HandleMenuInput()
     {
 
+      // Check axis hold
+      if (!(_menuDownTime_down != 0f && _menuDownTime_up != 0f))
+      {
+        if (_menuDownTime_down != 0f && Time.time - _menuDownTime_down > 0.09f)
+        {
+          _menuDownTime_down = Time.time;
+
+          Down();
+        }
+        else if (_menuDownTime_up != 0f && Time.time - _menuDownTime_up > 0.09f)
+        {
+          _menuDownTime_up = Time.time;
+
+          Up();
+        }
+      }
+
       // Accommodate for _ForceKeyboard; checking for -1 controllerID and controllerID > Gamepad.all.Count
       if (Settings._ForceKeyboard && _Id == 0)
         return;
@@ -2154,7 +2178,8 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
           if (_directionalAxis[i] <= 0f)
           {
             _directionalAxis[i] = 1f;
-            Up();
+
+            SetDownTime(false);
           }
         }
 
@@ -2163,16 +2188,53 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
           if (_directionalAxis[i] >= 0f)
           {
             _directionalAxis[i] = -1f;
-            Down();
+
+            SetDownTime(true);
           }
         }
 
         else
-          _directionalAxis[i] = 0f;
+        {
+          if (_directionalAxis[i] != 0f)
+          {
+            _directionalAxis[i] = 0f;
+
+            SetUpTime(true);
+            SetUpTime(false);
+          }
+        }
       }
 
     }
 
+    //
+    float _menuDownTime_down, _menuDownTime_up;
+    public void SetDownTime(bool down)
+    {
+      if (down)
+      {
+        if (_menuDownTime_down == 0f)
+          Down();
+
+        _menuDownTime_down = Time.time + 0.4f;
+      }
+      else
+      {
+        if (_menuDownTime_up == 0f)
+          Up();
+
+        _menuDownTime_up = Time.time + 0.4f;
+      }
+    }
+    public void SetUpTime(bool down)
+    {
+      if (down)
+        _menuDownTime_down = 0f;
+      else
+        _menuDownTime_up = 0f;
+    }
+
+    //
     public void HandleInput()
     {
 
@@ -3177,35 +3239,28 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     {
       switch (perk)
       {
-        case Shop.Perk.PerkType.NONE:
-          return 0;
-        case Shop.Perk.PerkType.PENETRATION_UP:
-          return 4;
-        case Shop.Perk.PerkType.ARMOR_UP:
-          return 4;
-        case Shop.Perk.PerkType.EXPLOSION_RESISTANCE:
-          return 3;
-        case Shop.Perk.PerkType.EXPLOSIONS_UP:
-          return 3;
-        case Shop.Perk.PerkType.FASTER_RELOAD:
-          return 4;
-        case Shop.Perk.PerkType.MAX_AMMO_UP:
-          return 3;
         case Shop.Perk.PerkType.FIRE_RATE_UP:
-          break;
-        case Shop.Perk.PerkType.LASER_SIGHTS:
-          return 1;
         case Shop.Perk.PerkType.AKIMBO:
           break;
+        case Shop.Perk.PerkType.NONE:
         case Shop.Perk.PerkType.NO_SLOWMO:
           return 0;
-
+        case Shop.Perk.PerkType.LASER_SIGHTS:
+          return 1;
         case Shop.Perk.PerkType.SPEED_UP:
           return 2;
+        case Shop.Perk.PerkType.EXPLOSIONS_UP:
+        case Shop.Perk.PerkType.GRAPPLE_MASTER:
+        case Shop.Perk.PerkType.EXPLOSION_RESISTANCE:
+        case Shop.Perk.PerkType.MAX_AMMO_UP:
+        case Shop.Perk.PerkType.EXPLOSIVE_PARRY:
+          return 3;
+        case Shop.Perk.PerkType.PENETRATION_UP:
+        case Shop.Perk.PerkType.ARMOR_UP:
+        case Shop.Perk.PerkType.FASTER_RELOAD:
+          return 4;
         case Shop.Perk.PerkType.SMART_BULLETS:
           return 6;
-        case Shop.Perk.PerkType.GRAPPLE_MASTER:
-          return 3;
       }
       return 100;
     }

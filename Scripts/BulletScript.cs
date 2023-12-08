@@ -347,14 +347,15 @@ public class BulletScript : MonoBehaviour
     if (++_hitAmount > _penatrationAmount)
     {
       Hide();
+      OnHideBullet();
     }
   }
 
   //
+  bool _explodeOnHide;
   public void OnHideBullet()
   {
-    return;
-    if (_sourceType == GameScript.ItemManager.Items.PISTOL_CHARGE && _penatrationAmount == 1)
+    if (_explodeOnHide)
     {
 
       // Explode
@@ -365,7 +366,6 @@ public class BulletScript : MonoBehaviour
 
       GameObject.Destroy(es);
     }
-
   }
 
   //
@@ -510,6 +510,8 @@ public class BulletScript : MonoBehaviour
     _particles.transform.localPosition = new Vector3(0f, 0f, 0.5f);
     _saveSmartVelocity = -1f;
 
+    _explodeOnHide = false;
+
     if (_rb != null)
       _rb.isKinematic = false;
 
@@ -580,7 +582,7 @@ public class BulletScript : MonoBehaviour
 
     // Change direction
     var speed = rb.velocity.magnitude;
-    rb.velocity = -MathC.Get2DVector(rb.position - _sourceDamageRagdoll._Hip.position).normalized * speed * 1.6f;
+    rb.velocity = -MathC.Get2DVector(rb.position - _sourceDamageRagdoll._Hip.position).normalized * Mathf.Clamp(speed * 1.6f, 0f, 30f);
 
     // Do not hurt person who just redirected
     _sourceDamageRagdoll = redirectorItem._ragdoll;
@@ -599,5 +601,9 @@ public class BulletScript : MonoBehaviour
     // Recoil char
     if (recoil)
       _sourceDamageRagdoll.Recoil(-(_sourceItemRagdoll._Hip.position - _sourceDamageRagdoll._Controller.transform.position).normalized, _rb.velocity.magnitude / 30f);
+
+    // Check special
+    if (redirectorItem._ragdoll._IsPlayer && redirectorItem._ragdoll._PlayerScript.HasPerk(Shop.Perk.PerkType.EXPLOSIVE_PARRY))
+      _explodeOnHide = true;
   }
 }

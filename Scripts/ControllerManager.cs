@@ -87,17 +87,33 @@ public static class ControllerManager
     }
     void Input_action.IMenuActions.OnUp(InputAction.CallbackContext context)
     {
-      if (context.phase != InputActionPhase.Started) return;
-      if (!Menu2._InMenus) return;
-      Menu2.SendInput(Menu2.Input.UP);
-      FunctionsC.OnControllerInput();
+      var pp = GetPlayerProfile(context);
+      switch (context.phase)
+      {
+        case InputActionPhase.Started:
+          FunctionsC.OnControllerInput();
+          pp.SetDownTime(false);
+          break;
+        case InputActionPhase.Canceled:
+          FunctionsC.OnControllerInput();
+          pp.SetUpTime(false);
+          break;
+      }
     }
     void Input_action.IMenuActions.OnDown(InputAction.CallbackContext context)
     {
-      if (context.phase != InputActionPhase.Started) return;
-      if (!Menu2._InMenus) return;
-      Menu2.SendInput(Menu2.Input.DOWN);
-      FunctionsC.OnControllerInput();
+      var pp = GetPlayerProfile(context);
+      switch (context.phase)
+      {
+        case InputActionPhase.Started:
+          FunctionsC.OnControllerInput();
+          pp.SetDownTime(true);
+          break;
+        case InputActionPhase.Canceled:
+          FunctionsC.OnControllerInput();
+          pp.SetUpTime(true);
+          break;
+      }
     }
     void Input_action.IMenuActions.OnLeft(InputAction.CallbackContext context)
     {
@@ -220,6 +236,16 @@ public static class ControllerManager
         return player;
     }
     return null;
+  }
+  static GameScript.PlayerProfile GetPlayerProfile(InputAction.CallbackContext obj)
+  {
+    // Check keyboard
+    if (obj.control.device.name.Equals("Keyboard"))
+      return GameScript.PlayerProfile.s_Profiles[0];
+
+    // Check controllers
+    var controllerIndexOffset = Settings._ForceKeyboard ? 1 : 0;
+    return GameScript.PlayerProfile.s_Profiles[Mathf.Clamp(obj.control.device.deviceId + controllerIndexOffset, 0, 3)];
   }
 
   class HandlerPlayer : Input_action.IPlayerActions
@@ -383,7 +409,10 @@ public static class ControllerManager
     F5,
     F6,
 
-    BACKQUOTE
+    BACKQUOTE,
+
+    ENTER,
+    ALT_L, ALT_R,
   }
   public static bool GetKey(Key key, InputMode mode = InputMode.DOWN)
   {
@@ -582,6 +611,15 @@ public static class ControllerManager
 
       case Key.BACKQUOTE:
         gotKey = keyboard.backquoteKey;
+        break;
+      case Key.ENTER:
+        gotKey = keyboard.enterKey;
+        break;
+      case Key.ALT_L:
+        gotKey = keyboard.leftAltKey;
+        break;
+      case Key.ALT_R:
+        gotKey = keyboard.rightAltKey;
         break;
     }
     switch (mode)

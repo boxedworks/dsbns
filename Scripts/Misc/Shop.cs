@@ -256,6 +256,7 @@ public static class Shop
     ITEM_RAPIER,
     UTILITY_MOLOTOV,
     ITEM_RIFLE_CHARGE,
+    MOD_EXPLOSIVE_PARRY,
   }
 
   public static int _Max_Equipment_Points
@@ -303,7 +304,7 @@ public static class Shop
       { Unlocks.ITEM_DMR, new Tuple<string, int>("rifle, semi-automatic, slow-reload", 25) },
       { Unlocks.ITEM_SNIPER, new Tuple<string, int>("bolt-action, semi-automatic, powerful", 20) },
       { Unlocks.ITEM_GRENADE_LAUNCHER, new Tuple<string, int>("explosive, semi-automatic, slow-reload", 15) },
-      { Unlocks.ITEM_STICKY_GUN, new Tuple<string, int>("stealthy, chain, slow-reload", 20) },
+      { Unlocks.ITEM_STICKY_GUN, new Tuple<string, int>("stealthy, chain, slow-reload", 15) },
 
       { Unlocks.ITEM_FLAMETHROWER, new Tuple<string, int>("charge-shot, incendiary, slow-reload", 20) },
 
@@ -329,13 +330,14 @@ public static class Shop
       { Unlocks.MOD_NO_SLOWMO, new Tuple<string, int>("-", 1) },
       { Unlocks.MOD_FASTER_RELOAD, new Tuple<string, int>("-", 20) },
       { Unlocks.MOD_MAX_AMMO_UP, new Tuple<string, int>("-", 20) },
-      { Unlocks.MOD_EXPLOSION_RESISTANCE, new Tuple<string, int>("-", 20) },
+      { Unlocks.MOD_EXPLOSION_RESISTANCE, new Tuple<string, int>("-", 15) },
       { Unlocks.MOD_EXPLOSIONS_UP, new Tuple<string, int>("-", 20) },
       { Unlocks.MOD_ARMOR_UP, new Tuple<string, int>("-", 0) },
       { Unlocks.MOD_PENETRATION_UP, new Tuple<string, int>("-", 0) },
       { Unlocks.MOD_SPEED_UP, new Tuple<string, int>("-", 15) },
       { Unlocks.MOD_SMART_BULLETS, new Tuple<string, int>("-", 20) },
       { Unlocks.MOD_GRAPPLE_MASTER, new Tuple<string, int>("-", 5) },
+      { Unlocks.MOD_EXPLOSIVE_PARRY, new Tuple<string, int>("-", 10) },
       { Unlocks.MAX_EQUIPMENT_POINTS_0, new Tuple<string, int>("equipment points (+1)", 5) },
       { Unlocks.MAX_EQUIPMENT_POINTS_1, new Tuple<string, int>("equipment points (+1)", 5) },
       { Unlocks.MAX_EQUIPMENT_POINTS_2, new Tuple<string, int>("equipment points (+1)", 10) },
@@ -400,28 +402,28 @@ public static class Shop
     }
     else
     {
-      _Unlocks_Vault.Add("classic_0", new Unlocks[] { Unlocks.ITEM_AXE, Unlocks.UTILITY_GRENADE, Unlocks.MAX_EQUIPMENT_POINTS_2, Unlocks.LOADOUT_SLOT_X2_0 });
+      _Unlocks_Vault.Add("classic_0", new Unlocks[] { Unlocks.ITEM_AXE, Unlocks.UTILITY_GRENADE, Unlocks.MAX_EQUIPMENT_POINTS_2, Unlocks.LOADOUT_SLOT_X2_0, Unlocks.EXTRA_BLOOD_FX });
       _Unlocks_Vault.Add("classic_1", new Unlocks[] { Unlocks.MOD_LASER_SIGHTS, Unlocks.MOD_NO_SLOWMO, Unlocks.UTILITY_KUNAI_EXPLOSIVE, Unlocks.ITEM_PISTOL_CHARGE });
       _Unlocks_Vault.Add("classic_2", new Unlocks[] { Unlocks.MODE_SURVIVAL, Unlocks.ITEM_RIFLE, Unlocks.ITEM_PISTOL_MACHINE, Unlocks.MAX_EQUIPMENT_POINTS_3, Unlocks.LOADOUT_SLOT_X2_1 });
       _Unlocks_Vault.Add("classic_3", new Unlocks[] { Unlocks.ITEM_PISTOL_DOUBLE, Unlocks.UTILITY_STOP_WATCH, Unlocks.UTILITY_TEMP_SHIELD, Unlocks.MOD_SPEED_UP });
       _Unlocks_Vault.Add("classic_4", new Unlocks[] { Unlocks.ITEM_AXE, Unlocks.ITEM_REVOLVER, Unlocks.UTILITY_C4, Unlocks.UTILITY_GRENADE_STUN, Unlocks.UTILITY_SHURIKEN_BIG });
-      _Unlocks_Vault.Add("classic_5", new Unlocks[] { Unlocks.ITEM_RAPIER, Unlocks.ITEM_STICKY_GUN, Unlocks.UTILITY_GRENADE_IMPACT, Unlocks.MAX_EQUIPMENT_POINTS_4 });
-      _Unlocks_Vault.Add("classic_6", new Unlocks[] { Unlocks.ITEM_FRYING_PAN, Unlocks.ITEM_CROSSBOW, Unlocks.ITEM_GRENADE_LAUNCHER, Unlocks.UTILITY_TACTICAL_BULLET });
+      _Unlocks_Vault.Add("classic_5", new Unlocks[] { Unlocks.ITEM_RAPIER, Unlocks.ITEM_STICKY_GUN, Unlocks.UTILITY_GRENADE_IMPACT });
+      _Unlocks_Vault.Add("classic_6", new Unlocks[] { Unlocks.ITEM_FRYING_PAN, Unlocks.ITEM_CROSSBOW, Unlocks.ITEM_GRENADE_LAUNCHER, Unlocks.UTILITY_TACTICAL_BULLET, Unlocks.MAX_EQUIPMENT_POINTS_4 });
       _Unlocks_Vault.Add("classic_7", new Unlocks[] { Unlocks.UTILITY_KUNAI_STICKY, Unlocks.UTILITY_INVISIBILITY, Unlocks.LOADOUT_SLOT_X2_2 });
-      _Unlocks_Vault.Add("classic_8", new Unlocks[] { Unlocks.ITEM_UZI, Unlocks.ITEM_SHOTGUN_PUMP, Unlocks.MOD_GRAPPLE_MASTER, Unlocks.MAX_EQUIPMENT_POINTS_5 });
-      _Unlocks_Vault.Add("classic_9", new Unlocks[] { Unlocks.ITEM_RIFLE_LEVER, Unlocks.LOADOUT_SLOT_X2_3 });
-      _Unlocks_Vault.Add("classic_10", new Unlocks[] { Unlocks.UTILITY_MORTAR_STRIKE, Unlocks.MOD_EXPLOSIONS_UP });
+      _Unlocks_Vault.Add("classic_8", new Unlocks[] { Unlocks.ITEM_UZI, Unlocks.ITEM_SHOTGUN_PUMP, Unlocks.MOD_GRAPPLE_MASTER });
+      _Unlocks_Vault.Add("classic_9", new Unlocks[] { Unlocks.ITEM_RIFLE_LEVER, Unlocks.MOD_EXPLOSIVE_PARRY, Unlocks.LOADOUT_SLOT_X2_3, Unlocks.MAX_EQUIPMENT_POINTS_5 });
+      _Unlocks_Vault.Add("classic_10", new Unlocks[] { Unlocks.ITEM_RIFLE_CHARGE, Unlocks.UTILITY_MORTAR_STRIKE, Unlocks.MOD_EXPLOSIONS_UP });
 
-      _Unlocks_Vault.Add("classic_11", new Unlocks[] { Unlocks.ITEM_SNIPER, Unlocks.MODE_EXTRAS, Unlocks.MAX_EQUIPMENT_POINTS_6, Unlocks.LOADOUT_SLOT_X2_4 });
-      _Unlocks_Vault.Add("classic_12", new Unlocks[] { Unlocks.ITEM_DMR, Unlocks.ITEM_KATANA });
-      _Unlocks_Vault.Add("classic_13", new Unlocks[] { Unlocks.ITEM_SHOTGUN_DOUBLE, });
-      _Unlocks_Vault.Add("classic_14", new Unlocks[] { Unlocks.ITEM_RIFLE_CHARGE, Unlocks.MOD_EXPLOSION_RESISTANCE, Unlocks.MAX_EQUIPMENT_POINTS_7 });
-      _Unlocks_Vault.Add("classic_15", new Unlocks[] { Unlocks.ITEM_M16, Unlocks.LOADOUT_SLOT_X2_5 });
+      _Unlocks_Vault.Add("classic_11", new Unlocks[] { Unlocks.ITEM_SNIPER, Unlocks.MODE_EXTRAS, Unlocks.LOADOUT_SLOT_X2_4 });
+      _Unlocks_Vault.Add("classic_12", new Unlocks[] { Unlocks.ITEM_KATANA, Unlocks.ITEM_DMR, Unlocks.ITEM_SHOTGUN_DOUBLE, });
+      _Unlocks_Vault.Add("classic_13", new Unlocks[] { Unlocks.MOD_EXPLOSION_RESISTANCE, Unlocks.MAX_EQUIPMENT_POINTS_6 });
+      _Unlocks_Vault.Add("classic_14", new Unlocks[] { Unlocks.LOADOUT_SLOT_X2_5, });
+      _Unlocks_Vault.Add("classic_15", new Unlocks[] { Unlocks.ITEM_M16 });
       _Unlocks_Vault.Add("classic_16", new Unlocks[] { Unlocks.MOD_FASTER_RELOAD });
-      _Unlocks_Vault.Add("classic_17", new Unlocks[] { Unlocks.ITEM_FLAMETHROWER, Unlocks.MOD_SMART_BULLETS, Unlocks.MAX_EQUIPMENT_POINTS_8 });
-      _Unlocks_Vault.Add("classic_18", new Unlocks[] { Unlocks.ITEM_AK47 });
-      _Unlocks_Vault.Add("classic_19", new Unlocks[] { Unlocks.MOD_MAX_AMMO_UP, Unlocks.MAX_EQUIPMENT_POINTS_9 });
-      _Unlocks_Vault.Add("classic_20", new Unlocks[] { Unlocks.ITEM_SHOTGUN_BURST, Unlocks.MAX_EQUIPMENT_POINTS_10 });
+      _Unlocks_Vault.Add("classic_17", new Unlocks[] { Unlocks.ITEM_FLAMETHROWER, Unlocks.MOD_SMART_BULLETS, Unlocks.MAX_EQUIPMENT_POINTS_7, });
+      _Unlocks_Vault.Add("classic_18", new Unlocks[] { Unlocks.ITEM_AK47, });
+      _Unlocks_Vault.Add("classic_19", new Unlocks[] { Unlocks.ITEM_SHOTGUN_BURST, Unlocks.MOD_MAX_AMMO_UP, Unlocks.MAX_EQUIPMENT_POINTS_8, });
+      _Unlocks_Vault.Add("classic_20", new Unlocks[] { Unlocks.MAX_EQUIPMENT_POINTS_9, Unlocks.MAX_EQUIPMENT_POINTS_10 });
     }
 
     // Create utility cap
@@ -597,7 +599,8 @@ public static class Shop
 
   public static void ShowUnlocks(Menu2.MenuType toMenu)
   {
-    Menu2.GenericMenu(new string[] { "new unlocks\n\n", s_UnlockString }, UnityEngine.Random.value < 0.5f ? "wow" : "nice", toMenu);
+    Debug.Log("Dispay");
+    Menu2.GenericMenu(new string[] { "new unlocks\n\n", $"{s_UnlockString}" }, UnityEngine.Random.value < 0.5f ? "wow\n\n" : "nice\n\n", toMenu);
     s_UnlockString = "";
   }
 
@@ -698,6 +701,7 @@ public static class Shop
       SMART_BULLETS,
       GRAPPLE_MASTER,
       SPEED_UP,
+      EXPLOSIVE_PARRY,
 
       NONE
     }
@@ -706,21 +710,23 @@ public static class Shop
 
     public static void Init()
     {
-      _PERK_DESCRIPTIONS = new Dictionary<PerkType, string>();
-
-      _PERK_DESCRIPTIONS.Add(PerkType.PENETRATION_UP, "bullets penetrate deeper");
-      _PERK_DESCRIPTIONS.Add(PerkType.ARMOR_UP, "gain 2 extra health");
-      _PERK_DESCRIPTIONS.Add(PerkType.EXPLOSION_RESISTANCE, "survive self-explosions");
-      _PERK_DESCRIPTIONS.Add(PerkType.EXPLOSIONS_UP, "1.25x explosion radius");
-      _PERK_DESCRIPTIONS.Add(PerkType.FASTER_RELOAD, "1.4x reload speed");
-      _PERK_DESCRIPTIONS.Add(PerkType.MAX_AMMO_UP, "1.5x clip size");
-      _PERK_DESCRIPTIONS.Add(PerkType.AKIMBO, "dual wield big guns");
-      _PERK_DESCRIPTIONS.Add(PerkType.LASER_SIGHTS, "guns have laser sights");
-      _PERK_DESCRIPTIONS.Add(PerkType.FIRE_RATE_UP, "guns shoot faster");
-      _PERK_DESCRIPTIONS.Add(PerkType.NO_SLOWMO, "no slowmo; harder");
-      _PERK_DESCRIPTIONS.Add(PerkType.SMART_BULLETS, "strong gun = smart bullet");
-      _PERK_DESCRIPTIONS.Add(PerkType.GRAPPLE_MASTER, "grapple armor");
-      _PERK_DESCRIPTIONS.Add(PerkType.SPEED_UP, "1.15x movement speed");
+      _PERK_DESCRIPTIONS = new Dictionary<PerkType, string>
+      {
+        { PerkType.PENETRATION_UP, "bullets penetrate deeper" },
+        { PerkType.ARMOR_UP, "gain 2 extra health" },
+        { PerkType.EXPLOSION_RESISTANCE, "survive self-explosions" },
+        { PerkType.EXPLOSIONS_UP, "1.25x explosion radius" },
+        { PerkType.FASTER_RELOAD, "1.4x reload speed" },
+        { PerkType.MAX_AMMO_UP, "1.5x clip size" },
+        { PerkType.AKIMBO, "dual wield big guns" },
+        { PerkType.LASER_SIGHTS, "guns have laser sights" },
+        { PerkType.FIRE_RATE_UP, "guns shoot faster" },
+        { PerkType.NO_SLOWMO, "no slowmo; harder" },
+        { PerkType.SMART_BULLETS, "strong gun = smart bullet" },
+        { PerkType.GRAPPLE_MASTER, "grapple armor" },
+        { PerkType.SPEED_UP, "1.15x movement speed" },
+        { PerkType.EXPLOSIVE_PARRY, "parried bullets explode" },
+      };
     }
 
     public static bool HasPerk(int playerId, PerkType perk)

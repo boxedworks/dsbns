@@ -140,7 +140,8 @@ public static class FunctionsC
     SMOKE_RING,
     FOOTPRINT_BLOOD,
     TACTICAL_BULLET,
-    TABLE_FLIP
+    TABLE_FLIP,
+    CLOUD_RING,
   }
   static int _ExplosionIter;
   public static ParticleSystem[] GetParticleSystem(ParticleSystemType particleType, int forceParticleIndex = -1)
@@ -228,21 +229,21 @@ public static class FunctionsC
         index = 24;
         hasChildren = true;
         break;
-
       case ParticleSystemType.SMOKE_RING:
         index = 25;
         break;
-
       case ParticleSystemType.FOOTPRINT_BLOOD:
         index = 26;
         break;
-
       case ParticleSystemType.TACTICAL_BULLET:
         index = 27;
         break;
-
       case ParticleSystemType.TABLE_FLIP:
         index = 28;
+        break;
+      case ParticleSystemType.CLOUD_RING:
+        index = 29;
+        hasChildren = true;
         break;
     }
 

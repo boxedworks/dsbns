@@ -2496,6 +2496,7 @@ public class PlayerScript : MonoBehaviour
           //
           table.name = "Table_Flipped";
           SfxManager.PlayAudioSourceSimple(transform.position, "Etc/Table_flip");
+          SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.TABLE_FLIP);
 
           IEnumerator FlipTable()
           {

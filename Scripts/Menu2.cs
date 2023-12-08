@@ -817,6 +817,7 @@ public class Menu2
       _CurrentMenu._timeDisplayed = -1f;
       _Max_Height = _Start_Max_Height;
       _CurrentMenu._onSwitched?.Invoke();
+
       // Switch menu type
       if (type == MenuType.NONE)
       {
@@ -3015,6 +3016,19 @@ public class Menu2
       // Shop table headers
       m.AddComponent($"<color={_COLOR_GRAY}>===</color>" + string.Format(format_shop, "name", "tags", "($$)", "equip cost", _COLOR_GRAY, _COLOR_GRAY, _COLOR_GRAY) + "\n\n");
 
+      // Data for seperating categories
+      var categoryFirsts = new int[6]; // Item_, Utility_, Mod_, Max_Equipment_Points_, Mode_, Extra_
+      void OnPrintItem(int itemType)
+      {
+
+        var firstUnlock = categoryFirsts[itemType] == 0;
+        if (!firstUnlock)
+          return;
+
+        categoryFirsts[itemType] = 1;
+        m.AddComponent("\n");
+      }
+
       // Add unlocks
       foreach (var desc in Shop._Unlocks_Descriptions)
       {
@@ -3030,6 +3044,7 @@ public class Menu2
 
         var cost = shop_details.Item2;
         var equip_cost = 0;
+        var itemType = 0;
         if (name.StartsWith("ITEM_"))
         {
           name = string.Format("{0,-20}{1,6}", name.Substring(5), "[item]");
@@ -3037,39 +3052,52 @@ public class Menu2
         }
         else if (name.StartsWith("UTILITY_"))
         {
+          itemType = 1;
+
           name = string.Format("{0,-17}{1,9}", name.Substring(8), "[utility]");
           equip_cost = GameScript.ItemManager.GetUtilityValue((UtilityScript.UtilityType)System.Enum.Parse(typeof(UtilityScript.UtilityType), unlock_s.Substring(8), true));
         }
         else if (name.StartsWith("MOD_"))
         {
+          itemType = 2;
+
           name = string.Format("{0,-21}{1,5}", name.Substring(4), "[mod]");
           var perk = (Shop.Perk.PerkType)System.Enum.Parse(typeof(Shop.Perk.PerkType), unlock_s.Substring(4), true);
           equip_cost = GameScript.ItemManager.GetPerkValue(perk);
           shop_details = System.Tuple.Create(Shop.Perk._PERK_DESCRIPTIONS[perk], shop_details.Item2);
         }
-        else if (name.StartsWith("EXTRA_"))
+        else if (name.StartsWith("MAX_EQUIPMENT_POINTS_"))
         {
-          name = string.Format("{0,-19}{1,7}", name.Substring(6), "[extra]");
+          itemType = 3;
         }
         else if (name.StartsWith("MODE_"))
         {
+          itemType = 4;
+
           name = string.Format("{0,-20}{1,6}", name.Substring(5), "[mode]");
         }
+        else if (name.StartsWith("EXTRA_"))
+        {
+          itemType = 5;
 
+          name = string.Format("{0,-19}{1,7}", name.Substring(6), "[extra]");
+        }
+
+        // If not unlocked, only show if showing all
         if (!Shop.UnlockAvailable(unlock))
         {
           if (display_mode == Shop.DisplayModes.ALL)
           {
+            OnPrintItem(itemType);
+
             m.AddComponent($"{string.Format(format_shop2, FunctionsC.GenerateGarbageText(name), FunctionsC.GenerateGarbageText(shop_details.Item1), FunctionsC.GenerateGarbageText(cost + ""), "*", _COLOR_GRAY, _COLOR_GRAY, _COLOR_GRAY)}\n", MenuComponent.ComponentType.BUTTON_SIMPLE);
-            //Debug.Log("Shop unlock not available...: " + unlock);
           }
           continue;
         }
 
-        if (Shop.Unlocked(unlock))
-        {
-          if (display_mode == Shop.DisplayModes.AVAILABLE) continue;
-        }
+        // Only show available unlocks
+        if (display_mode == Shop.DisplayModes.AVAILABLE && Shop.Unlocked(unlock))
+          continue;
 
         /*/ Reformat item types
         string ReformatItemTypes(string input)
@@ -3097,12 +3125,17 @@ public class Menu2
         var equip_cost_string = equip_cost == 0 ? "-" : equip_cost + "";
         if (display_mode == Shop.DisplayModes.PURCHASED)
         {
-          Debug.Log($"{unlock} == {Shop.Unlocked(unlock)}");
-          if (!Shop.Unlocked(unlock)) { continue; }
+          if (!Shop.Unlocked(unlock))
+            continue;
+
+          OnPrintItem(itemType);
+
           var color = "yellow";
           m.AddComponent($"{string.Format(format_shop2, name, shop_details.Item1, cost, equip_cost_string, color, color, color)}\n", MenuComponent.ComponentType.BUTTON_SIMPLE);
           continue;
         }
+
+        OnPrintItem(itemType);
 
         var set_text = true;
         var max_equip = GameScript.ItemManager.Loadout._POINTS_MAX;
@@ -3250,7 +3283,7 @@ public class Menu2
       m.AddComponent("\n")
       .AddBackButton((MenuComponent component) =>
       {
-        CommonEvents._SwitchMenu(_InPause ? MenuType.PAUSE : MenuType.GAMETYPE_CLASSIC);
+        CommonEvents._SwitchMenu(_PreviousMenuType == MenuType.GENERIC_MENU || _InPause ? MenuType.PAUSE : MenuType.GAMETYPE_CLASSIC);
         if (_InPause)
         {
           _CurrentMenu._selectionIndex = 1;
@@ -3961,7 +3994,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
         component._onSelected?.Invoke(component);
         if (save_saveLevelSelected != -1)
         {
-          _CurrentMenu._selectionIndex = (_CurrentMenu._menuComponentsSelectable.Count - _CurrentMenu._dropdownCount + save_saveLevelSelected);
+          _CurrentMenu._selectionIndex = _CurrentMenu._menuComponentsSelectable.Count - _CurrentMenu._dropdownCount + save_saveLevelSelected;
           _CurrentMenu._menuComponent_lastFocused = _CurrentMenu._menuComponentsSelectable[_CurrentMenu._menuComponentsSelectable.Count - _CurrentMenu._dropdownCount];
           _CurrentMenu._selectedComponent._onFocus?.Invoke(_CurrentMenu._selectedComponent);
         }
@@ -5219,7 +5252,6 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
         .AddEvent((MenuComponent component) =>
         {
           //Debug.Log("resume pressed");
-
           GameScript.TogglePause();
           _InPause = false;
           _InMenus = false;
@@ -7338,6 +7370,7 @@ about extras</color>
       // Back button
       menu_extras.AddBackButton((MenuComponent component) =>
       {
+        Debug.Log($"{_InPause} .. {_InMenus} .. {GameScript._Paused}");
         if (_InPause)
         {
           _Menus[MenuType.PAUSE]._selectionIndex = 5;
@@ -7619,6 +7652,19 @@ about extras</color>
   {
     if (_CanRender && SettingsModule.TextSpeedFast && _CurrentMenu._Type != MenuType.SPLASH)
       _CanRender = false;
+
+    // Check special
+    if (_CurrentMenu._Type == MenuType.OPTIONS_SETTINGS)
+    {
+      // Check window swap
+      if (Screen.fullScreen != SettingsModule.Fullscreen)
+      {
+        SettingsModule.Fullscreen = Screen.fullScreen;
+        Settings.SettingsSaveData.Save();
+      }
+    }
+
+    // Render
     _CurrentMenu.Render();
   }
 
@@ -7802,15 +7848,53 @@ about extras</color>
   public static void OnPause(MenuType afterUnlockMenu)
   {
     _InMenus = true;
+
     _Menu.gameObject.SetActive(true);
     _Menus[MenuType.PAUSE]._selectedComponent._focused = false;
     _Menus[MenuType.PAUSE]._selectionIndex = 0;
+
+    // Show unlock menu
     if (Shop.s_UnlockString != string.Empty)
     {
-      // Show unlock menu
+      var unlockString = Shop.s_UnlockString;
       Shop.ShowUnlocks(afterUnlockMenu);
+      var menu = _Menus[MenuType.GENERIC_MENU];
+
+      var hasShopItem = unlockString.Contains("ITEM_") || unlockString.Contains("UTILITY_") || unlockString.Contains("MOD_") || unlockString.Contains("MAX_EQUIPMENT_POINTS_") || unlockString.Contains("LOADOUT_SLOT_X2_");
+      var hasExtra = unlockString.Contains("EXTRA_");
+      //var hasSurvival = unlockString.Contains("MODE_SURVIVAL");
+
+      if (hasShopItem)
+        menu
+        .AddComponent("shop\n", MenuComponent.ComponentType.BUTTON_SIMPLE, "yellow")
+          .AddEvent((MenuComponent c) =>
+          {
+            CommonEvents._SwitchMenu(MenuType.SHOP);
+          });
+      if (hasExtra)
+        menu
+        .AddComponent("extras\n", MenuComponent.ComponentType.BUTTON_SIMPLE, "magenta")
+          .AddEvent((MenuComponent c) =>
+          {
+            CommonEvents._SwitchMenu(MenuType.EXTRAS);
+            _InPause = true;
+          });
+      /*if (hasSurvival)
+        menu
+        .AddComponent("survival\n", MenuComponent.ComponentType.BUTTON_SIMPLE, "red")
+          .AddEvent((MenuComponent c) =>
+          {
+            Levels._CurrentLevelCollectionIndex = 2;
+            GameScript.s_GameMode = GameScript.GameModes.SURVIVAL;
+            CommonEvents._SwitchMenu(MenuType.GAMETYPE_SURVIVAL);
+
+            Settings.OnGamemodeChanged(Settings.GamemodeChange.SURVIVAL);
+            _SaveMenuDir = _SaveLevelSelected = -1;
+          });*/
+
       CommonEvents._SwitchMenu(MenuType.GENERIC_MENU);
       PlayNoise(Noise.PURCHASE);
+
       return;
     }
 
@@ -7820,11 +7904,14 @@ about extras</color>
       CommonEvents._SwitchMenu(afterUnlockMenu);
       _CurrentMenu._selectionIndex = _EditorSaveIndex;
       _CurrentMenu._selectedComponent._onFocus?.Invoke(_CurrentMenu._selectedComponent);
+
       _CanRender = false;
       RenderMenu();
+
       SendInput(Input.SPACE);
       _CanRender = true;
       RenderMenu();
+
       return;
     }
 

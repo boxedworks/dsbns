@@ -470,7 +470,11 @@ public class ActiveRagdoll
 
         _ForceGlobal += MathC.Get2DVector(moveDir * 0.5f);
 
+        // FX
         SfxManager.PlayAudioSourceSimple(_Hip.position, "Ragdoll/Quickstep", 0.85f, 1.15f, SfxManager.AudioClass.NONE, true);
+        var particles = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.CLOUD_RING)[0];
+        particles.transform.position = _Hip.position + new Vector3(0f, -0.5f, 0f);
+        particles.Play();
       }
     }
     else
