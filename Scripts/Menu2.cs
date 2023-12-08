@@ -7370,7 +7370,6 @@ about extras</color>
       // Back button
       menu_extras.AddBackButton((MenuComponent component) =>
       {
-        Debug.Log($"{_InPause} .. {_InMenus} .. {GameScript._Paused}");
         if (_InPause)
         {
           _Menus[MenuType.PAUSE]._selectionIndex = 5;

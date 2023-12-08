@@ -221,7 +221,6 @@ public static class Settings
     SettingsSaveData.Load();
     LevelSaveData.Load();
 
-
     // Load last version (old)
     var oldversion_OLD = PlayerPrefs.GetFloat("VERSION", -1f);
     if (oldversion_OLD != -1f)

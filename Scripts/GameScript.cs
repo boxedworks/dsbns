@@ -1499,7 +1499,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       }
 
       // Check backrooms
-      if (ControllerManager.GetKey(ControllerManager.Key.B) && ControllerManager.GetKey(ControllerManager.Key.R, ControllerManager.InputMode.HOLD))
+      if (Debug.isDebugBuild && ControllerManager.GetKey(ControllerManager.Key.B) && ControllerManager.GetKey(ControllerManager.Key.R, ControllerManager.InputMode.HOLD))
       {
         s_Backrooms = true;
         var clipboardData = ClipboardHelper.clipBoard;
