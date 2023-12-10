@@ -796,7 +796,7 @@ public class EnemyScript : MonoBehaviour
                     // Attack if close enough or pointed at target
                     else if (
                       _ragdoll.HasGun() ||
-                      (!_ragdoll.HasGun() && dis < (_itemLeft == GameScript.ItemManager.Items.GRENADE_HOLD ? 1f : _itemLeft == GameScript.ItemManager.Items.BAT ? 1.2f : (_IsZombieReal ? 0.6f : 1.8f)))
+                      (!_ragdoll.HasGun() && dis < (_itemLeft == GameScript.ItemManager.Items.GRENADE_HOLD ? 1f : (_itemLeft == GameScript.ItemManager.Items.BAT ? 1.2f : (_IsZombieReal ? 0.85f : 1.8f))))
                       )
                     {
                       UseItem(dis < 1.4f);

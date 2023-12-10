@@ -52,6 +52,10 @@ public class ActiveRagdoll
   {
     get { return (_ItemL?._IsSwinging ?? false) || (_ItemR?._IsSwinging ?? false); }
   }
+  public bool _IsSwingingSurvival
+  {
+    get { return (_ItemL?.IsSwingingSurvival() ?? false) || (_ItemR?.IsSwingingSurvival() ?? false); }
+  }
   public bool _HasItemsInUse
   {
     get { return (_ItemL?.Used() ?? false) || (_ItemR?.Used() ?? false); }
@@ -857,7 +861,9 @@ public class ActiveRagdoll
     var forwardMagnitude = (forwardOther - forwardSelf).magnitude;
     //Debug.Log(forwardMagnitude);
     if (forwardMagnitude < 1.7f)
+    {
       return null;
+    }
 
     // Check weapons in order L / R
     bool CheckHit(ItemScript item)
@@ -866,7 +872,7 @@ public class ActiveRagdoll
       //
       if (
         item == null ||
-        !item._IsSwinging ||
+        !(_IsPlayer && ragdollOther._IsEnemy && ragdollOther._EnemyScript._IsZombieReal ? item.IsSwingingSurvival() : item._IsSwinging) ||
         item.HasHitRagdoll(ragdollOther)
        )
         return false;

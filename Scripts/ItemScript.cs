@@ -83,7 +83,26 @@ public class ItemScript : MonoBehaviour
 
   float _time { get { return /*_ragdoll._isPlayer_twoHanded ? Time.unscaledTime : */Time.time; } }
 
-  public bool _IsSwinging;
+  //
+  bool _isSwinging;
+  float _swingTime;
+  public bool _IsSwinging
+  {
+    get
+    {
+      return _isSwinging;
+    }
+    set
+    {
+      _isSwinging = value;
+      if (value == true)
+        _swingTime = Time.time;
+    }
+  }
+  public bool IsSwingingSurvival()
+  {
+    return _isSwinging || (Time.time - _swingTime < 0.26f);
+  }
 
   bool _swang;
 
@@ -430,7 +449,8 @@ public class ItemScript : MonoBehaviour
           if (_ragdoll._IsPlayer && raycastInfo._ragdoll._IsPlayer && _canMeleePenatrate && _hasHitEnemy) return;
 
           // If both are swinging, bounce back both and ignore
-          if (_ragdoll._IsSwinging && raycastInfo._ragdoll._IsSwinging)
+          var otherSwinging = _isZombie && raycastInfo._ragdoll._IsPlayer ? raycastInfo._ragdoll._IsSwingingSurvival : raycastInfo._ragdoll._IsSwinging;
+          if (_ragdoll._IsSwinging && otherSwinging)
           {
 
             // Chaser
@@ -448,11 +468,12 @@ public class ItemScript : MonoBehaviour
             {
 
               var deflectData = raycastInfo._ragdoll.TryDeflectMelee(_ragdoll);
+              //Debug.Log($"dd? {deflectData != null}");
               if (deflectData != null)
               {
 
                 // Check zombie
-                if (_isZombie)
+                if (_isZombie && !deflectData._hitAnthingOverride)
                 {
 
                   // Die self
@@ -851,7 +872,7 @@ public class ItemScript : MonoBehaviour
         if (dist <= 0.5f) dist = 0f;
 
         start = _forward.position + forward * 0.1f;
-        dist -= 0.6f;
+        dist -= 0.5f;
 
         _laserSight.transform.position = start + (forward * (dist / 2f));
         _laserSight.transform.localScale = new Vector3(0.03f, 0.03f, dist);
@@ -1820,10 +1841,10 @@ public class ItemScript : MonoBehaviour
     );
     var hit = false;
     var canMeleePenatrate = _canMeleePenatrate && (_ragdoll._EnemyScript?._IsZombieReal ?? true);
-    var maxDistance = (!_ragdoll._IsPlayer && _ragdoll._EnemyScript._IsZombieReal) ? 0.25f : 0.7f * (canMeleePenatrate ? 1.3f : 1f);
+    var maxDistance = (!_ragdoll._IsPlayer && _ragdoll._EnemyScript._IsZombieReal) ? 0.5f : 0.7f * (canMeleePenatrate ? 1.3f : 1f);
     if (_type == ItemType.RAPIER)
       maxDistance *= 2.35f;
-    if (Physics.SphereCast(ray, Mathf.Clamp(_ragdoll._IsEnemy && _ragdoll._EnemyScript.IsChaser() ? 0.4f : 0.23f, 0.05f, maxDistance), out raycastInfo._raycastHit, maxDistance, GameResources._Layermask_Ragdoll))
+    if (Physics.SphereCast(ray, Mathf.Clamp(_ragdoll._IsEnemy && (_ragdoll._EnemyScript.IsChaser() || _ragdoll._EnemyScript._IsZombieReal) ? 0.4f : 0.23f, 0.05f, maxDistance), out raycastInfo._raycastHit, maxDistance, GameResources._Layermask_Ragdoll))
     {
       //Debug.Log(raycastInfo._raycastHit.collider.gameObject.name);
       //Debug.DrawLine(ray.origin, raycastInfo._raycastHit.point, Color.red, 5f);

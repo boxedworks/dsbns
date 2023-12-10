@@ -3017,7 +3017,7 @@ public class Menu2
       m.AddComponent($"<color={_COLOR_GRAY}>===</color>" + string.Format(format_shop, "name", "tags", "($$)", "equip cost", _COLOR_GRAY, _COLOR_GRAY, _COLOR_GRAY) + "\n\n");
 
       // Data for seperating categories
-      var categoryFirsts = new int[6]; // Item_, Utility_, Mod_, Max_Equipment_Points_, Mode_, Extra_
+      var categoryFirsts = new int[7]; // Item_, Utility_, Mod_, Max_Equipment_Points_, LOADOUT_SLOT_ Mode_, Extra_
       void OnPrintItem(int itemType)
       {
 
@@ -3070,15 +3070,19 @@ public class Menu2
         {
           itemType = 3;
         }
-        else if (name.StartsWith("MODE_"))
+        else if (name.StartsWith("LOADOUT_SLOT_"))
         {
           itemType = 4;
+        }
+        else if (name.StartsWith("MODE_"))
+        {
+          itemType = 5;
 
           name = string.Format("{0,-20}{1,6}", name.Substring(5), "[mode]");
         }
         else if (name.StartsWith("EXTRA_"))
         {
-          itemType = 5;
+          itemType = 6;
 
           name = string.Format("{0,-19}{1,7}", name.Substring(6), "[extra]");
         }
@@ -7861,35 +7865,39 @@ about extras</color>
 
       var hasShopItem = unlockString.Contains("ITEM_") || unlockString.Contains("UTILITY_") || unlockString.Contains("MOD_") || unlockString.Contains("MAX_EQUIPMENT_POINTS_") || unlockString.Contains("LOADOUT_SLOT_X2_");
       var hasExtra = unlockString.Contains("EXTRA_");
+      var hasNextDifficulty = unlockString.Contains("new difficulty unlocked:");
       //var hasSurvival = unlockString.Contains("MODE_SURVIVAL");
 
-      if (hasShopItem)
-        menu
-        .AddComponent("shop\n", MenuComponent.ComponentType.BUTTON_SIMPLE, "yellow")
-          .AddEvent((MenuComponent c) =>
-          {
-            CommonEvents._SwitchMenu(MenuType.SHOP);
-          });
-      if (hasExtra)
-        menu
-        .AddComponent("extras\n", MenuComponent.ComponentType.BUTTON_SIMPLE, "magenta")
-          .AddEvent((MenuComponent c) =>
-          {
-            CommonEvents._SwitchMenu(MenuType.EXTRAS);
-            _InPause = true;
-          });
-      /*if (hasSurvival)
-        menu
-        .AddComponent("survival\n", MenuComponent.ComponentType.BUTTON_SIMPLE, "red")
-          .AddEvent((MenuComponent c) =>
-          {
-            Levels._CurrentLevelCollectionIndex = 2;
-            GameScript.s_GameMode = GameScript.GameModes.SURVIVAL;
-            CommonEvents._SwitchMenu(MenuType.GAMETYPE_SURVIVAL);
+      if (!hasNextDifficulty)
+      {
+        if (hasShopItem)
+          menu
+          .AddComponent("shop\n", MenuComponent.ComponentType.BUTTON_SIMPLE, "yellow")
+            .AddEvent((MenuComponent c) =>
+            {
+              CommonEvents._SwitchMenu(MenuType.SHOP);
+            });
+        if (hasExtra)
+          menu
+          .AddComponent("extras\n", MenuComponent.ComponentType.BUTTON_SIMPLE, "magenta")
+            .AddEvent((MenuComponent c) =>
+            {
+              CommonEvents._SwitchMenu(MenuType.EXTRAS);
+              _InPause = true;
+            });
+        /*if (hasSurvival)
+          menu
+          .AddComponent("survival\n", MenuComponent.ComponentType.BUTTON_SIMPLE, "red")
+            .AddEvent((MenuComponent c) =>
+            {
+              Levels._CurrentLevelCollectionIndex = 2;
+              GameScript.s_GameMode = GameScript.GameModes.SURVIVAL;
+              CommonEvents._SwitchMenu(MenuType.GAMETYPE_SURVIVAL);
 
-            Settings.OnGamemodeChanged(Settings.GamemodeChange.SURVIVAL);
-            _SaveMenuDir = _SaveLevelSelected = -1;
-          });*/
+              Settings.OnGamemodeChanged(Settings.GamemodeChange.SURVIVAL);
+              _SaveMenuDir = _SaveLevelSelected = -1;
+            });*/
+      }
 
       CommonEvents._SwitchMenu(MenuType.GENERIC_MENU);
       PlayNoise(Noise.PURCHASE);

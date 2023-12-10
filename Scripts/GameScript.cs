@@ -1553,7 +1553,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     // Check for controller change
     if (Time.unscaledTime - _lastInputCheck > 0.25f)
     {
-      _lastInputCheck = Time.time;
+      _lastInputCheck = Time.unscaledTime;
       Settings._NumberPlayers = (ControllerManager._NumberGamepads) + (Settings._ForceKeyboard ? 1 : 0);
       if (Settings._NumberPlayers == 0)
         Settings._NumberPlayers = 1;
@@ -2139,15 +2139,15 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       // Check axis hold
       if (!(_menuDownTime_down != 0f && _menuDownTime_up != 0f))
       {
-        if (_menuDownTime_down != 0f && Time.time - _menuDownTime_down > 0.09f)
+        if (_menuDownTime_down != 0f && Time.unscaledTime - _menuDownTime_down > 0.09f)
         {
-          _menuDownTime_down = Time.time;
+          _menuDownTime_down = Time.unscaledTime;
 
           Down();
         }
-        else if (_menuDownTime_up != 0f && Time.time - _menuDownTime_up > 0.09f)
+        else if (_menuDownTime_up != 0f && Time.unscaledTime - _menuDownTime_up > 0.09f)
         {
-          _menuDownTime_up = Time.time;
+          _menuDownTime_up = Time.unscaledTime;
 
           Up();
         }
@@ -2216,14 +2216,14 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         if (_menuDownTime_down == 0f)
           Down();
 
-        _menuDownTime_down = Time.time + 0.4f;
+        _menuDownTime_down = Time.unscaledTime + 0.4f;
       }
       else
       {
         if (_menuDownTime_up == 0f)
           Up();
 
-        _menuDownTime_up = Time.time + 0.4f;
+        _menuDownTime_up = Time.unscaledTime + 0.4f;
       }
     }
     public void SetUpTime(bool down)
