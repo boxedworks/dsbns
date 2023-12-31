@@ -183,7 +183,7 @@ public static class Settings
     }
   }
 
-  public static float _VERSION = 1.41f;
+  public static float _VERSION = 1.42f;
 
   // Struct holding info what item pair gets unlocked at what level
   public class WeaponPair
@@ -554,7 +554,7 @@ public static class Settings
           difficulty = 0,
           rating = 0,
           extras = null,
-          loadoutDesc = "sword, shuriken x4",
+          loadoutDesc = "katana, shuriken x4",
           items = new GameScript.ItemManager.Items[] {
             GameScript.ItemManager.Items.KATANA,
             },

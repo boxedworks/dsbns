@@ -47,7 +47,7 @@ public static class GameResources
 
   public static bool _Loaded;
 
-  public static Transform _Container_Objects, _UI_Player;
+  public static Transform _Container_Objects, _UI_Player, s_Backrooms;
   public static Camera _Camera_Main, _Camera_Menu;
   public static MeshRenderer _CameraFader;
 
@@ -142,6 +142,9 @@ public static class GameResources
     s_AmmoSideUi = s_AmmoUi.transform.GetChild(0).GetComponent<TMPro.TextMeshPro>();
 
     s_Blood0 = GameObject.Find("Blood_0").GetComponent<Renderer>();
+
+    s_Backrooms = GameObject.Find("Backrooms").transform;
+    s_Backrooms.gameObject.SetActive(false);
 
     //
     //if (GameScript._s_Singleton.ReplacementShader != null)

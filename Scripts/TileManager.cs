@@ -965,7 +965,9 @@ public class TileManager
       // Backrooms
       if (GameScript.s_Backrooms)
       {
-        GameObject.Find("Backrooms").transform.position = new Vector3(-42.49f, -2.3f, -53.95f);
+        var backrooms = GameResources.s_Backrooms;
+        backrooms.gameObject.SetActive(true);
+        backrooms.position = new Vector3(-42.49f, -2.3f, -53.95f);
 
         GameObject.Destroy(GameObject.Find("Meshes_Tiles_Up"));
         GameObject.Destroy(GameObject.Find("Meshes_Tiles_Down"));

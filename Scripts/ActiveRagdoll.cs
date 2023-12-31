@@ -1889,17 +1889,14 @@ public class ActiveRagdoll
 
   public void Recoil(Vector3 dir, float force, bool overright = true)
   {
+    _grappler?.Recoil(dir, force * 0.75f, overright);
+
     if (overright)
     {
       _ForceGlobal = MathC.Get2DVector(dir) * force;
-      if (_grappler != null)
-        _grappler._ForceGlobal = MathC.Get2DVector(dir) * force * 0.75f;
       return;
     }
-
     _ForceGlobal += MathC.Get2DVector(dir) * force;
-    if (_grappler != null)
-      _grappler._ForceGlobal += MathC.Get2DVector(dir) * force * 0.75f;
   }
   public void RecoilSimple(float force)
   {

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Steamworks;
 using UnityEngine;
 
 public class Menu2
@@ -1177,13 +1178,16 @@ public class Menu2
 
 #if UNITY_STANDALONE
     // Show level editor menu
-    main_menu.AddComponent("level editor\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-      .AddEvent((MenuComponent component) =>
-      {
-        CommonEvents._SwitchMenu(MenuType.EDITOR_MAIN);
+    if (GameScript.s_UsingSteam)
+    {
+      main_menu.AddComponent("level editor\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
+        .AddEvent((MenuComponent component) =>
+        {
+          CommonEvents._SwitchMenu(MenuType.EDITOR_MAIN);
 
-        Settings.OnGamemodeChanged(Settings.GamemodeChange.LEVEL_EDITOR);
-      });
+          Settings.OnGamemodeChanged(Settings.GamemodeChange.LEVEL_EDITOR);
+        });
+    }
 #endif
     // Show options menu
     main_menu.AddComponent("options\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
@@ -1222,7 +1226,7 @@ public class Menu2
       .AddEvent(EventType.ON_RENDER, CommonEvents._OnRender_XSelector);
     // Tip
 #if UNITY_STANDALONE
-    ModifyMenu_TipComponents(MenuType.MAIN, 12, 1);
+    ModifyMenu_TipComponents(MenuType.MAIN, GameScript.s_UsingSteam ? 12 : 14, 1);
 #else
     ModifyMenu_TipComponents(MenuType.MAIN, 14, 1);
 #endif
@@ -3418,7 +3422,7 @@ public class Menu2
           t.localPosition += lp;
         }
       })
-    .AddComponent($"{string.Format(format_controls, "toggle camera type:", "", "f3")} \n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
+    .AddComponent($"{string.Format(format_controls, "toggle camera type:", "", "f4")} \n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
     .AddComponent($"{string.Format(format_controls, "next level:", " hold", "page up")} \n", MenuComponent.ComponentType.BUTTON_SIMPLE)
       .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
       {
@@ -7525,7 +7529,7 @@ about extras</color>
           // Check mouse highlight
           RaycastHit h;
           var r = GameResources._Camera_Menu.ScreenPointToRay(ControllerManager.GetMousePosition());
-          if (Physics.SphereCast(r, 0.1f, out h))
+          if (Physics.SphereCast(r, 0.1f, out h, 100f))
           {
             foreach (var component in _CurrentMenu._menuComponents)
             {
@@ -7695,7 +7699,8 @@ about extras</color>
     if (TileManager.EditorMenus._Menu_Workshop_Infos.gameObject.activeSelf) return false;
 
 #if UNITY_STANDALONE
-    if (SteamManager.SteamMenus._DialogueMenuShown) return false;
+    if (GameScript.s_UsingSteam)
+      if (SteamManager.SteamMenus._DialogueMenuShown) return false;
 #endif
 
     return true;
@@ -7706,9 +7711,10 @@ about extras</color>
     {
 
 #if UNITY_STANDALONE
-      if (SteamManager.SteamMenus._DialogueMenuShown)
-        if (input == Input.SPACE || input == Input.BACK)
-          SteamManager.SteamMenus.HideInformationDialogue();
+      if (GameScript.s_UsingSteam)
+        if (SteamManager.SteamMenus._DialogueMenuShown)
+          if (input == Input.SPACE || input == Input.BACK)
+            SteamManager.SteamMenus.HideInformationDialogue();
 #endif
 
       return;

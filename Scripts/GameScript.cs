@@ -9,6 +9,15 @@ public class GameScript : MonoBehaviour
   static Settings.SettingsSaveData SettingsModule { get { return Settings.s_SaveData.Settings; } }
   static Settings.LevelSaveData LevelModule { get { return Settings.s_SaveData.LevelData; } }
 
+  // True if steam, false if EOS
+  public static bool s_UsingSteam
+  {
+    get
+    {
+      return SteamManager._Enabled;
+    }
+  }
+
   //
   public static TextMesh _debugText;
 
@@ -147,7 +156,8 @@ public class GameScript : MonoBehaviour
     SteamManager.SteamMenus.Init();
     //SteamManager.Achievements.Init();
 #if UNITY_STANDALONE
-    SteamManager.Workshop_GetUserItems(true);
+    if (s_UsingSteam)
+      SteamManager.Workshop_GetUserItems(true);
 #endif
 
     ActiveRagdoll.Rigidbody_Handler.Init();
@@ -1501,6 +1511,8 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       // Check backrooms
       if (Debug.isDebugBuild && ControllerManager.GetKey(ControllerManager.Key.B) && ControllerManager.GetKey(ControllerManager.Key.R, ControllerManager.InputMode.HOLD))
       {
+        //Screen.SetResolution(720, 1280, true);
+
         s_Backrooms = true;
         var clipboardData = ClipboardHelper.clipBoard;
         var levelData = clipboardData.EndsWith("loaded map") ? clipboardData : "11 10 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 playerspawn_-29_-51.4_rot_0_ e_-42.9_-32.9_li_knife_w_-42.9_-32.9_l_-43.4_-32.3_canmove_false_canhear_false_ e_-29_-41.8_li_pistol_w_-29_-41.8_l_-29_-40.9_canmove_true_canhear_true_ p_-29.25_-32.75_end_ +unnamed loaded map";
@@ -1847,7 +1859,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         }
 
         // Check camera change
-        if (ControllerManager.GetKey(ControllerManager.Key.F3))
+        if (ControllerManager.GetKey(ControllerManager.Key.F4))
         {
           SettingsModule.UseOrthographicCamera = !SettingsModule.UseOrthographicCamera;
           if (SettingsModule.CameraZoom == Settings.SettingsSaveData.CameraZoomType.AUTO)
