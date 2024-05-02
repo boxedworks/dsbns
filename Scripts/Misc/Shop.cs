@@ -50,8 +50,6 @@ public static class Shop
 
       "equip mods to gain special attributes",
       "you can equip up to 4 mods",
-
-      "every steam review helps this game :)"
     };
     static string[] _Tips_Classic = new string[]
     {

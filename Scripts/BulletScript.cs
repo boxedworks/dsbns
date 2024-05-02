@@ -299,6 +299,8 @@ public class BulletScript : MonoBehaviour
         }
         if (TakeDamage(r)) return;
       }
+      else
+        hit_wall = true;
     }
 
     else
