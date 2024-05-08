@@ -1,0 +1,1 @@
+4 4 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 playerspawn_-42.12_-50.88_rot_0_ playerspawn_-37.88_-55_rot_0_ p_-40_-48.26_end_ candelbig_-40.87_-56.42_rot_45 candelbig_-42_-53.25_rot_45 barrel_-34.5_-52.25_rot_0 barrel_-34.62_-50.62_rot_0 barrel_-35.62_-50.62_rot_0 +unnamed loaded map

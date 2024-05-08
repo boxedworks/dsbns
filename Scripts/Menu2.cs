@@ -58,6 +58,10 @@ public class Menu2
 
     GENERIC_MENU,
 
+    VERSUS_SIMPLE,
+
+    MULTIPLAYER_MANAGER,
+
     NONE
   }
 
@@ -1378,8 +1382,8 @@ public class Menu2
                 Levels._LevelEdit_SaveIndex = _CurrentMenu._dropdownParentIndex;
 
                 // Load map
-                _EditorSaveIndex = Menu2._CurrentMenu._dropdownParentIndex;
-                Levels._CurrentLevelIndex = Menu2._CurrentMenu._dropdownParentIndex - 1;
+                _EditorSaveIndex = _CurrentMenu._dropdownParentIndex;
+                Levels._CurrentLevelIndex = _CurrentMenu._dropdownParentIndex - 1;
                 var level_data = leveldata[_EditorSaveIndex - 1];
                 GameScript.NextLevel(level_data);
 
@@ -3544,6 +3548,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
         }
 
       })
+
     // Switch to survival mode menu
     .AddComponent(string.Format(format_mode, "survival", "waves of enemies\n"), MenuComponent.ComponentType.BUTTON_SIMPLE)
       .AddEvent((MenuComponent component) =>
@@ -3561,7 +3566,21 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
 #endif
         component._obscured = !Shop.Unlocked(Shop.Unlocks.MODE_SURVIVAL);
       })
+
+    // Switch to versus mode menu
+    .AddComponent(string.Format(format_mode, "versus", "local co-op party\n"), MenuComponent.ComponentType.BUTTON_SIMPLE)
+      .AddEvent((MenuComponent component) =>
+      {
+        Levels._CurrentLevelCollectionIndex = 4;
+        GameScript.s_GameMode = GameScript.GameModes.VERSUS_SIMPLE;
+        CommonEvents._SwitchMenu(MenuType.VERSUS_SIMPLE);
+
+        Settings.OnGamemodeChanged(Settings.GamemodeChange.VERSUS_SIMPLE);
+      })
+
+    // Back button
     .AddBackButton(MenuType.MAIN)
+
     // Fire event on menu switch; save last selected
     ._onSwitchTo += () =>
     {
@@ -3572,6 +3591,57 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
     // Set tip
     ModifyMenu_TipComponents(MenuType.MODE_SELECTION, 17);
     ModifyMenu_TipSwitch(MenuType.MODE_SELECTION);
+
+    // Versus menu
+    {
+      var format_versus = "{0,-14}{1,3}\n";
+      new Menu2(MenuType.VERSUS_SIMPLE)
+      {
+
+      }
+      .AddComponent($"<color={_COLOR_GRAY}>versus</color>\n\n")
+
+      // Score to win setting
+      .AddComponent("score to win: 5\n\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
+       .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+        {
+          // Set display text
+          var selection_match = $"{GameScript.VersusMode._ScoreToWin}";
+          component.SetDisplayText(string.Format(format_versus, "score to win:", selection_match) + "\n");
+
+          // Set dropdown data
+          var selections = new List<string>();
+          var actions = new List<System.Action<MenuComponent>>();
+          foreach (var selection in new int[] { 1, 3, 5, 7, 10 })
+          {
+            var selectionCurrent = selection;
+
+            selections.Add($"{selectionCurrent}");
+            actions.Add((MenuComponent component0) =>
+            {
+              GameScript.VersusMode._ScoreToWin = selectionCurrent;
+              _CanRender = false;
+              RenderMenu();
+            });
+          }
+
+          component.SetDropdownData("score to win\n*sets what score to reach for the game to end\n\n", selections, actions, selection_match);
+        })
+
+      // Start button
+      .AddComponent("play\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
+        .AddEvent((MenuComponent component) =>
+        {
+          GameScript.NextLevel(0);
+
+          // Play music
+          if (FunctionsC.MusicManager.s_CurrentTrack <= 2)
+            FunctionsC.MusicManager.TransitionTo(FunctionsC.MusicManager.GetNextTrackIter());
+        })
+
+      // Back button
+      .AddBackButton(MenuType.MODE_SELECTION);
+    }
 
     // Level display menu
     var dirs = 11;
@@ -5649,12 +5719,19 @@ go to the <color=yellow>SHOP</color> to buy something~1
 
     }
     .AddComponent($"<color={_COLOR_GRAY}>options</color>\n\n")
+
     // Settings
     .AddComponent("graphics / audio settings\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
       .AddEvent((MenuComponent component) => { CommonEvents._SwitchMenu(MenuType.OPTIONS_SETTINGS); })
+
     // Game options
     .AddComponent("game options\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
       .AddEvent((MenuComponent component) => { CommonEvents._SwitchMenu(MenuType.OPTIONS_GAME); })
+
+    // Multiplayer
+    //.AddComponent("online multiplayer options\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
+    //  .AddEvent((MenuComponent component) => { CommonEvents._SwitchMenu(MenuType.MULTIPLAYER_MANAGER); })
+
     // Control options
     .AddComponent("controls\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
       .AddEvent((MenuComponent component) => { CommonEvents._SwitchMenu(MenuType.CONTROLS); })
@@ -6462,6 +6539,49 @@ go to the <color=yellow>SHOP</color> to buy something~1
 
       Settings.SettingsSaveData.Save();
     };
+
+    // Multiplayer manager
+    void SpawnMenu_MultiplayerManager()
+    {
+      var menu = new Menu2(MenuType.MULTIPLAYER_MANAGER)
+      {
+      };
+
+      menu.AddComponent($"<color={_COLOR_GRAY}>multiplayer manager</color>\n\n");
+
+      // Display connected players
+      var mm = GameScript.s_CustomNetworkManager;
+      if (!mm._Connected)
+      {
+        menu.AddComponent($"Not connected / hosting [h / j]\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE);
+      }
+      else
+      {
+        menu.AddComponent($"Player 1: YOU\n", MenuComponent.ComponentType.BUTTON_SIMPLE);
+        if (mm._Players.Count > 1)
+          menu.AddComponent($"Player 2: Connected\n", MenuComponent.ComponentType.BUTTON_SIMPLE);
+        else
+          menu.AddComponent($"Player 2: Not connected\n", MenuComponent.ComponentType.BUTTON_SIMPLE);
+        if (mm._Players.Count > 2)
+          menu.AddComponent($"Player 3: Connected\n", MenuComponent.ComponentType.BUTTON_SIMPLE);
+        else
+          menu.AddComponent($"Player 3: Not connected\n", MenuComponent.ComponentType.BUTTON_SIMPLE);
+        if (mm._Players.Count > 3)
+          menu.AddComponent($"Player 4: Connected\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE);
+        else
+          menu.AddComponent($"Player 4: Not connected\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE);
+      }
+
+      //
+      menu.AddBackButton(MenuType.OPTIONS);
+
+      //
+      menu._onSwitchTo += () =>
+      {
+        SpawnMenu_MultiplayerManager();
+      };
+    }
+    SpawnMenu_MultiplayerManager();
 
     // Credits
     var m_cred = new Menu2(MenuType.CREDITS)

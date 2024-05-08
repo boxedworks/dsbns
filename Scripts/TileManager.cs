@@ -609,6 +609,7 @@ public class TileManager
       Powerup.Reset();
       FunctionsC.AoeHandler.Reset();
       CandleScript.Reset();
+      PlayerspawnScript.ResetPlayerSpawnIndex();
       CustomEntityUI._ID = 0;
       EnemyScript._ID = 0;
 
@@ -972,6 +973,20 @@ public class TileManager
         GameObject.Destroy(GameObject.Find("Meshes_Tiles_Up"));
         GameObject.Destroy(GameObject.Find("Meshes_Tiles_Down"));
         GameObject.Destroy(GameObject.Find("Meshes_Tiles_Sides"));
+      }
+
+      // Mark level loaded
+      if (GameScript.s_CustomNetworkManager._Connected)
+      {
+        GameScript.s_CustomNetworkManager._Self._NetworkBehavior.CmdMarkMapLoadComplete();
+
+        if (GameScript.s_CustomNetworkManager._IsServer)
+        {
+          while (!GameScript.s_CustomNetworkManager.AllPlayersLoaded())
+          {
+            yield return new WaitForSeconds(0.1f);
+          }
+        }
       }
 
       // Set level time
@@ -1585,7 +1600,7 @@ public class TileManager
         break;
       // Check for player spawn
       case ("playerspawn"):
-        loadedObject = PlayerspawnScript._PlayerSpawns[0].gameObject;
+        loadedObject = PlayerspawnScript.GetPlayerSpawnScript().gameObject;
         loadedObject.transform.position = new Vector3(object_base._x, loadedObject.transform.position.y, object_base._z);
         // Move barricade
         //GameScript._EndLight.transform.position = new Vector3(object_base._x, 26f, object_base._z);
@@ -1906,6 +1921,10 @@ public class TileManager
     if (!CanReloadMap()) return;
     _LastReloadTime = Time.unscaledTime;
 
+    //
+    if (GameScript.s_CustomNetworkManager._Connected && GameScript.s_CustomNetworkManager._IsServer)
+      GameScript.s_CustomNetworkManager.MarkAllLevelsUnloaded();
+
     // Check AutoPlayer
     if (PlayerScript.AutoPlayer._Capturing)
       PlayerScript.AutoPlayer.Capture();
@@ -1940,6 +1959,7 @@ public class TileManager
     CustomEntityUI._ID = 0;
     ExplosiveScript.Reset();
     FunctionsC.AoeHandler.Reset();
+    PlayerspawnScript.ResetPlayerSpawnIndex();
     ResetParticles();
 
     var objects = GameResources._Container_Objects;
@@ -2034,12 +2054,6 @@ public class TileManager
     }
     GameScript._s_Singleton.StartCoroutine(co());
 
-    // Set level time
-    GameScript._LevelStartTime = Time.time;
-
-    // Init enemies
-    EnemyScript.HardInitAll();
-
     // Move camera
     var campos = GameResources._Camera_Main.transform.position;
     var playerspawnpos = PlayerspawnScript._PlayerSpawns[0].transform.position;
@@ -2047,13 +2061,35 @@ public class TileManager
     campos.z = playerspawnpos.z + 3.6f;
     GameResources._Camera_Main.transform.position = campos;
 
-    // Spawn player
-    GameScript.SpawnPlayers();
-    OnMapLoad();
-
     // Lerp camera
     IEnumerator LerpCamera()
     {
+
+      // Mark level loaded
+      if (GameScript.s_CustomNetworkManager._Connected)
+      {
+        GameScript.s_CustomNetworkManager._Self._NetworkBehavior.CmdMarkMapLoadComplete();
+
+        if (GameScript.s_CustomNetworkManager._IsServer)
+        {
+          while (!GameScript.s_CustomNetworkManager.AllPlayersLoaded())
+          {
+            yield return new WaitForSeconds(0.1f);
+          }
+        }
+      }
+
+      // Set level time
+      GameScript._LevelStartTime = Time.time;
+
+      // Init enemies
+      EnemyScript.HardInitAll();
+
+      // Spawn player
+      GameScript.SpawnPlayers();
+      OnMapLoad();
+
+      //
       var time = 1f;
       var material = GameResources._CameraFader.sharedMaterial;
       var color = material.color;
@@ -2519,7 +2555,7 @@ public class TileManager
     ActiveRagdoll.Reset();
 
     // Show player spawn
-    foreach (PlayerspawnScript s in PlayerspawnScript._PlayerSpawns)
+    foreach (var s in PlayerspawnScript._PlayerSpawns)
       s._visual.SetActive(true);
 
     // Enable pointer and ring
@@ -2604,7 +2640,8 @@ public class TileManager
       GameResources._Camera_Main.transform.localPosition = new Vector3(-26.1f, GameResources._Camera_Main.transform.localPosition.y, -70.5f);
 
     // Set player spawn layer
-    PlayerspawnScript._PlayerSpawns[0].gameObject.layer = 0;
+    foreach (var playerSpawn in PlayerspawnScript._PlayerSpawns)
+      playerSpawn.gameObject.layer = 0;
   }
   public static void EditorDisabled(string mapData)
   {
@@ -2636,16 +2673,15 @@ public class TileManager
     // Remove line renders
     LineRenderer_Clear();
 
-    // Set player spawn layer
-    PlayerspawnScript._PlayerSpawns[0].gameObject.layer = 2;
+    // Set player spawn layer /  Hide player spawn(s)
+    foreach (var playerSpawn in PlayerspawnScript._PlayerSpawns)
+    {
+      playerSpawn.gameObject.layer = 2;
+      playerSpawn._visual.SetActive(false);
+    }
 
     // Disable light
     GameScript.ToggleCameraLight(false);
-
-    // Hide player spawn(s)
-    foreach (PlayerspawnScript s in PlayerspawnScript._PlayerSpawns)
-      s._visual.SetActive(false);
-    //Debug.Log("Map editor disabled.");
 
     // Hide menus
     EditorMenus.HideMenus();
@@ -3345,7 +3381,12 @@ public class TileManager
         _localPos = -1.191999f
       },
       new LevelEditorObject.RotationSettings(),
-      null, null, null, null, null),
+      new LevelEditorObject.CopySettings(),
+      new LevelEditorObject.AddSettings()
+      {
+        _data = "playerspawn_0_0"
+      },
+      null, null, null),
 
     _LEO_Table = new LevelEditorObject("Table", LevelEditorObject._UpdateFunction_Object,
       new LevelEditorObject.MovementSettings()
@@ -3987,7 +4028,7 @@ public class TileManager
       return returnString;
     };
 
-    static int _selectedObjectSaveLayer;
+    public static int s_SelectedObjectSaveLayer;
     public static void Select(GameObject selection)
     {
       if (_CurrentMode == EditorMode.MOVE || _IsLinking)
@@ -4003,10 +4044,10 @@ public class TileManager
 
       // Normal selection
       if (_SelectedObject != null)
-        _SelectedObject.gameObject.layer = _selectedObjectSaveLayer;
+        _SelectedObject.gameObject.layer = s_SelectedObjectSaveLayer;
 
       _SelectedObject = selection.transform;
-      _selectedObjectSaveLayer = _SelectedObject.gameObject.layer;
+      s_SelectedObjectSaveLayer = _SelectedObject.gameObject.layer;
       _SelectedObject.gameObject.layer = 2;
 
       ClearText();
@@ -4166,7 +4207,7 @@ public class TileManager
           // If did not find collider or finds the floor, end
           if (raycast_info.collider == null || raycast_info.collider.name.Equals("Floor")) break;
 
-          // Check for til
+          // Check for tile
           if (raycast_info.collider.name == "Tile")
           {
             got_obj = save_collider.gameObject;
@@ -4184,7 +4225,7 @@ public class TileManager
 
             // take anyways
             found = true;
-            continue;
+            break;
           }
 
           // Else, found a new mode
@@ -4238,7 +4279,7 @@ public class TileManager
 
     if (_SelectedObject != null)
     {
-      LevelEditorObject.MovementSettings movementSettings = obj._movementSettings;
+      var movementSettings = obj._movementSettings;
 
       // Check move
       if (_CurrentMode == EditorMode.MOVE)
@@ -4494,12 +4535,15 @@ public class TileManager
     copy.rotation = copy_target.rotation;
     copy.localScale = copy_target.localScale;
     copy.position = copy_target.position;
+    copy.gameObject.layer = LevelEditorObject.s_SelectedObjectSaveLayer;
 
     // Fire onCopy function
     copySettings._onCopy?.Invoke(copy.gameObject);
 
     // Select and move the object
-    _SelectedObject = copy;
+    LevelEditorObject.Select(copy.gameObject);
+
+    //_SelectedObject = copy;
     LevelEditorObject.SetIterOnName(_SelectedObject.name);
     _CurrentMode = EditorMode.MOVE;
   }

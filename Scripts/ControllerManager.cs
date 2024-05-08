@@ -359,6 +359,7 @@ public static class ControllerManager
     SHIFT_R,
     T,
     X,
+    J,
     BACKSPACE,
     DELETE,
     C,
@@ -498,6 +499,9 @@ public static class ControllerManager
         break;
       case (Key.O):
         gotKey = keyboard.oKey;
+        break;
+      case Key.J:
+        gotKey = keyboard.jKey;
         break;
       case (Key.PERIOD):
         gotKey = keyboard.periodKey;

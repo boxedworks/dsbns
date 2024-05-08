@@ -4,7 +4,7 @@ using UnityEngine;
 
 public static class GameResources
 {
-  public static GameObject _Player, _Enemy, _Ragdoll, _Bullet, _Door, _Button, _Laser, _Playerspawn,
+  public static GameObject _Player, _PlayerNetwork, _Enemy, _Ragdoll, _Bullet, _Door, _Button, _Laser, _Playerspawn,
     _Barrel_Explosive,
     _Explosive_Scar,
     _Table, _Table_Bush,
@@ -62,6 +62,7 @@ public static class GameResources
     _Layermask_Ragdoll &= ~(1 << LayerMask.NameToLayer("CAMERA2"));
 
     _Player = Resources.Load("Player") as GameObject;
+    _PlayerNetwork = Resources.Load("NetworkPlayer") as GameObject;
     _Enemy = Resources.Load("Enemy") as GameObject;
     _Ragdoll = Resources.Load("Ragdoll") as GameObject;
 

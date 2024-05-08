@@ -40,7 +40,7 @@ public class CandleScript : MonoBehaviour
     if (GameScript.s_GameMode != GameScript.GameModes.SURVIVAL)
       _enabled = true;
 
-    _NormalizedEnable = GameScript.s_GameMode == GameScript.GameModes.CLASSIC ? 1f : 0f;
+    _NormalizedEnable = GameScript.s_GameMode != GameScript.GameModes.SURVIVAL ? 1f : 0f;
     if (GameScript.s_GameMode == GameScript.GameModes.SURVIVAL)
       _light.range = 8.3f;
   }

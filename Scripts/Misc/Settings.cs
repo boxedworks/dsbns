@@ -183,7 +183,7 @@ public static class Settings
     }
   }
 
-  public static float _VERSION = 1.42f;
+  public static float _VERSION = 1.43f;
 
   // Struct holding info what item pair gets unlocked at what level
   public class WeaponPair
@@ -203,7 +203,7 @@ public static class Settings
 
     // Register levels files by name
     Levels._LevelCollections = new();
-    foreach (var filename in new string[] { "levels0", "levels1", "levels_survival", "levels_editor_local", /*"levels_challenge"*/ })
+    foreach (var filename in new string[] { "levels0", "levels1", "levels_survival", "levels_editor_local", "levels_versus" /*"levels_challenge"*/ })
       Levels._LevelCollections.Add(new Levels.LevelCollection()
       {
         _name = filename
@@ -632,7 +632,8 @@ public static class Settings
     CLASSIC,
     SURVIVAL,
 
-    LEVEL_EDITOR
+    LEVEL_EDITOR,
+    VERSUS_SIMPLE,
   }
 
   public static bool _LevelEditorEnabled;
@@ -652,6 +653,7 @@ public static class Settings
 
       case GamemodeChange.SURVIVAL:
       case GamemodeChange.LEVEL_EDITOR:
+      case GamemodeChange.VERSUS_SIMPLE:
 
         Physics.gravity = new Vector3(0f, -9.81f, 0f);
         break;

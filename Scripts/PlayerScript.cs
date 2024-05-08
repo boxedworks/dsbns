@@ -266,6 +266,7 @@ public class PlayerScript : MonoBehaviour
       {
         _ragdoll.AddCrown();
       }
+
   }
 
   public void RegisterEquipment()
@@ -871,7 +872,12 @@ public class PlayerScript : MonoBehaviour
 
           var onealive = false;
           foreach (var player in s_Players)
-            if (player._ragdoll != null && !player._ragdoll._IsDead) { onealive = true; break; }
+          {
+            if (player._ragdoll != null && !player._ragdoll._IsDead)
+            {
+              onealive = true; break;
+            }
+          }
           if (!onealive) desiredTimeScale = 0f;
 
           // Update timescale
@@ -1359,11 +1365,14 @@ public class PlayerScript : MonoBehaviour
     else
     // Controller
     {
+      var gamepadId = _Id - (GameScript.s_CustomNetworkManager._Connected ? GameScript.s_CustomNetworkManager._Self._NetworkBehavior._PlayerId : 0);
+      //Debug.Log($"[{_Id}] Gathering gamepad id {gamepadId} [{GameScript.s_CustomNetworkManager._Self._NetworkBehavior._PlayerId}]");
+
       // Check sticks
-      Vector2 controllerInput0 = new Vector2(ControllerManager.GetControllerAxis(_Id, ControllerManager.Axis.LSTICK_X),
-          ControllerManager.GetControllerAxis(_Id, ControllerManager.Axis.LSTICK_Y)),
-        controllerInput1 = new Vector2(ControllerManager.GetControllerAxis(_Id, ControllerManager.Axis.RSTICK_X),
-          ControllerManager.GetControllerAxis(_Id, ControllerManager.Axis.RSTICK_Y));
+      Vector2 controllerInput0 = new Vector2(ControllerManager.GetControllerAxis(gamepadId, ControllerManager.Axis.LSTICK_X),
+          ControllerManager.GetControllerAxis(gamepadId, ControllerManager.Axis.LSTICK_Y)),
+        controllerInput1 = new Vector2(ControllerManager.GetControllerAxis(gamepadId, ControllerManager.Axis.RSTICK_X),
+          ControllerManager.GetControllerAxis(gamepadId, ControllerManager.Axis.RSTICK_Y));
       float min = 0.125f, max = 0.85f;
       if (Mathf.Abs(controllerInput0.x) <= min) controllerInput0.x = 0f;
       else if (Mathf.Abs(controllerInput0.x) >= max) controllerInput0.x = 1f * Mathf.Sign(controllerInput0.x);
@@ -1387,7 +1396,7 @@ public class PlayerScript : MonoBehaviour
       }
 
       // Move arms
-      var gamepad = ControllerManager.GetPlayerGamepad(_Id);
+      var gamepad = ControllerManager.GetPlayerGamepad(gamepadId);
       if (gamepad != null)
       {
         if (!_ragdoll._IsDead && gamepad.buttonSouth.isPressed)
@@ -1396,8 +1405,8 @@ public class PlayerScript : MonoBehaviour
           _ragdoll.ArmsDown();
 
         // Use items
-        Vector2 input = new Vector2(ControllerManager.GetControllerAxis(_Id, ControllerManager.Axis.L2),
-          ControllerManager.GetControllerAxis(_Id, ControllerManager.Axis.R2));
+        Vector2 input = new Vector2(ControllerManager.GetControllerAxis(gamepadId, ControllerManager.Axis.L2),
+          ControllerManager.GetControllerAxis(gamepadId, ControllerManager.Axis.R2));
         float bias = 0.4f;
         min = 0f + bias;
         if (input.x >= 1f - bias && _lastInputTriggers.x < 1f - bias)

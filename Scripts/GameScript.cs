@@ -19,6 +19,9 @@ public class GameScript : MonoBehaviour
   }
 
   //
+  public static CustomNetworkManager s_CustomNetworkManager;
+
+  //
   public static TextMesh _debugText;
 
   public static GameScript _s_Singleton;
@@ -84,7 +87,10 @@ public class GameScript : MonoBehaviour
   {
     CLASSIC,
     SURVIVAL,
-    CHALLENGE
+
+    CHALLENGE,
+
+    VERSUS_SIMPLE
   }
   public static GameModes s_GameMode;
 
@@ -150,6 +156,7 @@ public class GameScript : MonoBehaviour
     SceneThemes.Init();
     ProgressBar.Init();
     Stats.Init();
+    VersusMode.Init();
 
     UpdateLevelVault();
 
@@ -167,6 +174,9 @@ public class GameScript : MonoBehaviour
     var color = material.color;
     color.a = 0f;
     material.color = color;
+
+    // Network
+    s_CustomNetworkManager = GameObject.Find("Networking").GetComponent<CustomNetworkManager>();
 
     // Init loadouts
     ItemManager.Loadout.Init();
@@ -237,9 +247,10 @@ public class GameScript : MonoBehaviour
     }
 
     // Spawn players
-    if (_PlayerIter < Settings._NumberPlayers)
-      for (; _PlayerIter < Settings._NumberPlayers; _PlayerIter++)
-        PlayerspawnScript._PlayerSpawns[0].SpawnPlayer();
+    if (!s_CustomNetworkManager._Connected || s_CustomNetworkManager._IsServer)
+      if (_PlayerIter < Settings._NumberPlayers)
+        for (; _PlayerIter < Settings._NumberPlayers; _PlayerIter++)
+          PlayerspawnScript._PlayerSpawns[0].SpawnPlayer();
   }
 
   static Coroutine _tutorialCo;
@@ -412,6 +423,18 @@ public class GameScript : MonoBehaviour
     Menu.SwitchMenu(Menu._Menu_LevelOrganizer);
   }*/
 
+//
+public static class VersusMode{
+
+  public static int _ScoreToWin;
+
+  public static void Init(){
+    _ScoreToWin = 5;
+  }
+
+}
+
+//
   public static class SurvivalMode
   {
     public static bool _WavePlaying;
@@ -1484,7 +1507,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
 
   // Update is called once per frame
   public static bool s_Backrooms;
-  public static bool s_InteractableObjects { get { return s_GameMode == GameModes.CLASSIC; } }
+  public static bool s_InteractableObjects { get { return s_GameMode == GameModes.CLASSIC || s_GameMode == GameModes.VERSUS_SIMPLE; } }
   public Light _GlobalLight;
   void Update()
   {
@@ -1542,6 +1565,34 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     // Update menus
     Menu2.UpdateMenus();
 
+    /*/ Update multiplayer
+    if (ControllerManager.GetKey(ControllerManager.Key.H))
+    {
+      s_CustomNetworkManager.Connect();
+    }
+    else if (ControllerManager.GetKey(ControllerManager.Key.J))
+    {
+      s_CustomNetworkManager.Host();
+    }
+    else if (ControllerManager.GetKey(ControllerManager.Key.K))
+    {
+      s_CustomNetworkManager.StopHost();
+    }
+    else if (ControllerManager.GetKey(ControllerManager.Key.L))
+    {
+      s_CustomNetworkManager.StopClient();
+    }*/
+
+    if (s_CustomNetworkManager._Connected)
+    {
+      var mapData = s_CustomNetworkManager._CurrentMapData;
+      if (mapData != null && mapData.Trim().Length > 0 && !_Paused && !TileManager._LoadingMap)
+      {
+        s_CustomNetworkManager._CurrentMapData = null;
+        NextLevel(mapData);
+      }
+    }
+
     // Update playerprofiles
     foreach (var profile in PlayerProfile.s_Profiles)
       profile.HandleInput();
@@ -1567,6 +1618,8 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     {
       _lastInputCheck = Time.unscaledTime;
       Settings._NumberPlayers = (ControllerManager._NumberGamepads) + (Settings._ForceKeyboard ? 1 : 0);
+      if (s_CustomNetworkManager._Connected)
+        Settings._NumberPlayers += s_CustomNetworkManager._Players.Count - 1;
       if (Settings._NumberPlayers == 0)
         Settings._NumberPlayers = 1;
       var numcontrollers_save = Settings._NumberControllers;
@@ -3719,6 +3772,9 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     // Begin coroutine
     _s_Singleton._GameEnded = true;
     _Coroutine_load = _s_Singleton.StartCoroutine(NextLevelCo(levelData));
+
+    // Network load
+    s_CustomNetworkManager.OnLevelLoad(levelData);
   }
   static IEnumerator NextLevelCo(string levelData)
   {
