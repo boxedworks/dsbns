@@ -3572,10 +3572,10 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
       .AddEvent((MenuComponent component) =>
       {
         Levels._CurrentLevelCollectionIndex = 4;
-        GameScript.s_GameMode = GameScript.GameModes.VERSUS_SIMPLE;
+        GameScript.s_GameMode = GameScript.GameModes.VERSUS;
         CommonEvents._SwitchMenu(MenuType.VERSUS_SIMPLE);
 
-        Settings.OnGamemodeChanged(Settings.GamemodeChange.VERSUS_SIMPLE);
+        Settings.OnGamemodeChanged(Settings.GamemodeChange.VERSUS);
       })
 
     // Back button
@@ -3606,7 +3606,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
        .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
         {
           // Set display text
-          var selection_match = $"{GameScript.VersusMode._ScoreToWin}";
+          var selection_match = $"{GameScript.VersusMode.s_ScoreToWin}";
           component.SetDisplayText(string.Format(format_versus, "score to win:", selection_match) + "\n");
 
           // Set dropdown data
@@ -3619,7 +3619,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
             selections.Add($"{selectionCurrent}");
             actions.Add((MenuComponent component0) =>
             {
-              GameScript.VersusMode._ScoreToWin = selectionCurrent;
+              GameScript.VersusMode.s_ScoreToWin = selectionCurrent;
               _CanRender = false;
               RenderMenu();
             });
@@ -3627,6 +3627,8 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
 
           component.SetDropdownData("score to win\n*sets what score to reach for the game to end\n\n", selections, actions, selection_match);
         })
+
+      // Slowmo setting
 
       // Start button
       .AddComponent("play\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
@@ -5358,7 +5360,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
           });
       }
 
-      else if (GameScript.s_GameMode != GameScript.GameModes.SURVIVAL)
+      else if (GameScript.s_GameMode != GameScript.GameModes.SURVIVAL && GameScript.s_GameMode != GameScript.GameModes.VERSUS)
       {
         // Switch to store
         mPause.AddComponent("shop\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
@@ -5399,7 +5401,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
           });
       }
 
-      if (!GameScript._EditorTesting || (GameScript._EditorTesting && !GameScript._EditorEnabled))
+      if ((!GameScript._EditorTesting || (GameScript._EditorTesting && !GameScript._EditorEnabled)) && GameScript.s_GameMode != GameScript.GameModes.VERSUS)
         // Restart the map
         mPause.AddComponent("restart\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
           .AddEvent((MenuComponent component) =>
@@ -5446,7 +5448,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
           }
         });
 
-      if (!GameScript.IsSurvival())
+      if (!GameScript.IsSurvival() && GameScript.s_GameMode != GameScript.GameModes.VERSUS)
       {
         mPause.AddComponent("extras*\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE);
         if (Shop.Unlocked(Shop.Unlocks.MODE_EXTRAS))
@@ -5564,7 +5566,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
         SpawnMenu_Pause();
       };
       // Tip
-      ModifyMenu_TipComponents(MenuType.PAUSE, (GameScript.s_GameMode == GameScript.GameModes.SURVIVAL ? 5 : 3));
+      ModifyMenu_TipComponents(MenuType.PAUSE, (GameScript.s_GameMode == GameScript.GameModes.SURVIVAL || GameScript.s_GameMode == GameScript.GameModes.VERSUS ? 5 : 3));
       ModifyMenu_TipSwitch(MenuType.PAUSE);
     }
     SpawnMenu_Pause();

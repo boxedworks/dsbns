@@ -826,7 +826,7 @@ public static class FunctionsC
       {
 
         // Level pack music; random
-        if (Levels._LevelPack_Playing || GameScript._EditorTesting || GameScript.s_GameMode == GameScript.GameModes.VERSUS_SIMPLE)
+        if (Levels._LevelPack_Playing || GameScript._EditorTesting || GameScript.s_GameMode == GameScript.GameModes.VERSUS)
         {
 
           var songs_length = s_TrackNames.Length - 3;

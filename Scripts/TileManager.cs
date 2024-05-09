@@ -12,7 +12,7 @@ public class TileManager
   static Settings.LevelSaveData LevelModule { get { return Settings.s_SaveData.LevelData; } }
 
   //
-  static int _s_mapIndex;
+  public static int _s_MapIndex;
 
   public static List<Tile> _Tiles;
   static int _MouseID, _Width = 50, _Height = 50;
@@ -519,8 +519,8 @@ public class TileManager
   {
 
     //
-    _s_mapIndex++;
-    var mapsaveindex = _s_mapIndex;
+    _s_MapIndex++;
+    var mapsaveindex = _s_MapIndex;
 
     // Lerp camera
     var time = 1f;
@@ -545,7 +545,7 @@ public class TileManager
     while (GameScript._Paused)
       yield return new WaitForSeconds(0.05f);
 
-    if (_s_mapIndex != mapsaveindex) { }
+    if (_s_MapIndex != mapsaveindex) { }
     else
     {
 
@@ -623,6 +623,13 @@ public class TileManager
       }
       else if (GameScript.IsSurvival())
         SceneThemes.ChangeMapTheme(SceneThemes._Instance._ThemeOrder[2]);
+      else if (GameScript.s_GameMode == GameScript.GameModes.VERSUS)
+      {
+        if (_CurrentLevel_Theme != -1)
+          SceneThemes.ChangeMapTheme(SceneThemes._SceneOrder_LevelEditor[_CurrentLevel_Theme % SceneThemes._SceneOrder_LevelEditor.Length]);
+        else
+          SceneThemes.ChangeMapTheme(SceneThemes._Instance._ThemeOrder[2]);
+      }
       else if (GameScript._EditorTesting)
         SceneThemes.ChangeMapTheme(SceneThemes._Instance._ThemeOrder[2]);
       else
@@ -996,12 +1003,16 @@ public class TileManager
       EnemyScript.HardInitAll();
 
       // Spawn players / hide menus
-      if (_s_mapIndex > 1)
+      if (_s_MapIndex > 1)
       {
         if (Menu2._InMenus)
         {
           Menu2.HideMenus();
         }
+
+        // Versus mode
+        if (GameScript.s_GameMode == GameScript.GameModes.VERSUS)
+          GameScript.VersusMode.OnLevelLoad();
 
         // Spawn player
         GameScript.SpawnPlayers();
@@ -3386,7 +3397,10 @@ public class TileManager
       {
         _data = "playerspawn_0_0"
       },
-      null, null, null),
+      new LevelEditorObject.DeleteSettings(),
+      null,
+      null
+    ),
 
     _LEO_Table = new LevelEditorObject("Table", LevelEditorObject._UpdateFunction_Object,
       new LevelEditorObject.MovementSettings()
@@ -4412,6 +4426,7 @@ public class TileManager
       {
         // Select the transform to delete
         var delete_target = LevelEditorObject.GetTransformTarget(deleteSettings._target);
+        var canDelete = true;
 
         // Check special case
         if (LevelEditorObject.GetCurrentObject()._name == _LEO_Enemy._name)
@@ -4425,11 +4440,26 @@ public class TileManager
           enemyScript?._linkedDoor?.UnregisterEnemy(enemyScript);
         }
 
+        else if (LevelEditorObject.GetCurrentObject()._name == _LEO_Playerspawn._name)
+        {
+          if (PlayerspawnScript._PlayerSpawns.Count == 1)
+            canDelete = false;
+        }
+
         // Delete LEO
-        GameObject.Destroy(delete_target.gameObject);
-        _CurrentMode = EditorMode.NONE;
-        _SelectedObject = null;
-        _Ring.position = new Vector3(0f, -100f, 0f);
+        if (canDelete)
+        {
+          if (LevelEditorObject.GetCurrentObject()._name == _LEO_Playerspawn._name)
+          {
+            var playerspawnScript = delete_target.GetComponent<PlayerspawnScript>();
+            PlayerspawnScript._PlayerSpawns.Remove(playerspawnScript);
+          }
+
+          GameObject.Destroy(delete_target.gameObject);
+          _CurrentMode = EditorMode.NONE;
+          _SelectedObject = null;
+          _Ring.position = new Vector3(0f, -100f, 0f);
+        }
       }
     }
     // Check add

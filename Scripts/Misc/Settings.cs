@@ -633,7 +633,7 @@ public static class Settings
     SURVIVAL,
 
     LEVEL_EDITOR,
-    VERSUS_SIMPLE,
+    VERSUS,
   }
 
   public static bool _LevelEditorEnabled;
@@ -653,9 +653,11 @@ public static class Settings
 
       case GamemodeChange.SURVIVAL:
       case GamemodeChange.LEVEL_EDITOR:
-      case GamemodeChange.VERSUS_SIMPLE:
+      case GamemodeChange.VERSUS:
 
         Physics.gravity = new Vector3(0f, -9.81f, 0f);
+
+        GameScript.VersusMode.OnGamemodeSwitched(gamemode == GamemodeChange.VERSUS);
         break;
     }
 

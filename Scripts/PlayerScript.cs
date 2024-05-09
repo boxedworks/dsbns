@@ -1101,6 +1101,9 @@ public class PlayerScript : MonoBehaviour
     // Check if application is focused
     if (!Application.isFocused) return;
 
+    // Check versus start
+    if (GameScript.s_GameMode == GameScript.GameModes.VERSUS && !GameScript.VersusMode.s_PlayersCanMove) return;
+
     //
     if (AutoPlayer._Playing && _Id != 0)
       return;
@@ -2164,6 +2167,12 @@ public class PlayerScript : MonoBehaviour
     // Survival
     if (GameScript.s_GameMode == GameScript.GameModes.SURVIVAL)
       GameScript.SurvivalMode.OnPlayerDead(_Id);
+
+    // Versus
+    if (GameScript.s_GameMode == GameScript.GameModes.VERSUS)
+    {
+      GameScript.VersusMode.OnPlayerDeath();
+    }
 
     // Remove ring
     IEnumerator fadeRing()

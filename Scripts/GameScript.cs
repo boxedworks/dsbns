@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Data.SqlTypes;
 using UnityEngine;
+using UnityEngine.Tilemaps;
 
 public class GameScript : MonoBehaviour
 {
@@ -90,7 +91,7 @@ public class GameScript : MonoBehaviour
 
     CHALLENGE,
 
-    VERSUS_SIMPLE
+    VERSUS
   }
   public static GameModes s_GameMode;
 
@@ -247,10 +248,11 @@ public class GameScript : MonoBehaviour
     }
 
     // Spawn players
+    var playerSpawnIndex = 0;
     if (!s_CustomNetworkManager._Connected || s_CustomNetworkManager._IsServer)
       if (_PlayerIter < Settings._NumberPlayers)
         for (; _PlayerIter < Settings._NumberPlayers; _PlayerIter++)
-          PlayerspawnScript._PlayerSpawns[0].SpawnPlayer();
+          PlayerspawnScript._PlayerSpawns[playerSpawnIndex++ % PlayerspawnScript._PlayerSpawns.Count].SpawnPlayer();
   }
 
   static Coroutine _tutorialCo;
@@ -423,18 +425,130 @@ public class GameScript : MonoBehaviour
     Menu.SwitchMenu(Menu._Menu_LevelOrganizer);
   }*/
 
-//
-public static class VersusMode{
+  //
+  public static class VersusMode
+  {
 
-  public static int _ScoreToWin;
+    public static int s_ScoreToWin;
+    public static bool s_UseSlowmo;
 
-  public static void Init(){
-    _ScoreToWin = 5;
+    public static bool s_PlayersCanMove;
+
+    static TMPro.TextMeshPro s_announcementText;
+
+    public static void Init()
+    {
+      s_ScoreToWin = 5;
+      s_UseSlowmo = true;
+
+      s_announcementText = GameObject.Find("VersusUI").transform.GetChild(0).GetComponent<TMPro.TextMeshPro>();
+    }
+
+    //
+    public static void OnLevelLoad()
+    {
+      s_PlayersCanMove = false;
+
+      IEnumerator LevelStartCountdownCo()
+      {
+
+        var timeStart = Time.time;
+        var levelId = TileManager._s_MapIndex;
+
+        bool IsMapSame()
+        {
+          return levelId == TileManager._s_MapIndex;
+        }
+
+        var preTimeAmount = 2f;
+        while (Time.time - timeStart < preTimeAmount)
+        {
+          yield return new WaitForSeconds(0.01f);
+          if (IsMapSame())
+            s_announcementText.text = $"{string.Format("{0:0.00}", -(Time.time - timeStart - preTimeAmount))}";
+        }
+
+        if (IsMapSame())
+        {
+          s_PlayersCanMove = true;
+          yield return new WaitForSeconds(0f);
+          s_announcementText.text = $"Start!";
+
+          yield return new WaitForSeconds(0.4f);
+          s_announcementText.text = "";
+        }
+      }
+      _s_Singleton.StartCoroutine(LevelStartCountdownCo());
+    }
+
+    //
+    public static void OnGamemodeSwitched(bool switchedTo)
+    {
+      s_announcementText.enabled = switchedTo;
+    }
+
+    //
+    public static void OnPlayerDeath()
+    {
+
+      // Check all / last dead
+      IEnumerator CheckPlayerDeathStatusCo()
+      {
+
+        var mapIndex = TileManager._s_MapIndex;
+        bool IsMapSame()
+        {
+          return mapIndex == TileManager._s_MapIndex;
+        }
+
+        yield return new WaitForSeconds(0.5f);
+        if (IsMapSame())
+        {
+          var numAlive = 0;
+          PlayerScript lastAlive = null;
+          foreach (var player in PlayerScript.s_Players)
+          {
+            if (player._ragdoll._health > 0)
+            {
+              numAlive++;
+              lastAlive = player;
+            }
+          }
+
+          // Draw
+          if (numAlive == 0)
+          {
+            s_announcementText.text = $"Draw!";
+          }
+
+          // Win
+          else if (numAlive == 1)
+          {
+            s_announcementText.text = $"Player {lastAlive._Id + 1} wins!";
+          }
+
+          // Load next level
+          yield return new WaitForSeconds(2f);
+
+          if (IsMapSame())
+          {
+            var nextLevelIndex = GetRandomNextLevelIndex();
+            NextLevel(nextLevelIndex);
+          }
+        }
+
+      }
+      _s_Singleton.StartCoroutine(CheckPlayerDeathStatusCo());
+    }
+
+    //
+    public static int GetRandomNextLevelIndex()
+    {
+      return 0;
+    }
   }
 
-}
-
-//
+  //
   public static class SurvivalMode
   {
     public static bool _WavePlaying;
@@ -1507,7 +1621,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
 
   // Update is called once per frame
   public static bool s_Backrooms;
-  public static bool s_InteractableObjects { get { return s_GameMode == GameModes.CLASSIC || s_GameMode == GameModes.VERSUS_SIMPLE; } }
+  public static bool s_InteractableObjects { get { return s_GameMode == GameModes.CLASSIC || s_GameMode == GameModes.VERSUS; } }
   public Light _GlobalLight;
   void Update()
   {
@@ -1705,7 +1819,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         }
 
         // Check normal mode
-        if (!IsSurvival() && !_EditorEnabled)
+        if (!IsSurvival() && !_EditorEnabled && s_GameMode != GameModes.VERSUS)
         {
           // Check endgame
           var timeToEnd = 2.2f;

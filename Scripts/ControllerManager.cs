@@ -262,9 +262,10 @@ public static class ControllerManager
     void Input_action.IPlayerActions.OnReloadMap(InputAction.CallbackContext context)
     {
       if (context.phase != InputActionPhase.Started) return;
+      if (GameScript.s_GameMode == GameScript.GameModes.VERSUS) return;
       if (!Menu2._InMenus)
       {
-        PlayerScript p = GetPlayer(context);
+        var p = GetPlayer(context);
         if (p == null)
         {
           TileManager.ReloadMap();

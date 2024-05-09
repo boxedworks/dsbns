@@ -37,6 +37,7 @@ public static class Shop
       "powerful gun's bullets penetrate through enemies",
       "explosives have a ring around them showing how big the explosion will be",
       "some guns reload bullets one-by-one; make sure to reload each bullet",
+      "bullets will collide with each other; stronger ones beating weaker ones!",
       "need to reload multiple times? hold down &WB",
       "you can hide from explosions behind walls",
       "some melee weapons can kill more than one person per swing",
@@ -91,13 +92,17 @@ public static class Shop
       "on death, you lose all of your equipment",
       "in survival mode, you need the akimbo perk to two-hand some weapons"
     };
+    static string[] _Tips_Versus = new string[]
+    {
+      "try out different versus settings",
+    };
 
     public static string GetTip(GameScript.GameModes mode)
     {
       // Check modes
-      var array = mode == GameScript.GameModes.CLASSIC ? _Tips_Classic : _Tips_Survival;
+      var array = mode == GameScript.GameModes.CLASSIC ? _Tips_Classic : (mode == GameScript.GameModes.SURVIVAL ? _Tips_Survival : _Tips_Versus);
       var mode_string = mode.ToString().ToLower();
-      if (UnityEngine.Random.value <= 0.5f)
+      if (UnityEngine.Random.value <= 0.5f || mode == GameScript.GameModes.VERSUS)
       {
         array = _Tips_General;
         mode_string = "general";
