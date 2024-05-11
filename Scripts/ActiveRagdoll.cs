@@ -1198,7 +1198,7 @@ public class ActiveRagdoll
        startColor1 = mesh.sharedMaterials[1].color;
 
       SetLerpAmount(ref mesh, c, 1f, startColor0, startColor1);
-      _PlayerScript?.ChangeRingColor(c);
+      _PlayerScript?.ChangeRingColor(GameScript.s_GameMode == GameScript.GameModes.VERSUS && !GameScript.VersusMode.s_FreeForAll ? GameScript.VersusMode.GetTeamColorFromPlayerId(_PlayerScript._Id) : c);
       return;
     }
     if (_color_Coroutine != null)

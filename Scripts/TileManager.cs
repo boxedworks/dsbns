@@ -2424,7 +2424,14 @@ public class TileManager
           button.onClick.AddListener(() =>
           {
             _CurrentMode = EditorMode.NONE;
-            LevelEditorObject.SetIterOnName(_LEO_Tile._name);
+            if (LevelEditorObject.GetCurrentObject()._name != _LEO_Tile._name)
+            {
+              LevelEditorObject.SetIterOnName(_LEO_Tile._name);
+            }
+            else
+            {
+              LevelEditorObject.SetIterOnName(_LEO_Barrel._name);
+            }
           });
           break;
 

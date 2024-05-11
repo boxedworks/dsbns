@@ -457,7 +457,7 @@ public static class ControllerManager
         gotKey = keyboard.leftShiftKey;
         break;
       case (Key.SHIFT_R):
-        gotKey = keyboard.leftShiftKey;
+        gotKey = keyboard.rightShiftKey;
         break;
       case (Key.T):
         gotKey = keyboard.tKey;
@@ -649,12 +649,12 @@ public static class ControllerManager
     return GetAnyKey(InputMode.HOLD, key);
   }
 
-  public static bool GetAnyKey(InputMode mode, params Key[] key)
+  public static bool GetAnyKey(InputMode inputMode, params Key[] keys)
   {
 
-    foreach (var key_ in key)
+    foreach (var key in keys)
     {
-      if (GetKey(key_, mode))
+      if (GetKey(key, inputMode))
       {
         return true;
       }
@@ -668,6 +668,7 @@ public static class ControllerManager
     // Check for keyboard skips
     if (GetKey(Key.SPACE, InputMode.HOLD) || GetKey(Key.BACKSPACE, InputMode.HOLD) || GetMouseInput(0, InputMode.HOLD))
       return true;
+
     // Check for controller skips
     if (_NumberGamepads == 0) return false;
 

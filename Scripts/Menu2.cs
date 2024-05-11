@@ -3699,7 +3699,8 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
           if (!GameScript.VersusMode.HasMultipleTeams()) return;
 
           GameScript.VersusMode.Reset();
-          GameScript.NextLevel(0);
+          var nextLevelIndex = GameScript.VersusMode.GetRandomNextLevelIndex();
+          GameScript.NextLevel(nextLevelIndex);
 
           // Play music
           if (FunctionsC.MusicManager.s_CurrentTrack <= 2)
@@ -5627,8 +5628,6 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
           .AddComponent("exit to versus menu\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
             .AddEvent((MenuComponent component) =>
             {
-              GameScript.VersusMode.OnGamemodeSwitched(true);
-
               _SaveIndex = 2;
               CommonEvents._SwitchMenu(MenuType.MODE_EXIT_CONFIRM);
             })
@@ -6974,6 +6973,8 @@ there are no loadouts.~1 all items will be given in the mode!~1
           _InPause = false;
 
           GameScript.VersusMode.Reset();
+          if (switchMenu == MenuType.VERSUS)
+            GameScript.VersusMode.OnGamemodeSwitched(true);
         }
 
         // Normal pause

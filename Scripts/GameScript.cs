@@ -1,8 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
-using System.Data.SqlTypes;
 using UnityEngine;
-using UnityEngine.Tilemaps;
 
 public class GameScript : MonoBehaviour
 {
@@ -251,14 +249,33 @@ public class GameScript : MonoBehaviour
 
     // Spawn players
     var rnd = new System.Random();
-    var playerSpawnList = new int[] { 0, 1, 2, 3 };
-    rnd.Shuffle(playerSpawnList);
+    var numSpawns = PlayerspawnScript._PlayerSpawns.Count;
+    var spawnList = new int[numSpawns];
+    rnd.Shuffle(spawnList);
+    for (var i = 0; i < spawnList.Length; i++)
+      spawnList[i] = i;
 
-    var playerSpawnIndex = 0;
-    if (!s_CustomNetworkManager._Connected || s_CustomNetworkManager._IsServer)
-      if (_PlayerIter < Settings._NumberPlayers)
-        for (; _PlayerIter < Settings._NumberPlayers; _PlayerIter++)
-          PlayerspawnScript._PlayerSpawns[playerSpawnList[playerSpawnIndex++] % PlayerspawnScript._PlayerSpawns.Count].SpawnPlayer();
+    if (s_GameMode != GameModes.VERSUS || (s_GameMode == GameModes.VERSUS && VersusMode.s_FreeForAll))
+    {
+      var playerSpawnIndex = 0;
+      if (!s_CustomNetworkManager._Connected || s_CustomNetworkManager._IsServer)
+        if (_PlayerIter < Settings._NumberPlayers)
+          for (; _PlayerIter < Settings._NumberPlayers; _PlayerIter++)
+            PlayerspawnScript._PlayerSpawns[spawnList[playerSpawnIndex++ % numSpawns]].SpawnPlayer();
+    }
+
+    else
+    {
+
+      // Get level data
+      //var numPlayers = Settings._NumberPlayers;
+      var numTeams = VersusMode.GetNumberTeams();
+
+      var spawnOrder = new int[numTeams];
+      rnd.Shuffle(spawnList);
+      for (var i = 0; i < spawnOrder.Length; i++)
+        spawnOrder[i] = spawnList[i];
+    }
   }
 
   static Coroutine _tutorialCo;
@@ -491,6 +508,8 @@ public class GameScript : MonoBehaviour
       s_gamePlaying = true;
       ToggleTeammodeSwitchUi(false);
 
+      SetRandomLoadout();
+
       IEnumerator LevelStartCountdownCo()
       {
 
@@ -542,9 +561,9 @@ public class GameScript : MonoBehaviour
     }
 
     //
-    public static bool HasMultipleTeams()
+    public static int GetNumberTeams()
     {
-      if (s_FreeForAll && Settings._NumberPlayers > 1) return true;
+      if (s_FreeForAll && Settings._NumberPlayers > 1) return -1;
 
       var teamsCounted = new List<int>();
       for (var i = 0; i < Settings._NumberPlayers; i++)
@@ -555,7 +574,11 @@ public class GameScript : MonoBehaviour
         teamsCounted.Add(teamId);
       }
 
-      return teamsCounted.Count > 1;
+      return teamsCounted.Count;
+    }
+    public static bool HasMultipleTeams()
+    {
+      return s_FreeForAll || GetNumberTeams() > 1;
     }
 
     //
@@ -779,9 +802,57 @@ public class GameScript : MonoBehaviour
     }
 
     //
+    static int s_currentLevelIndex = -1;
     public static int GetRandomNextLevelIndex()
     {
-      return 0;
+      var levelSize = Levels._CurrentLevelCollection._levelData.Length;
+      while (true)
+      {
+        var levelIndex = Random.Range(0, levelSize);
+        if (levelIndex == s_currentLevelIndex)
+        {
+          levelIndex += 1;
+          levelIndex %= levelSize;
+        }
+        s_currentLevelIndex = levelIndex;
+
+        // Check map size
+        var numPlayers = Settings._NumberPlayers;
+        var numTeams = GetNumberTeams();
+
+        var numberSpawns = 0;
+        var levelData = Levels._CurrentLevelCollection._levelData[s_currentLevelIndex];
+        var a = 0;
+        var pattern = "playerspawn_";
+        while ((a = levelData.IndexOf(pattern, a)) != -1)
+        {
+          a += pattern.Length;
+          numberSpawns++;
+        }
+        Debug.Log(numberSpawns);
+
+        //
+        if ((s_FreeForAll && numberSpawns < numPlayers) || (!s_FreeForAll && numTeams < numberSpawns))
+          continue;
+
+        break;
+      }
+      return s_currentLevelIndex;
+    }
+
+    //
+    static void SetRandomLoadout()
+    {
+
+      s_PlayerLoadouts = new ItemManager.Loadout()
+      {
+        _equipment = new PlayerProfile.Equipment()
+        {
+          _item_left0 = ItemManager.Items.KNIFE,
+          _item_right0 = ItemManager.Items.PISTOL_SILENCED
+        }
+      };
+
     }
 
     //
@@ -2731,7 +2802,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     {
       return _Colors[_profileSettings.Color];
     }
-        public string GetColorName()
+    public string GetColorName()
     {
       return _ColorsName[_profileSettings.Color];
     }
