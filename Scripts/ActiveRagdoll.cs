@@ -375,7 +375,8 @@ public class ActiveRagdoll
         var force_apply = _ForceGlobal * Time.deltaTime * 10f;
 
         var agent = _IsPlayer ? _PlayerScript._agent : _EnemyScript._agent;
-        agent.Move(force_apply);
+        if (!_grappled)
+          agent.Move(force_apply);
         _ForceGlobal -= force_apply;
       }
 

@@ -157,7 +157,6 @@ public class GameScript : MonoBehaviour
     SceneThemes.Init();
     ProgressBar.Init();
     Stats.Init();
-    VersusMode.Init();
 
     UpdateLevelVault();
 
@@ -216,6 +215,9 @@ public class GameScript : MonoBehaviour
     // Init menus
     Menu2.Init();
 
+    //
+    VersusMode.Init();
+
     // Play menu music
     FunctionsC.MusicManager.PlayTrack(Settings._DifficultyUnlocked == 0 && !Levels._UnlockAllLevels ? 0 : 1);
 
@@ -248,11 +250,15 @@ public class GameScript : MonoBehaviour
     }
 
     // Spawn players
+    var rnd = new System.Random();
+    var playerSpawnList = new int[] { 0, 1, 2, 3 };
+    rnd.Shuffle(playerSpawnList);
+
     var playerSpawnIndex = 0;
     if (!s_CustomNetworkManager._Connected || s_CustomNetworkManager._IsServer)
       if (_PlayerIter < Settings._NumberPlayers)
         for (; _PlayerIter < Settings._NumberPlayers; _PlayerIter++)
-          PlayerspawnScript._PlayerSpawns[playerSpawnIndex++ % PlayerspawnScript._PlayerSpawns.Count].SpawnPlayer();
+          PlayerspawnScript._PlayerSpawns[playerSpawnList[playerSpawnIndex++] % PlayerspawnScript._PlayerSpawns.Count].SpawnPlayer();
   }
 
   static Coroutine _tutorialCo;
@@ -431,23 +437,59 @@ public class GameScript : MonoBehaviour
 
     public static int s_ScoreToWin;
     public static bool s_UseSlowmo;
+    public static bool s_FreeForAll;
+
+    static bool s_gamePlaying;
 
     public static bool s_PlayersCanMove;
 
     static TMPro.TextMeshPro s_announcementText;
 
+    public static ItemManager.Loadout s_PlayerLoadouts;
+
+    static int[] s_playerTeams;
+
+    static int[] s_playerScores;
+    public static int GetPlayerScore(int playerId)
+    {
+      return s_playerScores[playerId];
+    }
+
     public static void Init()
     {
       s_ScoreToWin = 5;
       s_UseSlowmo = true;
+      s_FreeForAll = true;
 
       s_announcementText = GameObject.Find("VersusUI").transform.GetChild(0).GetComponent<TMPro.TextMeshPro>();
+
+      s_playerTeams = new int[4];
+
+      Reset();
+    }
+
+    //
+    public static void Reset()
+    {
+      s_playerScores = new int[4];
+      s_PlayerLoadouts = new ItemManager.Loadout
+      {
+        _equipment = new PlayerProfile.Equipment()
+      };
+
+      foreach (var playerProfile in PlayerProfile.s_Profiles)
+      {
+        playerProfile.UpdateIcons();
+        playerProfile.UpdateVersusScore();
+      }
     }
 
     //
     public static void OnLevelLoad()
     {
       s_PlayersCanMove = false;
+      s_gamePlaying = true;
+      ToggleTeammodeSwitchUi(false);
 
       IEnumerator LevelStartCountdownCo()
       {
@@ -460,7 +502,7 @@ public class GameScript : MonoBehaviour
           return levelId == TileManager._s_MapIndex;
         }
 
-        var preTimeAmount = 2f;
+        var preTimeAmount = 1.5f;
         while (Time.time - timeStart < preTimeAmount)
         {
           yield return new WaitForSeconds(0.01f);
@@ -472,9 +514,9 @@ public class GameScript : MonoBehaviour
         {
           s_PlayersCanMove = true;
           yield return new WaitForSeconds(0f);
-          s_announcementText.text = $"Start!";
+          s_announcementText.text = $"go!";
 
-          yield return new WaitForSeconds(0.4f);
+          yield return new WaitForSeconds(0.3f);
           s_announcementText.text = "";
         }
       }
@@ -485,11 +527,42 @@ public class GameScript : MonoBehaviour
     public static void OnGamemodeSwitched(bool switchedTo)
     {
       s_announcementText.enabled = switchedTo;
+
+      if (switchedTo)
+      {
+        if (s_FreeForAll)
+          ToggleTeammodeSwitchUi(false);
+        else
+          ToggleTeammodeSwitchUi(true);
+      }
+      else
+      {
+        ToggleTeammodeSwitchUi(true);
+      }
+    }
+
+    //
+    public static bool HasMultipleTeams()
+    {
+      if (s_FreeForAll && Settings._NumberPlayers > 1) return true;
+
+      var teamsCounted = new List<int>();
+      for (var i = 0; i < Settings._NumberPlayers; i++)
+      {
+        var teamId = s_playerTeams[i];
+
+        if (teamsCounted.Contains(teamId)) continue;
+        teamsCounted.Add(teamId);
+      }
+
+      return teamsCounted.Count > 1;
     }
 
     //
     public static void OnPlayerDeath()
     {
+      if (!s_gamePlaying)
+        return;
 
       // Check all / last dead
       IEnumerator CheckPlayerDeathStatusCo()
@@ -504,36 +577,124 @@ public class GameScript : MonoBehaviour
         yield return new WaitForSeconds(0.5f);
         if (IsMapSame())
         {
-          var numAlive = 0;
-          PlayerScript lastAlive = null;
-          foreach (var player in PlayerScript.s_Players)
+
+          var waitTime = 2f;
+          var gameOver = false;
+
+          // Free for all
+          if (s_FreeForAll)
           {
-            if (player._ragdoll._health > 0)
+            var numAlive = 0;
+            PlayerScript lastAlive = null;
+            foreach (var player in PlayerScript.s_Players)
             {
-              numAlive++;
-              lastAlive = player;
+              if (player._ragdoll._health > 0)
+              {
+                numAlive++;
+                lastAlive = player;
+              }
+            }
+
+            // Draw
+            if (numAlive == 0)
+            {
+              s_announcementText.text = $"draw!";
+            }
+
+            // Score
+            else if (numAlive == 1)
+            {
+              s_playerScores[lastAlive._Id]++;
+              foreach (var playerProfile in PlayerProfile.s_Profiles)
+                playerProfile.UpdateVersusUI();
+
+              // Check win
+              var playerColor = PlayerProfile.s_Profiles[lastAlive._Id].GetColorName();
+              if (s_playerScores[lastAlive._Id] >= s_ScoreToWin)
+              {
+                s_announcementText.text = $"<color={playerColor}>P{lastAlive._Id + 1}</color> <b>wins</b>!";
+                gameOver = true;
+
+                waitTime = 4.5f;
+              }
+              else
+                s_announcementText.text = $"<color={playerColor}>P{lastAlive._Id + 1}</color> scored!";
             }
           }
 
-          // Draw
-          if (numAlive == 0)
+          // Team fight
+          else
           {
-            s_announcementText.text = $"Draw!";
+
+            var teamsAlive = new List<int>();
+            foreach (var player in PlayerScript.s_Players)
+            {
+              if (player._ragdoll._health > 0)
+              {
+                var teamId = s_playerTeams[player._Id];
+                if (!teamsAlive.Contains(teamId))
+                  teamsAlive.Add(teamId);
+              }
+            }
+
+            // Draw
+            if (teamsAlive.Count == 0)
+            {
+              s_announcementText.text = $"Draw!";
+            }
+
+            // Score
+            else if (teamsAlive.Count == 1)
+            {
+
+              var teamScore = 0;
+              for (var i = 0; i < s_playerScores.Length; i++)
+              {
+                var teamId = s_playerTeams[i];
+                if (teamId == teamsAlive[0])
+                {
+                  s_playerScores[i]++;
+                  teamScore = s_playerScores[i];
+                }
+              }
+              foreach (var playerProfile in PlayerProfile.s_Profiles)
+                playerProfile.UpdateVersusUI();
+
+              // Check win
+              var teamColor = GetTeamColorName(teamsAlive[0]);
+              if (teamScore >= s_ScoreToWin)
+              {
+                s_announcementText.text = $"<color={teamColor}>{teamColor}</color> team <b>wins</b>!";
+                gameOver = true;
+
+                waitTime = 4.5f;
+              }
+              else
+                s_announcementText.text = $"<color={teamColor}>{teamColor}</color> team scored!";
+            }
+
           }
 
-          // Win
-          else if (numAlive == 1)
-          {
-            s_announcementText.text = $"Player {lastAlive._Id + 1} wins!";
-          }
+          //
+          if (gameOver)
+            s_gamePlaying = false;
 
           // Load next level
-          yield return new WaitForSeconds(2f);
+          yield return new WaitForSeconds(waitTime);
 
           if (IsMapSame())
           {
-            var nextLevelIndex = GetRandomNextLevelIndex();
-            NextLevel(nextLevelIndex);
+            if (gameOver)
+            {
+              TogglePause(Menu2.MenuType.VERSUS);
+              Menu2.SwitchMenu(Menu2.MenuType.VERSUS);
+              _LastPause = Time.unscaledTime;
+            }
+            else
+            {
+              var nextLevelIndex = GetRandomNextLevelIndex();
+              NextLevel(nextLevelIndex);
+            }
           }
         }
 
@@ -542,9 +703,95 @@ public class GameScript : MonoBehaviour
     }
 
     //
+    public static void OnTeammmodeChanged()
+    {
+
+      // Split players into teams
+      if (!s_FreeForAll)
+        switch (Settings._NumberPlayers)
+        {
+          case 2:
+            s_playerTeams = new int[] { 0, 1, 0, 1 };
+            break;
+          case 3:
+            s_playerTeams = new int[] { 0, 1, 1, 0 };
+            break;
+          default:
+            s_playerTeams = new int[] { 0, 0, 1, 1 };
+            break;
+        }
+      else
+        s_playerTeams = new int[] { 0, 1, 2, 3 };
+
+      //
+      ToggleTeammodeSwitchUi(!s_FreeForAll);
+      UpdateTeammodeUis();
+    }
+    public static void UpdateTeammodeUis()
+    {
+      foreach (var playerProf in PlayerProfile.s_Profiles)
+      {
+        var text = playerProf._VersusUI.GetChild(1).GetComponent<TMPro.TextMeshPro>();
+        text.color = s_FreeForAll ? Color.white : GetTeamColorFromPlayerId(playerProf._Id);
+      }
+    }
+    public static Color GetTeamColor(int teamId)
+    {
+      return teamId switch
+      {
+        0 => Color.blue,
+        1 => Color.red,
+        2 => Color.green,
+        _ => Color.yellow
+      };
+    }
+    public static string GetTeamColorName(int teamId)
+    {
+      return teamId switch
+      {
+        0 => "blue",
+        1 => "red",
+        2 => "green",
+        _ => "yellow"
+      };
+    }
+    public static Color GetTeamColorFromPlayerId(int playerId)
+    {
+      return GetTeamColor(s_playerTeams[playerId]);
+    }
+    public static void IncrementPlayerTeam(int playerId, int incrementBy)
+    {
+      if (!s_FreeForAll)
+      {
+
+        var s = s_playerTeams[playerId] + incrementBy;
+        if (s < 0)
+          s = 3;
+        s_playerTeams[playerId] = s % 4;
+
+        UpdateTeammodeUis();
+
+        Menu2.PlayNoise(Menu2.Noise.TEAM_SWAP);
+      }
+
+      Menu2._CanRender = false;
+      Menu2.RenderMenu();
+    }
+
+    //
     public static int GetRandomNextLevelIndex()
     {
       return 0;
+    }
+
+    //
+    public static void ToggleTeammodeSwitchUi(bool toggle)
+    {
+      foreach (var playerProf in PlayerProfile.s_Profiles)
+      {
+        var controlUi = playerProf._VersusUI.GetChild(1).GetChild(0).gameObject;
+        controlUi.SetActive(toggle);
+      }
     }
   }
 
@@ -2141,14 +2388,19 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         UpdateIcons();
 
         // If in loadout menu, update colors
-        if (Menu2._InMenus && Menu2._CurrentMenu._Type == Menu2.MenuType.SELECT_LOADOUT)
+        if (Menu2._InMenus)
         {
-          Menu2.TriggerActionSwapTo(Menu2.MenuType.SELECT_LOADOUT);
-          /*var save_selection = Menu2.GetCurrentSelection();
-          Menu2.SetCurrentSelection(0);
-          Menu2.SetCurrentSelection(save_selection);
-          Menu2._CanRender = false;
-          Menu2.RenderMenu();*/
+          Menu2.PlayNoise(Menu2.Noise.LOADOUT_SWAP);
+          if (Menu2._CurrentMenu._Type == Menu2.MenuType.SELECT_LOADOUT)
+          {
+
+            Menu2.TriggerActionSwapTo(Menu2.MenuType.SELECT_LOADOUT);
+            /*var save_selection = Menu2.GetCurrentSelection();
+            Menu2.SetCurrentSelection(0);
+            Menu2.SetCurrentSelection(save_selection);
+            Menu2._CanRender = false;
+            Menu2.RenderMenu();*/
+          }
         }
       }
     }
@@ -2165,6 +2417,9 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       {
         // Level packs
         if (Levels._HardcodedLoadout != null && !GameScript._EditorTesting) return Levels._HardcodedLoadout;
+
+        // VERSUS mode
+        if (s_GameMode == GameModes.VERSUS) return VersusMode.s_PlayerLoadouts;
 
         // SURVIVAL mode
         if (s_GameMode == GameModes.SURVIVAL && SurvivalMode._PlayerLoadouts != null) return SurvivalMode._PlayerLoadouts[_Id];
@@ -2233,6 +2488,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     }
 
     public static Color[] _Colors = new Color[] { Color.blue, Color.red, Color.yellow, Color.cyan, Color.white, Color.black, new Color(1f, 0.6f, 0f) };
+    static string[] _ColorsName = new string[] { "blue", "red", "yellow", "cyan", "white", "black", "orange" };
 
     public bool _faceMovement
     {
@@ -2278,12 +2534,14 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       }
     }
     Transform _UI { get { return GameResources._UI_Player.GetChild(_Id); } }
+    public Transform _VersusUI;
 
     MeshRenderer[] _health_UI, _perk_UI;
 
     public PlayerProfile()
     {
       _Id = s_iD++;
+      _VersusUI = _UI.GetChild(6);
 
       if (s_Profiles == null) s_Profiles = new PlayerProfile[4];
       s_Profiles[_Id] = this;
@@ -2423,9 +2681,17 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
 
         // Check loadout change
         if (ControllerManager.GetKey(ControllerManager.Key.Z))
+        {
+          if (Menu2._CurrentMenu._Type == Menu2.MenuType.VERSUS)
+            VersusMode.IncrementPlayerTeam(_Id, -1);
           _LoadoutIndex--;
+        }
         if (ControllerManager.GetKey(ControllerManager.Key.C))
+        {
+          if (Menu2._CurrentMenu._Type == Menu2.MenuType.VERSUS)
+            VersusMode.IncrementPlayerTeam(_Id, 1);
           _LoadoutIndex++;
+        }
 
         return;
       }
@@ -2437,9 +2703,17 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       // Check axis selections
       var gamepad = ControllerManager.GetPlayerGamepad(_Id);
       if (gamepad.dpad.left.wasPressedThisFrame)
+      {
+        if (Menu2._CurrentMenu._Type == Menu2.MenuType.VERSUS)
+          VersusMode.IncrementPlayerTeam(_Id, -1);
         _LoadoutIndex--;
+      }
       if (gamepad.dpad.right.wasPressedThisFrame)
+      {
+        if (Menu2._CurrentMenu._Type == Menu2.MenuType.VERSUS)
+          VersusMode.IncrementPlayerTeam(_Id, 1);
         _LoadoutIndex++;
+      }
     }
 
     void Up()
@@ -2456,6 +2730,10 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     public Color GetColor()
     {
       return _Colors[_profileSettings.Color];
+    }
+        public string GetColorName()
+    {
+      return _ColorsName[_profileSettings.Color];
     }
     public string GetColorName(bool visual = true)
     {
@@ -2724,6 +3002,48 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       return utils.Length * Shop.GetUtilityCount(utils[0]);
     }
 
+    //
+    public void UpdateVersusUI()
+    {
+      var bg = _UI.GetChild(1).transform;
+
+      _VersusUI.gameObject.SetActive(s_GameMode == GameModes.VERSUS);
+      if (s_GameMode == GameModes.VERSUS)
+      {
+
+        var xpos = 0.701f;
+        var ypos = -0.113f;
+        if (bg.localScale.y >= 4.14f)
+        {
+          xpos = 3f;
+          ypos = 0.35f;
+        }
+        else if (bg.localScale.y >= 3.29f)
+        {
+          xpos = 3.17f;
+        }
+        else if (bg.localScale.y >= 2.44f)
+        {
+          xpos = 2.38f;
+        }
+        else if (bg.localScale.y >= 1.59f)
+        {
+          xpos = 1.55f;
+        }
+
+        _VersusUI.localPosition = new Vector3(xpos, ypos, 0f);
+        UpdateVersusScore();
+      }
+    }
+    public void UpdateVersusScore()
+    {
+      var score = VersusMode.GetPlayerScore(_Id);
+      var scoreText = _VersusUI.GetChild(1).GetComponent<TMPro.TextMeshPro>();
+
+      scoreText.text = $"{score}";
+    }
+
+    //
     public void UpdateIcons()
     {
       // Perks
@@ -2745,6 +3065,8 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       {
         bg.localPosition = new Vector3(0f, -0.05f, 0f);
         bg.localScale = new Vector3(0.6f, 0.74f, 0.001f);
+
+        UpdateVersusUI();
         return;
       }
       var equipmentIter = 0;
@@ -2971,6 +3293,9 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
           }
         return item;
       }
+
+      //
+      UpdateVersusUI();
     }
 
     //

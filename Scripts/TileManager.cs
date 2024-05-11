@@ -610,6 +610,7 @@ public class TileManager
       FunctionsC.AoeHandler.Reset();
       CandleScript.Reset();
       PlayerspawnScript.ResetPlayerSpawnIndex();
+      PlayerspawnScript.ResetPlayerSpawns();
       CustomEntityUI._ID = 0;
       EnemyScript._ID = 0;
 

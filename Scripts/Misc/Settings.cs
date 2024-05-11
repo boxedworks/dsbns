@@ -639,6 +639,11 @@ public static class Settings
   public static bool _LevelEditorEnabled;
   public static void OnGamemodeChanged(GamemodeChange gamemode)
   {
+    // Update UI
+    foreach (var profile in GameScript.PlayerProfile.s_Profiles)
+      profile.UpdateIcons();
+
+    //
     switch (gamemode)
     {
       case GamemodeChange.CLASSIC:

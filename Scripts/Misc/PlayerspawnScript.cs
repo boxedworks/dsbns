@@ -12,13 +12,14 @@ public class PlayerspawnScript : MonoBehaviour
   public static List<PlayerspawnScript> _PlayerSpawns;
   public static void ResetPlayerSpawns()
   {
-    for (var i = _PlayerSpawns.Count - 1; i >= 1; i--)
-    {
-      var playerSpawn = _PlayerSpawns[i];
-      GameObject.DestroyImmediate(playerSpawn.gameObject);
+    if (_PlayerSpawns.Count > 1)
+      for (var i = _PlayerSpawns.Count - 1; i >= 1; i--)
+      {
+        var playerSpawn = _PlayerSpawns[i];
 
-      _PlayerSpawns.RemoveAt(i);
-    }
+        _PlayerSpawns.RemoveAt(i);
+        GameObject.DestroyImmediate(playerSpawn.gameObject);
+      }
   }
   static int s_playerSpawnIndex;
   public static PlayerspawnScript GetPlayerSpawnScript()

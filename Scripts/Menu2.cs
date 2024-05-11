@@ -48,6 +48,7 @@ public class Menu2
     HOWTOPLAY_CLASSIC,
     HOWTOPLAY_SURVIVAL,
     HOWTOPLAY_EDITOR,
+    HOWTOPLAY_VERSUS,
 
     CREDITS,
 
@@ -58,7 +59,7 @@ public class Menu2
 
     GENERIC_MENU,
 
-    VERSUS_SIMPLE,
+    VERSUS,
 
     MULTIPLAYER_MANAGER,
 
@@ -971,7 +972,7 @@ public class Menu2
     var index = 0;
     foreach (var component in _Menu.gameObject.GetComponents<AudioSource>())
     {
-      _MenuAudio.Add((Noise)(index++), component);
+      _MenuAudio.Add((Noise)index++, component);
     }
 
     // Set starting menu
@@ -3573,7 +3574,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
       {
         Levels._CurrentLevelCollectionIndex = 4;
         GameScript.s_GameMode = GameScript.GameModes.VERSUS;
-        CommonEvents._SwitchMenu(MenuType.VERSUS_SIMPLE);
+        CommonEvents._SwitchMenu(MenuType.VERSUS);
 
         Settings.OnGamemodeChanged(Settings.GamemodeChange.VERSUS);
       })
@@ -3589,25 +3590,25 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
       GameScript.SurvivalMode.OnLeaveMode();
     };
     // Set tip
-    ModifyMenu_TipComponents(MenuType.MODE_SELECTION, 17);
+    ModifyMenu_TipComponents(MenuType.MODE_SELECTION, 15);
     ModifyMenu_TipSwitch(MenuType.MODE_SELECTION);
 
     // Versus menu
     {
-      var format_versus = "{0,-14}{1,3}\n";
-      new Menu2(MenuType.VERSUS_SIMPLE)
+      var format_versus = "{0,-14}{1,-3}\n";
+      new Menu2(MenuType.VERSUS)
       {
 
       }
-      .AddComponent($"<color={_COLOR_GRAY}>versus</color>\n\n")
+      .AddComponent($"mode: <color={_COLOR_GRAY}>VERSUS</color>\n\n")
 
       // Score to win setting
-      .AddComponent("score to win: 5\n\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
+      .AddComponent("score to win: 5\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
        .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
         {
           // Set display text
           var selection_match = $"{GameScript.VersusMode.s_ScoreToWin}";
-          component.SetDisplayText(string.Format(format_versus, "score to win:", selection_match) + "\n");
+          component.SetDisplayText(string.Format(format_versus, "score to win:", selection_match));
 
           // Set dropdown data
           var selections = new List<string>();
@@ -3628,18 +3629,116 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
           component.SetDropdownData("score to win\n*sets what score to reach for the game to end\n\n", selections, actions, selection_match);
         })
 
+
+      // Team setting
+      .AddComponent("grouping: free-for-all\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
+       .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+        {
+          // Set display text
+          var selection_match = GameScript.VersusMode.s_FreeForAll ? "free-for-all" : "teams";
+          component.SetDisplayText(string.Format(format_versus, "grouping:", selection_match));
+
+          // Set dropdown data
+          var selections = new List<string>();
+          var actions = new List<System.Action<MenuComponent>>();
+          selections.Add($"free-for-all - everyone for themselves");
+          actions.Add((MenuComponent component0) =>
+          {
+            GameScript.VersusMode.s_FreeForAll = true;
+            GameScript.VersusMode.OnTeammmodeChanged();
+
+            _CanRender = false;
+            RenderMenu();
+          });
+          selections.Add($"teams        - work together");
+          actions.Add((MenuComponent component0) =>
+          {
+            GameScript.VersusMode.s_FreeForAll = false;
+            GameScript.VersusMode.OnTeammmodeChanged();
+
+            _CanRender = false;
+            RenderMenu();
+          });
+
+          component.SetDropdownData("grouping\n*change team rules\n\n", selections, actions, selection_match);
+        })
+
       // Slowmo setting
+      .AddComponent("slow-motion: on\n\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
+       .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+        {
+          // Set display text
+          var selection_match = GameScript.VersusMode.s_UseSlowmo ? "on" : "off";
+          component.SetDisplayText(string.Format(format_versus, "slow-motion:", selection_match) + "\n");
+
+          // Set dropdown data
+          var selections = new List<string>();
+          var actions = new List<System.Action<MenuComponent>>();
+          selections.Add($"on");
+          actions.Add((MenuComponent component0) =>
+          {
+            GameScript.VersusMode.s_UseSlowmo = true;
+            _CanRender = false;
+            RenderMenu();
+          });
+          selections.Add($"off");
+          actions.Add((MenuComponent component0) =>
+          {
+            GameScript.VersusMode.s_UseSlowmo = false;
+            _CanRender = false;
+            RenderMenu();
+          });
+
+          component.SetDropdownData("slow-motion\n*turns the slow-mo effect on or off\n\n", selections, actions, selection_match);
+        })
 
       // Start button
       .AddComponent("play\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
         .AddEvent((MenuComponent component) =>
         {
+          if (!GameScript.VersusMode.HasMultipleTeams()) return;
+
+          GameScript.VersusMode.Reset();
           GameScript.NextLevel(0);
 
           // Play music
           if (FunctionsC.MusicManager.s_CurrentTrack <= 2)
             FunctionsC.MusicManager.TransitionTo(FunctionsC.MusicManager.GetNextTrackIter());
         })
+        .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+        {
+          var obscured = !GameScript.VersusMode.HasMultipleTeams();
+
+          if (obscured)
+          {
+            component._selectorType = MenuComponent.SelectorType.QUESTION;
+            component._textColor = _COLOR_GRAY;
+          }
+          else
+          {
+            component._selectorType = MenuComponent.SelectorType.NORMAL;
+            component._textColor = "white";
+          }
+
+          if (component._focused)
+          {
+            if (obscured)
+            {
+              var obscuredMessage = "not enough teams";
+              if (GameScript.VersusMode.s_FreeForAll)
+                obscuredMessage = "not enought players";
+              component.SetDisplayText($"</color><color=red>play</color><color=white> <-- {obscuredMessage}\n\n");
+            }
+            else
+              component.SetDisplayText("play\n\n");
+          }
+          else
+            component.SetDisplayText("play\n\n");
+        })
+
+      // Tutorial
+      .AddComponent("how to play\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
+        .AddEvent((MenuComponent component) => { CommonEvents._SwitchMenu(MenuType.HOWTOPLAY_VERSUS); })
 
       // Back button
       .AddBackButton(MenuType.MODE_SELECTION);
@@ -4481,6 +4580,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
                     RenderMenu();
                   });
                 }
+
                 // Update UI
                 foreach (var profile in GameScript.PlayerProfile.s_Profiles)
                   profile.UpdateIcons();
@@ -5520,7 +5620,32 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
             .AddEvent(EventType.ON_RENDER, CommonEvents._OnRender_XSelector);
       }
 
+      else if (GameScript.s_GameMode == GameScript.GameModes.VERSUS)
+      {
+        // Switch to versus mode menu
+        mPause
+          .AddComponent("exit to versus menu\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
+            .AddEvent((MenuComponent component) =>
+            {
+              GameScript.VersusMode.OnGamemodeSwitched(true);
+
+              _SaveIndex = 2;
+              CommonEvents._SwitchMenu(MenuType.MODE_EXIT_CONFIRM);
+            })
+            .AddEvent(EventType.ON_RENDER, CommonEvents._OnRender_XSelector)
+
+          // Switch to main menu
+          .AddComponent("exit to main menu\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
+            .AddEvent((MenuComponent component) =>
+            {
+              _SaveIndex = 3;
+              CommonEvents._SwitchMenu(MenuType.MODE_EXIT_CONFIRM);
+            })
+            .AddEvent(EventType.ON_RENDER, CommonEvents._OnRender_XSelector);
+      }
+
       else
+      {
         // Switch to level select
         mPause
           .AddComponent("exit to level select\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
@@ -5538,6 +5663,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
               CommonEvents._SwitchMenu(MenuType.MODE_EXIT_CONFIRM);
             })
             .AddEvent(EventType.ON_RENDER, CommonEvents._OnRender_XSelector);
+      }
 
       // Add pause menu stats (?)
       var format_stats = "=<color={0}>{1,-15}</color>{2,-11}{3,-11}{4,-11}{5,-11}\n";
@@ -5566,7 +5692,12 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
         SpawnMenu_Pause();
       };
       // Tip
-      ModifyMenu_TipComponents(MenuType.PAUSE, (GameScript.s_GameMode == GameScript.GameModes.SURVIVAL || GameScript.s_GameMode == GameScript.GameModes.VERSUS ? 5 : 3));
+      ModifyMenu_TipComponents(MenuType.PAUSE, GameScript.s_GameMode switch
+      {
+        GameScript.GameModes.SURVIVAL => 5,
+        GameScript.GameModes.VERSUS => 7,
+        _ => 3,
+      });
       ModifyMenu_TipSwitch(MenuType.PAUSE);
     }
     SpawnMenu_Pause();
@@ -5702,20 +5833,24 @@ go to the <color=yellow>SHOP</color> to buy something~1
 
     }
     .AddComponent($"mode: <color={_COLOR_GRAY}>SURVIVAL</color>\n\n")
+
     // Select level
     .AddComponent("select level\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
       .AddEvent((MenuComponent component) => { CommonEvents._SwitchMenu(MenuType.LEVELS); })
+
     // Tutorial
     .AddComponent("how to play\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
       .AddEvent((MenuComponent component) => { CommonEvents._SwitchMenu(MenuType.HOWTOPLAY_SURVIVAL); })
+
     // Back
     .AddBackButton(MenuType.MODE_SELECTION);
+
     // Tip
     ModifyMenu_TipComponents(MenuType.GAMETYPE_SURVIVAL, 16);
     ModifyMenu_TipSwitch(MenuType.GAMETYPE_SURVIVAL);
 
-    var format_options = "{0,-25}{1,28}\n";
     // Options menu
+    var format_options = "{0,-25}{1,28}\n";
     new Menu2(MenuType.OPTIONS)
     {
 
@@ -6727,6 +6862,32 @@ a gampad if plugged in.~1
 ")
     .AddBackButton(MenuType.EDITOR_MAIN, "ok then");
 
+    // Versus how to play
+    new Menu2(MenuType.HOWTOPLAY_VERSUS)
+    {
+
+    }
+    .AddComponent(
+    $@"<color={_COLOR_GRAY}>how to play - VERSUS mode</color>~1
+
+
+<color={_COLOR_GRAY}>overview</color>~1
+in this mode, you can go head-to-head against your friends!~1 last person
+or team standing will give you a point.~1 reach the score to win, to win!~1
+
+
+<color={_COLOR_GRAY}>special controls</color>~1
+there are no loadouts.~1 all items will be given in the mode!~1
+
+
+<color={_COLOR_GRAY}>notes</color>~1
+* check out the different VERSUS mode settings!
+
+
+
+")
+    .AddBackButton(MenuType.VERSUS, "very cool");
+
     // Confirm exit game
     new Menu2(MenuType.EXIT_GAME_CONFIRM)
     {
@@ -6805,6 +6966,16 @@ a gampad if plugged in.~1
           }
         }
 
+        // Versus mode
+        else if (GameScript.s_GameMode == GameScript.GameModes.VERSUS)
+        {
+          var switchMenu = _Menus[MenuType.PAUSE]._selectionIndex == 2 ? MenuType.VERSUS : MenuType.MAIN;
+          CommonEvents._SwitchMenu(switchMenu);
+          _InPause = false;
+
+          GameScript.VersusMode.Reset();
+        }
+
         // Normal pause
         else
         {
@@ -6813,15 +6984,16 @@ a gampad if plugged in.~1
           _InPause = false;
         }
       })
-      .AddEvent(EventType.ON_RENDER, CommonEvents._OnRender_XSelector)
-    .AddBackButton(MenuType.PAUSE, "back")
-      .AddEvent((MenuComponent c) =>
-      {
-        _CurrentMenu._selectionIndex = _SaveIndex;
-        _CurrentMenu._selectedComponent._onFocus?.Invoke(_CurrentMenu._selectedComponent);
-        _CanRender = true;
-        RenderMenu();
-      });
+        .AddEvent(EventType.ON_RENDER, CommonEvents._OnRender_XSelector)
+
+      .AddBackButton(MenuType.PAUSE, "back")
+        .AddEvent((MenuComponent c) =>
+        {
+          _CurrentMenu._selectionIndex = _SaveIndex;
+          _CurrentMenu._selectedComponent._onFocus?.Invoke(_CurrentMenu._selectedComponent);
+          _CanRender = true;
+          RenderMenu();
+        });
 
     // Control options menu
     new Menu2(MenuType.OPTIONS_CONTROLS)
@@ -7936,7 +8108,9 @@ about extras</color>
     SELECT,
     MOVE,
     BACK,
-    PURCHASE
+    PURCHASE,
+    LOADOUT_SWAP,
+    TEAM_SWAP
   }
   static Dictionary<Noise, AudioSource> _MenuAudio;
   public static AudioSource GetNoise(Noise noise)
@@ -7948,14 +8122,14 @@ about extras</color>
   {
     if (s_volumes == null)
     {
-      s_volumes = new float[5];
+      s_volumes = new float[7];
       for (var i = 0; i < s_volumes.Length; i++)
       {
         var a = GetNoise((Noise)i);
         s_volumes[i] = a.volume;
       }
 
-      s_times = new float[5];
+      s_times = new float[7];
     }
 
     if (!_Menu.gameObject.activeSelf) return;

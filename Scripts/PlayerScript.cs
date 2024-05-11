@@ -156,8 +156,7 @@ public class PlayerScript : MonoBehaviour
     //_profile.CreateHealthUI(health);
 
     // Assign color by _PlayerID
-    var color = _Profile.GetColor();
-    _ragdoll.ChangeColor(color);
+    _ragdoll.ChangeColor(_Profile.GetColor());
 
     // Create ring
     var new_ring = Instantiate(TileManager._Ring.gameObject) as GameObject;
@@ -170,7 +169,7 @@ public class PlayerScript : MonoBehaviour
     localscale *= 0.8f;
     localscale.y = 2f;
     _ring[0].transform.parent.localScale = localscale;
-    ChangeRingColor(color);
+    ChangeRingColor(GetRingColor());
 
     // Move ring with hip
     var hippos = transform.position;
@@ -267,6 +266,14 @@ public class PlayerScript : MonoBehaviour
         _ragdoll.AddCrown();
       }
 
+  }
+
+  //
+  Color GetRingColor()
+  {
+    if (GameScript.s_GameMode == GameScript.GameModes.VERSUS && !GameScript.VersusMode.s_FreeForAll)
+      return GameScript.VersusMode.GetTeamColorFromPlayerId(_Id);
+    return _Profile.GetColor();
   }
 
   public void RegisterEquipment()
@@ -789,108 +796,114 @@ public class PlayerScript : MonoBehaviour
       if (_Id == 0)
       {
 
-        // Update time via player speed
-        var time_move = LevelModule.ExtraTime == 1 && Settings._Extras_CanUse;
-        if (time_move)
+        // Check should apply time
+        if ((GameScript.s_GameMode == GameScript.GameModes.VERSUS && GameScript.VersusMode.s_UseSlowmo) || GameScript.s_GameMode != GameScript.GameModes.VERSUS)
         {
-          if (_spawnTimer <= 0f)
+
+          // Update time via player speed
+          var time_move = LevelModule.ExtraTime == 1 && Settings._Extras_CanUse;
+          if (time_move)
           {
-
-            var dirs = Vector2.zero;
-            var num = 0;
-            for (var i = 0; i < s_Players.Count; i++)
+            if (_spawnTimer <= 0f)
             {
-              if (!s_Players[i]._ragdoll._IsDead)
+
+              var dirs = Vector2.zero;
+              var num = 0;
+              for (var i = 0; i < s_Players.Count; i++)
               {
-                num++;
-                dirs += s_Players[i]._saveInput;
+                if (!s_Players[i]._ragdoll._IsDead)
+                {
+                  num++;
+                  dirs += s_Players[i]._saveInput;
+                }
               }
-            }
-            if (num == 0) num = 1;
-            dirs /= num;
+              if (num == 0) num = 1;
+              dirs /= num;
 
-            float mag = Mathf.Clamp(dirs.magnitude, 0.03f, 1f);
-            //if (mag < 0.1f)
-            //  mag = 0.0f;
-            Time.timeScale = mag;
-          }
-        }
-        else
-        {
-          // Check player dist
-          float minDist = 1.2f, desiredTimeScale = 1f, slowTime = 0.1f, speedMod = 1f;
-
-          if (_SlowmoTimer > 0f)
-          {
-            var has_perk = false;
-            foreach (var p in s_Players)
-            {
-              if (p._ragdoll._IsDead) continue;
-              if (p.HasPerk(Shop.Perk.PerkType.NO_SLOWMO))
-              {
-                has_perk = true;
-                break;
-              }
-            }
-
-            if (!has_perk)
-            {
-              desiredTimeScale = slowTime;
+              float mag = Mathf.Clamp(dirs.magnitude, 0.03f, 1f);
+              //if (mag < 0.1f)
+              //  mag = 0.0f;
+              Time.timeScale = mag;
             }
           }
           else
+          {
+            // Check player dist
+            float minDist = 1.2f, desiredTimeScale = 1f, slowTime = 0.1f, speedMod = 1f;
 
-            // Loop through players
-            foreach (var p in s_Players)
+            if (_SlowmoTimer > 0f)
             {
-              // Check if player dead
-              if (p._ragdoll._IsDead || HasPerk(Shop.Perk.PerkType.NO_SLOWMO)) continue;
-              foreach (var bullet in ItemScript._BulletPool)
+              var has_perk = false;
+              foreach (var p in s_Players)
               {
-
-                if (!bullet.gameObject.activeSelf) continue;
-
-                var bulletSourceId = bullet.GetRagdollID();
-                if (
-                  bulletSourceId == p._ragdoll._Id ||
-                  bulletSourceId == (p._ragdoll._grapplee?._Id ?? -1)
-                )
-                  continue;
-
-                if (MathC.Get2DDistance(p._ragdoll._Hip.position, bullet.transform.position) < minDist)
+                if (p._ragdoll._IsDead) continue;
+                if (p.HasPerk(Shop.Perk.PerkType.NO_SLOWMO))
                 {
-                  //_SlowmoTimer = Mathf.Clamp(_SlowmoTimer + 1f, 0f, 2f);
-                  desiredTimeScale = slowTime;
+                  has_perk = true;
                   break;
                 }
               }
-            }
-          if (Time.timeScale > desiredTimeScale)
-            speedMod = 4f;
-          else
-            speedMod = 2f;
 
-          var onealive = false;
-          foreach (var player in s_Players)
-          {
-            if (player._ragdoll != null && !player._ragdoll._IsDead)
+              if (!has_perk)
+              {
+                desiredTimeScale = slowTime;
+              }
+            }
+            else
+
+              // Loop through players
+              foreach (var p in s_Players)
+              {
+                // Check if player dead
+                if (p._ragdoll._IsDead || HasPerk(Shop.Perk.PerkType.NO_SLOWMO)) continue;
+                foreach (var bullet in ItemScript._BulletPool)
+                {
+
+                  if (!bullet.gameObject.activeSelf) continue;
+
+                  var bulletSourceId = bullet.GetRagdollID();
+                  if (
+                    bulletSourceId == p._ragdoll._Id ||
+                    bulletSourceId == (p._ragdoll._grapplee?._Id ?? -1)
+                  )
+                    continue;
+
+                  if (MathC.Get2DDistance(p._ragdoll._Hip.position, bullet.transform.position) < minDist)
+                  {
+                    //_SlowmoTimer = Mathf.Clamp(_SlowmoTimer + 1f, 0f, 2f);
+                    desiredTimeScale = slowTime;
+                    break;
+                  }
+                }
+              }
+            if (Time.timeScale > desiredTimeScale)
+              speedMod = 4f;
+            else
+              speedMod = 2f;
+
+            var onealive = false;
+            foreach (var player in s_Players)
             {
-              onealive = true; break;
+              if (player._ragdoll != null && !player._ragdoll._IsDead)
+              {
+                onealive = true; break;
+              }
             }
-          }
-          if (!onealive) desiredTimeScale = 0f;
+            if (!onealive) desiredTimeScale = 0f;
 
-          // Update timescale
-          Time.timeScale = Mathf.Clamp(Time.timeScale + (desiredTimeScale - Time.timeScale) * unscaled_dt * 5f * speedMod, slowTime, 1f);
-          //Debug.Log(Time.timeScale);
-          if (Time.timeScale < 0.01f)
-            Time.timeScale = 0f;
-          else if (Time.timeScale > 0.99f)
-            Time.timeScale = 1f;
+            // Update timescale
+            Time.timeScale = Mathf.Clamp(Time.timeScale + (desiredTimeScale - Time.timeScale) * unscaled_dt * 5f * speedMod, slowTime, 1f);
+            //Debug.Log(Time.timeScale);
+            if (Time.timeScale < 0.01f)
+              Time.timeScale = 0f;
+            else if (Time.timeScale > 0.99f)
+              Time.timeScale = 1f;
+          }
+
+          // Update sounds with Time.timescale
+          var pitch = 1f + -0.7f * ((1f - Time.timeScale) / (0.8f));
+          SfxManager.Update(pitch);
         }
-        // Update sounds with Time.timescale
-        var pitch = 1f + -0.7f * ((1f - Time.timeScale) / (0.8f));
-        SfxManager.Update(pitch);
       }
     }
     // Update ragdoll
@@ -2177,7 +2190,7 @@ public class PlayerScript : MonoBehaviour
     // Remove ring
     IEnumerator fadeRing()
     {
-      var c = _Profile.GetColor();
+      var c = GetRingColor();
       float t = 1f, startA = c.a;
       while (t >= 0f)
       {
