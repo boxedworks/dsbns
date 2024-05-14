@@ -156,8 +156,8 @@ public class BulletScript : MonoBehaviour
       var max = Mathf.Clamp(pen - _hitAmount, 1f, 10f);
       var damage = Mathf.Clamp(health, 1f, max);
       var damageSource = _sourceDamageRagdoll;
-      if (r._grappled && r._grappler._IsPlayer)
-        damageSource = r._grappler;
+      //if (r._grappled && r._grappler._IsPlayer)
+      //  damageSource = r._grappler;
 
       // Hurt ragdoll
       if (r.TakeDamage(

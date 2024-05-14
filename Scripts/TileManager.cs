@@ -1013,7 +1013,7 @@ public class TileManager
 
         // Versus mode
         if (GameScript.s_GameMode == GameScript.GameModes.VERSUS)
-          GameScript.VersusMode.OnLevelLoad();
+          VersusMode.OnLevelLoad();
 
         // Spawn player
         GameScript.SpawnPlayers();

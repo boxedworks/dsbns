@@ -662,7 +662,7 @@ public static class Settings
 
         Physics.gravity = new Vector3(0f, -9.81f, 0f);
 
-        GameScript.VersusMode.OnGamemodeSwitched(gamemode == GamemodeChange.VERSUS);
+        VersusMode.OnGamemodeSwitched(gamemode == GamemodeChange.VERSUS);
         break;
     }
 

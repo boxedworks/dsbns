@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public class GameScript : MonoBehaviour
@@ -251,11 +252,14 @@ public class GameScript : MonoBehaviour
     var rnd = new System.Random();
     var numSpawns = PlayerspawnScript._PlayerSpawns.Count;
     var spawnList = new int[numSpawns];
-    rnd.Shuffle(spawnList);
     for (var i = 0; i < spawnList.Length; i++)
       spawnList[i] = i;
+    rnd.Shuffle(spawnList);
 
-    if (s_GameMode != GameModes.VERSUS || (s_GameMode == GameModes.VERSUS && VersusMode.s_FreeForAll))
+    var numPlayers = Settings._NumberPlayers;
+    var numTeams = VersusMode.GetNumberTeams();
+
+    if ((s_GameMode == GameModes.VERSUS && !VersusMode.s_Settings._FreeForAll ? numTeams : numPlayers) <= numSpawns || s_GameMode != GameModes.VERSUS || (s_GameMode == GameModes.VERSUS && VersusMode.s_Settings._FreeForAll))
     {
       var playerSpawnIndex = 0;
       if (!s_CustomNetworkManager._Connected || s_CustomNetworkManager._IsServer)
@@ -268,13 +272,18 @@ public class GameScript : MonoBehaviour
     {
 
       // Get level data
-      //var numPlayers = Settings._NumberPlayers;
-      var numTeams = VersusMode.GetNumberTeams();
+      //Debug.Log($"numTeams: {numTeams} .. numSpawn: {numSpawns}");
 
       var spawnOrder = new int[numTeams];
       rnd.Shuffle(spawnList);
+      //if (spawnOrder.Length <= spawnList.Length)
       for (var i = 0; i < spawnOrder.Length; i++)
         spawnOrder[i] = spawnList[i];
+
+      if (!s_CustomNetworkManager._Connected || s_CustomNetworkManager._IsServer)
+        if (_PlayerIter < Settings._NumberPlayers)
+          for (; _PlayerIter < Settings._NumberPlayers; _PlayerIter++)
+            PlayerspawnScript._PlayerSpawns[spawnList[VersusMode.GetTeamId(_PlayerIter)]].SpawnPlayer();
     }
   }
 
@@ -447,424 +456,6 @@ public class GameScript : MonoBehaviour
     // Load level selections
     Menu.SwitchMenu(Menu._Menu_LevelOrganizer);
   }*/
-
-  //
-  public static class VersusMode
-  {
-
-    public static int s_ScoreToWin;
-    public static bool s_UseSlowmo;
-    public static bool s_FreeForAll;
-
-    static bool s_gamePlaying;
-
-    public static bool s_PlayersCanMove;
-
-    static TMPro.TextMeshPro s_announcementText;
-
-    public static ItemManager.Loadout s_PlayerLoadouts;
-
-    static int[] s_playerTeams;
-
-    static int[] s_playerScores;
-    public static int GetPlayerScore(int playerId)
-    {
-      return s_playerScores[playerId];
-    }
-
-    public static void Init()
-    {
-      s_ScoreToWin = 5;
-      s_UseSlowmo = true;
-      s_FreeForAll = true;
-
-      s_announcementText = GameObject.Find("VersusUI").transform.GetChild(0).GetComponent<TMPro.TextMeshPro>();
-
-      s_playerTeams = new int[4];
-
-      Reset();
-    }
-
-    //
-    public static void Reset()
-    {
-      s_playerScores = new int[4];
-      s_PlayerLoadouts = new ItemManager.Loadout
-      {
-        _equipment = new PlayerProfile.Equipment()
-      };
-
-      foreach (var playerProfile in PlayerProfile.s_Profiles)
-      {
-        playerProfile.UpdateIcons();
-        playerProfile.UpdateVersusScore();
-      }
-    }
-
-    //
-    public static void OnLevelLoad()
-    {
-      s_PlayersCanMove = false;
-      s_gamePlaying = true;
-      ToggleTeammodeSwitchUi(false);
-
-      SetRandomLoadout();
-
-      IEnumerator LevelStartCountdownCo()
-      {
-
-        var timeStart = Time.time;
-        var levelId = TileManager._s_MapIndex;
-
-        bool IsMapSame()
-        {
-          return levelId == TileManager._s_MapIndex;
-        }
-
-        var preTimeAmount = 1.5f;
-        while (Time.time - timeStart < preTimeAmount)
-        {
-          yield return new WaitForSeconds(0.01f);
-          if (IsMapSame())
-            s_announcementText.text = $"{string.Format("{0:0.00}", -(Time.time - timeStart - preTimeAmount))}";
-        }
-
-        if (IsMapSame())
-        {
-          s_PlayersCanMove = true;
-          yield return new WaitForSeconds(0f);
-          s_announcementText.text = $"go!";
-
-          yield return new WaitForSeconds(0.3f);
-          s_announcementText.text = "";
-        }
-      }
-      _s_Singleton.StartCoroutine(LevelStartCountdownCo());
-    }
-
-    //
-    public static void OnGamemodeSwitched(bool switchedTo)
-    {
-      s_announcementText.enabled = switchedTo;
-
-      if (switchedTo)
-      {
-        if (s_FreeForAll)
-          ToggleTeammodeSwitchUi(false);
-        else
-          ToggleTeammodeSwitchUi(true);
-      }
-      else
-      {
-        ToggleTeammodeSwitchUi(true);
-      }
-    }
-
-    //
-    public static int GetNumberTeams()
-    {
-      if (s_FreeForAll && Settings._NumberPlayers > 1) return -1;
-
-      var teamsCounted = new List<int>();
-      for (var i = 0; i < Settings._NumberPlayers; i++)
-      {
-        var teamId = s_playerTeams[i];
-
-        if (teamsCounted.Contains(teamId)) continue;
-        teamsCounted.Add(teamId);
-      }
-
-      return teamsCounted.Count;
-    }
-    public static bool HasMultipleTeams()
-    {
-      return s_FreeForAll || GetNumberTeams() > 1;
-    }
-
-    //
-    public static void OnPlayerDeath()
-    {
-      if (!s_gamePlaying)
-        return;
-
-      // Check all / last dead
-      IEnumerator CheckPlayerDeathStatusCo()
-      {
-
-        var mapIndex = TileManager._s_MapIndex;
-        bool IsMapSame()
-        {
-          return mapIndex == TileManager._s_MapIndex;
-        }
-
-        yield return new WaitForSeconds(0.5f);
-        if (IsMapSame())
-        {
-
-          var waitTime = 2f;
-          var gameOver = false;
-
-          // Free for all
-          if (s_FreeForAll)
-          {
-            var numAlive = 0;
-            PlayerScript lastAlive = null;
-            foreach (var player in PlayerScript.s_Players)
-            {
-              if (player._ragdoll._health > 0)
-              {
-                numAlive++;
-                lastAlive = player;
-              }
-            }
-
-            // Draw
-            if (numAlive == 0)
-            {
-              s_announcementText.text = $"draw!";
-            }
-
-            // Score
-            else if (numAlive == 1)
-            {
-              s_playerScores[lastAlive._Id]++;
-              foreach (var playerProfile in PlayerProfile.s_Profiles)
-                playerProfile.UpdateVersusUI();
-
-              // Check win
-              var playerColor = PlayerProfile.s_Profiles[lastAlive._Id].GetColorName();
-              if (s_playerScores[lastAlive._Id] >= s_ScoreToWin)
-              {
-                s_announcementText.text = $"<color={playerColor}>P{lastAlive._Id + 1}</color> <b>wins</b>!";
-                gameOver = true;
-
-                waitTime = 4.5f;
-              }
-              else
-                s_announcementText.text = $"<color={playerColor}>P{lastAlive._Id + 1}</color> scored!";
-            }
-          }
-
-          // Team fight
-          else
-          {
-
-            var teamsAlive = new List<int>();
-            foreach (var player in PlayerScript.s_Players)
-            {
-              if (player._ragdoll._health > 0)
-              {
-                var teamId = s_playerTeams[player._Id];
-                if (!teamsAlive.Contains(teamId))
-                  teamsAlive.Add(teamId);
-              }
-            }
-
-            // Draw
-            if (teamsAlive.Count == 0)
-            {
-              s_announcementText.text = $"Draw!";
-            }
-
-            // Score
-            else if (teamsAlive.Count == 1)
-            {
-
-              var teamScore = 0;
-              for (var i = 0; i < s_playerScores.Length; i++)
-              {
-                var teamId = s_playerTeams[i];
-                if (teamId == teamsAlive[0])
-                {
-                  s_playerScores[i]++;
-                  teamScore = s_playerScores[i];
-                }
-              }
-              foreach (var playerProfile in PlayerProfile.s_Profiles)
-                playerProfile.UpdateVersusUI();
-
-              // Check win
-              var teamColor = GetTeamColorName(teamsAlive[0]);
-              if (teamScore >= s_ScoreToWin)
-              {
-                s_announcementText.text = $"<color={teamColor}>{teamColor}</color> team <b>wins</b>!";
-                gameOver = true;
-
-                waitTime = 4.5f;
-              }
-              else
-                s_announcementText.text = $"<color={teamColor}>{teamColor}</color> team scored!";
-            }
-
-          }
-
-          //
-          if (gameOver)
-            s_gamePlaying = false;
-
-          // Load next level
-          yield return new WaitForSeconds(waitTime);
-
-          if (IsMapSame())
-          {
-            if (gameOver)
-            {
-              TogglePause(Menu2.MenuType.VERSUS);
-              Menu2.SwitchMenu(Menu2.MenuType.VERSUS);
-              _LastPause = Time.unscaledTime;
-            }
-            else
-            {
-              var nextLevelIndex = GetRandomNextLevelIndex();
-              NextLevel(nextLevelIndex);
-            }
-          }
-        }
-
-      }
-      _s_Singleton.StartCoroutine(CheckPlayerDeathStatusCo());
-    }
-
-    //
-    public static void OnTeammmodeChanged()
-    {
-
-      // Split players into teams
-      if (!s_FreeForAll)
-        switch (Settings._NumberPlayers)
-        {
-          case 2:
-            s_playerTeams = new int[] { 0, 1, 0, 1 };
-            break;
-          case 3:
-            s_playerTeams = new int[] { 0, 1, 1, 0 };
-            break;
-          default:
-            s_playerTeams = new int[] { 0, 0, 1, 1 };
-            break;
-        }
-      else
-        s_playerTeams = new int[] { 0, 1, 2, 3 };
-
-      //
-      ToggleTeammodeSwitchUi(!s_FreeForAll);
-      UpdateTeammodeUis();
-    }
-    public static void UpdateTeammodeUis()
-    {
-      foreach (var playerProf in PlayerProfile.s_Profiles)
-      {
-        var text = playerProf._VersusUI.GetChild(1).GetComponent<TMPro.TextMeshPro>();
-        text.color = s_FreeForAll ? Color.white : GetTeamColorFromPlayerId(playerProf._Id);
-      }
-    }
-    public static Color GetTeamColor(int teamId)
-    {
-      return teamId switch
-      {
-        0 => Color.blue,
-        1 => Color.red,
-        2 => Color.green,
-        _ => Color.yellow
-      };
-    }
-    public static string GetTeamColorName(int teamId)
-    {
-      return teamId switch
-      {
-        0 => "blue",
-        1 => "red",
-        2 => "green",
-        _ => "yellow"
-      };
-    }
-    public static Color GetTeamColorFromPlayerId(int playerId)
-    {
-      return GetTeamColor(s_playerTeams[playerId]);
-    }
-    public static void IncrementPlayerTeam(int playerId, int incrementBy)
-    {
-      if (!s_FreeForAll)
-      {
-
-        var s = s_playerTeams[playerId] + incrementBy;
-        if (s < 0)
-          s = 3;
-        s_playerTeams[playerId] = s % 4;
-
-        UpdateTeammodeUis();
-
-        Menu2.PlayNoise(Menu2.Noise.TEAM_SWAP);
-      }
-
-      Menu2._CanRender = false;
-      Menu2.RenderMenu();
-    }
-
-    //
-    static int s_currentLevelIndex = -1;
-    public static int GetRandomNextLevelIndex()
-    {
-      var levelSize = Levels._CurrentLevelCollection._levelData.Length;
-      while (true)
-      {
-        var levelIndex = Random.Range(0, levelSize);
-        if (levelIndex == s_currentLevelIndex)
-        {
-          levelIndex += 1;
-          levelIndex %= levelSize;
-        }
-        s_currentLevelIndex = levelIndex;
-
-        // Check map size
-        var numPlayers = Settings._NumberPlayers;
-        var numTeams = GetNumberTeams();
-
-        var numberSpawns = 0;
-        var levelData = Levels._CurrentLevelCollection._levelData[s_currentLevelIndex];
-        var a = 0;
-        var pattern = "playerspawn_";
-        while ((a = levelData.IndexOf(pattern, a)) != -1)
-        {
-          a += pattern.Length;
-          numberSpawns++;
-        }
-        Debug.Log(numberSpawns);
-
-        //
-        if ((s_FreeForAll && numberSpawns < numPlayers) || (!s_FreeForAll && numTeams < numberSpawns))
-          continue;
-
-        break;
-      }
-      return s_currentLevelIndex;
-    }
-
-    //
-    static void SetRandomLoadout()
-    {
-
-      s_PlayerLoadouts = new ItemManager.Loadout()
-      {
-        _equipment = new PlayerProfile.Equipment()
-        {
-          _item_left0 = ItemManager.Items.KNIFE,
-          _item_right0 = ItemManager.Items.PISTOL_SILENCED
-        }
-      };
-
-    }
-
-    //
-    public static void ToggleTeammodeSwitchUi(bool toggle)
-    {
-      foreach (var playerProf in PlayerProfile.s_Profiles)
-      {
-        var controlUi = playerProf._VersusUI.GetChild(1).GetChild(0).gameObject;
-        controlUi.SetActive(toggle);
-      }
-    }
-  }
 
   //
   public static class SurvivalMode
@@ -2049,7 +1640,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     if (Time.unscaledTime - _lastInputCheck > 0.25f)
     {
       _lastInputCheck = Time.unscaledTime;
-      Settings._NumberPlayers = (ControllerManager._NumberGamepads) + (Settings._ForceKeyboard ? 1 : 0);
+      Settings._NumberPlayers = 4;//(ControllerManager._NumberGamepads) + (Settings._ForceKeyboard ? 1 : 0);
       if (s_CustomNetworkManager._Connected)
         Settings._NumberPlayers += s_CustomNetworkManager._Players.Count - 1;
       if (Settings._NumberPlayers == 0)
@@ -2263,7 +1854,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
           }
 
           // Next / previous level
-          if (!_EditorEnabled && !IsSurvival())
+          if (!_EditorEnabled && !IsSurvival() && (s_GameMode != GameModes.VERSUS || Debug.isDebugBuild))
           {
             if (!TileManager._LoadingMap)
             {

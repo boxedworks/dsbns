@@ -3595,48 +3595,55 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
 
     // Versus menu
     {
-      var format_versus = "{0,-14}{1,-3}\n";
+      var format_versus = "{0,-14}: {1,-3}\n";
       new Menu2(MenuType.VERSUS)
       {
 
       }
       .AddComponent($"mode: <color={_COLOR_GRAY}>VERSUS</color>\n\n")
 
-      // Score to win setting
-      .AddComponent("score to win: 5\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
+      // Mode
+      .AddComponent("mode: endurance\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
        .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
         {
           // Set display text
-          var selection_match = $"{GameScript.VersusMode.s_ScoreToWin}";
-          component.SetDisplayText(string.Format(format_versus, "score to win:", selection_match));
+          var selection_match = VersusMode.GetModeName();
+          component.SetDisplayText(string.Format(format_versus, "mode", selection_match));
 
           // Set dropdown data
           var selections = new List<string>();
           var actions = new List<System.Action<MenuComponent>>();
-          foreach (var selection in new int[] { 1, 3, 5, 7, 10 })
+          foreach (var selection in new int[] { 0, 1 })
           {
-            var selectionCurrent = selection;
+            var selectionCurrent = VersusMode.GetModeName(selection);
+            var modeCurrent = (VersusMode.VersusSettings.ModeType)selection;
 
-            selections.Add($"{selectionCurrent}");
+            var modeDescription = modeCurrent switch
+            {
+              VersusMode.VersusSettings.ModeType.LAST_MAN_STANDING => "- be the last one standing to win",
+              VersusMode.VersusSettings.ModeType.KILLS_FOR_POINTS => "    - every kill gives you a point",
+              _ => ""
+            };
+
+            selections.Add($"{selectionCurrent} {modeDescription}");
             actions.Add((MenuComponent component0) =>
             {
-              GameScript.VersusMode.s_ScoreToWin = selectionCurrent;
+              VersusMode.s_Settings._Mode = modeCurrent;
               _CanRender = false;
               RenderMenu();
             });
           }
 
-          component.SetDropdownData("score to win\n*sets what score to reach for the game to end\n\n", selections, actions, selection_match);
+          component.SetDropdownData("mode\n*play different versus modes\n\n", selections, actions, selection_match);
         })
 
-
       // Team setting
-      .AddComponent("grouping: free-for-all\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
+      .AddComponent("grouping: free-for-all\n\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
        .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
         {
           // Set display text
-          var selection_match = GameScript.VersusMode.s_FreeForAll ? "free-for-all" : "teams";
-          component.SetDisplayText(string.Format(format_versus, "grouping:", selection_match));
+          var selection_match = VersusMode.s_Settings._FreeForAll ? "free-for-all" : "teams";
+          component.SetDisplayText(string.Format(format_versus, "grouping", selection_match) + '\n');
 
           // Set dropdown data
           var selections = new List<string>();
@@ -3644,8 +3651,8 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
           selections.Add($"free-for-all - everyone for themselves");
           actions.Add((MenuComponent component0) =>
           {
-            GameScript.VersusMode.s_FreeForAll = true;
-            GameScript.VersusMode.OnTeammmodeChanged();
+            VersusMode.s_Settings._FreeForAll = true;
+            VersusMode.OnTeammmodeChanged();
 
             _CanRender = false;
             RenderMenu();
@@ -3653,8 +3660,8 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
           selections.Add($"teams        - work together");
           actions.Add((MenuComponent component0) =>
           {
-            GameScript.VersusMode.s_FreeForAll = false;
-            GameScript.VersusMode.OnTeammmodeChanged();
+            VersusMode.s_Settings._FreeForAll = false;
+            VersusMode.OnTeammmodeChanged();
 
             _CanRender = false;
             RenderMenu();
@@ -3663,13 +3670,67 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
           component.SetDropdownData("grouping\n*change team rules\n\n", selections, actions, selection_match);
         })
 
+      // Score to win setting
+      .AddComponent("score to win: 5\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
+       .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+        {
+          // Set display text
+          var selection_match = $"{VersusMode.s_Settings._ScoreToWin}";
+          component.SetDisplayText(string.Format(format_versus, "score to win", selection_match));
+
+          // Set dropdown data
+          var selections = new List<string>();
+          var actions = new List<System.Action<MenuComponent>>();
+          foreach (var selection in new int[] { 1, 3, 5, 7, 10, 15, 20 })
+          {
+            var selectionCurrent = selection;
+
+            selections.Add($"{selectionCurrent}");
+            actions.Add((MenuComponent component0) =>
+            {
+              VersusMode.s_Settings._ScoreToWin = selectionCurrent;
+              _CanRender = false;
+              RenderMenu();
+            });
+          }
+
+          component.SetDropdownData("score to win\n*sets what score to reach for the game to end\n\n", selections, actions, selection_match);
+        })
+
+      // Health
+      .AddComponent("start health: 1\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
+       .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+        {
+          // Set display text
+          var selection_match = $"{VersusMode.s_Settings._PlayerHealth}";
+          component.SetDisplayText(string.Format(format_versus, "start health", selection_match));
+
+          // Set dropdown data
+          var selections = new List<string>();
+          var actions = new List<System.Action<MenuComponent>>();
+          foreach (var selection in new int[] { 1, 2, 3 })
+          {
+            var selectionCurrent = selection;
+
+            selections.Add($"{selectionCurrent}");
+            actions.Add((MenuComponent component0) =>
+            {
+              VersusMode.s_Settings._PlayerHealth = selectionCurrent;
+              _CanRender = false;
+              RenderMenu();
+            });
+          }
+
+          component.SetDropdownData("start health\n*sets the players' starting health\n\n", selections, actions, selection_match);
+        })
+
       // Slowmo setting
       .AddComponent("slow-motion: on\n\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
        .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
         {
           // Set display text
-          var selection_match = GameScript.VersusMode.s_UseSlowmo ? "on" : "off";
-          component.SetDisplayText(string.Format(format_versus, "slow-motion:", selection_match) + "\n");
+          var selection_match = VersusMode.s_Settings._UseSlowmo ? "on" : "off";
+          component.SetDisplayText(string.Format(format_versus, "slow-motion", selection_match) + "\n");
 
           // Set dropdown data
           var selections = new List<string>();
@@ -3677,14 +3738,14 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
           selections.Add($"on");
           actions.Add((MenuComponent component0) =>
           {
-            GameScript.VersusMode.s_UseSlowmo = true;
+            VersusMode.s_Settings._UseSlowmo = true;
             _CanRender = false;
             RenderMenu();
           });
           selections.Add($"off");
           actions.Add((MenuComponent component0) =>
           {
-            GameScript.VersusMode.s_UseSlowmo = false;
+            VersusMode.s_Settings._UseSlowmo = false;
             _CanRender = false;
             RenderMenu();
           });
@@ -3696,10 +3757,10 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
       .AddComponent("play\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
         .AddEvent((MenuComponent component) =>
         {
-          if (!GameScript.VersusMode.HasMultipleTeams()) return;
+          if (!VersusMode.HasMultipleTeams()) return;
 
-          GameScript.VersusMode.Reset();
-          var nextLevelIndex = GameScript.VersusMode.GetRandomNextLevelIndex();
+          VersusMode.Reset();
+          var nextLevelIndex = VersusMode.GetRandomNextLevelIndex();
           GameScript.NextLevel(nextLevelIndex);
 
           // Play music
@@ -3708,7 +3769,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
         })
         .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
         {
-          var obscured = !GameScript.VersusMode.HasMultipleTeams();
+          var obscured = !VersusMode.HasMultipleTeams();
 
           if (obscured)
           {
@@ -3726,7 +3787,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
             if (obscured)
             {
               var obscuredMessage = "not enough teams";
-              if (GameScript.VersusMode.s_FreeForAll)
+              if (VersusMode.s_Settings._FreeForAll)
                 obscuredMessage = "not enought players";
               component.SetDisplayText($"</color><color=red>play</color><color=white> <-- {obscuredMessage}\n\n");
             }
@@ -6972,9 +7033,9 @@ there are no loadouts.~1 all items will be given in the mode!~1
           CommonEvents._SwitchMenu(switchMenu);
           _InPause = false;
 
-          GameScript.VersusMode.Reset();
+          VersusMode.Reset();
           if (switchMenu == MenuType.VERSUS)
-            GameScript.VersusMode.OnGamemodeSwitched(true);
+            VersusMode.OnGamemodeSwitched(true);
         }
 
         // Normal pause

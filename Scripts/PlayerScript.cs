@@ -102,7 +102,7 @@ public class PlayerScript : MonoBehaviour
     ragdollObj.transform.parent = transform.parent;
     ragdollObj.transform.Rotate(new Vector3(0f, 1f, 0f) * 90f);
     ragdollObj.transform.position = transform.position;
-    var health = (GameScript.IsSurvival() ? 3 : 1);
+    var health = GameScript.s_GameMode == GameScript.GameModes.VERSUS ? VersusMode.s_Settings._PlayerHealth : (GameScript.IsSurvival() ? 3 : 1);
     _ragdoll = new ActiveRagdoll(ragdollObj, transform)
     {
       _IsPlayer = true,
@@ -271,8 +271,8 @@ public class PlayerScript : MonoBehaviour
   //
   Color GetRingColor()
   {
-    if (GameScript.s_GameMode == GameScript.GameModes.VERSUS && !GameScript.VersusMode.s_FreeForAll)
-      return GameScript.VersusMode.GetTeamColorFromPlayerId(_Id);
+    if (GameScript.s_GameMode == GameScript.GameModes.VERSUS && !VersusMode.s_Settings._FreeForAll)
+      return VersusMode.GetTeamColorFromPlayerId(_Id);
     return _Profile.GetColor();
   }
 
@@ -429,7 +429,7 @@ public class PlayerScript : MonoBehaviour
   {
     if (_ring == null) return;
     _ring[0].sharedMaterial.SetColor("_EmissionColor", c);
-    c.a = 0.6f;
+    c.a = 0.85f;
     _ring[0].sharedMaterial.color = c;
   }
 
@@ -797,7 +797,7 @@ public class PlayerScript : MonoBehaviour
       {
 
         // Check should apply time
-        if ((GameScript.s_GameMode == GameScript.GameModes.VERSUS && GameScript.VersusMode.s_UseSlowmo) || GameScript.s_GameMode != GameScript.GameModes.VERSUS)
+        if ((GameScript.s_GameMode == GameScript.GameModes.VERSUS && VersusMode.s_Settings._UseSlowmo) || GameScript.s_GameMode != GameScript.GameModes.VERSUS)
         {
 
           // Update time via player speed
@@ -1114,9 +1114,6 @@ public class PlayerScript : MonoBehaviour
     // Check if application is focused
     if (!Application.isFocused) return;
 
-    // Check versus start
-    if (GameScript.s_GameMode == GameScript.GameModes.VERSUS && !GameScript.VersusMode.s_PlayersCanMove) return;
-
     //
     if (AutoPlayer._Playing && _Id != 0)
       return;
@@ -1241,69 +1238,74 @@ public class PlayerScript : MonoBehaviour
       // Fire modes
       if (ControllerManager.GetKey(ControllerManager.Key.X))
         ToggleFireModes();
+
       /// Use items
       // Left item
-      if (ControllerManager.GetMouseInput(0, ControllerManager.InputMode.DOWN))
-        if (!_ragdoll._ItemL)
-        {
-          _ragdoll.UseRightDown();
-          saveInput.y = 1f;
-        }
-        else
-        {
-          _ragdoll.UseLeftDown();
-          saveInput.x = 1f;
-        }
-      if (ControllerManager.GetMouseInput(0, ControllerManager.InputMode.UP))
-        if (!_ragdoll._ItemL)
-        {
-          _ragdoll.UseRightUp();
-          saveInput.y = -1f;
-        }
-        else
-        {
-          _ragdoll.UseLeftUp();
-          saveInput.x = -1f;
-        }
-      // Right item
-      if (ControllerManager.GetMouseInput(1, ControllerManager.InputMode.DOWN))
-        if (!_ragdoll._ItemR)
-        {
-          _ragdoll.UseLeftDown();
-          saveInput.x = 1f;
-        }
-        else
-        {
-          _ragdoll.UseRightDown();
-          saveInput.y = 1f;
-        }
-      if (ControllerManager.GetMouseInput(1, ControllerManager.InputMode.UP))
-        if (!_ragdoll._ItemR)
-        {
-          _ragdoll.UseLeftUp();
-          saveInput.x = -1f;
-        }
-        else
-        {
-          _ragdoll.UseRightUp();
-          saveInput.y = -1f;
-        }
+      // Check versus start
+      if (GameScript.s_GameMode == GameScript.GameModes.VERSUS && VersusMode.s_PlayersCanMove)
+      {
+        if (ControllerManager.GetMouseInput(0, ControllerManager.InputMode.DOWN))
+          if (!_ragdoll._ItemL)
+          {
+            _ragdoll.UseRightDown();
+            saveInput.y = 1f;
+          }
+          else
+          {
+            _ragdoll.UseLeftDown();
+            saveInput.x = 1f;
+          }
+        if (ControllerManager.GetMouseInput(0, ControllerManager.InputMode.UP))
+          if (!_ragdoll._ItemL)
+          {
+            _ragdoll.UseRightUp();
+            saveInput.y = -1f;
+          }
+          else
+          {
+            _ragdoll.UseLeftUp();
+            saveInput.x = -1f;
+          }
+        // Right item
+        if (ControllerManager.GetMouseInput(1, ControllerManager.InputMode.DOWN))
+          if (!_ragdoll._ItemR)
+          {
+            _ragdoll.UseLeftDown();
+            saveInput.x = 1f;
+          }
+          else
+          {
+            _ragdoll.UseRightDown();
+            saveInput.y = 1f;
+          }
+        if (ControllerManager.GetMouseInput(1, ControllerManager.InputMode.UP))
+          if (!_ragdoll._ItemR)
+          {
+            _ragdoll.UseLeftUp();
+            saveInput.x = -1f;
+          }
+          else
+          {
+            _ragdoll.UseRightUp();
+            saveInput.y = -1f;
+          }
 
-      // Check grapple
-      if (
-        !_ragdoll._IsDead &&
-        _ragdoll._CanGrapple &&
-        ControllerManager.GetMouseInput(2, ControllerManager.InputMode.UP)
-        )
-      {
-        _ragdoll.Grapple(true);
-      }
-      if (_ragdoll._grappling)
-      {
-        if (_ragdoll._ItemL == null && ControllerManager.GetMouseInput(0, ControllerManager.InputMode.UP))
-          _ragdoll.Grapple(false);
-        if (_ragdoll._ItemR == null && ControllerManager.GetMouseInput(1, ControllerManager.InputMode.UP))
-          _ragdoll.Grapple(false);
+        // Check grapple
+        if (
+          !_ragdoll._IsDead &&
+          _ragdoll._CanGrapple &&
+          ControllerManager.GetMouseInput(2, ControllerManager.InputMode.UP)
+          )
+        {
+          _ragdoll.Grapple(true);
+        }
+        if (_ragdoll._grappling)
+        {
+          if (_ragdoll._ItemL == null && ControllerManager.GetMouseInput(0, ControllerManager.InputMode.UP))
+            _ragdoll.Grapple(false);
+          if (_ragdoll._ItemR == null && ControllerManager.GetMouseInput(1, ControllerManager.InputMode.UP))
+            _ragdoll.Grapple(false);
+        }
       }
 
       // Move arms
@@ -1321,38 +1323,42 @@ public class PlayerScript : MonoBehaviour
       {
         runKeyDown = ControllerManager.ShiftHeld();
       }
+
       // Check utility
-      if (ControllerManager.GetKey(ControllerManager.Key.Q))
+      if (GameScript.s_GameMode == GameScript.GameModes.VERSUS && VersusMode.s_PlayersCanMove)
       {
-        /*if (_UtilitiesLeft.Count == 0 && _UtilitiesRight.Count > 0)
-          _UtilitiesRight[0].UseDown();
-        else */
-        if (_UtilitiesLeft.Count > 0)
-          _UtilitiesLeft[0].UseDown();
-      }
-      else if (ControllerManager.GetKey(ControllerManager.Key.Q, ControllerManager.InputMode.UP))
-      {
-        /*if (_UtilitiesLeft.Count == 0 && _UtilitiesRight.Count > 0)
-          _UtilitiesRight[0].UseUp();
-        else */
-        if (_UtilitiesLeft.Count > 0)
-          _UtilitiesLeft[0].UseUp();
-      }
-      if (ControllerManager.GetKey(ControllerManager.Key.E))
-      {
-        /*if (_UtilitiesRight.Count == 0 && _UtilitiesLeft.Count > 0)
-          _UtilitiesLeft[0].UseDown();
-        else */
-        if (_UtilitiesRight.Count > 0)
-          _UtilitiesRight[0].UseDown();
-      }
-      else if (ControllerManager.GetKey(ControllerManager.Key.E, ControllerManager.InputMode.UP))
-      {
-        /*if (_UtilitiesRight.Count == 0 && _UtilitiesLeft.Count > 0)
-          _UtilitiesLeft[0].UseUp();
-        else */
-        if (_UtilitiesRight.Count > 0)
-          _UtilitiesRight[0].UseUp();
+        if (ControllerManager.GetKey(ControllerManager.Key.Q))
+        {
+          /*if (_UtilitiesLeft.Count == 0 && _UtilitiesRight.Count > 0)
+            _UtilitiesRight[0].UseDown();
+          else */
+          if (_UtilitiesLeft.Count > 0)
+            _UtilitiesLeft[0].UseDown();
+        }
+        else if (ControllerManager.GetKey(ControllerManager.Key.Q, ControllerManager.InputMode.UP))
+        {
+          /*if (_UtilitiesLeft.Count == 0 && _UtilitiesRight.Count > 0)
+            _UtilitiesRight[0].UseUp();
+          else */
+          if (_UtilitiesLeft.Count > 0)
+            _UtilitiesLeft[0].UseUp();
+        }
+        if (ControllerManager.GetKey(ControllerManager.Key.E))
+        {
+          /*if (_UtilitiesRight.Count == 0 && _UtilitiesLeft.Count > 0)
+            _UtilitiesLeft[0].UseDown();
+          else */
+          if (_UtilitiesRight.Count > 0)
+            _UtilitiesRight[0].UseDown();
+        }
+        else if (ControllerManager.GetKey(ControllerManager.Key.E, ControllerManager.InputMode.UP))
+        {
+          /*if (_UtilitiesRight.Count == 0 && _UtilitiesLeft.Count > 0)
+            _UtilitiesLeft[0].UseUp();
+          else */
+          if (_UtilitiesRight.Count > 0)
+            _UtilitiesRight[0].UseUp();
+        }
       }
 
       // Check weapon swap
@@ -1421,63 +1427,66 @@ public class PlayerScript : MonoBehaviour
           _ragdoll.ArmsDown();
 
         // Use items
-        Vector2 input = new Vector2(ControllerManager.GetControllerAxis(gamepadId, ControllerManager.Axis.L2),
-          ControllerManager.GetControllerAxis(gamepadId, ControllerManager.Axis.R2));
-        float bias = 0.4f;
-        min = 0f + bias;
-        if (input.x >= 1f - bias && _lastInputTriggers.x < 1f - bias)
-          if (!_ragdoll._ItemL && !_ragdoll._ItemR)
-          {
-            SwapLoadouts();
-          }
-          else if (!_ragdoll._ItemL)
-          {
-            _ragdoll.UseRightDown();
-            saveInput.y = 1f;
-          }
-          else
-          {
-            _ragdoll.UseLeftDown();
-            saveInput.x = 1f;
-          }
-        else if (input.x <= min && _lastInputTriggers.x > min)
-          if (!_ragdoll._ItemL)
-          {
-            _ragdoll.UseRightUp();
-            saveInput.y = -1f;
-          }
-          else
-          {
-            _ragdoll.UseLeftUp();
-            saveInput.x = -1f;
-          }
-        if (input.y >= 1f - bias && _lastInputTriggers.y < 1f - bias)
-          if (!_ragdoll._ItemL && !_ragdoll._ItemR)
-          {
-            SwapLoadouts();
-          }
-          else if (!_ragdoll._ItemR)
-          {
-            _ragdoll.UseLeftDown();
-            saveInput.x = 1f;
-          }
-          else
-          {
-            _ragdoll.UseRightDown();
-            saveInput.y = 1f;
-          }
-        else if (input.y <= min && _lastInputTriggers.y > min)
-          if (!_ragdoll._ItemR)
-          {
-            _ragdoll.UseLeftUp();
-            saveInput.x = -1f;
-          }
-          else
-          {
-            _ragdoll.UseRightUp();
-            saveInput.y = -1f;
-          }
-        _lastInputTriggers = input;
+        if (GameScript.s_GameMode == GameScript.GameModes.VERSUS && VersusMode.s_PlayersCanMove)
+        {
+          Vector2 input = new Vector2(ControllerManager.GetControllerAxis(gamepadId, ControllerManager.Axis.L2),
+            ControllerManager.GetControllerAxis(gamepadId, ControllerManager.Axis.R2));
+          float bias = 0.4f;
+          min = 0f + bias;
+          if (input.x >= 1f - bias && _lastInputTriggers.x < 1f - bias)
+            if (!_ragdoll._ItemL && !_ragdoll._ItemR)
+            {
+              SwapLoadouts();
+            }
+            else if (!_ragdoll._ItemL)
+            {
+              _ragdoll.UseRightDown();
+              saveInput.y = 1f;
+            }
+            else
+            {
+              _ragdoll.UseLeftDown();
+              saveInput.x = 1f;
+            }
+          else if (input.x <= min && _lastInputTriggers.x > min)
+            if (!_ragdoll._ItemL)
+            {
+              _ragdoll.UseRightUp();
+              saveInput.y = -1f;
+            }
+            else
+            {
+              _ragdoll.UseLeftUp();
+              saveInput.x = -1f;
+            }
+          if (input.y >= 1f - bias && _lastInputTriggers.y < 1f - bias)
+            if (!_ragdoll._ItemL && !_ragdoll._ItemR)
+            {
+              SwapLoadouts();
+            }
+            else if (!_ragdoll._ItemR)
+            {
+              _ragdoll.UseLeftDown();
+              saveInput.x = 1f;
+            }
+            else
+            {
+              _ragdoll.UseRightDown();
+              saveInput.y = 1f;
+            }
+          else if (input.y <= min && _lastInputTriggers.y > min)
+            if (!_ragdoll._ItemR)
+            {
+              _ragdoll.UseLeftUp();
+              saveInput.x = -1f;
+            }
+            else
+            {
+              _ragdoll.UseRightUp();
+              saveInput.y = -1f;
+            }
+          _lastInputTriggers = input;
+        }
 
         // Save dpad press times
         if (gamepad.dpad.up.wasPressedThisFrame)
@@ -1545,54 +1554,57 @@ public class PlayerScript : MonoBehaviour
         runKeyDown = gamepad.leftStickButton.isPressed;
 
         // Check grapple
-        if (
-          !_ragdoll._IsDead &&
-          _ragdoll._CanGrapple &&
-          gamepad.rightStickButton.wasPressedThisFrame
-        )
+        if (GameScript.s_GameMode == GameScript.GameModes.VERSUS && VersusMode.s_PlayersCanMove)
         {
-          _ragdoll.Grapple(true);
-        }
-        if (_ragdoll._grappling)
-        {
-          if (_ragdoll._ItemL == null && gamepad.leftTrigger.wasReleasedThisFrame)
-            _ragdoll.Grapple(false);
-          if (_ragdoll._ItemR == null && gamepad.rightTrigger.wasReleasedThisFrame)
-            _ragdoll.Grapple(false);
-        }
+          if (
+            !_ragdoll._IsDead &&
+            _ragdoll._CanGrapple &&
+            gamepad.rightStickButton.wasPressedThisFrame
+          )
+          {
+            _ragdoll.Grapple(true);
+          }
+          if (_ragdoll._grappling)
+          {
+            if (_ragdoll._ItemL == null && gamepad.leftTrigger.wasReleasedThisFrame)
+              _ragdoll.Grapple(false);
+            if (_ragdoll._ItemR == null && gamepad.rightTrigger.wasReleasedThisFrame)
+              _ragdoll.Grapple(false);
+          }
 
-        // Check utilities
-        if (gamepad.leftShoulder.wasPressedThisFrame)
-        {
-          /*if (_UtilitiesLeft.Count == 0 && _UtilitiesRight.Count > 0)
-            {}_UtilitiesRight[0].UseDown();
-          else */
-          if (_UtilitiesLeft.Count > 0)
-            _UtilitiesLeft[0].UseDown();
-        }
-        else if (gamepad.leftShoulder.wasReleasedThisFrame)
-        {
-          /*if (_UtilitiesLeft.Count == 0 && _UtilitiesRight.Count > 0)
-            _UtilitiesRight[0].UseUp();
-          else */
-          if (_UtilitiesLeft.Count > 0)
-            _UtilitiesLeft[0].UseUp();
-        }
-        if (gamepad.rightShoulder.wasPressedThisFrame)
-        {
-          /*if (_UtilitiesRight.Count == 0 && _UtilitiesLeft.Count > 0)
-            _UtilitiesLeft[0].UseDown();
-          else */
-          if (_UtilitiesRight.Count > 0)
-            _UtilitiesRight[0].UseDown();
-        }
-        else if (gamepad.rightShoulder.wasReleasedThisFrame)
-        {
-          /*if (_UtilitiesRight.Count == 0 && _UtilitiesLeft.Count > 0)
-            _UtilitiesLeft[0].UseUp();
-          else */
-          if (_UtilitiesRight.Count > 0)
-            _UtilitiesRight[0].UseUp();
+          // Check utilities
+          if (gamepad.leftShoulder.wasPressedThisFrame)
+          {
+            /*if (_UtilitiesLeft.Count == 0 && _UtilitiesRight.Count > 0)
+              {}_UtilitiesRight[0].UseDown();
+            else */
+            if (_UtilitiesLeft.Count > 0)
+              _UtilitiesLeft[0].UseDown();
+          }
+          else if (gamepad.leftShoulder.wasReleasedThisFrame)
+          {
+            /*if (_UtilitiesLeft.Count == 0 && _UtilitiesRight.Count > 0)
+              _UtilitiesRight[0].UseUp();
+            else */
+            if (_UtilitiesLeft.Count > 0)
+              _UtilitiesLeft[0].UseUp();
+          }
+          if (gamepad.rightShoulder.wasPressedThisFrame)
+          {
+            /*if (_UtilitiesRight.Count == 0 && _UtilitiesLeft.Count > 0)
+              _UtilitiesLeft[0].UseDown();
+            else */
+            if (_UtilitiesRight.Count > 0)
+              _UtilitiesRight[0].UseDown();
+          }
+          else if (gamepad.rightShoulder.wasReleasedThisFrame)
+          {
+            /*if (_UtilitiesRight.Count == 0 && _UtilitiesLeft.Count > 0)
+              _UtilitiesLeft[0].UseUp();
+            else */
+            if (_UtilitiesRight.Count > 0)
+              _UtilitiesRight[0].UseUp();
+          }
         }
 
         // Check weapon swap
@@ -1672,7 +1684,8 @@ public class PlayerScript : MonoBehaviour
     if (!_ragdoll._grappled)
     {
       _saveInput = xy;
-      MovePlayer(unscaled_dt, movespeed, _saveInput);
+      if (GameScript.s_GameMode == GameScript.GameModes.VERSUS && VersusMode.s_PlayersCanMove)
+        MovePlayer(unscaled_dt, movespeed, _saveInput);
 
       // Rotate player
       if (!mouseEnabled)
@@ -2128,9 +2141,9 @@ public class PlayerScript : MonoBehaviour
     // Controller rumble
     if (!mouseEnabled && SettingsModule.ControllerRumble)
     {
-      IEnumerator rumble()
+      var gamepad = ControllerManager.GetPlayerGamepad(_Id);
+      IEnumerator rumbleCo()
       {
-        var gamepad = ControllerManager.GetPlayerGamepad(_Id);
         gamepad.SetMotorSpeeds(0.2f, 0.2f);
 
         yield return new WaitForSecondsRealtime(1f);
@@ -2138,7 +2151,8 @@ public class PlayerScript : MonoBehaviour
         else
           gamepad.SetMotorSpeeds(0f, 0f);
       }
-      StartCoroutine(rumble());
+      if (gamepad != null)
+        StartCoroutine(rumbleCo());
     }
   }
 
@@ -2150,16 +2164,17 @@ public class PlayerScript : MonoBehaviour
     // Controller rumble
     if (!mouseEnabled && SettingsModule.ControllerRumble)
     {
+      var gamepad = ControllerManager.GetPlayerGamepad(_Id);
       IEnumerator rumble()
       {
-        var gamepad = ControllerManager.GetPlayerGamepad(_Id);
         gamepad.SetMotorSpeeds(0.8f, 0.8f);
 
         yield return new WaitForSecondsRealtime(1.5f);
 
         gamepad.SetMotorSpeeds(0f, 0f);
       }
-      StartCoroutine(rumble());
+      if (gamepad != null)
+        StartCoroutine(rumble());
     }
 
     // Send dead to other clients
@@ -2184,7 +2199,7 @@ public class PlayerScript : MonoBehaviour
     // Versus
     if (GameScript.s_GameMode == GameScript.GameModes.VERSUS)
     {
-      GameScript.VersusMode.OnPlayerDeath();
+      VersusMode.OnPlayerDeath(this, source._PlayerScript);
     }
 
     // Remove ring
@@ -2709,5 +2724,16 @@ public class PlayerScript : MonoBehaviour
   {
     public Vector3 _position, _forward;
     public KeyValuePair<string, float>[] _actions;
+  }
+
+  //
+  public static int GetNumberAlivePlayers()
+  {
+    var numAlive = 0;
+    foreach (var player in s_Players)
+      if (player._ragdoll._health > 0)
+        numAlive++;
+
+    return numAlive;
   }
 }

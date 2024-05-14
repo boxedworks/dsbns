@@ -64,7 +64,16 @@ public class PlayerspawnScript : MonoBehaviour
     player.name = "Player";
 
     // Spawn them based on the this transform
-    player.transform.position = transform.position;
+    var spawnPosition = transform.position;
+    if (!VersusMode.s_Settings._FreeForAll)
+    {
+      var numSpawns = _PlayerSpawns.Count;
+      var numPlayers = Settings._NumberPlayers;
+
+      if (numPlayers < numSpawns)
+        spawnPosition += new Vector3(Random.Range(-0.5f, 0.5f), 0f, Random.Range(-0.5f, 0.5f));
+    }
+    player.transform.position = spawnPosition;
     //Debug.Log($"= Spawning player at position: [{transform.position}]");
 
     FunctionsC.RotateLocal(ref player, transform.localEulerAngles.y);
