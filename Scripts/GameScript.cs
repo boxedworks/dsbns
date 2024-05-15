@@ -261,11 +261,44 @@ public class GameScript : MonoBehaviour
 
     if ((s_GameMode == GameModes.VERSUS && !VersusMode.s_Settings._FreeForAll ? numTeams : numPlayers) <= numSpawns || s_GameMode != GameModes.VERSUS || (s_GameMode == GameModes.VERSUS && VersusMode.s_Settings._FreeForAll))
     {
+      var spawnLocation = new int[numPlayers];
+      if (s_GameMode == GameModes.VERSUS && !VersusMode.s_Settings._FreeForAll && numPlayers > numSpawns)
+      {
+        var teamListSpawn = new Dictionary<int, int>();
+        var spawnList_ = new List<int>(spawnList);
+        for (var i = 0; i < numPlayers; i++)
+        {
+
+          var teamId = VersusMode.GetTeamId(i);
+          if (teamListSpawn.ContainsKey(teamId))
+          {
+            var spawnIndex = teamListSpawn[teamId];
+            spawnLocation[i] = spawnIndex;
+          }
+          else
+          {
+            var spawnIndex = spawnList_[Random.Range(0, spawnList_.Count)];
+            spawnList_.Remove(spawnIndex);
+            teamListSpawn.Add(teamId, spawnIndex);
+
+            spawnLocation[i] = spawnIndex;
+          }
+
+        }
+      }
+      else
+      {
+        for (var i = 0; i < numPlayers; i++)
+        {
+          spawnLocation[i] = spawnList[i % spawnList.Length];
+        }
+      }
+
       var playerSpawnIndex = 0;
       if (!s_CustomNetworkManager._Connected || s_CustomNetworkManager._IsServer)
         if (_PlayerIter < Settings._NumberPlayers)
           for (; _PlayerIter < Settings._NumberPlayers; _PlayerIter++)
-            PlayerspawnScript._PlayerSpawns[spawnList[playerSpawnIndex++ % numSpawns]].SpawnPlayer();
+            PlayerspawnScript._PlayerSpawns[spawnLocation[playerSpawnIndex++]].SpawnPlayer();
     }
 
     else

@@ -70,8 +70,8 @@ public class PlayerspawnScript : MonoBehaviour
       var numSpawns = _PlayerSpawns.Count;
       var numPlayers = Settings._NumberPlayers;
 
-      if (numPlayers < numSpawns)
-        spawnPosition += new Vector3(Random.Range(-0.5f, 0.5f), 0f, Random.Range(-0.5f, 0.5f));
+      if (numPlayers > numSpawns)
+        spawnPosition += new Vector3(Random.Range(-0.35f, 0.35f), 0f, Random.Range(-0.35f, 0.35f));
     }
     player.transform.position = spawnPosition;
     //Debug.Log($"= Spawning player at position: [{transform.position}]");

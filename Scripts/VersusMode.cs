@@ -450,7 +450,8 @@ public static class VersusMode
               foreach (var player in PlayerScript.s_Players)
               {
                 var teamId = s_playerTeams[player._Id];
-                teamsAll.Add(teamId);
+                if (!teamsAll.Contains(teamId))
+                  teamsAll.Add(teamId);
                 if (player._ragdoll._health > 0)
                 {
                   if (!teamsAlive.Contains(teamId))
@@ -539,9 +540,10 @@ public static class VersusMode
                   var highestTeams = new List<int>();
                   for (var i = 0; i < numTeams; i++)
                   {
-                    var teamScore = GetTeamScore(i);
+                    var teamId = teamsAll[i];
+                    var teamScore = GetTeamScore(teamId);
                     if (teamScore == highestScore)
-                      highestTeams.Add(i);
+                      highestTeams.Add(teamId);
                   }
 
                   // Check win
