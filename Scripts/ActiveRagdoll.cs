@@ -306,7 +306,7 @@ public class ActiveRagdoll
     Debug.DrawRay(_Hip.position, _Hip.transform.forward * 100f, Color.yellow);*/
 #endif
 
-    var dt = (_PlayerScript != null ? Time.unscaledDeltaTime : Time.deltaTime);
+    var dt = _PlayerScript != null ? Time.unscaledDeltaTime : Time.deltaTime;
 
     // Update grabbed rd
     if (_grapplee != null)

@@ -213,8 +213,15 @@ public static class ControllerManager
     if (SettingsModule.IgnoreFirstController)
       playerID++;
 
-    if (playerID >= _NumberGamepads || playerID < 0)
+    if (playerID < 0)
       return null;
+
+    if (playerID >= _NumberGamepads)
+#if UNITY_EDITOR
+      return _Gamepads[playerID % _Gamepads.Count];
+#else
+      return null;
+#endif
 
     return _Gamepads[playerID];
   }

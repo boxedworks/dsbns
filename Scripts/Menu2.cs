@@ -3588,6 +3588,9 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
       _SaveMenuDir = _SaveLevelSelected = -1;
 
       GameScript.SurvivalMode.OnLeaveMode();
+
+      GameScript.s_GameMode = GameScript.GameModes.CLASSIC;
+      Settings.OnGamemodeChanged(Settings.GamemodeChange.CLASSIC);
     };
     // Set tip
     ModifyMenu_TipComponents(MenuType.MODE_SELECTION, 15);
@@ -3595,7 +3598,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
 
     // Versus menu
     {
-      var format_versus = "{0,-14}: {1,-3}\n";
+      var format_versus = "{0,-12}: <color=grey>{1,-3}</color>\n";
       new Menu2(MenuType.VERSUS)
       {
 
@@ -6595,13 +6598,13 @@ go to the <color=yellow>SHOP</color> to buy something~1
       })
 
     // Show tips
-    .AddComponent("show tips\n\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
+    .AddComponent("show tips\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
       .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
       {
 
         // Set display text
-        var selection = SettingsModule.ShowTips ? "on " : "off";
-        component.SetDisplayText(string.Format(format_options, "show tips:", selection) + "\n");
+        var selection = SettingsModule.ShowTips ? "on" : "off";
+        component.SetDisplayText(string.Format(format_options, "show tips:", selection));
 
         // Set dropdown data
         var selections = new List<string>();
@@ -6627,6 +6630,47 @@ go to the <color=yellow>SHOP</color> to buy something~1
         // Update dropdown data
         component.SetDropdownData("show tips\n\n", selections, actions, selection_match);
       })
+
+    // Display loadout index
+    .AddComponent("show loadout number\n\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
+      .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+      {
+
+        // Set display text
+        var selection = SettingsModule.ShowLoadoutIndexes ? "on" : "off";
+        component.SetDisplayText(string.Format(format_options, "show loadout number:", selection) + "\n");
+
+        // Set dropdown data
+        var selections = new List<string>();
+        var actions = new List<System.Action<MenuComponent>>();
+        var selection_match = $"{selection} ";
+
+        selections.Add("on  - display player loadout number [DEFAULT]");
+        actions.Add((MenuComponent component0) =>
+        {
+          SettingsModule.ShowLoadoutIndexes = true;
+          _CanRender = false;
+          RenderMenu();
+
+          foreach (var playerprof in GameScript.PlayerProfile.s_Profiles)
+            playerprof.UpdateLoadoutIndex();
+        });
+
+        selections.Add("off - do not display player loadout number");
+        actions.Add((MenuComponent component0) =>
+        {
+          SettingsModule.ShowLoadoutIndexes = false;
+          _CanRender = false;
+          RenderMenu();
+
+          foreach (var playerprof in GameScript.PlayerProfile.s_Profiles)
+            playerprof.UpdateLoadoutIndex();
+        });
+
+        // Update dropdown data
+        component.SetDropdownData("show loadout numbers in CLASSIC mode?\n\n", selections, actions, selection_match);
+      })
+
 
     // Toggle lightning
     .AddComponent("lightning\n\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
@@ -7691,7 +7735,7 @@ there are no loadouts.~1 all items will be given in the mode!~1
   @$"<color={_COLOR_GRAY}>============
 about extras</color>
 
--unlock extras by satisfying the requirements at the bottom of the extras menu
+-unlock extras by satisfying the requirements <color=red>solo</color> at the bottom of the extras menu
 
 -extras only work in the <color={_COLOR_GRAY}>CLASSIC</color> mode
 
@@ -7807,6 +7851,13 @@ about extras</color>
         SpawnMenu_Extras();
         _Menus[MenuType.EXTRAS]._selectedComponent._onFocus(_Menus[MenuType.EXTRAS]._selectedComponent);
       };
+
+      //
+      _Menus[MenuType.EXTRAS]._onSwitched += () =>
+      {
+        Settings.LevelSaveData.Save();
+      };
+
       // Tip
       //ModifyMenu_TipComponents(MenuType.EXTRAS, 14);
       //ModifyMenu_TipSwitch(MenuType.EXTRAS);
@@ -7827,6 +7878,13 @@ about extras</color>
         if (ControllerManager._NumberGamepads == 0)
           _Confirmed_SwitchToKeyboard = true;
 
+        if (GameScript.s_GameMode == GameScript.GameModes.VERSUS)
+        {
+          CommonEvents._SwitchMenu(MenuType.VERSUS);
+          return;
+        }
+
+        //
         GameScript.TogglePause();
         _InPause = false;
         _InMenus = false;
@@ -8306,9 +8364,13 @@ about extras</color>
     // Set menu prompt
     if (Settings._NumberPlayers == 0)
       _Menus[MenuType.CONTROLLERS_CHANGED]._menuComponents[1].SetDisplayText("looks like your controller got unplugged! plug it back in to resume or\npress 'ok' to play with keyboard instead\n\n");
-    else
-      if (GameScript.s_GameMode == GameScript.GameModes.SURVIVAL)
+    else if (GameScript.s_GameMode == GameScript.GameModes.SURVIVAL)
       _Menus[MenuType.CONTROLLERS_CHANGED]._menuComponents[1].SetDisplayText("looks like a controller got unplugged! plug it back in to resume or\npress 'ok' to resume the game (you must manually restart in survival mode)\n\n");
+    else if (GameScript.s_GameMode == GameScript.GameModes.VERSUS)
+    {
+      // Check if still enough players
+      _Menus[MenuType.CONTROLLERS_CHANGED]._menuComponents[1].SetDisplayText("looks like a controller got unplugged! plug it back in to resume or\npress 'ok' to escape to versus mode menu\n\n");
+    }
     else
       _Menus[MenuType.CONTROLLERS_CHANGED]._menuComponents[1].SetDisplayText("looks like a controller got unplugged! plug it back in to resume or\npress 'ok' to restart the level and play with less people\n\n");
 

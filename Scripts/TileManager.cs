@@ -629,7 +629,27 @@ public class TileManager
         if (_CurrentLevel_Theme != -1)
           SceneThemes.ChangeMapTheme(SceneThemes._SceneOrder_LevelEditor[_CurrentLevel_Theme % SceneThemes._SceneOrder_LevelEditor.Length]);
         else
-          SceneThemes.ChangeMapTheme(SceneThemes._Instance._ThemeOrder[2]);
+        {
+          var themeIndex = 2;
+          switch (Levels._CurrentLevelIndex)
+          {
+            case 1:
+              themeIndex = 1;
+              break;
+            case 2:
+            case 4:
+              themeIndex = 4;
+              break;
+            case 3:
+              themeIndex = 3;
+              break;
+            case 6:
+              themeIndex = 5;
+              break;
+          }
+
+          SceneThemes.ChangeMapTheme(SceneThemes._Instance._ThemeOrder[themeIndex]);
+        }
       }
       else if (GameScript._EditorTesting)
         SceneThemes.ChangeMapTheme(SceneThemes._Instance._ThemeOrder[2]);
@@ -923,10 +943,10 @@ public class TileManager
       GameResources._Camera_Main.transform.position = campos;
 
       // Hide playerspawn
-      if (GameScript.s_GameMode == GameScript.GameModes.SURVIVAL && !GameScript._EditorEnabled)
-        PlayerspawnScript._PlayerSpawns[0].transform.GetChild(1).gameObject.SetActive(false);
-      else
-        PlayerspawnScript._PlayerSpawns[0].transform.GetChild(1).gameObject.SetActive(true);
+      var isSurvival = GameScript.s_GameMode == GameScript.GameModes.SURVIVAL && !GameScript._EditorEnabled;
+      foreach(var spawn in PlayerspawnScript._PlayerSpawns){
+        spawn.transform.GetChild(1).gameObject.SetActive(!isSurvival);
+      }
 
       // Check special objects before build
       var objectsToDisable = new List<GameObject>();
@@ -1559,6 +1579,12 @@ public class TileManager
                 //Debug.Log(GameScript._Singleton.transform.GetChild(0).childCount);
                 //Debug.Log(idP);
                 var enemies = GameScript._s_Singleton.transform.GetChild(0);
+
+                // Check extra
+                if (LevelModule.ExtraEnemyMultiplier == 2)
+                  break;
+
+                // Out of bounds
                 if (idP >= enemies.childCount)
                 {
                   throw new System.IndexOutOfRangeException($"Trying to link door with enemy ID {idP} out of {enemies.childCount}");

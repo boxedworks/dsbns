@@ -87,6 +87,10 @@ public class PlayerScript : MonoBehaviour
 
   public static int s_PlayerCountSave;
 
+  [System.NonSerialized]
+  public int _PlayerSpawnId;
+  PlayerspawnScript _playerSpawn { get { return PlayerspawnScript._PlayerSpawns[_PlayerSpawnId]; } }
+
   // Use this for initialization
   void Start()
   {
@@ -176,7 +180,6 @@ public class PlayerScript : MonoBehaviour
     hippos.y = -1.38f;
     if (!_ragdoll._IsDead)
       _ring[0].transform.parent.position = hippos;
-    _ring[0].transform.parent.gameObject.SetActive(true);
 
     // Equip starting weapons
     _Profile._equipmentIndex = 0;
@@ -402,7 +405,8 @@ public class PlayerScript : MonoBehaviour
         p._HasExit = false;
         if (p != null && p.gameObject != null) Destroy(p.gameObject);
       }
-    GameScript._inLevelEnd = false;
+
+    GameScript.s_InLevelEndPlayer = null;
     s_Players = null;
   }
 
@@ -457,7 +461,7 @@ public class PlayerScript : MonoBehaviour
     if (!_TimerStarted && _Id == 0 && _spawnTimer <= 0f)
     {
 
-      var player_farthest = FunctionsC.GetFarthestPlayerFrom(PlayerspawnScript._PlayerSpawns[0].transform.position);
+      var player_farthest = FunctionsC.GetFarthestPlayerFrom(_playerSpawn.transform.position);
       if (player_farthest._distance > 0.5f)
       {
         StartLevelTimer();
@@ -478,7 +482,7 @@ public class PlayerScript : MonoBehaviour
       _Id == 0 && !_level_ratings_shown && !TileManager._Level_Complete && !GameScript._Paused &&
       (
         (!_TimerStarted && Time.time - GameScript._LevelStartTime > 3f) ||
-        (_ragdoll._IsDead && Time.unscaledTime - _ragdoll._time_dead > 3f)
+        (_All_Dead && Time.unscaledTime - _ragdoll._time_dead > 3f)
       )
     )
     {
@@ -558,7 +562,7 @@ public class PlayerScript : MonoBehaviour
           }
           else
           {
-            _agent.SetDestination(PlayerspawnScript._PlayerSpawns[0].transform.position);
+            _agent.SetDestination(_playerSpawn.transform.position);
           }
 
           _rearrangeTime = 0.2f;
@@ -742,7 +746,19 @@ public class PlayerScript : MonoBehaviour
       hippos.y = -1.38f;
       //if (Time.timeScale < 0.9f)
       //{
-      _ring[0].transform.parent.position += (hippos - _ring[0].transform.parent.position) * Time.deltaTime * 15f;
+
+      var ringDis = hippos - _ring[0].transform.parent.position;
+      if (ringDis.magnitude > 2f)
+      {
+        _ring[0].transform.parent.position = hippos;
+      }
+      else
+      {
+        if (!_ring[0].transform.parent.gameObject.activeSelf)
+          _ring[0].transform.parent.gameObject.SetActive(true);
+
+        _ring[0].transform.parent.position += ringDis * Time.deltaTime * 15f;
+      }
       //}
       //else
       //  _ring[0].transform.parent.position = hippos;
@@ -751,18 +767,18 @@ public class PlayerScript : MonoBehaviour
       _ring[0].transform.parent.LookAt(lookpos);
 
       // Check back at spawn
-      var spawnDist = Vector3.Distance(new Vector3(PlayerspawnScript._PlayerSpawns[0].transform.position.x, 0f, PlayerspawnScript._PlayerSpawns[0].transform.position.z), new Vector3(_ragdoll._Hip.position.x, 0f, _ragdoll._Hip.position.z));
+      var spawnDist = Vector3.Distance(new Vector3(_playerSpawn.transform.position.x, 0f, _playerSpawn.transform.position.z), new Vector3(_ragdoll._Hip.position.x, 0f, _ragdoll._Hip.position.z));
       if (_HasExit)
       {
         if (GameScript._inLevelEnd)
         {
           if (spawnDist > 0.35f)
-            GameScript._inLevelEnd = false;
+            GameScript.s_InLevelEndPlayer = null;
         }
         else
         {
           if (spawnDist <= 0.35f)
-            GameScript._inLevelEnd = true;
+            GameScript.s_InLevelEndPlayer = this;
         }
       }
 
@@ -1133,16 +1149,34 @@ public class PlayerScript : MonoBehaviour
       )
       {
 
-        var spawnDistance = MathC.Get2DDistance(transform.position, PlayerspawnScript._PlayerSpawns[0].transform.position);
-        if (spawnDistance > 3f)
+        var minSpawnDistance = 0f;
+        foreach (var player in s_Players)
+        {
+          if ((player?._ragdoll._health ?? -1) <= 0) continue;
+          var spawnDistance = MathC.Get2DDistance(player._ragdoll._Hip.position, player._playerSpawn.transform.position);
+
+          if (spawnDistance > minSpawnDistance)
+            minSpawnDistance = spawnDistance;
+        }
+
+        if (minSpawnDistance > 3f)
         {
 
           _crazyZombieTimer += Time.deltaTime;
           var czt = 0.2f;
           if (_crazyZombieTimer >= czt)
           {
-            if (EnemyScript._Enemies_alive.Count > 0)
+            //if (EnemyScript._Enemies_alive.Count > 0)
             {
+              // Save setting
+              var saveEnemyMulti = -1;
+              if (LevelModule.ExtraEnemyMultiplier == 2)
+              {
+                saveEnemyMulti = LevelModule.ExtraEnemyMultiplier;
+                LevelModule.ExtraEnemyMultiplier = 0;
+              }
+
+              //
               while (
                 _crazyZombieTimer >= czt &&
                 EnemyScript._Enemies_alive.Count < EnemyScript._MAX_RAGDOLLS_ALIVE
@@ -1151,6 +1185,7 @@ public class PlayerScript : MonoBehaviour
 
                 _crazyZombieTimer -= czt;
 
+                //
                 var enemy = EnemyScript.SpawnEnemyAt(
                   new EnemyScript.SurvivalAttributes()
                   {
@@ -1161,6 +1196,12 @@ public class PlayerScript : MonoBehaviour
                   true
                 );
                 enemy._moveSpeed = 0.5f + 0.15f * Random.value;
+              }
+
+              //
+              if (saveEnemyMulti > -1)
+              {
+                LevelModule.ExtraEnemyMultiplier = saveEnemyMulti;
               }
             }
           }
@@ -1242,7 +1283,7 @@ public class PlayerScript : MonoBehaviour
       /// Use items
       // Left item
       // Check versus start
-      if (GameScript.s_GameMode == GameScript.GameModes.VERSUS && VersusMode.s_PlayersCanMove)
+      if (GameScript.s_GameMode != GameScript.GameModes.VERSUS || (GameScript.s_GameMode == GameScript.GameModes.VERSUS && VersusMode.s_PlayersCanMove))
       {
         if (ControllerManager.GetMouseInput(0, ControllerManager.InputMode.DOWN))
           if (!_ragdoll._ItemL)
@@ -1325,7 +1366,7 @@ public class PlayerScript : MonoBehaviour
       }
 
       // Check utility
-      if (GameScript.s_GameMode == GameScript.GameModes.VERSUS && VersusMode.s_PlayersCanMove)
+      if (GameScript.s_GameMode != GameScript.GameModes.VERSUS || (GameScript.s_GameMode == GameScript.GameModes.VERSUS && VersusMode.s_PlayersCanMove))
       {
         if (ControllerManager.GetKey(ControllerManager.Key.Q))
         {
@@ -1427,7 +1468,7 @@ public class PlayerScript : MonoBehaviour
           _ragdoll.ArmsDown();
 
         // Use items
-        if (GameScript.s_GameMode == GameScript.GameModes.VERSUS && VersusMode.s_PlayersCanMove)
+        if (GameScript.s_GameMode != GameScript.GameModes.VERSUS || (GameScript.s_GameMode == GameScript.GameModes.VERSUS && VersusMode.s_PlayersCanMove))
         {
           Vector2 input = new Vector2(ControllerManager.GetControllerAxis(gamepadId, ControllerManager.Axis.L2),
             ControllerManager.GetControllerAxis(gamepadId, ControllerManager.Axis.R2));
@@ -1554,7 +1595,7 @@ public class PlayerScript : MonoBehaviour
         runKeyDown = gamepad.leftStickButton.isPressed;
 
         // Check grapple
-        if (GameScript.s_GameMode == GameScript.GameModes.VERSUS && VersusMode.s_PlayersCanMove)
+        if (GameScript.s_GameMode != GameScript.GameModes.VERSUS || (GameScript.s_GameMode == GameScript.GameModes.VERSUS && VersusMode.s_PlayersCanMove))
         {
           if (
             !_ragdoll._IsDead &&
@@ -1684,7 +1725,7 @@ public class PlayerScript : MonoBehaviour
     if (!_ragdoll._grappled)
     {
       _saveInput = xy;
-      if (GameScript.s_GameMode == GameScript.GameModes.VERSUS && VersusMode.s_PlayersCanMove)
+      if (GameScript.s_GameMode != GameScript.GameModes.VERSUS || (GameScript.s_GameMode == GameScript.GameModes.VERSUS && VersusMode.s_PlayersCanMove))
         MovePlayer(unscaled_dt, movespeed, _saveInput);
 
       // Rotate player
@@ -1761,7 +1802,7 @@ public class PlayerScript : MonoBehaviour
     // Check changed loadout profile
     if (_Profile._LoadoutIndex != _saveLoadoutIndex)
     {
-      if (MathC.Get2DDistance(transform.position, PlayerspawnScript._PlayerSpawns[0].transform.position) > 1.2f)
+      if (MathC.Get2DDistance(transform.position, _playerSpawn.transform.position) > 1.2f)
         _Profile._LoadoutIndex = _saveLoadoutIndex;
       else
       {
@@ -2294,9 +2335,9 @@ public class PlayerScript : MonoBehaviour
     if (!_HasExit || GameScript._s_Singleton._GameEnded) return;
     GameScript.ToggleExit(false);
     _HasExit = false;
-    GameScript._inLevelEnd = false;
-    Powerup p = FunctionsC.SpawnPowerup(Powerup.PowerupType.END);
-    p.transform.position = _ragdoll._Hip.transform.position;
+    GameScript.s_InLevelEndPlayer = null;
+    var p = FunctionsC.SpawnPowerup(Powerup.PowerupType.END);
+    p.transform.position = transform.position;
     p.Init();
   }
 
@@ -2474,7 +2515,7 @@ public class PlayerScript : MonoBehaviour
         // Check candles
         foreach (var candle in CandleScript.s_Candles)
         {
-          if (PositionInBounds(candle.transform.position))
+          if (PositionInBounds(candle.transform.position) && candle.gameObject.name != "CandelBig")
           {
             canFlip = false;
             break;

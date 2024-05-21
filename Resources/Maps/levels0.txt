@@ -1,5 +1,5 @@
 1 4 0 0 0 0 playerspawn_-42.5_-55.62_rot_1.838948E-05_ p_-42.5_-48.26_end_ candelbig_-41.69_-47.46_rot_45 +unnamed loaded map
-1 4 0 0 0 0 playerspawn_-42.5_-55.62_rot_0_ e_-42.5_-50.8_li_knife_w_-42.5_-50.8_l_-42.5_-50_canmove_true_canhear_true_ p_-42.5_-48.75_end_ bdt_0.668 candelbig_-43.12_-47.5_rot_45 +unnamed loaded map
+1 4 0 0 0 0 playerspawn_-42.5_-55.62_rot_0_ e_-42.5_-50.8_li_knife_w_-42.5_-50.8_l_-42.5_-50_canmove_true_canhear_true_ p_-42.5_-48.75_end_ candelbig_-43.12_-47.5_rot_45 bdt_0.668 +unnamed loaded map
 3 4 0 0 0 0 1 1 1 0 1 1 1 0 playerspawn_-42.5_-55.62_rot_0_ e_-42.5_-50.6_li_knife_w_-37.5_-48.1_l_-38.6_-48.1_canmove_true_canhear_true_ p_-42.5_-48.12_end_ bdt_1.113 candelbig_-36.88_-47.5_rot_45 +unnamed loaded map
 3 5 0 0 0 0 0 1 1 0 1 0 1 1 0 0 0 playerspawn_-42.5_-55.62_rot_0 e_-37.5_-50.6_li_knife_w_-37.5_-50.6_l_-37.5_-49.4_l_-38.8_-50.6_canmove_true_canhear_true_ p_-42.5_-45.62_end_ candelbig_-36.88_-45_rot_45 bdt_1.343
 3 5 1 1 0 0 0 0 0 0 1 0 1 1 0 0 0 playerspawn_-40_-55.62_rot_0_ e_-37.5_-50.6_li_knife_w_-42.5_-45.6_l_-42.5_-46.4_w_-42.5_-50.6_l_-41.7_-50.6_w_-37.5_-50.6_l_-37.5_-49.9_w_-37.5_-45.6_l_-38.3_-45.6_canmove_true_canhear_true_ p_-40_-45.62_end_ candelbig_-40_-50_rot_45 tilewall_-41_-53.25_rot_90.00001 bdt_1.178 tilewall_-39.12_-53.25_rot_90.00001 +unnamed loaded map

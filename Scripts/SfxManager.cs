@@ -10,7 +10,8 @@ public static class SfxManager
   public enum AudioClass
   {
     NONE,
-    FOOTSTEP
+    FOOTSTEP,
+    BULLET_SFX
   }
   struct AudioData
   {
@@ -25,7 +26,7 @@ public static class SfxManager
   static Queue<AudioSource> s_audioSourcesAvailable;
   static List<AudioData> s_audioSourcesPlaying;
   static Dictionary<AudioClass, int> s_audioClassAmounts, s_audioClassCounts;
-  static Transform s_audioContainer;
+  static Transform s_audioContainer, s_audioContainerPlaying;
 
   // Create audio pool
   public static void Init()
@@ -33,6 +34,9 @@ public static class SfxManager
     s_audioSourcesAvailable = new Queue<AudioSource>();
     s_audioSourcesPlaying = new List<AudioData>();
     s_audioContainer = new GameObject("AudioContainer").transform;
+#if UNITY_EDITOR
+    s_audioContainerPlaying = new GameObject("AudioContainerPlaying").transform;
+#endif
 
     for (var i = 0; i < 150; i++)
     {
@@ -50,8 +54,10 @@ public static class SfxManager
     s_audioClassCounts = new Dictionary<AudioClass, int>();
     s_audioClassAmounts.Add(AudioClass.NONE, -1);
     s_audioClassCounts.Add(AudioClass.NONE, 0);
-    s_audioClassAmounts.Add(AudioClass.FOOTSTEP, 35);
+    s_audioClassAmounts.Add(AudioClass.FOOTSTEP, 20);
     s_audioClassCounts.Add(AudioClass.FOOTSTEP, 0);
+    s_audioClassAmounts.Add(AudioClass.BULLET_SFX, 15);
+    s_audioClassCounts.Add(AudioClass.BULLET_SFX, 0);
   }
 
   //
@@ -81,7 +87,7 @@ public static class SfxManager
     // Check if source available
     if (s_audioSourcesAvailable.Count == 0)
     {
-      Debug.Log("No more audio sources!");
+      Debug.LogWarning("No more audio sources!");
       return null;
     }
 
@@ -91,6 +97,9 @@ public static class SfxManager
     audioSource.clip = clip;
     audioSource.volume = volume;
     audioSource.pitch = pitch;
+#if UNITY_EDITOR
+    audioSource.transform.parent = s_audioContainerPlaying;
+#endif
 
     //if (audioSource.loop)
     //  audioSource.loop = false;
@@ -109,6 +118,8 @@ public static class SfxManager
       var classCountMax = s_audioClassAmounts[audioClass];
       if (classCountMax != -1 && classCount >= classCountMax)
       {
+        //Debug.LogWarning($"Unable to play low priority clip {clip.name} ... {classCount} / {classCountMax}");
+
         return null;
       }
     }
@@ -139,14 +150,17 @@ public static class SfxManager
 
     s_audioClassCounts[audioClass]++;
   }
-  static void StopAudioSource(int listIndex)
+  static void StopAudioSource(int index)
   {
-    var audioData = s_audioSourcesPlaying[listIndex];
+    var audioData = s_audioSourcesPlaying[index];
     if (audioData._audioSource.isPlaying)
       audioData._audioSource.Stop();
-    s_audioSourcesPlaying.RemoveAt(listIndex);
+    s_audioSourcesPlaying.RemoveAt(index);
     s_audioSourcesAvailable.Enqueue(audioData._audioSource);
     s_audioClassCounts[audioData._audioClass]--;
+#if UNITY_EDITOR
+    audioData._audioSource.transform.parent = s_audioContainer;
+#endif
   }
 
   public static AudioSource PlayAudioSourceSimple(Vector3 position, AudioClip clip, AudioClass audioClass, float volume, float pitch, bool priority = false, bool changePitch = true)
@@ -183,6 +197,7 @@ public static class SfxManager
   // Update volume and pitch of SFX for settings and slowmso
   public static void Update(float pitch)
   {
+    //Debug.Log($"playing: {s_audioSourcesPlaying.Count} avail: {s_audioSourcesAvailable.Count}");
     if (s_audioSourcesPlaying.Count == 0)
     {
       return;

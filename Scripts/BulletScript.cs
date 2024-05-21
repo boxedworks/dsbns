@@ -410,7 +410,7 @@ public class BulletScript : MonoBehaviour
         break;
 
       case 1:
-        SfxManager.PlayAudioSourceSimple(position, bulletImpactType == BulletImpactType.NORMAL ? "Etc/Bullet_impact" : (bulletImpactType == BulletImpactType.BUSHES ? "Etc/Bullet_impact_bushes" : "Etc/Bullet_impact_wood"));
+        SfxManager.PlayAudioSourceSimple(position, bulletImpactType == BulletImpactType.NORMAL ? "Etc/Bullet_impact" : (bulletImpactType == BulletImpactType.BUSHES ? "Etc/Bullet_impact_bushes" : "Etc/Bullet_impact_wood"), 0.9f, 1.1f, SfxManager.AudioClass.BULLET_SFX);
 
         parts = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.SPARKS)[0];
         parts.transform.position = position;

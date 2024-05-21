@@ -159,7 +159,7 @@ public static class VersusMode
   }
   public static bool HasMultipleTeams()
   {
-    return s_Settings._FreeForAll || GetNumberTeams() > 1;
+    return (s_Settings._FreeForAll && Settings._NumberPlayers > 1) || GetNumberTeams() > 1;
   }
 
   //
@@ -766,18 +766,181 @@ public static class VersusMode
   }
 
   //
+  static GameScript.ItemManager.Items GetRandomMeleeWeapon()
+  {
+    return Random.Range(0, 4) switch
+    {
+      1 => GameScript.ItemManager.Items.FRYING_PAN,
+      2 => GameScript.ItemManager.Items.RAPIER,
+      3 => GameScript.ItemManager.Items.AXE,
+
+      _ => GameScript.ItemManager.Items.KNIFE,
+    };
+  }
+  static GameScript.ItemManager.Items GetRandomGun()
+  {
+    return Random.Range(0, 20) switch
+    {
+      1 => GameScript.ItemManager.Items.PISTOL_DOUBLE,
+      2 => GameScript.ItemManager.Items.PISTOL_MACHINE,
+      3 => GameScript.ItemManager.Items.PISTOL_CHARGE,
+      4 => GameScript.ItemManager.Items.REVOLVER,
+
+      5 => GameScript.ItemManager.Items.RIFLE,
+      6 => GameScript.ItemManager.Items.RIFLE_LEVER,
+      7 => GameScript.ItemManager.Items.RIFLE_CHARGE,
+
+      8 => GameScript.ItemManager.Items.UZI,
+      9 => GameScript.ItemManager.Items.AK47,
+      10 => GameScript.ItemManager.Items.SNIPER,
+      11 => GameScript.ItemManager.Items.FLAMETHROWER,
+      12 => GameScript.ItemManager.Items.GRENADE_LAUNCHER,
+      13 => GameScript.ItemManager.Items.CROSSBOW,
+      14 => GameScript.ItemManager.Items.DMR,
+      15 => GameScript.ItemManager.Items.M16,
+
+      16 => GameScript.ItemManager.Items.SHOTGUN_BURST,
+      17 => GameScript.ItemManager.Items.SHOTGUN_DOUBLE,
+      18 => GameScript.ItemManager.Items.SHOTGUN_PUMP,
+      19 => GameScript.ItemManager.Items.STICKY_GUN,
+
+      _ => GameScript.ItemManager.Items.PISTOL_SILENCED,
+    };
+  }
+
+  static UtilityScript.UtilityType GetRandomUtility()
+  {
+    return Random.Range(0, 11) switch
+    {
+      1 => UtilityScript.UtilityType.GRENADE_IMPACT,
+      2 => UtilityScript.UtilityType.GRENADE_STUN,
+
+      3 => UtilityScript.UtilityType.KUNAI_STICKY,
+      4 => UtilityScript.UtilityType.SHURIKEN,
+      5 => UtilityScript.UtilityType.SHURIKEN_BIG,
+
+      6 => UtilityScript.UtilityType.TACTICAL_BULLET,
+      7 => UtilityScript.UtilityType.MORTAR_STRIKE,
+      8 => UtilityScript.UtilityType.C4,
+      9 => UtilityScript.UtilityType.INVISIBILITY,
+      10 => UtilityScript.UtilityType.TEMP_SHIELD,
+
+      _ => UtilityScript.UtilityType.GRENADE
+    };
+  }
+  static Shop.Perk.PerkType GetRandomPerk()
+  {
+    return Random.Range(0, 5) switch
+    {
+      1 => Shop.Perk.PerkType.MAX_AMMO_UP,
+      2 => Shop.Perk.PerkType.EXPLOSION_RESISTANCE,
+      3 => Shop.Perk.PerkType.SMART_BULLETS,
+      4 => Shop.Perk.PerkType.LASER_SIGHTS,
+      5 => Shop.Perk.PerkType.SPEED_UP,
+
+      _ => Shop.Perk.PerkType.FASTER_RELOAD
+    };
+  }
   static void SetRandomLoadout()
   {
 
-    s_PlayerLoadouts = new GameScript.ItemManager.Loadout()
+    if (Random.Range(0, 15) == 0)
     {
-      _equipment = new GameScript.PlayerProfile.Equipment()
+      s_PlayerLoadouts = new GameScript.ItemManager.Loadout()
       {
-        _item_left0 = GameScript.ItemManager.Items.KNIFE,
-        _item_right0 = GameScript.ItemManager.Items.PISTOL_SILENCED
-      }
-    };
+        _equipment = new GameScript.PlayerProfile.Equipment()
+        {
+          _item_left0 = GameScript.ItemManager.Items.KATANA,
+        }
+      };
+    }
+    else
+      switch (Random.Range(0, 7))
+      {
 
+        case 0:
+        case 1:
+        case 2:
+        case 3:
+          s_PlayerLoadouts = new GameScript.ItemManager.Loadout()
+          {
+            _equipment = new GameScript.PlayerProfile.Equipment()
+            {
+              _item_left0 = GetRandomMeleeWeapon(),
+              _item_right0 = Random.Range(0, 4) > 2 ? GetRandomMeleeWeapon() : GetRandomGun(),
+            }
+          };
+          break;
+        case 4:
+          s_PlayerLoadouts = new GameScript.ItemManager.Loadout()
+          {
+            _equipment = new GameScript.PlayerProfile.Equipment()
+            {
+              _item_left0 = GetRandomGun(),
+              _item_right0 = GetRandomGun()
+            }
+          };
+          break;
+        case 5:
+          s_PlayerLoadouts = new GameScript.ItemManager.Loadout()
+          {
+            _equipment = new GameScript.PlayerProfile.Equipment()
+            {
+              _item_left0 = GameScript.ItemManager.Items.NONE,
+              _item_right0 = GetRandomGun()
+            }
+          };
+          break;
+        case 6:
+          s_PlayerLoadouts = new GameScript.ItemManager.Loadout()
+          {
+            _equipment = new GameScript.PlayerProfile.Equipment()
+            {
+              _item_left0 = GetRandomMeleeWeapon(),
+              _item_right0 = GameScript.ItemManager.Items.NONE
+            }
+          };
+          break;
+      }
+
+    // Add utilities
+    if (Random.Range(0, 5) == 0)
+    {
+      s_PlayerLoadouts._equipment._utilities_left = new UtilityScript.UtilityType[Random.Range(1, 4)];
+      var randomUtil = GetRandomUtility();
+      for (var i = 0; i < s_PlayerLoadouts._equipment._utilities_left.Length; i++)
+      {
+        s_PlayerLoadouts._equipment._utilities_left[i] = randomUtil;
+      }
+
+      if (Random.Range(0, 5) == 0)
+      {
+        s_PlayerLoadouts._equipment._utilities_right = new UtilityScript.UtilityType[Random.Range(1, 4)];
+        randomUtil = GetRandomUtility();
+        for (var i = 0; i < s_PlayerLoadouts._equipment._utilities_right.Length; i++)
+        {
+          s_PlayerLoadouts._equipment._utilities_right[i] = randomUtil;
+        }
+      }
+    }
+
+    // Add mods
+    if (Random.Range(0, 5) == 0)
+    {
+      s_PlayerLoadouts._equipment._perks = new();
+      for (var i = 0; i < Random.Range(1, 3); i++)
+      {
+
+        var randomPerk = GetRandomPerk();
+        if (s_PlayerLoadouts._equipment._perks.Contains(randomPerk))
+        {
+          i--;
+          continue;
+        }
+
+        s_PlayerLoadouts._equipment._perks.Add(randomPerk);
+      }
+    }
   }
 
   //

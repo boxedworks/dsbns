@@ -29,6 +29,8 @@ public class DoorScript : CustomEntity
   public List<EnemyScript> _EnemiesEditor;
   public List<EnemyScript> _EnemiesGame;
 
+  bool _forceExtrasOpen { get { return Settings.s_SaveData.LevelData.ExtraEnemyMultiplier == 2 && GameScript.s_GameMode == GameScript.GameModes.CLASSIC && !GameScript._EditorEnabled; } }
+
   // Use this for initialization
   void Start()
   {
@@ -46,6 +48,12 @@ public class DoorScript : CustomEntity
       _obstacle.enabled = false;
     }
 
+    // Special case
+    if (_forceExtrasOpen && _Opened)
+    {
+      _Opened = false;
+      Toggle(false);
+    }
   }
 
   public void RegisterEnemyEditor(EnemyScript e)
@@ -135,6 +143,8 @@ public class DoorScript : CustomEntity
 
   public void Toggle()
   {
+    if (_forceExtrasOpen) return;
+
     if (_Button != null)
     {
       SfxManager.PlayAudioSourceSimple(transform.position, "Ragdoll/Tick");

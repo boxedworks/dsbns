@@ -183,7 +183,7 @@ public static class Settings
     }
   }
 
-  public static float _VERSION = 1.43f;
+  public static float _VERSION = 1.44f;
 
   // Struct holding info what item pair gets unlocked at what level
   public class WeaponPair
@@ -951,6 +951,7 @@ public static class Settings
       public bool ReloadSameTime;
     }
     public List<PlayerProfile> PlayerProfiles;
+    public bool ShowLoadoutIndexes = true;
 
     public void UpdatePlayerProfile(int id, PlayerProfile playerProfile)
     {

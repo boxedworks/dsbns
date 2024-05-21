@@ -78,7 +78,8 @@ public class GameScript : MonoBehaviour
   }
 
   static float _levelEndTimer;
-  public static bool _inLevelEnd;
+  public static PlayerScript s_InLevelEndPlayer;
+  public static bool _inLevelEnd { get { return s_InLevelEndPlayer != null; } }
   static ParticleSystem _LevelEndParticles;
 
   public static Color _LightingAmbientColor;
@@ -216,6 +217,7 @@ public class GameScript : MonoBehaviour
 
     //
     VersusMode.Init();
+    SurvivalMode.InitLight();
 
     // Play menu music
     FunctionsC.MusicManager.PlayTrack(Settings._DifficultyUnlocked == 0 && !Levels._UnlockAllLevels ? 0 : 1);
@@ -309,14 +311,14 @@ public class GameScript : MonoBehaviour
 
       var spawnOrder = new int[numTeams];
       rnd.Shuffle(spawnList);
-      //if (spawnOrder.Length <= spawnList.Length)
-      for (var i = 0; i < spawnOrder.Length; i++)
-        spawnOrder[i] = spawnList[i];
+      if (spawnOrder.Length <= spawnList.Length)
+        for (var i = 0; i < spawnOrder.Length; i++)
+          spawnOrder[i] = spawnList[i];
 
       if (!s_CustomNetworkManager._Connected || s_CustomNetworkManager._IsServer)
         if (_PlayerIter < Settings._NumberPlayers)
           for (; _PlayerIter < Settings._NumberPlayers; _PlayerIter++)
-            PlayerspawnScript._PlayerSpawns[spawnList[VersusMode.GetTeamId(_PlayerIter)]].SpawnPlayer();
+            PlayerspawnScript._PlayerSpawns[spawnList[VersusMode.GetTeamId(_PlayerIter) % spawnList.Length]].SpawnPlayer();
     }
   }
 
@@ -503,7 +505,7 @@ public class GameScript : MonoBehaviour
 
     public static Vector3 _AllSpawn;
 
-    public static ItemManager.Loadout[] _PlayerLoadouts;
+    public static ItemManager.Loadout[] s_PlayerLoadouts;
     static int[] _PlayerScores, _PlayerScores_Total;
 
     static public List<System.Tuple<GameObject, float>> _Money;
@@ -533,6 +535,18 @@ public class GameScript : MonoBehaviour
 
     public static List<int> _EnabledSpawners;
 
+    public static void InitLight()
+    {
+      s_PlayerLoadouts = new ItemManager.Loadout[4];
+      for (var i = 0; i < s_PlayerLoadouts.Length; i++)
+      {
+        s_PlayerLoadouts[i] = new ItemManager.Loadout();
+        s_PlayerLoadouts[i]._equipment = new PlayerProfile.Equipment();
+        s_PlayerLoadouts[i]._two_weapon_pairs = true;
+        OnPlayerDead(i);
+      }
+    }
+
     public static void Init()
     {
       _WavePlaying = false;
@@ -549,12 +563,12 @@ public class GameScript : MonoBehaviour
       Stats.Reset_Local();
 
       // Assign starting player loadouts
-      _PlayerLoadouts = new ItemManager.Loadout[4];
-      for (var i = 0; i < _PlayerLoadouts.Length; i++)
+      s_PlayerLoadouts = new ItemManager.Loadout[4];
+      for (var i = 0; i < s_PlayerLoadouts.Length; i++)
       {
-        _PlayerLoadouts[i] = new ItemManager.Loadout();
-        _PlayerLoadouts[i]._equipment = new PlayerProfile.Equipment();
-        _PlayerLoadouts[i]._two_weapon_pairs = true;
+        s_PlayerLoadouts[i] = new ItemManager.Loadout();
+        s_PlayerLoadouts[i]._equipment = new PlayerProfile.Equipment();
+        s_PlayerLoadouts[i]._two_weapon_pairs = true;
         OnPlayerDead(i);
       }
 
@@ -605,14 +619,14 @@ public class GameScript : MonoBehaviour
     // Revert player loadout to starting loadout
     public static void OnPlayerDead(int playerId)
     {
-      _PlayerLoadouts[playerId]._equipment._utilities_left = new UtilityScript.UtilityType[] { UtilityScript.UtilityType.GRENADE, };
-      _PlayerLoadouts[playerId]._equipment._utilities_right = new UtilityScript.UtilityType[0];
-      _PlayerLoadouts[playerId]._equipment._item_left0 = ItemManager.Items.KNIFE;
-      _PlayerLoadouts[playerId]._equipment._item_right0 = ItemManager.Items.NONE;
-      _PlayerLoadouts[playerId]._equipment._item_left1 = ItemManager.Items.NONE;
-      _PlayerLoadouts[playerId]._equipment._item_right1 = ItemManager.Items.NONE;
+      s_PlayerLoadouts[playerId]._equipment._utilities_left = new UtilityScript.UtilityType[] { UtilityScript.UtilityType.GRENADE, };
+      s_PlayerLoadouts[playerId]._equipment._utilities_right = new UtilityScript.UtilityType[0];
+      s_PlayerLoadouts[playerId]._equipment._item_left0 = ItemManager.Items.KNIFE;
+      s_PlayerLoadouts[playerId]._equipment._item_right0 = ItemManager.Items.NONE;
+      s_PlayerLoadouts[playerId]._equipment._item_left1 = ItemManager.Items.NONE;
+      s_PlayerLoadouts[playerId]._equipment._item_right1 = ItemManager.Items.NONE;
 
-      _PlayerLoadouts[playerId]._equipment._perks.Clear();
+      s_PlayerLoadouts[playerId]._equipment._perks.Clear();
 
       // Check for unlocks
       if (PlayerScript._All_Dead)
@@ -1673,7 +1687,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     if (Time.unscaledTime - _lastInputCheck > 0.25f)
     {
       _lastInputCheck = Time.unscaledTime;
-      Settings._NumberPlayers = 4;//(ControllerManager._NumberGamepads) + (Settings._ForceKeyboard ? 1 : 0);
+      Settings._NumberPlayers = (ControllerManager._NumberGamepads) + (Settings._ForceKeyboard ? 1 : 0);
       if (s_CustomNetworkManager._Connected)
         Settings._NumberPlayers += s_CustomNetworkManager._Players.Count - 1;
       if (Settings._NumberPlayers == 0)
@@ -1692,6 +1706,13 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         // Pause if a controller was unplugged and playing
         if (!Menu2._InMenus && (!_EditorTesting) && Settings._NumberControllers != PlayerScript.s_Players.Count)
           Menu2.OnControllersChanged(Settings._NumberControllers - numcontrollers_save, numcontrollers_save);
+
+        // Check if menu
+        if (Menu2._InMenus && Menu2._CurrentMenu._Type == Menu2.MenuType.VERSUS)
+        {
+          Menu2._CanRender = false;
+          Menu2.RenderMenu();
+        }
       }
     }
 
@@ -1778,7 +1799,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
                 MarkLevelCompleted();
               }
 
-              _inLevelEnd = false;
+              s_InLevelEndPlayer = null;
               _levelEndTimer = 0f;
 
               // Check who got the goal
@@ -1802,11 +1823,16 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
 
           // Check timer with particles
           {
-            if (_LevelEndParticles == null) _LevelEndParticles = PlayerspawnScript._PlayerSpawns[0].GetComponent<ParticleSystem>();
+            if (_LevelEndParticles == null && _inLevelEnd) _LevelEndParticles = PlayerspawnScript._PlayerSpawns[s_InLevelEndPlayer?._PlayerSpawnId ?? 0].GetComponent<ParticleSystem>();
             if (_inLevelEnd && !_LevelEndParticles.isPlaying)
+            {
               _LevelEndParticles.Play();
-            else if (!_inLevelEnd && _LevelEndParticles.isPlaying)
+            }
+            else if (!_inLevelEnd && (_LevelEndParticles?.isPlaying ?? false))
+            {
               _LevelEndParticles.Stop();
+              _LevelEndParticles = null;
+            }
             /*if (_LevelEndParticles.isPlaying && _levelEndTimer > 0f)
             {
               // Emit particles for feedback
@@ -2117,7 +2143,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         if (s_GameMode == GameModes.VERSUS) return VersusMode.s_PlayerLoadouts;
 
         // SURVIVAL mode
-        if (s_GameMode == GameModes.SURVIVAL && SurvivalMode._PlayerLoadouts != null) return SurvivalMode._PlayerLoadouts[_Id];
+        if (s_GameMode == GameModes.SURVIVAL && SurvivalMode.s_PlayerLoadouts != null) return SurvivalMode.s_PlayerLoadouts[_Id];
 
         // CLASSIC mode
         return ItemManager.Loadout._Loadouts[_LoadoutIndex];
@@ -2230,6 +2256,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     }
     Transform _UI { get { return GameResources._UI_Player.GetChild(_Id); } }
     public Transform _VersusUI;
+    TMPro.TextMeshPro _loadoutIndexText;
 
     MeshRenderer[] _health_UI, _perk_UI;
 
@@ -2237,6 +2264,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     {
       _Id = s_iD++;
       _VersusUI = _UI.GetChild(6);
+      _loadoutIndexText = _UI.GetChild(7).GetComponent<TMPro.TextMeshPro>();
 
       if (s_Profiles == null) s_Profiles = new PlayerProfile[4];
       s_Profiles[_Id] = this;
@@ -2738,6 +2766,43 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       scoreText.text = $"{score}";
     }
 
+    // Update loadout index
+    public void UpdateLoadoutIndex()
+    {
+      var bg = _UI.GetChild(1).transform;
+
+      if (s_GameMode == GameModes.CLASSIC && SettingsModule.ShowLoadoutIndexes)
+      {
+        _loadoutIndexText.enabled = true;
+        _loadoutIndexText.text = $"{_LoadoutIndex + 1}";
+
+        var xpos = 0.49f;
+        var ypos = -0.24f;
+        if (bg.localScale.y >= 4.14f)
+        {
+          xpos = 3.82f;
+        }
+        else if (bg.localScale.y >= 3.29f)
+        {
+          xpos = 3f;
+        }
+        else if (bg.localScale.y >= 2.44f)
+        {
+          xpos = 2.17f;
+        }
+        else if (bg.localScale.y >= 1.59f)
+        {
+          xpos = 1.36f;
+        }
+
+        _loadoutIndexText.transform.localPosition = new Vector3(xpos, ypos, 0f);
+      }
+      else
+      {
+        _loadoutIndexText.enabled = false;
+      }
+    }
+
     //
     public void UpdateIcons()
     {
@@ -2762,6 +2827,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         bg.localScale = new Vector3(0.6f, 0.74f, 0.001f);
 
         UpdateVersusUI();
+        UpdateLoadoutIndex();
         return;
       }
       var equipmentIter = 0;
@@ -2991,6 +3057,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
 
       //
       UpdateVersusUI();
+      UpdateLoadoutIndex();
     }
 
     //
@@ -3507,7 +3574,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     {
       Time.timeScale = 1f;
       // Check player amount change
-      if (s_GameMode != GameModes.SURVIVAL)
+      if (s_GameMode == GameModes.CLASSIC)
         if (PlayerScript.s_Players != null && Settings._NumberPlayers != PlayerScript.s_Players.Count) TileManager.ReloadMap();
       TileManager._Text_LevelNum.gameObject.SetActive(true);
       TileManager._Text_LevelTimer.gameObject.SetActive(true);
@@ -3912,7 +3979,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
   }
   static IEnumerator NextLevelCo(string levelData)
   {
-    _inLevelEnd = false;
+    s_InLevelEndPlayer = null;
 
     // Fix players
     if (PlayerScript.s_Players != null)

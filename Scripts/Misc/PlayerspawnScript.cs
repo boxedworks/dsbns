@@ -40,11 +40,13 @@ public class PlayerspawnScript : MonoBehaviour
 
   public GameObject _visual;
 
+  int _id;
   // Use this for initialization
   void Start()
   {
     if (_PlayerSpawns == null) _PlayerSpawns = new List<PlayerspawnScript>();
     _PlayerSpawns.Add(this);
+    _id = _PlayerSpawns.Count - 1;
 
     if (!GameScript._EditorEnabled)
       _visual.SetActive(false);
@@ -63,9 +65,12 @@ public class PlayerspawnScript : MonoBehaviour
     player.transform.parent = GameObject.Find("Players").transform;
     player.name = "Player";
 
+    var playerScript = player.transform.GetChild(0).GetComponent<PlayerScript>();
+    playerScript._PlayerSpawnId = _id;
+
     // Spawn them based on the this transform
     var spawnPosition = transform.position;
-    if (!VersusMode.s_Settings._FreeForAll)
+    if ((GameScript.s_GameMode == GameScript.GameModes.VERSUS && !VersusMode.s_Settings._FreeForAll) || (GameScript.s_GameMode == GameScript.GameModes.SURVIVAL))
     {
       var numSpawns = _PlayerSpawns.Count;
       var numPlayers = Settings._NumberPlayers;
@@ -90,6 +95,6 @@ public class PlayerspawnScript : MonoBehaviour
     if (GameScript.s_CustomNetworkManager._Connected)
       NetworkServer.Spawn(player, GameScript.s_CustomNetworkManager.GetPlayer(playerId)._NetworkBehavior.connectionToClient);
 
-    return player.transform.GetChild(0).GetComponent<PlayerScript>();
+    return playerScript;
   }
 }

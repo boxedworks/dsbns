@@ -244,18 +244,18 @@ public class ItemScript : MonoBehaviour
     return iter;
   }
   // Play SFX via enum
-  protected void PlaySound(Audio audioType, float pitchMin = 0.9f, float pitchMax = 1.1f)
+  protected void PlaySound(Audio audioType, float pitchMin = 0.9f, float pitchMax = 1.1f, bool priorty = false)
   {
-    var sfx = PlaySound(GetAudioSource(audioType), pitchMin, pitchMax);
+    var sfx = PlaySound(GetAudioSource(audioType), pitchMin, pitchMax, priorty);
     if (audioType == Audio.MELEE_SWING || audioType == Audio.GUN_RELOAD)
     {
       _sfx_hold = sfx;
     }
   }
-  protected AudioSource PlaySound(int source_index, float pitchMin = 0.9f, float pitchMax = 1.1f)
+  protected AudioSource PlaySound(int source_index, float pitchMin = 0.9f, float pitchMax = 1.1f, bool priority = false)
   {
     if (source_index == -1) return null;
-    return transform.PlayAudioSourceSimple(_sfx_clip[source_index], SfxManager.AudioClass.NONE, _sfx_volume[source_index], Random.Range(pitchMin, pitchMax));
+    return transform.PlayAudioSourceSimple(_sfx_clip[source_index], SfxManager.AudioClass.NONE, _sfx_volume[source_index], Random.Range(pitchMin, pitchMax), priority);
   }
 
   //
@@ -1259,7 +1259,7 @@ public class ItemScript : MonoBehaviour
         rotation3D = bulletRot.eulerAngles
       };
       bullet_casing.Emit(emitParams, 1);
-      SfxManager.PlayAudioSourceSimple(spawnPos, "Ragdoll/Bullet_Casing", 0.8f, 1.2f);
+      SfxManager.PlayAudioSourceSimple(spawnPos, "Ragdoll/Bullet_Casing", 0.8f, 1.2f, SfxManager.AudioClass.BULLET_SFX);
 
       // Gun embers
       var ps_gunsmoke = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.GUN_FIRE)[0];
