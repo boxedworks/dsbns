@@ -1075,7 +1075,7 @@ public static class Settings
     public int ShopPoints = 3;
     public int ShopDisplayMode = 0;
     public int ShopLoadoutDisplayMode = 0;
-    public string ShopUnlockString;
+    public string ShopUnlockString = "";
 
     [System.Serializable]
     public struct ShopUnlock

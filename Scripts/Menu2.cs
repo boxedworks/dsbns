@@ -6733,9 +6733,9 @@ go to the <color=yellow>SHOP</color> to buy something~1
             _SaveMenuDir = _SaveLevelSelected = -1;
 
             // Erase save
-            if (System.IO.File.Exists("save.json.backup"))
-              System.IO.File.Delete("save.json.backup");
-            System.IO.File.Move("save.json", "save.json.backup");
+            if (File.Exists("save.json.backup"))
+              File.Delete("save.json.backup");
+            File.Move("save.json", "save.json.backup");
 
             // Reload settings
             Shop.Init();
@@ -8133,6 +8133,9 @@ about extras</color>
 
       return;
     }
+
+    //
+    //Debug.Log("input " + input);
 
     // Switch input
     switch (input)

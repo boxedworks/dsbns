@@ -2296,6 +2296,16 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     public void HandleMenuInput()
     {
 
+      // Accommodate for _ForceKeyboard; checking for -1 controllerID and controllerID > Gamepad.all.Count
+      if (
+        Settings._ForceKeyboard && _Id == 0 ||
+        _Id + (Settings._ForceKeyboard ? -1 : 0) >= ControllerManager._NumberGamepads
+        )
+      {
+        _menuDownTime_down = _menuDownTime_up = 0f;
+        return;
+      }
+
       // Check axis hold
       if (!(_menuDownTime_down != 0f && _menuDownTime_up != 0f))
       {
@@ -2312,12 +2322,6 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
           Up();
         }
       }
-
-      // Accommodate for _ForceKeyboard; checking for -1 controllerID and controllerID > Gamepad.all.Count
-      if (Settings._ForceKeyboard && _Id == 0)
-        return;
-      if (_Id + (Settings._ForceKeyboard ? -1 : 0) >= ControllerManager._NumberGamepads)
-        return;
 
       // Check axis selections
       for (var i = 0; i < 2; i++)
@@ -3762,15 +3766,53 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
   {
 
 #if UNITY_EDITOR
-    if (anyDifficulty)
+    /*if (anyDifficulty)
       Settings._DIFFICULTY = Levels._CurrentLevelCollectionIndex = Random.Range(0, 2);
     NextLevel(Random.Range(0, Levels._CurrentLevelCollection._levelData.Length));
-    return;
+    return;*/
 #endif
 
-    if (anyDifficulty)
-      Settings._DIFFICULTY = Levels._CurrentLevelCollectionIndex = Random.Range(0, Settings._DifficultyUnlocked + 1);
-    NextLevel(Random.Range(0, Settings._LevelsCompleted_Current.Count));
+    if (anyDifficulty && Settings._DifficultyUnlocked > 0)
+    {
+      var highestLevelCompleted = 0;
+      var levels1 = LevelModule.LevelData[1].Data;
+      for (var i = levels1.Count - 1; i >= 0; i--)
+      {
+        var levelData = levels1[i];
+        if (levelData.Completed)
+        {
+          highestLevelCompleted = i;
+          break;
+        }
+      }
+
+      var randomLevel = Random.Range(0, 131 + highestLevelCompleted + 1);
+      if (randomLevel > 131)
+      {
+        Settings._DIFFICULTY = 1;
+        randomLevel -= 131;
+
+      }
+      else
+        Settings._DIFFICULTY = 0;
+      NextLevel(Mathf.Clamp(randomLevel, 0, Settings._LevelsCompleted_Current.Count));
+    }
+
+    else
+    {
+      var highestLevelCompleted = 0;
+      var levels = Settings._LevelsCompleted_Current;
+      for (var i = levels.Count - 1; i >= 0; i--)
+      {
+        var levelData = levels[i];
+        if (levelData.Completed)
+        {
+          highestLevelCompleted = i;
+          break;
+        }
+      }
+      NextLevel(Mathf.Clamp(Random.Range(0, highestLevelCompleted + 2), 0, levels.Count));
+    }
   }
 
   // Increment level menu
