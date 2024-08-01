@@ -183,7 +183,7 @@ public static class Settings
     }
   }
 
-  public static float _VERSION = 1.44f;
+  public static float _VERSION = 1.45f;
 
   // Struct holding info what item pair gets unlocked at what level
   public class WeaponPair
@@ -470,7 +470,7 @@ public static class Settings
         }
     );
 
-    // Chaser
+    /*/ Chaser
     s_Extra_UnlockCriterea.Add(
         Shop.Unlocks.EXTRA_CHASE,
         new UnlockCriteria
@@ -487,7 +487,7 @@ public static class Settings
           utilities = null,
           perks = null
         }
-    );
+    );*/
 
     // Enemy off
     s_Extra_UnlockCriterea.Add(

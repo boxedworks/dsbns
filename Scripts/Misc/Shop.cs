@@ -417,7 +417,7 @@ public static class Shop
       _Unlocks_Vault.Add("classic_9", new Unlocks[] { Unlocks.ITEM_RIFLE_LEVER, Unlocks.MOD_EXPLOSIVE_PARRY, Unlocks.LOADOUT_SLOT_X2_3, Unlocks.MAX_EQUIPMENT_POINTS_5 });
       _Unlocks_Vault.Add("classic_10", new Unlocks[] { Unlocks.ITEM_RIFLE_CHARGE, Unlocks.UTILITY_MORTAR_STRIKE, Unlocks.MOD_EXPLOSIONS_UP });
 
-      _Unlocks_Vault.Add("classic_11", new Unlocks[] { Unlocks.ITEM_SNIPER, Unlocks.MODE_EXTRAS, Unlocks.LOADOUT_SLOT_X2_4 });
+      _Unlocks_Vault.Add("classic_11", new Unlocks[] { Unlocks.MODE_EXTRAS, Unlocks.EXTRA_CHASE, Unlocks.ITEM_SNIPER, Unlocks.LOADOUT_SLOT_X2_4 });
       _Unlocks_Vault.Add("classic_12", new Unlocks[] { Unlocks.ITEM_KATANA, Unlocks.ITEM_DMR, Unlocks.ITEM_SHOTGUN_DOUBLE, });
       _Unlocks_Vault.Add("classic_13", new Unlocks[] { Unlocks.MOD_EXPLOSION_RESISTANCE, Unlocks.MAX_EQUIPMENT_POINTS_6 });
       _Unlocks_Vault.Add("classic_14", new Unlocks[] { Unlocks.LOADOUT_SLOT_X2_5, });
