@@ -183,7 +183,7 @@ public static class Settings
     }
   }
 
-  public static float _VERSION = 1.45f;
+  public static float _VERSION = 1.46f;
 
   // Struct holding info what item pair gets unlocked at what level
   public class WeaponPair
@@ -470,24 +470,23 @@ public static class Settings
         }
     );
 
-    /*/ Chaser
+    // Chaser
     s_Extra_UnlockCriterea.Add(
         Shop.Unlocks.EXTRA_CHASE,
         new UnlockCriteria
         {
-          level = 113,
+          level = -1,
           difficulty = 0,
-          rating = 2,
-          extras = new Shop.Unlocks[] { Shop.Unlocks.EXTRA_HORDE },
-          loadoutDesc = "knife, double-barrel shotgun",
+          rating = 0,
+          extras = null,
+          loadoutDesc = "free purchase in the shop",
           items = new GameScript.ItemManager.Items[] {
-            GameScript.ItemManager.Items.KNIFE,
-            GameScript.ItemManager.Items.SHOTGUN_DOUBLE
-            },
+            GameScript.ItemManager.Items.KNIFE
+          },
           utilities = null,
           perks = null
         }
-    );*/
+    );
 
     // Enemy off
     s_Extra_UnlockCriterea.Add(
@@ -904,6 +903,8 @@ public static class Settings
 
     public int BloomAmount = 2;
     public int DepthOfFieldAmount = 2;
+
+    public bool UseSmokeFx = true;
 
     public enum CameraZoomType
     {

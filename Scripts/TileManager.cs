@@ -25,7 +25,7 @@ public class TileManager
   static Transform _Tile_begin, _Tile_end;
   public static Transform _Map, _Tile;
   public static Transform _Floor { get { return _Map.transform.GetChild(0); } }
-  public static UnityEngine.AI.NavMeshSurface _navMeshSurface, _navMeshSurface2;
+  public static Unity.AI.Navigation.NavMeshSurface _navMeshSurface, _navMeshSurface2;
   static List<string> s_levelObjectData;
   public static string _CurrentLevel_Name,
     _CurrentLevel_Loadout;
@@ -537,10 +537,13 @@ public class TileManager
     color.a = 1f;
     material.color = color;
 
+    //
+    System.GC.Collect();
+
     // Show unlocks
     _LoadingMap = false;
-    if (!Menu2._InMenus && Shop.s_UnlockString != string.Empty)
-      GameScript.TogglePause(Menu2.MenuType.NONE);
+    if (!Menu._InMenus && Shop.s_UnlockString != string.Empty)
+      GameScript.TogglePause(Menu.MenuType.NONE);
 
     while (GameScript._Paused)
       yield return new WaitForSeconds(0.05f);
@@ -586,7 +589,7 @@ public class TileManager
       // If fails to load map, just load the first level
       catch (System.FormatException e)
       {
-        Menu2.QuickEnableMenus();
+        Menu.QuickEnableMenus();
 
         GameScript._Coroutine_load = null;
         _LoadingMap = false;
@@ -727,7 +730,7 @@ public class TileManager
         {
           foreach (var p in Players)
           {
-            if (p._ragdoll._IsDead) continue;
+            if (p._Ragdoll._IsDead) continue;
             usePos = p.transform.position;
             _lastUsePos = usePos;
           }
@@ -944,7 +947,8 @@ public class TileManager
 
       // Hide playerspawn
       var isSurvival = GameScript.s_GameMode == GameScript.GameModes.SURVIVAL && !GameScript._EditorEnabled;
-      foreach(var spawn in PlayerspawnScript._PlayerSpawns){
+      foreach (var spawn in PlayerspawnScript._PlayerSpawns)
+      {
         spawn.transform.GetChild(1).gameObject.SetActive(!isSurvival);
       }
 
@@ -1026,9 +1030,9 @@ public class TileManager
       // Spawn players / hide menus
       if (_s_MapIndex > 1)
       {
-        if (Menu2._InMenus)
+        if (Menu._InMenus)
         {
-          Menu2.HideMenus();
+          Menu.HideMenus();
         }
 
         // Versus mode
@@ -1041,12 +1045,12 @@ public class TileManager
 
       // Refill player ammo
       if (Players != null)
-        foreach (var p in Players) p._ragdoll.RefillAmmo();
+        foreach (var p in Players) p._Ragdoll.RefillAmmo();
       OnMapLoad();
 
       // Append to maps
       if (appendToEditMaps)
-        Menu2.AppendToEditMaps($"{level_meta[0]} +{_CurrentLevel_Name}" + (level_meta[2] == null ? "" : $"!{level_meta[2]}") + (level_meta[3] == null ? "" : $"*{level_meta[3]}"));
+        Menu.AppendToEditMaps($"{level_meta[0]} +{_CurrentLevel_Name}" + (level_meta[2] == null ? "" : $"!{level_meta[2]}") + (level_meta[3] == null ? "" : $"*{level_meta[3]}"));
 
       GameScript._Coroutine_load = null;
       _LoadingMap = false;
@@ -1288,7 +1292,7 @@ public class TileManager
     {
       var hardmodeadd = Settings._DIFFICULTY == 1 ? "*" : "";
       _Text_LevelNum.text = $"{Levels._CurrentLevelIndex + 1}{hardmodeadd}";
-      if (Menu2._InMenus)
+      if (Menu._InMenus)
       {
         _Text_LevelNum.gameObject.SetActive(false);
         _Text_LevelTimer.gameObject.SetActive(false);
@@ -2566,8 +2570,8 @@ public class TileManager
           controller.position = e._startPosition;
           var controller_visual = GiveEnemyVisual(ref controller);
           ChangeEnemyType(e, controller_visual.GetComponent<MeshRenderer>());
-          controller.GetComponent<UnityEngine.AI.NavMeshAgent>().enabled = false;
-          GameObject.Destroy(e.GetRagdoll().Transform.gameObject);
+          controller.GetComponent<NavMeshAgent>().enabled = false;
+          GameObject.Destroy(e._Ragdoll.Transform.gameObject);
         }
       if (EnemyScript._Enemies_dead != null)
         foreach (var e in EnemyScript._Enemies_dead)
@@ -2582,8 +2586,8 @@ public class TileManager
           controller.position = e._startPosition;
           var controller_visual = GiveEnemyVisual(ref controller);
           ChangeEnemyType(e, controller_visual.GetComponent<MeshRenderer>());
-          controller.GetComponent<UnityEngine.AI.NavMeshAgent>().enabled = false;
-          GameObject.Destroy(e.GetRagdoll().Transform.gameObject);
+          controller.GetComponent<NavMeshAgent>().enabled = false;
+          GameObject.Destroy(e._Ragdoll.Transform.gameObject);
         }
     }
     // If survival, don't save enemy positions
@@ -4857,7 +4861,7 @@ public class TileManager
     {
       _SceneMaterials = new Material[13];
       for (int i = 0; i < _SceneMaterials.Length; i++)
-        _SceneMaterials[i] = new Material(Menu2._Menu.GetChild(1).gameObject.GetComponent<MeshRenderer>().sharedMaterial);
+        _SceneMaterials[i] = new Material(Menu._Menu.GetChild(1).gameObject.GetComponent<MeshRenderer>().sharedMaterial);
     }
     void ChangeColorAndDelete(Transform t0, int index, Color c0)
     {
@@ -5163,7 +5167,7 @@ public class TileManager
     container.localScale = new Vector3(0.17f * mod, 0.17f * mod, 0.01f);
 
     // Set position
-    container.parent = Menu2._Text.transform;
+    container.parent = Menu._Text.transform;
     if (GameScript._lp0 != null && GameScript._lp0.gameObject != null)
     {
       GameObject.Destroy(GameScript._lp0.gameObject);
@@ -5171,12 +5175,12 @@ public class TileManager
     }
 
     // Set preview pos
-    if (Menu2._CurrentMenu._Type == Menu2.MenuType.EDITOR_LEVELS)
+    if (Menu._CurrentMenu._Type == Menu.MenuType.EDITOR_LEVELS)
     {
       container.parent = GameResources._Camera_Main.transform;
       container.localPosition = new Vector3(2.8f, 1.5f, 6f);
     }
-    else if (Menu2._CurrentMenu._Type == Menu2.MenuType.EDITOR_PACKS_EDIT)
+    else if (Menu._CurrentMenu._Type == Menu.MenuType.EDITOR_PACKS_EDIT)
     {
       container.parent = GameResources._Camera_Main.transform;
       container.localPosition = new Vector3(2.8f, 1.5f, 6f);
@@ -5198,10 +5202,10 @@ public class TileManager
       // Check no longer in menu
       bool getout = false;
       if (
-        !Menu2._InMenus ||
+        !Menu._InMenus ||
         (
-          ((Menu2._CurrentMenu._Type != Menu2.MenuType.LEVELS) || (Menu2._CurrentMenu._Type == Menu2.MenuType.LEVELS && Menu2._CurrentMenu._dropdownCount == 0)) &&
-          (Menu2._CurrentMenu._Type != Menu2.MenuType.EDITOR_LEVELS && Menu2._CurrentMenu._Type != Menu2.MenuType.EDITOR_PACKS_EDIT)
+          ((Menu._CurrentMenu._Type != Menu.MenuType.LEVELS) || (Menu._CurrentMenu._Type == Menu.MenuType.LEVELS && Menu._CurrentMenu._dropdownCount == 0)) &&
+          (Menu._CurrentMenu._Type != Menu.MenuType.EDITOR_LEVELS && Menu._CurrentMenu._Type != Menu.MenuType.EDITOR_PACKS_EDIT)
         )
         )
       {

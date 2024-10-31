@@ -31,6 +31,8 @@ public class UtilityScript : ItemScript
     TACTICAL_BULLET,
 
     MOLOTOV,
+
+    MIRROR,
   }
 
   public UtilityType _utility_type;
@@ -60,14 +62,14 @@ public class UtilityScript : ItemScript
     _customProjectileId = source._ItemId;
   }
 
-  static Dictionary<UtilityType, List<UtilityScript>> _Utilities_Thrown;
+  public static Dictionary<UtilityType, List<UtilityScript>> s_Utilities_Thrown;
   public static void Reset()
   {
-    _Utilities_Thrown = new Dictionary<UtilityType, List<UtilityScript>>();
+    s_Utilities_Thrown = new Dictionary<UtilityType, List<UtilityScript>>();
     foreach (var enum_ in System.Enum.GetValues(typeof(UtilityType)))
     {
       var t = (UtilityType)enum_;
-      _Utilities_Thrown[t] = new List<UtilityScript>();
+      s_Utilities_Thrown[t] = new List<UtilityScript>();
     }
   }
 
@@ -79,7 +81,7 @@ public class UtilityScript : ItemScript
   public static void Detonate_UtilitiesById(ItemScript source, UtilityType utilityType, int count = -1)
   {
 
-    var utilities = _Utilities_Thrown[utilityType];
+    var utilities = s_Utilities_Thrown[utilityType];
     var exploded = 0;
     for (var i = 0; i < utilities.Count; i++)
     {
@@ -97,7 +99,7 @@ public class UtilityScript : ItemScript
   }
   static public void ParentUtilitiesById(int itemIdOld, int itemIdNew, UtilityType utilityType)
   {
-    foreach (var utility in _Utilities_Thrown[utilityType])
+    foreach (var utility in s_Utilities_Thrown[utilityType])
       if (utility._customProjectileId == itemIdOld)
         utility._customProjectileId = itemIdNew;
   }
@@ -193,6 +195,10 @@ public class UtilityScript : ItemScript
       case UtilityType.TACTICAL_BULLET:
         _throwSpeed = 3f;
         _spinYAxis = true;
+        break;
+      case UtilityType.MIRROR:
+        _throwSpeed = 3f;
+        _spin = false;
         break;
 
       case UtilityType.C4:
@@ -759,25 +765,10 @@ public class UtilityScript : ItemScript
                   if (this == null || !gameObject.activeSelf) break;
 
                   //
-                  var usePlayers = true;
                   var targetPosition = Vector3.zero;
-                  if (!EnemyScript.AllDead())
-                  {
-                    var closestEnemy = FunctionsC.GetClosestEnemyTo(transform.position, false);
-                    if (closestEnemy._ragdoll != null)
-                    {
-                      usePlayers = false;
-                      targetPosition = closestEnemy._ragdoll._Hip.position;
-                    }
-                  }
-                  if (usePlayers)
-                  {
-                    var closestPlayer = FunctionsC.GetClosestPlayerTo(targetPosition, _ragdoll._PlayerScript._Id);
-                    if (closestPlayer._ragdoll != null)
-                    {
-                      targetPosition = closestPlayer._ragdoll._Hip.position;
-                    }
-                  }
+                  var closestTarget = FunctionsC.GetClosestTargetTo(_ragdoll, transform.position, false);
+                  if (closestTarget._ragdoll != null)
+                    targetPosition = closestTarget._ragdoll._Hip.position;
 
                   if (targetPosition != Vector3.zero)
                   {
@@ -824,6 +815,73 @@ public class UtilityScript : ItemScript
 
           break;
 
+        //
+        case UtilityType.MIRROR:
+
+          //
+          _onTriggerEnter += (Collider c) =>
+          {
+
+            // Projectile handler
+            if (SimpleProjectileHandler(_c, c))
+              return;
+          };
+
+          // Add kill on impact event
+          _onCollisionEnter += (Collision c) =>
+          {
+
+            // Projectile handler
+            if (SimpleProjectileHandler(_c, c.collider))
+              return;
+
+            // Ragdoll
+            var rag = ActiveRagdoll.GetRagdoll(c.collider.gameObject);
+            var killed = false;
+            if (rag != null)
+            {
+              if (rag._Id == _ragdoll._Id) return;
+              if (rag._IsDead) return;
+              killed = true;
+              transform.parent = c.transform;
+              rag.TakeDamage(
+                new ActiveRagdoll.RagdollDamageSource()
+                {
+                  Source = _ragdoll,
+
+                  HitForce = new Vector3(0f, 1f, 0f),
+
+                  Damage = 1,
+                  DamageSource = _ragdoll._Hip.position,
+                  DamageSourceType = ActiveRagdoll.DamageSourceType.THROW_MELEE,
+
+                  SpawnBlood = true,
+                  SpawnGiblets = false
+                });
+              PlaySound(Audio.UTILITY_ACTION);
+            }
+
+            EnemyScript.CheckSound(transform.position, killed ? EnemyScript.Loudness.SUPERSOFT : EnemyScript.Loudness.SOFT);
+            transform.GetChild(1).GetComponent<ParticleSystem>().Stop();
+            GameObject.Destroy(_rb);
+            _stuck = true;
+
+            // Stop ignoring holder's ragdoll
+            _ragdoll.IgnoreCollision(_c, false);
+            _c.enabled = true;
+            _c.isTrigger = true;
+            GetComponent<BoxCollider>().isTrigger = true;
+            PlaySound(Audio.UTILITY_HIT_FLOOR);
+
+          };
+          // Throw and queue next
+          transform.GetChild(1).GetComponent<ParticleSystem>().Play();
+
+          Throw();
+          Unregister();
+          break;
+
+        //
         case UtilityType.C4:
 
           incrementClip = false;
@@ -1070,7 +1128,7 @@ public class UtilityScript : ItemScript
     _thrownTimer = Time.time;
 
     // Check for max utils
-    var utils_thrown = _Utilities_Thrown[_utility_type];
+    var utils_thrown = s_Utilities_Thrown[_utility_type];
     var maxed = utils_thrown.Count > 25;
     if (maxed)
     {
@@ -1101,7 +1159,7 @@ public class UtilityScript : ItemScript
     var spawnPosition = _spawnLocation != Vector3.zero ? _spawnLocation :
       _ragdoll._spine.transform.position + forward * 0.5f + new Vector3(0f, (_explosion != null ? 0.25f : 0.1f), 0f);
     spawnPosition.y = BulletScript.s_BULLET_HEIGHT;
-    transform.position = _throwPosition = spawnPosition;
+    _rb.position = _throwPosition = spawnPosition;
 
     // Configure Rigidbody
     if (_utility_type != UtilityType.MORTAR_STRIKE)
@@ -1112,7 +1170,7 @@ public class UtilityScript : ItemScript
     _rb.AddForce(
       MathC.Get2DVector(forward * 250f * (_throwSpeed + Mathf.Clamp(_downTime, 0f, 4f)) +
       Vector3.up * 55f +
-      _ragdoll._Hip.velocity * 1.3f) * _forceModifier);
+      _ragdoll._Hip.linearVelocity * 1.3f) * _forceModifier);
 
     // Rotate
     if (_spin)
@@ -1121,9 +1179,10 @@ public class UtilityScript : ItemScript
         _rb.maxAngularVelocity = 45f + 5f * Random.value;
       _rb.AddTorque(_spinYAxis ? Vector3.up * 1000f : _ragdoll._Hip.transform.right * 300f);
     }
+
     else
     {
-      transform.LookAt(transform.position + forward);
+      _rb.rotation = Quaternion.LookRotation(forward) * Quaternion.Euler(0f, -90f, 0f);
     }
   }
 
@@ -1167,7 +1226,7 @@ public class UtilityScript : ItemScript
             player._Profile.UtilityReload(side, 1);
 
             // Play noise
-            player._ragdoll.PlaySound("Ragdoll/Pickup");
+            player._Ragdoll.PlaySound("Ragdoll/Pickup");
 
             // Disable and hide
             GameObject.Destroy(gameObject, 2f);
@@ -1183,7 +1242,7 @@ public class UtilityScript : ItemScript
       player._Profile.UtilityReload(side, 1);
 
       // Play noise
-      player._ragdoll.PlaySound("Ragdoll/Pickup");
+      player._Ragdoll.PlaySound("Ragdoll/Pickup");
 
       // Disable and hide
       GameObject.Destroy(gameObject, 2f);
@@ -1279,7 +1338,7 @@ public class UtilityScript : ItemScript
     _onCollisionEnter?.Invoke(collision);
 
     // Check for collision on throw based on velocity
-    if (_rb != null && _rb.velocity.magnitude > 0.1f && Time.time - _lastSound > 0.1f && _sfx_clip.Length > 3)
+    if (_rb != null && _rb.linearVelocity.magnitude > 0.1f && Time.time - _lastSound > 0.1f && _sfx_clip.Length > 3)
     {
       _lastSound = Time.time;
 
@@ -1298,9 +1357,8 @@ public class UtilityScript : ItemScript
   {
     var utilityName = type.ToString();
 
-    var gameObject = GameObject.Instantiate(Resources.Load($"Items\\{utilityName}")) as GameObject;
+    var gameObject = Instantiate(Resources.Load($"Items\\{utilityName}"), GameResources._Container_Objects) as GameObject;
     gameObject.name = utilityName;
-    gameObject.transform.parent = GameResources._Container_Objects;
     gameObject.transform.position = new Vector3(1000, -100f, 0f);
     return gameObject.GetComponent<UtilityScript>();
   }
@@ -1330,7 +1388,7 @@ public class UtilityScript : ItemScript
     var numBullets = 0;
 
     // Destroy both
-    if (p0._PenatrationAmount == p1._PenatrationAmount)
+    if ((p0._PenatrationAmount == p1._PenatrationAmount) || (p0._PenatrationAmount > 100 && p1._PenatrationAmount > 100))
     {
 
       p0._OnDisable?.Invoke(p0);
@@ -1434,6 +1492,11 @@ public class UtilityScript : ItemScript
         projectileData._CanDestroyObjects = true;
         break;
 
+      //
+      case "mirror":
+        projectileData._PenatrationAmount = 99999;
+        break;
+
       // Not found
       default:
 
@@ -1460,6 +1523,7 @@ public class UtilityScript : ItemScript
   //
   public static bool SimpleProjectileHandler(Collider c0, Collider c1, System.Action<ProjectileCollisionData> onDisable = null)
   {
+
     // Projectile handler
     if (c1.gameObject.layer == 3)
     {
@@ -1476,6 +1540,25 @@ public class UtilityScript : ItemScript
 
         // Make sure bullet can interact with
         if (pSelf_._IsBullet && pOther_._IsBullet && !pSelf_._BulletScript.CanInteractWithOther(pOther_._BulletScript)) { }
+
+        //
+        else if ((c0.name.ToLower() == "mirror" && c1.name.ToLower() != "mirror") || (c1.name.ToLower() == "mirror" && c0.name.ToLower() != "mirror"))
+        {
+
+          var mirror = c0.name.ToLower() == "mirror" ? pSelf_ : pOther_;
+          var bullet = c0.name.ToLower() == "mirror" ? pOther_ : pSelf_;
+          if (bullet._IsBullet)
+          {
+
+            if (bullet._BulletScript.RedirectToClosestTarget(mirror._GameObject.transform.GetChild(0).GetChild(0).gameObject, false))
+            {
+              bullet._BulletScript.PlaySparks(true, 0, BulletScript.BulletImpactType.MIRROR);
+            }
+
+            return true;
+          }
+
+        }
 
         //
         else

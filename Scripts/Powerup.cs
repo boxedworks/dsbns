@@ -85,11 +85,12 @@ public class Powerup : MonoBehaviour
       _icon.layer = 2;
 
       _rb = _icon.AddComponent<Rigidbody>();
-      _rb.angularDrag = 0.4f;
+      _rb.angularDamping = 0.4f;
       _rb.constraints = RigidbodyConstraints.FreezePosition;
       _rb.useGravity = false;
       _rb.interpolation = RigidbodyInterpolation.Interpolate;
-      _rb.drag = 1.5f;
+      _rb.linearDamping = 1.5f;
+      //_rb.isKinematic = true;
     }
     // Hide editor indicator
     transform.GetComponent<MeshRenderer>().enabled = false;
@@ -136,7 +137,7 @@ public class Powerup : MonoBehaviour
             for (int i = EnemyScript._Enemies_alive.Count - 1; i >= 0; i--)
             {
               EnemyScript e = EnemyScript._Enemies_alive[i];
-              if (e.IsChaser()) e.GetRagdoll().TakeDamage(
+              if (e.IsChaser()) e._Ragdoll.TakeDamage(
                 new ActiveRagdoll.RagdollDamageSource()
                 {
                   Source = r,
@@ -173,7 +174,7 @@ public class Powerup : MonoBehaviour
   // Update is called once per frame
   void Update()
   {
-    if (GameScript._Paused || Menu2._InMenus)
+    if (GameScript._Paused || Menu._InMenus)
     {
       _audio.volume = 0f;
       return;
@@ -182,22 +183,22 @@ public class Powerup : MonoBehaviour
     if (Time.time % 3 <= 0.1f) Rotate();
     _l.intensity += (Mathf.Clamp(_rb.angularVelocity.magnitude / 3f, 0.5f, 2f) - _l.intensity) * Time.deltaTime * 2f;
 
-    if (_activated)
+        if (_activated)
     {
       if (_activator == null || _activator._IsDead || _activator._Hip == null)
       {
         Destroy(gameObject);
         return;
       }
+
       // If game ended, set activated2
       if (GameScript._s_Singleton._GameEnded)
-      {
         _activated2 = true;
-      }
+
       // If activated2, move icon into sky
       if (_activated2)
       {
-        _icon.transform.position += (((new Vector3(_icon.transform.position.x, transform.position.y + 21f, _icon.transform.position.z)) - _icon.transform.position) * Time.deltaTime * 3f);
+        _rb.MovePosition(_rb.position + ((new Vector3(_icon.transform.position.x, transform.position.y + 21f, _icon.transform.position.z)) - _rb.position) * Time.deltaTime * 3f);
         if (_icon.transform.position.y > transform.position.y + 20f)
         {
           Destroy(_icon);
@@ -209,14 +210,14 @@ public class Powerup : MonoBehaviour
       {
         //Vector3 newPos = MathC.Get2DVector(_icon.transform.position - GameObject.Find("EndLight").transform.position);
         //if (newPos.magnitude > 1f) newPos.Normalize();
-        _icon.transform.position += (((_activator._Controller.transform.position - _activator._Hip.transform.forward + new Vector3(0f, 1f, 0f)) - _icon.transform.position) * Time.deltaTime * 4f);
+        _rb.MovePosition(_rb.position + ((_activator._Controller.transform.position - _activator._Hip.transform.forward + new Vector3(0f, 1f, 0f)) - _rb.position) * Time.deltaTime * 4f);
       }
 
     }
     else
     {
 
-      var pl_info = FunctionsC.GetClosestPlayerTo(transform.position);
+      var pl_info = FunctionsC.GetClosestTargetTo(-1, transform.position);
       if (pl_info != null && pl_info._ragdoll != null)
       {
         var dist = pl_info._distance;

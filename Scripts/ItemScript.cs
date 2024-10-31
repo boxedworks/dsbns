@@ -9,6 +9,7 @@ public class ItemScript : MonoBehaviour
 {
   //
   static Settings.LevelSaveData LevelModule { get { return Settings.s_SaveData.LevelData; } }
+  static Settings.SettingsSaveData SettingsModule { get { return Settings.s_SaveData.Settings; } }
 
   // Information about weapon holder
   public ActiveRagdoll _ragdoll;
@@ -548,6 +549,8 @@ public class ItemScript : MonoBehaviour
 
       // Shoot bullet(s)
       var penatrationAmount = GetPenatrationAmount();
+      var smokeParts = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.GUN_SMOKE)[0];
+
       for (var i = 0; i < _projectilesPerShot; i++)
       {
 
@@ -610,10 +613,11 @@ public class ItemScript : MonoBehaviour
           var spawn_pos = _forward.position;
           if (_type == ItemType.ROCKET_FIST)
             spawn_pos = _ragdoll._Hip.position;
+          spawn_pos.y = _ragdoll._spine.transform.position.y;
 
           var bullet = SpawnBulletTowards(
             _ragdoll,
-            new Vector3(spawn_pos.x, _ragdoll._spine.transform.position.y, spawn_pos.z),
+            spawn_pos,
             transform.forward,
             _type,
             use_penatrationAmount,
@@ -624,6 +628,14 @@ public class ItemScript : MonoBehaviour
             i
           );
           bullet.SetSourceItem(this);
+
+          //
+          if (SettingsModule.UseSmokeFx)
+            if (_type != ItemType.FLAMETHROWER && _type != ItemType.CROSSBOW && _type != ItemType.STICKY_GUN)
+            {
+              smokeParts.transform.position = spawn_pos + new Vector3(0f, 0.5f, 0f);
+              smokeParts.Emit(Mathf.Clamp(use_penatrationAmount, 1, 6));
+            }
 
           /*/ Check gun smoke on
           if (_type == ItemType.REVOLVER)
@@ -636,7 +648,7 @@ public class ItemScript : MonoBehaviour
         // Custom projectile
         else
         {
-          // Spawn projectiles
+          // Spawn projectiles.
           if (_customProjectileIter >= _customProjectiles.Length || _customProjectiles[_customProjectileIter] == null)
             ReloadCustom();
 
@@ -660,6 +672,12 @@ public class ItemScript : MonoBehaviour
           utility.SetForceModifier(_customProjectileVelocityMod);
         }
       }
+
+      /*/
+      var muzzleParts = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.MUZZLE_FIRE)[0];
+      muzzleParts.transform.position = _forward.position + _forward.forward * 0.45f;
+      muzzleParts.transform.rotation = _forward.rotation;
+      muzzleParts.Emit(6);*/
 
       // Add force to spine
       var torqueForce = -Vector3.right.normalized * 20000f * _hit_force;
@@ -1222,9 +1240,9 @@ public class ItemScript : MonoBehaviour
     }
 
     // Physics
-    var bulletRb = newBullet._rb;
-    bulletRb.velocity = Vector3.zero;
-    bulletRb.transform.position = spawnPos;
+    var rb = newBullet._rb;
+    rb.linearVelocity = Vector3.zero;
+    rb.position = spawnPos;
     var speedMod = 0.5f * (itemType == ItemType.FLAMETHROWER ? 1f : (penatrationAmount > 0 ? 1.35f : 1f)) + (bulletIter == 0 ? 0f : (UnityEngine.Random.value * 0.15f) - 0.075f);
     speedMod *= bulletSpeedMod;
     var addforce = Vector3.zero;
@@ -1236,10 +1254,10 @@ public class ItemScript : MonoBehaviour
       addforce = Quaternion.AngleAxis(90f, Vector3.up) * shootDirNormalized * bulletSpread * (randomSpread ? Random.value : 1f) * mod;
     }
     var bulletForce = MathC.Get2DVector(shootDirNormalized + addforce) * 2100f * speedMod;
-    bulletRb.transform.LookAt(bulletRb.position + bulletForce);
-    bulletRb.AddForce(bulletForce);
+    rb.transform.LookAt(rb.position + bulletForce);
+    rb.AddForce(bulletForce);
 
-    newBullet.OnShot(penatrationAmount, bulletForce.magnitude);
+    newBullet.OnShot(penatrationAmount, bulletForce.magnitude, spawnPos);
 
     // Bullet casing
     if (

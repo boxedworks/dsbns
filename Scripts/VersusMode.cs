@@ -224,11 +224,13 @@ public static class VersusMode
 
                 PlayerScript lastAlive = null;
                 foreach (var player in PlayerScript.s_Players)
-                  if (player._ragdoll._health > 0)
+                  if (player._Ragdoll._health > 0)
                     lastAlive = player;
 
                 // Check game types
                 var playerColor = GameScript.PlayerProfile.s_Profiles[lastAlive._Id].GetColorName();
+                if (playerColor == "cyan") playerColor = "#00FFFF";
+
                 s_playerScores[lastAlive._Id]++;
                 s_playerScoresRound[lastAlive._Id]++;
 
@@ -264,7 +266,7 @@ public static class VersusMode
               var teamsAlive = new List<int>();
               foreach (var player in PlayerScript.s_Players)
               {
-                if (player._ragdoll._health > 0)
+                if (player._Ragdoll._health > 0)
                 {
                   var teamId = s_playerTeams[player._Id];
                   if (!teamsAlive.Contains(teamId))
@@ -411,6 +413,7 @@ public static class VersusMode
 
                     var playerWinner = highestPlayers[0];
                     var playerColor = GameScript.PlayerProfile.s_Profiles[playerWinner].GetColorName();
+                    if (playerColor == "cyan") playerColor = "#00FFFF";
 
                     s_announcementText.text = $"<color={playerColor}>P{playerWinner + 1}</color> <b>wins</b>!";
                     gameWon = true;
@@ -452,7 +455,7 @@ public static class VersusMode
                 var teamId = s_playerTeams[player._Id];
                 if (!teamsAll.Contains(teamId))
                   teamsAll.Add(teamId);
-                if (player._ragdoll._health > 0)
+                if (player._Ragdoll._health > 0)
                 {
                   if (!teamsAlive.Contains(teamId))
                     teamsAlive.Add(teamId);
@@ -600,8 +603,8 @@ public static class VersusMode
             {
               if (gameWon)
               {
-                GameScript.TogglePause(Menu2.MenuType.VERSUS);
-                Menu2.SwitchMenu(Menu2.MenuType.VERSUS);
+                GameScript.TogglePause(Menu.MenuType.VERSUS);
+                Menu.SwitchMenu(Menu.MenuType.VERSUS);
                 GameScript._LastPause = Time.unscaledTime;
               }
               else
@@ -696,11 +699,11 @@ public static class VersusMode
 
       UpdateTeammodeUis();
 
-      Menu2.PlayNoise(Menu2.Noise.TEAM_SWAP);
+      Menu.PlayNoise(Menu.Noise.TEAM_SWAP);
     }
 
-    Menu2._CanRender = false;
-    Menu2.RenderMenu();
+    Menu._CanRender = false;
+    Menu.RenderMenu();
   }
 
   //
@@ -810,7 +813,7 @@ public static class VersusMode
 
   static UtilityScript.UtilityType GetRandomUtility()
   {
-    return Random.Range(0, 11) switch
+    return Random.Range(0, 12) switch
     {
       1 => UtilityScript.UtilityType.GRENADE_IMPACT,
       2 => UtilityScript.UtilityType.GRENADE_STUN,
@@ -820,10 +823,12 @@ public static class VersusMode
       5 => UtilityScript.UtilityType.SHURIKEN_BIG,
 
       6 => UtilityScript.UtilityType.TACTICAL_BULLET,
-      7 => UtilityScript.UtilityType.MORTAR_STRIKE,
-      8 => UtilityScript.UtilityType.C4,
-      9 => UtilityScript.UtilityType.INVISIBILITY,
-      10 => UtilityScript.UtilityType.TEMP_SHIELD,
+      7 => UtilityScript.UtilityType.MIRROR,
+
+      8 => UtilityScript.UtilityType.MORTAR_STRIKE,
+      9 => UtilityScript.UtilityType.C4,
+      10 => UtilityScript.UtilityType.INVISIBILITY,
+      11 => UtilityScript.UtilityType.TEMP_SHIELD,
 
       _ => UtilityScript.UtilityType.GRENADE
     };
@@ -951,5 +956,27 @@ public static class VersusMode
       var controlUi = playerProf._VersusUI.GetChild(1).GetChild(0).gameObject;
       controlUi.SetActive(toggle);
     }
+  }
+
+  //
+  public static List<PlayerScript> GetEnemyPlayers(int ofPlayerId)
+  {
+    var enemyList = new List<PlayerScript>();
+    var thisTeamId = GetTeamId(ofPlayerId);
+
+    for (var i = 0; i < Settings._NumberPlayers; i++)
+    {
+
+      if (i >= PlayerScript.s_Players.Count) continue;
+
+      var otherPlayer = PlayerScript.s_Players[i];
+      if (otherPlayer._Id == ofPlayerId) continue;
+
+      var otherTeamId = GetTeamId(otherPlayer._Id);
+      if (otherTeamId != thisTeamId)
+        enemyList.Add(otherPlayer);
+    }
+
+    return enemyList;
   }
 }

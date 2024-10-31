@@ -13,7 +13,7 @@ public static class FunctionsC
   public static void Init()
   {
     s_soundLibrary = new Dictionary<string, Dictionary<string, AudioSource>>();
-    s_ParticlesAll = Object.FindObjectsOfType<ParticleSystem>();
+    s_ParticlesAll = Object.FindObjectsByType<ParticleSystem>(FindObjectsSortMode.None);
 
     // Populate audio library
     s_Sounds = Camera.main.transform.parent.GetChild(2);
@@ -47,43 +47,48 @@ public static class FunctionsC
     public float _distance;
   }
   // Return the closest player to a point
-  public static DistanceInfo GetClosestPlayerTo(Vector3 pos, int playerIdFilter = -1)
+  static DistanceInfo GetClosestPlayerTo(Vector3 pos, int playerRagdollIdFilter = -1)
   {
     if (PlayerScript.s_Players == null) return null;
-
-    var info = new DistanceInfo
-    {
-      _distance = 1000f
-    };
-    foreach (var player in PlayerScript.s_Players)
-    {
-      if (player._Id == playerIdFilter || player._ragdoll._IsDead || player._ragdoll._Hip == null) continue;
-      var dist = MathC.Get2DDistance(player._ragdoll._Hip.position, pos);
-      if (dist < info._distance)
-      {
-        info._distance = dist;
-        info._ragdoll = player._ragdoll;
-      }
-    }
-    return info;
+    return GetClosestTargetOf(pos, new List<PlayerScript.IHasRagdoll>(PlayerScript.s_Players), playerRagdollIdFilter);
   }
-  public static DistanceInfo GetClosestEnemyTo(Vector3 pos, bool include_chaser = true)
+  static DistanceInfo GetClosestEnemyTo(Vector3 pos, bool include_chaser = true)
   {
     if (EnemyScript._Enemies_alive == null) return null;
-    var info = new DistanceInfo();
-    info._distance = 1000f;
-    foreach (var enemy in EnemyScript._Enemies_alive)
-    {
-      if (enemy.IsChaser() && !include_chaser) { continue; }
-      var dist = MathC.Get2DDistance(enemy.GetRagdoll()._Hip.position, pos);
-      if (dist < info._distance)
-      {
-        info._distance = dist;
-        info._ragdoll = enemy.GetRagdoll();
-      }
-    }
-    return info;
+    return GetClosestTargetOf(pos, new List<PlayerScript.IHasRagdoll>(EnemyScript._Enemies_alive), -1, include_chaser);
   }
+
+  public static DistanceInfo GetClosestTargetTo(ActiveRagdoll host, Vector3 pos, bool include_chaser = false)
+  {
+    return GetClosestTargetTo(host._IsPlayer ? host._PlayerScript._Id : -1, pos, host._Id, include_chaser);
+  }
+  public static DistanceInfo GetClosestTargetTo(int isPlayerId, Vector3 pos, int ragdollIdFilter = -1, bool include_chaser = false)
+  {
+
+    // If enemy, target will be player
+    var isPlayer = isPlayerId > -1;
+    if (!isPlayer)
+      return GetClosestPlayerTo(pos);
+
+    // If player, check modes
+    // Survival / Classic, always look for enemies only
+    if (GameScript.s_GameMode == GameScript.GameModes.SURVIVAL || GameScript.s_GameMode == GameScript.GameModes.CLASSIC)
+      return GetClosestEnemyTo(pos, include_chaser);
+
+    // Versus, group enemies and enemy players together (teams)
+    if (GameScript.s_GameMode == GameScript.GameModes.VERSUS)
+    {
+      var targetList = new List<PlayerScript.IHasRagdoll>(EnemyScript._Enemies_alive);
+      var enemyPlayers = VersusMode.GetEnemyPlayers(isPlayerId);
+      foreach (var enemyPlayer in enemyPlayers)
+        targetList.Add(enemyPlayer);
+
+      return GetClosestTargetOf(pos, targetList, ragdollIdFilter);
+    }
+
+    return null;
+  }
+
   // Return the farthest player from a point
   public static DistanceInfo GetFarthestPlayerFrom(Vector3 pos)
   {
@@ -94,16 +99,59 @@ public static class FunctionsC
 
     foreach (var p in PlayerScript.s_Players)
     {
-      if (p._ragdoll._IsDead) continue;
-      var dist = MathC.Get2DDistance(p._ragdoll._Hip.position, pos);
+      if (p._Ragdoll._IsDead) continue;
+      var dist = MathC.Get2DDistance(p._Ragdoll._Hip.position, pos);
       if (dist > info._distance)
       {
         info._distance = dist;
-        info._ragdoll = p._ragdoll;
+        info._ragdoll = p._Ragdoll;
       }
     }
 
     return info;
+  }
+
+  //
+  static DistanceInfo GetClosestTargetOf(Vector3 atPos, List<PlayerScript.IHasRagdoll> ofRagdolls, int ragdollIdFilter = -1, bool include_chaser = false)
+  {
+    if (ofRagdolls == null) return null;
+
+    var info = new DistanceInfo
+    {
+      _distance = 1000f
+    };
+    foreach (var ragdollHolder in ofRagdolls)
+    {
+      if (ragdollHolder._Ragdoll._Id == ragdollIdFilter || ragdollHolder._Ragdoll._IsDead || ragdollHolder._Ragdoll._Hip == null) continue;
+      if (!include_chaser && ragdollHolder._Ragdoll._IsEnemy && ragdollHolder._Ragdoll._EnemyScript.IsChaser()) continue;
+
+      var dist = MathC.Get2DDistance(ragdollHolder._Ragdoll._Hip.position, atPos);
+      if (dist < info._distance)
+      {
+        info._distance = dist;
+        info._ragdoll = ragdollHolder._Ragdoll;
+      }
+    }
+    return info;
+  }
+
+  public static DistanceInfo GetRandomEnemy(Vector3 pos, bool include_chaser = true)
+  {
+    if (EnemyScript._Enemies_alive == null) return null;
+    var info = new DistanceInfo();
+    info._distance = 1000f;
+    var enemiesAlive = new List<EnemyScript>(EnemyScript._Enemies_alive);
+    enemiesAlive.Shuffle();
+    foreach (var enemy in enemiesAlive)
+    {
+      if (enemy.IsChaser() && !include_chaser) { continue; }
+      var dist = MathC.Get2DDistance(enemy._Ragdoll._Hip.position, pos);
+
+      info._distance = dist;
+      info._ragdoll = enemy._Ragdoll;
+      return info;
+    }
+    return null;
   }
 
   public static float GetPathLength(params Vector3[] corners)
@@ -135,6 +183,8 @@ public static class FunctionsC
     GIBLETS,
     CONFETTI,
     BULLET_CASING_HOT,
+    BLOOD_SMOKE,
+    BLOOD_SMOKE_CONFETTI,
     CONFUSED,
     EXPLOSION_STUN,
     SMOKE_RING,
@@ -142,6 +192,10 @@ public static class FunctionsC
     TACTICAL_BULLET,
     TABLE_FLIP,
     CLOUD_RING,
+    GUN_SMOKE,
+    EXPLOSION_SMOKE,
+    EXPLOSION_NEW,
+    MUZZLE_FIRE,
   }
   static int _ExplosionIter;
   public static ParticleSystem[] GetParticleSystem(ParticleSystemType particleType, int forceParticleIndex = -1)
@@ -220,6 +274,32 @@ public static class FunctionsC
         break;
       case ParticleSystemType.BULLET_CASING_HOT:
         index = 21;
+        break;
+
+      case ParticleSystemType.BLOOD_SMOKE:
+        index = 22;
+        hasChildren = true;
+        break;
+      case ParticleSystemType.BLOOD_SMOKE_CONFETTI:
+        index = 34;
+        hasChildren = true;
+        break;
+      case ParticleSystemType.GUN_SMOKE:
+        index = 30;
+        hasChildren = true;
+        break;
+      case ParticleSystemType.EXPLOSION_SMOKE:
+        index = 31;
+        hasChildren = true;
+        break;
+      case ParticleSystemType.EXPLOSION_NEW:
+        index = 32;
+        hasChildren = true;
+        break;
+
+      case ParticleSystemType.MUZZLE_FIRE:
+        index = 33;
+        hasChildren = true;
         break;
 
       case ParticleSystemType.CONFUSED:
@@ -766,7 +846,7 @@ public static class FunctionsC
       if (!s_TrackSource.isPlaying && !s_transitioning)
       {
         // Check for menu music
-        if (Menu2._InMenus)
+        if (Menu._InMenus)
         {
           if (s_CurrentTrack < s_TrackOffset)
           {
@@ -809,7 +889,7 @@ public static class FunctionsC
     public static int GetNextTrackIter()
     {
       // If main menu is showing, play main menu music
-      if (Menu2._CurrentMenu._Type == Menu2.MenuType.MAIN) return 0;
+      if (Menu._CurrentMenu._Type == Menu.MenuType.MAIN) return 0;
 
       // SURVIVAL mode music
       if (GameScript.s_GameMode == GameScript.GameModes.SURVIVAL)
@@ -891,7 +971,7 @@ public static class FunctionsC
   {
     if (Settings._ForceKeyboard || ControllerManager._NumberGamepads == 0) return;
     Cursor.visible = false;
-    Menu2._CheckMouse = false;
+    Menu._CheckMouse = false;
   }
 
   public enum Control
@@ -1217,6 +1297,21 @@ public static class FunctionsC
       T temp = array[n];
       array[n] = array[k];
       array[k] = temp;
+    }
+  }
+
+  // Shuffle a list randomly
+  private static System.Random rng = new System.Random();
+  public static void Shuffle<T>(this IList<T> list)
+  {
+    int n = list.Count;
+    while (n > 1)
+    {
+      n--;
+      int k = rng.Next(n + 1);
+      T value = list[k];
+      list[k] = list[n];
+      list[n] = value;
     }
   }
 

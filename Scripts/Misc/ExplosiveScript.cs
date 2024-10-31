@@ -144,6 +144,13 @@ public class ExplosiveScript : MonoBehaviour
     // Set sound alert
     EnemyScript.CheckSound(transform.position, EnemyScript.Loudness.LOUD);
 
+    //
+    var smokeParts = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.EXPLOSION_SMOKE)[0];
+    var spawnPos = transform.position;
+    spawnPos.y = 1f;
+    smokeParts.transform.position = spawnPos;
+    smokeParts.Emit(10);
+
     // Play sound
     if (playSound)
       SfxManager.PlayAudioSourceSimple(transform.position, "Ragdoll/Explode", 0.825f, 1.175f);

@@ -10,6 +10,7 @@ public class ActiveRagdoll
 {
   //
   static Settings.LevelSaveData LevelModule { get { return Settings.s_SaveData.LevelData; } }
+  static Settings.SettingsSaveData SettingsModule { get { return Settings.s_SaveData.Settings; } }
 
   //
   public static List<ActiveRagdoll> s_Ragdolls;
@@ -172,17 +173,20 @@ public class ActiveRagdoll
     _time_dead = -1f;
 
     // Set materials
-    if (_Materials_Ragdoll == null) _Materials_Ragdoll = new List<System.Tuple<Material, Material>>();
+    if (_Materials_Ragdoll == null) _Materials_Ragdoll = new List<Tuple<Material, Material>>();
     _renderer = Transform.GetChild(0).GetComponent<SkinnedMeshRenderer>();
-    if (_Id == _Materials_Ragdoll.Count) _Materials_Ragdoll.Add(new System.Tuple<Material, Material>(new Material(_renderer.sharedMaterials[0]), new Material(_renderer.sharedMaterials[1])));
+    if (_Id == _Materials_Ragdoll.Count) _Materials_Ragdoll.Add(new Tuple<Material, Material>(new Material(_renderer.sharedMaterials[0]), new Material(_renderer.sharedMaterials[1])));
     Resources.UnloadAsset(_renderer.sharedMaterials[0]);
     Resources.UnloadAsset(_renderer.sharedMaterials[1]);
     _renderer.sharedMaterials = new Material[] { _Materials_Ragdoll[_Id].Item1, _Materials_Ragdoll[_Id].Item2 };
+
     // Register enemy / player script
     _EnemyScript = follow.GetComponent<EnemyScript>();
     _PlayerScript = follow.GetComponent<PlayerScript>();
+
     // Set default health
     _health = 1;
+
     // Index body parts
     _Hip = ragdoll.transform.GetChild(1).GetChild(0).GetChild(0).GetComponent<Rigidbody>();
     _leg_upper_l = _Hip.transform.GetChild(0).GetComponent<HingeJoint>();
@@ -383,13 +387,13 @@ public class ActiveRagdoll
       // Only update if enabled
       if (!_CanReceiveInput) return;
 
-      // Check hip
+      /*/ Check hip
       if (_Hip.transform.position.y > 0f)
       {
         Debug.Log("defective ragdoll");
         Kill(null, DamageSourceType.MELEE, Vector3.zero);
         return;
-      }
+      }*/
     }
 
     // Move / rotate based on a rigidbody
@@ -1101,7 +1105,7 @@ public class ActiveRagdoll
         }
 
         //
-        var mag = rb.velocity.magnitude;
+        var mag = rb.linearVelocity.magnitude;
         var mag_old = rbData.MagnitudeOld;
         var lastSound = rbData.LastSoundFX;
         var bodyType = rbData.RigidbodyType;
@@ -1351,6 +1355,12 @@ public class ActiveRagdoll
             PlaySound("Ragdoll/Combust", 0.9f, 1.1f);
             FunctionsC.PlayComplexParticleSystemAt(FunctionsC.ParticleSystemType.FIREBALL, _Hip.position);
             FunctionsC.SpawnExplosionScar(_Hip.position);
+
+            var smokeParts = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.EXPLOSION_SMOKE)[0];
+            var spawnPos = _Hip.position;
+            spawnPos.y = 1f;
+            smokeParts.transform.position = spawnPos;
+            smokeParts.Emit(3);
           }
           else
             PlaySound("Ragdoll/Punch", 0.9f, 1.1f);
@@ -1648,6 +1658,15 @@ public class ActiveRagdoll
 
         GameScript._s_Singleton.StartCoroutine(BloodFollow(confetti));
 
+        /*/
+        if (SettingsModule.UseSmokeFx)
+        {
+          var parts = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.BLOOD_SMOKE_CONFETTI)[0];
+          parts.transform.position = _Hip.position + new Vector3(0f, 0.5f, 0f);
+          parts.Emit(4);
+        }*/
+
+
         // Audio
         PlaySound("Ragdoll/Confetti", 0.6f, 1.2f);
 
@@ -1726,6 +1745,14 @@ public class ActiveRagdoll
       }
 
       GameScript._s_Singleton.StartCoroutine(BloodFollow(blood));
+
+      //
+      if (SettingsModule.UseSmokeFx)
+      {
+        var parts = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.BLOOD_SMOKE)[0];
+        parts.transform.position = _Hip.position + new Vector3(0f, 0.5f, 0f);
+        parts.Emit(2);
+      }
 
       // Bloody footprint
       FunctionsC.AoeHandler.RegisterAoeEffect(this, FunctionsC.AoeHandler.AoeType.BLOOD, _Hip.position, 1f, 20f);
@@ -2031,7 +2058,7 @@ public class ActiveRagdoll
     );
 
     // Set grapplee
-    Grapple(enemy.GetRagdoll());
+    Grapple(enemy._Ragdoll);
 
     // FX
     if (playSound)
@@ -2351,7 +2378,7 @@ public class ActiveRagdoll
     s_Ragdolls.Clear();
     foreach (var p in PlayerScript.s_Players)
     {
-      s_Ragdolls.Add(p._ragdoll);
+      s_Ragdolls.Add(p._Ragdoll);
     }
   }
 }

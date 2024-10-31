@@ -4,8 +4,15 @@ using Steamworks;
 using UnityEngine;
 using UnityEngine.AI;
 
-public class PlayerScript : MonoBehaviour
+public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
 {
+
+
+  public interface IHasRagdoll
+  {
+    public ActiveRagdoll _Ragdoll { get; set; }
+  }
+
   // Singleton
   public static List<PlayerScript> s_Players;
   static Settings.SettingsSaveData SettingsModule { get { return Settings.s_SaveData.Settings; } }
@@ -16,8 +23,11 @@ public class PlayerScript : MonoBehaviour
 
   public static int _PLAYERID = 0;
   public int _Id;
+
   // Ragdoll
-  public ActiveRagdoll _ragdoll;
+  ActiveRagdoll _ragdoll;
+  public ActiveRagdoll _Ragdoll { get { return _ragdoll; } set { _ragdoll = value; } }
+
   // Holds values for camera position / rotation to lerp to
   public Vector3 _camPos, _camRot;
   float _camRotX;
@@ -102,10 +112,12 @@ public class PlayerScript : MonoBehaviour
     //_camHeight = Vector3.Distance(GameResources._Camera_Main.transform.position, transform.position);
 
     // Setup ragdoll
-    var ragdollObj = Instantiate(GameResources._Ragdoll);
-    ragdollObj.transform.parent = transform.parent;
-    ragdollObj.transform.Rotate(new Vector3(0f, 1f, 0f) * 90f);
-    ragdollObj.transform.position = transform.position;
+    var ragdollObj = Instantiate(
+      GameResources._Ragdoll,
+      transform.position,
+      transform.rotation * Quaternion.Euler(0f, 90f, 0f),
+      transform.parent
+    );
     var health = GameScript.s_GameMode == GameScript.GameModes.VERSUS ? VersusMode.s_Settings._PlayerHealth : (GameScript.IsSurvival() ? 3 : 1);
     _ragdoll = new ActiveRagdoll(ragdollObj, transform)
     {
@@ -123,7 +135,7 @@ public class PlayerScript : MonoBehaviour
       }
 
     // Get NavMeshAgent
-    _agent = transform.GetComponent<UnityEngine.AI.NavMeshAgent>();
+    _agent = transform.GetComponent<NavMeshAgent>();
 
     // Add self to list of players
     if (s_Players == null)
@@ -550,7 +562,7 @@ public class PlayerScript : MonoBehaviour
               if (MathC.Get2DDistance(_ragdoll._Hip.position, bullet.transform.position) < minDist)
               {
                 //_SlowmoTimer = Mathf.Clamp(_SlowmoTimer + 1f, 0f, 2f);
-                var dir = Quaternion.AngleAxis(-90, Vector3.up) * bullet._rb.velocity;
+                var dir = Quaternion.AngleAxis(-90, Vector3.up) * bullet._rb.linearVelocity;
                 _agent.SetDestination(_ragdoll.Transform.position + dir * 10f);
                 moved = true;
                 break;
@@ -589,7 +601,7 @@ public class PlayerScript : MonoBehaviour
         for (var i = 0; i < 10; i++)
         {
           var next_enemy = EnemyScript._Enemies_alive[_targetIter++ % EnemyScript._Enemies_alive.Count];
-          var next_ragdoll = next_enemy.GetRagdoll();
+          var next_ragdoll = next_enemy._Ragdoll;
 
           if (next_ragdoll != null && (_targetRagdoll == null || next_ragdoll._Id != _targetRagdoll._Id))
           {
@@ -599,7 +611,7 @@ public class PlayerScript : MonoBehaviour
               var dist = FunctionsC.GetPathLength(path.corners);
               if (dist < _lastDistance)
               {
-                _targetRagdoll = next_enemy.GetRagdoll();
+                _targetRagdoll = next_enemy._Ragdoll;
                 _lastDistance = dist;
               }
             }
@@ -836,7 +848,7 @@ public class PlayerScript : MonoBehaviour
               if (num == 0) num = 1;
               dirs /= num;
 
-              float mag = Mathf.Clamp(dirs.magnitude, 0.03f, 1f);
+              var mag = Mathf.Clamp(dirs.magnitude, 0.03f, 1f);
               //if (mag < 0.1f)
               //  mag = 0.0f;
               Time.timeScale = mag;
@@ -905,15 +917,20 @@ public class PlayerScript : MonoBehaviour
                 onealive = true; break;
               }
             }
-            if (!onealive) desiredTimeScale = 0f;
+            if (!onealive && GameScript.s_GameMode != GameScript.GameModes.VERSUS) desiredTimeScale = 0f;
 
             // Update timescale
-            Time.timeScale = Mathf.Clamp(Time.timeScale + (desiredTimeScale - Time.timeScale) * unscaled_dt * 5f * speedMod, slowTime, 1f);
+            {
+              var newScale = Mathf.Clamp(Time.timeScale + (desiredTimeScale - Time.timeScale) * unscaled_dt * 5f * speedMod, slowTime, 1f);
+              if (newScale < 0.01f)
+                Time.timeScale = 0f;
+              else if (newScale > 0.99f)
+                Time.timeScale = 1f;
+              else
+                Time.timeScale = newScale;
+            }
+
             //Debug.Log(Time.timeScale);
-            if (Time.timeScale < 0.01f)
-              Time.timeScale = 0f;
-            else if (Time.timeScale > 0.99f)
-              Time.timeScale = 1f;
           }
 
           // Update sounds with Time.timescale
@@ -2027,7 +2044,7 @@ public class PlayerScript : MonoBehaviour
   float[] _taunt_times;
   void Taunt(int iter)
   {
-    if (Menu2._InMenus) return;
+    if (Menu._InMenus) return;
 
     switch (iter)
     {
@@ -2272,7 +2289,7 @@ public class PlayerScript : MonoBehaviour
     if (Settings._Slowmo_on_death && lastplayer && !HasPerk(Shop.Perk.PerkType.NO_SLOWMO)) _SlowmoTimer += 2f;
 
     // Check for restart tutorial
-    if (lastplayer)
+    if (lastplayer && GameScript.s_GameMode != GameScript.GameModes.VERSUS)
     {
       _All_Dead = true;
 

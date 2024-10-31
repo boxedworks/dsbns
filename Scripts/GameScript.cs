@@ -187,8 +187,9 @@ public class GameScript : MonoBehaviour
     t.localPosition = new Vector3(t.localPosition.x, TileManager.Tile._StartY + TileManager.Tile._AddY, t.localPosition.z);
 
     TileManager._Map = GameObject.Find("Map").transform;
-    TileManager._navMeshSurface = TileManager._Map.GetComponent<UnityEngine.AI.NavMeshSurface>();
-    TileManager._navMeshSurface2 = TileManager._Map.GetComponents<UnityEngine.AI.NavMeshSurface>()[1];
+    var navMeshSurfaces = TileManager._Map.GetComponents<Unity.AI.Navigation.NavMeshSurface>();
+    TileManager._navMeshSurface = navMeshSurfaces[0];
+    TileManager._navMeshSurface2 = navMeshSurfaces[1];
     TileManager.Init();
     TileManager._LoadingMap = true;
     TileManager.LoadMap("5 6 1 1 1 0 1 1 1 1 0 0 0 0 0 0 0 0 0 0 1 1 0 0 0 0 1 1 1 0 1 1 playerspawn_-37.5_-55.62_rot_0 e_-42.5_-48.1_li_knife_w_-42.5_-48.1_l_-41.4_-48.1_canmove_true_canhear_true_ e_-32.5_-48.1_li_knife_w_-32.5_-48.1_l_-33.6_-48.1_canmove_true_canhear_true_ e_-40_-50.6_li_knife_w_-40_-50.6_l_-39.7_-49.4_canmove_true_canhear_true_ e_-35_-44.4_li_knife_w_-35_-44.4_l_-36.1_-44.4_canmove_true_canhear_true_ p_-37.5_-44.38_end_ barrel_-40.66_-42.61_rot_0 barrel_-39.79_-42.62_rot_0 barrel_-38.9_-42.59_rot_0 barrel_-37.96_-42.62_rot_0 barrel_-37.02_-42.55_rot_0 barrel_-40.72_-46.53_rot_0 barrel_-40.73_-45.68_rot_0 barrel_-34.44_-46.61_rot_0 bookcasebig_-35.16_-42.79_rot_15 bookcaseopen_-40.47_-51.45_rot_0 bookcaseopen_-34.37_-51.19_rot_90.00001 bookcaseopen_-34.39_-50_rot_90.00001 bookcaseopen_-40.67_-44.71_rot_90.00001 bookcaseopen_-37.5_-46.88_rot_0 bookcaseopen_-37.5_-47.67_rot_0 barrel_-34.39_-45.78_rot_0 barrel_-31.86_-47.48_rot_0 barrel_-31.84_-48.37_rot_0 barrel_-35.15_-51.47_rot_0 tablesmall_-43.08_-48.95_rot_0 chair_-42.68_-49.08_rot_45 chair_-31.83_-49.12_rot_1.692939E-06 chair_-40.71_-43.66_rot_135 bookcasebig_-38.42_-50.79_rot_285 bookcaseopen_-36.42_-47.9_rot_75 barrel_-39.44_-51.42_rot_0 barrel_-39.25_-50.49_rot_0 candelbig_-36.55_-46.97_rot_90.00001 bookcaseopen_-43.24_-47.83_rot_105", false, false, true);
@@ -213,7 +214,7 @@ public class GameScript : MonoBehaviour
     SceneThemes.ChangeMapTheme("Black and White");
 
     // Init menus
-    Menu2.Init();
+    Menu.Init();
 
     //
     VersusMode.Init();
@@ -239,13 +240,13 @@ public class GameScript : MonoBehaviour
     {
 
       // Count number of players to spawn.. only used if trying to stay persistant or players joined?
-      foreach (var p in PlayerScript.s_Players) if (p != null && !p._ragdoll._IsDead) _PlayerIter++;
+      foreach (var p in PlayerScript.s_Players) if (p != null && !p._Ragdoll._IsDead) _PlayerIter++;
 
       // Remove null / dead players
       for (var i = PlayerScript.s_Players.Count - 1; i >= 0; i--)
       {
         var p = PlayerScript.s_Players[i];
-        if (p == null || p._ragdoll == null || !p._ragdoll._IsDead)
+        if (p == null || p._Ragdoll == null || !p._Ragdoll._IsDead)
           PlayerScript.s_Players.RemoveAt(i);
       }
     }
@@ -663,7 +664,7 @@ public class GameScript : MonoBehaviour
         {
           //if (i >= PlayerScript._Players.Count) continue;
           var p = PlayerScript.s_Players[i];
-          if (p == null || p._ragdoll == null || p._ragdoll._IsDead) continue;
+          if (p == null || p._Ragdoll == null || p._Ragdoll._IsDead) continue;
           alive_player = p;
           break;
         }
@@ -672,15 +673,15 @@ public class GameScript : MonoBehaviour
         if (alive_player == null) return;
 
         // Count number of players to spawn.. only used if trying to stay persistant or players joined?
-        foreach (var p in PlayerScript.s_Players) if (p != null && !p._ragdoll._IsDead) _PlayerIter++;
+        foreach (var p in PlayerScript.s_Players) if (p != null && !p._Ragdoll._IsDead) _PlayerIter++;
 
         // Remove null / dead players
         for (var i = PlayerScript.s_Players.Count - 1; i >= 0; i--)
         {
           var p = PlayerScript.s_Players[i];
-          if (p == null || p._ragdoll == null || p._ragdoll._IsDead)
+          if (p == null || p._Ragdoll == null || p._Ragdoll._IsDead)
           {
-            ActiveRagdoll.s_Ragdolls.Remove(p._ragdoll);
+            ActiveRagdoll.s_Ragdolls.Remove(p._Ragdoll);
             GameObject.Destroy(p.transform.parent.gameObject);
             PlayerScript.s_Players.RemoveAt(i);
             p = PlayerspawnScript._PlayerSpawns[0].SpawnPlayer(false);
@@ -692,7 +693,7 @@ public class GameScript : MonoBehaviour
 
         // Heal and reload all players
         foreach (var p in PlayerScript.s_Players)
-          if (p != null && p._ragdoll != null)
+          if (p != null && p._Ragdoll != null)
             HealPlayer(p);
       }
 
@@ -1023,17 +1024,17 @@ public class GameScript : MonoBehaviour
           {
             // Unlock next map
             TogglePause();
-            Menu2.PlayNoise(Menu2.Noise.PURCHASE);
-            Menu2.GenericMenu(new string[] {
-$@"<color={Menu2._COLOR_GRAY}>new survival map unlocked</color>
+            Menu.PlayNoise(Menu.Noise.PURCHASE);
+            Menu.GenericMenu(new string[] {
+$@"<color={Menu._COLOR_GRAY}>new survival map unlocked</color>
 
 you survived 10 waves and have unlocked a <color=yellow>new survival map</color>!
 "
-        }, "nice", Menu2.MenuType.NONE, null, true, null,
-            (Menu2.MenuComponent c) =>
+        }, "nice", Menu.MenuType.NONE, null, true, null,
+            (Menu.MenuComponent c) =>
             {
               TogglePause();
-              Menu2.HideMenus();
+              Menu.HideMenus();
             });
           }
         }
@@ -1079,7 +1080,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         {
           //if (i >= PlayerScript._Players.Count) continue;
           var p = PlayerScript.s_Players[i];
-          if (p == null || p._ragdoll == null || p._ragdoll._IsDead) continue;
+          if (p == null || p._Ragdoll == null || p._Ragdoll._IsDead) continue;
           alive_player = p;
           break;
         }
@@ -1088,15 +1089,15 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         if (alive_player == null) return;
 
         // Count number of players to spawn.. only used if trying to stay persistant or players joined?
-        foreach (var p in PlayerScript.s_Players) if (p != null && !p._ragdoll._IsDead) _PlayerIter++;
+        foreach (var p in PlayerScript.s_Players) if (p != null && !p._Ragdoll._IsDead) _PlayerIter++;
 
         // Remove null / dead players
         for (var i = PlayerScript.s_Players.Count - 1; i >= 0; i--)
         {
           var p = PlayerScript.s_Players[i];
-          if (p == null || p._ragdoll == null || p._ragdoll._IsDead)
+          if (p == null || p._Ragdoll == null || p._Ragdoll._IsDead)
           {
-            ActiveRagdoll.s_Ragdolls.Remove(p._ragdoll);
+            ActiveRagdoll.s_Ragdolls.Remove(p._Ragdoll);
             GameObject.Destroy(p.transform.parent.gameObject);
             PlayerScript.s_Players.RemoveAt(i);
             p = PlayerspawnScript._PlayerSpawns[0].SpawnPlayer(false);
@@ -1117,7 +1118,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
 
         // Heal and reload all players
         foreach (var p in PlayerScript.s_Players)
-          if (p != null && p._ragdoll != null)
+          if (p != null && p._Ragdoll != null)
           {
             HealPlayer(p);
             p.RegisterUtilities();
@@ -1132,16 +1133,16 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       //var healed = false;
       if (Shop.Perk.HasPerk(p._Id, Shop.Perk.PerkType.ARMOR_UP))
       {
-        if (p._ragdoll._health != 5)
+        if (p._Ragdoll._health != 5)
         {
-          p._ragdoll._health = 5;
-          p._ragdoll.AddArmor();
+          p._Ragdoll._health = 5;
+          p._Ragdoll.AddArmor();
           //healed = true;
         }
       }
-      else if (p._ragdoll._health != 3)
+      else if (p._Ragdoll._health != 3)
       {
-        p._ragdoll._health = 3;
+        p._Ragdoll._health = 3;
         //healed = true;
       }
 
@@ -1217,7 +1218,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         var player = PlayerScript.s_Players[_ClosestSpawns_PlayerIter++ % PlayerScript.s_Players.Count];
         var spawn = _Spawn_Points[_ClosestSpawns_SpawnIter++ % _Spawn_Points.Count];
 
-        if (player._ragdoll != null && !player._ragdoll._IsDead)
+        if (player._Ragdoll != null && !player._Ragdoll._IsDead)
         {
           // Calculate distance
           UnityEngine.AI.NavMeshQueryFilter filter = new UnityEngine.AI.NavMeshQueryFilter();
@@ -1277,7 +1278,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
 
         // Get next enemy
         var enemy_next = EnemyScript._Enemies_alive[_EnemyIndex++ % EnemyScript._Enemies_alive.Count];
-        var enemy_ragdoll = enemy_next.GetRagdoll();
+        var enemy_ragdoll = enemy_next._Ragdoll;
 
         enemy_ragdoll.ToggleRaycasting(false);
 
@@ -1351,7 +1352,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
             var rb = barrier.gameObject.AddComponent<Rigidbody>();
             rb.interpolation = RigidbodyInterpolation.Interpolate;
             rb.useGravity = false;
-            rb.drag = 0.1f;
+            rb.linearDamping = 0.1f;
             rb.mass = 0.5f;
             rb.AddForce(new Vector3(0f, 1f, 0f) * (350f + Random.value * 200f));
             rb.AddTorque(new Vector3(1f - (Random.value * 2f), 1f - (Random.value * 2f), 1f - (Random.value * 2f)) * (250f + Random.value * 200f));
@@ -1402,13 +1403,13 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
 
       // Update score text
       var text = "";
-      if (!_Paused && !Menu2._InMenus)
+      if (!_Paused && !Menu._InMenus)
         for (var i = 0; i < Settings._NumberPlayers; i++)
           text += $"<color={PlayerProfile.s_Profiles[i].GetColorName(false)}>p{i + 1}:</color> {_PlayerScores[i]}\n";
       _Text_Scores.text = text;
 
       // Check if paused or in menu
-      if (_Paused || Menu2._InMenus || CustomObstacle._CustomSpawners == null) return;
+      if (_Paused || Menu._InMenus || CustomObstacle._CustomSpawners == null) return;
 
       IncrementalUpdate();
 
@@ -1494,20 +1495,20 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
               case (EnemyType.KNIFE_BEEFY_SLOW):
                 movespeed = 0.15f;
                 health = 4;
-                e?.GetRagdoll().ChangeColor((Color.red + Color.yellow) / 3f);//new Color(0, 30, 0));
+                e?._Ragdoll.ChangeColor((Color.red + Color.yellow) / 3f);//new Color(0, 30, 0));
                 //e.GetRagdoll()._hip.transform.localScale *= 1.6f;
                 break;
               case (EnemyType.ARMORED):
                 movespeed = 0.25f;
                 health = 4;
-                e.GetRagdoll().ChangeColor(Color.gray);
+                e._Ragdoll.ChangeColor(Color.gray);
                 break;
             }
 
             if (e != null)
             {
               e._moveSpeed = movespeed + (-0.1f + Random.value * 0.2f);
-              e.GetRagdoll()._health = health;
+              e._Ragdoll._health = health;
             }
 
             SpawnLogic._NextSpawnTime = Time.time + SpawnLogic._SpawnTime;
@@ -1590,8 +1591,8 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         TileManager._Text_LevelTimer.text = "";
       if (!TileManager._Level_Complete && PlayerScript._TimerStarted)
       {
-        TileManager._LevelTimer += Menu2._InMenus ? Time.unscaledDeltaTime : Time.deltaTime;
-        if (!Menu2._InMenus)
+        TileManager._LevelTimer += Menu._InMenus ? Time.unscaledDeltaTime : Time.deltaTime;
+        if (!Menu._InMenus)
           TileManager._Text_LevelTimer.text = TileManager._LevelTimer.ToStringTimer();
       }
 
@@ -1633,7 +1634,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     FunctionsC.MusicManager.Update();
 
     // Update menus
-    Menu2.UpdateMenus();
+    Menu.UpdateMenus();
 
     /*/ Update multiplayer
     if (ControllerManager.GetKey(ControllerManager.Key.H))
@@ -1694,7 +1695,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         Settings._NumberPlayers = 1;
       var numcontrollers_save = Settings._NumberControllers;
       Settings._NumberControllers = (ControllerManager._NumberGamepads) + (Settings._ForceKeyboard ? 1 : 0);
-      if (Settings._NumberControllers == 0 && Menu2._Confirmed_SwitchToKeyboard)
+      if (Settings._NumberControllers == 0 && Menu._Confirmed_SwitchToKeyboard)
         Settings._NumberControllers = 1;
 
       if (Settings._NumberControllers != numcontrollers_save)
@@ -1704,17 +1705,18 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
           ui.GetChild(i).gameObject.SetActive(i < Settings._NumberPlayers);
 
         // Pause if a controller was unplugged and playing
-        if (!Menu2._InMenus && (!_EditorTesting) && Settings._NumberControllers != PlayerScript.s_Players.Count)
-          Menu2.OnControllersChanged(Settings._NumberControllers - numcontrollers_save, numcontrollers_save);
+        if (!Menu._InMenus && (!_EditorTesting) && Settings._NumberControllers != PlayerScript.s_Players.Count)
+          Menu.OnControllersChanged(Settings._NumberControllers - numcontrollers_save, numcontrollers_save);
 
         // Check if menu
-        if (Menu2._InMenus && Menu2._CurrentMenu._Type == Menu2.MenuType.VERSUS)
+        if (Menu._InMenus && Menu._CurrentMenu._Type == Menu.MenuType.VERSUS)
         {
-          Menu2._CanRender = false;
-          Menu2.RenderMenu();
+          Menu._CanRender = false;
+          Menu.RenderMenu();
         }
       }
     }
+    //Settings._NumberPlayers = 4;
 
     // Update survial mode
     if (IsSurvival() && !_EditorEnabled)
@@ -1724,7 +1726,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     ProgressBar.Update();
 
     // Check play mode
-    if (!Menu2._InMenus)
+    if (!Menu._InMenus)
     {
       if (!_Paused)
       {
@@ -1977,7 +1979,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
             }
 
             // Exit to menus
-            TogglePause(Menu2.MenuType.EDITOR_LEVELS);
+            TogglePause(Menu.MenuType.EDITOR_LEVELS);
             TileManager.EditorMenus.HideMenus();
           }
 
@@ -2013,12 +2015,12 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         profile.HandleMenuInput();
 
       // Check if checking for controllers
-      if (Menu2._CurrentMenu._Type == Menu2.MenuType.CONTROLLERS_CHANGED)
+      if (Menu._CurrentMenu._Type == Menu.MenuType.CONTROLLERS_CHANGED)
       {
         var numplayers = (ControllerManager._NumberGamepads) + (Settings._ForceKeyboard ? 1 : 0);
-        if (numplayers >= Menu2._Save_NumPlayers)
+        if (numplayers >= Menu._Save_NumPlayers)
         {
-          Menu2.OnControllersChangedFix();
+          Menu.OnControllersChangedFix();
         }
       }
     }
@@ -2084,7 +2086,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       {
         if (Levels._HardcodedLoadout != null && !_EditorTesting) return;
         if (s_GameMode != GameModes.CLASSIC) return;
-        if (_Player?._ragdoll?._grappling ?? false) return;
+        if (_Player?._Ragdoll?._grappling ?? false) return;
 
         var iter = ItemManager.Loadout._Loadouts.Length;
         var difference = value - _LoadoutIndex;
@@ -2109,13 +2111,13 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         UpdateIcons();
 
         // If in loadout menu, update colors
-        if (Menu2._InMenus)
+        if (Menu._InMenus)
         {
-          Menu2.PlayNoise(Menu2.Noise.LOADOUT_SWAP);
-          if (Menu2._CurrentMenu._Type == Menu2.MenuType.SELECT_LOADOUT)
+          Menu.PlayNoise(Menu.Noise.LOADOUT_SWAP);
+          if (Menu._CurrentMenu._Type == Menu.MenuType.SELECT_LOADOUT)
           {
 
-            Menu2.TriggerActionSwapTo(Menu2.MenuType.SELECT_LOADOUT);
+            Menu.TriggerActionSwapTo(Menu.MenuType.SELECT_LOADOUT);
             /*var save_selection = Menu2.GetCurrentSelection();
             Menu2.SetCurrentSelection(0);
             Menu2.SetCurrentSelection(save_selection);
@@ -2251,7 +2253,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         // Check for alive player
         if (PlayerScript.s_Players != null)
           foreach (PlayerScript p in PlayerScript.s_Players)
-            if (p._Id == _Id && !p._ragdoll._IsDead) p._ragdoll.ChangeColor(GetColor());
+            if (p._Id == _Id && !p._Ragdoll._IsDead) p._Ragdoll.ChangeColor(GetColor());
       }
     }
     Transform _UI { get { return GameResources._UI_Player.GetChild(_Id); } }
@@ -2409,13 +2411,13 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         // Check loadout change
         if (ControllerManager.GetKey(ControllerManager.Key.Z))
         {
-          if (Menu2._CurrentMenu._Type == Menu2.MenuType.VERSUS)
+          if (Menu._CurrentMenu._Type == Menu.MenuType.VERSUS)
             VersusMode.IncrementPlayerTeam(_Id, -1);
           _LoadoutIndex--;
         }
         if (ControllerManager.GetKey(ControllerManager.Key.C))
         {
-          if (Menu2._CurrentMenu._Type == Menu2.MenuType.VERSUS)
+          if (Menu._CurrentMenu._Type == Menu.MenuType.VERSUS)
             VersusMode.IncrementPlayerTeam(_Id, 1);
           _LoadoutIndex++;
         }
@@ -2424,20 +2426,20 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       }
 
       // Check in menus
-      if (!Menu2._InMenus)
+      if (!Menu._InMenus)
         return;
 
       // Check axis selections
       var gamepad = ControllerManager.GetPlayerGamepad(_Id);
       if (gamepad.dpad.left.wasPressedThisFrame)
       {
-        if (Menu2._CurrentMenu._Type == Menu2.MenuType.VERSUS)
+        if (Menu._CurrentMenu._Type == Menu.MenuType.VERSUS)
           VersusMode.IncrementPlayerTeam(_Id, -1);
         _LoadoutIndex--;
       }
       if (gamepad.dpad.right.wasPressedThisFrame)
       {
-        if (Menu2._CurrentMenu._Type == Menu2.MenuType.VERSUS)
+        if (Menu._CurrentMenu._Type == Menu.MenuType.VERSUS)
           VersusMode.IncrementPlayerTeam(_Id, 1);
         _LoadoutIndex++;
       }
@@ -2445,12 +2447,12 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
 
     void Up()
     {
-      Menu2.SendInput(Menu2.Input.UP);
+      Menu.SendInput(Menu.Input.UP);
       FunctionsC.OnControllerInput();
     }
     void Down()
     {
-      Menu2.SendInput(Menu2.Input.DOWN);
+      Menu.SendInput(Menu.Input.DOWN);
       FunctionsC.OnControllerInput();
     }
 
@@ -2537,7 +2539,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
 
     public void UpdateHealthUI()
     {
-      UpdateHealthUI(_Player._ragdoll._health);
+      UpdateHealthUI(_Player._Ragdoll._health);
     }
     public void UpdateHealthUI(int health)
     {
@@ -2588,8 +2590,6 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         _ammoUI.localEulerAngles = new Vector3(90f, 0f, 0f);
         _ammoUI.localScale = new Vector3(0.8f, 0.004f, 0.25f);
 
-
-
         // Create ammo meshes
         _ammo = new Transform[_ammoCount];
         Vector3 localScale = new Vector3(0.8f / _ammoCount * (_ammoCount >= 3 ? (_ammoCount >= 12 ? 0.5f : 0.7f) : 0.82f), 0.18f, 0.001f);
@@ -2601,13 +2601,14 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
           var isUtility = item_data.Item2;
           var side = item_data.Item3;
           if (!isUtility)
-            if (side == ActiveRagdoll.Side.LEFT) ammo = player._ragdoll._ItemL != null ? player._ragdoll._ItemL.Clip() : ammo;
-            else ammo = player._ragdoll._ItemR != null ? player._ragdoll._ItemR.Clip() : ammo;
+            if (side == ActiveRagdoll.Side.LEFT) ammo = player._Ragdoll._ItemL != null ? player._Ragdoll._ItemL.Clip() : ammo;
+            else ammo = player._Ragdoll._ItemR != null ? player._Ragdoll._ItemR.Clip() : ammo;
           else
             if (side == ActiveRagdoll.Side.LEFT) ammo = player._UtilitiesLeft != null ? player._UtilitiesLeft.Count : ammo;
           else ammo = player._UtilitiesRight != null ? player._UtilitiesRight.Count : ammo;
         }
         if (ammo != _ammoCount) _ammoVisible = ammo;
+
         // Create meshes
         for (int i = 0; i < _ammoCount; i++)
         {
@@ -2810,6 +2811,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     //
     public void UpdateIcons()
     {
+
       // Perks
       UpdatePerkIcons();
 
@@ -2863,182 +2865,189 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         _weaponIcons[util.Item3].Init(System.Tuple.Create(util.Item1, util.Item2), util.Item3, System.Tuple.Create(_Player, true, util.Item4), true);
       }
       loaded_utils = null;
+
       // Local parsing function
       System.Tuple<Transform, int> LoadIcon(string name, int iter)
       {
         // Get icon
-        var item = ItemManager.GetItemUI(name, _Player);
-        Transform t = item.Item1;
-        t.parent = _UI;
+        var item = ItemManager.GetItemUI(name, _Player, _UI);
+        var transform = item.Item1;
+
         // Move BG
         bg.localPosition = new Vector3(0.05f + (iter + 1) * 0.4f, -0.05f, 0f);
         bg.localScale = new Vector3(0.6f, 0.74f + (iter + 1) * 0.85f, 0.001f);
+
         // Set transform
-        t.localScale = new Vector3(0.22f, 0.22f, 0.22f);
-        t.localPosition = new Vector3(0.7f + iter * 0.8f, 0f, 0f);
-        t.localEulerAngles = new Vector3(0f, 90f, 0f);
-        switch (t.name)
+        transform.localScale = new Vector3(0.22f, 0.22f, 0.22f);
+        transform.localPosition = new Vector3(0.7f + iter * 0.8f, 0f, 0f);
+        transform.localEulerAngles = new Vector3(0f, 90f, 0f);
+        switch (transform.name)
         {
           case ("KNIFE"):
           case ("ROCKET_FIST"):
-            t.localPosition += new Vector3(-0.11f, -0.02f, 0f);
-            t.localScale = new Vector3(0.13f, 0.13f, 0.13f);
-            t.localEulerAngles += new Vector3(6.8f, 0f, 0f);
+            transform.localPosition += new Vector3(-0.11f, -0.02f, 0f);
+            transform.localScale = new Vector3(0.13f, 0.13f, 0.13f);
+            transform.localEulerAngles += new Vector3(6.8f, 0f, 0f);
             break;
           case ("AXE"):
-            t.localPosition += new Vector3(-0.11f, 0.03f, 0f);
-            t.localScale = new Vector3(0.1f, 0.12f, 0.1f);
-            t.localEulerAngles += new Vector3(90f, 0f, 0f);
+            transform.localPosition += new Vector3(-0.11f, 0.03f, 0f);
+            transform.localScale = new Vector3(0.1f, 0.12f, 0.1f);
+            transform.localEulerAngles += new Vector3(90f, 0f, 0f);
             break;
           case ("FRYING_PAN"):
-            t.localPosition += new Vector3(-0.2f, 0.03f, 0f);
-            t.localScale = new Vector3(0.13f, 0.17f, 0.13f);
-            t.localEulerAngles = new Vector3(0f, 0f, 270f);
+            transform.localPosition += new Vector3(-0.2f, 0.03f, 0f);
+            transform.localScale = new Vector3(0.13f, 0.17f, 0.13f);
+            transform.localEulerAngles = new Vector3(0f, 0f, 270f);
             break;
           case ("BAT"):
-            t.localPosition += new Vector3(-0.15f, 0f, 0f);
-            t.localScale = new Vector3(0.11f, 0.12f, 0.11f);
-            t.localEulerAngles += new Vector3(81f, 0f, 0f);
+            transform.localPosition += new Vector3(-0.15f, 0f, 0f);
+            transform.localScale = new Vector3(0.11f, 0.12f, 0.11f);
+            transform.localEulerAngles += new Vector3(81f, 0f, 0f);
             break;
           case "KATANA":
           case "RAPIER":
-            t.localPosition += new Vector3(-0.2f, -0.05f, 0f);
-            t.localScale = new Vector3(0.11f, 0.1f, 0.11f);
-            t.localEulerAngles = new Vector3(8f, 0f, -75f);
+            transform.localPosition += new Vector3(-0.2f, -0.05f, 0f);
+            transform.localScale = new Vector3(0.11f, 0.1f, 0.11f);
+            transform.localEulerAngles = new Vector3(8f, 0f, -75f);
             break;
           case "PISTOL_SILENCED":
           case "PISTOL":
           case "PISTOL_DOUBLE":
           case "PISTOL_CHARGE":
-            t.localPosition += new Vector3(-0.19f, 0.06f, 0f);
-            t.localScale = new Vector3(0.14f, 0.14f, 0.14f);
+            transform.localPosition += new Vector3(-0.19f, 0.06f, 0f);
+            transform.localScale = new Vector3(0.14f, 0.14f, 0.14f);
             break;
           case "RIFLE_CHARGE":
-            t.localPosition += new Vector3(0.03f, 0.06f, 0f);
-            t.localScale = new Vector3(0.14f, 0.14f, 0.14f);
+            transform.localPosition += new Vector3(0.03f, 0.06f, 0f);
+            transform.localScale = new Vector3(0.14f, 0.14f, 0.14f);
             break;
           case "PISTOL_MACHINE":
-            t.localPosition += new Vector3(-0.19f, 0.08f, 0f);
-            t.localScale = new Vector3(0.14f, 0.14f, 0.14f);
+            transform.localPosition += new Vector3(-0.19f, 0.08f, 0f);
+            transform.localScale = new Vector3(0.14f, 0.14f, 0.14f);
             break;
           case ("REVOLVER"):
-            t.localPosition += new Vector3(-0.22f, -0.01f, 0f);
-            t.localScale = new Vector3(0.13f, 0.13f, 0.13f);
+            transform.localPosition += new Vector3(-0.22f, -0.01f, 0f);
+            transform.localScale = new Vector3(0.13f, 0.13f, 0.13f);
             break;
           case ("SHOTGUN_DOUBLE"):
-            t.localPosition += new Vector3(0.08f, 0.04f, 0f);
-            t.localScale = new Vector3(0.16f, 0.16f, 0.16f);
+            transform.localPosition += new Vector3(0.08f, 0.04f, 0f);
+            transform.localScale = new Vector3(0.16f, 0.16f, 0.16f);
             break;
           case ("SHOTGUN_PUMP"):
-            t.localPosition += new Vector3(0f, 0.02f, 0f);
-            t.localScale = new Vector3(0.1f, 0.09f, 0.1f);
+            transform.localPosition += new Vector3(0f, 0.02f, 0f);
+            transform.localScale = new Vector3(0.1f, 0.09f, 0.1f);
             break;
           case ("SHOTGUN_BURST"):
-            t.localPosition += new Vector3(0.01f, 0f, 0f);
-            t.localScale = new Vector3(0.11f, 0.1f, 0.13f);
+            transform.localPosition += new Vector3(0.01f, 0f, 0f);
+            transform.localScale = new Vector3(0.11f, 0.1f, 0.13f);
             break;
           case ("UZI"):
-            t.localPosition += new Vector3(-0.16f, 0.07f, 0f);
-            t.localScale = new Vector3(0.14f, 0.14f, 0.14f);
+            transform.localPosition += new Vector3(-0.16f, 0.07f, 0f);
+            transform.localScale = new Vector3(0.14f, 0.14f, 0.14f);
             break;
           case ("AK47"):
           case ("FLAMETHROWER"):
-            t.localPosition += new Vector3(-0.11f, 0.03f, 0f);
-            t.localScale = new Vector3(0.09f, 0.09f, 0.09f);
+            transform.localPosition += new Vector3(-0.11f, 0.03f, 0f);
+            transform.localScale = new Vector3(0.09f, 0.09f, 0.09f);
             break;
           case ("M16"):
-            t.localPosition += new Vector3(-0.14f, 0.03f, 0f);
-            t.localScale = new Vector3(0.09f, 0.11f, 0.08f);
+            transform.localPosition += new Vector3(-0.14f, 0.03f, 0f);
+            transform.localScale = new Vector3(0.09f, 0.11f, 0.08f);
             break;
           case ("DMR"):
           case ("RIFLE"):
           case ("RIFLE_LEVER"):
-            t.localPosition += new Vector3(-0.14f, 0.03f, 0f);
-            t.localScale = new Vector3(0.09f, 0.11f, 0.08f);
+            transform.localPosition += new Vector3(-0.14f, 0.03f, 0f);
+            transform.localScale = new Vector3(0.09f, 0.11f, 0.08f);
             break;
           case ("CROSSBOW"):
-            t.localPosition += new Vector3(-0.35f, -0.07f, 0f);
-            t.localScale = new Vector3(0.08f, 0.08f, 0.08f);
-            t.localEulerAngles = new Vector3(-30f, 90f, 90f);
+            transform.localPosition += new Vector3(-0.35f, -0.07f, 0f);
+            transform.localScale = new Vector3(0.08f, 0.08f, 0.08f);
+            transform.localEulerAngles = new Vector3(-30f, 90f, 90f);
             break;
           case ("GRENADE_LAUNCHER"):
-            t.localPosition += new Vector3(-0.21f, 0.05f, 0f);
-            t.localScale = new Vector3(0.11f, 0.11f, 0.11f);
+            transform.localPosition += new Vector3(-0.21f, 0.05f, 0f);
+            transform.localScale = new Vector3(0.11f, 0.11f, 0.11f);
             break;
           case ("MORTAR_STRIKE"):
-            t.localPosition += new Vector3(-0.15f, 0.05f, 0f);
-            t.localScale = new Vector3(0.09f, 0.09f, 0.09f);
+            transform.localPosition += new Vector3(-0.15f, 0.05f, 0f);
+            transform.localScale = new Vector3(0.09f, 0.09f, 0.09f);
             break;
           case ("SNIPER"):
-            t.localPosition += new Vector3(-0.14f, 0.03f, 0f);
-            t.localScale = new Vector3(0.09f, 0.11f, 0.08f);
+            transform.localPosition += new Vector3(-0.14f, 0.03f, 0f);
+            transform.localScale = new Vector3(0.09f, 0.11f, 0.08f);
             break;
           case "GRENADE_IMPACT":
           case "GRENADE":
           case "MOLOTOV":
-            t.localPosition += new Vector3(-0.23f, 0.03f, 0f);
-            t.localEulerAngles = new Vector3(25f, -90f, 0f);
-            t.localScale = new Vector3(0.8f, 0.8f, 0.8f);
+            transform.localPosition += new Vector3(-0.23f, 0.03f, 0f);
+            transform.localEulerAngles = new Vector3(25f, -90f, 0f);
+            transform.localScale = new Vector3(0.8f, 0.8f, 0.8f);
             break;
           case "TACTICAL_BULLET":
-            t.localPosition += new Vector3(-0.13f, 0.03f, 0f);
-            t.localEulerAngles = new Vector3(17f, -90f, 0f);
-            t.localScale = new Vector3(1.2f, 1.2f, 1.2f);
+            transform.localPosition += new Vector3(-0.13f, 0.03f, 0f);
+            transform.localEulerAngles = new Vector3(17f, -90f, 0f);
+            transform.localScale = new Vector3(1.2f, 1.2f, 1.2f);
+            break;
+          case "MIRROR":
+            transform.localPosition += new Vector3(-0.14f, 0f, 0f);
+            transform.localEulerAngles = new Vector3(0f, 180f, -16f);
+            transform.localScale = new Vector3(0.8f, 0.8f, 0.2f);
             break;
           case ("C4"):
-            t.localPosition += new Vector3(-0.17f, 0.0f, 0f);
-            t.localEulerAngles = new Vector3(0f, 90f, -90f);
-            t.localScale = new Vector3(0.8f, 0.8f, 0.8f);
+            transform.localPosition += new Vector3(-0.17f, 0.0f, 0f);
+            transform.localEulerAngles = new Vector3(0f, 90f, -90f);
+            transform.localScale = new Vector3(0.8f, 0.8f, 0.8f);
             break;
           case ("SHURIKEN"):
           case ("SHURIKEN_BIG"):
-            t.localPosition += new Vector3(-0.22f, 0.02f, 0f);
-            t.localEulerAngles = new Vector3(90f, 0f, 0f);
-            t.localScale = new Vector3(0.7f, 0.7f, 0.7f);
+            transform.localPosition += new Vector3(-0.22f, 0.02f, 0f);
+            transform.localEulerAngles = new Vector3(90f, 0f, 0f);
+            transform.localScale = new Vector3(0.7f, 0.7f, 0.7f);
             break;
           case ("KUNAI_EXPLOSIVE"):
           case ("KUNAI_STICKY"):
-            t.localPosition += new Vector3(-0.14f, -0.03f, 0f);
-            t.localEulerAngles = new Vector3(0f, 90f, 90f);
-            t.localScale = new Vector3(0.7f, 0.7f, 0.7f);
+            transform.localPosition += new Vector3(-0.14f, -0.03f, 0f);
+            transform.localEulerAngles = new Vector3(0f, 90f, 90f);
+            transform.localScale = new Vector3(0.7f, 0.7f, 0.7f);
             break;
           case ("STOP_WATCH"):
           case ("INVISIBILITY"):
-            t.localPosition += new Vector3(-0.25f, 0f, 0f);
-            t.localEulerAngles = new Vector3(0f, 90f, -90f);
-            t.localScale = new Vector3(0.6f, 0.6f, 0.6f);
+            transform.localPosition += new Vector3(-0.25f, 0f, 0f);
+            transform.localEulerAngles = new Vector3(0f, 90f, -90f);
+            transform.localScale = new Vector3(0.6f, 0.6f, 0.6f);
             break;
           case ("STICKY_GUN"):
-            t.localPosition += new Vector3(-0.06f, 0.03f, 0f);
-            t.localScale = new Vector3(0.15f, 0.15f, 0.15f);
+            transform.localPosition += new Vector3(-0.06f, 0.03f, 0f);
+            transform.localScale = new Vector3(0.15f, 0.15f, 0.15f);
             break;
 
           case ("GRENADE_STUN"):
 
-            t.localPosition += new Vector3(-0.13f, -0.01f, 0f);
-            t.localEulerAngles = new Vector3(0f, 0f, -90f);
-            t.localScale = new Vector3(0.85f, 0.85f, 0.85f);
+            transform.localPosition += new Vector3(-0.13f, -0.01f, 0f);
+            transform.localEulerAngles = new Vector3(0f, 0f, -90f);
+            transform.localScale = new Vector3(0.85f, 0.85f, 0.85f);
 
             break;
 
           case ("TEMP_SHIELD"):
 
-            t.localPosition += new Vector3(-0.2f, 0.03f, 0f);
-            t.localEulerAngles = new Vector3(90f, 0f, 0f);
-            t.localScale = new Vector3(0.7f, 0.7f, 0.7f);
+            transform.localPosition += new Vector3(-0.2f, 0.03f, 0f);
+            transform.localEulerAngles = new Vector3(90f, 0f, 0f);
+            transform.localScale = new Vector3(0.7f, 0.7f, 0.7f);
 
             break;
 
           default:
             Debug.LogWarning($"Unhandled positioning of Utility UI type: {name}");
 
-            t.localPosition += new Vector3(-0.19f, 0.08f, 0f);
-            t.localScale = new Vector3(0.14f, 0.14f, 0.14f);
+            transform.localPosition += new Vector3(-0.19f, 0.08f, 0f);
+            transform.localScale = new Vector3(0.14f, 0.14f, 0.14f);
             break;
         }
         // Color
         var meshes = new List<Renderer>();
-        var transform_base = t.Find("Mesh");
+        var transform_base = transform.Find("Mesh");
         transform_base.gameObject.layer = 11;
         var mesh_base = transform_base.GetComponent<Renderer>();
         if (mesh_base != null) meshes.Add(mesh_base);
@@ -3056,6 +3065,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
             else shared[i] = _s_Singleton._item_materials[1];
             mesh.sharedMaterials = shared;
           }
+
         return item;
       }
 
@@ -3097,7 +3107,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     {
       UpdateIcons();
 
-      CreateHealthUI(_Player == null ? 1 : _Player._ragdoll._health);
+      CreateHealthUI(_Player == null ? 1 : _Player._Ragdoll._health);
     }
   }
 
@@ -3116,7 +3126,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
 #endif
 
     if (!focus)
-      if (!Menu2._InMenus && !_EditorEnabled)
+      if (!Menu._InMenus && !_EditorEnabled)
         TogglePause();
   }
 
@@ -3393,32 +3403,38 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     {
       if (item == Items.NONE) return null;
       if (_Items == null) _Items = new List<Item>();
+
       var name = item.ToString();
-      GameObject new_item = Instantiate(Resources.Load($"Items/{name}") as GameObject);
+      if (_Container == null) _Container = GameObject.Find("Items").transform;
+
+      GameObject new_item = Instantiate(Resources.Load($"Items/{name}") as GameObject, _Container);
       new_item.name = name;
       var script = new_item.GetComponent<ItemScript>();
       script._type = item;
-      if (_Container == null) _Container = GameObject.Find("Items").transform;
-      new_item.transform.parent = _Container;
       new_item.transform.position = new Vector3(0f, -10f, 0f);
       _Items.Add(new Item(item, ref new_item));
       return script;
     }
 
-    public static System.Tuple<Transform, int> GetItemUI(string item, PlayerScript player)
+    public static System.Tuple<Transform, int> GetItemUI(string item, PlayerScript player, Transform parent)
     {
-      GameObject new_item = Instantiate(Resources.Load($"Items/{item}") as GameObject);
-      new_item.layer = 11;
-      var script = new_item.GetComponent<ItemScript>();
-      script._ragdoll = player != null ? player._ragdoll : null;
-      int clip = script.GetClipSize();
-      GameObject.Destroy(script);
-      var collider = new_item.GetComponent<Collider>();
-      if (collider) GameObject.Destroy(collider);
-      var rigidbody = new_item.GetComponent<Rigidbody>();
-      if (rigidbody) GameObject.Destroy(rigidbody);
+      GameObject new_item = Instantiate(Resources.Load($"Items/{item}") as GameObject, parent);
       new_item.name = item;
-      return System.Tuple.Create(new_item.transform, clip);
+      new_item.layer = 11;
+
+      var script = new_item.GetComponent<ItemScript>();
+      script._ragdoll = player != null ? player._Ragdoll : null;
+      var clipSize = script.GetClipSize();
+      GameObject.DestroyImmediate(script);
+
+      var colliders = new_item.GetComponents<Collider>();
+      for (var i = 0; i < colliders.Length; i++)
+        GameObject.DestroyImmediate(colliders[i]);
+
+      var rigidbody = new_item.GetComponent<Rigidbody>();
+      if (rigidbody) GameObject.DestroyImmediate(rigidbody);
+
+      return System.Tuple.Create(new_item.transform, clipSize);
     }
 
     public static GameObject GetItem(Items itemType)
@@ -3489,6 +3505,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         case UtilityScript.UtilityType.SHURIKEN_BIG:
         case UtilityScript.UtilityType.GRENADE_STUN:
         case UtilityScript.UtilityType.TACTICAL_BULLET:
+        case UtilityScript.UtilityType.MIRROR:
           return 1;
         case UtilityScript.UtilityType.GRENADE:
         case UtilityScript.UtilityType.GRENADE_IMPACT:
@@ -3547,15 +3564,15 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
   public static float _LastPause;
   public static void TogglePause()
   {
-    TogglePause(Menu2.MenuType.PAUSE);
+    TogglePause(Menu.MenuType.PAUSE);
   }
-  public static void TogglePause(Menu2.MenuType afterUnlockMenu, bool controllersChanged = false)
+  public static void TogglePause(Menu.MenuType afterUnlockMenu, bool controllersChanged = false)
   {
     if (Time.unscaledTime < 5f) return;
 
-    if (!Menu2.CanPause()) return;
+    if (!Menu.CanPause()) return;
 
-    if (afterUnlockMenu != Menu2.MenuType.NONE)
+    if (afterUnlockMenu != Menu.MenuType.NONE)
     {
       if (TileManager._LoadingMap) return;
       if (Time.unscaledTime - _LastPause < 0.1f) return;
@@ -3565,7 +3582,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     if (_Paused)
     {
       Time.timeScale = 0f;
-      Menu2.OnPause(afterUnlockMenu);
+      Menu.OnPause(afterUnlockMenu);
       System.GC.Collect();
       TileManager._Text_LevelNum.gameObject.SetActive(false);
       TileManager._Text_LevelTimer.gameObject.SetActive(false);
@@ -3647,15 +3664,15 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
           {
             Levels._LevelPack_Playing = false;
 
-            TogglePause(Menu2.MenuType.EDITOR_PACKS);
-            Menu2.SwitchMenu(Menu2.MenuType.EDITOR_PACKS);
-            Menu2._CurrentMenu._selectionIndex = Levels._LevelPacks_Play_SaveIndex;
-            Menu2._CanRender = false;
-            Menu2.RenderMenu();
+            TogglePause(Menu.MenuType.EDITOR_PACKS);
+            Menu.SwitchMenu(Menu.MenuType.EDITOR_PACKS);
+            Menu._CurrentMenu._selectionIndex = Levels._LevelPacks_Play_SaveIndex;
+            Menu._CanRender = false;
+            Menu.RenderMenu();
             _LastPause = Time.unscaledTime - 0.2f;
-            Menu2.SendInput(Menu2.Input.SPACE);
-            Menu2.SendInput(Menu2.Input.SPACE);
-            Menu2.SendInput(Menu2.Input.SPACE);
+            Menu.SendInput(Menu.Input.SPACE);
+            Menu.SendInput(Menu.Input.SPACE);
+            Menu.SendInput(Menu.Input.SPACE);
             _LastPause = Time.unscaledTime;
             return;
           }
@@ -3678,15 +3695,15 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
           {
             Levels._LevelPack_Playing = false;
 
-            TogglePause(Menu2.MenuType.EDITOR_PACKS);
-            Menu2.SwitchMenu(Menu2.MenuType.EDITOR_PACKS);
-            Menu2._CurrentMenu._selectionIndex = Levels._LevelPacks_Play_SaveIndex;
-            Menu2._CanRender = false;
-            Menu2.RenderMenu();
+            TogglePause(Menu.MenuType.EDITOR_PACKS);
+            Menu.SwitchMenu(Menu.MenuType.EDITOR_PACKS);
+            Menu._CurrentMenu._selectionIndex = Levels._LevelPacks_Play_SaveIndex;
+            Menu._CanRender = false;
+            Menu.RenderMenu();
             _LastPause = Time.unscaledTime - 0.2f;
-            Menu2.SendInput(Menu2.Input.SPACE);
-            Menu2.SendInput(Menu2.Input.SPACE);
-            Menu2.SendInput(Menu2.Input.SPACE);
+            Menu.SendInput(Menu.Input.SPACE);
+            Menu.SendInput(Menu.Input.SPACE);
+            Menu.SendInput(Menu.Input.SPACE);
             _LastPause = Time.unscaledTime;
             return;
           }
@@ -3709,9 +3726,9 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     // Display unlock messages
     if (Shop.s_UnlockString != string.Empty)
     {
-      var nextMenu = Shop.s_UnlockString.Contains("new difficulty unlocked") || Shop.s_UnlockString.Contains("to unlock the optional extra settings") ? Menu2.MenuType.LEVELS : Menu2.MenuType.NONE;
+      var nextMenu = Shop.s_UnlockString.Contains("new difficulty unlocked") || Shop.s_UnlockString.Contains("to unlock the optional extra settings") ? Menu.MenuType.LEVELS : Menu.MenuType.NONE;
       TogglePause(nextMenu);
-      if (nextMenu != Menu2.MenuType.NONE)
+      if (nextMenu != Menu.MenuType.NONE)
         return;
     }
 
@@ -3724,7 +3741,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         if (Levels._CurrentLevelIndex + 1 == Levels._CurrentLevelCollection._levelData.Length)
         {
           TogglePause();
-          Menu2.SwitchMenu(Menu2.MenuType.LEVELS);
+          Menu.SwitchMenu(Menu.MenuType.LEVELS);
           return;
         }
         NextLevel(Levels._CurrentLevelIndex + 1);
@@ -3741,7 +3758,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         if (Levels._CurrentLevelIndex == 0)
         {
           TogglePause();
-          Menu2.SwitchMenu(Menu2.MenuType.LEVELS);
+          Menu.SwitchMenu(Menu.MenuType.LEVELS);
           return;
         }
         NextLevel(Levels._CurrentLevelIndex - 1);
@@ -3819,16 +3836,16 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
   static void IncrementLevelMenu(int by)
   {
     // Increment menu selector
-    Menu2._SaveLevelSelected += by;
-    if (Menu2._SaveLevelSelected == 12)
+    Menu._SaveLevelSelected += by;
+    if (Menu._SaveLevelSelected == 12)
     {
-      Menu2._SaveLevelSelected = 0;
-      Menu2._SaveMenuDir++;
+      Menu._SaveLevelSelected = 0;
+      Menu._SaveMenuDir++;
     }
-    else if (Menu2._SaveLevelSelected == -1)
+    else if (Menu._SaveLevelSelected == -1)
     {
-      Menu2._SaveLevelSelected = 11;
-      Menu2._SaveMenuDir--;
+      Menu._SaveLevelSelected = 11;
+      Menu._SaveMenuDir--;
     }
   }
 
@@ -3887,10 +3904,10 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
 
         if (Settings._DifficultyUnlocked <= 0)
         {
-          Menu2._SaveMenuDir = -1;
+          Menu._SaveMenuDir = -1;
           Settings._DifficultyUnlocked = 1;
           Shop.s_UnlockString += $"- new difficulty unlocked: <color=cyan>sneakier</color>\n";
-          Menu2.s_SetNextDifficultyOnMenu = true;
+          Menu.s_SetNextDifficultyOnMenu = true;
 
           return true;
         }
@@ -4045,7 +4062,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         // Teleport other players to them
         foreach (var p in PlayerScript.s_Players)
         {
-          if (p == null || p._ragdoll._IsDead || p._Id == hasGoal._Id) continue;
+          if (p == null || p._Ragdoll._IsDead || p._Id == hasGoal._Id) continue;
           p.transform.position = hasGoal.transform.position;
         }
       }
@@ -4057,7 +4074,6 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     ActiveRagdoll.SoftReset();
     yield return new WaitForSeconds(0.05f);
     TileManager.LoadMap(levelData);
-    System.GC.Collect();
     yield return new WaitForSeconds(0.05f);
     _s_Singleton._GameEnded = false;
 

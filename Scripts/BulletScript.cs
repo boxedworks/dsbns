@@ -45,7 +45,7 @@ public class BulletScript : MonoBehaviour
   }
 
   ParticleSystem __particles;
-  ParticleSystem _particles
+  public ParticleSystem _Particles
   {
     get { if (__particles == null) __particles = transform.GetChild(0).GetComponent<ParticleSystem>(); return __particles; }
     set { __particles = value; }
@@ -85,7 +85,7 @@ public class BulletScript : MonoBehaviour
     _c.size = size;
 
     // Set particle system scale
-    var module = _particles.main;
+    var module = _Particles.main;
     module.startSize = 0.13f * scale;
   }
 
@@ -127,11 +127,11 @@ public class BulletScript : MonoBehaviour
 
   int _penatrationAmount;
   float _initialForce;
-  public void OnShot(int penatrationAmount, float force)
+  public void OnShot(int penatrationAmount, float force, Vector3 shootPos)
   {
     _penatrationAmount = penatrationAmount;
     _initialForce = force;
-    _shootPosition = transform.position;
+    _shootPosition = shootPos;
   }
 
   public int GetPenatrationAmount(bool total)
@@ -184,18 +184,7 @@ public class BulletScript : MonoBehaviour
           // Check smart bullets
           if ((_sourceDamageRagdoll._PlayerScript?.HasPerk(Shop.Perk.PerkType.SMART_BULLETS) ?? false) && _sourceType != GameScript.ItemManager.Items.FLAMETHROWER)
           {
-            var enemy = FunctionsC.GetClosestEnemyTo(transform.position, false);
-            if (enemy != null && enemy._ragdoll != null)
-            {
-              if (_saveSmartVelocity == -1f)
-                _saveSmartVelocity = _rb.velocity.magnitude;
-              var new_vel = (enemy._ragdoll._Hip.transform.position - _rb.position).normalized * _saveSmartVelocity;
-              _rb.velocity = new_vel;
-
-              _startTime = Time.time;
-
-              _canDamageSource = true;
-            }
+            RedirectToClosestTarget(r._Hip.gameObject, true);
           }
 
           return true;
@@ -251,7 +240,7 @@ public class BulletScript : MonoBehaviour
               PlaySparks(true);
               PlayBulletEffectDropBullets(transform.position, 1);
 
-              item._ragdoll.Recoil(-(_sourceItemRagdoll._Hip.position - item.transform.position).normalized, _rb.velocity.magnitude / 25f);
+              item._ragdoll.Recoil(-(_sourceItemRagdoll._Hip.position - item.transform.position).normalized, _rb.linearVelocity.magnitude / 25f);
               OnHideBullet();
               Hide();
             }
@@ -330,6 +319,128 @@ public class BulletScript : MonoBehaviour
   }
 
   //
+  int _lastRedirectedId, _lastLastRedirectedId;
+  public bool RedirectToClosestTarget(GameObject usingGameObject, bool smartBullets)
+  {
+    // Don't redirect from same entity in a row
+    var id = usingGameObject.GetHashCode();
+    if (_lastRedirectedId == id) return false;
+    _lastLastRedirectedId = _lastRedirectedId;
+    _lastRedirectedId = id;
+
+    //
+    Vector3 GetLocalPosition(Vector3 position)
+    {
+      position.y = _rb.position.y;
+      return position;
+    }
+
+    //
+    var targetPosition = Vector3.zero;
+
+    var setPosition = GetLocalPosition(usingGameObject.transform.position);
+    _rb.position = setPosition;
+
+    // Check closest enemy
+    var target = FunctionsC.GetClosestTargetTo(_sourceDamageRagdoll, transform.position, false);
+    if (target != null && target._ragdoll != null)
+    {
+      targetPosition = GetLocalPosition(target._ragdoll._Hip.position);
+
+      //Debug.DrawLine(_rb.position, targetPosition, Color.cyan, 5f);
+    }
+
+    // Check random enemy
+    var raycastinfo = new RaycastHit();
+    if (targetPosition == Vector3.zero || (Physics.SphereCast(new Ray(_rb.position, (targetPosition - _rb.position).normalized), 0.05f, out raycastinfo, 100f, LayerMask.GetMask("ParticleCollision")) && raycastinfo.distance < target._distance * 0.95f))
+    {
+      //Debug.Log($"{raycastinfo.distance} <? {enemy._distance * 0.95f} [{raycastinfo.collider.name}]");
+
+      target = FunctionsC.GetRandomEnemy(transform.position, false);
+      if (target != null && target._ragdoll != null)
+      {
+        targetPosition = GetLocalPosition(target._ragdoll._Hip.position);
+
+        //Debug.DrawLine(_rb.position, targetPosition, Color.blue, 5f);
+      }
+    }
+
+    // Check nearest mirrors
+    raycastinfo = new RaycastHit();
+    if (targetPosition == Vector3.zero || (Physics.SphereCast(new Ray(_rb.position, (targetPosition - _rb.position).normalized), 0.05f, out raycastinfo, 100f, LayerMask.GetMask("ParticleCollision")) && raycastinfo.distance < target._distance * 0.95f))
+    {
+
+      var mirrors = UtilityScript.s_Utilities_Thrown.ContainsKey(UtilityScript.UtilityType.MIRROR) ? UtilityScript.s_Utilities_Thrown[UtilityScript.UtilityType.MIRROR] : null;
+      if (mirrors != null && mirrors.Count > 0)
+      {
+
+        var index = -1;
+        var closestVisibleMirror = -1;
+        var mirrorDistance = 10000f;
+        foreach (var mirror in mirrors)
+        {
+          index++;
+
+          // Check for self
+          if (mirror == null) continue;
+          if (mirror.transform.parent.name != "Objects") continue;
+
+          var mirrorId = mirror.gameObject.transform.GetChild(0).GetChild(0).gameObject.GetHashCode();
+          if (
+            mirrorId == id ||
+            mirrorId == _lastRedirectedId ||
+            mirrorId == _lastLastRedirectedId
+          )
+            continue;
+
+          //
+          var mirrorPosition = mirror.transform.GetChild(0).GetChild(0).position;
+          var distance = MathC.Get2DDistance(_rb.position, mirrorPosition);
+          if (distance > mirrorDistance) continue;
+
+          //
+          raycastinfo = new RaycastHit();
+          var dir = (mirrorPosition - _rb.position).normalized;
+          if (Physics.SphereCast(new Ray(_rb.position + dir * 0.15f, dir), 0.025f, out raycastinfo, 100f, LayerMask.GetMask("ParticleCollision")))
+          {
+            //Debug.DrawLine(_rb.position, raycastinfo.point, raycastinfo.distance < distance ? Color.red : Color.green, 5f);
+            //Debug.Log($"{raycastinfo.distance} <? {distance}");
+            if (raycastinfo.distance < distance * 0.95f) continue;
+          }
+
+          closestVisibleMirror = index;
+          mirrorDistance = distance;
+        }
+
+        //
+        if (closestVisibleMirror != -1)
+          targetPosition = GetLocalPosition(mirrors[closestVisibleMirror].transform.GetChild(0).GetChild(0).position);
+      }
+    }
+
+    //
+    if (targetPosition != Vector3.zero)
+    {
+      if (_saveSmartVelocity == -1f)
+        _saveSmartVelocity = _rb.linearVelocity.magnitude;
+
+      var dir = (targetPosition - _rb.position).normalized;
+      if (!smartBullets)
+        _rb.position += dir * 0.25f;
+
+      dir = (targetPosition - _rb.position).normalized;
+      var new_vel = dir * _saveSmartVelocity;
+      _rb.linearVelocity = new_vel;
+
+      _startTime = Time.time;
+
+      _canDamageSource = true;
+    }
+
+    return true;
+  }
+
+  //
   public Vector3 GetShootPosition()
   {
     return _shootPosition;
@@ -375,11 +486,11 @@ public class BulletScript : MonoBehaviour
   {
     if (other_bullet)
     {
-      PlayBulletEffect(0, transform.position, transform.forward, bulletImpactType);
+      PlayBulletEffect(0, _rb.position, transform.forward, bulletImpactType);
     }
     else
     {
-      PlayBulletEffect(1, transform.position, transform.forward, bulletImpactType);
+      PlayBulletEffect(1, _rb.position, transform.forward, bulletImpactType);
     }
 
     // Hot bullet casings
@@ -395,13 +506,18 @@ public class BulletScript : MonoBehaviour
 
     WOOD,
     BUSHES,
+
+    MIRROR,
   }
   public static void PlayBulletEffect(int effectIter, Vector3 position, Vector3 forward, BulletImpactType bulletImpactType = BulletImpactType.NORMAL)
   {
     switch (effectIter)
     {
       case 0:
-        SfxManager.PlayAudioSourceSimple(position, "Etc/Bullet_ricochet");
+        if (bulletImpactType == BulletImpactType.MIRROR)
+          SfxManager.PlayAudioSourceSimple(position, "Etc/Mirror_Reflect", 0.65f, 0.85f);
+        else
+          SfxManager.PlayAudioSourceSimple(position, "Etc/Bullet_ricochet");
 
         var parts = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.BULLET_COLLIDE)[0];
         parts.transform.position = position;
@@ -490,9 +606,10 @@ public class BulletScript : MonoBehaviour
     // Delay the start of playing the system to keep particles from emitting across screen
     if (itemType != GameScript.ItemManager.Items.FLAMETHROWER && itemType != GameScript.ItemManager.Items.ROCKET_FIST)
     {
-      if (_particles != null)
+      if (_Particles != null)
       {
-        _particles.Play();
+        _Particles.gameObject.SetActive(true);
+        _Particles.Play();
         _light.enabled = true;
       }
     }
@@ -508,8 +625,8 @@ public class BulletScript : MonoBehaviour
     _lastPos = spawnPosition;
     _triggered = false;
     _deflected = false;
-    _particles.transform.parent = transform;
-    _particles.transform.localPosition = new Vector3(0f, 0f, 0.5f);
+    _Particles.transform.parent = transform;
+    _Particles.transform.localPosition = new Vector3(0f, 0f, 0.5f);
     _saveSmartVelocity = -1f;
 
     _explodeOnHide = false;
@@ -525,13 +642,13 @@ public class BulletScript : MonoBehaviour
   public void SetColor(Color start, Color end)
   {
     var g = new Gradient();
-    var colors = _particles.colorOverLifetime.color.gradient.colorKeys;
-    var alphas_original = _particles.colorOverLifetime.color.gradient.alphaKeys;
+    var colors = _Particles.colorOverLifetime.color.gradient.colorKeys;
+    var alphas_original = _Particles.colorOverLifetime.color.gradient.alphaKeys;
     var alphas = new GradientAlphaKey[alphas_original.Length];
     System.Array.Copy(alphas_original, 0, alphas, 0, alphas_original.Length);
     g.SetKeys(new GradientColorKey[] { new GradientColorKey(start, 0f), new GradientColorKey(end, 1f) }, alphas);
 
-    var lifetime = _particles.colorOverLifetime;
+    var lifetime = _Particles.colorOverLifetime;
     lifetime.color = g;
 
     _light.color = start;
@@ -539,13 +656,13 @@ public class BulletScript : MonoBehaviour
 
   public void SetLifetime(float lifetime)
   {
-    var particles = _particles.main;
+    var particles = _Particles.main;
     particles.startLifetime = lifetime;
   }
 
   public void SetNoise(float strength, float frequency)
   {
-    var particles = _particles.noise;
+    var particles = _Particles.noise;
     particles.strength = strength;
     particles.frequency = frequency;
   }
@@ -554,7 +671,7 @@ public class BulletScript : MonoBehaviour
   {
     _triggered = true;
     _light.enabled = false;
-    if (_particles == null) return;
+    if (_Particles == null) return;
     GameScript._s_Singleton.StartCoroutine(LagParticles(1f));
   }
   public static void HideAll()
@@ -568,11 +685,12 @@ public class BulletScript : MonoBehaviour
 
   IEnumerator LagParticles(float time)
   {
-    _particles.transform.parent = transform.parent;
-    _particles.Stop();
+    _Particles.transform.parent = transform.parent;
+    _Particles.Stop();
+    _Particles.gameObject.SetActive(false);
     gameObject.SetActive(false);
     yield return new WaitForSeconds(time);
-    _particles.transform.parent = transform;
+    _Particles.transform.parent = transform;
   }
 
   ActiveRagdoll _sourceDamageRagdoll;
@@ -583,8 +701,8 @@ public class BulletScript : MonoBehaviour
     _startTime = Time.time;
 
     // Change direction
-    var speed = rb.velocity.magnitude;
-    rb.velocity = -MathC.Get2DVector(rb.position - _sourceDamageRagdoll._Hip.position).normalized * Mathf.Clamp(speed * 1.6f, 0f, 30f);
+    var speed = rb.linearVelocity.magnitude;
+    rb.linearVelocity = -MathC.Get2DVector(rb.position - _sourceDamageRagdoll._Hip.position).normalized * Mathf.Clamp(speed * 1.6f, 0f, 30f);
 
     // Do not hurt person who just redirected
     _sourceDamageRagdoll = redirectorItem._ragdoll;
@@ -602,7 +720,7 @@ public class BulletScript : MonoBehaviour
 
     // Recoil char
     if (recoil)
-      _sourceDamageRagdoll.Recoil(-(_sourceItemRagdoll._Hip.position - _sourceDamageRagdoll._Controller.transform.position).normalized, _rb.velocity.magnitude / 30f);
+      _sourceDamageRagdoll.Recoil(-(_sourceItemRagdoll._Hip.position - _sourceDamageRagdoll._Controller.transform.position).normalized, _rb.linearVelocity.magnitude / 30f);
 
     // Check special
     if (redirectorItem._ragdoll._IsPlayer && redirectorItem._ragdoll._PlayerScript.HasPerk(Shop.Perk.PerkType.EXPLOSIVE_PARRY))

@@ -260,6 +260,10 @@ public static class Shop
     UTILITY_MOLOTOV,
     ITEM_RIFLE_CHARGE,
     MOD_EXPLOSIVE_PARRY,
+
+    // Cannot re-order unlocks
+    UTILITY_MIRROR,
+
   }
 
   public static int _Max_Equipment_Points
@@ -318,10 +322,11 @@ public static class Shop
       { Unlocks.UTILITY_KUNAI_EXPLOSIVE, new Tuple<string, int>("throwable, explodes, small", 15) },
       { Unlocks.UTILITY_KUNAI_STICKY, new Tuple<string, int>("throwable, delalyed-explosion, small", 15) },
       { Unlocks.UTILITY_TACTICAL_BULLET, new Tuple<string, int>("throwable, stun", 10) },
-      { Unlocks.UTILITY_GRENADE, new Tuple<string, int>("throwable, explosive, large-radius", 15) },
+      { Unlocks.UTILITY_MIRROR, new Tuple<string, int>("throwable, reflect", 10) },
+      { Unlocks.UTILITY_GRENADE, new Tuple<string, int>("throwable, explosive, large-radius", 10) },
       { Unlocks.UTILITY_GRENADE_IMPACT, new Tuple<string, int>("throwable, contact-explosive", 15) },
       { Unlocks.UTILITY_GRENADE_STUN, new Tuple<string, int>("throwable, corner-killer", 10) },
-      { Unlocks.UTILITY_C4, new Tuple<string, int>("throwable, explosive, remote-controlled", 15) },
+      { Unlocks.UTILITY_C4, new Tuple<string, int>("throwable, explosive, remote-controlled", 10) },
       //{ Unlocks.UTILITY_MOLOTOV, new Tuple<string, int>("throwable, fire, duration", 10) },
       { Unlocks.UTILITY_MORTAR_STRIKE, new Tuple<string, int>("ranged, explosive, remote-controlled", 15) },
       { Unlocks.UTILITY_STOP_WATCH, new Tuple<string, int>("useable, slows-time", 20) },
@@ -407,7 +412,7 @@ public static class Shop
     {
       _Unlocks_Vault.Add("classic_0", new Unlocks[] { Unlocks.ITEM_AXE, Unlocks.UTILITY_GRENADE, Unlocks.MAX_EQUIPMENT_POINTS_2, Unlocks.LOADOUT_SLOT_X2_0 });
       _Unlocks_Vault.Add("classic_1", new Unlocks[] { Unlocks.MOD_LASER_SIGHTS, Unlocks.MOD_NO_SLOWMO, Unlocks.UTILITY_KUNAI_EXPLOSIVE, Unlocks.ITEM_PISTOL_CHARGE });
-      _Unlocks_Vault.Add("classic_2", new Unlocks[] { Unlocks.MODE_SURVIVAL, Unlocks.ITEM_RIFLE, Unlocks.ITEM_PISTOL_MACHINE, Unlocks.MAX_EQUIPMENT_POINTS_3, Unlocks.LOADOUT_SLOT_X2_1 });
+      _Unlocks_Vault.Add("classic_2", new Unlocks[] { Unlocks.MODE_SURVIVAL, Unlocks.ITEM_RIFLE, Unlocks.ITEM_PISTOL_MACHINE, Unlocks.UTILITY_MIRROR, Unlocks.MAX_EQUIPMENT_POINTS_3, Unlocks.LOADOUT_SLOT_X2_1 });
       _Unlocks_Vault.Add("classic_3", new Unlocks[] { Unlocks.ITEM_PISTOL_DOUBLE, Unlocks.UTILITY_STOP_WATCH, Unlocks.UTILITY_TEMP_SHIELD, Unlocks.MOD_SPEED_UP });
       _Unlocks_Vault.Add("classic_4", new Unlocks[] { Unlocks.ITEM_AXE, Unlocks.ITEM_REVOLVER, Unlocks.UTILITY_C4, Unlocks.UTILITY_GRENADE_STUN, Unlocks.UTILITY_SHURIKEN_BIG });
       _Unlocks_Vault.Add("classic_5", new Unlocks[] { Unlocks.ITEM_RAPIER, Unlocks.ITEM_STICKY_GUN, Unlocks.UTILITY_GRENADE_IMPACT });
@@ -446,6 +451,7 @@ public static class Shop
       { UtilityScript.UtilityType.STICKY_GUN_BULLET, 50 },
       { UtilityScript.UtilityType.MORTAR_STRIKE, 6 },
       { UtilityScript.UtilityType.TACTICAL_BULLET, 6 },
+      { UtilityScript.UtilityType.MIRROR, 6 },
       { UtilityScript.UtilityType.MOLOTOV, 6 },
     };
 
@@ -600,9 +606,9 @@ public static class Shop
     }
   }
 
-  public static void ShowUnlocks(Menu2.MenuType toMenu)
+  public static void ShowUnlocks(Menu.MenuType toMenu)
   {
-    Menu2.GenericMenu(new string[] { "new unlocks\n\n", $"{s_UnlockString}" }, UnityEngine.Random.value < 0.5f ? "wow\n\n" : "nice\n\n", toMenu);
+    Menu.GenericMenu(new string[] { "new unlocks\n\n", $"{s_UnlockString}" }, UnityEngine.Random.value < 0.5f ? "wow\n\n" : "nice\n\n", toMenu);
     s_UnlockString = "";
   }
 
@@ -761,7 +767,7 @@ public static class Shop
           {
             if (player._Id == playerId)
             {
-              player._ragdoll.RefillAmmo();
+              player._Ragdoll.RefillAmmo();
               player._Profile.UpdateIcons();
               return;
             }
@@ -773,8 +779,8 @@ public static class Shop
           {
             if (player._Id == playerId)
             {
-              player._ragdoll._ItemL?.AddLaserSight();
-              player._ragdoll._ItemR?.AddLaserSight();
+              player._Ragdoll._ItemL?.AddLaserSight();
+              player._Ragdoll._ItemR?.AddLaserSight();
               return;
             }
           }
@@ -785,10 +791,10 @@ public static class Shop
           {
             if (player._Id == playerId)
             {
-              player._ragdoll._health += 2;
+              player._Ragdoll._health += 2;
               player._Profile.UpdateHealthUI();
-              if (player._ragdoll._health > 3)
-                player._ragdoll.AddArmor();
+              if (player._Ragdoll._health > 3)
+                player._Ragdoll.AddArmor();
               return;
             }
           }

@@ -156,6 +156,7 @@ public class CustomObstacle : MonoBehaviour
       _BUYABLE_UTILITY_TIERS[1].Add(System.Tuple.Create(UtilityScript.UtilityType.SHURIKEN, 35));
       _BUYABLE_UTILITY_TIERS[1].Add(System.Tuple.Create(UtilityScript.UtilityType.GRENADE_IMPACT, 75));
       _BUYABLE_UTILITY_TIERS[1].Add(System.Tuple.Create(UtilityScript.UtilityType.GRENADE_STUN, 30));
+      _BUYABLE_UTILITY_TIERS[1].Add(System.Tuple.Create(UtilityScript.UtilityType.MIRROR, 50));
       //_BUYABLE_UTILITY_TIERS[1].Add(System.Tuple.Create(UtilityScript.UtilityType.TACTICAL_BULLET, 25));
       _BUYABLE_UTILITY_TIERS[1].Add(System.Tuple.Create(UtilityScript.UtilityType.KUNAI_STICKY, 60));
       _BUYABLE_UTILITY_TIERS[1].Add(System.Tuple.Create(UtilityScript.UtilityType.C4, 40));
@@ -369,7 +370,7 @@ public class CustomObstacle : MonoBehaviour
   public void Interact(PlayerScript p, InteractSide side)
   {
     // If player is dead, do not buy
-    if (p == null || p._ragdoll == null || p._ragdoll._IsDead) return;
+    if (p == null || p._Ragdoll == null || p._Ragdoll._IsDead) return;
 
     // If text not visible, do not do anything
     if (!_text.gameObject.activeSelf) return;
@@ -388,7 +389,7 @@ public class CustomObstacle : MonoBehaviour
         p.RemoveInteractable();
         GameScript.SurvivalMode.OpenRoom(_index, _index2);
         // Play sound
-        p._ragdoll.PlaySound("Survival/Buy_Wall");
+        p._Ragdoll.PlaySound("Survival/Buy_Wall");
       }
       else if (use_type == InteractType.BUYITEM)
       {
@@ -404,7 +405,7 @@ public class CustomObstacle : MonoBehaviour
         if (!equip_info.Item1)
         {
           var text = equip_info.Item3;
-          if (text != null && text.Length > 0) p._ragdoll.DisplayText(text);
+          if (text != null && text.Length > 0) p._Ragdoll.DisplayText(text);
           return;
         }
         equip_side = equip_info.Item2;
@@ -468,7 +469,7 @@ public class CustomObstacle : MonoBehaviour
         }
 
         // Equip
-        p._ragdoll.EquipItem(item_type, equip_side);
+        p._Ragdoll.EquipItem(item_type, equip_side);
         if (equip_info.Item3 == "BOTH")
           p._Profile._item_right = GameScript.ItemManager.Items.NONE;
 
@@ -480,7 +481,7 @@ public class CustomObstacle : MonoBehaviour
         GameScript.PlayerProfile.s_Profiles[p._Id].UpdateIcons();
 
         // Play sfx
-        p._ragdoll.PlaySound("Survival/Buy_Weapon");
+        p._Ragdoll.PlaySound("Survival/Buy_Weapon");
 
 #if UNITY_STANDALONE
         // Achievement
@@ -513,7 +514,7 @@ public class CustomObstacle : MonoBehaviour
                 // Check utility cap
                 if (equipment._utilities_left.Length == Shop._Utility_Cap[utility_type])
                 {
-                  p._ragdoll.DisplayText("i have too many..");
+                  p._Ragdoll.DisplayText("i have too many..");
                   return;
                 }
                 equip_side = ActiveRagdoll.Side.LEFT;
@@ -521,7 +522,7 @@ public class CustomObstacle : MonoBehaviour
               }
               else
               {
-                p._ragdoll.DisplayText("i have too many..");
+                p._Ragdoll.DisplayText("i have too many..");
                 return;
               }
             }
@@ -544,7 +545,7 @@ public class CustomObstacle : MonoBehaviour
                 // Check utility cap
                 if (equipment._utilities_right.Length == Shop._Utility_Cap[utility_type])
                 {
-                  p._ragdoll.DisplayText("i have too many..");
+                  p._Ragdoll.DisplayText("i have too many..");
                   return;
                 }
                 equip_side = ActiveRagdoll.Side.RIGHT;
@@ -552,7 +553,7 @@ public class CustomObstacle : MonoBehaviour
               }
               else
               {
-                p._ragdoll.DisplayText("i have too many..");
+                p._Ragdoll.DisplayText("i have too many..");
                 return;
               }
             }
@@ -571,7 +572,7 @@ public class CustomObstacle : MonoBehaviour
             // Check utility cap
             if (equipment._utilities_left.Length == Shop._Utility_Cap[utility_type])
             {
-              p._ragdoll.DisplayText("i have too many..");
+              p._Ragdoll.DisplayText("i have too many..");
               return;
             }
 
@@ -590,7 +591,7 @@ public class CustomObstacle : MonoBehaviour
             // Check utility cap
             if (equipment._utilities_right.Length == Shop._Utility_Cap[utility_type])
             {
-              p._ragdoll.DisplayText("i have too many..");
+              p._Ragdoll.DisplayText("i have too many..");
               return;
             }
 
@@ -627,7 +628,7 @@ public class CustomObstacle : MonoBehaviour
         GameScript.PlayerProfile.s_Profiles[p._Id].UpdateIcons();
 
         // Play sound
-        p._ragdoll.PlaySound("Survival/Buy_Weapon");
+        p._Ragdoll.PlaySound("Survival/Buy_Weapon");
 
 #if UNITY_STANDALONE
         // Achievement
@@ -641,7 +642,7 @@ public class CustomObstacle : MonoBehaviour
         if (Shop.Perk.HasPerk(p._Id, perk))
         {
           var text_haveAlready = "i have this already";
-          p._ragdoll.DisplayText(text_haveAlready);
+          p._Ragdoll.DisplayText(text_haveAlready);
           return;
         }
 
@@ -649,7 +650,7 @@ public class CustomObstacle : MonoBehaviour
         if (Shop.Perk.GetNumPerks(p._Id) > 3)
         {
           var text_haveAlready = "i already have 4 mods";
-          p._ragdoll.DisplayText(text_haveAlready);
+          p._Ragdoll.DisplayText(text_haveAlready);
           return;
         }
 
@@ -659,7 +660,7 @@ public class CustomObstacle : MonoBehaviour
         GameScript.PlayerProfile.s_Profiles[p._Id].UpdateIcons();
 
         // Play sound
-        p._ragdoll.PlaySound("Survival/Buy_Weapon");
+        p._Ragdoll.PlaySound("Survival/Buy_Weapon");
 
 #if UNITY_STANDALONE
         // Achievement
@@ -672,7 +673,7 @@ public class CustomObstacle : MonoBehaviour
       GameScript.SurvivalMode.SpendPoints(p._Id, _pointCost);
     }
     else
-      p._ragdoll.DisplayText("not enough points..");
+      p._Ragdoll.DisplayText("not enough points..");
   }
 
   float _desiredScale;
@@ -971,7 +972,7 @@ public class CustomObstacle : MonoBehaviour
       var min_dist = 1000f;
       foreach (var player in PlayerScript.s_Players)
       {
-        if (player._ragdoll._IsDead || player == null) continue;
+        if (player._Ragdoll._IsDead || player == null) continue;
         var path = new UnityEngine.AI.NavMeshPath();
         var filter = new UnityEngine.AI.NavMeshQueryFilter();
         filter.areaMask = 1;

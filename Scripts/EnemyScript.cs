@@ -6,7 +6,7 @@ using Unity.Collections;
 
 using System.Linq;
 
-public class EnemyScript : MonoBehaviour
+public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
 {
   //
   static Settings.SettingsSaveData SettingsModule { get { return Settings.s_SaveData.Settings; } }
@@ -116,6 +116,7 @@ public class EnemyScript : MonoBehaviour
   public int _Id;
 
   ActiveRagdoll _ragdoll;
+  public ActiveRagdoll _Ragdoll { get { return _ragdoll; } set { _ragdoll = value; } }
 
   public UnityEngine.AI.NavMeshAgent _agent;
 
@@ -244,17 +245,18 @@ public class EnemyScript : MonoBehaviour
       _agent.agentTypeID = TileManager._navMeshSurface.agentTypeID;
 
     // Setup ragdoll
-    var ragdollObj = Instantiate(GameResources._Ragdoll);
-    ragdollObj.transform.parent = transform.parent;
-    ragdollObj.transform.position = transform.position;
-    ragdollObj.transform.LookAt(new Vector3(_waitLookPos.x, ragdollObj.transform.position.y, _waitLookPos.z));
-    ragdollObj.transform.Rotate(new Vector3(0f, 1f, 0f) * 90f);
+    var ragdollObj = Instantiate(
+      GameResources._Ragdoll,
+      transform.position,
+      Quaternion.LookRotation(new Vector3(_waitLookPos.x, transform.position.y, _waitLookPos.z) - transform.position) * Quaternion.Euler(0f, 90f, 0f),
+      transform.parent
+    );
     _ragdoll = new ActiveRagdoll(ragdollObj, transform);
     if (_enemyType == EnemyType.NORMAL)
       switch (_itemLeft)
       {
         case (GameScript.ItemManager.Items.KNIFE):
-          if (UnityEngine.Random.value < 0.5f)
+          if (Random.value < 0.5f)
           {
             _itemLeft = GameScript.ItemManager.Items.NONE;
             _itemRight = GameScript.ItemManager.Items.KNIFE;
@@ -306,9 +308,9 @@ public class EnemyScript : MonoBehaviour
       _patroling = false;
 
       // Set target to nearest player
-      var data = FunctionsC.GetClosestPlayerTo(transform.position);
-      if (data == null || data._ragdoll == null) return;
-      var closestPlayer = data._ragdoll;
+      var distanceData = FunctionsC.GetClosestTargetTo(_ragdoll, transform.position);
+      if (distanceData == null || distanceData._ragdoll == null) return;
+      var closestPlayer = distanceData._ragdoll;
       SetRagdollTarget(closestPlayer);
 
       SetRandomStrafe();
@@ -336,16 +338,11 @@ public class EnemyScript : MonoBehaviour
     Walk();
   }
 
-  public ActiveRagdoll GetRagdoll()
-  {
-    return _ragdoll;
-  }
-
   public static void UpdateEnemies()
   {
     // Check null
     if (_Enemies_alive == null || _Enemies_alive.Count == 0 || GameScript._EditorEnabled) return;
-    if (Menu2._InMenus || TileManager._LoadingMap || PlayerScript.s_Players == null || PlayerScript.s_Players.Count == 0) return;
+    if (Menu._InMenus || TileManager._LoadingMap || PlayerScript.s_Players == null || PlayerScript.s_Players.Count == 0) return;
     if (GameScript.s_GameMode != GameScript.GameModes.SURVIVAL)
     {
       // Set up handler
@@ -475,12 +472,12 @@ public class EnemyScript : MonoBehaviour
           {
             _canAttack = true;
             _canMove = true;
-            SetRagdollTarget(FunctionsC.GetClosestPlayerTo(transform.position)._ragdoll);
+            SetRagdollTarget(FunctionsC.GetClosestTargetTo(_ragdoll, transform.position)._ragdoll);
             TargetFound();
           }
           else
           {
-            var close_data = FunctionsC.GetClosestPlayerTo(transform.position);
+            var close_data = FunctionsC.GetClosestTargetTo(_ragdoll, transform.position);
             if (close_data._ragdoll != null)
             {
               lookAtPos = (close_data._ragdoll.Transform.position);
@@ -1011,9 +1008,9 @@ public class EnemyScript : MonoBehaviour
     _survivalAttributes = null;
 
     // Set target to nearest player
-    var data = FunctionsC.GetClosestPlayerTo(transform.position);
-    if (data == null || data._ragdoll == null) return;
-    var closestPlayer = data._ragdoll;
+    var distanceData = FunctionsC.GetClosestTargetTo(_ragdoll, transform.position);
+    if (distanceData == null || distanceData._ragdoll == null) return;
+    var closestPlayer = distanceData._ragdoll;
     SetRagdollTarget(closestPlayer);
 
     SetRandomStrafe();
@@ -1097,12 +1094,12 @@ public class EnemyScript : MonoBehaviour
     {
       var olddis = _DIS;
       var targ = _ragdollTarget;
-      var closestPlayer = FunctionsC.GetClosestPlayerTo(_ragdoll._Hip.position);
+      var closestPlayer = FunctionsC.GetClosestTargetTo(_ragdoll, _ragdoll._Hip.position);
       if (closestPlayer._distance < olddis && targ._Id != closestPlayer._ragdoll._Id)
         SetRagdollTarget(closestPlayer._ragdoll);
       _DIS = closestPlayer._distance;
     }
-    else _DIS = FunctionsC.GetClosestPlayerTo(_ragdoll._Hip.position)._distance;
+    else _DIS = FunctionsC.GetClosestTargetTo(_ragdoll, _ragdoll._Hip.position)._distance;
     /*/ Try to limit Raycast calls via enemy number, distance, and Raycast function call number
     if (!_targetInLOS && !_targetInFront && (_Enemies.Count - _NumDead) > 8)
     {
@@ -1165,7 +1162,7 @@ public class EnemyScript : MonoBehaviour
           // If ischaser and there are more players, chase them
           if (IsChaser() || _IsZombie)
           {
-            var info = FunctionsC.GetClosestPlayerTo(transform.position);
+            var info = FunctionsC.GetClosestTargetTo(_ragdoll, transform.position);
             if (info != null && info._ragdoll != null)
             {
               SetRagdollTarget(info._ragdoll);
@@ -1594,8 +1591,8 @@ public class EnemyScript : MonoBehaviour
     if (PlayerScript.s_Players == null) return null;
     foreach (PlayerScript p in PlayerScript.s_Players)
     {
-      if (!p._CanDetect || p._ragdoll._IsDead) continue;
-      if (p._ragdoll.IsSelf(obj)) return p._ragdoll;
+      if (!p._CanDetect || p._Ragdoll._IsDead) continue;
+      if (p._Ragdoll.IsSelf(obj)) return p._Ragdoll;
     }
     return null;
   }
@@ -2388,7 +2385,7 @@ public class EnemyScript : MonoBehaviour
                 var closest_player = PlayerScript.GetClosestPlayerTo(new Vector2(_ragdoll._Controller.position.x, _ragdoll._Controller.position.z));
                 if (closest_player != null)
                 {
-                  Powerup._Powerups[0].Activate(closest_player._ragdoll);
+                  Powerup._Powerups[0].Activate(closest_player._Ragdoll);
                 }
               }
             }
@@ -2418,7 +2415,7 @@ public class EnemyScript : MonoBehaviour
       //Debug.Log("Chaser activated: kill");
       _Chaser._canAttack = true;
       _Chaser._canMove = true;
-      var playerInfo = FunctionsC.GetClosestPlayerTo(transform.position);
+      var playerInfo = FunctionsC.GetClosestTargetTo(_ragdoll, transform.position);
       if (playerInfo._ragdoll == null || playerInfo._ragdoll == null) return;
       _Chaser.SetRagdollTarget(playerInfo._ragdoll);
       _Chaser.TargetFound();
