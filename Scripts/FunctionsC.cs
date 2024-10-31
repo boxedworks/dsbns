@@ -58,9 +58,9 @@ public static class FunctionsC
     return GetClosestTargetOf(pos, new List<PlayerScript.IHasRagdoll>(EnemyScript._Enemies_alive), -1, include_chaser);
   }
 
-  public static DistanceInfo GetClosestTargetTo(ActiveRagdoll host, Vector3 pos, bool include_chaser = false)
+  public static DistanceInfo GetClosestTargetTo(ActiveRagdoll host, Vector3 pos, int ragdollIdFilter = -1, bool include_chaser = false)
   {
-    return GetClosestTargetTo(host._IsPlayer ? host._PlayerScript._Id : -1, pos, host._Id, include_chaser);
+    return GetClosestTargetTo(host._IsPlayer ? host._PlayerScript._Id : -1, pos, ragdollIdFilter, include_chaser);
   }
   public static DistanceInfo GetClosestTargetTo(int isPlayerId, Vector3 pos, int ragdollIdFilter = -1, bool include_chaser = false)
   {

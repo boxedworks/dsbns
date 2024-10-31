@@ -766,7 +766,7 @@ public class UtilityScript : ItemScript
 
                   //
                   var targetPosition = Vector3.zero;
-                  var closestTarget = FunctionsC.GetClosestTargetTo(_ragdoll, transform.position, false);
+                  var closestTarget = FunctionsC.GetClosestTargetTo(_ragdoll, transform.position, _ragdoll._Id, false);
                   if (closestTarget._ragdoll != null)
                     targetPosition = closestTarget._ragdoll._Hip.position;
 

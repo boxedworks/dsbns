@@ -342,32 +342,30 @@ public class BulletScript : MonoBehaviour
     _rb.position = setPosition;
 
     // Check closest enemy
-    var target = FunctionsC.GetClosestTargetTo(_sourceDamageRagdoll, transform.position, false);
+    var target = FunctionsC.GetClosestTargetTo(_sourceDamageRagdoll, transform.position, -1, false);
     if (target != null && target._ragdoll != null)
-    {
       targetPosition = GetLocalPosition(target._ragdoll._Hip.position);
+    var closestTargetPos = targetPosition;
 
-      //Debug.DrawLine(_rb.position, targetPosition, Color.cyan, 5f);
-    }
-
-    // Check random enemy
+    // Check 2nd closest enemy
+    var bulletPos = _rb.position + new Vector3(0f, 0.6f, 0f);
     var raycastinfo = new RaycastHit();
-    if (targetPosition == Vector3.zero || (Physics.SphereCast(new Ray(_rb.position, (targetPosition - _rb.position).normalized), 0.05f, out raycastinfo, 100f, LayerMask.GetMask("ParticleCollision")) && raycastinfo.distance < target._distance * 0.95f))
+    if (targetPosition != Vector3.zero && (Physics.SphereCast(new Ray(bulletPos, MathC.Get2DVector(targetPosition - _rb.position).normalized), 0.05f, out raycastinfo, 100f, LayerMask.GetMask("ParticleCollision")) && raycastinfo.distance < target._distance * 0.95f))
     {
-      //Debug.Log($"{raycastinfo.distance} <? {enemy._distance * 0.95f} [{raycastinfo.collider.name}]");
+      //Debug.Log($"{raycastinfo.distance} <? {target._distance * 0.95f} [{raycastinfo.collider.name}]");
 
-      target = FunctionsC.GetRandomEnemy(transform.position, false);
+      target = FunctionsC.GetClosestTargetTo(_sourceDamageRagdoll, transform.position, target._ragdoll._Id, false);
       if (target != null && target._ragdoll != null)
-      {
         targetPosition = GetLocalPosition(target._ragdoll._Hip.position);
-
-        //Debug.DrawLine(_rb.position, targetPosition, Color.blue, 5f);
-      }
     }
+
+    // Try to use closest enemy again
+    if (targetPosition == Vector3.zero && closestTargetPos != Vector3.zero)
+      targetPosition = closestTargetPos;
 
     // Check nearest mirrors
     raycastinfo = new RaycastHit();
-    if (targetPosition == Vector3.zero || (Physics.SphereCast(new Ray(_rb.position, (targetPosition - _rb.position).normalized), 0.05f, out raycastinfo, 100f, LayerMask.GetMask("ParticleCollision")) && raycastinfo.distance < target._distance * 0.95f))
+    if (targetPosition == Vector3.zero || (Physics.SphereCast(new Ray(bulletPos, MathC.Get2DVector(targetPosition - _rb.position).normalized), 0.05f, out raycastinfo, 100f, LayerMask.GetMask("ParticleCollision")) && raycastinfo.distance < target._distance * 0.95f))
     {
 
       var mirrors = UtilityScript.s_Utilities_Thrown.ContainsKey(UtilityScript.UtilityType.MIRROR) ? UtilityScript.s_Utilities_Thrown[UtilityScript.UtilityType.MIRROR] : null;
