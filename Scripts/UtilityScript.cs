@@ -752,9 +752,9 @@ public class UtilityScript : ItemScript
             IEnumerator SpawnBulletCo(float delay)
             {
 
-              var gameid = GameScript._GameId;
+              var gameid = GameScript.s_GameId;
               yield return new WaitForSeconds(delay);
-              if (gameid != GameScript._GameId) { }
+              if (gameid != GameScript.s_GameId) { }
               else
               {
 
@@ -805,7 +805,7 @@ public class UtilityScript : ItemScript
                   gameObject.SetActive(false);
               }
             }
-            GameScript._s_Singleton.StartCoroutine(SpawnBulletCo(0.5f));
+            GameScript.s_Singleton.StartCoroutine(SpawnBulletCo(0.5f));
           };
 
           // Throw and queue next

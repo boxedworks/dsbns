@@ -29,7 +29,7 @@ public class DoorScript : CustomEntity
   public List<EnemyScript> _EnemiesEditor;
   public List<EnemyScript> _EnemiesGame;
 
-  bool _forceExtrasOpen { get { return Settings.s_SaveData.LevelData.ExtraEnemyMultiplier == 2 && GameScript.s_GameMode == GameScript.GameModes.CLASSIC && !GameScript._EditorEnabled; } }
+  bool _forceExtrasOpen { get { return Settings.s_SaveData.LevelData.ExtraEnemyMultiplier == 2 && GameScript.s_GameMode == GameScript.GameModes.CLASSIC && !GameScript.s_EditorEnabled; } }
 
   // Use this for initialization
   void Start()
@@ -150,7 +150,7 @@ public class DoorScript : CustomEntity
       SfxManager.PlayAudioSourceSimple(transform.position, "Ragdoll/Tick");
     }
 
-    if (!GameScript._EditorEnabled)
+    if (!GameScript.s_EditorEnabled)
       EnemyScript.CheckSound(_door.position, EnemyScript.Loudness.SOFT);
 
     _Opened = !_Opened;

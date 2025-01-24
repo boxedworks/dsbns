@@ -45,7 +45,7 @@ public class LaserScript : CustomEntity
 
     _saveRot = _machine.rotation.eulerAngles.y;
     _saveOn = _on;
-    if (!GameScript._EditorEnabled) _canRotate = true;
+    if (!GameScript.s_EditorEnabled) _canRotate = true;
   }
 
   // Update is called once per frame

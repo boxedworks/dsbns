@@ -326,7 +326,7 @@ public class CustomObstacle : MonoBehaviour
     }
 
     // Hide interactable
-    if (!GameScript._EditorEnabled && !midgame)
+    if (!GameScript.s_EditorEnabled && !midgame)
       gameObject.SetActive(false);
 
     // Set scale
@@ -681,7 +681,7 @@ public class CustomObstacle : MonoBehaviour
   {
     // Scale
     if (!_interactable) return;
-    transform.GetChild(1).localScale += ((new Vector3(1f, 1f, 1f) * (GameScript._EditorEnabled ? 0.3f : _desiredScale)) - transform.GetChild(1).localScale) * Time.deltaTime * 8f;
+    transform.GetChild(1).localScale += ((new Vector3(1f, 1f, 1f) * (GameScript.s_EditorEnabled ? 0.3f : _desiredScale)) - transform.GetChild(1).localScale) * Time.deltaTime * 8f;
     _text.transform.localScale += ((new Vector3(1f, 1f, 1f) * ((_desiredScale - 0.15f) / 0.15f)) - _text.transform.localScale) * Time.deltaTime * 8f;
     if (_text.transform.localScale.x < 0f) _text.transform.localScale = Vector3.zero;
   }

@@ -1,8 +1,11 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
-using Steamworks;
 using UnityEngine;
 using UnityEngine.AI;
+
+#if !DISABLESTEAMWORKS
+using Steamworks;
+#endif
 
 public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
 {
@@ -243,8 +246,8 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
     {
 
       // Clean up old light if exists
-      if (GameScript._s_Singleton._Thunder_Light != null)
-        GameObject.DestroyImmediate(GameScript._s_Singleton._Thunder_Light.gameObject);
+      if (GameScript.s_Singleton._Thunder_Light != null)
+        GameObject.DestroyImmediate(GameScript.s_Singleton._Thunder_Light.gameObject);
 
       // Handle creating rain SFX
       if (SceneThemes._Theme._rain)
@@ -264,7 +267,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
         thunder_light.shadowNearPlane = 7f;
         //thunder_light.shadows = LightShadows.Soft;
 
-        GameScript._s_Singleton._Thunder_Light = thunder_light;
+        GameScript.s_Singleton._Thunder_Light = thunder_light;
       }
 
       // Clean up rain SFX
@@ -482,7 +485,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
 
     // Paused dpad reset
     if (
-      GameScript._Paused &&
+      GameScript.s_Paused &&
       (_dpadPressed[0] != 0f || _dpadPressed[1] != 0f || _dpadPressed[2] != 0f || _dpadPressed[3] != 0f)
     )
     {
@@ -491,9 +494,9 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
 
     // Ratings
     if (
-      _Id == 0 && !_level_ratings_shown && !TileManager._Level_Complete && !GameScript._Paused &&
+      _Id == 0 && !_level_ratings_shown && !TileManager._Level_Complete && !GameScript.s_Paused &&
       (
-        (!_TimerStarted && Time.time - GameScript._LevelStartTime > 3f) ||
+        (!_TimerStarted && Time.time - GameScript.s_LevelStartTime > 3f) ||
         (_All_Dead && Time.unscaledTime - _ragdoll._time_dead > 3f)
       )
     )
@@ -534,7 +537,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
     {
       _isauto = !_isauto;
     }
-    if (_isauto && !_ragdoll._IsDead && !GameScript._Paused)
+    if (_isauto && !_ragdoll._IsDead && !GameScript.s_Paused)
     {
       _rearrangeTime -= Time.deltaTime * (_agent.pathStatus != UnityEngine.AI.NavMeshPathStatus.PathComplete ? 10f : 1f);
       if (_rearrangeTime <= 0f && !s_Players[0]._ragdoll._IsDead)
@@ -739,7 +742,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
     }
 #endif
     // Try to spawn ragdoll
-    if (!_ragdoll.IsActive() && Time.time - GameScript._LevelStartTime > 0.2f)
+    if (!_ragdoll.IsActive() && Time.time - GameScript.s_LevelStartTime > 0.2f)
     {
       // Enable ragdoll
       _ragdoll.SetActive(true);
@@ -796,7 +799,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
 
     }
 
-    if (GameScript._Paused)
+    if (GameScript.s_Paused)
     {
       if (_Id == 0)
       {
@@ -812,7 +815,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
     if (!_isauto)
       HandleInput();
 
-    if (TileManager._LoadingMap || GameScript._s_Singleton._GameEnded || GameScript._Paused)
+    if (TileManager._LoadingMap || GameScript.s_Singleton._GameEnded || GameScript.s_Paused)
     {
       Time.timeScale = 1f;
       return;
@@ -958,7 +961,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
     float unscaled_dt = Time.unscaledDeltaTime,
       dt = Time.deltaTime;
 
-    if (_Id == 0 && GameScript._s_Singleton._UseCamera)
+    if (_Id == 0 && GameScript.s_Singleton._UseCamera)
     {
       var camera_height = SettingsModule.CameraZoom == Settings.SettingsSaveData.CameraZoomType.NORMAL ? 14f : SettingsModule.CameraZoom == Settings.SettingsSaveData.CameraZoomType.CLOSE ? 10f : 18f;
       if (SettingsModule.UseOrthographicCamera)
@@ -1049,9 +1052,9 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
       {
 
         float CamYPos = 16f,
-          camSpeed = (Time.time - GameScript._LevelStartTime < 1f ? 0.8f : 0.4f) * (22f / CamYPos);//,
-                                                                                                   //biggestDist = 0f;
-                                                                                                   //GameResources._Camera_Main.transform.GetChild(2).GetComponent<Light>().spotAngle = Mathf.LerpUnclamped(131f, 86f, (CamYPos / 10f) - 1f);
+          camSpeed = (Time.time - GameScript.s_LevelStartTime < 1f ? 0.8f : 0.4f) * (22f / CamYPos);//,
+                                                                                                    //biggestDist = 0f;
+                                                                                                    //GameResources._Camera_Main.transform.GetChild(2).GetComponent<Light>().spotAngle = Mathf.LerpUnclamped(131f, 86f, (CamYPos / 10f) - 1f);
         Vector3 sharedPos = Vector3.zero,
          sharedForward = Vector3.zero;
         var forwardMagnitude = 3.5f;
@@ -1084,9 +1087,9 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
           sharedForward /= 1.4f;
 
         var changePos = Vector3.zero;
-        if (GameScript._s_Singleton._X) changePos.x = sharedPos.x + sharedForward.x;
-        if (GameScript._s_Singleton._Y) changePos.y = sharedPos.y;
-        if (GameScript._s_Singleton._Z) changePos.z = sharedPos.z + sharedForward.z;
+        if (GameScript.s_Singleton._X) changePos.x = sharedPos.x + sharedForward.x;
+        if (GameScript.s_Singleton._Y) changePos.y = sharedPos.y;
+        if (GameScript.s_Singleton._Z) changePos.z = sharedPos.z + sharedForward.z;
 
         /*if (_cycle_objects)
         {
@@ -1996,7 +1999,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
           break;
         }
     }
-    if (reset && !GameScript._s_Singleton._GameEnded)
+    if (reset && !GameScript.s_Singleton._GameEnded)
     {
       if (GameScript.ReloadMap(true, true))
       {
@@ -2082,7 +2085,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
             var money = GameObject.Instantiate(GameResources._Money) as GameObject;
             GameScript.SurvivalMode.AddMoney(money);
             money.name = $"Money {points}";
-            money.transform.parent = GameScript._s_Singleton.transform;
+            money.transform.parent = GameScript.s_Singleton.transform;
             money.transform.position = _ragdoll._Hip.position + _ragdoll._Hip.transform.forward * 0.2f;
             var collider = money.GetComponent<Collider>();
             var collider0 = _ragdoll._Hip.GetComponents<Collider>()[1];
@@ -2185,10 +2188,9 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
   // Cycles through all players to see if one has the exit
   public static bool HasExit()
   {
-    foreach (PlayerScript p in s_Players)
-    {
-      if (p._HasExit) return true;
-    }
+    if (s_Players != null)
+      foreach (PlayerScript p in s_Players)
+        if (p._HasExit) return true;
     return false;
   }
 
@@ -2276,7 +2278,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
       }
       if (_ring != null) _ring[0].transform.parent.gameObject.SetActive(false);
     }
-    GameScript._s_Singleton.StartCoroutine(fadeRing());
+    GameScript.s_Singleton.StartCoroutine(fadeRing());
 
     // Slow motion on player death
     var lastplayer = true;
@@ -2343,13 +2345,13 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
           tutorial_ui1.position =
           new Vector3(1000f, 0f, 0f);
       }
-      GameScript._s_Singleton.StartCoroutine(FlashRestart());
+      GameScript.s_Singleton.StartCoroutine(FlashRestart());
     }
     // Play death sound
     //_ragdoll._audioPlayer.volume = 1f;
 
     // If has the exit and dies, re-drop the exit so someone else can pick it up
-    if (!_HasExit || GameScript._s_Singleton._GameEnded) return;
+    if (!_HasExit || GameScript.s_Singleton._GameEnded) return;
     GameScript.ToggleExit(false);
     _HasExit = false;
     GameScript.s_InLevelEndPlayer = null;
@@ -2600,7 +2602,10 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
           //
           table.name = "Table_Flipped";
           SfxManager.PlayAudioSourceSimple(transform.position, "Etc/Table_flip");
+
+#if !DISABLESTEAMWORKS
           SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.TABLE_FLIP);
+#endif
 
           IEnumerator FlipTable()
           {
@@ -2705,7 +2710,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
     public static void UpdateCapture(PlayerData data)
     {
       _CapturedDataList.Add(data);
-      _TimeScalesList.Add(Time.time - GameScript._LevelStartTime);
+      _TimeScalesList.Add(Time.time - GameScript.s_LevelStartTime);
     }
 
     public static bool _Playing;

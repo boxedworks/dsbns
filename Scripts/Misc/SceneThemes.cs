@@ -102,7 +102,7 @@ public class SceneThemes : MonoBehaviour
         rain_sfx.loop = true;
         GameScript.s_SfxRain = rain_sfx;
       }
-      GameScript._s_Singleton._Thunder_Last = Time.time;
+      GameScript.s_Singleton._Thunder_Last = Time.time;
     }
     else
     {

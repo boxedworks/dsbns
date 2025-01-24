@@ -52,10 +52,10 @@ public static class FunctionsC
     if (PlayerScript.s_Players == null) return null;
     return GetClosestTargetOf(pos, new List<PlayerScript.IHasRagdoll>(PlayerScript.s_Players), playerRagdollIdFilter);
   }
-  static DistanceInfo GetClosestEnemyTo(Vector3 pos, bool include_chaser = true)
+  static DistanceInfo GetClosestEnemyTo(Vector3 pos, int ragdollIdFilter = -1, bool include_chaser = true)
   {
     if (EnemyScript._Enemies_alive == null) return null;
-    return GetClosestTargetOf(pos, new List<PlayerScript.IHasRagdoll>(EnemyScript._Enemies_alive), -1, include_chaser);
+    return GetClosestTargetOf(pos, new List<PlayerScript.IHasRagdoll>(EnemyScript._Enemies_alive), ragdollIdFilter, include_chaser);
   }
 
   public static DistanceInfo GetClosestTargetTo(ActiveRagdoll host, Vector3 pos, int ragdollIdFilter = -1, bool include_chaser = false)
@@ -73,7 +73,7 @@ public static class FunctionsC
     // If player, check modes
     // Survival / Classic, always look for enemies only
     if (GameScript.s_GameMode == GameScript.GameModes.SURVIVAL || GameScript.s_GameMode == GameScript.GameModes.CLASSIC)
-      return GetClosestEnemyTo(pos, include_chaser);
+      return GetClosestEnemyTo(pos, ragdollIdFilter, include_chaser);
 
     // Versus, group enemies and enemy players together (teams)
     if (GameScript.s_GameMode == GameScript.GameModes.VERSUS)
@@ -768,7 +768,7 @@ public static class FunctionsC
     // Create the AudioSource component and play the menu music
     public static void Init()
     {
-      s_TrackSource = GameScript._s_Singleton.gameObject.AddComponent<AudioSource>();
+      s_TrackSource = GameScript.s_Singleton.gameObject.AddComponent<AudioSource>();
       s_TrackSource.playOnAwake = false;
     }
 
@@ -795,7 +795,7 @@ public static class FunctionsC
         s_CurrentTrack = trackIndex;
         s_transitioning = false;
       }
-      GameScript._s_Singleton.StartCoroutine(LoadAsync());
+      GameScript.s_Singleton.StartCoroutine(LoadAsync());
     }
 
     // fade out current music and play a new track
@@ -830,7 +830,7 @@ public static class FunctionsC
         s_CurrentTrack = trackIndex;
         s_transitioning = false;
       }
-      GameScript._s_Singleton.StartCoroutine(TransitionToCo());
+      GameScript.s_Singleton.StartCoroutine(TransitionToCo());
     }
 
     // Unload tracks not being played to reduce memory usage
@@ -906,7 +906,7 @@ public static class FunctionsC
       {
 
         // Level pack music; random
-        if (Levels._LevelPack_Playing || GameScript._EditorTesting || GameScript.s_GameMode == GameScript.GameModes.VERSUS)
+        if (Levels._LevelPack_Playing || GameScript.s_EditorTesting || GameScript.s_GameMode == GameScript.GameModes.VERSUS)
         {
 
           var songs_length = s_TrackNames.Length - 3;

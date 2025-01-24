@@ -120,7 +120,7 @@ public static class VersusMode
         s_announcementText.text = "";
       }
     }
-    GameScript._s_Singleton.StartCoroutine(LevelStartCountdownCo());
+    GameScript.s_Singleton.StartCoroutine(LevelStartCountdownCo());
   }
 
   //
@@ -617,7 +617,7 @@ public static class VersusMode
       }
 
     }
-    GameScript._s_Singleton.StartCoroutine(CheckPlayerDeathStatusCo());
+    GameScript.s_Singleton.StartCoroutine(CheckPlayerDeathStatusCo());
   }
 
   //

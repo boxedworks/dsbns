@@ -2,8 +2,12 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Steamworks;
+
 using UnityEngine;
+
+#if !DISABLESTEAMWORKS
+using Steamworks;
+#endif
 
 public class Menu
 {
@@ -1164,18 +1168,27 @@ public class Menu
     };
 
     // Main menu
-    var demoText = GameScript._s_Singleton._IsDemo ? $" <color={_COLOR_GRAY}>[</color><color=red>demo</color><color={_COLOR_GRAY}>]</color>" : "";
+    var demoText = GameScript.s_Singleton._IsDemo ? $" <color={_COLOR_GRAY}>[</color><color=red>demo</color><color={_COLOR_GRAY}>]</color>" : "";
     var main_menu = new Menu(MenuType.MAIN)
     {
 
-    }
-    .AddComponent($"<color={_COLOR_GRAY}>definitely sneaky\nbut not sneaky</color>{demoText}\n\n")
+    };
+
+#if UNITY_WEBGL
+    main_menu.AddComponent($"<color={_COLOR_GRAY}>definitely sneaky\nbut not sneaky</color>{demoText} <color=magenta>demo</color>\n\n");
+#else
+    main_menu.AddComponent($"<color={_COLOR_GRAY}>definitely sneaky\nbut not sneaky</color>{demoText}\n\n");
+#endif
+
     // Show game modes menu
-    .AddComponent("play\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
+    main_menu.AddComponent("play\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
       .AddEvent((MenuComponent component) =>
       {
         CommonEvents._SwitchMenu(MenuType.MODE_SELECTION);
+
+#if !DISABLESTEAMWORKS
         SteamManager.Achievements.LoadAchievements();
+#endif
 
         TileManager._CurrentLevel_Name = "";
         TileManager._CurrentLevel_Loadout = null;
@@ -1209,15 +1222,25 @@ public class Menu
           component.SetDisplayText("options\n");
           component._textColor = "";
         }
-      })
+      });
+
+#if UNITY_STANDALONE
     // Show social menu
-    .AddComponent("social\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
+    main_menu.AddComponent("social\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
       .AddEvent((MenuComponent component) =>
       {
         SwitchMenu(MenuType.SOCIAL);
-      })
+      });
+#else
+    main_menu.AddComponent("buy on steam!\n", MenuComponent.ComponentType.BUTTON_SIMPLE, "magenta")
+      .AddEvent((MenuComponent component) =>
+      {
+        Application.OpenURL("https://store.steampowered.com/app/954010/Definitely_Sneaky_But_Not_Sneaky/");
+      });
+#endif
+
     // Display credits
-    .AddComponent("credits\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
+    main_menu.AddComponent("credits\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
       .AddEvent((MenuComponent c) =>
       {
         SwitchMenu(MenuType.CREDITS);
@@ -1228,7 +1251,13 @@ public class Menu
       {
         CommonEvents._SwitchMenu(MenuType.EXIT_GAME_CONFIRM);
       })
-      .AddEvent(EventType.ON_RENDER, CommonEvents._OnRender_XSelector);
+      .AddEvent(EventType.ON_RENDER, CommonEvents._OnRender_XSelector)
+      .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+      {
+#if UNITY_WEBGL
+        component._obscured = true;
+#endif
+      });
     // Tip
 #if UNITY_STANDALONE
     ModifyMenu_TipComponents(MenuType.MAIN, GameScript.s_UsingSteam ? 12 : 14, 1);
@@ -1379,7 +1408,7 @@ public class Menu
 
               if (!Levels._LevelPack_SelectingLevelsFromPack)
               {
-                GameScript._EditorTesting = true;
+                GameScript.s_EditorTesting = true;
                 Levels._LevelEdit_SaveIndex = _CurrentMenu._dropdownParentIndex;
 
                 // Load map
@@ -1407,7 +1436,7 @@ public class Menu
                 _InMenus = false;
               }
               Time.timeScale = 1f;
-              GameScript._Paused = false;
+              GameScript.s_Paused = false;
               TileManager._Text_LevelTimer.gameObject.SetActive(true);
 
               // Play music
@@ -1425,7 +1454,7 @@ public class Menu
               selections.Add("edit");
               actions.Add((MenuComponent component0) =>
               {
-                GameScript._EditorTesting = true;
+                GameScript.s_EditorTesting = true;
                 Levels._LevelEdit_SaveIndex = _CurrentMenu._dropdownParentIndex;
 
                 // Load map
@@ -1441,7 +1470,7 @@ public class Menu
                 _InMenus = false;
                 _InPause = false;
                 Time.timeScale = 1f;
-                GameScript._Paused = false;
+                GameScript.s_Paused = false;
 
                 // Play music
                 if (FunctionsC.MusicManager.s_CurrentTrack < 3)
@@ -2304,7 +2333,7 @@ public class Menu
               _CanRender = false;
               RenderMenu();
             }
-            GameScript._s_Singleton.StartCoroutine(reloaddelay());
+            GameScript.s_Singleton.StartCoroutine(reloaddelay());
           })
         /*.AddComponent("open deleted levels / packs backup\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
           .AddEvent((MenuComponent component) =>
@@ -3905,6 +3934,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
           // Update dropdown selections
           .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
           {
+
             // Obscur dir if first level not unlocked
             if (GameScript.s_GameMode != GameScript.GameModes.SURVIVAL)
             {
@@ -3925,12 +3955,15 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
               }
             }
 
-            // Demo and default case
-            if (GameScript._s_Singleton._IsDemo && component._buttonIndex >= 4)
+            /*/ Demo and default case
+#if UNITY_WEBGL
+            if (/*GameScript._s_Singleton._IsDemo && component._buttonIndex >= 4)
             {
               component._obscured = true;
               return;
             }
+#endif
+*/
 
             component._obscured = false;
 
@@ -4683,7 +4716,14 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
             var selections = new List<string>();
             var actions = new List<System.Action<MenuComponent>>();
             var actions_onCreated = new List<System.Action<MenuComponent>>();
-            var selection_match = item_name.ToString();
+            var selection_match = item_name;
+
+            /*Debug.Log(selection_match);
+            if (selection_match == "NONE")
+            {
+              if (list_items.Length > 1)
+                selection_match = list_items[1].ToString();
+            }*/
 
             foreach (var item0 in list_items)
             {
@@ -4757,6 +4797,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
                   actions_onCreated.Add((MenuComponent component0) => { component0._obscured = true; });
               }
             }
+
             // Update dropdown data
             component.SetDropdownData("=== " + string.Format(loadout_format, "item", "tags", "point value") + "\n\n", selections, actions, selection_match, actions_onCreated);
           });
@@ -5311,7 +5352,8 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
                     _Menus[MenuType.EDIT_LOADOUT]._selectionIndex = save_dropdown;
                     RenderMenu();
                   });
-                };
+                }
+                ;
                 // Update UI
                 foreach (var profile in GameScript.PlayerProfile.s_Profiles)
                   profile.UpdateIcons();
@@ -5503,12 +5545,12 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
           _Menu.gameObject.SetActive(false);
 
           // Check editing
-          if (GameScript._EditorTesting)
-            if (GameScript._EditorEnabled) TileManager.EditorMenus._Menu_Editor.gameObject.SetActive(true);
+          if (GameScript.s_EditorTesting)
+            if (GameScript.s_EditorEnabled) TileManager.EditorMenus._Menu_Editor.gameObject.SetActive(true);
             else TileManager.EditorMenus._Menu_EditorTesting.gameObject.SetActive(true);
         });
 
-      if (Levels._HardcodedLoadout != null && !GameScript._EditorTesting)
+      if (Levels._HardcodedLoadout != null && !GameScript.s_EditorTesting)
       {
         // Switch to loadouts menu
         mPause.AddComponent("edit loadouts\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
@@ -5566,7 +5608,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
           });
       }
 
-      if ((!GameScript._EditorTesting || (GameScript._EditorTesting && !GameScript._EditorEnabled)) && GameScript.s_GameMode != GameScript.GameModes.VERSUS)
+      if ((!GameScript.s_EditorTesting || (GameScript.s_EditorTesting && !GameScript.s_EditorEnabled)) && GameScript.s_GameMode != GameScript.GameModes.VERSUS)
         // Restart the map
         mPause.AddComponent("restart\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
           .AddEvent((MenuComponent component) =>
@@ -5661,7 +5703,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
             .AddEvent(EventType.ON_RENDER, CommonEvents._OnRender_XSelector);
       }
 
-      else if (GameScript._EditorTesting)
+      else if (GameScript.s_EditorTesting)
       {
         // Switch to level select
         mPause
@@ -5741,7 +5783,8 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
         }
         var stat = Stats._Stats[i];
         mPause.AddComponent(string.Format(format_stats, GameScript.PlayerProfile.s_Profiles[i].GetColorName(), $"P{i + 1}/", $"{stat._kills}", $"{stat._deaths}", Settings._NumberPlayers > 1 ? $"{stat._teamkills}" : "", GameScript.s_GameMode == GameScript.GameModes.SURVIVAL ? $"{stat._points}" : ""));
-      };
+      }
+      ;
       // Set the onback function to be resume
       _Menus[MenuType.PAUSE]._onBack = () =>
       {
@@ -5978,7 +6021,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
     .AddComponent($"<color={_COLOR_GRAY}>graphics / audio settings</color>\n\n");
 
     // Non-console options
-    if (Application.platform != RuntimePlatform.PS4 && Application.platform != RuntimePlatform.PS5 && Application.platform != RuntimePlatform.GameCoreXboxSeries && Application.platform != RuntimePlatform.GameCoreXboxOne && Application.platform != RuntimePlatform.XboxOne)
+    if (Application.platform != RuntimePlatform.PS4 && Application.platform != RuntimePlatform.PS5 && Application.platform != RuntimePlatform.GameCoreXboxSeries && Application.platform != RuntimePlatform.GameCoreXboxOne && Application.platform != RuntimePlatform.XboxOne && Application.platform != RuntimePlatform.WebGLPlayer)
     {
 
       // Window mode toggle
@@ -6901,7 +6944,7 @@ www.reddit.com/u/quaterniusdev
         }
         SwitchMenu(MenuType.MAIN);
       }
-      GameScript._s_Singleton.StartCoroutine(scrollCredits());
+      GameScript.s_Singleton.StartCoroutine(scrollCredits());
     };
     m_cred._onSwitched += () =>
     {
@@ -7067,7 +7110,7 @@ there are no loadouts.~1 all items will be given in the mode!~1
         {
 
           Levels._LevelPack_Playing = false;
-          GameScript._EditorTesting = false;
+          GameScript.s_EditorTesting = false;
 
           var menutype = _Menus[MenuType.PAUSE]._selectionIndex == _Menus[MenuType.PAUSE]._menuComponentsSelectable.Count - 1 ? MenuType.MAIN : MenuType.EDITOR_PACKS;
           CommonEvents._SwitchMenu(menutype);
@@ -7083,14 +7126,14 @@ there are no loadouts.~1 all items will be given in the mode!~1
         }
 
         // Check for level editor
-        else if (GameScript._EditorTesting)
+        else if (GameScript.s_EditorTesting)
         {
-          GameScript._EditorTesting = false;
+          GameScript.s_EditorTesting = false;
 
           // Save map data
-          if (GameScript._EditorEnabled)
+          if (GameScript.s_EditorEnabled)
           {
-            GameScript._EditorEnabled = false;
+            GameScript.s_EditorEnabled = false;
             var mapdata = TileManager.SaveMap();
             TileManager.SaveFileOverwrite(mapdata);
             TileManager.EditorDisabled(null);
@@ -8035,7 +8078,8 @@ about extras</color>
           _CanRender = false;
           onRender = true;
           break;
-        };
+        }
+        ;
         var nextChar = _TextBuffer[i];
         var nextNextChar = i < _TextBuffer.Length - 1 && i >= 0 ? _TextBuffer[i + 1] : ' ';
         if (nextChar == '~')
@@ -8329,6 +8373,20 @@ about extras</color>
       var hasNextDifficulty = unlockString.Contains("new difficulty unlocked:");
       //var hasSurvival = unlockString.Contains("MODE_SURVIVAL");
 
+#if UNITY_WEBGL
+
+      if (unlockString.Contains("you completed the demo"))
+      {
+        menu
+        .AddComponent("steam link\n", MenuComponent.ComponentType.BUTTON_SIMPLE, "magenta")
+          .AddEvent((MenuComponent c) =>
+          {
+            Application.OpenURL("https://store.steampowered.com/app/954010/Definitely_Sneaky_But_Not_Sneaky/");
+          });
+      }
+
+#endif
+
       if (!hasNextDifficulty)
       {
         if (hasShopItem)
@@ -8394,7 +8452,7 @@ about extras</color>
     if (change >= 0) return;
 
     // Pause
-    GameScript._Paused = true;
+    GameScript.s_Paused = true;
     Time.timeScale = 0f;
     _InMenus = true;
 
@@ -8474,7 +8532,7 @@ about extras</color>
   {
     _InMenus = true;
     _InPause = true;
-    GameScript._Paused = true;
+    GameScript.s_Paused = true;
     Time.timeScale = 0f;
 
     _CurrentMenu._selectedComponent._focused = false;

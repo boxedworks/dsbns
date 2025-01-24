@@ -31,7 +31,6 @@ public class Powerup : MonoBehaviour
   private void Start()
   {
     //Init();
-    transform.position = new Vector3(transform.position.x, 0f, transform.position.z);
   }
 
   // Use this for initialization
@@ -90,6 +89,8 @@ public class Powerup : MonoBehaviour
       _rb.useGravity = false;
       _rb.interpolation = RigidbodyInterpolation.Interpolate;
       _rb.linearDamping = 1.5f;
+
+      _rb.position = new Vector3(_rb.position.x, 0f, _rb.position.z);
       //_rb.isKinematic = true;
     }
     // Hide editor indicator
@@ -111,17 +112,19 @@ public class Powerup : MonoBehaviour
     GetComponent<CustomEntityUI>().Activate();
     switch (_type)
     {
-      case (Powerup.PowerupType.SILENCED_PISTOL):
+      case PowerupType.SILENCED_PISTOL:
         r.EquipItem(GameScript.ItemManager.Items.PISTOL_SILENCED, ActiveRagdoll.Side.RIGHT);
         r.PlaySound("Ragdoll/Reload");
         break;
-      case (Powerup.PowerupType.KNIFE):
+
+      case PowerupType.KNIFE:
         r.EquipItem(GameScript.ItemManager.Items.KNIFE, ActiveRagdoll.Side.LEFT);
         r.PlaySound("Ragdoll/Slice");
         break;
-      case (Powerup.PowerupType.END):
+
+      case PowerupType.END:
         remove = false;
-        if (r._IsPlayer && !GameScript._s_Singleton._ExitOpen)
+        if (r._IsPlayer && !GameScript.s_Singleton._ExitOpen)
         {
           SfxManager.PlayAudioSourceSimple(r._Controller.position, "Etc/Ping");
 
@@ -156,12 +159,13 @@ public class Powerup : MonoBehaviour
 
           }
 
-          GameScript.ToggleExit();
           r._PlayerScript._HasExit = true;
           _rb.constraints = RigidbodyConstraints.None;
           transform.parent = transform.parent.parent;
           //_audio.Stop();
           //GameScript.NextLevel();
+
+          GameScript.ToggleExit();
 
           break;
         }
@@ -174,7 +178,7 @@ public class Powerup : MonoBehaviour
   // Update is called once per frame
   void Update()
   {
-    if (GameScript._Paused || Menu._InMenus)
+    if (GameScript.s_Paused || Menu._InMenus)
     {
       _audio.volume = 0f;
       return;
@@ -183,7 +187,7 @@ public class Powerup : MonoBehaviour
     if (Time.time % 3 <= 0.1f) Rotate();
     _l.intensity += (Mathf.Clamp(_rb.angularVelocity.magnitude / 3f, 0.5f, 2f) - _l.intensity) * Time.deltaTime * 2f;
 
-        if (_activated)
+    if (_activated)
     {
       if (_activator == null || _activator._IsDead || _activator._Hip == null)
       {
@@ -192,7 +196,7 @@ public class Powerup : MonoBehaviour
       }
 
       // If game ended, set activated2
-      if (GameScript._s_Singleton._GameEnded)
+      if (GameScript.s_Singleton._GameEnded)
         _activated2 = true;
 
       // If activated2, move icon into sky

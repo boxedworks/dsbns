@@ -345,12 +345,11 @@ public class BulletScript : MonoBehaviour
     var target = FunctionsC.GetClosestTargetTo(_sourceDamageRagdoll, transform.position, -1, false);
     if (target != null && target._ragdoll != null)
       targetPosition = GetLocalPosition(target._ragdoll._Hip.position);
-    var closestTargetPos = targetPosition;
 
     // Check 2nd closest enemy
     var bulletPos = _rb.position + new Vector3(0f, 0.6f, 0f);
     var raycastinfo = new RaycastHit();
-    if (targetPosition != Vector3.zero && (Physics.SphereCast(new Ray(bulletPos, MathC.Get2DVector(targetPosition - _rb.position).normalized), 0.05f, out raycastinfo, 100f, LayerMask.GetMask("ParticleCollision")) && raycastinfo.distance < target._distance * 0.95f))
+    if (targetPosition != Vector3.zero && (Physics.SphereCast(new Ray(bulletPos, MathC.Get2DVector(targetPosition - _rb.position).normalized), 0.05f, out raycastinfo, 100f, LayerMask.GetMask("ParticleCollision")) && raycastinfo.distance < target._distance))
     {
       //Debug.Log($"{raycastinfo.distance} <? {target._distance * 0.95f} [{raycastinfo.collider.name}]");
 
@@ -359,13 +358,9 @@ public class BulletScript : MonoBehaviour
         targetPosition = GetLocalPosition(target._ragdoll._Hip.position);
     }
 
-    // Try to use closest enemy again
-    if (targetPosition == Vector3.zero && closestTargetPos != Vector3.zero)
-      targetPosition = closestTargetPos;
-
     // Check nearest mirrors
     raycastinfo = new RaycastHit();
-    if (targetPosition == Vector3.zero || (Physics.SphereCast(new Ray(bulletPos, MathC.Get2DVector(targetPosition - _rb.position).normalized), 0.05f, out raycastinfo, 100f, LayerMask.GetMask("ParticleCollision")) && raycastinfo.distance < target._distance * 0.95f))
+    if (targetPosition == Vector3.zero || (Physics.SphereCast(new Ray(bulletPos, MathC.Get2DVector(targetPosition - _rb.position).normalized), 0.05f, out raycastinfo, 100f, LayerMask.GetMask("ParticleCollision")) && raycastinfo.distance < target._distance))
     {
 
       var mirrors = UtilityScript.s_Utilities_Thrown.ContainsKey(UtilityScript.UtilityType.MIRROR) ? UtilityScript.s_Utilities_Thrown[UtilityScript.UtilityType.MIRROR] : null;
@@ -670,7 +665,7 @@ public class BulletScript : MonoBehaviour
     _triggered = true;
     _light.enabled = false;
     if (_Particles == null) return;
-    GameScript._s_Singleton.StartCoroutine(LagParticles(1f));
+    GameScript.s_Singleton.StartCoroutine(LagParticles(1f));
   }
   public static void HideAll()
   {

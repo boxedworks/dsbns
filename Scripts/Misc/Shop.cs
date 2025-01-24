@@ -402,7 +402,7 @@ public static class Shop
     // Add unlocks to vault
     _Unlocks_Vault = new Dictionary<string, Unlocks[]>();
 
-    if (GameScript._s_Singleton._IsDemo)
+    if (GameScript.s_Singleton._IsDemo)
     {
       _Unlocks_Vault.Add("classic_0", new Unlocks[] { Unlocks.ITEM_AXE, Unlocks.UTILITY_GRENADE });
       _Unlocks_Vault.Add("classic_1", new Unlocks[] { Unlocks.MOD_LASER_SIGHTS, Unlocks.UTILITY_KUNAI_EXPLOSIVE, Unlocks.MAX_EQUIPMENT_POINTS_2 });

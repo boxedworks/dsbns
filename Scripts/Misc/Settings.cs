@@ -183,7 +183,7 @@ public static class Settings
     }
   }
 
-  public static float _VERSION = 1.46f;
+  public static float _VERSION = 1.47f;
 
   // Struct holding info what item pair gets unlocked at what level
   public class WeaponPair
@@ -203,7 +203,11 @@ public static class Settings
 
     // Register levels files by name
     Levels._LevelCollections = new();
-    foreach (var filename in new string[] { "levels0", "levels1", "levels_survival", "levels_editor_local", "levels_versus" /*"levels_challenge"*/ })
+    var levelsLoad = new string[] { "levels0", "levels1", "levels_survival", "levels_editor_local", "levels_versus" /*"levels_challenge"*/ };
+#if UNITY_WEBGL
+    levelsLoad = new string[] { "levels_demo", "levels_demo", "levels_survival", "levels_editor_local", "levels_versus" /*"levels_challenge"*/ };
+#endif
+    foreach (var filename in levelsLoad)
       Levels._LevelCollections.Add(new Levels.LevelCollection()
       {
         _name = filename
@@ -253,7 +257,11 @@ public static class Settings
         SettingsModule.ControllerRumble = PlayerPrefs.GetInt("controller_rumble", 1) == 1;
         SettingsModule.IgnoreFirstController = PlayerPrefs.GetInt("_IgnoreFirstController", 0) == 1;
 
-        SettingsModule.Quality = PlayerPrefs.GetInt("quality", 5);
+        var defaultQuality = 5;
+#if UNITY_WEBGL
+        defaultQuality = 2;
+#endif
+        SettingsModule.Quality = PlayerPrefs.GetInt("quality", defaultQuality);
         SettingsModule.ScreenResolution = PlayerPrefs.GetString("screen_resolution", $"{GetSafeMaxResolution()}");
         SettingsModule.Fullscreen = PlayerPrefs.GetInt("screen_fullscreen", 1) == 1;
         SettingsModule.UseVsync = PlayerPrefs.GetInt("vsync_setting", 0) == 1;
@@ -653,17 +661,26 @@ public static class Settings
           case 2: Physics.gravity = new Vector3(0f, 0f, 9.81f); break;
           case 3: Physics.gravity = Vector3.zero; break;
         }
+
+        GameScript.s_ExitLight.enabled = true;
+        break;
+
+      case GamemodeChange.LEVEL_EDITOR:
+        Physics.gravity = new Vector3(0f, -9.81f, 0f);
+
+        GameScript.s_ExitLight.enabled = true;
         break;
 
       case GamemodeChange.SURVIVAL:
-      case GamemodeChange.LEVEL_EDITOR:
       case GamemodeChange.VERSUS:
 
         Physics.gravity = new Vector3(0f, -9.81f, 0f);
+        GameScript.s_ExitLight.enabled = false;
 
-        VersusMode.OnGamemodeSwitched(gamemode == GamemodeChange.VERSUS);
         break;
     }
+
+    VersusMode.OnGamemodeSwitched(gamemode == GamemodeChange.VERSUS);
 
     _LevelEditorEnabled = gamemode == GamemodeChange.LEVEL_EDITOR;
   }
@@ -730,13 +747,15 @@ public static class Settings
                 depthOfField.focusDistance.value = 10.2f;
                 depthOfField.aperture.value = 1f * apertureMod;
                 break;
-              case SettingsSaveData.CameraZoomType.NORMAL:
-                depthOfField.focusDistance.value = 14.3f;
-                depthOfField.aperture.value = 0.5f * apertureMod;
-                break;
+
               case SettingsSaveData.CameraZoomType.FAR:
                 depthOfField.focusDistance.value = 18.2f;
                 depthOfField.aperture.value = 0.35f * apertureMod;
+                break;
+
+              default:
+                depthOfField.focusDistance.value = 14.3f;
+                depthOfField.aperture.value = 0.5f * apertureMod;
                 break;
             }
           }
@@ -799,9 +818,10 @@ public static class Settings
 
   public static void UpdateResolution()
   {
-    /*#if UNITY_EDITOR
-          return;
-    #endif*/
+#if UNITY_WEBGL
+    return;
+#endif
+
     Screen.SetResolution(_ScreenResolution.width, _ScreenResolution.height, _Fullscreen);
     // set the desired aspect ratio (the values in this example are
     // hard-coded for 16:9, but you could make them into public

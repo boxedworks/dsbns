@@ -1,8 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
-using Steamworks;
 using UnityEngine;
 using UnityEngine.AI;
+
 using Key = ControllerManager.Key;
 
 public class TileManager
@@ -47,7 +47,7 @@ public class TileManager
 
   public static void ShowGameOverText(string text, string color_base, string color_flash, int flashes = 8)
   {
-    var gameid = GameScript._GameId;
+    var gameid = GameScript.s_GameId;
     IEnumerator ShowTextCo()
     {
       //SfxManager.PlayAudioSourceSimple(GameResources._Camera_Main.transform.GetChild(1).position, "Etc/HiHat", 0.95f, 1f, SfxManager.AudioClass.NONE, false, false);
@@ -66,10 +66,10 @@ public class TileManager
         _Text_GameOver.text = $"<color={color_base}>{text}</color>";
 
       // Check game ended
-      if (gameid != GameScript._GameId)
+      if (gameid != GameScript.s_GameId)
         _Text_GameOver.gameObject.SetActive(false);
     }
-    GameScript._s_Singleton.StartCoroutine(ShowTextCo());
+    GameScript.s_Singleton.StartCoroutine(ShowTextCo());
     _Text_GameOver.gameObject.SetActive(true);
   }
   public static void HideGameOverText()
@@ -81,7 +81,7 @@ public class TileManager
 
     ResetMonies();
 
-    GameScript._GameId++;
+    GameScript.s_GameId++;
   }
 
   public static void HideMonies()
@@ -183,7 +183,7 @@ public class TileManager
 
       ResetMonie(index);
     }
-    GameScript._s_Singleton.StartCoroutine(MoveMonieCo());
+    GameScript.s_Singleton.StartCoroutine(MoveMonieCo());
   }
 
   public static void Init()
@@ -393,7 +393,7 @@ public class TileManager
         var e = enemies.GetChild(i).GetChild(0).GetComponent<EnemyScript>();
         // Don't save bat enemy if not level editor
         /*if (Settings._DIFFICULTY > 0)*/
-        if (!GameScript._EditorTesting)
+        if (!GameScript.s_EditorTesting)
           if (e._itemLeft == GameScript.ItemManager.Items.BAT || e._itemRight == GameScript.ItemManager.Items.BAT) continue;
         // Basic position info
         var pos_save = e.transform.position - offset;
@@ -545,7 +545,7 @@ public class TileManager
     if (!Menu._InMenus && Shop.s_UnlockString != string.Empty)
       GameScript.TogglePause(Menu.MenuType.NONE);
 
-    while (GameScript._Paused)
+    while (GameScript.s_Paused)
       yield return new WaitForSeconds(0.05f);
 
     if (_s_MapIndex != mapsaveindex) { }
@@ -654,7 +654,7 @@ public class TileManager
           SceneThemes.ChangeMapTheme(SceneThemes._Instance._ThemeOrder[themeIndex]);
         }
       }
-      else if (GameScript._EditorTesting)
+      else if (GameScript.s_EditorTesting)
         SceneThemes.ChangeMapTheme(SceneThemes._Instance._ThemeOrder[2]);
       else
       {
@@ -946,7 +946,7 @@ public class TileManager
       GameResources._Camera_Main.transform.position = campos;
 
       // Hide playerspawn
-      var isSurvival = GameScript.s_GameMode == GameScript.GameModes.SURVIVAL && !GameScript._EditorEnabled;
+      var isSurvival = GameScript.s_GameMode == GameScript.GameModes.SURVIVAL && !GameScript.s_EditorEnabled;
       foreach (var spawn in PlayerspawnScript._PlayerSpawns)
       {
         spawn.transform.GetChild(1).gameObject.SetActive(!isSurvival);
@@ -1022,7 +1022,7 @@ public class TileManager
       }
 
       // Set level time
-      GameScript._LevelStartTime = Time.time;
+      GameScript.s_LevelStartTime = Time.time;
 
       // Init all enemies
       EnemyScript.HardInitAll();
@@ -1263,7 +1263,7 @@ public class TileManager
     if (GameScript.IsSurvival()) GameScript.SurvivalMode.Init();
 
     // Check if there is bat enemy to spawn
-    if (!GameScript._EditorTesting)
+    if (!GameScript.s_EditorTesting)
     {
       var hasBat = false;
       if (EnemyScript._Enemies_alive != null)
@@ -1288,7 +1288,7 @@ public class TileManager
     }
 
     // Display level #
-    if (GameScript.s_GameMode == GameScript.GameModes.CLASSIC && !GameScript._EditorTesting)
+    if (GameScript.s_GameMode == GameScript.GameModes.CLASSIC && !GameScript.s_EditorTesting)
     {
       var hardmodeadd = Settings._DIFFICULTY == 1 ? "*" : "";
       _Text_LevelNum.text = $"{Levels._CurrentLevelIndex + 1}{hardmodeadd}";
@@ -1533,7 +1533,7 @@ public class TileManager
       case ("button"):
         loadedObject = object_base.LoadResource("Button", container_objects, new Vector3(0.6f, 0.1f, 0.6f), -1.28f);
         var button_script = loadedObject.GetComponent<CustomEntityUI>();
-        button_script.gameObject.layer = GameScript._EditorEnabled ? 0 : 2;
+        button_script.gameObject.layer = GameScript.s_EditorEnabled ? 0 : 2;
         // Check for attached objects
         while (object_data_iter < object_data_split.Length)
           // Check object type
@@ -1546,7 +1546,7 @@ public class TileManager
               object_data_iter++;
               var door_script = door_new.GetComponent<DoorScript>();
               door_script.RegisterButton(ref button_script);
-              door_script.transform.GetChild(0).GetChild(1).GetComponent<BoxCollider>().enabled = GameScript._EditorEnabled;
+              door_script.transform.GetChild(0).GetChild(1).GetComponent<BoxCollider>().enabled = GameScript.s_EditorEnabled;
               break;
           }
         break;
@@ -1556,7 +1556,7 @@ public class TileManager
         var door_script0 = loadedObject.GetComponent<DoorScript>();
         door_script0.enabled = false;
         door_script0.enabled = true;
-        door_script0.transform.GetChild(0).GetChild(1).GetComponent<BoxCollider>().enabled = GameScript._EditorEnabled;
+        door_script0.transform.GetChild(0).GetChild(1).GetComponent<BoxCollider>().enabled = GameScript.s_EditorEnabled;
         var properties = GetProperties(ref object_data_split, ref object_data_iter);
         foreach (var pair in properties)
         {
@@ -1582,7 +1582,7 @@ public class TileManager
                 var idP = id.ParseIntInvariant();
                 //Debug.Log(GameScript._Singleton.transform.GetChild(0).childCount);
                 //Debug.Log(idP);
-                var enemies = GameScript._s_Singleton.transform.GetChild(0);
+                var enemies = GameScript.s_Singleton.transform.GetChild(0);
 
                 // Check extra
                 if (LevelModule.ExtraEnemyMultiplier == 2)
@@ -1676,7 +1676,7 @@ public class TileManager
         if (!object_base._type.Equals(leo._name.ToLower())) continue;
         var isNavMesh = (leo._name.Equals(_LEO_NavMeshBarrier._name));
         loadedObject = object_base.LoadResource(leo._name, _Map.GetChild(1));
-        if ((isNavMesh || leo._name.Equals(_LEO_RugRectangle._name)) && !GameScript._EditorEnabled) { loadedObject.GetComponent<BoxCollider>().enabled = false; }
+        if ((isNavMesh || leo._name.Equals(_LEO_RugRectangle._name)) && !GameScript.s_EditorEnabled) { loadedObject.GetComponent<BoxCollider>().enabled = false; }
         loadedObject.transform.localPosition = new Vector3(loadedObject.transform.localPosition.x, leo._movementSettings._localPos, loadedObject.transform.localPosition.z);
 
         // Check fake wall
@@ -1707,7 +1707,7 @@ public class TileManager
 
         // Change layer per editor mode
         if (loadedObject.name == _LEO_Interactable._name || loadedObject.name == _LEO_NavMeshBarrier._name)
-          loadedObject.layer = GameScript._EditorEnabled ? 0 : 2;
+          loadedObject.layer = GameScript.s_EditorEnabled ? 0 : 2;
 
         // Get properties
         foreach (var pair in GetProperties(ref object_data_split, ref object_data_iter))
@@ -1758,7 +1758,7 @@ public class TileManager
             l.shadowStrength = SceneThemes._Theme._shadowStrength;
 
             // Ignore raycasts on lamps
-            if (!GameScript._EditorEnabled)
+            if (!GameScript.s_EditorEnabled)
               loadedObject.layer = 2;
           }
         }
@@ -1860,34 +1860,34 @@ public class TileManager
           resource = GameResources._Barrel_Explosive;
           break;
         case ("Table"):
-          resource = SceneThemes._Theme._name == "Hedge" && !GameScript._EditorEnabled ? GameResources._Table_Bush : GameResources._Table;
-          resourceName = SceneThemes._Theme._name == "Hedge" && !GameScript._EditorEnabled ? resourceName + "_Bush" : resourceName;
+          resource = SceneThemes._Theme._name == "Hedge" && !GameScript.s_EditorEnabled ? GameResources._Table_Bush : GameResources._Table;
+          resourceName = SceneThemes._Theme._name == "Hedge" && !GameScript.s_EditorEnabled ? resourceName + "_Bush" : resourceName;
           break;
         case ("TableSmall"):
-          resource = SceneThemes._Theme._name == "Hedge" && !GameScript._EditorEnabled ? GameResources._TableSmall_Bush : GameResources._TableSmall;
-          resourceName = SceneThemes._Theme._name == "Hedge" && !GameScript._EditorEnabled ? resourceName + "_Bush" : resourceName;
+          resource = SceneThemes._Theme._name == "Hedge" && !GameScript.s_EditorEnabled ? GameResources._TableSmall_Bush : GameResources._TableSmall;
+          resourceName = SceneThemes._Theme._name == "Hedge" && !GameScript.s_EditorEnabled ? resourceName + "_Bush" : resourceName;
           break;
         case ("Chair"):
-          resource = SceneThemes._Theme._name == "Hedge" && !GameScript._EditorEnabled ? GameResources._Chair_Stump : GameResources._Chair;
-          resourceName = SceneThemes._Theme._name == "Hedge" && !GameScript._EditorEnabled ? resourceName + "_Stump" : resourceName;
+          resource = SceneThemes._Theme._name == "Hedge" && !GameScript.s_EditorEnabled ? GameResources._Chair_Stump : GameResources._Chair;
+          resourceName = SceneThemes._Theme._name == "Hedge" && !GameScript.s_EditorEnabled ? resourceName + "_Stump" : resourceName;
           break;
         case ("BookcaseClosed"):
           resource = GameResources._BookcaseClosed;
           break;
         case ("BookcaseOpen"):
-          resource = SceneThemes._Theme._name == "Hedge" && !GameScript._EditorEnabled ? GameResources._BookcaseOpen_Bush : GameResources._BookcaseOpen;
-          resourceName = SceneThemes._Theme._name == "Hedge" && !GameScript._EditorEnabled ? resourceName + "_Bush" : resourceName;
+          resource = SceneThemes._Theme._name == "Hedge" && !GameScript.s_EditorEnabled ? GameResources._BookcaseOpen_Bush : GameResources._BookcaseOpen;
+          resourceName = SceneThemes._Theme._name == "Hedge" && !GameScript.s_EditorEnabled ? resourceName + "_Bush" : resourceName;
           break;
         case ("BookcaseBig"):
-          resource = SceneThemes._Theme._name == "Hedge" && !GameScript._EditorEnabled ? GameResources._BookcaseBig_Bush : GameResources._BookcaseBig;
-          resourceName = SceneThemes._Theme._name == "Hedge" && !GameScript._EditorEnabled ? resourceName + "_Bush" : resourceName;
+          resource = SceneThemes._Theme._name == "Hedge" && !GameScript.s_EditorEnabled ? GameResources._BookcaseBig_Bush : GameResources._BookcaseBig;
+          resourceName = SceneThemes._Theme._name == "Hedge" && !GameScript.s_EditorEnabled ? resourceName + "_Bush" : resourceName;
           break;
         case ("RugRectangle"):
           resource = GameResources._RugRectangle;
           break;
         case ("Barrel"):
-          resource = SceneThemes._Theme._name == "Hedge" && !GameScript._EditorEnabled ? GameResources._Barrel_Rock : GameResources._Barrel;
-          resourceName = SceneThemes._Theme._name == "Hedge" && !GameScript._EditorEnabled ? resourceName + "_Rock" : resourceName;
+          resource = SceneThemes._Theme._name == "Hedge" && !GameScript.s_EditorEnabled ? GameResources._Barrel_Rock : GameResources._Barrel;
+          resourceName = SceneThemes._Theme._name == "Hedge" && !GameScript.s_EditorEnabled ? resourceName + "_Rock" : resourceName;
           localScale.y *= 0.8f;
           break;
         case ("Column"):
@@ -1955,7 +1955,7 @@ public class TileManager
   static float _LastReloadTime;
   public static bool CanReloadMap()
   {
-    return (!GameScript._EditorEnabled && !_LoadingMap && Time.unscaledTime - _LastReloadTime >= 0.3f);
+    return (!GameScript.s_EditorEnabled && !_LoadingMap && Time.unscaledTime - _LastReloadTime >= 0.3f);
   }
   public static void ReloadMap()
   {
@@ -2094,7 +2094,7 @@ public class TileManager
       yield return new WaitForSecondsRealtime(0.1f);
       CombineMeshes(false);
     }
-    GameScript._s_Singleton.StartCoroutine(co());
+    GameScript.s_Singleton.StartCoroutine(co());
 
     // Move camera
     var campos = GameResources._Camera_Main.transform.position;
@@ -2122,7 +2122,7 @@ public class TileManager
       }
 
       // Set level time
-      GameScript._LevelStartTime = Time.time;
+      GameScript.s_LevelStartTime = Time.time;
 
       // Init enemies
       EnemyScript.HardInitAll();
@@ -2146,7 +2146,7 @@ public class TileManager
       color.a = 0f;
       material.color = color;
     }
-    GameScript._s_Singleton.StartCoroutine(LerpCamera());
+    GameScript.s_Singleton.StartCoroutine(LerpCamera());
   }
 
   public static void ResetParticles()
@@ -2613,7 +2613,7 @@ public class TileManager
       _Pointer = GameObject.CreatePrimitive(PrimitiveType.Sphere).transform;
       GameObject.Destroy(_Pointer.GetComponent<Collider>());
       _Pointer.gameObject.name = "Pointer";
-      _Pointer.parent = GameScript._s_Singleton.transform;
+      _Pointer.parent = GameScript.s_Singleton.transform;
       _Pointer.gameObject.layer = 2;
       MeshRenderer m = _Pointer.GetComponent<MeshRenderer>();
       m.sharedMaterial = GameObject.Find("BlackFade").GetComponent<MeshRenderer>().sharedMaterial;
@@ -3961,7 +3961,7 @@ public class TileManager
       }
       // Toggle
       if (ControllerManager.GetMouseInput(1, ControllerManager.InputMode.DOWN) && _Selected_Tiles != null)
-        GameScript._s_Singleton.StartCoroutine(Tile.LerpPositions(_Selected_Tiles.ToArray(), 0f, false));
+        GameScript.s_Singleton.StartCoroutine(Tile.LerpPositions(_Selected_Tiles.ToArray(), 0f, false));
     }
     ,
     _UpdateFunction_Object = (GameObject selection) =>
@@ -4192,7 +4192,7 @@ public class TileManager
     // Test and save map
     if (ControllerManager.GetKey(Key.F1) && Time.unscaledTime - _EditorSwitchTime > 0.5f)
     {
-      GameScript._EditorEnabled = false;
+      GameScript.s_EditorEnabled = false;
       //if (_EditorEnabled) StartCoroutine(TileManager.EditorEnabled());
       string mapdata = TileManager.SaveMap();
       TileManager.EditorDisabled(mapdata);
@@ -4849,7 +4849,7 @@ public class TileManager
     background.parent = container;
     background.transform.localPosition = Vector3.zero;
     background.transform.localScale = new Vector3(1f, 1f, 0.1f);
-    GameScript._s_Singleton.StartCoroutine(GetMapPreviewCo(container, mapData));
+    GameScript.s_Singleton.StartCoroutine(GetMapPreviewCo(container, mapData));
     return container;
   }
 
@@ -5278,7 +5278,7 @@ public class TileManager
       Vector3 pos_up = new Vector3(0f, _StartY + _AddY, 0f),
        pos_down = new Vector3(0f, _StartY, 0f);
 
-      if (!GameScript._EditorEnabled)
+      if (!GameScript.s_EditorEnabled)
       {
         if (tiles_up.Count > 0)
           tiles_up[0].ChangeColor(SceneThemes._Theme._tileColorUp);
@@ -5297,7 +5297,7 @@ public class TileManager
 
     public void ChangeColor(Color c)
     {
-      GameScript._s_Singleton.StartCoroutine(ChangeColorCo(c, 0.2f));
+      GameScript.s_Singleton.StartCoroutine(ChangeColorCo(c, 0.2f));
     }
 
     IEnumerator ChangeColorCo(Color c, float time = 1f)
@@ -5305,13 +5305,13 @@ public class TileManager
       _moving = true;
       float t = 0f;
       MeshRenderer m = _tile.GetComponent<MeshRenderer>();
-      Color startColor = !GameScript._EditorEnabled ? m.sharedMaterial.color : m.material.color;
+      Color startColor = !GameScript.s_EditorEnabled ? m.sharedMaterial.color : m.material.color;
       if (!Color.Equals(startColor, c))
         while (t < time)
         {
           yield return new WaitForSecondsRealtime(0.01f);
           t += 0.01f;
-          if (!GameScript._EditorEnabled)
+          if (!GameScript.s_EditorEnabled)
             m.sharedMaterial.color = Color.Lerp(startColor, c, t / time);
           else
             m.material.color = Color.Lerp(startColor, c, t / time);

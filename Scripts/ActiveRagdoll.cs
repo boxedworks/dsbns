@@ -980,7 +980,7 @@ public class ActiveRagdoll
           if (_ItemR != null && _ItemR.CanReload())
             _ItemR.Reload();
         }
-        GameScript._s_Singleton.StartCoroutine(delayedReload());
+        GameScript.s_Singleton.StartCoroutine(delayedReload());
       }
     }
     //else if (_itemL != null && !_itemL._melee && _isPlayer) DisplayText("already reloading L");
@@ -1206,8 +1206,8 @@ public class ActiveRagdoll
       return;
     }
     if (_color_Coroutine != null)
-      GameScript._s_Singleton.StopCoroutine(_color_Coroutine);
-    _color_Coroutine = GameScript._s_Singleton.StartCoroutine(LerpColor(mesh, c, lerpAmount));
+      GameScript.s_Singleton.StopCoroutine(_color_Coroutine);
+    _color_Coroutine = GameScript.s_Singleton.StartCoroutine(LerpColor(mesh, c, lerpAmount));
   }
   void SetLerpAmount(ref SkinnedMeshRenderer mesh, Color c, float normalized, Color sc0, Color sc1)
   {
@@ -1489,7 +1489,7 @@ public class ActiveRagdoll
         // Clean up
         ToggleRaycasting(true);
       }
-      GameScript._s_Singleton.StartCoroutine(TryGrapple());
+      GameScript.s_Singleton.StartCoroutine(TryGrapple());
 
       /*/ Kick
       else if (!_kicking && Time.time - _kickTimer_start >= 2f)
@@ -1593,7 +1593,7 @@ public class ActiveRagdoll
       }
 
       system.transform.parent = saveParent;
-      if (Time.time - GameScript._LevelStartTime < 1f)
+      if (Time.time - GameScript.s_LevelStartTime < 1f)
       {
         system.Stop();
         system.Clear();
@@ -1627,7 +1627,7 @@ public class ActiveRagdoll
         }
       }
       PlaySound("Enemies/Electric_Shock");
-      GameScript._s_Singleton.StartCoroutine(PlaySparks());
+      GameScript.s_Singleton.StartCoroutine(PlaySparks());
       return;
     }
 
@@ -1656,7 +1656,7 @@ public class ActiveRagdoll
         confetti.transform.Rotate(new Vector3(1f, 0f, 0f), UnityEngine.Random.value * -20f);
         rotationConfetti = confetti.transform.localRotation;
 
-        GameScript._s_Singleton.StartCoroutine(BloodFollow(confetti));
+        GameScript.s_Singleton.StartCoroutine(BloodFollow(confetti));
 
         /*/
         if (SettingsModule.UseSmokeFx)
@@ -1744,7 +1744,7 @@ public class ActiveRagdoll
         giblets.Play();
       }
 
-      GameScript._s_Singleton.StartCoroutine(BloodFollow(blood));
+      GameScript.s_Singleton.StartCoroutine(BloodFollow(blood));
 
       //
       if (SettingsModule.UseSmokeFx)
@@ -2043,7 +2043,7 @@ public class ActiveRagdoll
     // Checks
     if (_IsDead) return;
     if (_grappling) return;
-    if (GameScript._EditorEnabled) return;
+    if (GameScript.s_EditorEnabled) return;
     if (!_CanGrapple) return;
 
     // Spawn enemy

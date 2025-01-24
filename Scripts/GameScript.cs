@@ -14,7 +14,11 @@ public class GameScript : MonoBehaviour
   {
     get
     {
+#if DISABLESTEAMWORKS
+      return false;
+#else
       return SteamManager._Enabled;
+#endif
     }
   }
 
@@ -22,21 +26,22 @@ public class GameScript : MonoBehaviour
   public static CustomNetworkManager s_CustomNetworkManager;
 
   //
-  public static TextMesh _debugText;
+  public static TextMesh s_DebugText;
 
-  public static GameScript _s_Singleton;
+  public static GameScript s_Singleton;
 
-  public static bool _Paused;
+  public static bool s_Paused;
 
   public bool _GameEnded,
     _ExitOpen,
     _IsDemo;
 
-  public static int _PlayerIter;
+  public static int s_PlayerIter;
 
-  public static Light _CameraLight;
+  public static Light s_CameraLight, s_ExitLight;
+  public static bool s_ExitLightShow;
 
-  static MeshRenderer _BlackFade;
+  static MeshRenderer s_BlackFade;
 
   public static AudioSource s_Music, s_SfxRain;
   static AudioSource s_sfxThunder;
@@ -45,20 +50,20 @@ public class GameScript : MonoBehaviour
 
   public Material[] _item_materials;
 
-  public static float _LevelStartTime;
+  public static float s_LevelStartTime;
 
-  public static bool _EditorEnabled, _EditorTesting;
+  public static bool s_EditorEnabled, s_EditorTesting;
 
-  public static int _LevelSelectColumns = 12, _LevelSelectRows = 4;
-  public static int _LevelSelectionsPerPage
+  public static int s_LevelSelectColumns = 12, s_LevelSelectRows = 4;
+  public static int s_LevelSelectionsPerPage
   {
     get
     {
-      return _LevelSelectRows * _LevelSelectColumns;
+      return s_LevelSelectRows * s_LevelSelectColumns;
     }
   }
 
-  public static int _GameId;
+  public static int s_GameId;
 
   public void OnApplicationQuit()
   {
@@ -74,7 +79,7 @@ public class GameScript : MonoBehaviour
   }
   public static void OnApplicationQuitS()
   {
-    _s_Singleton.OnApplicationQuit();
+    s_Singleton.OnApplicationQuit();
   }
 
   static float _levelEndTimer;
@@ -133,10 +138,10 @@ public class GameScript : MonoBehaviour
   // Use this for initialization
   void Start()
   {
-    _s_Singleton = this;
+    s_Singleton = this;
 
     //
-    _debugText = GameObject.Find("DebugText").GetComponent<TextMesh>();
+    s_DebugText = GameObject.Find("DebugText").GetComponent<TextMesh>();
 
     //
     GameResources.Init();
@@ -181,7 +186,8 @@ public class GameScript : MonoBehaviour
     // Init loadouts
     ItemManager.Loadout.Init();
 
-    _CameraLight = GameResources._Camera_Main.transform.GetChild(2).GetComponent<Light>();
+    s_CameraLight = GameResources._Camera_Main.transform.GetChild(2).GetComponent<Light>();
+    s_ExitLight = GameObject.Find("Spotlight").GetComponent<Light>();
 
     Transform t = GameObject.Find("Map").transform.GetChild(2);
     t.localPosition = new Vector3(t.localPosition.x, TileManager.Tile._StartY + TileManager.Tile._AddY, t.localPosition.z);
@@ -197,7 +203,7 @@ public class GameScript : MonoBehaviour
     TileManager.EditorMenus.Init();
     TileManager.EditorMenus.HideMenus();
 
-    _BlackFade = GameObject.Find("BlackFade").GetComponent<MeshRenderer>();
+    s_BlackFade = GameObject.Find("BlackFade").GetComponent<MeshRenderer>();
     FadeIn();
 
     // Init playerprofile and loadouts
@@ -235,12 +241,12 @@ public class GameScript : MonoBehaviour
   public static void SpawnPlayers()
   {
     PlayerScript._PLAYERID = 0;
-    _PlayerIter = 0;
+    s_PlayerIter = 0;
     if (PlayerScript.s_Players != null)
     {
 
       // Count number of players to spawn.. only used if trying to stay persistant or players joined?
-      foreach (var p in PlayerScript.s_Players) if (p != null && !p._Ragdoll._IsDead) _PlayerIter++;
+      foreach (var p in PlayerScript.s_Players) if (p != null && !p._Ragdoll._IsDead) s_PlayerIter++;
 
       // Remove null / dead players
       for (var i = PlayerScript.s_Players.Count - 1; i >= 0; i--)
@@ -299,8 +305,8 @@ public class GameScript : MonoBehaviour
 
       var playerSpawnIndex = 0;
       if (!s_CustomNetworkManager._Connected || s_CustomNetworkManager._IsServer)
-        if (_PlayerIter < Settings._NumberPlayers)
-          for (; _PlayerIter < Settings._NumberPlayers; _PlayerIter++)
+        if (s_PlayerIter < Settings._NumberPlayers)
+          for (; s_PlayerIter < Settings._NumberPlayers; s_PlayerIter++)
             PlayerspawnScript._PlayerSpawns[spawnLocation[playerSpawnIndex++]].SpawnPlayer();
     }
 
@@ -317,9 +323,9 @@ public class GameScript : MonoBehaviour
           spawnOrder[i] = spawnList[i];
 
       if (!s_CustomNetworkManager._Connected || s_CustomNetworkManager._IsServer)
-        if (_PlayerIter < Settings._NumberPlayers)
-          for (; _PlayerIter < Settings._NumberPlayers; _PlayerIter++)
-            PlayerspawnScript._PlayerSpawns[spawnList[VersusMode.GetTeamId(_PlayerIter) % spawnList.Length]].SpawnPlayer();
+        if (s_PlayerIter < Settings._NumberPlayers)
+          for (; s_PlayerIter < Settings._NumberPlayers; s_PlayerIter++)
+            PlayerspawnScript._PlayerSpawns[spawnList[VersusMode.GetTeamId(s_PlayerIter) % spawnList.Length]].SpawnPlayer();
     }
   }
 
@@ -351,7 +357,7 @@ public class GameScript : MonoBehaviour
         Vector3 pos;
 
         // Spawn tutorial arrow after 5 seconds
-        if (Time.time - _LevelStartTime > 5f)
+        if (Time.time - s_LevelStartTime > 5f)
           if (!goal._activated && !goal._activated2)
           {
             pos = goal.transform.position + new Vector3(1.5f + Easings.CircularEaseOut(mod), 0f) + (SettingsModule.UseOrthographicCamera ? new Vector3(0f, 0f, SettingsModule.CameraZoom switch
@@ -391,10 +397,10 @@ public class GameScript : MonoBehaviour
     {
       if (_tutorialCo != null)
       {
-        _s_Singleton.StopCoroutine(_tutorialCo);
+        s_Singleton.StopCoroutine(_tutorialCo);
         _tutorialCo = null;
       }
-      _tutorialCo = _s_Singleton.StartCoroutine(tutorialfunction());
+      _tutorialCo = s_Singleton.StartCoroutine(tutorialfunction());
     }
   }
 
@@ -656,7 +662,7 @@ public class GameScript : MonoBehaviour
     public static void OnWaveStart()
     {
       // Respawn players and heal
-      _PlayerIter = 0;
+      s_PlayerIter = 0;
       if (PlayerScript.s_Players != null)
       {
         PlayerScript alive_player = null;
@@ -673,7 +679,7 @@ public class GameScript : MonoBehaviour
         if (alive_player == null) return;
 
         // Count number of players to spawn.. only used if trying to stay persistant or players joined?
-        foreach (var p in PlayerScript.s_Players) if (p != null && !p._Ragdoll._IsDead) _PlayerIter++;
+        foreach (var p in PlayerScript.s_Players) if (p != null && !p._Ragdoll._IsDead) s_PlayerIter++;
 
         // Remove null / dead players
         for (var i = PlayerScript.s_Players.Count - 1; i >= 0; i--)
@@ -1072,7 +1078,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       //Stats.OverallStats._Waves_Played++;
 
       // Respawn players
-      _PlayerIter = 0;
+      s_PlayerIter = 0;
       if (PlayerScript.s_Players != null)
       {
         PlayerScript alive_player = null;
@@ -1089,7 +1095,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         if (alive_player == null) return;
 
         // Count number of players to spawn.. only used if trying to stay persistant or players joined?
-        foreach (var p in PlayerScript.s_Players) if (p != null && !p._Ragdoll._IsDead) _PlayerIter++;
+        foreach (var p in PlayerScript.s_Players) if (p != null && !p._Ragdoll._IsDead) s_PlayerIter++;
 
         // Remove null / dead players
         for (var i = PlayerScript.s_Players.Count - 1; i >= 0; i--)
@@ -1403,13 +1409,13 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
 
       // Update score text
       var text = "";
-      if (!_Paused && !Menu._InMenus)
+      if (!s_Paused && !Menu._InMenus)
         for (var i = 0; i < Settings._NumberPlayers; i++)
           text += $"<color={PlayerProfile.s_Profiles[i].GetColorName(false)}>p{i + 1}:</color> {_PlayerScores[i]}\n";
       _Text_Scores.text = text;
 
       // Check if paused or in menu
-      if (_Paused || Menu._InMenus || CustomObstacle._CustomSpawners == null) return;
+      if (s_Paused || Menu._InMenus || CustomObstacle._CustomSpawners == null) return;
 
       IncrementalUpdate();
 
@@ -1583,6 +1589,11 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
   void Update()
   {
 
+    if (s_ExitLightShow)
+      s_ExitLight.spotAngle += ((30f - Mathf.Sin(Time.time * 4f) * 2.5f) - s_ExitLight.spotAngle) * Time.deltaTime * 5f;
+    else
+      s_ExitLight.spotAngle += (0f - s_ExitLight.spotAngle) * Time.deltaTime * 5f;
+
     //
     if (!IsSurvival())
     {
@@ -1657,7 +1668,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     if (s_CustomNetworkManager._Connected)
     {
       var mapData = s_CustomNetworkManager._CurrentMapData;
-      if (mapData != null && mapData.Trim().Length > 0 && !_Paused && !TileManager._LoadingMap)
+      if (mapData != null && mapData.Trim().Length > 0 && !s_Paused && !TileManager._LoadingMap)
       {
         s_CustomNetworkManager._CurrentMapData = null;
         NextLevel(mapData);
@@ -1705,7 +1716,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
           ui.GetChild(i).gameObject.SetActive(i < Settings._NumberPlayers);
 
         // Pause if a controller was unplugged and playing
-        if (!Menu._InMenus && (!_EditorTesting) && Settings._NumberControllers != PlayerScript.s_Players.Count)
+        if (!Menu._InMenus && (!s_EditorTesting) && Settings._NumberControllers != PlayerScript.s_Players.Count)
           Menu.OnControllersChanged(Settings._NumberControllers - numcontrollers_save, numcontrollers_save);
 
         // Check if menu
@@ -1719,7 +1730,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     //Settings._NumberPlayers = 4;
 
     // Update survial mode
-    if (IsSurvival() && !_EditorEnabled)
+    if (IsSurvival() && !s_EditorEnabled)
       SurvivalMode.Update();
 
     // Update progress bars
@@ -1728,7 +1739,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     // Check play mode
     if (!Menu._InMenus)
     {
-      if (!_Paused)
+      if (!s_Paused)
       {
         // Update ragdoll body sounds
         ActiveRagdoll.Rigidbody_Handler.Update();
@@ -1784,7 +1795,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         }
 
         // Check normal mode
-        if (!IsSurvival() && !_EditorEnabled && s_GameMode != GameModes.VERSUS)
+        if (!IsSurvival() && !s_EditorEnabled && s_GameMode != GameModes.VERSUS)
         {
           // Check endgame
           var timeToEnd = 2.2f;
@@ -1845,14 +1856,14 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         }
 
         // Enable editor
-        if (!_EditorTesting)
+        if (!s_EditorTesting)
         {
           if (Debug.isDebugBuild)
           {
             if (ControllerManager.GetKey(ControllerManager.Key.SPACE, ControllerManager.InputMode.HOLD) && ControllerManager.GetKey(ControllerManager.Key.E))
             {
-              _EditorEnabled = !_EditorEnabled;
-              if (_EditorEnabled) StartCoroutine(TileManager.EditorEnabled());
+              s_EditorEnabled = !s_EditorEnabled;
+              if (s_EditorEnabled) StartCoroutine(TileManager.EditorEnabled());
               else
               {
                 string mapdata = TileManager.SaveMap();
@@ -1862,7 +1873,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
               }
             }
 
-            if (!_EditorEnabled)
+            if (!s_EditorEnabled)
             {
               // Increment survival wave
               if (IsSurvival())
@@ -1915,7 +1926,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
           }
 
           // Next / previous level
-          if (!_EditorEnabled && !IsSurvival() && (s_GameMode != GameModes.VERSUS || Debug.isDebugBuild))
+          if (!s_EditorEnabled && !IsSurvival() && (s_GameMode != GameModes.VERSUS || Debug.isDebugBuild))
           {
             if (!TileManager._LoadingMap)
             {
@@ -1953,11 +1964,11 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         else
         {
 
-          if (!_EditorEnabled && Time.unscaledTime - TileManager._EditorSwitchTime > 0.5f)
+          if (!s_EditorEnabled && Time.unscaledTime - TileManager._EditorSwitchTime > 0.5f)
           {
             if (ControllerManager.GetKey(ControllerManager.Key.F1))
             {
-              _EditorEnabled = true;
+              s_EditorEnabled = true;
               StartCoroutine(TileManager.EditorEnabled());
 
               TileManager.EditorMenus._Menu_EditorTesting.gameObject.SetActive(false);
@@ -1968,12 +1979,12 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
           if (ControllerManager.GetKey(ControllerManager.Key.F2))
           {
 
-            _EditorTesting = false;
+            s_EditorTesting = false;
 
             // If editing, save map
-            if (_EditorEnabled)
+            if (s_EditorEnabled)
             {
-              _EditorEnabled = false;
+              s_EditorEnabled = false;
               TileManager.SaveFileOverwrite(TileManager.SaveMap());
               TileManager.EditorDisabled(null);
             }
@@ -2005,7 +2016,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
           PlayerScript.ResetCamera();
         }
 
-        if (_EditorEnabled)
+        if (s_EditorEnabled)
           TileManager.HandleInput();
       }
     }
@@ -2084,7 +2095,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       get { return _profileSettings.LoadoutIndex; }
       set
       {
-        if (Levels._HardcodedLoadout != null && !_EditorTesting) return;
+        if (Levels._HardcodedLoadout != null && !s_EditorTesting) return;
         if (s_GameMode != GameModes.CLASSIC) return;
         if (_Player?._Ragdoll?._grappling ?? false) return;
 
@@ -2139,7 +2150,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       get
       {
         // Level packs
-        if (Levels._HardcodedLoadout != null && !GameScript._EditorTesting) return Levels._HardcodedLoadout;
+        if (Levels._HardcodedLoadout != null && !GameScript.s_EditorTesting) return Levels._HardcodedLoadout;
 
         // VERSUS mode
         if (s_GameMode == GameModes.VERSUS) return VersusMode.s_PlayerLoadouts;
@@ -2148,6 +2159,8 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         if (s_GameMode == GameModes.SURVIVAL && SurvivalMode.s_PlayerLoadouts != null) return SurvivalMode.s_PlayerLoadouts[_Id];
 
         // CLASSIC mode
+        if (_LoadoutIndex > ItemManager.Loadout._Loadouts.Length)
+          _LoadoutIndex = 0;
         return ItemManager.Loadout._Loadouts[_LoadoutIndex];
       }
     }
@@ -2619,7 +2632,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
           _ammo[i].localScale = localScale;
           _ammo[i].localEulerAngles = Vector3.zero;
           _ammo[i].localPosition = new Vector3(0.36f + index * 0.8f + _Offset.x, -0.23f + _Offset.y, 0f) + new Vector3(Mathf.Lerp(0f, 0.7f, (float)i / _ammoCount), 0f, 0f) + new Vector3(localScale.x / 2f, 0f, 0f);
-          _ammo[i].GetComponent<Renderer>().sharedMaterial = _s_Singleton._item_materials[0];
+          _ammo[i].GetComponent<Renderer>().sharedMaterial = s_Singleton._item_materials[0];
           if (i >= ammo) _ammo[i].gameObject.SetActive(false);
         }
       }
@@ -3061,8 +3074,8 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
           for (int i = 0; i < mesh.sharedMaterials.Length; i++)
           {
             var shared = mesh.sharedMaterials;
-            if (shared[i].name.Equals("Item")) shared[i] = _s_Singleton._item_materials[0];
-            else shared[i] = _s_Singleton._item_materials[1];
+            if (shared[i].name.Equals("Item")) shared[i] = s_Singleton._item_materials[0];
+            else shared[i] = s_Singleton._item_materials[1];
             mesh.sharedMaterials = shared;
           }
 
@@ -3126,29 +3139,29 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
 #endif
 
     if (!focus)
-      if (!Menu._InMenus && !_EditorEnabled)
+      if (!Menu._InMenus && !s_EditorEnabled)
         TogglePause();
   }
 
   static Coroutine _movecam = null;
   public static void ToggleCameraLight(bool toggle)
   {
-    if (toggle && _CameraLight.intensity != 0f) return;
-    else if (!toggle && _CameraLight.intensity == 0f) return;
+    if (toggle && s_CameraLight.intensity != 0f) return;
+    else if (!toggle && s_CameraLight.intensity == 0f) return;
     if (_movecam != null) return;
-    _movecam = _s_Singleton.StartCoroutine(ToggleCameraLightCo(toggle));
+    _movecam = s_Singleton.StartCoroutine(ToggleCameraLightCo(toggle));
   }
   static IEnumerator ToggleCameraLightCo(bool toggle)
   {
-    if (toggle) _CameraLight.enabled = true;
+    if (toggle) s_CameraLight.enabled = true;
     float t = 0f;
     while (t < 1f)
     {
       t = Mathf.Clamp(t + 0.02f, 0f, 1f);
-      _CameraLight.intensity = Mathf.Lerp(0f, 1.1f, toggle ? t : 1f - t);
+      s_CameraLight.intensity = Mathf.Lerp(0f, 1.1f, toggle ? t : 1f - t);
       yield return new WaitForSecondsRealtime(0.01f);
     }
-    if (!toggle) _CameraLight.enabled = false;
+    if (!toggle) s_CameraLight.enabled = false;
     _movecam = null;
   }
 
@@ -3578,8 +3591,8 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       if (Time.unscaledTime - _LastPause < 0.1f) return;
     }
     _LastPause = Time.unscaledTime;
-    _Paused = !_Paused;
-    if (_Paused)
+    s_Paused = !s_Paused;
+    if (s_Paused)
     {
       Time.timeScale = 0f;
       Menu.OnPause(afterUnlockMenu);
@@ -3599,14 +3612,14 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         if (PlayerScript.s_Players != null && Settings._NumberPlayers != PlayerScript.s_Players.Count) TileManager.ReloadMap();
       TileManager._Text_LevelNum.gameObject.SetActive(true);
       TileManager._Text_LevelTimer.gameObject.SetActive(true);
-      if (s_GameMode == GameModes.CLASSIC && !Levels._LevelPack_Playing && !_EditorTesting)
+      if (s_GameMode == GameModes.CLASSIC && !Levels._LevelPack_Playing && !s_EditorTesting)
         TileManager._Text_LevelTimer_Best.gameObject.SetActive(true);
       TileManager._Text_GameOver.gameObject.SetActive(true);
       TileManager._Text_Money.gameObject.SetActive(true);
       TileManager.UnHideMonies();
     }
     // Toggle text bubbles
-    TextBubbleScript.ToggleBubbles(!_Paused);
+    TextBubbleScript.ToggleBubbles(!s_Paused);
   }
 
   // Determine unlocks for classic mode via JSON save
@@ -3631,7 +3644,9 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
   // Fired on last enemy killed
   public static void OnLastEnemyKilled()
   {
-    _s_Singleton._goalPickupTime = Time.time;
+    s_Singleton._goalPickupTime = Time.time;
+
+    ToggleExitLight(true);
 
     // Check achievements
 #if UNITY_STANDALONE
@@ -3717,7 +3732,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     }
 
     // Check level editor levels
-    if (_EditorTesting)
+    if (s_EditorTesting)
     {
       ReloadMap();
       return;
@@ -3727,6 +3742,10 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     if (Shop.s_UnlockString != string.Empty)
     {
       var nextMenu = Shop.s_UnlockString.Contains("new difficulty unlocked") || Shop.s_UnlockString.Contains("to unlock the optional extra settings") ? Menu.MenuType.LEVELS : Menu.MenuType.NONE;
+#if UNITY_WEBGL
+      if (Shop.s_UnlockString.Contains("you completed the demo"))
+        nextMenu = Menu.MenuType.LEVELS;
+#endif
       TogglePause(nextMenu);
       if (nextMenu != Menu.MenuType.NONE)
         return;
@@ -3854,6 +3873,16 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     // Stat
     //Stats.OverallStats._Levels_Completed++;
 
+
+#if UNITY_WEBGL
+    if (Levels._CurrentLevelIndex >= 32)
+    {
+      Shop.s_UnlockString += $"- you completed the demo! <color=magenta>check out the full game on Steam!</color>\n";
+
+      return true;
+    }
+#endif
+
     // Save level status
     if (!Levels.LevelCompleted(Levels._CurrentLevelIndex))
     {
@@ -3922,6 +3951,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
 
         if (Settings._DifficultyUnlocked <= 1)
         {
+
           Settings._DifficultyUnlocked = 2;
 
           Shop.s_UnlockString += $"- you have beaten the classic mode!\n- try out the survival mode or try to unlock the optional extra settings!";
@@ -3938,8 +3968,8 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
   {
 
     if (
-      _EditorEnabled ||
-      _EditorTesting ||
+      s_EditorEnabled ||
+      s_EditorTesting ||
       IsSurvival() ||
       TileManager._LoadingMap
     )
@@ -3974,8 +4004,8 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
   {
 
     if (
-      _EditorEnabled ||
-      _EditorTesting ||
+      s_EditorEnabled ||
+      s_EditorTesting ||
       IsSurvival() ||
       TileManager._LoadingMap
     )
@@ -4009,7 +4039,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
   public static void NextLevel(int levelIndex)
   {
     // Unpause if paused
-    if (GameScript._Paused) GameScript.TogglePause();
+    if (GameScript.s_Paused) GameScript.TogglePause();
 
     // Check last level
     if (levelIndex >= Levels._CurrentLevelCollection._levelData.Length)
@@ -4030,8 +4060,8 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     if (_Coroutine_load != null) return;
 
     // Begin coroutine
-    _s_Singleton._GameEnded = true;
-    _Coroutine_load = _s_Singleton.StartCoroutine(NextLevelCo(levelData));
+    s_Singleton._GameEnded = true;
+    _Coroutine_load = s_Singleton.StartCoroutine(NextLevelCo(levelData));
 
     // Network load
     s_CustomNetworkManager.OnLevelLoad(levelData);
@@ -4075,7 +4105,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     yield return new WaitForSeconds(0.05f);
     TileManager.LoadMap(levelData);
     yield return new WaitForSeconds(0.05f);
-    _s_Singleton._GameEnded = false;
+    s_Singleton._GameEnded = false;
 
     // Check for editor enable
     while (TileManager._LoadingMap)
@@ -4083,7 +4113,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     if (TileManager._EnableEditorAfterLoad)
     {
       TileManager._EnableEditorAfterLoad = false;
-      _EditorEnabled = true;
+      s_EditorEnabled = true;
       yield return TileManager.EditorEnabled();
     }
   }
@@ -4097,32 +4127,43 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
   public float _goalPickupTime;
   public static void ToggleExit(bool toggle = true)
   {
-    if (_s_Singleton._ExitOpen == toggle) return;
-    _s_Singleton._ExitOpen = toggle;
+    ToggleExitLight(toggle);
+
+    if (s_Singleton._ExitOpen == toggle) return;
+    s_Singleton._ExitOpen = toggle;
     if (toggle)
     {
-      _s_Singleton._goalPickupTime = Time.time;
+      s_Singleton._goalPickupTime = Time.time;
     }
+  }
+
+  public static void ToggleExitLight(bool toggle)
+  {
+    s_ExitLight.transform.position = PlayerspawnScript._PlayerSpawns[0].transform.position + new Vector3(0f, 4f, 0f);
+    if (!EnemyScript.AllDead() || !PlayerScript.HasExit())
+      s_ExitLightShow = false;
+    else
+      s_ExitLightShow = toggle;
   }
 
   public static void FadeIn()
   {
-    _s_Singleton.StartCoroutine(FadeScreen(true));
+    s_Singleton.StartCoroutine(FadeScreen(true));
   }
   public static void FadeOut()
   {
-    _s_Singleton.StartCoroutine(FadeScreen(false));
+    s_Singleton.StartCoroutine(FadeScreen(false));
   }
   static IEnumerator FadeScreen(bool toggle)
   {
     float t = 0f;
     float toggleT = toggle ? 1f - t : t;
-    _BlackFade.sharedMaterial.color = new Color(_BlackFade.sharedMaterial.color.r, _BlackFade.sharedMaterial.color.g, _BlackFade.sharedMaterial.color.b, toggleT);
+    s_BlackFade.sharedMaterial.color = new Color(s_BlackFade.sharedMaterial.color.r, s_BlackFade.sharedMaterial.color.g, s_BlackFade.sharedMaterial.color.b, toggleT);
     while (t < 1f)
     {
       t += 0.03f;
       toggleT = toggle ? 1f - t : t;
-      _BlackFade.sharedMaterial.color = new Color(_BlackFade.sharedMaterial.color.r, _BlackFade.sharedMaterial.color.g, _BlackFade.sharedMaterial.color.b, toggleT);
+      s_BlackFade.sharedMaterial.color = new Color(s_BlackFade.sharedMaterial.color.r, s_BlackFade.sharedMaterial.color.g, s_BlackFade.sharedMaterial.color.b, toggleT);
       yield return new WaitForSeconds(0.03f);
     }
   }

@@ -155,7 +155,7 @@ public static class ControllerManager
       if (context.phase != InputActionPhase.Started) return;
 
       // Level editor
-      if (GameScript._EditorTesting)
+      if (GameScript.s_EditorTesting)
       {
 
         /*GameScript._EditorTesting = false;
@@ -177,7 +177,7 @@ public static class ControllerManager
           GameScript.TogglePause();
 
           // Check editing menus
-          if (GameScript._EditorEnabled) TileManager.EditorMenus._Menu_Editor.gameObject.SetActive(true);
+          if (GameScript.s_EditorEnabled) TileManager.EditorMenus._Menu_Editor.gameObject.SetActive(true);
           else TileManager.EditorMenus._Menu_EditorTesting.gameObject.SetActive(true);
         }
         else if (!Menu._InMenus)
@@ -189,7 +189,7 @@ public static class ControllerManager
         return;
       }
 
-      if (GameScript._EditorEnabled) return;
+      if (GameScript.s_EditorEnabled) return;
       if (Menu._InMenus && Menu._InPause)
       {
         Menu._InMenus = false;

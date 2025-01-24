@@ -1,7 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using Mirror;
-using Steamworks;
+
 using UnityEngine;
 
 public class PlayerspawnScript : MonoBehaviour
@@ -48,8 +48,13 @@ public class PlayerspawnScript : MonoBehaviour
     _PlayerSpawns.Add(this);
     _id = _PlayerSpawns.Count - 1;
 
-    if (!GameScript._EditorEnabled)
+    if (!GameScript.s_EditorEnabled)
+    {
       _visual.SetActive(false);
+    }
+
+    if (GameScript.s_ExitLight != null)
+      GameScript.s_ExitLight.spotAngle = 0f;
   }
 
   private void OnDestroy()

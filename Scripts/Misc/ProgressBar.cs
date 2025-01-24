@@ -42,7 +42,7 @@ public static class ProgressBar
       var p = progress_bar._parent;
 
       // If no parent, move offscreen
-      if (p == null || !progress_bar._enabled || GameScript._Paused)
+      if (p == null || !progress_bar._enabled || GameScript.s_Paused)
       {
         progress_bar._transform.position = new Vector3(1000f, 0f, 1000f);
         continue;

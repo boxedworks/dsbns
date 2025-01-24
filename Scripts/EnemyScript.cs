@@ -341,7 +341,7 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
   public static void UpdateEnemies()
   {
     // Check null
-    if (_Enemies_alive == null || _Enemies_alive.Count == 0 || GameScript._EditorEnabled) return;
+    if (_Enemies_alive == null || _Enemies_alive.Count == 0 || GameScript.s_EditorEnabled) return;
     if (Menu._InMenus || TileManager._LoadingMap || PlayerScript.s_Players == null || PlayerScript.s_Players.Count == 0) return;
     if (GameScript.s_GameMode != GameScript.GameModes.SURVIVAL)
     {
@@ -465,7 +465,7 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
       // If chaser, check if enabled
       if (!_canAttack && IsChaser() && !_IsZombie)
       {
-        if (Time.time - GameScript._LevelStartTime > 0.5f)
+        if (Time.time - GameScript.s_LevelStartTime > 0.5f)
         {
           var info = FunctionsC.GetFarthestPlayerFrom(transform.position);
           if (info != null && info._distance > 3f + (Settings._NumberPlayers > 1 ? (1.5f * Mathf.Clamp(Settings._NumberPlayers, 0, 2) - 1) : 0f))
@@ -622,7 +622,7 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
           _atd = Time.time - _attackTime;
 
           // Check if game ended
-          if (GameScript._s_Singleton._GameEnded)
+          if (GameScript.s_Singleton._GameEnded)
           {
           }
 
@@ -895,7 +895,7 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
           }
         }
       }
-      if (Time.time - GameScript._LevelStartTime > 0.25f && !TileManager.Tile._Moving)
+      if (Time.time - GameScript.s_LevelStartTime > 0.25f && !TileManager.Tile._Moving)
         Raycast();
     }
     _ragdoll.Update();
@@ -1071,7 +1071,7 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
   // Go through "Enemies" Transform children and init
   public static void HardInitAll()
   {
-    var enemies = GameScript._s_Singleton.transform.GetChild(0);
+    var enemies = GameScript.s_Singleton.transform.GetChild(0);
     for (var i = 0; i < enemies.childCount; i++)
     {
       var e = enemies.GetChild(i).GetChild(0).GetComponent<EnemyScript>();
@@ -1250,7 +1250,7 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
 
   public void Turn()
   {
-    if (Time.time - GameScript._LevelStartTime < 1f) return;
+    if (Time.time - GameScript.s_LevelStartTime < 1f) return;
     Transform lp = _path.GetLookPoint(),
       p = _path.GetPatrolPoint();
     _waitLookPos = MathC.Get2DVector(transform.position + (lp.position - p.position).normalized) + new Vector3(0f, transform.position.y, 0f);
@@ -1484,7 +1484,7 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
   }
   public void Suspicious(Vector3 source, Loudness loudness, float waittime)
   {
-    if (Time.time - GameScript._LevelStartTime < 0.5f || TileManager.Tile._Moving) return;
+    if (Time.time - GameScript.s_LevelStartTime < 0.5f || TileManager.Tile._Moving) return;
     if (_suspiciousCoroutine != null) StopCoroutine(_suspiciousCoroutine);
     if (!_agent.enabled) return;
     // Return if already chasing or running away
@@ -1901,7 +1901,7 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
         // Level timer
         TileManager._Level_Complete = true;
 
-        if (GameScript.s_GameMode == GameScript.GameModes.CLASSIC && !GameScript._EditorTesting && !Levels._LevelPack_Playing)
+        if (GameScript.s_GameMode == GameScript.GameModes.CLASSIC && !GameScript.s_EditorTesting && !Levels._LevelPack_Playing)
         {
 
           var levelComplete = Levels._CurrentLevelCollectionIndex > 1 ? false : LevelModule.LevelData[Levels._CurrentLevelCollectionIndex].Data[Levels._CurrentLevelIndex].Completed;
@@ -1921,12 +1921,12 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
           IEnumerator AwardPlayer()
           {
 
-            var gameId = GameScript._GameId;
+            var gameId = GameScript.s_GameId;
             yield return new WaitForSecondsRealtime(0.5f);
 
             var saveDat = false;
 
-            if (PlayerScript._All_Dead || gameId != GameScript._GameId)
+            if (PlayerScript._All_Dead || gameId != GameScript.s_GameId)
             {
               TileManager._Text_LevelTimer_Best.text += string.Format(" -> <s>{0}</s> (dead)", level_time.ToStringTimer());
             }
