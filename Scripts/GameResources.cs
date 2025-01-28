@@ -48,7 +48,7 @@ public static class GameResources
   public static bool _Loaded;
 
   public static Transform _Container_Objects, _UI_Player, s_Backrooms;
-  public static Camera _Camera_Main, _Camera_Menu;
+  public static Camera _Camera_Main, _Camera_Menu, _Camera_IgnorePP;
   public static MeshRenderer _CameraFader;
 
   public static int _Layermask_Ragdoll;
@@ -128,6 +128,7 @@ public static class GameResources
 
     _Camera_Main = GameObject.Find("Main Camera").GetComponent<Camera>();
     _Camera_Menu = GameObject.Find("Menu Camera").GetComponent<Camera>();
+    _Camera_IgnorePP = GameObject.Find("NoPPCamera").GetComponent<Camera>();
 
     _CameraFader = GameObject.Find("Fader").GetComponent<MeshRenderer>();
 

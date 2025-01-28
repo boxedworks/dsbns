@@ -680,10 +680,12 @@ public class BulletScript : MonoBehaviour
   {
     _Particles.transform.parent = transform.parent;
     _Particles.Stop();
-    _Particles.gameObject.SetActive(false);
     gameObject.SetActive(false);
+
     yield return new WaitForSeconds(time);
+
     _Particles.transform.parent = transform;
+    _Particles.gameObject.SetActive(false);
   }
 
   ActiveRagdoll _sourceDamageRagdoll;

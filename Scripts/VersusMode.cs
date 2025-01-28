@@ -771,11 +771,12 @@ public static class VersusMode
   //
   static GameScript.ItemManager.Items GetRandomMeleeWeapon()
   {
-    return Random.Range(0, 4) switch
+    return Random.Range(0, 5) switch
     {
       1 => GameScript.ItemManager.Items.FRYING_PAN,
       2 => GameScript.ItemManager.Items.RAPIER,
       3 => GameScript.ItemManager.Items.AXE,
+      4 => GameScript.ItemManager.Items.FIST,
 
       _ => GameScript.ItemManager.Items.KNIFE,
     };

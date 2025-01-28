@@ -485,16 +485,9 @@ public class ActiveRagdoll
         particles.transform.position = _Hip.position + new Vector3(0f, -0.5f, 0f);
         particles.Play();
       }
-    }
-    else
-    {
-      _Controller.position = _Hip.position;
-
-      // Use iter to move joints
-      _movementIter += (_Distance.magnitude / 10f) * Time.deltaTime * 50f;
 
       // Check stun FX
-      if (!_IsDead && _stunned)
+      if (!_IsDead && _IsStunned)
       {
         if (Time.time - _confusedTimer > 0f)
         {
@@ -504,6 +497,13 @@ public class ActiveRagdoll
           p.Play();
         }
       }
+    }
+    else
+    {
+      _Controller.position = _Hip.position;
+
+      // Use iter to move joints
+      _movementIter += (_Distance.magnitude / 10f) * Time.deltaTime * 50f;
     }
 
     // Kick
@@ -870,6 +870,43 @@ public class ActiveRagdoll
       return null;
     }
 
+    /*/ Check each item vs each other
+    foreach (var itemSelf in new ItemScript[] { _ItemL, _ItemR })
+    {
+
+      // Check null item
+      if (itemSelf == null) continue;
+
+      // Make sure item is swinging
+      if (_IsPlayer && !ragdollOther._IsPlayer && ragdollOther._EnemyScript._IsZombieReal)
+        if (!itemSelf.IsSwingingSurvival()) continue;
+        else if (!itemSelf._IsSwinging) continue;
+
+      // Make sure has not already damaged ragdoll this swing
+      if (itemSelf.HasHitRagdoll(ragdollOther)) continue;
+
+      // Compare item deflects
+      foreach (var itemOther in new ItemScript[] { ragdollOther._ItemL, ragdollOther._ItemR })
+      {
+
+        // Check null item
+        if (itemOther == null) continue;
+
+        // Make sure item is swinging
+        if (ragdollOther._IsPlayer && !_IsPlayer && _EnemyScript._IsZombieReal)
+          if (!itemOther.IsSwingingSurvival()) continue;
+          else if (!itemOther._IsSwinging) continue;
+
+        // Make sure has not already damaged ragdoll this swing
+        if (itemOther.HasHitRagdoll(this)) continue;
+
+        //
+        return itemSelf;
+      }
+    }
+
+    return null;*/
+
     // Check weapons in order L / R
     bool CheckHit(ItemScript item)
     {
@@ -1234,7 +1271,7 @@ public class ActiveRagdoll
       yield return new WaitForSecondsRealtime(0.02f);
       if (_Hip == null) break;
 
-      timer = Mathf.Clamp(timer + (Time.time - timeLast) * 1f, 0f, lerpAmount);
+      timer = Mathf.Clamp(timer + (Time.time - timeLast) * 1.25f, 0f, lerpAmount);
       timeLast = Time.time;
       SetLerpAmount(ref mesh, c, timer / lerpAmount, startColor0, startColor1);
 
@@ -1879,11 +1916,15 @@ public class ActiveRagdoll
   }
 
   // Stun the ragdoll
-  bool _stunned { get { return Time.time - _stunTimer < 0f; } }
+  public bool _IsStunned { get { return Time.time - _stunTimer < 0f; } }
+  [System.NonSerialized]
+  public bool _HasBeenStunned;
   float _stunTimer;
   public void Stun(float duration = 1.5f)
   {
     if (_EnemyScript?.IsChaser() ?? false) { return; }
+
+    _HasBeenStunned = true;
     _stunTimer = Time.time + duration;
   }
 
@@ -2111,7 +2152,7 @@ public class ActiveRagdoll
 
   public bool Active()
   {
-    return !_IsRagdolled && !_IsReviving && !_stunned;
+    return !_IsRagdolled && !_IsReviving;
   }
 
   // Return a true if o is in _parts
@@ -2298,7 +2339,7 @@ public class ActiveRagdoll
     {
       var rb = t.GetComponent<Rigidbody>();
       AddPartListener(rb);
-      rb.AddForce(force * 0.5f);
+      rb.AddForce(force * 0.25f);
     }
     return true;
   }

@@ -16,13 +16,16 @@ public class GrabScript : MonoBehaviour
 
   void OnCollisionEnter(Collision c)
   {
-    // Check if already grabbing something  
+    // Check if already grabbing something
     if (_connected) return;
+
     // Check if has rb
     Rigidbody r = c.collider.transform.GetComponent<Rigidbody>();
     if (r == null) return;
+
     // Check if is self
     if (_ragdoll.IsSelf(r.gameObject)) return;
+
     // Check if is ragdoll
     ActiveRagdoll rag = ActiveRagdoll.GetRagdoll(r.gameObject);
     if (rag != null)

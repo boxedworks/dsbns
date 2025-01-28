@@ -87,7 +87,7 @@ public class GameScript : MonoBehaviour
   public static bool _inLevelEnd { get { return s_InLevelEndPlayer != null; } }
   static ParticleSystem _LevelEndParticles;
 
-  public static Color _LightingAmbientColor;
+  public static Color _LightingAmbientColor = new Color(0.05490196f, 0.05490196f, 0.05490196f);
 
   public enum GameModes
   {
@@ -174,7 +174,6 @@ public class GameScript : MonoBehaviour
 
     ActiveRagdoll.Rigidbody_Handler.Init();
 
-    GameResources._Camera_Main.farClipPlane = 35f;
     var material = GameResources._CameraFader.sharedMaterial;
     var color = material.color;
     color.a = 0f;
@@ -403,101 +402,6 @@ public class GameScript : MonoBehaviour
       _tutorialCo = s_Singleton.StartCoroutine(tutorialfunction());
     }
   }
-
-  /*static int selectedlevel = -1;
-  public static void DisplayLevelOrganizerLevels()
-  {
-    // Delete old maps if exists
-    if (Menu._Menu_LevelOrganizer._menu.GetChild(0).childCount > 0)
-    {
-      Transform selections = Menu._Menu_LevelOrganizer._menu.GetChild(0);
-      for (int i = selections.childCount - 1; i >= 0; i--)
-        GameObject.Destroy(selections.GetChild(i).gameObject);
-    }
-    // Delete level previews if exist
-    if (_lp0 != null && _lp0.gameObject != null) GameObject.Destroy(_lp0.gameObject);
-    if (_lp1 != null && _lp1.gameObject != null) GameObject.Destroy(_lp1.gameObject);
-    if (_lp2 != null && _lp2.gameObject != null) GameObject.Destroy(_lp2.gameObject);
-    // Start display coroutine
-    _Instance.StartCoroutine(DisplayLevelOrganizerLevelsCo());
-    // Change quality settings to 0; loading >100 map previews is very laggy
-    RenderSettings.ambientLight = Color.white;
-    QualitySettings.SetQualityLevel(0);
-  }
-  static IEnumerator DisplayLevelOrganizerLevelsCo()
-  {
-    // Load all map previews
-    int width = 6,
-      cwidth = 0, cheight = 0,
-      iter = 0;
-    Transform holder = Menu._Menu_LevelOrganizer._menu.GetChild(0);
-    holder.localScale = new Vector3(1f, 1f, 1f);
-    string[] leveldata = Levels._LevelCollections[Levels._CurrentLevelCollectionIndex]._leveldata;
-    Menu._Menu_LevelOrganizer._menuActions = new Menu.MenuAction[leveldata.Length];
-    foreach (string s in leveldata)
-    {
-      Transform container = TileManager.GetMapPreview(s, -1),
-        supercontainer = new GameObject(iter + "").transform;
-      container.name = "map";
-      container.parent = supercontainer;
-      container.localPosition = Vector3.zero;
-      supercontainer.parent = holder;
-      supercontainer.localPosition = new Vector3(cwidth++ * 2.5f, -cheight * 1.5f, -3f);
-      // Swap levels
-      Menu._Menu_LevelOrganizer._menuActions[iter++] = (int iterr) =>
-      {
-        int selection = Menu._Menu_LevelOrganizer._currentSelection;
-        // Select level
-        if (selectedlevel == -1)
-        {
-          selectedlevel = selection;
-          Menu.ChangeSelectorColor(Color.green, Menu.SelectorType.ARROW);
-          TileManager._Ring.position = Menu._Menu_LevelOrganizer._menu.GetChild(0).GetChild(selectedlevel).position;
-          return;
-        }
-        // Check double selection
-        if (selectedlevel == selection)
-        {
-          selectedlevel = -1;
-          Menu.ChangeSelectorColor(Color.white, Menu.SelectorType.ARROW);
-          TileManager._Ring.position = new Vector3(100f, 0f, 0f);
-          return;
-        }
-        /// Swap level
-        // Swap level display
-        Transform map0 = Menu._CurrentMenu._menu.GetChild(0).GetChild(selectedlevel),
-          map1 = Menu._CurrentMenu._menu.GetChild(0).GetChild(selection);
-        map0.GetChild(0).parent = map1;
-        map1.GetChild(0).parent = map0;
-        map0.GetChild(0).localPosition = map1.GetChild(0).localPosition = Vector3.zero;
-        // Swap actual level data and save
-        string savemap = Levels._LevelCollections[Levels._CurrentLevelCollectionIndex]._leveldata[selectedlevel];
-        Levels._LevelCollections[Levels._CurrentLevelCollectionIndex]._leveldata[selectedlevel] = Levels._LevelCollections[Levels._CurrentLevelCollectionIndex]._leveldata[selection];
-        Levels._LevelCollections[Levels._CurrentLevelCollectionIndex]._leveldata[selection] = savemap;
-        Levels.SaveLevels();
-        // Set selection to -1
-        selectedlevel = -1;
-        TileManager._Ring.position = new Vector3(100f, 0f, 0f);
-        Menu.ChangeSelectorColor(Color.white, Menu.SelectorType.ARROW);
-      };
-      if (cwidth > width)
-      {
-        cwidth = 0;
-        cheight++;
-      }
-      //if(cwidth % 20 == 0)
-      //  yield return new WaitForSecondsRealtime(0.005f);
-    }
-    yield return new WaitForSecondsRealtime(0.005f);
-    holder.localScale = new Vector3(0.7f, 0.7f, 1f);
-    // Set defaults
-    selectedlevel = -1;
-    TileManager._Ring.position = new Vector3(100f, 0f, 0f);
-    Menu.ChangeSelectorColor(Color.white, Menu.SelectorType.ARROW);
-    Menu._Menu_LevelOrganizer._currentSelection = 0;
-    // Load level selections
-    Menu.SwitchMenu(Menu._Menu_LevelOrganizer);
-  }*/
 
   //
   public static class SurvivalMode
@@ -1590,7 +1494,12 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
   {
 
     if (s_ExitLightShow)
-      s_ExitLight.spotAngle += ((30f - Mathf.Sin(Time.time * 4f) * 2.5f) - s_ExitLight.spotAngle) * Time.deltaTime * 5f;
+    {
+      if (!s_ExitLight.enabled)
+        s_ExitLight.enabled = true;
+      s_ExitLight.spotAngle += ((40f - Mathf.Sin(Time.time * 4f) * 2.5f) - s_ExitLight.spotAngle) * Time.deltaTime * 5f;
+      s_ExitLight.innerSpotAngle = s_ExitLight.spotAngle - 6;
+    }
     else
       s_ExitLight.spotAngle += (0f - s_ExitLight.spotAngle) * Time.deltaTime * 5f;
 
@@ -2923,6 +2832,10 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
             transform.localScale = new Vector3(0.11f, 0.1f, 0.11f);
             transform.localEulerAngles = new Vector3(8f, 0f, -75f);
             break;
+          case "FIST":
+            transform.localPosition += new Vector3(-0.2f, 0.03f, 0f);
+            transform.localScale = new Vector3(0.2f, 0.2f, 0.2f);
+            break;
           case "PISTOL_SILENCED":
           case "PISTOL":
           case "PISTOL_DOUBLE":
@@ -3409,6 +3322,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       PISTOL_CHARGE,
       RAPIER,
       RIFLE_CHARGE,
+      FIST,
     }
 
     // Spawn a single item
@@ -3468,6 +3382,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       switch (item)
       {
         case Items.NONE:
+        case Items.FIST:
           return 0;
         case Items.KNIFE:
           return 1;
@@ -4139,8 +4054,11 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
 
   public static void ToggleExitLight(bool toggle)
   {
-    s_ExitLight.transform.position = PlayerspawnScript._PlayerSpawns[0].transform.position + new Vector3(0f, 4f, 0f);
-    if (!EnemyScript.AllDead() || !PlayerScript.HasExit())
+    s_ExitLight.transform.position = PlayerspawnScript._PlayerSpawns[0].transform.position + new Vector3(0f, 3f, 0f);
+    if (!PlayerScript._TimerStarted)
+      s_ExitLightShow = true;
+
+    else if (!EnemyScript.AllDead() || !PlayerScript.HasExit())
       s_ExitLightShow = false;
     else
       s_ExitLightShow = toggle;

@@ -457,7 +457,7 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
 
     var saveWait = waiting;
 
-    if (_ragdoll.Active())
+    if (_ragdoll.Active() && !_ragdoll._IsStunned)
     {
       if (!_IsZombie)
         _ragdoll._rotSpeed = (_state == State.PURSUIT ? _targetDirectlyInFront ? 1.15f : 0.8f : 0.6f) * PlayerScript.ROTATIONSPEED;

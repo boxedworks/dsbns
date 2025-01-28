@@ -135,6 +135,10 @@ public static class Settings
 
       // Update quality settings
       QualitySettings.SetQualityLevel(SettingsModule.Quality);
+
+      var data = UnityEngine.Rendering.GraphicsSettings.currentRenderPipeline as UnityEngine.Rendering.Universal.UniversalRenderPipelineAsset;
+      data.msaaSampleCount = SettingsModule.Quality >= 4 ? 2 : 1;
+      data.supportsHDR = SettingsModule.Quality >= 3;
     }
   }
   public static bool _VSync
@@ -183,7 +187,7 @@ public static class Settings
     }
   }
 
-  public static float _VERSION = 1.47f;
+  public static float _VERSION = 1.48f;
 
   // Struct holding info what item pair gets unlocked at what level
   public class WeaponPair
@@ -487,7 +491,7 @@ public static class Settings
           difficulty = 0,
           rating = 0,
           extras = null,
-          loadoutDesc = "free purchase in the shop",
+          loadoutDesc = "auto-unlocked",
           items = new GameScript.ItemManager.Items[] {
             GameScript.ItemManager.Items.KNIFE
           },
@@ -661,21 +665,13 @@ public static class Settings
           case 2: Physics.gravity = new Vector3(0f, 0f, 9.81f); break;
           case 3: Physics.gravity = Vector3.zero; break;
         }
-
-        GameScript.s_ExitLight.enabled = true;
         break;
 
       case GamemodeChange.LEVEL_EDITOR:
-        Physics.gravity = new Vector3(0f, -9.81f, 0f);
-
-        GameScript.s_ExitLight.enabled = true;
-        break;
-
       case GamemodeChange.SURVIVAL:
       case GamemodeChange.VERSUS:
 
         Physics.gravity = new Vector3(0f, -9.81f, 0f);
-        GameScript.s_ExitLight.enabled = false;
 
         break;
     }
@@ -687,84 +683,89 @@ public static class Settings
 
   public static void SetPostProcessing(bool forceOffDOF = false)
   {
+
     // Camera settings
     if (SettingsModule.UseOrthographicCamera)
     {
-      GameResources._Camera_Main.orthographic = true;
-      GameResources._Camera_Main.orthographicSize =
+      GameResources._Camera_Main.orthographic = GameResources._Camera_IgnorePP.orthographic = true;
+      GameResources._Camera_Main.orthographicSize = GameResources._Camera_IgnorePP.orthographicSize =
         SettingsModule.CameraZoom == SettingsSaveData.CameraZoomType.NORMAL ? 7.6f : (SettingsModule.CameraZoom == SettingsSaveData.CameraZoomType.CLOSE ? 5.9f : 10.8f);
-      GameResources._Camera_Main.transform.eulerAngles = new Vector3(88f, 0f, 0f);
+      GameResources._Camera_Main.transform.eulerAngles = GameResources._Camera_IgnorePP.transform.eulerAngles = new Vector3(88f, 0f, 0f);
     }
     else
     {
-      GameResources._Camera_Main.orthographic = false;
-      GameResources._Camera_Main.transform.eulerAngles = new Vector3(89.9f, 0f, 0f);
+      GameResources._Camera_Main.orthographic = GameResources._Camera_IgnorePP.orthographic = false;
+      GameResources._Camera_Main.transform.eulerAngles = GameResources._Camera_IgnorePP.transform.eulerAngles = new Vector3(89.9f, 0f, 0f);
     }
 
-    // PP
-    var profiles = GameObject.Find("PProfiles").transform;
-    //for (var u = 0; u < 7; u++)
-    var u = 0;
+    //
+    var profile_ = GameResources._Camera_Main.GetComponent<UnityEngine.Rendering.Volume>().profile;
+
+    // Brightness
+    UnityEngine.Rendering.Universal.ColorAdjustments colorAdjustment = null;
+    if (profile_.TryGet(out colorAdjustment))
     {
-      var profile = profiles.GetChild(u).GetComponent<UnityEngine.Rendering.PostProcessing.PostProcessVolume>();
+      var b = Mathf.Lerp(0.65f, 2.4f, SettingsModule.Brightness / 9f);
+      colorAdjustment.colorFilter.value = new Color(b, b, b);
+    }
 
-      // Bloom
-      UnityEngine.Rendering.PostProcessing.Bloom bloom = null;
-      profile.profile.TryGetSettings(out bloom);
-      if (bloom != null)
+    // Bloom
+    UnityEngine.Rendering.Universal.Bloom bloom = null;
+    if (profile_.TryGet(out bloom))
+    {
+      bloom.intensity.value = SettingsModule.BloomAmount switch
       {
-        bloom.intensity.value = SettingsModule.BloomAmount switch
-        {
-          0 => 0f,
-          1 => 1.1f,
-          2 => 1.8f
-        };
-      }
+        0 => 0f,
+        1 => 1f,
+        2 => 1.5f,
+        3 => 10f
+      };
+    }
 
-      // DOF
-      UnityEngine.Rendering.PostProcessing.DepthOfField depthOfField = null;
-      profile.profile.TryGetSettings(out depthOfField);
-      if (depthOfField != null)
+    // DOF
+    UnityEngine.Rendering.Universal.DepthOfField dof = null;
+    if (profile_.TryGet(out dof))
+    {
+      if (SettingsModule.DepthOfFieldAmount > 0 && !forceOffDOF)
       {
+        dof.mode.value = UnityEngine.Rendering.Universal.DepthOfFieldMode.Bokeh;
 
-        if (SettingsModule.DepthOfFieldAmount > 0 && !forceOffDOF)
+        var apertureMod = SettingsModule.DepthOfFieldAmount == 1 ? 1.6f : 1.2f;
+
+        if (SettingsModule.UseOrthographicCamera)
         {
-          depthOfField.enabled.value = true;
-          depthOfField.focalLength.value = 177f;
-
-          var apertureMod = SettingsModule.DepthOfFieldAmount == 1 ? 1.6f : 1.1f;
-
-          if (SettingsModule.UseOrthographicCamera)
-          {
-            depthOfField.focusDistance.value = 5.65f;
-            depthOfField.aperture.value = 0.7f * apertureMod;
-          }
-          else
-          {
-            switch (SettingsModule.CameraZoom)
-            {
-              case SettingsSaveData.CameraZoomType.CLOSE:
-                depthOfField.focusDistance.value = 10.2f;
-                depthOfField.aperture.value = 1f * apertureMod;
-                break;
-
-              case SettingsSaveData.CameraZoomType.FAR:
-                depthOfField.focusDistance.value = 18.2f;
-                depthOfField.aperture.value = 0.35f * apertureMod;
-                break;
-
-              default:
-                depthOfField.focusDistance.value = 14.3f;
-                depthOfField.aperture.value = 0.5f * apertureMod;
-                break;
-            }
-          }
+          dof.focusDistance.value = 5.65f;
+          dof.aperture.value = apertureMod;
+          dof.focalLength.value = 235f;
         }
-
         else
         {
-          depthOfField.enabled.value = false;
+          switch (SettingsModule.CameraZoom)
+          {
+            case SettingsSaveData.CameraZoomType.CLOSE:
+              dof.focusDistance.value = 10.2f;
+              dof.aperture.value = 1f * apertureMod;
+              dof.focalLength.value = 235f;
+              break;
+
+            case SettingsSaveData.CameraZoomType.FAR:
+              dof.focusDistance.value = 18.2f;
+              dof.aperture.value = 0.8f * apertureMod;
+              dof.focalLength.value = 300f;
+              break;
+
+            default:
+              dof.focusDistance.value = 14.3f;
+              dof.aperture.value = 0.9f * apertureMod;
+              dof.focalLength.value = 275f;
+              break;
+          }
         }
+      }
+
+      else
+      {
+        dof.mode.value = UnityEngine.Rendering.Universal.DepthOfFieldMode.Off;
       }
     }
   }
@@ -921,6 +922,7 @@ public static class Settings
     public bool UseDefaultTargetFramerate = true;
     public bool UseOrthographicCamera = true;
 
+    public int Brightness = 3;
     public int BloomAmount = 2;
     public int DepthOfFieldAmount = 2;
 
@@ -1012,7 +1014,7 @@ public static class Settings
     }
     public static void Save()
     {
-      var json = JsonUtility.ToJson(SettingsModule);
+      var json = JsonUtility.ToJson(SettingsModule, Application.isEditor || Debug.isDebugBuild);
       System.IO.File.WriteAllText("settings.json", json);
     }
   }
@@ -1218,7 +1220,7 @@ public static class Settings
     }
     public static void Save()
     {
-      var json = JsonUtility.ToJson(LevelModule);
+      var json = JsonUtility.ToJson(LevelModule, Application.isEditor || Debug.isDebugBuild);
       System.IO.File.WriteAllText("save.json", json);
     }
   }

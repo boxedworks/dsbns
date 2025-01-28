@@ -222,16 +222,11 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
     _taunt_times = new float[4];
     _dpadPressed = new float[4];
 
+    RenderSettings.ambientLight = GameScript._LightingAmbientColor;
     if (!TileManager._HasLocalLighting)
     {
       if (!GameScript.s_Backrooms)
         AddLight();
-
-      RenderSettings.ambientLight = Color.black;
-    }
-    else
-    {
-      RenderSettings.ambientLight = GameScript._LightingAmbientColor;
     }
 
     RegisterUtilities();
@@ -455,6 +450,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
   public static void StartLevelTimer()
   {
     _TimerStarted = true;
+    GameScript.ToggleExitLight(false);
 
     if (s_Players[0]._level_ratings_shown)
       TileManager._Text_LevelTimer_Best.text = TileManager._Text_LevelTimer_Best.text.Split("\n")[0];
@@ -653,7 +649,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
                 if (item)
                 {
                   // Melee
-                  if (item._melee)
+                  if (item._isMelee)
                   {
                     dist = 0.7f;
                     switch_sides = true;
@@ -675,7 +671,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
                       _ragdoll.UseRight();
 
                     // Set use rate
-                    if (item._melee)
+                    if (item._isMelee)
                       s_autoUseRate = Time.time + item.UseRate();
                     else if (item._fireMode == ItemScript.FireMode.AUTOMATIC)
                     {
@@ -787,12 +783,12 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
       {
         if (GameScript._inLevelEnd)
         {
-          if (spawnDist > 0.35f)
+          if (spawnDist > 0.55f)
             GameScript.s_InLevelEndPlayer = null;
         }
         else
         {
-          if (spawnDist <= 0.35f)
+          if (spawnDist <= 0.55f)
             GameScript.s_InLevelEndPlayer = this;
         }
       }
@@ -1780,7 +1776,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
     if (_ragdoll._grappling) { moveSpeed *= 0.9f; }
 
     // Move player
-    if (_ragdoll.Active() && _agent != null)
+    if (_ragdoll.Active() && !_ragdoll._IsStunned && _agent != null)
     {
       /*if (Time.timeScale < 1f)
       {

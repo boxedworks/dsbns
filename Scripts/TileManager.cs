@@ -704,11 +704,6 @@ public class TileManager
         if (endofobjects)
           break;
       }
-      /*/ Turn on light if has no local lighting
-      if(!hasLocalLighting && GameScript._CameraLight.intensity == 0f)
-        GameScript.ToggleCameraLight(true);
-      else if(hasLocalLighting && GameScript._CameraLight.intensity != 0f)
-        GameScript.ToggleCameraLight(false);    */
 
       Vector2 offset = new Vector2(0, 0),
         difference = Vector2.zero;
@@ -1046,6 +1041,7 @@ public class TileManager
       // Refill player ammo
       if (Players != null)
         foreach (var p in Players) p._Ragdoll.RefillAmmo();
+
       OnMapLoad();
 
       // Append to maps
@@ -1256,6 +1252,8 @@ public class TileManager
     _LevelTimer = 0f;
     _Level_Complete = false;
     PlayerScript._TimerStarted = false;
+
+    GameScript.ToggleExitLight(true);
 
     _Text_LevelTimer.text = _LevelTimer.ToStringTimer();
 
@@ -2164,6 +2162,9 @@ public class TileManager
 
     // Remove bullets and their particles
     BulletScript.HideAll();
+
+    //
+    GameScript.s_ExitLight.enabled = false;
   }
 
   static Tile SpawnTile(int width, int height)

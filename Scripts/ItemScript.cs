@@ -11,6 +11,10 @@ public class ItemScript : MonoBehaviour
   static Settings.LevelSaveData LevelModule { get { return Settings.s_SaveData.LevelData; } }
   static Settings.SettingsSaveData SettingsModule { get { return Settings.s_SaveData.Settings; } }
 
+  [System.NonSerialized]
+  public int _Id;
+  static int s_id;
+
   // Information about weapon holder
   public ActiveRagdoll _ragdoll;
   protected ActiveRagdoll.Side _side;
@@ -22,7 +26,7 @@ public class ItemScript : MonoBehaviour
   AudioSource _sfx0, _sfx1;
 
   public int _clipSize, _minimumClipToFire, _projectilesPerShot, _burstPerShot, _penatrationAmount;
-  public bool _reloading, _melee, _twoHanded, _runWhileUse, _reloadOneAtTime, _silenced, _throwable, _dismember, _useOnRelease, _randomSpread, _chargeHold;
+  public bool _reloading, _isMelee, _twoHanded, _runWhileUse, _reloadOneAtTime, _silenced, _throwable, _dismember, _useOnRelease, _randomSpread, _chargeHold;
   public float _useTime, _reloadTime, _useRate, _downTime, _burstRate, _hit_force, _bullet_spread, _shoot_force, _shoot_forward_force;
   float _downTimeSave;
   public FireMode _fireMode;
@@ -47,7 +51,7 @@ public class ItemScript : MonoBehaviour
 
   public int GetClipSize()
   {
-    if (_melee && !IsChargeWeapon()) return 1;
+    if (_isMelee && !IsChargeWeapon()) return 1;
 
     var clip_size = _clipSize;
 
@@ -74,13 +78,13 @@ public class ItemScript : MonoBehaviour
   }
   public float UseRate()
   {
-    if (!_melee && _ragdoll != null && _ragdoll._IsPlayer && Shop.Perk.HasPerk(_ragdoll._PlayerScript._Id, Shop.Perk.PerkType.FIRE_RATE_UP))
+    if (!_isMelee && _ragdoll != null && _ragdoll._IsPlayer && Shop.Perk.HasPerk(_ragdoll._PlayerScript._Id, Shop.Perk.PerkType.FIRE_RATE_UP))
       return _useRate * 0.5f;
     return _useRate;
   }
 
   bool _isZombie { get { return !_ragdoll._IsPlayer && _ragdoll._EnemyScript._IsZombieReal; } }
-  bool _canMeleePenatrate { get { return _twoHanded || (_type == ItemType.AXE && !_isZombie) || _type == ItemType.ROCKET_FIST; } }
+  bool _canMeleePenatrate { get { return _twoHanded || (_type == ItemType.AXE && !_isZombie) || _type == ItemType.ROCKET_FIST /*|| _type == ItemType.FIST*/; } }
 
   float _time { get { return /*_ragdoll._isPlayer_twoHanded ? Time.unscaledTime : */Time.time; } }
 
@@ -153,10 +157,12 @@ public class ItemScript : MonoBehaviour
   protected List<int> _hitRagdolls;
   public bool HasHitRagdoll(ActiveRagdoll ragdoll)
   {
+    if (_hitRagdolls == null) return false;
     return _hitRagdolls.Contains(ragdoll._Id);
   }
   public void RegisterHitRagdoll(ActiveRagdoll ragdoll)
   {
+    _hitRagdolls ??= new();
     _hitRagdolls.Add(ragdoll._Id);
   }
 
@@ -270,7 +276,7 @@ public class ItemScript : MonoBehaviour
   GameObject _laserSight;
   public void AddLaserSight()
   {
-    if (_melee) return;
+    if (_isMelee) return;
 
     // Make sure doesn't have laser sight
     if (_laserSight) return;
@@ -321,6 +327,8 @@ public class ItemScript : MonoBehaviour
   public int _ItemId; // Unique id per item / weapon
   public void Start()
   {
+    _Id = s_id++;
+
     _disableOnRagdollDeath = true;
 
     if (_twoHanded)
@@ -375,7 +383,7 @@ public class ItemScript : MonoBehaviour
         IEnumerator DelayedExplode()
         {
           yield return new WaitForSeconds(0.2f);
-          if (!_ragdoll._IsDead)
+          if (!_ragdoll._IsDead && !_ragdoll._IsStunned)
             transform.GetChild(0).GetComponent<ExplosiveScript>().Trigger(_ragdoll, 0f);
         }
         StartCoroutine(DelayedExplode());
@@ -396,7 +404,7 @@ public class ItemScript : MonoBehaviour
       }
 
       // Melee
-      if (_melee)
+      if (_isMelee)
       {
 
         var raycastInfo = new RaycastInfo();
@@ -420,7 +428,7 @@ public class ItemScript : MonoBehaviour
           //bool hitEnemy = !raycastInfo._ragdoll._isPlayer;
 
           // Check stunned
-          if (!_ragdoll.Active()) return;
+          if (!_ragdoll.Active() || _ragdoll._IsStunned) return;
 
           // Check grappler
           if (raycastInfo._ragdoll._grappling)
@@ -476,9 +484,28 @@ public class ItemScript : MonoBehaviour
                 // Check zombie
                 if (_isZombie && !deflectData._hitAnthingOverride)
                 {
-
                   // Die self
-                  deflectData.MeleeDamageOther(_ragdoll);
+                  deflectData.MeleeDamageOther(_ragdoll._grappling ? _ragdoll._grapplee : _ragdoll);
+                  return;
+                }
+                else if (deflectData._isZombie && !_hitAnthingOverride)
+                {
+                  // Die other
+                  MeleeDamageOther(raycastInfo._ragdoll);
+                  return;
+                }
+
+                // Check incompatible types
+                if (_type == ItemType.FIST && deflectData._type != ItemType.FIST)
+                {
+                  // Die self
+                  deflectData.MeleeDamageOther(_ragdoll._grappling ? _ragdoll._grapplee : _ragdoll);
+                  return;
+                }
+                else if (_type != ItemType.FIST && deflectData._type == ItemType.FIST)
+                {
+                  // Die other
+                  MeleeDamageOther(raycastInfo._ragdoll);
                   return;
                 }
 
@@ -734,7 +761,7 @@ public class ItemScript : MonoBehaviour
     }*/
 
     // Custom swing melee
-    if (_melee && _useOnRelease)
+    if (_isMelee && _useOnRelease)
     {
 
       if (_triggerDown && !_meleeReleaseTrigger && _meleeReleaseTimer <= 0f)
@@ -786,6 +813,7 @@ public class ItemScript : MonoBehaviour
       {
         case ItemType.KNIFE:
         case ItemType.RAPIER:
+        case ItemType.FIST:
           SetRotationLocal(_arm_upper, Vector3.Lerp(_save_rot_upper, _save_rot_upper + new Vector3(-60f, -130f * sideMod, -20f * sideMod), _meleeLerper));
           SetRotationLocal(_arm_lower, Vector3.Lerp(_save_rot_lower, _save_rot_lower + new Vector3(110f, 0f, 0f), _meleeLerper));
           break;
@@ -1010,7 +1038,7 @@ public class ItemScript : MonoBehaviour
     {
 
       // Check grapple release
-      if (_melee)
+      if (_isMelee)
       {
         if (_ragdoll._grappling)
         {
@@ -1051,7 +1079,7 @@ public class ItemScript : MonoBehaviour
       _onUse?.Invoke();
       _useTime = _time;
 
-      if (_melee)
+      if (_isMelee)
       {
         // Update UI
         _swang = true;
@@ -1081,8 +1109,8 @@ public class ItemScript : MonoBehaviour
       {
         if (!_ragdoll._IsPlayer && _downTime > 0.2f || _ragdoll._IsPlayer)
         {
-          Local_Use(_melee && _bursts > 0 ? false : true);
-          if ((_clip == 0 && !_melee) || _bursts++ >= _burstPerShot - 1)
+          Local_Use(_isMelee && _bursts > 0 ? false : true);
+          if ((_clip == 0 && !_isMelee) || _bursts++ >= _burstPerShot - 1)
           {
             StopUse();
           }
@@ -1114,7 +1142,7 @@ public class ItemScript : MonoBehaviour
           }
 
           // Melee animation
-          if (_melee)
+          if (_isMelee)
           {
             if (_hitRagdolls == null)
               _hitRagdolls = new();
@@ -1143,7 +1171,7 @@ public class ItemScript : MonoBehaviour
           if (_fireMode == FireMode.SEMI) { _triggerDown = false; }
           Local_Use();
         }
-        if (_melee)
+        if (_isMelee)
         {
 
           switch (_type)
@@ -1158,6 +1186,9 @@ public class ItemScript : MonoBehaviour
             case ItemType.FRYING_PAN:
               _ragdoll.RecoilSimple(-0.65f);
               break;
+            case ItemType.FIST:
+              _ragdoll.RecoilSimple(_downTimeSave > 0.5f ? -1.3f : -1f);
+              break;
           }
 
           _IsSwinging = true;
@@ -1167,7 +1198,7 @@ public class ItemScript : MonoBehaviour
       // Check buffer use
       else
       {
-        if (_melee && _ragdoll._IsPlayer)
+        if (_isMelee && _ragdoll._IsPlayer)
         {
           if (Time.time - _useTime <= 0.5f)
             _bufferUse = true;
@@ -1210,7 +1241,6 @@ public class ItemScript : MonoBehaviour
   )
   {
     var newBullet = _BulletPool[_BulletPool_Iter++ % _BulletPool.Length];
-    newBullet.gameObject.SetActive(true);
 
     // Size
     var use_size = Mathf.Clamp(0.9f + penatrationAmount * 0.2f, 0.9f, 2.5f);
@@ -1239,6 +1269,9 @@ public class ItemScript : MonoBehaviour
       newBullet.SetNoise(0.25f, 0.5f);
     }
 
+    newBullet.transform.position = spawnPos;
+    newBullet.gameObject.SetActive(true);
+
     // Physics
     var rb = newBullet._rb;
     rb.linearVelocity = Vector3.zero;
@@ -1254,6 +1287,7 @@ public class ItemScript : MonoBehaviour
       addforce = Quaternion.AngleAxis(90f, Vector3.up) * shootDirNormalized * bulletSpread * (randomSpread ? Random.value : 1f) * mod;
     }
     var bulletForce = MathC.Get2DVector(shootDirNormalized + addforce) * 2100f * speedMod;
+
     rb.transform.LookAt(rb.position + bulletForce);
     rb.AddForce(bulletForce);
 
@@ -1295,7 +1329,7 @@ public class ItemScript : MonoBehaviour
           itemType == ItemType.GRENADE_LAUNCHER ||
           itemType == ItemType.SHOTGUN_PUMP
           ? 0.35f : 0f));
-        ps_gunsmoke.transform.LookAt(spawnPos + shootDirNormalized);
+        ps_gunsmoke.transform.LookAt(ps_gunsmoke.transform.position + shootDirNormalized);
         //var mainmodule = p_gunsmoke.main;
         //mainmodule.emitterVelocity = source._head?.GetComponent<Rigidbody>()?.velocity ?? Vector3.zero;
         ps_gunsmoke.Play();
@@ -1314,7 +1348,7 @@ public class ItemScript : MonoBehaviour
     if (!IsChargeWeapon() && !_useOnRelease) _triggerDown = false;
 
     // If melee, stop swinging
-    if (_melee)
+    if (_isMelee)
     {
       _IsSwinging = false;
       _meleeStartSwinging = false;
@@ -1326,12 +1360,21 @@ public class ItemScript : MonoBehaviour
   }
 
   //
-  public void MeleeDamageOther(ActiveRagdoll ragdoll)
+  public void MeleeDamageOther(ActiveRagdoll other)
   {
 
+    // Check fist
+    if (_type == ItemType.FIST)
+      if (!other._HasBeenStunned && !other._IsStunned)
+      {
+        other.Stun();
+        other.BounceFromPosition(_ragdoll._Hip.position, 0.5f);
+        return;
+      }
+
     // Damage
-    var hitForce = MathC.Get2DVector(-(_ragdoll._Hip.position - ragdoll._Hip.position).normalized * (3750f + (Random.value * 1750f)) * _hit_force);
-    ragdoll.TakeDamage(
+    var hitForce = MathC.Get2DVector(-(_ragdoll._Hip.position - other._Hip.position).normalized * (3750f + (Random.value * 1750f)) * _hit_force);
+    other.TakeDamage(
        new ActiveRagdoll.RagdollDamageSource()
        {
          Source = _ragdoll,
@@ -1347,8 +1390,8 @@ public class ItemScript : MonoBehaviour
        });
 
     // Dismember
-    if (ragdoll._IsDead && _dismember)
-      ragdoll.DismemberRandomTimes(hitForce, 3);
+    if (other._IsDead && _dismember)
+      other.DismemberRandomTimes(hitForce, 3);
   }
 
   //
@@ -1372,7 +1415,7 @@ public class ItemScript : MonoBehaviour
     _side = side;
 
     // Check for laser sight
-    if (!_melee && _ragdoll._IsPlayer && _ragdoll._PlayerScript.HasPerk(Shop.Perk.PerkType.LASER_SIGHTS))
+    if (!_isMelee && _ragdoll._IsPlayer && _ragdoll._PlayerScript.HasPerk(Shop.Perk.PerkType.LASER_SIGHTS))
       AddLaserSight();
 
     // Set clip and use time if applicable
@@ -1569,6 +1612,11 @@ public class ItemScript : MonoBehaviour
     //_ragdoll._playerScript?.ResetLoadout();
     //if (this == null) return;
 
+    // Check other item
+    var item_other = _side == ActiveRagdoll.Side.LEFT ? _ragdoll._ItemR : _ragdoll._ItemL;
+    if (_isMelee && item_other != null && item_other._isMelee && item_other._triggerDown) return;
+
+    //
     _triggerDown = true;
     _triggerDownReal = true;
 
@@ -1589,6 +1637,8 @@ public class ItemScript : MonoBehaviour
   }
   public void UseUp()
   {
+    if (!_triggerDown) return;
+
     //_ragdoll._playerScript?.ResetLoadout();
     //if (this == null) return;
 
@@ -1606,7 +1656,7 @@ public class ItemScript : MonoBehaviour
   // Can you use the item?
   public bool CanUse(bool playEmpty = true)
   {
-    if (_melee)
+    if (_isMelee)
       return (_time >= _useTime + UseRate()) || (_bursts > 0 && _fireMode == FireMode.BURST && _time >= _useTime + _burstRate);
 
     // Check clip
@@ -1634,7 +1684,7 @@ public class ItemScript : MonoBehaviour
   public void Reload()
   {
     // If melee, do nothing
-    if (_melee && !IsChargeWeapon()) return;
+    if (_isMelee && !IsChargeWeapon()) return;
 
     // Check perk
     var reload_speed_mod = 1f;
@@ -1710,18 +1760,18 @@ public class ItemScript : MonoBehaviour
   // Can the item reload?
   public bool CanReload()
   {
-    if (_melee && !IsChargeWeapon()) return false;
-    if (!_melee && _useOnRelease && !IsChargeWeapon() && _triggerDownReal) return false;
+    if (_isMelee && !IsChargeWeapon()) return false;
+    if (!_isMelee && _useOnRelease && !IsChargeWeapon() && _triggerDownReal) return false;
     return _clip < GetClipSize() && ((_time >= _useTime + (UseRate() * 0.6f)) || (_bursts > 0 && _fireMode == FireMode.BURST && _time >= _useTime + _burstRate * 0.3f)) && !_used && !_reloading;
   }
   public bool NeedsReload()
   {
     if (IsChargeWeapon()) return false;
-    return !_melee && _clip == 0;
+    return !_isMelee && _clip == 0;
   }
   public void SetClip(int clip = -1)
   {
-    if (_melee || _chargeHold) return;
+    if (_isMelee || _chargeHold) return;
     _clip = clip == -1 ? GetClipSize() : clip;
   }
 
@@ -1754,12 +1804,12 @@ public class ItemScript : MonoBehaviour
 
   public bool IsGun()
   {
-    return !_melee && !_throwable;
+    return !_isMelee && !_throwable;
   }
 
   public bool IsMelee()
   {
-    return _melee;
+    return _isMelee;
   }
   public bool IsEmpty()
   {
@@ -1808,7 +1858,7 @@ public class ItemScript : MonoBehaviour
 
   public int Clip()
   {
-    if (_melee) return 1;
+    if (_isMelee) return 1;
     return _clip;
   }
 
@@ -1862,6 +1912,8 @@ public class ItemScript : MonoBehaviour
     var maxDistance = (!_ragdoll._IsPlayer && _ragdoll._EnemyScript._IsZombieReal) ? 0.5f : 0.7f * (canMeleePenatrate ? 1.3f : 1f);
     if (_type == ItemType.RAPIER)
       maxDistance *= 2.35f;
+    else if (_type == ItemType.FIST)
+      maxDistance *= 0.85f;
     if (Physics.SphereCast(ray, Mathf.Clamp(_ragdoll._IsEnemy && (_ragdoll._EnemyScript.IsChaser() || _ragdoll._EnemyScript._IsZombieReal) ? 0.4f : 0.23f, 0.05f, maxDistance), out raycastInfo._raycastHit, maxDistance, GameResources._Layermask_Ragdoll))
     {
       //Debug.Log(raycastInfo._raycastHit.collider.gameObject.name);

@@ -6206,9 +6206,9 @@ go to the <color=yellow>SHOP</color> to buy something~1
 
             // Add action to update quality
             actions.Add((MenuComponent component0) =>
-              {
-                Settings._QualityLevel = component0._dropdownIndex;
-              });
+            {
+              Settings._QualityLevel = component0._dropdownIndex;
+            });
           }
 
           // Update dropdown data
@@ -6236,29 +6236,92 @@ go to the <color=yellow>SHOP</color> to buy something~1
     // Post-processing
     menu_optionsSettings
 
+    // Brightness
+    .AddComponent("brightness\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
+      .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+      {
+        // Set display text
+        var selection_match = SettingsModule.Brightness switch
+        {
+          0 => "0",
+          1 => "1",
+          2 => "2",
+          3 => "3",
+          4 => "4",
+          5 => "5",
+          6 => "6",
+          7 => "7",
+          8 => "8",
+          9 => "9",
+        };
+        component.SetDisplayText(string.Format(format_options, "brightness:", selection_match));
+
+        // Set dropdown data
+        var selections = new List<string>();
+        var actions = new List<System.Action<MenuComponent>>();
+        for (var i = 0; i < 10; i++)
+        {
+          selections.Add(i switch
+          {
+            0 => "0",
+            1 => "1",
+            2 => "2",
+            3 => "3 [DEFAULT]",
+            4 => "4",
+            5 => "5",
+            6 => "6",
+            7 => "7",
+            8 => "8",
+            9 => "9",
+          });
+          actions.Add((MenuComponent component0) =>
+          {
+            SettingsModule.Brightness = component0._dropdownIndex;
+
+            Settings.SetPostProcessing();
+            PlayerScript.ResetCamera();
+
+            _CanRender = false;
+            RenderMenu();
+          });
+        }
+
+        component.SetDropdownData("brightness\n*makes everything brighter\n\n", selections, actions, selection_match);
+      })
+
     // Bloom
     .AddComponent("bloom\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
       .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
       {
         // Set display text
-        var selection_match = SettingsModule.BloomAmount == 0 ? "off" : (SettingsModule.BloomAmount == 1 ? "low" : "normal");
+        var selection_match = SettingsModule.BloomAmount switch
+        {
+          0 => "off",
+          1 => "low",
+          2 => "normal",
+          3 => "high"
+        };
         component.SetDisplayText(string.Format(format_options, "bloom:", selection_match));
 
         // Set dropdown data
         var selections = new List<string>();
         var actions = new List<System.Action<MenuComponent>>();
-        for (var i = 0; i < 3; i++)
+        for (var i = 0; i < 4; i++)
         {
           selections.Add(i switch
           {
-            0 => "normal",
-            1 => "low",
-            2 => "off"
+            0 => "high",
+            1 => "normal [DEFAULT]",
+            2 => "low",
+            3 => "off"
           });
           actions.Add((MenuComponent component0) =>
           {
-            SettingsModule.BloomAmount = 2 - component0._dropdownIndex;
+            SettingsModule.BloomAmount = 3 - component0._dropdownIndex;
+
             Settings.SetPostProcessing();
+            PlayerScript.ResetCamera();
+
             _CanRender = false;
             RenderMenu();
           });
@@ -6287,14 +6350,17 @@ go to the <color=yellow>SHOP</color> to buy something~1
         {
           selections.Add(i switch
           {
-            0 => "normal",
+            0 => "normal [DEFAULT]",
             1 => "low",
             2 => "off",
           });
           actions.Add((MenuComponent component0) =>
           {
             SettingsModule.DepthOfFieldAmount = 2 - component0._dropdownIndex;
+
             Settings.SetPostProcessing();
+            PlayerScript.ResetCamera();
+
             _CanRender = false;
             RenderMenu();
           });
@@ -6390,7 +6456,9 @@ go to the <color=yellow>SHOP</color> to buy something~1
             }
 
             SettingsModule.UseOrthographicCamera = is_ortho;
+
             Settings.SetPostProcessing();
+            PlayerScript.ResetCamera();
           });
         }
 
@@ -6427,6 +6495,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
               }
 
               SettingsModule.CameraZoom = (Settings.SettingsSaveData.CameraZoomType)component0._dropdownIndex;
+
               Settings.SetPostProcessing();
               PlayerScript.ResetCamera();
             });
@@ -6437,6 +6506,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
             actions.Add((MenuComponent component0) =>
             {
               SettingsModule.CameraZoom = (Settings.SettingsSaveData.CameraZoomType)component0._dropdownIndex;
+
               Settings.SetPostProcessing();
               PlayerScript.ResetCamera();
             });

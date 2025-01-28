@@ -263,7 +263,7 @@ public static class Shop
 
     // Cannot re-order unlocks
     UTILITY_MIRROR,
-
+    ITEM_FIST,
   }
 
   public static int _Max_Equipment_Points
@@ -293,6 +293,8 @@ public static class Shop
       //_Unlocks_Descriptions.Add(Unlocks.ITEM_BAT, new Tuple<string, int>("melee, two-handed, wide-sweep", 10));
       { Unlocks.ITEM_RAPIER, new Tuple<string, int>("melee, one-handed, lunge", 15) },
       { Unlocks.ITEM_KATANA, new Tuple<string, int>("melee, two-handed, wide-sweep", 20) },
+      { Unlocks.ITEM_FIST, new Tuple<string, int>("melee, no-parry, hard", 3) },
+
       { Unlocks.ITEM_PISTOL_SILENCED, new Tuple<string, int>("handgun, silenced, fast-reload", 15) },
       { Unlocks.ITEM_PISTOL_MACHINE, new Tuple<string, int>("handgun, 3-burst, fast-reload", 10) },
       { Unlocks.ITEM_PISTOL_DOUBLE, new Tuple<string, int>("handgun, double-barrel", 10) },
@@ -308,7 +310,7 @@ public static class Shop
       { Unlocks.ITEM_RIFLE, new Tuple<string, int>("rifle, semi-automatic, slow-fire", 10) },
       { Unlocks.ITEM_RIFLE_LEVER, new Tuple<string, int>("rifle, semi-automatic, fast-fire", 20) },
       { Unlocks.ITEM_RIFLE_CHARGE, new Tuple<string, int>("rifle, semi/automatic, charged", 15) },
-      { Unlocks.ITEM_DMR, new Tuple<string, int>("rifle, semi-automatic, slow-reload", 25) },
+      { Unlocks.ITEM_DMR, new Tuple<string, int>("rifle, semi-automatic, slow-reload", 22) },
       { Unlocks.ITEM_SNIPER, new Tuple<string, int>("bolt-action, semi-automatic, powerful", 20) },
       { Unlocks.ITEM_GRENADE_LAUNCHER, new Tuple<string, int>("explosive, semi-automatic, slow-reload", 15) },
       { Unlocks.ITEM_STICKY_GUN, new Tuple<string, int>("stealthy, chain, slow-reload", 15) },
@@ -410,11 +412,11 @@ public static class Shop
     }
     else
     {
-      _Unlocks_Vault.Add("classic_0", new Unlocks[] { Unlocks.ITEM_AXE, Unlocks.UTILITY_GRENADE, Unlocks.MAX_EQUIPMENT_POINTS_2, Unlocks.LOADOUT_SLOT_X2_0 });
+      _Unlocks_Vault.Add("classic_0", new Unlocks[] { Unlocks.ITEM_FIST, Unlocks.ITEM_AXE, Unlocks.UTILITY_GRENADE, Unlocks.MAX_EQUIPMENT_POINTS_2, Unlocks.LOADOUT_SLOT_X2_0 });
       _Unlocks_Vault.Add("classic_1", new Unlocks[] { Unlocks.MOD_LASER_SIGHTS, Unlocks.MOD_NO_SLOWMO, Unlocks.UTILITY_KUNAI_EXPLOSIVE, Unlocks.ITEM_PISTOL_CHARGE });
       _Unlocks_Vault.Add("classic_2", new Unlocks[] { Unlocks.MODE_SURVIVAL, Unlocks.ITEM_RIFLE, Unlocks.ITEM_PISTOL_MACHINE, Unlocks.UTILITY_MIRROR, Unlocks.MAX_EQUIPMENT_POINTS_3, Unlocks.LOADOUT_SLOT_X2_1 });
       _Unlocks_Vault.Add("classic_3", new Unlocks[] { Unlocks.ITEM_PISTOL_DOUBLE, Unlocks.UTILITY_STOP_WATCH, Unlocks.UTILITY_TEMP_SHIELD, Unlocks.MOD_SPEED_UP });
-      _Unlocks_Vault.Add("classic_4", new Unlocks[] { Unlocks.ITEM_AXE, Unlocks.ITEM_REVOLVER, Unlocks.UTILITY_C4, Unlocks.UTILITY_GRENADE_STUN, Unlocks.UTILITY_SHURIKEN_BIG });
+      _Unlocks_Vault.Add("classic_4", new Unlocks[] { Unlocks.ITEM_REVOLVER, Unlocks.UTILITY_C4, Unlocks.UTILITY_GRENADE_STUN, Unlocks.UTILITY_SHURIKEN_BIG });
       _Unlocks_Vault.Add("classic_5", new Unlocks[] { Unlocks.ITEM_RAPIER, Unlocks.ITEM_STICKY_GUN, Unlocks.UTILITY_GRENADE_IMPACT });
       _Unlocks_Vault.Add("classic_6", new Unlocks[] { Unlocks.ITEM_FRYING_PAN, Unlocks.ITEM_CROSSBOW, Unlocks.ITEM_GRENADE_LAUNCHER, Unlocks.UTILITY_TACTICAL_BULLET, Unlocks.MAX_EQUIPMENT_POINTS_4 });
       _Unlocks_Vault.Add("classic_7", new Unlocks[] { Unlocks.UTILITY_KUNAI_STICKY, Unlocks.UTILITY_INVISIBILITY, Unlocks.LOADOUT_SLOT_X2_2 });
@@ -479,6 +481,7 @@ public static class Shop
       GameScript.ItemManager.Items.KATANA,
       GameScript.ItemManager.Items.BAT
     };
+
   }
 
   // Get a list of items with ItemManager.Items enum
@@ -548,11 +551,13 @@ public static class Shop
     LevelModule.ShopUnlocksOrdered[unlock] = unlockDat;
     LevelModule.SyncShopUnlocks();
 
-    // Check mode
+    // Auto unlock modes
     switch (unlock)
     {
       case Unlocks.MODE_SURVIVAL:
       case Unlocks.MODE_EXTRAS:
+
+      case Unlocks.EXTRA_CHASE:
         Unlock(unlock);
         break;
     }
