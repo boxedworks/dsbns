@@ -702,12 +702,7 @@ public static class Settings
     var profile_ = GameResources._Camera_Main.GetComponent<UnityEngine.Rendering.Volume>().profile;
 
     // Brightness
-    UnityEngine.Rendering.Universal.ColorAdjustments colorAdjustment = null;
-    if (profile_.TryGet(out colorAdjustment))
-    {
-      var b = Mathf.Lerp(0.65f, 2.4f, SettingsModule.Brightness / 9f);
-      colorAdjustment.colorFilter.value = new Color(b, b, b);
-    }
+    GameScript.UpdateAmbientLight();
 
     // Bloom
     UnityEngine.Rendering.Universal.Bloom bloom = null;

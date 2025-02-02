@@ -1739,7 +1739,7 @@ public class Menu
           Levels._HardcodedLoadout = new GameScript.ItemManager.Loadout()
           {
             _id = -1,
-            _equipment = new GameScript.PlayerProfile.Equipment()
+            _Equipment = new GameScript.PlayerProfile.Equipment()
           };
 
         _CurrentMenu._selectedComponent?._onFocus?.Invoke(_CurrentMenu._selectedComponent);
@@ -2393,7 +2393,7 @@ public class Menu
           Levels._HardcodedLoadout = new GameScript.ItemManager.Loadout()
           {
             _id = -1,
-            _equipment = new GameScript.PlayerProfile.Equipment()
+            _Equipment = new GameScript.PlayerProfile.Equipment()
           };
         Levels._EditingLoadout = true;
       };
@@ -2839,7 +2839,7 @@ public class Menu
                 });
 
                 // Set hard loadout
-                selections.Add("set loadout - " + (CurrentLoadout()._equipment.IsEmpty() ? "not set, using CLASSIC mode loadouts" : "set, using hard-set loadout"));
+                selections.Add("set loadout - " + (CurrentLoadout()._Equipment.IsEmpty() ? "not set, using CLASSIC mode loadouts" : "set, using hard-set loadout"));
                 actions.Add((MenuComponent component0) =>
                 {
 
@@ -4302,7 +4302,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
       for (; num_loadouts > 0; num_loadouts--)
       {
         var loadout = GameScript.ItemManager.Loadout._Loadouts[num_loadouts - 1];
-        if (!loadout._equipment.IsEmpty()) break;
+        if (!loadout._Equipment.IsEmpty()) break;
       }
       // Correct playerprofiles
       if (num_loadouts == 0) num_loadouts = 1;
@@ -4314,38 +4314,46 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
       {
         var loadout = GameScript.ItemManager.Loadout._Loadouts[i];
 
-        // Gather equipment
+        // Gather equipment pairs
+        bool isValidItemType(GameScript.ItemManager.Items itemType)
+        {
+          return
+            itemType != GameScript.ItemManager.Items.NONE &&
+            itemType != GameScript.ItemManager.Items.FIST;
+        }
+
         var equipment = "";
-        if (loadout._equipment._item_left0 != GameScript.ItemManager.Items.NONE)
-          equipment += (loadout._equipment._item_left0.ToString());
-        if (loadout._equipment._item_right0 != GameScript.ItemManager.Items.NONE)
+        if (isValidItemType(loadout._Equipment._ItemLeft0))
+          equipment += loadout._Equipment._ItemLeft0.ToString();
+        if (isValidItemType(loadout._Equipment._ItemRight0))
         {
           if (equipment != "") equipment += ", ";
-          equipment += (loadout._equipment._item_right0.ToString());
+          equipment += (loadout._Equipment._ItemRight0.ToString());
         }
+
         var equipment1 = "";
-        if (loadout._equipment._item_left1 != GameScript.ItemManager.Items.NONE)
-          equipment1 += (loadout._equipment._item_left1.ToString());
-        if (loadout._equipment._item_right1 != GameScript.ItemManager.Items.NONE)
+        if (isValidItemType(loadout._Equipment._ItemLeft1))
+          equipment1 += loadout._Equipment._ItemLeft1.ToString();
+        if (isValidItemType(loadout._Equipment._ItemRight1))
         {
           if (equipment1 != "") equipment1 += ", ";
-          equipment1 += (loadout._equipment._item_right1.ToString());
+          equipment1 += (loadout._Equipment._ItemRight1.ToString());
         }
 
         // Gather utilities
         var utilities = "";
         var utilities_strings = new List<string>();
-        if (loadout._equipment._utilities_left != null && loadout._equipment._utilities_left.Length > 0)
+        if (loadout._Equipment._UtilitiesLeft != null && loadout._Equipment._UtilitiesLeft.Length > 0)
         {
-          var count = Shop.GetUtilityCount(loadout._equipment._utilities_left[0]) * loadout._equipment._utilities_left.Length;
+          var count = Shop.GetUtilityCount(loadout._Equipment._UtilitiesLeft[0]) * loadout._Equipment._UtilitiesLeft.Length;
           var count_string = count == 1 ? "" : $" x{count}";
-          utilities_strings.Add($"{loadout._equipment._utilities_left[0].ToString()}{count_string}");
+          utilities_strings.Add($"{loadout._Equipment._UtilitiesLeft[0].ToString()}{count_string}");
         }
-        if (loadout._equipment._utilities_right != null && loadout._equipment._utilities_right.Length > 0)
+        if (loadout._Equipment._UtilitiesRight != null && loadout._Equipment._UtilitiesRight.Length > 0)
         {
-          var count = Shop.GetUtilityCount(loadout._equipment._utilities_right[0]) * loadout._equipment._utilities_right.Length;
+          var count = Shop.GetUtilityCount(loadout._Equipment._UtilitiesRight[0]) * loadout._Equipment._UtilitiesRight.Length;
           var count_string = count == 1 ? "" : $" x{count}";
-          utilities_strings.Add($"{loadout._equipment._utilities_right[0].ToString()}{count_string}");
+          utilities_strings.Add($"{loadout._Equipment._UtilitiesRight[0].ToString()}{count_string}");
         }
         for (int u = 0; u < utilities_strings.Count; u++)
         {
@@ -4357,28 +4365,28 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
 
         // Gather perks
         var perks = "";// "-\n-\n";
-        if (loadout._equipment._perks.Count > 0)
+        if (loadout._Equipment._Perks.Count > 0)
         {
-          perks += $"{loadout._equipment._perks[0]}";
+          perks += $"{loadout._Equipment._Perks[0]}";
         }
-        if (loadout._equipment._perks.Count > 1)
+        if (loadout._Equipment._Perks.Count > 1)
         {
           if (perks != "") perks += ", ";
-          perks += $"{loadout._equipment._perks[1]}\n";
+          perks += $"{loadout._Equipment._Perks[1]}\n";
         }
         else if (perks != "")
           perks += '\n';
         if (perks == "") perks = "-\n";
 
         var perks0 = "";// "-\n-\n";
-        if (loadout._equipment._perks.Count > 2)
+        if (loadout._Equipment._Perks.Count > 2)
         {
-          perks0 += $"{loadout._equipment._perks[2]}";
+          perks0 += $"{loadout._Equipment._Perks[2]}";
         }
-        if (loadout._equipment._perks.Count > 3)
+        if (loadout._Equipment._Perks.Count > 3)
         {
           if (perks0 != "") perks0 += ", ";
-          perks0 += $"{loadout._equipment._perks[3]}\n";
+          perks0 += $"{loadout._Equipment._Perks[3]}\n";
         }
         if (perks0 == "") perks0 = "-\n";
         perks = perks + perks0;
@@ -4469,7 +4477,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
 
         // Check for empty loadout for tutorial
         foreach (var loadout in GameScript.ItemManager.Loadout._Loadouts)
-          if (!loadout._equipment.IsEmpty())
+          if (!loadout._Equipment.IsEmpty())
           {
             Shop.Unlock(Shop.Unlocks.TUTORIAL_PART1);
             Settings.LevelSaveData.Save();
@@ -4492,14 +4500,14 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
         SpawnMenu_SelectLoadout();
         var allEmpty = true;
         foreach (var loadout in GameScript.ItemManager.Loadout._Loadouts)
-          if (!loadout._equipment.IsEmpty())
+          if (!loadout._Equipment.IsEmpty())
           {
             allEmpty = false;
             break;
           }
         if (!allEmpty)
           foreach (var profile in GameScript.PlayerProfile.s_Profiles)
-            if (profile._equipment.IsEmpty())
+            if (profile._Equipment.IsEmpty())
               profile._LoadoutIndex++;
 
         // Set selected loadout
@@ -4605,7 +4613,9 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
         m.AddComponent("left hand\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
           .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
           {
-            var item = CurrentLoadout()._equipment._item_left0;
+            var item = CurrentLoadout()._Equipment._ItemLeft0;
+            if (item == GameScript.ItemManager.Items.FIST) item = GameScript.ItemManager.Items.NONE;
+
             var item_name = item.ToString();
             var item_cost = GameScript.ItemManager.GetItemValue(item);
             if (item == GameScript.ItemManager.Items.NONE)
@@ -4614,7 +4624,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
               component.SetDisplayText(string.Format(loadoutEquip_format, "left hand", $"{item_name}", $"{item_cost}") + "\n", true);
 
             // Check for two handed
-            component._obscured = (CurrentLoadout()._equipment._item_right0 == GameScript.ItemManager.Items.KATANA);
+            component._obscured = (CurrentLoadout()._Equipment._ItemRight0 == GameScript.ItemManager.Items.KATANA);
 
             // Set dropdown data
             var selections = new List<string>();
@@ -4641,22 +4651,22 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
               actions.Add((MenuComponent component0) =>
               {
                 var item_selected = (GameScript.ItemManager.Items)System.Enum.Parse(typeof(GameScript.ItemManager.Items), component0.GetDisplayText(false).Trim().Split(' ')[2].Split('>')[2]);
-                var item_other = CurrentLoadout()._equipment._item_right0;
+                var item_other = CurrentLoadout()._Equipment._ItemRight0;
                 // Check for two handed
                 if (((item_selected == GameScript.ItemManager.Items.BAT || item_selected == GameScript.ItemManager.Items.KATANA) &&
                   (item_other != GameScript.ItemManager.Items.NONE)) ||
                   ((item_other == GameScript.ItemManager.Items.BAT || item_other == GameScript.ItemManager.Items.KATANA) &&
                   (item_selected != GameScript.ItemManager.Items.NONE))
                   )
-                  CurrentLoadout()._equipment._item_right0 = GameScript.ItemManager.Items.NONE;
+                  CurrentLoadout()._Equipment._ItemRight0 = GameScript.ItemManager.Items.NONE;
                 if (CurrentLoadout().CanEquipItem(ActiveRagdoll.Side.LEFT, 0, item_selected))
                 {
-                  CurrentLoadout()._equipment._item_left0 = item_selected;
+                  CurrentLoadout()._Equipment._ItemLeft0 = item_selected;
                   SendInput(Input.BACK);
                 }
                 else
                 {
-                  CurrentLoadout()._equipment._item_right0 = item_other;
+                  CurrentLoadout()._Equipment._ItemRight0 = item_other;
                   //
                   var save_selection = _CurrentMenu._dropdownParentIndex;
                   var save_dropdown = _CurrentMenu._selectionIndex;
@@ -4701,7 +4711,9 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
         .AddComponent("right hand\n\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
           .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
           {
-            var item = CurrentLoadout()._equipment._item_right0;
+            var item = CurrentLoadout()._Equipment._ItemRight0;
+            if (item == GameScript.ItemManager.Items.FIST) item = GameScript.ItemManager.Items.NONE;
+
             var item_name = item.ToString();
             var item_cost = GameScript.ItemManager.GetItemValue(item);
             if (item == GameScript.ItemManager.Items.NONE)
@@ -4710,7 +4722,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
               component.SetDisplayText(string.Format(loadoutEquip_format, "right hand", $"{item_name}", $"{item_cost}") + "\n\n", true);
 
             // Check for two handed
-            component._obscured = (CurrentLoadout()._equipment._item_left0 == GameScript.ItemManager.Items.KATANA);
+            component._obscured = (CurrentLoadout()._Equipment._ItemLeft0 == GameScript.ItemManager.Items.KATANA);
 
             // Set dropdown data
             var selections = new List<string>();
@@ -4744,22 +4756,22 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
               actions.Add((MenuComponent component0) =>
               {
                 var item_selected = (GameScript.ItemManager.Items)System.Enum.Parse(typeof(GameScript.ItemManager.Items), component0.GetDisplayText(false).Trim().Split(' ')[2].Split('>')[2]);
-                var item_other = CurrentLoadout()._equipment._item_left0;
+                var item_other = CurrentLoadout()._Equipment._ItemLeft0;
                 // Check for two handed
                 if (((item_selected == GameScript.ItemManager.Items.BAT || item_selected == GameScript.ItemManager.Items.KATANA) &&
                   (item_other != GameScript.ItemManager.Items.NONE)) ||
                   ((item_other == GameScript.ItemManager.Items.BAT || item_other == GameScript.ItemManager.Items.KATANA) &&
                   (item_selected != GameScript.ItemManager.Items.NONE))
                   )
-                  CurrentLoadout()._equipment._item_left0 = GameScript.ItemManager.Items.NONE;
+                  CurrentLoadout()._Equipment._ItemLeft0 = GameScript.ItemManager.Items.NONE;
                 if (CurrentLoadout().CanEquipItem(ActiveRagdoll.Side.RIGHT, 0, item_selected))
                 {
-                  CurrentLoadout()._equipment._item_right0 = item_selected;
+                  CurrentLoadout()._Equipment._ItemRight0 = item_selected;
                   SendInput(Input.BACK);
                 }
                 else
                 {
-                  CurrentLoadout()._equipment._item_left0 = item_other;
+                  CurrentLoadout()._Equipment._ItemLeft0 = item_other;
                   //
                   var save_selection = _CurrentMenu._dropdownParentIndex;
                   var save_dropdown = _CurrentMenu._selectionIndex;
@@ -4807,7 +4819,9 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
           m.AddComponent("left hand\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
             .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
             {
-              var item = CurrentLoadout()._equipment._item_left1;
+              var item = CurrentLoadout()._Equipment._ItemLeft1;
+              if (item == GameScript.ItemManager.Items.FIST) item = GameScript.ItemManager.Items.NONE;
+
               var item_name = item.ToString();
               var item_cost = GameScript.ItemManager.GetItemValue(item);
               if (item == GameScript.ItemManager.Items.NONE)
@@ -4816,7 +4830,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
                 component.SetDisplayText(string.Format(loadoutEquip_format, "left hand", $"{item_name}", $"{item_cost}") + "\n", true);
 
               // Check for two handed
-              component._obscured = (CurrentLoadout()._equipment._item_right1 == GameScript.ItemManager.Items.KATANA);
+              component._obscured = (CurrentLoadout()._Equipment._ItemRight1 == GameScript.ItemManager.Items.KATANA);
 
               // Set dropdown data
               var selections = new List<string>();
@@ -4843,22 +4857,22 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
                 actions.Add((MenuComponent component0) =>
                 {
                   var item_selected = (GameScript.ItemManager.Items)System.Enum.Parse(typeof(GameScript.ItemManager.Items), component0.GetDisplayText(false).Trim().Split(' ')[2].Split('>')[2]);
-                  var item_other = CurrentLoadout()._equipment._item_right1;
+                  var item_other = CurrentLoadout()._Equipment._ItemRight1;
                   // Check for two handed
                   if (((item_selected == GameScript.ItemManager.Items.BAT || item_selected == GameScript.ItemManager.Items.KATANA) &&
                     (item_other != GameScript.ItemManager.Items.NONE)) ||
                     ((item_other == GameScript.ItemManager.Items.BAT || item_other == GameScript.ItemManager.Items.KATANA) &&
                     (item_selected != GameScript.ItemManager.Items.NONE))
                     )
-                    CurrentLoadout()._equipment._item_right1 = GameScript.ItemManager.Items.NONE;
+                    CurrentLoadout()._Equipment._ItemRight1 = GameScript.ItemManager.Items.NONE;
                   if (CurrentLoadout().CanEquipItem(ActiveRagdoll.Side.LEFT, 1, item_selected))
                   {
-                    CurrentLoadout()._equipment._item_left1 = item_selected;
+                    CurrentLoadout()._Equipment._ItemLeft1 = item_selected;
                     SendInput(Input.BACK);
                   }
                   else
                   {
-                    CurrentLoadout()._equipment._item_right1 = item_other;
+                    CurrentLoadout()._Equipment._ItemRight1 = item_other;
                     //
                     var save_selection = _CurrentMenu._dropdownParentIndex;
                     var save_dropdown = _CurrentMenu._selectionIndex;
@@ -4902,7 +4916,9 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
           .AddComponent("right hand\n\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
             .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
             {
-              var item = CurrentLoadout()._equipment._item_right1;
+              var item = CurrentLoadout()._Equipment._ItemRight1;
+              if (item == GameScript.ItemManager.Items.FIST) item = GameScript.ItemManager.Items.NONE;
+
               var item_name = item.ToString();
               var item_cost = GameScript.ItemManager.GetItemValue(item);
               if (item == GameScript.ItemManager.Items.NONE)
@@ -4911,7 +4927,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
                 component.SetDisplayText(string.Format(loadoutEquip_format, "right hand", $"{item_name}", $"{item_cost}") + "\n\n", true);
 
               // Check for two handed
-              component._obscured = (CurrentLoadout()._equipment._item_left1 == GameScript.ItemManager.Items.KATANA);
+              component._obscured = (CurrentLoadout()._Equipment._ItemLeft1 == GameScript.ItemManager.Items.KATANA);
 
               // Set dropdown data
               var selections = new List<string>();
@@ -4938,22 +4954,22 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
                 actions.Add((MenuComponent component0) =>
                 {
                   var item_selected = (GameScript.ItemManager.Items)System.Enum.Parse(typeof(GameScript.ItemManager.Items), component0.GetDisplayText(false).Trim().Split(' ')[2].Split('>')[2]);
-                  var item_other = CurrentLoadout()._equipment._item_left1;
+                  var item_other = CurrentLoadout()._Equipment._ItemLeft1;
                   // Check for two handed
                   if (((item_selected == GameScript.ItemManager.Items.BAT || item_selected == GameScript.ItemManager.Items.KATANA) &&
                     (item_other != GameScript.ItemManager.Items.NONE)) ||
                     ((item_other == GameScript.ItemManager.Items.BAT || item_other == GameScript.ItemManager.Items.KATANA) &&
                     (item_selected != GameScript.ItemManager.Items.NONE))
                     )
-                    CurrentLoadout()._equipment._item_left1 = GameScript.ItemManager.Items.NONE;
+                    CurrentLoadout()._Equipment._ItemLeft1 = GameScript.ItemManager.Items.NONE;
                   if (CurrentLoadout().CanEquipItem(ActiveRagdoll.Side.RIGHT, 1, item_selected))
                   {
-                    CurrentLoadout()._equipment._item_right1 = item_selected;
+                    CurrentLoadout()._Equipment._ItemRight1 = item_selected;
                     SendInput(Input.BACK);
                   }
                   else
                   {
-                    CurrentLoadout()._equipment._item_left1 = item_other;
+                    CurrentLoadout()._Equipment._ItemLeft1 = item_other;
                     //
                     var save_selection = _CurrentMenu._dropdownParentIndex;
                     var save_dropdown = _CurrentMenu._selectionIndex;
@@ -5025,7 +5041,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
         m.AddComponent("left utility\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
           .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
           {
-            var utilities = CurrentLoadout()._equipment._utilities_left;
+            var utilities = CurrentLoadout()._Equipment._UtilitiesLeft;
             var utility_name = "";
             var utility_cost = 0;
             if (utilities.Length == 0)
@@ -5065,24 +5081,24 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
                 var utility_selected = (UtilityScript.UtilityType)System.Enum.Parse(typeof(UtilityScript.UtilityType), component0.GetDisplayText(false).Trim().Split(' ')[2].Split('>')[2]);
 
                 if (utility_selected == UtilityScript.UtilityType.NONE)
-                  CurrentLoadout()._equipment._utilities_left = new UtilityScript.UtilityType[0];
+                  CurrentLoadout()._Equipment._UtilitiesLeft = new UtilityScript.UtilityType[0];
                 else if (CurrentLoadout().CanEquipUtility(ActiveRagdoll.Side.LEFT, utility_selected))
                 {
                   // Check if different
-                  if (CurrentLoadout()._equipment._utilities_left.Length == 0 || utility_selected != CurrentLoadout()._equipment._utilities_left[0])
-                    CurrentLoadout()._equipment._utilities_left = new UtilityScript.UtilityType[] { utility_selected };
+                  if (CurrentLoadout()._Equipment._UtilitiesLeft.Length == 0 || utility_selected != CurrentLoadout()._Equipment._UtilitiesLeft[0])
+                    CurrentLoadout()._Equipment._UtilitiesLeft = new UtilityScript.UtilityType[] { utility_selected };
                   else
                   {
                     var list_new = new List<UtilityScript.UtilityType>();
-                    foreach (var util in CurrentLoadout()._equipment._utilities_left)
+                    foreach (var util in CurrentLoadout()._Equipment._UtilitiesLeft)
                       list_new.Add(util);
                     list_new.Add(utility_selected);
-                    CurrentLoadout()._equipment._utilities_left = list_new.ToArray();
+                    CurrentLoadout()._Equipment._UtilitiesLeft = list_new.ToArray();
                   }
                 }
                 // If can't equip and utility is the same, set to 1
-                else if (CurrentLoadout()._equipment._utilities_left.Length != 0 && utility_selected == CurrentLoadout()._equipment._utilities_left[0])
-                  CurrentLoadout()._equipment._utilities_left = new UtilityScript.UtilityType[] { utility_selected };
+                else if (CurrentLoadout()._Equipment._UtilitiesLeft.Length != 0 && utility_selected == CurrentLoadout()._Equipment._UtilitiesLeft[0])
+                  CurrentLoadout()._Equipment._UtilitiesLeft = new UtilityScript.UtilityType[] { utility_selected };
                 else
                 {
                   var save_selection = _CurrentMenu._dropdownParentIndex;
@@ -5127,7 +5143,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
         .AddComponent("right utility\n\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
           .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
           {
-            var utilities = CurrentLoadout()._equipment._utilities_right;
+            var utilities = CurrentLoadout()._Equipment._UtilitiesRight;
             var utility_name = "";
             var utility_cost = 0;
             if (utilities.Length == 0)
@@ -5167,24 +5183,24 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
               {
                 var utility_selected = (UtilityScript.UtilityType)System.Enum.Parse(typeof(UtilityScript.UtilityType), component0.GetDisplayText(false).Trim().Split(' ')[2].Split('>')[2]);
                 if (utility_selected == UtilityScript.UtilityType.NONE)
-                  CurrentLoadout()._equipment._utilities_right = new UtilityScript.UtilityType[0];
+                  CurrentLoadout()._Equipment._UtilitiesRight = new UtilityScript.UtilityType[0];
                 else if (CurrentLoadout().CanEquipUtility(ActiveRagdoll.Side.RIGHT, utility_selected))
                 {
                   // Check if different
-                  if (CurrentLoadout()._equipment._utilities_right.Length == 0 || utility_selected != CurrentLoadout()._equipment._utilities_right[0])
-                    CurrentLoadout()._equipment._utilities_right = new UtilityScript.UtilityType[] { utility_selected };
+                  if (CurrentLoadout()._Equipment._UtilitiesRight.Length == 0 || utility_selected != CurrentLoadout()._Equipment._UtilitiesRight[0])
+                    CurrentLoadout()._Equipment._UtilitiesRight = new UtilityScript.UtilityType[] { utility_selected };
                   else
                   {
                     var list_new = new List<UtilityScript.UtilityType>();
-                    foreach (var util in CurrentLoadout()._equipment._utilities_right)
+                    foreach (var util in CurrentLoadout()._Equipment._UtilitiesRight)
                       list_new.Add(util);
                     list_new.Add(utility_selected);
-                    CurrentLoadout()._equipment._utilities_right = list_new.ToArray();
+                    CurrentLoadout()._Equipment._UtilitiesRight = list_new.ToArray();
                   }
                 }
                 // If can't equip and utility is the same, set to 1
-                else if (CurrentLoadout()._equipment._utilities_right.Length != 0 && utility_selected == CurrentLoadout()._equipment._utilities_right[0])
-                  CurrentLoadout()._equipment._utilities_right = new UtilityScript.UtilityType[] { utility_selected };
+                else if (CurrentLoadout()._Equipment._UtilitiesRight.Length != 0 && utility_selected == CurrentLoadout()._Equipment._UtilitiesRight[0])
+                  CurrentLoadout()._Equipment._UtilitiesRight = new UtilityScript.UtilityType[] { utility_selected };
                 else
                 {
                   var save_selection = _CurrentMenu._dropdownParentIndex;
@@ -5248,7 +5264,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
         m.AddComponent("mods\n\n\n\n\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
           .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
           {
-            var perks = CurrentLoadout()._equipment._perks;
+            var perks = CurrentLoadout()._Equipment._Perks;
             var perk_name = "";
             if (perks.Count == 0)
               component.SetDisplayText(
@@ -5295,11 +5311,11 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
               {
                 var perk_selected = (Shop.Perk.PerkType)System.Enum.Parse(typeof(Shop.Perk.PerkType), component0.GetDisplayText(false).Trim().Split(' ')[2].Split('>')[2]);
                 var perk_value = GameScript.ItemManager.GetPerkValue(perk_selected);
-                perks = CurrentLoadout()._equipment._perks;
+                perks = CurrentLoadout()._Equipment._Perks;
 
                 // Check for none selection
                 if (perk_selected == Shop.Perk.PerkType.NONE)
-                  CurrentLoadout()._equipment._perks = new List<Shop.Perk.PerkType>();
+                  CurrentLoadout()._Equipment._Perks = new List<Shop.Perk.PerkType>();
 
                 // Check for selected already
                 else if (perks.Contains(perk_selected))
@@ -5397,7 +5413,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
               leveldata = leveldata.Split('!')[0];
 
             // Save loadout to level data
-            if (CurrentLoadout()._equipment.IsEmpty())
+            if (CurrentLoadout()._Equipment.IsEmpty())
             {
 
               // Check for removing forced loadout
@@ -5411,21 +5427,21 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
               return;
             }
 
-            var equipment = CurrentLoadout()._equipment;
+            var equipment = CurrentLoadout()._Equipment;
             var utilsleft_string = "";
             var utilsright_string = "";
             var perkstring = "";
 
-            if (equipment._utilities_left != null && equipment._utilities_left.Length > 0)
-              utilsleft_string = $"{equipment._utilities_left[0]}:{equipment._utilities_left.Length}";
-            if (equipment._utilities_right != null && equipment._utilities_right.Length > 0)
-              utilsright_string = $"{equipment._utilities_right[0]}:{equipment._utilities_right.Length}";
-            if (equipment._perks != null && equipment._perks.Count > 0)
-              foreach (var perk in equipment._perks)
+            if (equipment._UtilitiesLeft != null && equipment._UtilitiesLeft.Length > 0)
+              utilsleft_string = $"{equipment._UtilitiesLeft[0]}:{equipment._UtilitiesLeft.Length}";
+            if (equipment._UtilitiesRight != null && equipment._UtilitiesRight.Length > 0)
+              utilsright_string = $"{equipment._UtilitiesRight[0]}:{equipment._UtilitiesRight.Length}";
+            if (equipment._Perks != null && equipment._Perks.Count > 0)
+              foreach (var perk in equipment._Perks)
                 perkstring += $"{perk}:";
 
             Levels._LevelPack_Current._levelData[leveliter] = leveldata +
-              $"!{equipment._item_left0},{equipment._item_right0},{equipment._item_left1},{equipment._item_right1},{utilsleft_string},{utilsright_string},{perkstring}";
+              $"!{equipment._ItemLeft0},{equipment._ItemRight0},{equipment._ItemLeft1},{equipment._ItemRight1},{utilsleft_string},{utilsright_string},{perkstring}";
             Levels.LevelPack_Save();
 
             Debug.Log("Saved loadout to map data");
@@ -5993,8 +6009,8 @@ go to the <color=yellow>SHOP</color> to buy something~1
           component._textColor = "";
         }
       })
-    .AddComponent("overall stats - broke\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE, _COLOR_GRAY)
-      .AddEvent((MenuComponent component) => { /*CommonEvents._SwitchMenu(MenuType.STATS); */})
+    //.AddComponent("overall stats - broke\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE, _COLOR_GRAY)
+     // .AddEvent((MenuComponent component) => { /*CommonEvents._SwitchMenu(MenuType.STATS); */})
     // Back button; switch menu per pause setting
     .AddBackButton((MenuComponent component) =>
     {
@@ -6010,7 +6026,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
     });
 
     // Tip
-    ModifyMenu_TipComponents(MenuType.OPTIONS, 12);
+    ModifyMenu_TipComponents(MenuType.OPTIONS, 13);
     ModifyMenu_TipSwitch(MenuType.OPTIONS);
 
     // Game settings menu
@@ -6019,6 +6035,54 @@ go to the <color=yellow>SHOP</color> to buy something~1
 
     }
     .AddComponent($"<color={_COLOR_GRAY}>graphics / audio settings</color>\n\n");
+
+    // Music volume dropdown
+    menu_optionsSettings
+    .AddComponent("music volume\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
+      .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+      {
+        // Set display text
+        component.SetDisplayText(string.Format(format_options, "music volume:", $"{Settings._VolumeMusic}/5"));
+        // Set dropdown data
+        var selections = new List<string>();
+        var actions = new List<System.Action<MenuComponent>>();
+        var selection_match = "" + Settings._VolumeMusic;
+        for (int i = 0; i < 6; i++)
+        {
+          // Add volume level
+          selections.Add((i).ToString());
+          // Add action to update music volume
+          actions.Add((MenuComponent component0) =>
+          {
+            Settings._VolumeMusic = component0._dropdownIndex;
+          });
+        }
+        // Update dropdown data
+        component.SetDropdownData("music volume\n\n", selections, actions, selection_match);
+      })
+    // SFX volume dropdown
+    .AddComponent("sfx volume\n\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
+      .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+      {
+        // Set display text
+        component.SetDisplayText(string.Format(format_options, "sfx volume:", $"{SettingsModule.VolumeSFX}/5") + "\n");
+        // Set dropdown data
+        var selections = new List<string>();
+        var actions = new List<System.Action<MenuComponent>>();
+        var selection_match = "" + SettingsModule.VolumeSFX;
+        for (int i = 0; i < 6; i++)
+        {
+          // Add volume level
+          selections.Add((i).ToString());
+          // Add action to update sfx volume
+          actions.Add((MenuComponent component0) =>
+          {
+            SettingsModule.VolumeSFX = component0._dropdownIndex;
+          });
+        }
+        // Update dropdown data
+        component.SetDropdownData("sfx volume\n\n", selections, actions, selection_match);
+      });
 
     // Non-console options
     if (Application.platform != RuntimePlatform.PS4 && Application.platform != RuntimePlatform.PS5 && Application.platform != RuntimePlatform.GameCoreXboxSeries && Application.platform != RuntimePlatform.GameCoreXboxOne && Application.platform != RuntimePlatform.XboxOne && Application.platform != RuntimePlatform.WebGLPlayer)
@@ -6367,53 +6431,6 @@ go to the <color=yellow>SHOP</color> to buy something~1
         }
 
         component.SetDropdownData("depth of field\n*adds a blur effect\n\n", selections, actions, selection_match);
-      })
-
-    // Music volume dropdown
-    .AddComponent("music volume\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
-      .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
-      {
-        // Set display text
-        component.SetDisplayText(string.Format(format_options, "music volume:", $"{Settings._VolumeMusic}/5"));
-        // Set dropdown data
-        var selections = new List<string>();
-        var actions = new List<System.Action<MenuComponent>>();
-        var selection_match = "" + Settings._VolumeMusic;
-        for (int i = 0; i < 6; i++)
-        {
-          // Add volume level
-          selections.Add((i).ToString());
-          // Add action to update music volume
-          actions.Add((MenuComponent component0) =>
-          {
-            Settings._VolumeMusic = component0._dropdownIndex;
-          });
-        }
-        // Update dropdown data
-        component.SetDropdownData("music volume\n\n", selections, actions, selection_match);
-      })
-    // SFX volume dropdown
-    .AddComponent("sfx volume\n\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
-      .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
-      {
-        // Set display text
-        component.SetDisplayText(string.Format(format_options, "sfx volume:", $"{SettingsModule.VolumeSFX}/5") + "\n");
-        // Set dropdown data
-        var selections = new List<string>();
-        var actions = new List<System.Action<MenuComponent>>();
-        var selection_match = "" + SettingsModule.VolumeSFX;
-        for (int i = 0; i < 6; i++)
-        {
-          // Add volume level
-          selections.Add((i).ToString());
-          // Add action to update sfx volume
-          actions.Add((MenuComponent component0) =>
-          {
-            SettingsModule.VolumeSFX = component0._dropdownIndex;
-          });
-        }
-        // Update dropdown data
-        component.SetDropdownData("sfx volume\n\n", selections, actions, selection_match);
       })
 
     // Back button

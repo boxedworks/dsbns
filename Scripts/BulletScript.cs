@@ -26,6 +26,9 @@ public class BulletScript : MonoBehaviour
   float _distanceTraveled;
   public float _maxDistance;
 
+  Coroutine _hidingCoroutine;
+  public bool _Available { get { return _hidingCoroutine == null && _Particles.transform.parent == transform; } }
+
   Rigidbody rb;
   public Rigidbody _rb
   {
@@ -660,19 +663,30 @@ public class BulletScript : MonoBehaviour
     particles.frequency = frequency;
   }
 
-  public void Hide()
+  public void Hide(bool forceHide = false)
   {
     _triggered = true;
     _light.enabled = false;
     if (_Particles == null) return;
-    GameScript.s_Singleton.StartCoroutine(LagParticles(1f));
+    if (forceHide)
+    {
+      _Particles.Stop();
+      _Particles.gameObject.SetActive(false);
+    }
+    else
+    {
+      if (_hidingCoroutine != null)
+        GameScript.s_Singleton.StopCoroutine(_hidingCoroutine);
+      else
+        _hidingCoroutine = GameScript.s_Singleton.StartCoroutine(LagParticles(1f));
+    }
   }
   public static void HideAll()
   {
     if (ItemScript._BulletPool == null) return;
     foreach (var b in ItemScript._BulletPool)
     {
-      b.Hide();
+      b.Hide(true);
     }
   }
 
@@ -686,6 +700,8 @@ public class BulletScript : MonoBehaviour
 
     _Particles.transform.parent = transform;
     _Particles.gameObject.SetActive(false);
+
+    _hidingCoroutine = null;
   }
 
   ActiveRagdoll _sourceDamageRagdoll;

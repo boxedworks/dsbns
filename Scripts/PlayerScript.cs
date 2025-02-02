@@ -74,7 +74,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
 
   public GameScript.PlayerProfile.Equipment _Equipment
   {
-    get { return _Profile._equipment; }
+    get { return _Profile._Equipment; }
   }
 
   int _saveLoadoutIndex;
@@ -131,7 +131,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
 
     // Check armor for editor maps
     if (!GameScript.IsSurvival())
-      if (_Equipment._perks != null && _Equipment._perks.Contains(Shop.Perk.PerkType.ARMOR_UP))
+      if (_Equipment._Perks != null && _Equipment._Perks.Contains(Shop.Perk.PerkType.ARMOR_UP))
       {
         _ragdoll.AddArmor();
         _ragdoll._health = 3;
@@ -197,13 +197,13 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
       _ring[0].transform.parent.position = hippos;
 
     // Equip starting weapons
-    _Profile._equipmentIndex = 0;
-    _itemLeft = _Equipment._item_left0;
-    _itemRight = _Equipment._item_right0;
+    _Profile._EquipmentIndex = 0;
+    _itemLeft = _Profile._ItemLeft;
+    _itemRight = _Profile._ItemRight;
     GameScript.ItemManager.SpawnItem(_itemLeft);
     GameScript.ItemManager.SpawnItem(_itemRight);
-    GameScript.ItemManager.SpawnItem(_Equipment._item_left1);
-    GameScript.ItemManager.SpawnItem(_Equipment._item_right1);
+    GameScript.ItemManager.SpawnItem(_Equipment._ItemLeft1);
+    GameScript.ItemManager.SpawnItem(_Equipment._ItemRight1);
     EquipStart();
 
     _saveLoadoutIndex = _Profile._LoadoutIndex;
@@ -222,7 +222,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
     _taunt_times = new float[4];
     _dpadPressed = new float[4];
 
-    RenderSettings.ambientLight = GameScript._LightingAmbientColor;
+    GameScript.UpdateAmbientLight();
     if (!TileManager._HasLocalLighting)
     {
       if (!GameScript.s_Backrooms)
@@ -325,7 +325,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
     if (side == ActiveRagdoll.Side.LEFT)
     {
       _UtilitiesLeft = new List<UtilityScript>();
-      foreach (var utility in _Equipment._utilities_left)
+      foreach (var utility in _Equipment._UtilitiesLeft)
       {
         for (var i = Shop.GetUtilityCount(utility); i > 0 && max-- > 0; i--)
           AddUtility(utility, side);
@@ -334,7 +334,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
     else
     {
       _UtilitiesRight = new List<UtilityScript>();
-      foreach (var utility in _Equipment._utilities_right)
+      foreach (var utility in _Equipment._UtilitiesRight)
       {
         var count = Shop.GetUtilityCount(utility);
         for (; count > 0 && max-- > 0; count--)
@@ -938,6 +938,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
         }
       }
     }
+
     // Update ragdoll
     _ragdoll.Update();
   }
@@ -1425,7 +1426,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
       // Check weapon swap
       if (ControllerManager.GetKey(ControllerManager.Key.G))
       {
-        _ragdoll.SwapItemHands(_Profile._equipmentIndex);
+        _ragdoll.SwapItemHands(_Profile._EquipmentIndex);
         _Profile.UpdateIcons();
       }
 
@@ -1833,27 +1834,28 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
   {
     _Profile._LoadoutIndex = loadoutIndex;
 
-    _Profile._equipmentIndex = 0;
+    _Profile._EquipmentIndex = 0;
     if (!checkCanSwap || _ragdoll.CanSwapWeapons())
     {
       _ragdoll.SwapItems(
         new ActiveRagdoll.WeaponSwapData()
         {
-          ItemType = _Profile._item_left,
+          ItemType = _Profile._ItemLeft,
           ItemId = -1,
           ItemClip = -1,
           ItemUseItem = -1f
         },
         new ActiveRagdoll.WeaponSwapData()
         {
-          ItemType = _Profile._item_right,
+          ItemType = _Profile._ItemRight,
           ItemId = -1,
           ItemClip = -1,
           ItemUseItem = -1f
         },
-        _Profile._equipmentIndex,
+        _Profile._EquipmentIndex,
         checkCanSwap
       );
+
       // Despawn utilities
       if (_UtilitiesLeft != null)
         for (int i = _UtilitiesLeft.Count - 1; i > 0; i--)
@@ -1867,6 +1869,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
           if (_UtilitiesRight[i] != null)
             GameObject.Destroy(_UtilitiesRight[i].gameObject);
         }
+
       RegisterUtilities();
       _Profile.UpdateIcons();
       _saveLoadoutIndex = _Profile._LoadoutIndex;
@@ -1896,7 +1899,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
   public void SwapLoadouts()
   {
     if (!_ragdoll.CanSwapWeapons()) return;
-    if (!_Profile._loadout._two_weapon_pairs) return;
+    if (!_Profile._Loadout._two_weapon_pairs && !HasPerk(Shop.Perk.PerkType.MARTIAL_ARTIST)) return;
 
     var clip_l = -1;
     var clip_r = -1;
@@ -1939,23 +1942,23 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
     _loadout_info[2] = _ragdoll._ItemL?._useTime ?? -1f;
     _loadout_info[3] = _ragdoll._ItemR?._useTime ?? -1f;
 
-    _Profile._equipmentIndex++;
+    _Profile._EquipmentIndex++;
     _ragdoll.SwapItems(
       new ActiveRagdoll.WeaponSwapData()
       {
-        ItemType = _Profile._item_left,
+        ItemType = _Profile._ItemLeft,
         ItemId = itemId_l,
         ItemClip = clip_l,
         ItemUseItem = useTime_l
       },
       new ActiveRagdoll.WeaponSwapData()
       {
-        ItemType = _Profile._item_right,
+        ItemType = _Profile._ItemRight,
         ItemId = itemId_r,
         ItemClip = clip_r,
         ItemUseItem = useTime_r
       },
-      _Profile._equipmentIndex
+      _Profile._EquipmentIndex
     );
     _Profile.UpdateIcons();
   }
@@ -2057,7 +2060,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
     {
       // Up
       case (0):
-        _ragdoll.SwapItemHands(_Profile._equipmentIndex);
+        _ragdoll.SwapItemHands(_Profile._EquipmentIndex);
         _Profile.UpdateIcons();
         break;
 
@@ -2446,17 +2449,17 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
 
   public System.Tuple<bool, ActiveRagdoll.Side> HasUtility(UtilityScript.UtilityType utility)
   {
-    if (_Equipment._utilities_left != null && _Equipment._utilities_left.Length > 0 && _Equipment._utilities_left[0] == utility)
+    if (_Equipment._UtilitiesLeft != null && _Equipment._UtilitiesLeft.Length > 0 && _Equipment._UtilitiesLeft[0] == utility)
       return System.Tuple.Create(true, ActiveRagdoll.Side.LEFT);
-    if (_Equipment._utilities_right != null && _Equipment._utilities_right.Length > 0 && _Equipment._utilities_right[0] == utility)
+    if (_Equipment._UtilitiesRight != null && _Equipment._UtilitiesRight.Length > 0 && _Equipment._UtilitiesRight[0] == utility)
       return System.Tuple.Create(true, ActiveRagdoll.Side.RIGHT);
     return System.Tuple.Create(false, ActiveRagdoll.Side.LEFT);
   }
   public System.Tuple<bool, ActiveRagdoll.Side> HasUtility(UtilityScript.UtilityType utility, ActiveRagdoll.Side side)
   {
-    if (_Equipment._utilities_left != null && _Equipment._utilities_left.Length > 0 && _Equipment._utilities_left[0] == utility && side == ActiveRagdoll.Side.LEFT)
+    if (_Equipment._UtilitiesLeft != null && _Equipment._UtilitiesLeft.Length > 0 && _Equipment._UtilitiesLeft[0] == utility && side == ActiveRagdoll.Side.LEFT)
       return System.Tuple.Create(true, ActiveRagdoll.Side.LEFT);
-    if (_Equipment._utilities_right != null && _Equipment._utilities_right.Length > 0 && _Equipment._utilities_right[0] == utility && side == ActiveRagdoll.Side.RIGHT)
+    if (_Equipment._UtilitiesRight != null && _Equipment._UtilitiesRight.Length > 0 && _Equipment._UtilitiesRight[0] == utility && side == ActiveRagdoll.Side.RIGHT)
       return System.Tuple.Create(true, ActiveRagdoll.Side.RIGHT);
     return System.Tuple.Create(false, side);
   }

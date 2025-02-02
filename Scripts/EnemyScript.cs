@@ -447,457 +447,462 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
                 _attackTime = Time.time + (/*0.2f + Random.value */ (_ragdoll.HasSilencedWeapon() || _itemLeft == GameScript.ItemManager.Items.REVOLVER ? 0.25f : 0.55f));
             }
           }
+
         }
       }
 
-      return;
     }
 
-    var lookAtPos = Vector3.zero;
-
-    var saveWait = waiting;
-
-    if (_ragdoll.Active() && !_ragdoll._IsStunned)
+    else
     {
-      if (!_IsZombie)
-        _ragdoll._rotSpeed = (_state == State.PURSUIT ? _targetDirectlyInFront ? 1.15f : 0.8f : 0.6f) * PlayerScript.ROTATIONSPEED;
 
-      // If chaser, check if enabled
-      if (!_canAttack && IsChaser() && !_IsZombie)
+      var lookAtPos = Vector3.zero;
+
+      var saveWait = waiting;
+
+      if (_ragdoll.Active() && !_ragdoll._IsStunned)
       {
-        if (Time.time - GameScript.s_LevelStartTime > 0.5f)
+        if (!_IsZombie)
+          _ragdoll._rotSpeed = (_state == State.PURSUIT ? _targetDirectlyInFront ? 1.15f : 0.8f : 0.6f) * PlayerScript.ROTATIONSPEED;
+
+        // If chaser, check if enabled
+        if (!_canAttack && IsChaser() && !_IsZombie)
         {
-          var info = FunctionsC.GetFarthestPlayerFrom(transform.position);
-          if (info != null && info._distance > 3f + (Settings._NumberPlayers > 1 ? (1.5f * Mathf.Clamp(Settings._NumberPlayers, 0, 2) - 1) : 0f))
+          if (Time.time - GameScript.s_LevelStartTime > 0.5f)
           {
-            _canAttack = true;
-            _canMove = true;
-            SetRagdollTarget(FunctionsC.GetClosestTargetTo(_ragdoll, transform.position)._ragdoll);
-            TargetFound();
-          }
-          else
-          {
-            var close_data = FunctionsC.GetClosestTargetTo(_ragdoll, transform.position);
-            if (close_data._ragdoll != null)
+            var info = FunctionsC.GetFarthestPlayerFrom(transform.position);
+            if (info != null && info._distance > 3f + (Settings._NumberPlayers > 1 ? (1.5f * Mathf.Clamp(Settings._NumberPlayers, 0, 2) - 1) : 0f))
             {
-              lookAtPos = (close_data._ragdoll.Transform.position);
-              LookAt(lookAtPos);
+              _canAttack = true;
+              _canMove = true;
+              SetRagdollTarget(FunctionsC.GetClosestTargetTo(_ragdoll, transform.position)._ragdoll);
+              TargetFound();
+            }
+            else
+            {
+              var close_data = FunctionsC.GetClosestTargetTo(_ragdoll, transform.position);
+              if (close_data._ragdoll != null)
+              {
+                lookAtPos = (close_data._ragdoll.Transform.position);
+                LookAt(lookAtPos);
+              }
             }
           }
         }
-      }
 
-      // Waiting
-      else if (Time.time - _waitTimer < _waitAmount && (_state != State.PURSUIT))
-      {
-        _atd = _waitAmount - (Time.time - _waitTimer);
-        waiting = true;
-
-        // Just started waiting
-        if (!saveWait && _state == State.SUSPICIOUS)
-          _waitLookPos = _lastKnownPos;
-
-        // Look around
-        if (!_patroling)
+        // Waiting
+        else if (Time.time - _waitTimer < _waitAmount && (_state != State.PURSUIT))
         {
-          if (setstate)
+          _atd = _waitAmount - (Time.time - _waitTimer);
+          waiting = true;
+
+          // Just started waiting
+          if (!saveWait && _state == State.SUSPICIOUS)
+            _waitLookPos = _lastKnownPos;
+
+          // Look around
+          if (!_patroling)
           {
-            if (noPatrolWaitTurn)
-            {
-              //_waitLookPos = transform.position + (_state == State.SEARCHING ? -(transform.position - _lastKnownPos).normalized : transform.forward) * 2f + transform.right * 0.07f * (_strafeRight ? 1f : -1f);
-            }
-            else if (Time.time - _lookAroundT > noPartrolWaitTime)
-            {
-              _lookAroundT = Time.time;
-              SetRandomStrafe();
-              noPartrolWaitTime = 1f + Random.value * 4f;
-            }
-          }
-        }
-        else if (Time.time - _lookAroundT > _path.GetLookWait())
-        {
-          _lookAroundT = Time.time;
-          // Look in a direction
-          Turn();
-        }
-
-        lookAtPos = _waitLookPos;
-        LookAt(lookAtPos);
-      }
-      // Check states
-      else
-      {
-        waiting = false;
-        if (_state == State.PURSUIT)
-        {
-          setstate = false;
-        }
-        else
-        {
-          // Just left waiting
-          if (saveWait)
-          {
-            // Check for change state after wait
             if (setstate)
             {
-              setstate = false;
-              if (_setstate == State.NEUTRAL)
+              if (noPatrolWaitTurn)
               {
-                ChangeState(State.NEUTRAL);
-                _patroling = true;
+                //_waitLookPos = transform.position + (_state == State.SEARCHING ? -(transform.position - _lastKnownPos).normalized : transform.forward) * 2f + transform.right * 0.07f * (_strafeRight ? 1f : -1f);
               }
-            }
-            // Check for move back to path
-            if (_state == State.NEUTRAL)
-              if (_path.GetPathLength() > 1)
-                SetNextPatrolPoint();
-              else
-                SetCurrentPatrolPoint();
-          }
-        }
-
-        // Doing its job
-        if (_state == State.NEUTRAL)
-        {
-          if (!_IsZombie)
-          {
-            // Update patrol
-            if (_patroling && !IsChaser())
-            {
-              var dis = MathC.Get2DDistance(transform.position, _path.GetPatrolPoint().position);
-              _atd = dis;
-              if (dis < 0.1f)
+              else if (Time.time - _lookAroundT > noPartrolWaitTime)
               {
-                if (_path.GetPathLength() > 1)
-                {
-
-                  // Look at direction
-                  Transform lp = _path.GetLookPoint(),
-                   p = _path.GetPatrolPoint();
-                  _waitLookPos = MathC.Get2DVector(transform.position + (lp.position - p.position).normalized) + new Vector3(0f, transform.position.y, 0f);
-
-                }
-                _agent.Move(_path.GetPatrolPoint().position - transform.position);
-
-                // Wait until next movement
-                Wait(_path.GetPatrolWait(), (_path.GetPathLength() > 1));
-              }
-            }
-            else
-              Wait();
-          }
-        }
-
-        // Checking something out
-        else if (_state == State.SUSPICIOUS)
-        {
-          if (!_canMove)
-          {
-            _waitTimer = Time.time;
-            setstate = true;
-            _setstate = State.NEUTRAL;
-            _waitAmount = 1f + Random.value * 3f;
-            return;
-          }
-          var dis = MathC.Get2DDistance(transform.position, _lastKnownPos);
-          _atd = dis;
-          if (dis < 0.8f)
-          {
-            _waitTimer = Time.time;
-            setstate = true;
-            _setstate = State.NEUTRAL;
-            noPatrolWaitTurn = true;
-            _waitAmount = 6f + Random.value * 3f;
-          }
-          else
-          {
-            _waitAmount = 0f;
-            _agent.SetDestination(_lastKnownPos);
-          }
-        }
-
-        // Pursuing something
-        else if (_state == State.PURSUIT)
-        {
-          _atd = Time.time - _attackTime;
-
-          // Check if game ended
-          if (GameScript.s_Singleton._GameEnded)
-          {
-          }
-
-          // Check target turned invisible
-          else if ((_ragdollTarget?._invisible ?? false) && !IsChaser() && _targetInLOS)
-          {
-            ChangeState(State.SEARCHING);
-            _lastKnownPos = _ragdollTarget._Hip.position;
-            _agent.SetDestination(_lastKnownPos);
-
-            _time_lost = 0f;
-            _searchDir = -MathC.Get2DVector((transform.position - _lastKnownPos)).normalized * 3f;
-          }
-
-          //
-          else if (_ragdollTarget != null)
-          {
-
-            // Check for weapons
-            if (CheckShouldPanic())
-            {
-              Panic();
-            }
-
-            // Chase player
-            else
-            {
-
-              // Check if close to steering pos; try to look around corner before going around corner
-              if (_canMove)
-              {
-                if (MathC.Get2DDistance(_ragdoll._Hip.position, _agent.steeringTarget) < 3f)
-                {
-                  var iter = 0;
-                  if (_agent.path.corners.Length > 0 && !_agent.path.corners[_agent.path.corners.Length - 1].Equals(_agent.steeringTarget))
-                    foreach (var p in _agent.path.corners)
-                    {
-                      if (p.Equals(_agent.steeringTarget))
-                      {
-                        var nextPos = _agent.path.corners[iter + 1];
-                        if (Vector3.Distance(nextPos, _agent.steeringTarget) < 2.5f && iter + 2 < _agent.path.corners.Length - 1)
-                          nextPos = _agent.path.corners[iter + 2];
-                        lookAtPos = nextPos;
-                      }
-                      iter++;
-                    }
-                  //Debug.DrawLine(transform.position, _agent.steeringTarget, Color.red);
-                  //Debug.DrawLine(transform.position, _lastKnownPos, Color.blue);
-                }
-              }
-
-              if (_targetInLOS)
-              {
-                var dir = MathC.Get2DVector(_ragdollTarget._Hip.position - _ragdoll._Hip.position);
-                var dis = dir.magnitude;
-                dir = dir.normalized;
-
-                // If can't move, has gun, and player gets too close, start to chase
-                if (!_canMove)
-                {
-                  if (_ragdoll.HasGun() && dis < 1.5f)
-                  {
-                    _canMove = true;
-                    if (!_agent.hasPath)
-                      _agent.SetDestination(_lastKnownPos);
-                  }
-                }
-
-                // Check to chase player if has exit
-                if (!_canMove && _ragdollTarget._PlayerScript._HasExit)
-                {
-                  _sawWithGoal = true;
-                  if (dis > 13f)
-                  {
-                    _canMove = true;
-                  }
-                }
-
-                // If has gun, keep distance to shoot
-                if (_ragdoll.HasGun())
-                {
-                  if (_targetInFront)
-                    lookAtPos = new Vector3(_ragdollTarget._Hip.position.x, transform.position.y, _ragdollTarget._Hip.position.z) + dir;
-                  else
-                    lookAtPos = _lastKnownPos;
-
-                  // Check if the enemy is at the right distance to shoot
-                  if (_canMove)
-                  {
-
-                    // If player has the exit, chase closer
-                    float close = 3.5f, far = 10f;
-                    if (_ragdollTarget._IsPlayer && _ragdollTarget._PlayerScript._HasExit)
-                    {
-                      close = 3f;
-                      far = 4f;
-                    }
-
-                    // Move further back if reloading
-                    if (_ragdoll._IsReloading)
-                    {
-                      close += 1.5f;
-                      far += 1.5f;
-                    }
-
-                    // Keep distance per close and far values
-                    if (dis > close && dis < far && Time.time - _lastPosSetTime > 0.1f)
-                    {
-                      _agent.SetDestination(transform.position);
-                      _lastPosSetTime = Time.time;
-                    }
-
-                    // If not in distance, move into distance
-                    else if (dis >= far)
-                      ChaseTarget(false);
-                    else
-                    {
-                      UnityEngine.AI.NavMeshHit hit;
-                      var samplePos = transform.position + (_ragdoll._Hip.position - _ragdollTarget._Hip.position).normalized * 5f;
-                      if (UnityEngine.AI.NavMesh.SamplePosition(samplePos, out hit, 4f, UnityEngine.AI.NavMesh.AllAreas))
-                      {
-                        var save_distance = FunctionsC.GetPathLength(_agent.path.corners);
-                        var path = new UnityEngine.AI.NavMeshPath();
-
-                        if (UnityEngine.AI.NavMesh.CalculatePath(transform.position, samplePos, UnityEngine.AI.NavMesh.AllAreas, path))
-                        {
-                          var new_distance = FunctionsC.GetPathLength(path.corners);
-                          var diff = new_distance - save_distance;
-                          if (diff > 0.5f && diff < 2.5f)
-                            _agent.SetPath(path);
-                        }
-                      }
-
-                    }
-                  }
-                }
-
-                // If has no gun, chase player
-                else
-                  ChaseTarget();
-
-                // Check melee
-                if (!_IsZombieReal || dis < 4f)
-                  DrawBackMelee();
-
-                // Try attacking
-                if (Time.time - _attackTime > 0f && _canAttack)
-                {
-                  // If has a melee weapon and sees the target, run at them
-                  if (!_ragdoll.HasGun() && _time_seen > 0.05f && _targetInLOS && _enemyType != EnemyType.ROBOT && !_IsZombie)
-                    _moveSpeed = PlayerScript.RUNSPEED;
-
-                  // If grappling, slower
-                  if (_ragdoll._grappling) { _moveSpeed *= 0.9f; }
-
-                  // Only attack if is alive, the target is alive, and (the target is in front, or has a machine gun, or has a melee weapon)
-                  if (!_ragdoll._IsDead && !_ragdollTarget._IsDead && (_targetDirectlyInFront || HasMachineGun() || !_ragdoll.HasGun()))
-                  {
-                    var useitem = _leftweaponuse ? _ragdoll._ItemL : (_ragdoll._ItemR != null ? _ragdoll._ItemR : _ragdoll._ItemL);
-
-                    // Check for reload
-                    if (_ragdoll.HasGun() && useitem.NeedsReload())
-                    {
-                      _ragdoll.Reload();
-                      SetAttackTime(true);
-                    }
-
-                    // Attack if close enough or pointed at target
-                    else if (
-                      _ragdoll.HasGun() ||
-                      (!_ragdoll.HasGun() && dis < (_itemLeft == GameScript.ItemManager.Items.GRENADE_HOLD ? 1f : (_itemLeft == GameScript.ItemManager.Items.BAT ? 1.2f : (_IsZombieReal ? 0.85f : 1.8f))))
-                      )
-                    {
-                      UseItem(dis < 1.4f);
-                      if (HasMachineGun())
-                        _attackTime = Time.time + useitem.UseRate();
-                      else
-                      {
-                        _attackTime = Time.time + (/*0.2f + Random.value */ (_ragdoll.HasSilencedWeapon() || _itemLeft == GameScript.ItemManager.Items.REVOLVER ? 0.25f : 0.55f));
-                      }
-                    }
-                  }
-                }
-              }
-              else if (_targetFound)
-              {
-                if (!_canMove && _sawWithGoal && _time_lost > 1f)
-                  _canMove = true;
-                ChaseTarget();
-
-                if (!_canMove)
-                  lookAtPos = _lastKnownPos;
-
-                // Reload if chasing and not
-                var useitem = _leftweaponuse ? _ragdoll._ItemL : (_ragdoll._ItemR != null ? _ragdoll._ItemR : _ragdoll._ItemL);
-                if (useitem?.NeedsReload() ?? false)
-                {
-                  _ragdoll.Reload();
-                }
+                _lookAroundT = Time.time;
+                SetRandomStrafe();
+                noPartrolWaitTime = 1f + Random.value * 4f;
               }
             }
           }
-          else
+          else if (Time.time - _lookAroundT > _path.GetLookWait())
           {
-            ChangeState(State.SEARCHING);
-            Walk();
+            _lookAroundT = Time.time;
+            // Look in a direction
+            Turn();
           }
-        }
 
-        // Searching
-        else if (_state == State.SEARCHING)
-        {
-          _lastKnownPos = transform.position + _searchDir;
-          lookAtPos = _lastKnownPos;
-          if (_agent.remainingDistance < 1f || !_canMove)
-          {
-            _patroling = true;
-            SetNextPatrolPoint();
-            ChangeState(State.NEUTRAL);
-            _waitTimer = Time.time;
-            _waitAmount = 0.2f + Random.value * 2f;
-            _targetFound = false;
-            _suspiciousTimer = 20f;
-          }
+          lookAtPos = _waitLookPos;
+          LookAt(lookAtPos);
         }
-
-        // Run away!
-        else if (_state == State.PANICKED)
-        {
-          Vector3 dest = _panicTarget.position;
-          _moveSpeed = PlayerScript.RUNSPEED;
-          if (!_agent.destination.Equals(dest)) _agent.SetDestination(dest);
-          // If at exit, stop panicking
-          if (_agent.remainingDistance < 1f)
-          {
-            Wait(100f);
-          }
-        }
-
-        // No idea what to do
+        // Check states
         else
         {
-          Wait();
-        }
-
-        // Update controller
-        MoveRotateTransform(lookAtPos);
-
-        // Check if stuck and attempt to fix
-        if (_ragdoll.HasGun() && _targetInLOS) { }
-        else if (!_agent.hasPath && _state != State.NEUTRAL && _canMove)
-        {
-          _stuckIter++;
-          if (_stuckIter > 20)
+          waiting = false;
+          if (_state == State.PURSUIT)
           {
-            if (_IsZombie) { /*Debug.Log("stuck");*/ }
-            else if (IsChaser() && Time.time - _lastPosSetTime > 0.1f)
+            setstate = false;
+          }
+          else
+          {
+            // Just left waiting
+            if (saveWait)
             {
-              _agent.SetDestination(_ragdollTarget._Hip.position);
-              _lastPosSetTime = Time.time;
+              // Check for change state after wait
+              if (setstate)
+              {
+                setstate = false;
+                if (_setstate == State.NEUTRAL)
+                {
+                  ChangeState(State.NEUTRAL);
+                  _patroling = true;
+                }
+              }
+              // Check for move back to path
+              if (_state == State.NEUTRAL)
+                if (_path.GetPathLength() > 1)
+                  SetNextPatrolPoint();
+                else
+                  SetCurrentPatrolPoint();
+            }
+          }
+
+          // Doing its job
+          if (_state == State.NEUTRAL)
+          {
+            if (!_IsZombie)
+            {
+              // Update patrol
+              if (_patroling && !IsChaser())
+              {
+                var dis = MathC.Get2DDistance(transform.position, _path.GetPatrolPoint().position);
+                _atd = dis;
+                if (dis < 0.1f)
+                {
+                  if (_path.GetPathLength() > 1)
+                  {
+
+                    // Look at direction
+                    Transform lp = _path.GetLookPoint(),
+                     p = _path.GetPatrolPoint();
+                    _waitLookPos = MathC.Get2DVector(transform.position + (lp.position - p.position).normalized) + new Vector3(0f, transform.position.y, 0f);
+
+                  }
+                  _agent.Move(_path.GetPatrolPoint().position - transform.position);
+
+                  // Wait until next movement
+                  Wait(_path.GetPatrolWait(), (_path.GetPathLength() > 1));
+                }
+              }
+              else
+                Wait();
+            }
+          }
+
+          // Checking something out
+          else if (_state == State.SUSPICIOUS)
+          {
+            if (!_canMove)
+            {
+              _waitTimer = Time.time;
+              setstate = true;
+              _setstate = State.NEUTRAL;
+              _waitAmount = 1f + Random.value * 3f;
+              return;
+            }
+            var dis = MathC.Get2DDistance(transform.position, _lastKnownPos);
+            _atd = dis;
+            if (dis < 0.8f)
+            {
+              _waitTimer = Time.time;
+              setstate = true;
+              _setstate = State.NEUTRAL;
+              noPatrolWaitTurn = true;
+              _waitAmount = 6f + Random.value * 3f;
+            }
+            else
+            {
+              _waitAmount = 0f;
+              _agent.SetDestination(_lastKnownPos);
+            }
+          }
+
+          // Pursuing something
+          else if (_state == State.PURSUIT)
+          {
+            _atd = Time.time - _attackTime;
+
+            // Check if game ended
+            if (GameScript.s_Singleton._GameEnded)
+            {
+            }
+
+            // Check target turned invisible
+            else if ((_ragdollTarget?._invisible ?? false) && !IsChaser() && _targetInLOS)
+            {
+              ChangeState(State.SEARCHING);
+              _lastKnownPos = _ragdollTarget._Hip.position;
+              _agent.SetDestination(_lastKnownPos);
+
+              _time_lost = 0f;
+              _searchDir = -MathC.Get2DVector((transform.position - _lastKnownPos)).normalized * 3f;
+            }
+
+            //
+            else if (_ragdollTarget != null)
+            {
+
+              // Check for weapons
+              if (CheckShouldPanic())
+              {
+                Panic();
+              }
+
+              // Chase player
+              else
+              {
+
+                // Check if close to steering pos; try to look around corner before going around corner
+                if (_canMove)
+                {
+                  if (MathC.Get2DDistance(_ragdoll._Hip.position, _agent.steeringTarget) < 3f)
+                  {
+                    var iter = 0;
+                    if (_agent.path.corners.Length > 0 && !_agent.path.corners[_agent.path.corners.Length - 1].Equals(_agent.steeringTarget))
+                      foreach (var p in _agent.path.corners)
+                      {
+                        if (p.Equals(_agent.steeringTarget))
+                        {
+                          var nextPos = _agent.path.corners[iter + 1];
+                          if (Vector3.Distance(nextPos, _agent.steeringTarget) < 2.5f && iter + 2 < _agent.path.corners.Length - 1)
+                            nextPos = _agent.path.corners[iter + 2];
+                          lookAtPos = nextPos;
+                        }
+                        iter++;
+                      }
+                    //Debug.DrawLine(transform.position, _agent.steeringTarget, Color.red);
+                    //Debug.DrawLine(transform.position, _lastKnownPos, Color.blue);
+                  }
+                }
+
+                if (_targetInLOS)
+                {
+                  var dir = MathC.Get2DVector(_ragdollTarget._Hip.position - _ragdoll._Hip.position);
+                  var dis = dir.magnitude;
+                  dir = dir.normalized;
+
+                  // If can't move, has gun, and player gets too close, start to chase
+                  if (!_canMove)
+                  {
+                    if (_ragdoll.HasGun() && dis < 1.5f)
+                    {
+                      _canMove = true;
+                      if (!_agent.hasPath)
+                        _agent.SetDestination(_lastKnownPos);
+                    }
+                  }
+
+                  // Check to chase player if has exit
+                  if (!_canMove && _ragdollTarget._PlayerScript._HasExit)
+                  {
+                    _sawWithGoal = true;
+                    if (dis > 13f)
+                    {
+                      _canMove = true;
+                    }
+                  }
+
+                  // If has gun, keep distance to shoot
+                  if (_ragdoll.HasGun())
+                  {
+                    if (_targetInFront)
+                      lookAtPos = new Vector3(_ragdollTarget._Hip.position.x, transform.position.y, _ragdollTarget._Hip.position.z) + dir;
+                    else
+                      lookAtPos = _lastKnownPos;
+
+                    // Check if the enemy is at the right distance to shoot
+                    if (_canMove)
+                    {
+
+                      // If player has the exit, chase closer
+                      float close = 3.5f, far = 10f;
+                      if (_ragdollTarget._IsPlayer && _ragdollTarget._PlayerScript._HasExit)
+                      {
+                        close = 3f;
+                        far = 4f;
+                      }
+
+                      // Move further back if reloading
+                      if (_ragdoll._IsReloading)
+                      {
+                        close += 1.5f;
+                        far += 1.5f;
+                      }
+
+                      // Keep distance per close and far values
+                      if (dis > close && dis < far && Time.time - _lastPosSetTime > 0.1f)
+                      {
+                        _agent.SetDestination(transform.position);
+                        _lastPosSetTime = Time.time;
+                      }
+
+                      // If not in distance, move into distance
+                      else if (dis >= far)
+                        ChaseTarget(false);
+                      else
+                      {
+                        UnityEngine.AI.NavMeshHit hit;
+                        var samplePos = transform.position + (_ragdoll._Hip.position - _ragdollTarget._Hip.position).normalized * 5f;
+                        if (UnityEngine.AI.NavMesh.SamplePosition(samplePos, out hit, 4f, UnityEngine.AI.NavMesh.AllAreas))
+                        {
+                          var save_distance = FunctionsC.GetPathLength(_agent.path.corners);
+                          var path = new UnityEngine.AI.NavMeshPath();
+
+                          if (UnityEngine.AI.NavMesh.CalculatePath(transform.position, samplePos, UnityEngine.AI.NavMesh.AllAreas, path))
+                          {
+                            var new_distance = FunctionsC.GetPathLength(path.corners);
+                            var diff = new_distance - save_distance;
+                            if (diff > 0.5f && diff < 2.5f)
+                              _agent.SetPath(path);
+                          }
+                        }
+
+                      }
+                    }
+                  }
+
+                  // If has no gun, chase player
+                  else
+                    ChaseTarget();
+
+                  // Check melee
+                  if (!_IsZombieReal || dis < 4f)
+                    DrawBackMelee();
+
+                  // Try attacking
+                  if (Time.time - _attackTime > 0f && _canAttack)
+                  {
+                    // If has a melee weapon and sees the target, run at them
+                    if (!_ragdoll.HasGun() && _time_seen > 0.05f && _targetInLOS && _enemyType != EnemyType.ROBOT && !_IsZombie)
+                      _moveSpeed = PlayerScript.RUNSPEED;
+
+                    // If grappling, slower
+                    if (_ragdoll._grappling) { _moveSpeed *= 0.9f; }
+
+                    // Only attack if is alive, the target is alive, and (the target is in front, or has a machine gun, or has a melee weapon)
+                    if (!_ragdoll._IsDead && !_ragdollTarget._IsDead && (_targetDirectlyInFront || HasMachineGun() || !_ragdoll.HasGun()))
+                    {
+                      var useitem = _leftweaponuse ? _ragdoll._ItemL : (_ragdoll._ItemR != null ? _ragdoll._ItemR : _ragdoll._ItemL);
+
+                      // Check for reload
+                      if (_ragdoll.HasGun() && useitem.NeedsReload())
+                      {
+                        _ragdoll.Reload();
+                        SetAttackTime(true);
+                      }
+
+                      // Attack if close enough or pointed at target
+                      else if (
+                        _ragdoll.HasGun() ||
+                        (!_ragdoll.HasGun() && dis < (_itemLeft == GameScript.ItemManager.Items.GRENADE_HOLD ? 1f : (_itemLeft == GameScript.ItemManager.Items.BAT ? 1.2f : (_IsZombieReal ? 0.85f : 1.8f))))
+                        )
+                      {
+                        UseItem(dis < 1.4f);
+                        if (HasMachineGun())
+                          _attackTime = Time.time + useitem.UseRate();
+                        else
+                        {
+                          _attackTime = Time.time + (/*0.2f + Random.value */ (_ragdoll.HasSilencedWeapon() || _itemLeft == GameScript.ItemManager.Items.REVOLVER ? 0.25f : 0.55f));
+                        }
+                      }
+                    }
+                  }
+                }
+                else if (_targetFound)
+                {
+                  if (!_canMove && _sawWithGoal && _time_lost > 1f)
+                    _canMove = true;
+                  ChaseTarget();
+
+                  if (!_canMove)
+                    lookAtPos = _lastKnownPos;
+
+                  // Reload if chasing and not
+                  var useitem = _leftweaponuse ? _ragdoll._ItemL : (_ragdoll._ItemR != null ? _ragdoll._ItemR : _ragdoll._ItemL);
+                  if (useitem?.NeedsReload() ?? false)
+                  {
+                    _ragdoll.Reload();
+                  }
+                }
+              }
             }
             else
             {
               ChangeState(State.SEARCHING);
-              Wait();
               Walk();
-              //Debug.Log("Stuck");
             }
-            _stuckIter = 0;
+          }
+
+          // Searching
+          else if (_state == State.SEARCHING)
+          {
+            _lastKnownPos = transform.position + _searchDir;
+            lookAtPos = _lastKnownPos;
+            if (_agent.remainingDistance < 1f || !_canMove)
+            {
+              _patroling = true;
+              SetNextPatrolPoint();
+              ChangeState(State.NEUTRAL);
+              _waitTimer = Time.time;
+              _waitAmount = 0.2f + Random.value * 2f;
+              _targetFound = false;
+              _suspiciousTimer = 20f;
+            }
+          }
+
+          // Run away!
+          else if (_state == State.PANICKED)
+          {
+            Vector3 dest = _panicTarget.position;
+            _moveSpeed = PlayerScript.RUNSPEED;
+            if (!_agent.destination.Equals(dest)) _agent.SetDestination(dest);
+            // If at exit, stop panicking
+            if (_agent.remainingDistance < 1f)
+            {
+              Wait(100f);
+            }
+          }
+
+          // No idea what to do
+          else
+          {
+            Wait();
+          }
+
+          // Update controller
+          MoveRotateTransform(lookAtPos);
+
+          // Check if stuck and attempt to fix
+          if (_ragdoll.HasGun() && _targetInLOS) { }
+          else if (!_agent.hasPath && _state != State.NEUTRAL && _canMove)
+          {
+            _stuckIter++;
+            if (_stuckIter > 20)
+            {
+              if (_IsZombie) { /*Debug.Log("stuck");*/ }
+              else if (IsChaser() && Time.time - _lastPosSetTime > 0.1f)
+              {
+                _agent.SetDestination(_ragdollTarget._Hip.position);
+                _lastPosSetTime = Time.time;
+              }
+              else
+              {
+                ChangeState(State.SEARCHING);
+                Wait();
+                Walk();
+                //Debug.Log("Stuck");
+              }
+              _stuckIter = 0;
+            }
           }
         }
+        if (Time.time - GameScript.s_LevelStartTime > 0.25f && !TileManager.Tile._Moving)
+          Raycast();
       }
-      if (Time.time - GameScript.s_LevelStartTime > 0.25f && !TileManager.Tile._Moving)
-        Raycast();
     }
+
     _ragdoll.Update();
   }
 
@@ -925,6 +930,7 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
     // Local
     void UseLeft()
     {
+      if (_ragdoll._ItemL.IsMelee() && _ragdoll._grapplee != null) return;
       if (_ragdoll._ItemL._useOnRelease)
         _ragdoll._ItemL.UseUp();
       else
@@ -932,6 +938,7 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
     }
     void UseRight()
     {
+      if (_ragdoll._ItemR.IsMelee() && _ragdoll._grapplee != null) return;
       if (_ragdoll._ItemR._useOnRelease)
         _ragdoll._ItemR.UseUp();
       else
@@ -2178,16 +2185,16 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
 
                   // Check items equal
                   var equipment0_items = new List<GameScript.ItemManager.Items>(){
-                  e0._item_left0,
-                  e0._item_right0,
-                  e0._item_left1,
-                  e0._item_right1
+                  e0._ItemLeft0,
+                  e0._ItemRight0,
+                  e0._ItemLeft1,
+                  e0._ItemRight1
                 };
                   var equipment1_items = new List<GameScript.ItemManager.Items>(){
-                  e1._item_left0,
-                  e1._item_right0,
-                  e1._item_left1,
-                  e1._item_right1
+                  e1._ItemLeft0,
+                  e1._ItemRight0,
+                  e1._ItemLeft1,
+                  e1._ItemRight1
                 };
                   foreach (var item in equipment0_items)
                   {
@@ -2200,12 +2207,12 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
                     return false;
 
                   // Check perks equal
-                  if (e0._perks.Count != e1._perks.Count)
+                  if (e0._Perks.Count != e1._Perks.Count)
                   {
                     return false;
                   }
-                  var perkList = new List<Shop.Perk.PerkType>(e1._perks);
-                  foreach (var perk0 in e0._perks)
+                  var perkList = new List<Shop.Perk.PerkType>(e1._Perks);
+                  foreach (var perk0 in e0._Perks)
                   {
                     if (perkList.Contains(perk0))
                     {
@@ -2217,19 +2224,19 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
 
                   // Check utilities equal
                   var utilsTotal = new List<UtilityScript.UtilityType>();
-                  foreach (var util in e0._utilities_left)
+                  foreach (var util in e0._UtilitiesLeft)
                     utilsTotal.Add(util);
-                  foreach (var util in e0._utilities_right)
+                  foreach (var util in e0._UtilitiesRight)
                     utilsTotal.Add(util);
 
-                  foreach (var util in e1._utilities_left)
+                  foreach (var util in e1._UtilitiesLeft)
                   {
                     if (utilsTotal.Contains(util))
                     {
                       utilsTotal.Remove(util);
                     }
                   }
-                  foreach (var util in e1._utilities_right)
+                  foreach (var util in e1._UtilitiesRight)
                   {
                     if (utilsTotal.Contains(util))
                     {
@@ -2297,18 +2304,18 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
                     var equipmentFake = new GameScript.PlayerProfile.Equipment();
                     {
                       if (extraInfo.items?.Length > 0)
-                        equipmentFake._item_left0 = extraInfo.items[0];
+                        equipmentFake._ItemLeft0 = extraInfo.items[0];
                       if (extraInfo.items?.Length > 1)
-                        equipmentFake._item_right0 = extraInfo.items[1];
+                        equipmentFake._ItemRight0 = extraInfo.items[1];
                       if (extraInfo.items?.Length > 2)
-                        equipmentFake._item_left1 = extraInfo.items[2];
+                        equipmentFake._ItemLeft1 = extraInfo.items[2];
                       if (extraInfo.items?.Length > 3)
-                        equipmentFake._item_right1 = extraInfo.items[3];
+                        equipmentFake._ItemRight1 = extraInfo.items[3];
 
-                      equipmentFake._utilities_left = extraInfo.utilities == null ? new UtilityScript.UtilityType[0] : extraInfo.utilities;
+                      equipmentFake._UtilitiesLeft = extraInfo.utilities == null ? new UtilityScript.UtilityType[0] : extraInfo.utilities;
 
                       if (extraInfo.perks != null)
-                        equipmentFake._perks = new List<Shop.Perk.PerkType>(extraInfo.perks);
+                        equipmentFake._Perks = new List<Shop.Perk.PerkType>(extraInfo.perks);
                     }
 
                     if (!EquipmentIsEqual(equipmentStart, equipmentFake))

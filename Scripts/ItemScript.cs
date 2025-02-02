@@ -1240,7 +1240,11 @@ public class ItemScript : MonoBehaviour
     int bulletIter = 0
   )
   {
-    var newBullet = _BulletPool[_BulletPool_Iter++ % _BulletPool.Length];
+    BulletScript newBullet;
+    var tryAmount = _BulletPool.Length;
+    do
+      newBullet = _BulletPool[_BulletPool_Iter++ % _BulletPool.Length];
+    while (!newBullet._Available && tryAmount-- > 0);
 
     // Size
     var use_size = Mathf.Clamp(0.9f + penatrationAmount * 0.2f, 0.9f, 2.5f);
@@ -1614,7 +1618,11 @@ public class ItemScript : MonoBehaviour
 
     // Check other item
     var item_other = _side == ActiveRagdoll.Side.LEFT ? _ragdoll._ItemR : _ragdoll._ItemL;
-    if (_isMelee && item_other != null && item_other._isMelee && item_other._triggerDown) return;
+    if (_isMelee && item_other != null && item_other._isMelee && item_other._triggerDown)
+      if (_ragdoll._IsEnemy && _ragdoll._EnemyScript._IsZombieReal)
+        ;
+      else
+        return;
 
     //
     _triggerDown = true;

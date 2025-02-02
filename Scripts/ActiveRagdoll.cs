@@ -79,7 +79,7 @@ public class ActiveRagdoll
 
   public GameObject[] _parts;
 
-  static List<System.Tuple<Material, Material>> _Materials_Ragdoll;
+  static List<Tuple<Material, Material>> s_Materials_Ragdoll;
 
   SkinnedMeshRenderer _renderer;
 
@@ -173,12 +173,20 @@ public class ActiveRagdoll
     _time_dead = -1f;
 
     // Set materials
-    if (_Materials_Ragdoll == null) _Materials_Ragdoll = new List<Tuple<Material, Material>>();
     _renderer = Transform.GetChild(0).GetComponent<SkinnedMeshRenderer>();
-    if (_Id == _Materials_Ragdoll.Count) _Materials_Ragdoll.Add(new Tuple<Material, Material>(new Material(_renderer.sharedMaterials[0]), new Material(_renderer.sharedMaterials[1])));
+    s_Materials_Ragdoll ??= new List<Tuple<Material, Material>>();
+    if (_Id == s_Materials_Ragdoll.Count)
+    {
+      var mat0 = new Material(_renderer.sharedMaterials[0]);
+      mat0.SetFloat("_Metallic", 0.8f);
+      var mat1 = new Material(_renderer.sharedMaterials[1]);
+      mat1.SetFloat("_Metallic", 0.8f);
+
+      s_Materials_Ragdoll.Add(new Tuple<Material, Material>(mat0, mat1));
+    }
     Resources.UnloadAsset(_renderer.sharedMaterials[0]);
     Resources.UnloadAsset(_renderer.sharedMaterials[1]);
-    _renderer.sharedMaterials = new Material[] { _Materials_Ragdoll[_Id].Item1, _Materials_Ragdoll[_Id].Item2 };
+    _renderer.sharedMaterials = new Material[] { s_Materials_Ragdoll[_Id].Item1, s_Materials_Ragdoll[_Id].Item2 };
 
     // Register enemy / player script
     _EnemyScript = follow.GetComponent<EnemyScript>();
@@ -324,7 +332,7 @@ public class ActiveRagdoll
         // Get melee side
         var left_weapon = _ItemL != null && _ItemL.IsMelee();
 
-        _grapplee._Hip.position = _Hip.position + _Controller.forward * 0.45f + _Controller.right * 0.09f * (left_weapon ? -1f : 1f);
+        _grapplee._Hip.position = _Hip.position + _Hip.transform.forward * 0.45f + _Hip.transform.right * 0.09f * (left_weapon ? -1f : 1f);
         _grapplee._Hip.rotation = _Hip.rotation;
       }
     }
@@ -984,13 +992,13 @@ public class ActiveRagdoll
     {
       if (index == 0)
       {
-        _PlayerScript._Profile._equipment._item_left0 = itemL_type;
-        _PlayerScript._Profile._equipment._item_right0 = itemR_type;
+        _PlayerScript._Profile._Equipment._ItemLeft0 = itemL_type;
+        _PlayerScript._Profile._Equipment._ItemRight0 = itemR_type;
       }
       else
       {
-        _PlayerScript._Profile._equipment._item_left1 = itemL_type;
-        _PlayerScript._Profile._equipment._item_right1 = itemR_type;
+        _PlayerScript._Profile._Equipment._ItemLeft1 = itemL_type;
+        _PlayerScript._Profile._Equipment._ItemRight1 = itemR_type;
       }
     }
 

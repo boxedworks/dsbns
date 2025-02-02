@@ -263,7 +263,7 @@ public static class Shop
 
     // Cannot re-order unlocks
     UTILITY_MIRROR,
-    ITEM_FIST,
+    MOD_MARTIAL_ARTIST,
   }
 
   public static int _Max_Equipment_Points
@@ -293,7 +293,6 @@ public static class Shop
       //_Unlocks_Descriptions.Add(Unlocks.ITEM_BAT, new Tuple<string, int>("melee, two-handed, wide-sweep", 10));
       { Unlocks.ITEM_RAPIER, new Tuple<string, int>("melee, one-handed, lunge", 15) },
       { Unlocks.ITEM_KATANA, new Tuple<string, int>("melee, two-handed, wide-sweep", 20) },
-      { Unlocks.ITEM_FIST, new Tuple<string, int>("melee, no-parry, hard", 3) },
 
       { Unlocks.ITEM_PISTOL_SILENCED, new Tuple<string, int>("handgun, silenced, fast-reload", 15) },
       { Unlocks.ITEM_PISTOL_MACHINE, new Tuple<string, int>("handgun, 3-burst, fast-reload", 10) },
@@ -338,7 +337,7 @@ public static class Shop
 
       { Unlocks.MOD_LASER_SIGHTS, new Tuple<string, int>("-", 5) },
       { Unlocks.MOD_NO_SLOWMO, new Tuple<string, int>("-", 1) },
-      { Unlocks.MOD_FASTER_RELOAD, new Tuple<string, int>("-", 20) },
+      { Unlocks.MOD_FASTER_RELOAD, new Tuple<string, int>("-", 15) },
       { Unlocks.MOD_MAX_AMMO_UP, new Tuple<string, int>("-", 20) },
       { Unlocks.MOD_EXPLOSION_RESISTANCE, new Tuple<string, int>("-", 15) },
       { Unlocks.MOD_EXPLOSIONS_UP, new Tuple<string, int>("-", 20) },
@@ -347,7 +346,9 @@ public static class Shop
       { Unlocks.MOD_SPEED_UP, new Tuple<string, int>("-", 15) },
       { Unlocks.MOD_SMART_BULLETS, new Tuple<string, int>("-", 20) },
       { Unlocks.MOD_GRAPPLE_MASTER, new Tuple<string, int>("-", 5) },
+      { Unlocks.MOD_MARTIAL_ARTIST, new Tuple<string, int>("-", 5) },
       { Unlocks.MOD_EXPLOSIVE_PARRY, new Tuple<string, int>("-", 10) },
+
       { Unlocks.MAX_EQUIPMENT_POINTS_0, new Tuple<string, int>("equipment points (+1)", 5) },
       { Unlocks.MAX_EQUIPMENT_POINTS_1, new Tuple<string, int>("equipment points (+1)", 5) },
       { Unlocks.MAX_EQUIPMENT_POINTS_2, new Tuple<string, int>("equipment points (+1)", 10) },
@@ -359,14 +360,17 @@ public static class Shop
       { Unlocks.MAX_EQUIPMENT_POINTS_8, new Tuple<string, int>("equipment points (+1)", 40) },
       { Unlocks.MAX_EQUIPMENT_POINTS_9, new Tuple<string, int>("equipment points (+1)", 40) },
       { Unlocks.MAX_EQUIPMENT_POINTS_10, new Tuple<string, int>("equipment points (+1)", 45) },
+
       { Unlocks.LOADOUT_SLOT_X2_0, new Tuple<string, int>("loadout slot (+2)", 3) },
       { Unlocks.LOADOUT_SLOT_X2_1, new Tuple<string, int>("loadout slot (+2)", 8) },
       { Unlocks.LOADOUT_SLOT_X2_2, new Tuple<string, int>("loadout slot (+2)", 15) },
       { Unlocks.LOADOUT_SLOT_X2_3, new Tuple<string, int>("loadout slot (+2)", 20) },
       { Unlocks.LOADOUT_SLOT_X2_4, new Tuple<string, int>("loadout slot (+2)", 25) },
       { Unlocks.LOADOUT_SLOT_X2_5, new Tuple<string, int>("loadout slot (+2)", 30) },
+
       { Unlocks.MODE_SURVIVAL, new Tuple<string, int>("unlocks 'survival' mode", 0) },
       { Unlocks.MODE_EXTRAS, new Tuple<string, int>("unlocks 'extras' menu", 0) },
+
       { Unlocks.EXTRA_GRAVITY, new Tuple<string, int>("unlocks 'gravity' extra", 0) },
       { Unlocks.EXTRA_PLAYER_AMMO, new Tuple<string, int>("unlocks 'player ammo' extra", 0) },
       { Unlocks.EXTRA_ENEMY_OFF, new Tuple<string, int>("unlocks 'enemy off' extra", 0) },
@@ -376,6 +380,7 @@ public static class Shop
       { Unlocks.EXTRA_BLOOD_FX, new Tuple<string, int>("unlocks 'blood fx' extra", 0) },
       { Unlocks.EXTRA_EXPLODED, new Tuple<string, int>("unlocks 'explode death' extra", 0) },
       { Unlocks.EXTRA_CROWNMODE, new Tuple<string, int>("unlocks 'crown' extra", 0) },
+
       { Unlocks.TUTORIAL_PART0, new Tuple<string, int>("", 0) },
       { Unlocks.TUTORIAL_PART1, new Tuple<string, int>("", 0) }
     };
@@ -412,7 +417,7 @@ public static class Shop
     }
     else
     {
-      _Unlocks_Vault.Add("classic_0", new Unlocks[] { Unlocks.ITEM_FIST, Unlocks.ITEM_AXE, Unlocks.UTILITY_GRENADE, Unlocks.MAX_EQUIPMENT_POINTS_2, Unlocks.LOADOUT_SLOT_X2_0 });
+      _Unlocks_Vault.Add("classic_0", new Unlocks[] { Unlocks.MOD_MARTIAL_ARTIST, Unlocks.ITEM_AXE, Unlocks.UTILITY_GRENADE, Unlocks.MAX_EQUIPMENT_POINTS_2, Unlocks.LOADOUT_SLOT_X2_0 });
       _Unlocks_Vault.Add("classic_1", new Unlocks[] { Unlocks.MOD_LASER_SIGHTS, Unlocks.MOD_NO_SLOWMO, Unlocks.UTILITY_KUNAI_EXPLOSIVE, Unlocks.ITEM_PISTOL_CHARGE });
       _Unlocks_Vault.Add("classic_2", new Unlocks[] { Unlocks.MODE_SURVIVAL, Unlocks.ITEM_RIFLE, Unlocks.ITEM_PISTOL_MACHINE, Unlocks.UTILITY_MIRROR, Unlocks.MAX_EQUIPMENT_POINTS_3, Unlocks.LOADOUT_SLOT_X2_1 });
       _Unlocks_Vault.Add("classic_3", new Unlocks[] { Unlocks.ITEM_PISTOL_DOUBLE, Unlocks.UTILITY_STOP_WATCH, Unlocks.UTILITY_TEMP_SHIELD, Unlocks.MOD_SPEED_UP });
@@ -715,6 +720,7 @@ public static class Shop
       GRAPPLE_MASTER,
       SPEED_UP,
       EXPLOSIVE_PARRY,
+      MARTIAL_ARTIST,
 
       NONE
     }
@@ -737,6 +743,7 @@ public static class Shop
         { PerkType.NO_SLOWMO, "no slowmo; harder" },
         { PerkType.SMART_BULLETS, "strong gun = smart bullet" },
         { PerkType.GRAPPLE_MASTER, "grapple armor" },
+        { PerkType.MARTIAL_ARTIST, "empty hands are fists" },
         { PerkType.SPEED_UP, "1.15x movement speed" },
         { PerkType.EXPLOSIVE_PARRY, "parried bullets explode" },
       };
@@ -744,24 +751,24 @@ public static class Shop
 
     public static bool HasPerk(int playerId, PerkType perk)
     {
-      return GameScript.PlayerProfile.s_Profiles[playerId]._equipment._perks.Contains(perk);
+      return GameScript.PlayerProfile.s_Profiles[playerId]._Equipment._Perks.Contains(perk);
     }
 
     public static List<PerkType> GetPerks(int playerId)
     {
-      return GameScript.PlayerProfile.s_Profiles[playerId]._equipment._perks;
+      return GameScript.PlayerProfile.s_Profiles[playerId]._Equipment._Perks;
     }
 
     public static int GetNumPerks(int playerId)
     {
-      return GameScript.PlayerProfile.s_Profiles[playerId]._equipment._perks.Count;
+      return GameScript.PlayerProfile.s_Profiles[playerId]._Equipment._Perks.Count;
     }
 
     public static void BuyPerk(int playerId, PerkType perk)
     {
       if (GameScript.s_GameMode != GameScript.GameModes.SURVIVAL) return;
 
-      GameScript.PlayerProfile.s_Profiles[playerId]._equipment._perks.Add(perk);
+      GameScript.PlayerProfile.s_Profiles[playerId]._Equipment._Perks.Add(perk);
       GameScript.PlayerProfile.s_Profiles[playerId].UpdatePerkIcons();
 
       switch (perk)

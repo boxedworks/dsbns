@@ -4,7 +4,7 @@ using UnityEngine;
 
 using Mirror;
 
-public class CustomNetworkManager : NetworkManager
+public class CustomNetworkManager : MonoBehaviour// : NetworkManager
 {
 
   //
@@ -40,7 +40,7 @@ public class CustomNetworkManager : NetworkManager
     _CurrentMapData = "";
   }
 
-  public void Connect()
+  /*public void Connect()
   {
     _IsServer = true;
 
@@ -50,13 +50,6 @@ public class CustomNetworkManager : NetworkManager
   {
     networkAddress = "localhost";
     StartClient();
-  }
-
-  //
-  public PlayerData GetPlayer(int playerId)
-  {
-    var keys = new List<uint>(_Players.Keys);
-    return _Players[keys[playerId]];
   }
 
   //
@@ -71,6 +64,13 @@ public class CustomNetworkManager : NetworkManager
     base.OnClientDisconnect();
 
     Debug.Log("Client disconnected");
+  }*/
+
+  //
+  public PlayerData GetPlayer(int playerId)
+  {
+    var keys = new List<uint>(_Players.Keys);
+    return _Players[keys[playerId]];
   }
 
   //

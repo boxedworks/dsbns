@@ -413,20 +413,20 @@ public class CustomObstacle : MonoBehaviour
         // Check if replacing a weapon
         if (equip_info.Item3 == "BOTH")
         {
-          if (p._Profile._item_left == GameScript.ItemManager.Items.NONE && p._Profile._item_right == GameScript.ItemManager.Items.NONE) { }
-          else if (p._Profile._item_left_other != GameScript.ItemManager.Items.NONE && p._Profile._item_right_other != GameScript.ItemManager.Items.NONE) { }
-          else if (p._Profile._item_left_other == GameScript.ItemManager.Items.NONE && p._Profile._item_right_other == GameScript.ItemManager.Items.NONE)
+          if (p._Profile._ItemLeft == GameScript.ItemManager.Items.NONE && p._Profile._ItemRight == GameScript.ItemManager.Items.NONE) { }
+          else if (p._Profile._ItemLeft_Other != GameScript.ItemManager.Items.NONE && p._Profile._ItemRight_Other != GameScript.ItemManager.Items.NONE) { }
+          else if (p._Profile._ItemLeft_Other == GameScript.ItemManager.Items.NONE && p._Profile._ItemRight_Other == GameScript.ItemManager.Items.NONE)
           {
-            p._Profile._item_left_other = p._Profile._item_left;
-            p._Profile._item_right_other = p._Profile._item_right;
+            p._Profile._ItemLeft_Other = p._Profile._ItemLeft;
+            p._Profile._ItemRight_Other = p._Profile._ItemRight;
           }
           else
           {
             GameScript.ItemManager.Items[] items = null;
-            if (p._Profile._item_left_other == GameScript.ItemManager.Items.NONE && p._Profile._item_left != GameScript.ItemManager.Items.NONE)
-              items = new GameScript.ItemManager.Items[] { p._Profile._item_left, p._Profile._item_right };
-            else if (p._Profile._item_right_other == GameScript.ItemManager.Items.NONE && p._Profile._item_right != GameScript.ItemManager.Items.NONE)
-              items = new GameScript.ItemManager.Items[] { p._Profile._item_right, p._Profile._item_left };
+            if (p._Profile._ItemLeft_Other == GameScript.ItemManager.Items.NONE && p._Profile._ItemLeft != GameScript.ItemManager.Items.NONE)
+              items = new GameScript.ItemManager.Items[] { p._Profile._ItemLeft, p._Profile._ItemRight };
+            else if (p._Profile._ItemRight_Other == GameScript.ItemManager.Items.NONE && p._Profile._ItemRight != GameScript.ItemManager.Items.NONE)
+              items = new GameScript.ItemManager.Items[] { p._Profile._ItemRight, p._Profile._ItemLeft };
             if (items != null)
               foreach (var current_item in items)
               {
@@ -434,14 +434,14 @@ public class CustomObstacle : MonoBehaviour
                 var equip_info2 = CheckEquip(p, current_item, InteractSide.DEFAULT, hasAkimbo, 1);
                 var equip_side2 = equip_info2.Item2;
 
-                var current_item2 = (equip_side2 == ActiveRagdoll.Side.LEFT ? p._Profile._item_left_other : p._Profile._item_right_other);
+                var current_item2 = (equip_side2 == ActiveRagdoll.Side.LEFT ? p._Profile._ItemLeft_Other : p._Profile._ItemRight_Other);
                 if (current_item2 == GameScript.ItemManager.Items.NONE)
                   if (equip_info2.Item1)
                   {
                     if (equip_side2 == ActiveRagdoll.Side.LEFT)
-                      p._Profile._item_left_other = current_item;
+                      p._Profile._ItemLeft_Other = current_item;
                     else
-                      p._Profile._item_right_other = current_item;
+                      p._Profile._ItemRight_Other = current_item;
                     break;
                   }
               }
@@ -449,21 +449,21 @@ public class CustomObstacle : MonoBehaviour
         }
         else
         {
-          var current_item = (equip_side == ActiveRagdoll.Side.LEFT ? p._Profile._item_left : p._Profile._item_right);
+          var current_item = (equip_side == ActiveRagdoll.Side.LEFT ? p._Profile._ItemLeft : p._Profile._ItemRight);
           if (current_item != GameScript.ItemManager.Items.NONE)
           {
             // Try to equip in other slots
             var equip_info2 = CheckEquip(p, current_item, InteractSide.DEFAULT, hasAkimbo, 1);
             var equip_side2 = equip_info2.Item2;
 
-            var current_item2 = (equip_side2 == ActiveRagdoll.Side.LEFT ? p._Profile._item_left_other : p._Profile._item_right_other);
+            var current_item2 = (equip_side2 == ActiveRagdoll.Side.LEFT ? p._Profile._ItemLeft_Other : p._Profile._ItemRight_Other);
             if (current_item2 == GameScript.ItemManager.Items.NONE)
               if (equip_info2.Item1)
               {
                 if (equip_side2 == ActiveRagdoll.Side.LEFT)
-                  p._Profile._item_left_other = current_item;
+                  p._Profile._ItemLeft_Other = current_item;
                 else
-                  p._Profile._item_right_other = current_item;
+                  p._Profile._ItemRight_Other = current_item;
               }
           }
         }
@@ -471,13 +471,13 @@ public class CustomObstacle : MonoBehaviour
         // Equip
         p._Ragdoll.EquipItem(item_type, equip_side);
         if (equip_info.Item3 == "BOTH")
-          p._Profile._item_right = GameScript.ItemManager.Items.NONE;
+          p._Profile._ItemRight = GameScript.ItemManager.Items.NONE;
 
         // Update UI
         if (equip_side == ActiveRagdoll.Side.LEFT)
-          p._Profile._item_left = item_type;
+          p._Profile._ItemLeft = item_type;
         else
-          p._Profile._item_right = item_type;
+          p._Profile._ItemRight = item_type;
         GameScript.PlayerProfile.s_Profiles[p._Id].UpdateIcons();
 
         // Play sfx
@@ -495,24 +495,24 @@ public class CustomObstacle : MonoBehaviour
         if (side == InteractSide.DEFAULT) equip_side = ActiveRagdoll.Side.RIGHT;
 
         // Check utility side
-        var equipment = p._Profile._equipment;
+        var equipment = p._Profile._Equipment;
         var add = false;
-        if (equipment._utilities_left.Length == 0 && equipment._utilities_right.Length == 0) { }
+        if (equipment._UtilitiesLeft.Length == 0 && equipment._UtilitiesRight.Length == 0) { }
         if (side == InteractSide.DEFAULT)
         {
-          if (equipment._utilities_right.Length > 0 && equipment._utilities_right[0] == utility_type)
+          if (equipment._UtilitiesRight.Length > 0 && equipment._UtilitiesRight[0] == utility_type)
           {
             // Check utility cap
-            if (equipment._utilities_right.Length == Shop._Utility_Cap[utility_type])
+            if (equipment._UtilitiesRight.Length == Shop._Utility_Cap[utility_type])
             {
-              if (equipment._utilities_left.Length == 0)
+              if (equipment._UtilitiesLeft.Length == 0)
               {
                 equip_side = ActiveRagdoll.Side.LEFT;
               }
-              else if (equipment._utilities_left.Length > 0 && equipment._utilities_left[0] == utility_type)
+              else if (equipment._UtilitiesLeft.Length > 0 && equipment._UtilitiesLeft[0] == utility_type)
               {
                 // Check utility cap
-                if (equipment._utilities_left.Length == Shop._Utility_Cap[utility_type])
+                if (equipment._UtilitiesLeft.Length == Shop._Utility_Cap[utility_type])
                 {
                   p._Ragdoll.DisplayText("i have too many..");
                   return;
@@ -531,19 +531,19 @@ public class CustomObstacle : MonoBehaviour
               add = true;
             }
           }
-          else if (equipment._utilities_left.Length > 0 && equipment._utilities_left[0] == utility_type)
+          else if (equipment._UtilitiesLeft.Length > 0 && equipment._UtilitiesLeft[0] == utility_type)
           {
             // Check utility cap
-            if (equipment._utilities_left.Length == Shop._Utility_Cap[utility_type])
+            if (equipment._UtilitiesLeft.Length == Shop._Utility_Cap[utility_type])
             {
-              if (equipment._utilities_right.Length == 0)
+              if (equipment._UtilitiesRight.Length == 0)
               {
                 equip_side = ActiveRagdoll.Side.RIGHT;
               }
-              else if (equipment._utilities_right.Length > 0 && equipment._utilities_right[0] == utility_type)
+              else if (equipment._UtilitiesRight.Length > 0 && equipment._UtilitiesRight[0] == utility_type)
               {
                 // Check utility cap
-                if (equipment._utilities_right.Length == Shop._Utility_Cap[utility_type])
+                if (equipment._UtilitiesRight.Length == Shop._Utility_Cap[utility_type])
                 {
                   p._Ragdoll.DisplayText("i have too many..");
                   return;
@@ -566,11 +566,11 @@ public class CustomObstacle : MonoBehaviour
         }
         else if (equip_side == ActiveRagdoll.Side.LEFT)
         {
-          if (equipment._utilities_left.Length == 0) { }
-          else if (equipment._utilities_left.Length > 0 && equipment._utilities_left[0] == utility_type)
+          if (equipment._UtilitiesLeft.Length == 0) { }
+          else if (equipment._UtilitiesLeft.Length > 0 && equipment._UtilitiesLeft[0] == utility_type)
           {
             // Check utility cap
-            if (equipment._utilities_left.Length == Shop._Utility_Cap[utility_type])
+            if (equipment._UtilitiesLeft.Length == Shop._Utility_Cap[utility_type])
             {
               p._Ragdoll.DisplayText("i have too many..");
               return;
@@ -579,17 +579,17 @@ public class CustomObstacle : MonoBehaviour
             // Mark to add
             add = true;
           }
-          else if (equipment._utilities_right.Length == 0) { equip_side = ActiveRagdoll.Side.RIGHT; }
-          else if (equipment._utilities_left.Length > 0) { }
+          else if (equipment._UtilitiesRight.Length == 0) { equip_side = ActiveRagdoll.Side.RIGHT; }
+          else if (equipment._UtilitiesLeft.Length > 0) { }
           else return;
         }
         else if (equip_side == ActiveRagdoll.Side.RIGHT)
         {
-          if (equipment._utilities_right.Length == 0) { }
-          else if (equipment._utilities_right.Length > 0 && equipment._utilities_right[0] == utility_type)
+          if (equipment._UtilitiesRight.Length == 0) { }
+          else if (equipment._UtilitiesRight.Length > 0 && equipment._UtilitiesRight[0] == utility_type)
           {
             // Check utility cap
-            if (equipment._utilities_right.Length == Shop._Utility_Cap[utility_type])
+            if (equipment._UtilitiesRight.Length == Shop._Utility_Cap[utility_type])
             {
               p._Ragdoll.DisplayText("i have too many..");
               return;
@@ -598,28 +598,28 @@ public class CustomObstacle : MonoBehaviour
             // Mark to add
             add = true;
           }
-          else if (equipment._utilities_left.Length == 0) { equip_side = ActiveRagdoll.Side.RIGHT; }
-          else if (equipment._utilities_right.Length > 0) { }
+          else if (equipment._UtilitiesLeft.Length == 0) { equip_side = ActiveRagdoll.Side.RIGHT; }
+          else if (equipment._UtilitiesRight.Length > 0) { }
           else return;
         }
 
         // Check if replacing utility
-        var utilities = (equip_side == ActiveRagdoll.Side.LEFT ? equipment._utilities_left : equipment._utilities_right);
+        var utilities = (equip_side == ActiveRagdoll.Side.LEFT ? equipment._UtilitiesLeft : equipment._UtilitiesRight);
 
         // Equip
         var saveamount = add ? p.UtilityCount(equip_side) + 1 : -1;
         var new_amount = add ? utilities.Length + 1 : 1;
         if (equip_side == ActiveRagdoll.Side.LEFT)
         {
-          equipment._utilities_left = new UtilityScript.UtilityType[new_amount];
-          for (var i = 0; i < equipment._utilities_left.Length; i++)
-            equipment._utilities_left[i] = utility_type;
+          equipment._UtilitiesLeft = new UtilityScript.UtilityType[new_amount];
+          for (var i = 0; i < equipment._UtilitiesLeft.Length; i++)
+            equipment._UtilitiesLeft[i] = utility_type;
         }
         else
         {
-          equipment._utilities_right = new UtilityScript.UtilityType[new_amount];
-          for (var i = 0; i < equipment._utilities_right.Length; i++)
-            equipment._utilities_right[i] = utility_type;
+          equipment._UtilitiesRight = new UtilityScript.UtilityType[new_amount];
+          for (var i = 0; i < equipment._UtilitiesRight.Length; i++)
+            equipment._UtilitiesRight[i] = utility_type;
         }
 
         p.RegisterUtility(equip_side, saveamount);
@@ -692,8 +692,8 @@ public class CustomObstacle : MonoBehaviour
     var equip_side = ActiveRagdoll.Side.RIGHT;
     if (side == InteractSide.LEFT) equip_side = ActiveRagdoll.Side.LEFT;
 
-    var item_type_l = equipmentIndex == 0 ? p._Profile._item_left : p._Profile._item_left_other;
-    var item_type_r = equipmentIndex == 0 ? p._Profile._item_right : p._Profile._item_right_other;
+    var item_type_l = equipmentIndex == 0 ? p._Profile._ItemLeft : p._Profile._ItemLeft_Other;
+    var item_type_r = equipmentIndex == 0 ? p._Profile._ItemRight : p._Profile._ItemRight_Other;
 
     var has_item_l = item_type_l != GameScript.ItemManager.Items.NONE;
     var has_item_r = item_type_r != GameScript.ItemManager.Items.NONE;

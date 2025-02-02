@@ -567,7 +567,7 @@ public class TileManager
       {
         Levels._HardcodedLoadout = new GameScript.ItemManager.Loadout()
         {
-          _equipment = new GameScript.PlayerProfile.Equipment()
+          _Equipment = new GameScript.PlayerProfile.Equipment()
         };
         Levels.GetHardcodedLoadout(_CurrentLevel_Loadout);
       }
@@ -4433,7 +4433,7 @@ public class TileManager
       {
 
         // Set amount to rotate
-        var rotate_degree = (float)Mathf.RoundToInt(UnityEngine.InputSystem.Mouse.current.scroll.y.ReadValue() * 0.085f);
+        var rotate_degree = (float)Mathf.RoundToInt(UnityEngine.InputSystem.Mouse.current.scroll.y.ReadValue() * 5f);
         if (ControllerManager.GetKey(Key.R))
           rotate_degree = 45f;
         if (ControllerManager.ShiftHeld()) rotate_degree /= 3f;

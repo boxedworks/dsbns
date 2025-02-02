@@ -527,7 +527,7 @@ public class Levels : MonoBehaviour
 
     void UpdateLoadoutUI()
     {
-      Levels._HardcodedLoadout._equipment = equipment;
+      Levels._HardcodedLoadout._Equipment = equipment;
 
       if (GameScript.PlayerProfile.s_Profiles != null)
         foreach (var profile in GameScript.PlayerProfile.s_Profiles)
@@ -560,10 +560,10 @@ public class Levels : MonoBehaviour
     try
     {
 
-      equipment._item_left0 = (GameScript.ItemManager.Items)System.Enum.Parse(typeof(GameScript.ItemManager.Items), left_item0);
-      equipment._item_right0 = (GameScript.ItemManager.Items)System.Enum.Parse(typeof(GameScript.ItemManager.Items), right_item0);
-      equipment._item_left1 = (GameScript.ItemManager.Items)System.Enum.Parse(typeof(GameScript.ItemManager.Items), left_item1);
-      equipment._item_right1 = (GameScript.ItemManager.Items)System.Enum.Parse(typeof(GameScript.ItemManager.Items), right_item1);
+      equipment._ItemLeft0 = (GameScript.ItemManager.Items)System.Enum.Parse(typeof(GameScript.ItemManager.Items), left_item0);
+      equipment._ItemRight0 = (GameScript.ItemManager.Items)System.Enum.Parse(typeof(GameScript.ItemManager.Items), right_item0);
+      equipment._ItemLeft1 = (GameScript.ItemManager.Items)System.Enum.Parse(typeof(GameScript.ItemManager.Items), left_item1);
+      equipment._ItemRight1 = (GameScript.ItemManager.Items)System.Enum.Parse(typeof(GameScript.ItemManager.Items), right_item1);
 
       var utilities_left = new List<UtilityScript.UtilityType>();
       if (left_util.Trim().Length > 0)
@@ -577,7 +577,7 @@ public class Levels : MonoBehaviour
             utilities_left.Add((UtilityScript.UtilityType)System.Enum.Parse(typeof(UtilityScript.UtilityType), util));
         }
       }
-      equipment._utilities_left = utilities_left.ToArray();
+      equipment._UtilitiesLeft = utilities_left.ToArray();
 
       var utilities_right = new List<UtilityScript.UtilityType>();
       if (right_util.Length > 0)
@@ -591,7 +591,7 @@ public class Levels : MonoBehaviour
             utilities_right.Add((UtilityScript.UtilityType)System.Enum.Parse(typeof(UtilityScript.UtilityType), util));
         }
       }
-      equipment._utilities_right = utilities_right.ToArray();
+      equipment._UtilitiesRight = utilities_right.ToArray();
 
       var perks_list = new List<Shop.Perk.PerkType>();
       var perks_split = perks.Split(':');
@@ -600,7 +600,7 @@ public class Levels : MonoBehaviour
         if (perk.Trim().Length == 0) continue;
         perks_list.Add((Shop.Perk.PerkType)System.Enum.Parse(typeof(Shop.Perk.PerkType), perk));
       }
-      equipment._perks = perks_list;
+      equipment._Perks = perks_list;
     }
     catch (System.Exception e)
     {

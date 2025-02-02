@@ -66,7 +66,7 @@ public static class VersusMode
     s_playerScores = new int[4];
     s_PlayerLoadouts = new GameScript.ItemManager.Loadout
     {
-      _equipment = new GameScript.PlayerProfile.Equipment()
+      _Equipment = new GameScript.PlayerProfile.Equipment()
     };
 
     foreach (var playerProfile in GameScript.PlayerProfile.s_Profiles)
@@ -836,13 +836,14 @@ public static class VersusMode
   }
   static Shop.Perk.PerkType GetRandomPerk()
   {
-    return Random.Range(0, 5) switch
+    return Random.Range(0, 7) switch
     {
       1 => Shop.Perk.PerkType.MAX_AMMO_UP,
       2 => Shop.Perk.PerkType.EXPLOSION_RESISTANCE,
       3 => Shop.Perk.PerkType.SMART_BULLETS,
       4 => Shop.Perk.PerkType.LASER_SIGHTS,
       5 => Shop.Perk.PerkType.SPEED_UP,
+      6 => Shop.Perk.PerkType.MARTIAL_ARTIST,
 
       _ => Shop.Perk.PerkType.FASTER_RELOAD
     };
@@ -854,9 +855,9 @@ public static class VersusMode
     {
       s_PlayerLoadouts = new GameScript.ItemManager.Loadout()
       {
-        _equipment = new GameScript.PlayerProfile.Equipment()
+        _Equipment = new GameScript.PlayerProfile.Equipment()
         {
-          _item_left0 = GameScript.ItemManager.Items.KATANA,
+          _ItemLeft0 = GameScript.ItemManager.Items.KATANA,
         }
       };
     }
@@ -870,40 +871,40 @@ public static class VersusMode
         case 3:
           s_PlayerLoadouts = new GameScript.ItemManager.Loadout()
           {
-            _equipment = new GameScript.PlayerProfile.Equipment()
+            _Equipment = new GameScript.PlayerProfile.Equipment()
             {
-              _item_left0 = GetRandomMeleeWeapon(),
-              _item_right0 = Random.Range(0, 4) > 2 ? GetRandomMeleeWeapon() : GetRandomGun(),
+              _ItemLeft0 = GetRandomMeleeWeapon(),
+              _ItemRight0 = Random.Range(0, 4) > 2 ? GetRandomMeleeWeapon() : GetRandomGun(),
             }
           };
           break;
         case 4:
           s_PlayerLoadouts = new GameScript.ItemManager.Loadout()
           {
-            _equipment = new GameScript.PlayerProfile.Equipment()
+            _Equipment = new GameScript.PlayerProfile.Equipment()
             {
-              _item_left0 = GetRandomGun(),
-              _item_right0 = GetRandomGun()
+              _ItemLeft0 = GetRandomGun(),
+              _ItemRight0 = GetRandomGun()
             }
           };
           break;
         case 5:
           s_PlayerLoadouts = new GameScript.ItemManager.Loadout()
           {
-            _equipment = new GameScript.PlayerProfile.Equipment()
+            _Equipment = new GameScript.PlayerProfile.Equipment()
             {
-              _item_left0 = GameScript.ItemManager.Items.NONE,
-              _item_right0 = GetRandomGun()
+              _ItemLeft0 = GameScript.ItemManager.Items.NONE,
+              _ItemRight0 = GetRandomGun()
             }
           };
           break;
         case 6:
           s_PlayerLoadouts = new GameScript.ItemManager.Loadout()
           {
-            _equipment = new GameScript.PlayerProfile.Equipment()
+            _Equipment = new GameScript.PlayerProfile.Equipment()
             {
-              _item_left0 = GetRandomMeleeWeapon(),
-              _item_right0 = GameScript.ItemManager.Items.NONE
+              _ItemLeft0 = GetRandomMeleeWeapon(),
+              _ItemRight0 = GameScript.ItemManager.Items.NONE
             }
           };
           break;
@@ -912,20 +913,20 @@ public static class VersusMode
     // Add utilities
     if (Random.Range(0, 5) == 0)
     {
-      s_PlayerLoadouts._equipment._utilities_left = new UtilityScript.UtilityType[Random.Range(1, 4)];
+      s_PlayerLoadouts._Equipment._UtilitiesLeft = new UtilityScript.UtilityType[Random.Range(1, 4)];
       var randomUtil = GetRandomUtility();
-      for (var i = 0; i < s_PlayerLoadouts._equipment._utilities_left.Length; i++)
+      for (var i = 0; i < s_PlayerLoadouts._Equipment._UtilitiesLeft.Length; i++)
       {
-        s_PlayerLoadouts._equipment._utilities_left[i] = randomUtil;
+        s_PlayerLoadouts._Equipment._UtilitiesLeft[i] = randomUtil;
       }
 
       if (Random.Range(0, 5) == 0)
       {
-        s_PlayerLoadouts._equipment._utilities_right = new UtilityScript.UtilityType[Random.Range(1, 4)];
+        s_PlayerLoadouts._Equipment._UtilitiesRight = new UtilityScript.UtilityType[Random.Range(1, 4)];
         randomUtil = GetRandomUtility();
-        for (var i = 0; i < s_PlayerLoadouts._equipment._utilities_right.Length; i++)
+        for (var i = 0; i < s_PlayerLoadouts._Equipment._UtilitiesRight.Length; i++)
         {
-          s_PlayerLoadouts._equipment._utilities_right[i] = randomUtil;
+          s_PlayerLoadouts._Equipment._UtilitiesRight[i] = randomUtil;
         }
       }
     }
@@ -933,18 +934,18 @@ public static class VersusMode
     // Add mods
     if (Random.Range(0, 5) == 0)
     {
-      s_PlayerLoadouts._equipment._perks = new();
+      s_PlayerLoadouts._Equipment._Perks = new();
       for (var i = 0; i < Random.Range(1, 3); i++)
       {
 
         var randomPerk = GetRandomPerk();
-        if (s_PlayerLoadouts._equipment._perks.Contains(randomPerk))
+        if (s_PlayerLoadouts._Equipment._Perks.Contains(randomPerk))
         {
           i--;
           continue;
         }
 
-        s_PlayerLoadouts._equipment._perks.Add(randomPerk);
+        s_PlayerLoadouts._Equipment._Perks.Add(randomPerk);
       }
     }
   }

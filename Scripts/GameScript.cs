@@ -87,7 +87,24 @@ public class GameScript : MonoBehaviour
   public static bool _inLevelEnd { get { return s_InLevelEndPlayer != null; } }
   static ParticleSystem _LevelEndParticles;
 
-  public static Color _LightingAmbientColor = new Color(0.05490196f, 0.05490196f, 0.05490196f);
+  Color _LightingAmbientColor = new Color(0.05490196f, 0.05490196f, 0.05490196f);
+  public static void UpdateAmbientLight()
+  {
+    RenderSettings.ambientLight = SettingsModule.Brightness switch
+    {
+      1 => new Color(0.025f, 0.025f, 0.025f),
+      2 => s_Singleton._LightingAmbientColor,
+      3 => new Color(0.1f, 0.1f, 0.1f),
+      4 => new Color(0.23f, 0.23f, 0.23f),
+      5 => new Color(0.4f, 0.4f, 0.4f),
+      6 => new Color(0.55f, 0.55f, 0.55f),
+      7 => new Color(0.66f, 0.66f, 0.66f),
+      8 => new Color(0.87f, 0.87f, 0.87f),
+      9 => new Color(0.95f, 0.95f, 0.95f),
+
+      _ => Color.black
+    };
+  }
 
   public enum GameModes
   {
@@ -452,7 +469,7 @@ public class GameScript : MonoBehaviour
       for (var i = 0; i < s_PlayerLoadouts.Length; i++)
       {
         s_PlayerLoadouts[i] = new ItemManager.Loadout();
-        s_PlayerLoadouts[i]._equipment = new PlayerProfile.Equipment();
+        s_PlayerLoadouts[i]._Equipment = new PlayerProfile.Equipment();
         s_PlayerLoadouts[i]._two_weapon_pairs = true;
         OnPlayerDead(i);
       }
@@ -478,7 +495,7 @@ public class GameScript : MonoBehaviour
       for (var i = 0; i < s_PlayerLoadouts.Length; i++)
       {
         s_PlayerLoadouts[i] = new ItemManager.Loadout();
-        s_PlayerLoadouts[i]._equipment = new PlayerProfile.Equipment();
+        s_PlayerLoadouts[i]._Equipment = new PlayerProfile.Equipment();
         s_PlayerLoadouts[i]._two_weapon_pairs = true;
         OnPlayerDead(i);
       }
@@ -530,14 +547,14 @@ public class GameScript : MonoBehaviour
     // Revert player loadout to starting loadout
     public static void OnPlayerDead(int playerId)
     {
-      s_PlayerLoadouts[playerId]._equipment._utilities_left = new UtilityScript.UtilityType[] { UtilityScript.UtilityType.GRENADE, };
-      s_PlayerLoadouts[playerId]._equipment._utilities_right = new UtilityScript.UtilityType[0];
-      s_PlayerLoadouts[playerId]._equipment._item_left0 = ItemManager.Items.KNIFE;
-      s_PlayerLoadouts[playerId]._equipment._item_right0 = ItemManager.Items.NONE;
-      s_PlayerLoadouts[playerId]._equipment._item_left1 = ItemManager.Items.NONE;
-      s_PlayerLoadouts[playerId]._equipment._item_right1 = ItemManager.Items.NONE;
+      s_PlayerLoadouts[playerId]._Equipment._UtilitiesLeft = new UtilityScript.UtilityType[] { UtilityScript.UtilityType.GRENADE, };
+      s_PlayerLoadouts[playerId]._Equipment._UtilitiesRight = new UtilityScript.UtilityType[0];
+      s_PlayerLoadouts[playerId]._Equipment._ItemLeft0 = ItemManager.Items.KNIFE;
+      s_PlayerLoadouts[playerId]._Equipment._ItemRight0 = ItemManager.Items.NONE;
+      s_PlayerLoadouts[playerId]._Equipment._ItemLeft1 = ItemManager.Items.NONE;
+      s_PlayerLoadouts[playerId]._Equipment._ItemRight1 = ItemManager.Items.NONE;
 
-      s_PlayerLoadouts[playerId]._equipment._perks.Clear();
+      s_PlayerLoadouts[playerId]._Equipment._Perks.Clear();
 
       // Check for unlocks
       if (PlayerScript._All_Dead)
@@ -2019,10 +2036,10 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
           if (profileSettings.LoadoutIndex < 0) profileSettings.LoadoutIndex = ItemManager.Loadout._Loadouts.Length + profileSettings.LoadoutIndex;
           SettingsModule.UpdatePlayerProfile(_Id, profileSettings);
 
-          if (!_equipment.IsEmpty()) break;
+          if (!_Equipment.IsEmpty()) break;
           iter--;
         }
-        if (iter == -1 && _equipment.IsEmpty())
+        if (iter == -1 && _Equipment.IsEmpty())
         {
           profileSettings.LoadoutIndex = 0;
           SettingsModule.UpdatePlayerProfile(_Id, profileSettings);
@@ -2047,14 +2064,14 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         }
       }
     }
-    public Equipment _equipment
+    public Equipment _Equipment
     {
       get
       {
-        return _loadout._equipment;
+        return _Loadout._Equipment;
       }
     }
-    public ItemManager.Loadout _loadout
+    public ItemManager.Loadout _Loadout
     {
       get
       {
@@ -2085,14 +2102,57 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       }
     }
 
-    public ItemManager.Items _item_left { get { return (_equipmentIndex == 0 ? _equipment._item_left0 : _equipment._item_left1); } set { if (_equipmentIndex == 0) _equipment._item_left0 = value; else _equipment._item_left1 = value; } }
-    public ItemManager.Items _item_right { get { return (_equipmentIndex == 0 ? _equipment._item_right0 : _equipment._item_right1); } set { if (_equipmentIndex == 0) _equipment._item_right0 = value; else _equipment._item_right1 = value; } }
-    public ItemManager.Items _item_left_other { get { return (_equipmentIndex == 1 ? _equipment._item_left0 : _equipment._item_left1); } set { if (_equipmentIndex == 1) _equipment._item_left0 = value; else _equipment._item_left1 = value; } }
-    public ItemManager.Items _item_right_other { get { return (_equipmentIndex == 1 ? _equipment._item_right0 : _equipment._item_right1); } set { if (_equipmentIndex == 1) _equipment._item_right0 = value; else _equipment._item_right1 = value; } }
+    ItemManager.Items GetItem(ItemManager.Items item, ItemManager.Items other)
+    {
+      if (item == ItemManager.Items.NONE && !Shop.IsActuallyTwoHanded(other) && _Equipment._Perks.Contains(Shop.Perk.PerkType.MARTIAL_ARTIST))
+        return ItemManager.Items.FIST;
+      return item;
+    }
+
+    public ItemManager.Items _ItemLeft
+    {
+      get
+      {
+        var item = _EquipmentIndex == 0 ? _Equipment._ItemLeft0 : _Equipment._ItemLeft1;
+        var itemOther = _EquipmentIndex == 0 ? _Equipment._ItemRight0 : _Equipment._ItemRight1;
+        return GetItem(item, itemOther);
+      }
+      set { if (_EquipmentIndex == 0) _Equipment._ItemLeft0 = value; else _Equipment._ItemLeft1 = value; }
+    }
+    public ItemManager.Items _ItemRight
+    {
+      get
+      {
+        var item = _EquipmentIndex == 0 ? _Equipment._ItemRight0 : _Equipment._ItemRight1;
+        var itemOther = _EquipmentIndex == 0 ? _Equipment._ItemLeft0 : _Equipment._ItemLeft1;
+        return GetItem(item, itemOther);
+      }
+      set { if (_EquipmentIndex == 0) _Equipment._ItemRight0 = value; else _Equipment._ItemRight1 = value; }
+    }
+    public ItemManager.Items _ItemLeft_Other
+    {
+      get
+      {
+        var item = _EquipmentIndex == 1 ? _Equipment._ItemLeft0 : _Equipment._ItemLeft1;
+        var itemOther = _EquipmentIndex == 1 ? _Equipment._ItemRight0 : _Equipment._ItemRight1;
+        return GetItem(item, itemOther);
+      }
+      set { if (_EquipmentIndex == 1) _Equipment._ItemLeft0 = value; else _Equipment._ItemLeft1 = value; }
+    }
+    public ItemManager.Items _ItemRight_Other
+    {
+      get
+      {
+        var item = _EquipmentIndex == 1 ? _Equipment._ItemRight0 : _Equipment._ItemRight1;
+        var itemOther = _EquipmentIndex == 1 ? _Equipment._ItemLeft0 : _Equipment._ItemLeft1;
+        return GetItem(item, itemOther);
+      }
+      set { if (_EquipmentIndex == 1) _Equipment._ItemRight0 = value; else _Equipment._ItemRight1 = value; }
+    }
 
     // Used for two sets of equipment
     int equipmentIndex;
-    public int _equipmentIndex
+    public int _EquipmentIndex
     {
       get { return equipmentIndex; }
       set { equipmentIndex = value % 2; }
@@ -2102,33 +2162,33 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     {
       public Equipment()
       {
-        _utilities_left = new UtilityScript.UtilityType[0];
-        _utilities_right = new UtilityScript.UtilityType[0];
+        _UtilitiesLeft = new UtilityScript.UtilityType[0];
+        _UtilitiesRight = new UtilityScript.UtilityType[0];
 
-        _perks = new List<Shop.Perk.PerkType>();
+        _Perks = new List<Shop.Perk.PerkType>();
       }
+      public ItemManager.Items _ItemLeft0, _ItemRight0, _ItemLeft1, _ItemRight1;
 
-      public ItemManager.Items _item_left0, _item_right0, _item_left1, _item_right1;
-      public UtilityScript.UtilityType[] _utilities_left, _utilities_right;
-      public List<Shop.Perk.PerkType> _perks;
+      public UtilityScript.UtilityType[] _UtilitiesLeft, _UtilitiesRight;
+      public List<Shop.Perk.PerkType> _Perks;
 
       public bool HasWeapons0()
       {
-        return _item_left0 != ItemManager.Items.NONE ||
-          _item_right0 != ItemManager.Items.NONE;
+        return _ItemLeft0 != ItemManager.Items.NONE ||
+          _ItemRight0 != ItemManager.Items.NONE;
       }
       public bool HasWeapons1()
       {
-        return _item_left1 != ItemManager.Items.NONE ||
-          _item_right1 != ItemManager.Items.NONE;
+        return _ItemLeft1 != ItemManager.Items.NONE ||
+          _ItemRight1 != ItemManager.Items.NONE;
       }
 
       public bool IsEmpty()
       {
         return !HasWeapons0() && !HasWeapons1() &&
-          _utilities_left.Length == 0 &&
-          _utilities_right.Length == 0 &&
-          _perks.Count == 0;
+          _UtilitiesLeft.Length == 0 &&
+          _UtilitiesRight.Length == 0 &&
+          _Perks.Count == 0;
       }
     }
 
@@ -2210,7 +2270,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       // Bounds-check _loadoutIndex
       if (max_loadout != 4 && _LoadoutIndex > max_loadout)
         _LoadoutIndex = 0;
-      else if (_equipment.IsEmpty())
+      else if (_Equipment.IsEmpty())
         _LoadoutIndex++;
 
       // Update UI
@@ -2584,7 +2644,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
 
     int GetItemIcons(ActiveRagdoll.Side side)
     {
-      if (side == ActiveRagdoll.Side.RIGHT && _item_left != ItemManager.Items.NONE) return 1;
+      if (side == ActiveRagdoll.Side.RIGHT && _ItemLeft != ItemManager.Items.NONE) return 1;
       return 0;
     }
 
@@ -2603,13 +2663,13 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
 
     ItemIcon GetUtility(ActiveRagdoll.Side side)
     {
-      var startIter = (_item_left == ItemManager.Items.NONE ? 0 : 1) + (_item_right == ItemManager.Items.NONE ? 0 : 1);
+      var startIter = (_ItemLeft == ItemManager.Items.NONE ? 0 : 1) + (_ItemRight == ItemManager.Items.NONE ? 0 : 1);
       var addIter = 0;
       if (side == ActiveRagdoll.Side.LEFT)
         addIter = 0;
       else
       {
-        if (_equipment._utilities_left.Length == 0)
+        if (_Equipment._UtilitiesLeft.Length == 0)
           addIter = 0;
         else
           addIter = 1;
@@ -2640,9 +2700,9 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     public int GetUtilitiesLength(ActiveRagdoll.Side side)
     {
       // Check which utilities to check
-      var utils = _equipment._utilities_left;
+      var utils = _Equipment._UtilitiesLeft;
       if (side == ActiveRagdoll.Side.RIGHT)
-        utils = _equipment._utilities_right;
+        utils = _Equipment._UtilitiesRight;
 
       // Check for no utilities
       if (utils.Length == 0)
@@ -2749,7 +2809,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       var bg = _UI.GetChild(1).transform;
 
       // Check for empty
-      if (_weaponIcons.Length == 2 && _item_left == ItemManager.Items.NONE && _item_right == ItemManager.Items.NONE)
+      if (_weaponIcons.Length == 2 && _ItemLeft == ItemManager.Items.NONE && _ItemRight == ItemManager.Items.NONE)
       {
         bg.localPosition = new Vector3(0f, -0.05f, 0f);
         bg.localScale = new Vector3(0.6f, 0.74f, 0.001f);
@@ -2759,26 +2819,26 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         return;
       }
       var equipmentIter = 0;
-      if (_item_left != ItemManager.Items.NONE)
+      if (_ItemLeft != ItemManager.Items.NONE)
       {
         _weaponIcons[equipmentIter] = new ItemIcon();
-        _weaponIcons[equipmentIter].Init(LoadIcon(_item_left.ToString(), equipmentIter), equipmentIter++, System.Tuple.Create(_Player, false, ActiveRagdoll.Side.LEFT), false);
+        _weaponIcons[equipmentIter].Init(LoadIcon(_ItemLeft.ToString(), equipmentIter), equipmentIter++, System.Tuple.Create(_Player, false, ActiveRagdoll.Side.LEFT), false);
       }
-      if (_item_right != ItemManager.Items.NONE)
+      if (_ItemRight != ItemManager.Items.NONE)
       {
         _weaponIcons[equipmentIter] = new ItemIcon();
-        _weaponIcons[equipmentIter].Init(LoadIcon(_item_right.ToString(), equipmentIter), equipmentIter++, System.Tuple.Create(_Player, false, ActiveRagdoll.Side.RIGHT), false);
+        _weaponIcons[equipmentIter].Init(LoadIcon(_ItemRight.ToString(), equipmentIter), equipmentIter++, System.Tuple.Create(_Player, false, ActiveRagdoll.Side.RIGHT), false);
       }
       // Load utilities
       var loaded_utils = new List<System.Tuple<Transform, int, int, ActiveRagdoll.Side>>();
-      if (_equipment._utilities_left.Length > 0)
+      if (_Equipment._UtilitiesLeft.Length > 0)
       {
-        var util_data = LoadIcon(_equipment._utilities_left[0].ToString(), equipmentIter);
+        var util_data = LoadIcon(_Equipment._UtilitiesLeft[0].ToString(), equipmentIter);
         loaded_utils.Add(System.Tuple.Create(util_data.Item1, utilLength_left, equipmentIter++, ActiveRagdoll.Side.LEFT));
       }
-      if (_equipment._utilities_right.Length > 0)
+      if (_Equipment._UtilitiesRight.Length > 0)
       {
-        var util_data = LoadIcon(_equipment._utilities_right[0].ToString(), equipmentIter);
+        var util_data = LoadIcon(_Equipment._UtilitiesRight[0].ToString(), equipmentIter);
         loaded_utils.Add(System.Tuple.Create(util_data.Item1, utilLength_right, equipmentIter++, ActiveRagdoll.Side.RIGHT));
       }
       foreach (var util in loaded_utils)
@@ -3126,19 +3186,19 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
           var total = 0;
           // Items
           foreach (var item in (_two_weapon_pairs ? new Items[] {
-            _equipment._item_left0, _equipment._item_right0,
-            _equipment._item_left1, _equipment._item_right1,
+            _Equipment._ItemLeft0, _Equipment._ItemRight0,
+            _Equipment._ItemLeft1, _Equipment._ItemRight1,
           } : new Items[] {
-            _equipment._item_left0, _equipment._item_right0,
+            _Equipment._ItemLeft0, _Equipment._ItemRight0,
           }))
             total += GetItemValue(item);
           // Utils
-          foreach (var utility in _equipment._utilities_left)
+          foreach (var utility in _Equipment._UtilitiesLeft)
             total += GetUtilityValue(utility);
-          foreach (var utility in _equipment._utilities_right)
+          foreach (var utility in _Equipment._UtilitiesRight)
             total += GetUtilityValue(utility);
           // Perks
-          foreach (var perk in _equipment._perks)
+          foreach (var perk in _Equipment._Perks)
             total += GetPerkValue(perk);
           return _POINTS_MAX - total;
         }
@@ -3147,14 +3207,17 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       bool two_weapon_pairs;
       public bool _two_weapon_pairs
       {
-        get { return two_weapon_pairs; }
+        get
+        {
+          return two_weapon_pairs;
+        }
         set
         {
           two_weapon_pairs = value;
         }
       }
 
-      public PlayerProfile.Equipment _equipment;
+      public PlayerProfile.Equipment _Equipment;
 
       public Loadout()
       {
@@ -3171,12 +3234,12 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
 
       public bool CanEquipItem(ActiveRagdoll.Side side, int index, Items item)
       {
-        var currentEquipValue = GetItemValue(side == ActiveRagdoll.Side.LEFT ? (index == 0 ? _equipment._item_left0 : _equipment._item_left1) : (index == 0 ? _equipment._item_right0 : _equipment._item_right1));
+        var currentEquipValue = GetItemValue(side == ActiveRagdoll.Side.LEFT ? (index == 0 ? _Equipment._ItemLeft0 : _Equipment._ItemLeft1) : (index == 0 ? _Equipment._ItemRight0 : _Equipment._ItemRight1));
         return _available_points + currentEquipValue - GetItemValue(item) >= 0;
       }
       public bool CanEquipUtility(ActiveRagdoll.Side side, UtilityScript.UtilityType utility)
       {
-        var currentUtilities = side == ActiveRagdoll.Side.LEFT ? _equipment._utilities_left : _equipment._utilities_right;
+        var currentUtilities = side == ActiveRagdoll.Side.LEFT ? _Equipment._UtilitiesLeft : _Equipment._UtilitiesRight;
         var currentEquipValue = 0;
         // Check if adding a new utility or adding additional
         if (currentUtilities.Length > 0 && utility != currentUtilities[0])
@@ -3190,13 +3253,13 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       public void Save()
       {
         var savestring = "";
-        if (_equipment._item_left0 != Items.NONE) savestring += $"item_left0:{_equipment._item_left0.ToString()}|";
-        if (_equipment._item_right0 != Items.NONE) savestring += $"item_right0:{_equipment._item_right0.ToString()}|";
-        if (_equipment._item_left1 != Items.NONE) savestring += $"item_left1:{_equipment._item_left1.ToString()}|";
-        if (_equipment._item_right1 != Items.NONE) savestring += $"item_right1:{_equipment._item_right1.ToString()}|";
-        if (_equipment._utilities_left != null && _equipment._utilities_left.Length > 0) savestring += $"utility_left:{_equipment._utilities_left[0].ToString()},{_equipment._utilities_left.Length}|";
-        if (_equipment._utilities_right != null && _equipment._utilities_right.Length > 0) savestring += $"utility_right:{_equipment._utilities_right[0].ToString()},{_equipment._utilities_right.Length}|";
-        foreach (var perk in _equipment._perks)
+        if (_Equipment._ItemLeft0 != Items.NONE) savestring += $"item_left0:{_Equipment._ItemLeft0.ToString()}|";
+        if (_Equipment._ItemRight0 != Items.NONE) savestring += $"item_right0:{_Equipment._ItemRight0.ToString()}|";
+        if (_Equipment._ItemLeft1 != Items.NONE) savestring += $"item_left1:{_Equipment._ItemLeft1.ToString()}|";
+        if (_Equipment._ItemRight1 != Items.NONE) savestring += $"item_right1:{_Equipment._ItemRight1.ToString()}|";
+        if (_Equipment._UtilitiesLeft != null && _Equipment._UtilitiesLeft.Length > 0) savestring += $"utility_left:{_Equipment._UtilitiesLeft[0].ToString()},{_Equipment._UtilitiesLeft.Length}|";
+        if (_Equipment._UtilitiesRight != null && _Equipment._UtilitiesRight.Length > 0) savestring += $"utility_right:{_Equipment._UtilitiesRight[0].ToString()},{_Equipment._UtilitiesRight.Length}|";
+        foreach (var perk in _Equipment._Perks)
           savestring += $"perk:{perk}|";
         var pairs = _two_weapon_pairs ? 1 : 0;
         savestring += $"two_pairs:{pairs}|";
@@ -3206,7 +3269,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
 
       public void Load()
       {
-        _equipment = new PlayerProfile.Equipment();
+        _Equipment = new PlayerProfile.Equipment();
 
         try
         {
@@ -3236,19 +3299,19 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
             {
               case "item_left0":
                 var item = (Items)System.Enum.Parse(typeof(Items), val, true);
-                _equipment._item_left0 = item;
+                _Equipment._ItemLeft0 = item;
                 break;
               case "item_right0":
                 item = (Items)System.Enum.Parse(typeof(Items), val, true);
-                _equipment._item_right0 = item;
+                _Equipment._ItemRight0 = item;
                 break;
               case "item_left1":
                 item = (Items)System.Enum.Parse(typeof(Items), val, true);
-                _equipment._item_left1 = item;
+                _Equipment._ItemLeft1 = item;
                 break;
               case "item_right1":
                 item = (Items)System.Enum.Parse(typeof(Items), val, true);
-                _equipment._item_right1 = item;
+                _Equipment._ItemRight1 = item;
                 break;
               case "utility_left":
                 var split1 = val.Split(',');
@@ -3257,7 +3320,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
                 var utils = new UtilityScript.UtilityType[count];
                 for (var i = 0; i < count; i++)
                   utils[i] = util;
-                _equipment._utilities_left = utils;
+                _Equipment._UtilitiesLeft = utils;
                 break;
               case "utility_right":
                 split1 = val.Split(',');
@@ -3266,14 +3329,14 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
                 utils = new UtilityScript.UtilityType[count];
                 for (var i = 0; i < count; i++)
                   utils[i] = util;
-                _equipment._utilities_right = utils;
+                _Equipment._UtilitiesRight = utils;
                 break;
               case "two_pairs":
                 _two_weapon_pairs = val.ParseIntInvariant() == 1;
                 break;
               case "perk":
                 var perk = (Shop.Perk.PerkType)System.Enum.Parse(typeof(Shop.Perk.PerkType), val, true);
-                _equipment._perks.Add(perk);
+                _Equipment._Perks.Add(perk);
                 break;
             }
           }
@@ -3461,6 +3524,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         case Shop.Perk.PerkType.NO_SLOWMO:
           return 0;
         case Shop.Perk.PerkType.LASER_SIGHTS:
+        case Shop.Perk.PerkType.MARTIAL_ARTIST:
           return 1;
         case Shop.Perk.PerkType.SPEED_UP:
           return 2;
