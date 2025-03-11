@@ -312,7 +312,7 @@ new Theme(){
   _tile = "stone",
   _tileColorDown = new Color(0.2924528f, 0.1779547f, 0.1779547f, 0f),
   _tileColorUp = new Color(0.03773582f, 0.03773582f, 0.03773582f, 0f),
-  _furnatureColor = new Color(0.4245283f, 0.2382965f, 0.2382965f, 0f),
+  _furnatureColor = new Color(0.1509434f, 0.01067996f, 0.01067996f, 0f),
   _lightColor = new Color(1f, 1f, 1f, 0f),
   _innerWallColor = new Color(0.09985755f, 0.1132075f, 0.1036718f, 1f),
   _shadowStrength = 0.5f,

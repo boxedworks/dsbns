@@ -1977,6 +1977,12 @@ public class ActiveRagdoll
   }
   public void RecoilSimple(float force)
   {
+    // Mod
+    if (force < 0f)
+      if (_IsPlayer && _PlayerScript.HasPerk(Shop.Perk.PerkType.THRUST))
+        force *= 2f;
+
+    //
     Recoil(_grappled ? -_Hip.transform.forward : -_Controller.forward, force);
   }
 

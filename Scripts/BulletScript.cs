@@ -677,8 +677,7 @@ public class BulletScript : MonoBehaviour
     {
       if (_hidingCoroutine != null)
         GameScript.s_Singleton.StopCoroutine(_hidingCoroutine);
-      else
-        _hidingCoroutine = GameScript.s_Singleton.StartCoroutine(LagParticles(1f));
+      _hidingCoroutine = GameScript.s_Singleton.StartCoroutine(LagParticles(1f));
     }
   }
   public static void HideAll()

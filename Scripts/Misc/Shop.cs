@@ -264,6 +264,7 @@ public static class Shop
     // Cannot re-order unlocks
     UTILITY_MIRROR,
     MOD_MARTIAL_ARTIST,
+    MOD_THRUST,
   }
 
   public static int _Max_Equipment_Points
@@ -339,12 +340,13 @@ public static class Shop
       { Unlocks.MOD_NO_SLOWMO, new Tuple<string, int>("-", 1) },
       { Unlocks.MOD_FASTER_RELOAD, new Tuple<string, int>("-", 15) },
       { Unlocks.MOD_MAX_AMMO_UP, new Tuple<string, int>("-", 20) },
-      { Unlocks.MOD_EXPLOSION_RESISTANCE, new Tuple<string, int>("-", 15) },
+      { Unlocks.MOD_EXPLOSION_RESISTANCE, new Tuple<string, int>("-", 10) },
       { Unlocks.MOD_EXPLOSIONS_UP, new Tuple<string, int>("-", 20) },
       { Unlocks.MOD_ARMOR_UP, new Tuple<string, int>("-", 0) },
       { Unlocks.MOD_PENETRATION_UP, new Tuple<string, int>("-", 0) },
-      { Unlocks.MOD_SPEED_UP, new Tuple<string, int>("-", 15) },
+      { Unlocks.MOD_SPEED_UP, new Tuple<string, int>("-", 10) },
       { Unlocks.MOD_SMART_BULLETS, new Tuple<string, int>("-", 20) },
+      { Unlocks.MOD_THRUST, new Tuple<string, int>("-", 10) },
       { Unlocks.MOD_GRAPPLE_MASTER, new Tuple<string, int>("-", 5) },
       { Unlocks.MOD_MARTIAL_ARTIST, new Tuple<string, int>("-", 5) },
       { Unlocks.MOD_EXPLOSIVE_PARRY, new Tuple<string, int>("-", 10) },
@@ -424,7 +426,7 @@ public static class Shop
       _Unlocks_Vault.Add("classic_4", new Unlocks[] { Unlocks.ITEM_REVOLVER, Unlocks.UTILITY_C4, Unlocks.UTILITY_GRENADE_STUN, Unlocks.UTILITY_SHURIKEN_BIG });
       _Unlocks_Vault.Add("classic_5", new Unlocks[] { Unlocks.ITEM_RAPIER, Unlocks.ITEM_STICKY_GUN, Unlocks.UTILITY_GRENADE_IMPACT });
       _Unlocks_Vault.Add("classic_6", new Unlocks[] { Unlocks.ITEM_FRYING_PAN, Unlocks.ITEM_CROSSBOW, Unlocks.ITEM_GRENADE_LAUNCHER, Unlocks.UTILITY_TACTICAL_BULLET, Unlocks.MAX_EQUIPMENT_POINTS_4 });
-      _Unlocks_Vault.Add("classic_7", new Unlocks[] { Unlocks.UTILITY_KUNAI_STICKY, Unlocks.UTILITY_INVISIBILITY, Unlocks.LOADOUT_SLOT_X2_2 });
+      _Unlocks_Vault.Add("classic_7", new Unlocks[] { Unlocks.MOD_THRUST, Unlocks.UTILITY_KUNAI_STICKY, Unlocks.UTILITY_INVISIBILITY, Unlocks.LOADOUT_SLOT_X2_2 });
       _Unlocks_Vault.Add("classic_8", new Unlocks[] { Unlocks.ITEM_UZI, Unlocks.ITEM_SHOTGUN_PUMP, Unlocks.MOD_GRAPPLE_MASTER });
       _Unlocks_Vault.Add("classic_9", new Unlocks[] { Unlocks.ITEM_RIFLE_LEVER, Unlocks.MOD_EXPLOSIVE_PARRY, Unlocks.LOADOUT_SLOT_X2_3, Unlocks.MAX_EQUIPMENT_POINTS_5 });
       _Unlocks_Vault.Add("classic_10", new Unlocks[] { Unlocks.ITEM_RIFLE_CHARGE, Unlocks.UTILITY_MORTAR_STRIKE, Unlocks.MOD_EXPLOSIONS_UP });
@@ -721,6 +723,7 @@ public static class Shop
       SPEED_UP,
       EXPLOSIVE_PARRY,
       MARTIAL_ARTIST,
+      THRUST,
 
       NONE
     }
@@ -742,6 +745,7 @@ public static class Shop
         { PerkType.FIRE_RATE_UP, "guns shoot faster" },
         { PerkType.NO_SLOWMO, "no slowmo; harder" },
         { PerkType.SMART_BULLETS, "strong gun = smart bullet" },
+        { PerkType.THRUST, "extra melee range" },
         { PerkType.GRAPPLE_MASTER, "grapple armor" },
         { PerkType.MARTIAL_ARTIST, "empty hands are fists" },
         { PerkType.SPEED_UP, "1.15x movement speed" },

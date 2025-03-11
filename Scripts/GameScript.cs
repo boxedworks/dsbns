@@ -87,20 +87,19 @@ public class GameScript : MonoBehaviour
   public static bool _inLevelEnd { get { return s_InLevelEndPlayer != null; } }
   static ParticleSystem _LevelEndParticles;
 
-  Color _LightingAmbientColor = new Color(0.05490196f, 0.05490196f, 0.05490196f);
   public static void UpdateAmbientLight()
   {
     RenderSettings.ambientLight = SettingsModule.Brightness switch
     {
       1 => new Color(0.025f, 0.025f, 0.025f),
-      2 => s_Singleton._LightingAmbientColor,
-      3 => new Color(0.1f, 0.1f, 0.1f),
-      4 => new Color(0.23f, 0.23f, 0.23f),
-      5 => new Color(0.4f, 0.4f, 0.4f),
-      6 => new Color(0.55f, 0.55f, 0.55f),
-      7 => new Color(0.66f, 0.66f, 0.66f),
-      8 => new Color(0.87f, 0.87f, 0.87f),
-      9 => new Color(0.95f, 0.95f, 0.95f),
+      2 => new Color(0.0549f, 0.0549f, 0.0549f),
+      3 => new Color(0.09f, 0.09f, 0.09f),
+      4 => new Color(0.17f, 0.17f, 0.17f),
+      5 => new Color(0.25f, 0.25f, 0.25f),
+      6 => new Color(0.32f, 0.32f, 0.32f),
+      7 => new Color(0.45f, 0.45f, 0.45f),
+      8 => new Color(0.55f, 0.55f, 0.55f),
+      9 => new Color(0.65f, 0.65f, 0.65f),
 
       _ => Color.black
     };
@@ -3526,6 +3525,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         case Shop.Perk.PerkType.LASER_SIGHTS:
         case Shop.Perk.PerkType.MARTIAL_ARTIST:
           return 1;
+        case Shop.Perk.PerkType.THRUST:
         case Shop.Perk.PerkType.SPEED_UP:
           return 2;
         case Shop.Perk.PerkType.EXPLOSIONS_UP:

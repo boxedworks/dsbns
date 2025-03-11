@@ -917,7 +917,7 @@ public static class Settings
     public bool UseDefaultTargetFramerate = true;
     public bool UseOrthographicCamera = true;
 
-    public int Brightness = 3;
+    public int Brightness = 2;
     public int BloomAmount = 2;
     public int DepthOfFieldAmount = 2;
 

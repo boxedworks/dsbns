@@ -6316,7 +6316,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
           6 => "6",
           7 => "7",
           8 => "8",
-          9 => "9",
+          _ => "9",
         };
         component.SetDisplayText(string.Format(format_options, "brightness:", selection_match));
 
@@ -6329,14 +6329,14 @@ go to the <color=yellow>SHOP</color> to buy something~1
           {
             0 => "0",
             1 => "1",
-            2 => "2",
-            3 => "3 [DEFAULT]",
+            2 => "2 [DEFAULT]",
+            3 => "3",
             4 => "4",
             5 => "5",
             6 => "6",
             7 => "7",
             8 => "8",
-            9 => "9",
+            _ => "9",
           });
           actions.Add((MenuComponent component0) =>
           {

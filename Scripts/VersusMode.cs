@@ -836,7 +836,7 @@ public static class VersusMode
   }
   static Shop.Perk.PerkType GetRandomPerk()
   {
-    return Random.Range(0, 7) switch
+    return Random.Range(0, 8) switch
     {
       1 => Shop.Perk.PerkType.MAX_AMMO_UP,
       2 => Shop.Perk.PerkType.EXPLOSION_RESISTANCE,
@@ -844,6 +844,7 @@ public static class VersusMode
       4 => Shop.Perk.PerkType.LASER_SIGHTS,
       5 => Shop.Perk.PerkType.SPEED_UP,
       6 => Shop.Perk.PerkType.MARTIAL_ARTIST,
+      7 => Shop.Perk.PerkType.THRUST,
 
       _ => Shop.Perk.PerkType.FASTER_RELOAD
     };
