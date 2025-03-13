@@ -82,7 +82,7 @@ public class DoorScript : CustomEntity
   {
     if (_EnemiesGame == null) _EnemiesGame = new List<EnemyScript>();
     if (_EnemiesGame.Contains(e)) return;
-    e._linkedDoor = this;
+    //e._linkedDoor = this;
     _EnemiesGame.Add(e);
   }
 

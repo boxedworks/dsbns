@@ -33,7 +33,6 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
 
   // Holds values for camera position / rotation to lerp to
   public Vector3 _camPos, _camRot;
-  float _camRotX;
 
   Vector2 _saveInput;
   public Vector2 GetInput()
@@ -52,7 +51,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
 
   float _swordRunLerper = 0.7f;
 
-  bool mouseEnabled, _runToggle, _setCamera, _centerCamera;
+  bool mouseEnabled, _setCamera, _centerCamera;
 
   public bool _HasExit, _CanDetect;
 
@@ -1109,6 +1108,11 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
         //_camPos.z -= 1.9f;
       }
       GameResources._Camera_Main.transform.position = _camPos;
+
+      // Set audio listener y
+      var audioListenerPos = GameResources.s_AudioListener.transform.position;
+      audioListenerPos.y = PlayerspawnScript._PlayerSpawns[0].transform.position.y;
+      GameResources.s_AudioListener.transform.position = audioListenerPos;
 
       // Update rain
       if (SceneThemes._Theme._rain)

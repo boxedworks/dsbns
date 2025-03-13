@@ -158,7 +158,7 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
 
   static EnemyScript _Chaser;
 
-  public DoorScript _linkedDoor;
+  public DoorScript2 _linkedDoor;
 
   public float _moveSpeed, _moveSpeed_lerped,
    _waitTimer,
@@ -1491,7 +1491,7 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
   }
   public void Suspicious(Vector3 source, Loudness loudness, float waittime)
   {
-    if (Time.time - GameScript.s_LevelStartTime < 0.5f || TileManager.Tile._Moving) return;
+    if (Time.time - GameScript.s_LevelStartTime < 0.2f || TileManager.Tile._Moving) return;
     if (_suspiciousCoroutine != null) StopCoroutine(_suspiciousCoroutine);
     if (!_agent.enabled) return;
     // Return if already chasing or running away
@@ -2025,25 +2025,23 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
                   if (!played_wrong)
                   {
                     played_wrong = true;
-                    SfxManager.PlayAudioSourceSimple(GameResources._Camera_Main.transform.GetChild(1).position, "Etc/Wrong", 0.95f, 1f, SfxManager.AudioClass.NONE, false, false);
+                    SfxManager.PlayAudioSourceSimple(GameResources.s_AudioListener.transform.position, "Etc/Wrong", 0.95f, 1f, SfxManager.AudioClass.NONE, false, false);
                   }
                 }
                 else if (i > ratingIndex)
                 {
-                  //SfxManager.PlayAudioSourceSimple(GameResources._Camera_Main.transform.GetChild(1).position, "Etc/Tick", 0.95f, 1f);
                   var mod = i * 0.15f;
-                  SfxManager.PlayAudioSourceSimple(GameResources._Camera_Main.transform.GetChild(1).position, "Etc/Best_rank", 0.95f - mod, 1f - mod, SfxManager.AudioClass.NONE, false, false);
+                  SfxManager.PlayAudioSourceSimple(GameResources.s_AudioListener.transform.position, "Etc/Best_rank", 0.95f - mod, 1f - mod, SfxManager.AudioClass.NONE, false, false);
                 }
                 else
                 {
                   if (ratingIndex == 0)
-                    SfxManager.PlayAudioSourceSimple(GameResources._Camera_Main.transform.GetChild(1).position, "Etc/Best_rank", 0.95f, 1f, SfxManager.AudioClass.NONE, false, false);
+                    SfxManager.PlayAudioSourceSimple(GameResources.s_AudioListener.transform.position, "Etc/Best_rank", 0.95f, 1f, SfxManager.AudioClass.NONE, false, false);
                   else
                   {
-                    //SfxManager.PlayAudioSourceSimple(GameResources._Camera_Main.transform.GetChild(1).position, "Etc/Bell", 0.95f, 1f);
 
                     var mod = i * 0.15f;
-                    SfxManager.PlayAudioSourceSimple(GameResources._Camera_Main.transform.GetChild(1).position, "Etc/Best_rank", 0.95f - mod, 1f - mod, SfxManager.AudioClass.NONE, false, false);
+                    SfxManager.PlayAudioSourceSimple(GameResources.s_AudioListener.transform.position, "Etc/Best_rank", 0.95f - mod, 1f - mod, SfxManager.AudioClass.NONE, false, false);
                   }
                 }
 

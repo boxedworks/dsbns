@@ -50,8 +50,6 @@ public class TileManager
     var gameid = GameScript.s_GameId;
     IEnumerator ShowTextCo()
     {
-      //SfxManager.PlayAudioSourceSimple(GameResources._Camera_Main.transform.GetChild(1).position, "Etc/HiHat", 0.95f, 1f, SfxManager.AudioClass.NONE, false, false);
-
       _Text_GameOver.text = $"<color={color_base}>{text}</color>";
       for (var i = 0; i < flashes; i++)
       {
@@ -156,7 +154,7 @@ public class TileManager
         monieText.transform.localPosition = posStart;
 
         // FX
-        SfxManager.PlayAudioSourceSimple(GameResources._Camera_Main.transform.GetChild(1).position, "Etc/Monie_show", 0.95f, 1f);
+        SfxManager.PlayAudioSourceSimple(GameResources.s_AudioListener.transform.position, "Etc/Monie_show", 0.95f, 1f);
         yield return new WaitForSecondsRealtime(0.9f + delay * 0.2f);
 
         // Animation
@@ -177,7 +175,7 @@ public class TileManager
           monieText.transform.localPosition = _Positions_Monies[4];
           var monie = _Text_Money.text.Substring(2).ParseIntInvariant();
           _Text_Money.text = $"$${monie + 1}";
-          SfxManager.PlayAudioSourceSimple(GameResources._Camera_Main.transform.GetChild(1).position, "Etc/Monie_store", 0.95f, 1f);
+          SfxManager.PlayAudioSourceSimple(GameResources.s_AudioListener.transform.position, "Etc/Monie_store", 0.95f, 1f);
         }
       }
 
@@ -1519,9 +1517,9 @@ public class TileManager
 
               }
 
-              GameObject door_new = LoadObject(loadstring);
+              var door_new = LoadObject(loadstring);
               object_data_iter++;
-              DoorScript door_script = door_new.GetComponent<DoorScript>();
+              var door_script = door_new.GetComponent<DoorScript2>();
               door_script.RegisterButton(ref ui_script);
               break;
           }
@@ -1542,7 +1540,7 @@ public class TileManager
               var door_new = LoadObject(string.Format("{0}_{1}_{2}_rot_{3}_open_{4}", object_data_split[object_data_iter++], object_data_split[object_data_iter++], object_data_split[object_data_iter++], object_data_split[++object_data_iter], object_data_split[++object_data_iter + 1]));
               object_data_iter++;
               object_data_iter++;
-              var door_script = door_new.GetComponent<DoorScript>();
+              var door_script = door_new.GetComponent<DoorScript2>();
               door_script.RegisterButton(ref button_script);
               door_script.transform.GetChild(0).GetChild(1).GetComponent<BoxCollider>().enabled = GameScript.s_EditorEnabled;
               break;
@@ -1550,8 +1548,8 @@ public class TileManager
         break;
       // Check for doors
       case ("door"):
-        loadedObject = object_base.LoadResource("Door", container_objects, 0.15f);
-        var door_script0 = loadedObject.GetComponent<DoorScript>();
+        loadedObject = object_base.LoadResource("Door", container_objects, _LEO_Door._movementSettings._localPos);
+        var door_script0 = loadedObject.GetComponent<DoorScript2>();
         door_script0.enabled = false;
         door_script0.enabled = true;
         door_script0.transform.GetChild(0).GetChild(1).GetComponent<BoxCollider>().enabled = GameScript.s_EditorEnabled;
@@ -2853,7 +2851,7 @@ public class TileManager
             if (entity == null) continue;
 
             // Check for doors
-            var ds = entity.gameObject.GetComponent<DoorScript>();
+            var ds = entity.gameObject.GetComponent<DoorScript2>();
             if (ds != null)
             {
               var pos_use_local = ds.transform.position - offset;
@@ -2950,7 +2948,7 @@ public class TileManager
           // Check for selection
           if (ControllerManager.GetMouseInput(0, ControllerManager.InputMode.DOWN))
           {
-            var d = h.collider.transform.parent.parent.GetComponent<DoorScript>();
+            var d = h.collider.transform.parent.parent.GetComponent<DoorScript2>();
             if (d != null)
             {
 
@@ -3211,7 +3209,7 @@ public class TileManager
           {
             if (entity == null) continue;
             // Check for doors
-            DoorScript ds = entity.gameObject.GetComponent<DoorScript>();
+            var ds = entity.gameObject.GetComponent<DoorScript2>();
             if (ds != null)
             {
               Vector3 pos_use2 = ds.transform.position - offset;
@@ -3243,15 +3241,15 @@ public class TileManager
         // Check toggle
         if (ControllerManager.GetKey(Key.T))
         {
-          DoorScript script = null;
-          if (_SelectedObject.name.Equals("Door")) script = _SelectedObject.GetComponent<DoorScript>();
-          if (_SelectedObject.name.Equals("Door_Obstacle") || _SelectedObject.name.Equals("Door_Under")) script = _SelectedObject.parent.parent.GetComponent<DoorScript>();
+          DoorScript2 script = null;
+          if (_SelectedObject.name.Equals("Door")) script = _SelectedObject.GetComponent<DoorScript2>();
+          if (_SelectedObject.name.Equals("Door_Obstacle") || _SelectedObject.name.Equals("Door_Under")) script = _SelectedObject.parent.parent.GetComponent<DoorScript2>();
           script.Toggle();
         }
       },
       new LevelEditorObject.MovementSettings()
       {
-        _localPos = 0.15f
+        _localPos = -0.3f
       },
       new LevelEditorObject.RotationSettings(),
       new LevelEditorObject.CopySettings()
@@ -3259,7 +3257,7 @@ public class TileManager
         _onCopy = (GameObject g) =>
         {
           // Link new door to old
-          g.GetComponent<DoorScript>().LinkToDoor(_SelectedObject.GetComponent<DoorScript>());
+          g.GetComponent<DoorScript2>().LinkToDoor(_SelectedObject.GetComponent<DoorScript2>());
         }
       },
       new LevelEditorObject.AddSettings()
@@ -3818,6 +3816,10 @@ public class TileManager
     _LEO_Books,
   };
 
+  public static string GetLevelObjectName()
+  {
+    return LevelEditorObject.GetCurrentObject()._name;
+  }
   class LevelEditorObject
   {
     public static List<LevelEditorObject> _Objects;
@@ -3913,6 +3915,7 @@ public class TileManager
 
       // If old mode is tile, deselesct tiles
       if (GetCurrentObject()._name.Equals(_LEO_Tile._name)) DeselectTiles();
+
       // If old mode is enemy, hide menu
       if (GetCurrentObject()._name.Equals(_LEO_Enemy._name)) EditorMenus._Menu_Infos_Enemy.gameObject.SetActive(false);
       if (GetCurrentObject()._name.Equals(_LEO_Door._name)) EditorMenus._Menu_Infos_Door.gameObject.SetActive(false);
@@ -3922,13 +3925,16 @@ public class TileManager
 
       // Else, move ring
       else _Ring.position = new Vector3(0f, -100f, 0f);
+
       // Iterate into a range
       _Objects_iter += amount;
       if (_Objects_iter < 0) _Objects_iter = _Objects.Count - 1;
       else _Objects_iter %= _Objects.Count;
+
       // Set editor UI text
       ClearText();
       UpdateText();
+
       // Check skip
       if (skip && GetCurrentObject()._hide) IncrementIter(amount, true);
 
@@ -3989,7 +3995,7 @@ public class TileManager
         var cui = selection.GetComponent<CustomEntityUI>();
         foreach (var activate in cui._activate)
           if (activate != null && activate.gameObject.name == "Door")
-            ((DoorScript)activate)._Button = null;
+            ((DoorScript2)activate)._Button = null;
         cui._activate = new CustomEntity[0];
       }
       // Link CustomEntityUI with CustomEntity
@@ -4019,7 +4025,7 @@ public class TileManager
 
             if (ce.name == "Door")
             {
-              ((DoorScript)ce)._Button = custom_entity_ui;
+              ((DoorScript2)ce)._Button = custom_entity_ui;
             }
           }
           _IsLinking = false;
@@ -4062,7 +4068,7 @@ public class TileManager
       var returnString = "";
       returnString += LevelEditorObject._SaveFunction_Pos(leo, pos_use) + "_" +
         LevelEditorObject._SaveFunction_Rot(g);
-      var doorScript = g.GetComponent<DoorScript>();
+      var doorScript = g.GetComponent<DoorScript2>();
       if (doorScript != null)
       {
         if (doorScript._HasButton) return null;
@@ -5012,7 +5018,7 @@ public class TileManager
           if (split.Length < 7) break;
           var position2 = new Vector3(split[6].ParseFloatInvariant(), split[5].ParseFloatInvariant(), 0f);
           var object_new2 = GameObject.CreatePrimitive(PrimitiveType.Cube).transform;
-          ChangeColorAndDelete(object_new2, 1, GameResources._Door.transform.GetChild(0).GetChild(0).GetComponent<Renderer>().sharedMaterial.color);
+          ChangeColorAndDelete(object_new2, 1, GameResources._Door.transform.GetChild(0).GetChild(1).GetComponent<Renderer>().sharedMaterial.color);
           object_new2.parent = container_objects;
           object_new2.localScale = new Vector3(scale.x * 4f, scale.y * 0.8f, scale.z * 0.9f);
           object_new2.position = position2;
@@ -5035,7 +5041,7 @@ public class TileManager
           // Door
           position2 = new Vector3(split[5].ParseFloatInvariant(), split[4].ParseFloatInvariant(), 0f);
           object_new2 = GameObject.CreatePrimitive(PrimitiveType.Cube).transform;
-          ChangeColorAndDelete(object_new2, 1, GameResources._Door.transform.GetChild(0).GetChild(0).GetComponent<Renderer>().sharedMaterial.color);
+          ChangeColorAndDelete(object_new2, 1, GameResources._Door.transform.GetChild(0).GetChild(1).GetComponent<Renderer>().sharedMaterial.color);
           object_new2.parent = container_objects;
           object_new2.localScale = new Vector3(scale.x * 5f, scale.y * 0.8f, scale.z * 0.9f);
           object_new2.position = position2;

@@ -49,6 +49,7 @@ public static class GameResources
 
   public static Transform _Container_Objects, _UI_Player, s_Backrooms;
   public static Camera _Camera_Main, _Camera_Menu, _Camera_IgnorePP;
+  public static AudioListener s_AudioListener;
   public static MeshRenderer _CameraFader;
 
   public static int _Layermask_Ragdoll;
@@ -67,7 +68,7 @@ public static class GameResources
     _Ragdoll = Resources.Load("Ragdoll") as GameObject;
 
     _Bullet = Resources.Load("Bullet") as GameObject;
-    _Door = Resources.Load("Door") as GameObject;
+    _Door = Resources.Load("Door2") as GameObject;
     _Button = Resources.Load("Button") as GameObject;
     _Laser = Resources.Load("Laser") as GameObject;
     _Playerspawn = Resources.Load("PlayerSpawn") as GameObject;
@@ -129,6 +130,8 @@ public static class GameResources
     _Camera_Main = GameObject.Find("Main Camera").GetComponent<Camera>();
     _Camera_Menu = GameObject.Find("Menu Camera").GetComponent<Camera>();
     _Camera_IgnorePP = GameObject.Find("NoPPCamera").GetComponent<Camera>();
+
+    s_AudioListener = _Camera_Main.transform.GetChild(1).GetComponent<AudioListener>();
 
     _CameraFader = GameObject.Find("Fader").GetComponent<MeshRenderer>();
 

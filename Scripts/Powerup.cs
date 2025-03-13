@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Tilemaps;
 
 public class Powerup : MonoBehaviour
 {
@@ -24,7 +25,6 @@ public class Powerup : MonoBehaviour
   Rigidbody _rb;
 
   Light _l;
-  float _saveIntensity;
 
   AudioSource _audio;
 
@@ -44,7 +44,6 @@ public class Powerup : MonoBehaviour
     _touch = transform.GetChild(0).gameObject;
 
     _l = transform.GetChild(1).GetComponent<Light>();
-    _saveIntensity = _l.intensity;
 
     _audio = GetComponent<AudioSource>();
 
@@ -83,21 +82,24 @@ public class Powerup : MonoBehaviour
 
       _icon.layer = 2;
 
-      _rb = _icon.AddComponent<Rigidbody>();
-      _rb.angularDamping = 0.4f;
-      _rb.constraints = RigidbodyConstraints.FreezePosition;
-      _rb.useGravity = false;
-      _rb.interpolation = RigidbodyInterpolation.Interpolate;
-      _rb.linearDamping = 1.5f;
+      if (!GameScript.s_EditorEnabled)
+      {
+        _rb = _icon.AddComponent<Rigidbody>();
+        _rb.angularDamping = 0.4f;
+        _rb.constraints = RigidbodyConstraints.FreezePosition;
+        _rb.useGravity = false;
+        _rb.interpolation = RigidbodyInterpolation.Interpolate;
+        _rb.linearDamping = 1.5f;
 
-      _rb.position = new Vector3(_rb.position.x, 0f, _rb.position.z);
-      //_rb.isKinematic = true;
+        _rb.position = new Vector3(_rb.position.x, 0f, _rb.position.z);
+        //_rb.isKinematic = true;
+
+        Rotate();
+      }
     }
     // Hide editor indicator
     transform.GetComponent<MeshRenderer>().enabled = false;
     transform.GetChild(0).GetComponent<MeshRenderer>().enabled = false;
-
-    Rotate();
   }
 
   public void Activate(ActiveRagdoll r)
@@ -181,6 +183,11 @@ public class Powerup : MonoBehaviour
     if (GameScript.s_Paused || Menu._InMenus)
     {
       _audio.volume = 0f;
+      return;
+    }
+    if (GameScript.s_EditorEnabled || _rb == null)
+    {
+      _icon.transform.Rotate(new Vector3(1f, 1f, Mathf.Sin(Time.time)) * Time.deltaTime * 15f);
       return;
     }
 
