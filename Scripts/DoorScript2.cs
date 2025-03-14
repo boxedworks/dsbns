@@ -10,6 +10,7 @@ public class DoorScript2 : CustomEntity
   public CustomEntityUI _Button;
 
   AudioSource _sfx_sustain;
+  ParticleSystem _particles_laserSparks;
 
   public bool _HasButton
   {
@@ -36,6 +37,8 @@ public class DoorScript2 : CustomEntity
     _collider0 = _door.GetComponent<Collider>();
     _obstacle = _door.GetComponent<UnityEngine.AI.NavMeshObstacle>();
 
+    _particles_laserSparks = transform.GetChild(0).GetChild(2).GetComponent<ParticleSystem>();
+
     if (!_Opened)
     {
       Toggle(false);
@@ -53,13 +56,13 @@ public class DoorScript2 : CustomEntity
     if (_Opened)
     {
       ToggleAudio(true);
+      _particles_laserSparks.Play();
     }
   }
 
   //
   void ToggleAudio(bool toggle)
   {
-    Debug.Log(toggle);
     if (toggle)
     {
       if (_sfx_sustain != null) return;
@@ -160,6 +163,10 @@ public class DoorScript2 : CustomEntity
     transform.GetChild(0).GetChild(0).gameObject.SetActive(open);
 
     ToggleAudio(open);
+    if (open)
+      _particles_laserSparks.Play();
+    else
+      _particles_laserSparks.Stop();
   }
 
   public override void Activate(CustomEntityUI ui)

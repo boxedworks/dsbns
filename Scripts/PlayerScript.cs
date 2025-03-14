@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
+using UnityEngine.InputSystem;
+
 
 #if !DISABLESTEAMWORKS
 using Steamworks;
@@ -2205,18 +2207,21 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
     if (!mouseEnabled && SettingsModule.ControllerRumble)
     {
       var gamepad = ControllerManager.GetPlayerGamepad(_Id);
-      IEnumerator rumbleCo()
-      {
-        gamepad.SetMotorSpeeds(0.2f, 0.2f);
-
-        yield return new WaitForSecondsRealtime(1f);
-        if (_ragdoll != null && _ragdoll._IsDead) { }
-        else
-          gamepad.SetMotorSpeeds(0f, 0f);
-      }
       if (gamepad != null)
-        StartCoroutine(rumbleCo());
+      {
+        if (_rumbleCoroutine != null)
+          StopCoroutine(_rumbleCoroutine);
+        _rumbleCoroutine = StartCoroutine(rumbleCo(gamepad, 0.25f, 0.2f, 0.2f));
+      }
     }
+  }
+
+  Coroutine _rumbleCoroutine;
+  IEnumerator rumbleCo(Gamepad gamepad, float time, float intensityLeft, float intensityRight)
+  {
+    gamepad.SetMotorSpeeds(intensityLeft, intensityRight);
+    yield return new WaitForSecondsRealtime(time);
+    gamepad.SetMotorSpeeds(0f, 0f);
   }
 
   public void OnToggle(ActiveRagdoll source, ActiveRagdoll.DamageSourceType damageSourceType)
@@ -2228,16 +2233,12 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
     if (!mouseEnabled && SettingsModule.ControllerRumble)
     {
       var gamepad = ControllerManager.GetPlayerGamepad(_Id);
-      IEnumerator rumble()
-      {
-        gamepad.SetMotorSpeeds(0.8f, 0.8f);
-
-        yield return new WaitForSecondsRealtime(1.5f);
-
-        gamepad.SetMotorSpeeds(0f, 0f);
-      }
       if (gamepad != null)
-        StartCoroutine(rumble());
+      {
+        if (_rumbleCoroutine != null)
+          StopCoroutine(_rumbleCoroutine);
+        _rumbleCoroutine = StartCoroutine(rumbleCo(gamepad, 0.18f, 0.5f, 0.5f));
+      }
     }
 
     // Send dead to other clients
@@ -2268,14 +2269,16 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
     // Remove ring
     IEnumerator fadeRing()
     {
-      var c = GetRingColor();
-      float t = 1f, startA = c.a;
+      var baseColor = _ring[0].sharedMaterial.color;
+      var emissionColor = _ring[0].sharedMaterial.GetColor("_EmissionColor");
+      float t = 1f, startA = baseColor.a;
       while (t >= 0f)
       {
         t -= 0.07f;
-        c.a = Mathf.Clamp(startA * t, 0f, 1f);
-        _ring[0].sharedMaterial.color = c;
-        _ring[1].sharedMaterial.color = c;
+        baseColor.a = Mathf.Clamp(startA * t, 0f, 1f);
+        emissionColor = Color.Lerp(Color.black, emissionColor, t);
+        _ring[0].sharedMaterial.color = baseColor;
+        _ring[0].sharedMaterial.SetColor("_EmissionColor", emissionColor);
         yield return new WaitForSeconds(0.05f);
         if (this == null || _ragdoll == null || _ragdoll._Hip == null) break;
       }

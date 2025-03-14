@@ -2,7 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class CustomEntityUI : MonoBehaviour {
+public class CustomEntityUI : MonoBehaviour
+{
 
   public CustomEntity[] _activate;
 
@@ -18,8 +19,9 @@ public class CustomEntityUI : MonoBehaviour {
   public static int _ID;
   int _id;
 
-	// Use this for initialization
-	void Start () {
+  // Use this for initialization
+  void Start()
+  {
     _id = _ID++;
 
     _renderer = GetComponent<MeshRenderer>();
@@ -35,7 +37,7 @@ public class CustomEntityUI : MonoBehaviour {
       _light = transform.GetChild(0).gameObject.GetComponent<Light>();
       ChangeColor(_colors[0]);
     }
-	}
+  }
 
   public void Reset()
   {
@@ -48,33 +50,20 @@ public class CustomEntityUI : MonoBehaviour {
   // Lerp mesh color to new color
   public void ChangeColor(Color c)
   {
-    if (Color.Equals(_renderer.sharedMaterial.color, c)) return;
-    StopAllCoroutines();
-    StartCoroutine(ChangeColorCo(c, 0.3f));
-  }
-  IEnumerator ChangeColorCo(Color newColor, float time)
-  {
-    var currentColor = _renderer.sharedMaterial.color;
-    var saveTime = time;
-    while (time > 0f)
-    {
-      _renderer.sharedMaterial.color = Color.Lerp(currentColor, newColor, 1f - time / saveTime);
-      _light.color = Color.Lerp(currentColor, newColor, 1f - time / saveTime);
-      time -= 0.05f;
-      yield return new WaitForSeconds(0.05f);
-    }
-    _renderer.sharedMaterial.color = newColor;
+    _renderer.sharedMaterial.SetColor("_EmissionColor", c);
+    _light.color = c;
   }
 
   public void Activate()
   {
     if (_activate == null || _activated) return;
     _activated = true;
-    foreach(var c in _activate)
+    foreach (var c in _activate)
     {
       c.Activate(this);
     }
-    if (_colors != null && _colors.Length > 0) {
+    if (_colors != null && _colors.Length > 0)
+    {
       var c = _colors[++_colorIter % _colors.Length];
       ChangeColor(c);
     }

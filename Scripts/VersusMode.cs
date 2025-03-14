@@ -228,8 +228,7 @@ public static class VersusMode
                     lastAlive = player;
 
                 // Check game types
-                var playerColor = GameScript.PlayerProfile.s_Profiles[lastAlive._Id].GetColorName();
-                if (playerColor == "cyan") playerColor = "#00FFFF";
+                var playerColor = GameScript.PlayerProfile.s_Profiles[lastAlive._Id].GetColorName(false);
 
                 s_playerScores[lastAlive._Id]++;
                 s_playerScoresRound[lastAlive._Id]++;
@@ -383,8 +382,7 @@ public static class VersusMode
                   {
                     var playerScore = s_playerScoresRound[i];
                     var playerScoreTotal = s_playerScores[i];
-                    var playerColor = GameScript.PlayerProfile.s_Profiles[i].GetColorName();
-                    if (playerColor == "cyan") playerColor = "#00FFFF";
+                    var playerColor = GameScript.PlayerProfile.s_Profiles[i].GetColorName(false);
                     var scorePreText = playerScore < 0 ? '-' : '+';
                     var scoreColor = playerScore < 0 ? "red" : (playerScore == 0 ? "white" : "green");
                     s_announcementText.text += $"\n<color={playerColor}>P{i + 1}</color>: {playerScoreTotal} (<color={scoreColor}>{scorePreText}{playerScore}</color>)";
@@ -412,8 +410,7 @@ public static class VersusMode
                     yield return new WaitForSeconds(1.25f);
 
                     var playerWinner = highestPlayers[0];
-                    var playerColor = GameScript.PlayerProfile.s_Profiles[playerWinner].GetColorName();
-                    if (playerColor == "cyan") playerColor = "#00FFFF";
+                    var playerColor = GameScript.PlayerProfile.s_Profiles[playerWinner].GetColorName(false);
 
                     s_announcementText.text = $"<color={playerColor}>P{playerWinner + 1}</color> <b>wins</b>!";
                     gameWon = true;

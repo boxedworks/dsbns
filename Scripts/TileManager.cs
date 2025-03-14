@@ -938,13 +938,6 @@ public class TileManager
       campos.z = playerspawnpos.z + 3.6f;
       GameResources._Camera_Main.transform.position = campos;
 
-      // Hide playerspawn
-      var isSurvival = GameScript.s_GameMode == GameScript.GameModes.SURVIVAL && !GameScript.s_EditorEnabled;
-      foreach (var spawn in PlayerspawnScript._PlayerSpawns)
-      {
-        spawn.transform.GetChild(1).gameObject.SetActive(!isSurvival);
-      }
-
       // Check special objects before build
       var objectsToDisable = new List<GameObject>();
       if (GameScript.s_InteractableObjects)

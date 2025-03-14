@@ -1624,7 +1624,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     if (Time.unscaledTime - _lastInputCheck > 0.25f)
     {
       _lastInputCheck = Time.unscaledTime;
-      Settings._NumberPlayers = (ControllerManager._NumberGamepads) + (Settings._ForceKeyboard ? 1 : 0);
+      Settings._NumberPlayers = 4;//(ControllerManager._NumberGamepads) + (Settings._ForceKeyboard ? 1 : 0);
       if (s_CustomNetworkManager._Connected)
         Settings._NumberPlayers += s_CustomNetworkManager._Players.Count - 1;
       if (Settings._NumberPlayers == 0)
@@ -1652,7 +1652,6 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         }
       }
     }
-    //Settings._NumberPlayers = 4;
 
     // Update survial mode
     if (IsSurvival() && !s_EditorEnabled)
@@ -2191,8 +2190,36 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       }
     }
 
-    public static Color[] _Colors = new Color[] { Color.blue, Color.red, Color.yellow, Color.cyan, Color.white, Color.black, new Color(1f, 0.6f, 0f) };
-    static string[] _ColorsName = new string[] { "blue", "red", "yellow", "cyan", "white", "black", "orange" };
+    public static Color[] s_PlayerColors = new Color[] { Color.blue, Color.red, Color.yellow, Color.cyan, Color.green, Color.magenta, new Color(1f, 0.4f, 0f), Color.white, Color.black };
+    public Color GetColor()
+    {
+      return s_PlayerColors[_profileSettings.Color];
+    }
+    public string GetColorName(bool visual = true)
+    {
+      switch (_profileSettings.Color)
+      {
+        case 0:
+          return "blue";
+        case 1:
+          return "red";
+        case 2:
+          return "yellow";
+        case 3:
+          return visual ? "cyan" : "#00FFFF";
+        case 4:
+          return "green";
+        case 5:
+          return visual ? "magenta" : "#FF00FF";
+        case 6:
+          return "orange";
+        case 7:
+          return "white";
+        case 8:
+          return "black";
+      }
+      return "";
+    }
 
     public bool _faceMovement
     {
@@ -2220,9 +2247,9 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         var profileSettings = _profileSettings;
 
         // Clamp
-        profileSettings.Color = value % _Colors.Length;
+        profileSettings.Color = value % s_PlayerColors.Length;
         if (profileSettings.Color < 0)
-          profileSettings.Color = _Colors.Length - 1;
+          profileSettings.Color = s_PlayerColors.Length - 1;
 
         // Save
         SettingsModule.UpdatePlayerProfile(_Id, profileSettings);
@@ -2235,9 +2262,12 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         if (PlayerScript.s_Players != null)
           foreach (PlayerScript p in PlayerScript.s_Players)
             if (p._Id == _Id && !p._Ragdoll._IsDead) p._Ragdoll.ChangeColor(GetColor());
+
+        // Update UI
+        CreateHealthUI(_Player == null ? 1 : _Player._Ragdoll._health);
       }
     }
-    Transform _UI { get { return GameResources._UI_Player.GetChild(_Id); } }
+    Transform _ui { get { return GameResources._UI_Player.GetChild(_Id); } }
     public Transform _VersusUI;
     TMPro.TextMeshPro _loadoutIndexText;
 
@@ -2246,8 +2276,8 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     public PlayerProfile()
     {
       _Id = s_iD++;
-      _VersusUI = _UI.GetChild(6);
-      _loadoutIndexText = _UI.GetChild(7).GetComponent<TMPro.TextMeshPro>();
+      _VersusUI = _ui.GetChild(6);
+      _loadoutIndexText = _ui.GetChild(7).GetComponent<TMPro.TextMeshPro>();
 
       if (s_Profiles == null) s_Profiles = new PlayerProfile[4];
       s_Profiles[_Id] = this;
@@ -2286,6 +2316,19 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         )
       {
         _menuDownTime_down = _menuDownTime_up = 0f;
+
+        // Check color change
+        if (ControllerManager.GetKey(ControllerManager.Key.ONE, ControllerManager.InputMode.DOWN))
+        {
+          var playerColor = _playerColor;
+          playerColor--;
+          if (playerColor < 0)
+            playerColor = s_PlayerColors.Length - 1;
+          _playerColor = playerColor;
+        }
+        if (ControllerManager.GetKey(ControllerManager.Key.TWO, ControllerManager.InputMode.DOWN))
+          _playerColor = ++_playerColor % s_PlayerColors.Length;
+
         return;
       }
 
@@ -2306,48 +2349,65 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         }
       }
 
-      // Check axis selections
-      for (var i = 0; i < 2; i++)
+      var gamepad = ControllerManager.GetPlayerGamepad(_Id);
+      if (gamepad != null)
       {
-        var y = 0f;
-        switch (i)
+
+        // Check color change
+        if (gamepad.leftShoulder.wasPressedThisFrame)
         {
-          case 0:
-            y = ControllerManager.GetControllerAxis(_Id, ControllerManager.Axis.LSTICK_Y);
-            break;
-          case 1:
-            y = ControllerManager.GetControllerAxis(_Id, ControllerManager.Axis.DPAD_Y);
-            break;
+          var playerColor = _playerColor;
+          playerColor--;
+          if (playerColor < 0)
+            playerColor = s_PlayerColors.Length - 1;
+          _playerColor = playerColor;
         }
+        if (gamepad.rightShoulder.wasPressedThisFrame)
+          _playerColor = ++_playerColor % s_PlayerColors.Length;
 
-        if (y > 0.75f)
+        // Check axis selections
+        for (var i = 0; i < 2; i++)
         {
-          if (_directionalAxis[i] <= 0f)
+          var y = 0f;
+          switch (i)
           {
-            _directionalAxis[i] = 1f;
-
-            SetDownTime(false);
+            case 0:
+              y = ControllerManager.GetControllerAxis(_Id, ControllerManager.Axis.LSTICK_Y);
+              break;
+            case 1:
+              y = ControllerManager.GetControllerAxis(_Id, ControllerManager.Axis.DPAD_Y);
+              break;
           }
-        }
 
-        else if (y < -0.75f)
-        {
-          if (_directionalAxis[i] >= 0f)
+          if (y > 0.75f)
           {
-            _directionalAxis[i] = -1f;
+            if (_directionalAxis[i] <= 0f)
+            {
+              _directionalAxis[i] = 1f;
 
-            SetDownTime(true);
+              SetDownTime(false);
+            }
           }
-        }
 
-        else
-        {
-          if (_directionalAxis[i] != 0f)
+          else if (y < -0.75f)
           {
-            _directionalAxis[i] = 0f;
+            if (_directionalAxis[i] >= 0f)
+            {
+              _directionalAxis[i] = -1f;
 
-            SetUpTime(true);
-            SetUpTime(false);
+              SetDownTime(true);
+            }
+          }
+
+          else
+          {
+            if (_directionalAxis[i] != 0f)
+            {
+              _directionalAxis[i] = 0f;
+
+              SetUpTime(true);
+              SetUpTime(false);
+            }
           }
         }
       }
@@ -2393,14 +2453,22 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         if (ControllerManager.GetKey(ControllerManager.Key.Z))
         {
           if (Menu._CurrentMenu._Type == Menu.MenuType.VERSUS)
-            VersusMode.IncrementPlayerTeam(_Id, -1);
-          _LoadoutIndex--;
+          {
+            if (Menu._InMenus)
+              VersusMode.IncrementPlayerTeam(_Id, -1);
+          }
+          else
+            _LoadoutIndex--;
         }
         if (ControllerManager.GetKey(ControllerManager.Key.C))
         {
           if (Menu._CurrentMenu._Type == Menu.MenuType.VERSUS)
-            VersusMode.IncrementPlayerTeam(_Id, 1);
-          _LoadoutIndex++;
+          {
+            if (Menu._InMenus)
+              VersusMode.IncrementPlayerTeam(_Id, 1);
+          }
+          else
+            _LoadoutIndex++;
         }
 
         return;
@@ -2416,13 +2484,15 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       {
         if (Menu._CurrentMenu._Type == Menu.MenuType.VERSUS)
           VersusMode.IncrementPlayerTeam(_Id, -1);
-        _LoadoutIndex--;
+        else
+          _LoadoutIndex--;
       }
       if (gamepad.dpad.right.wasPressedThisFrame)
       {
         if (Menu._CurrentMenu._Type == Menu.MenuType.VERSUS)
           VersusMode.IncrementPlayerTeam(_Id, 1);
-        _LoadoutIndex++;
+        else
+          _LoadoutIndex++;
       }
     }
 
@@ -2437,36 +2507,6 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       FunctionsC.OnControllerInput();
     }
 
-    public Color GetColor()
-    {
-      return _Colors[_profileSettings.Color];
-    }
-    public string GetColorName()
-    {
-      return _ColorsName[_profileSettings.Color];
-    }
-    public string GetColorName(bool visual = true)
-    {
-      switch (_profileSettings.Color)
-      {
-        case 0:
-          return "blue";
-        case 1:
-          return "red";
-        case 2:
-          return "yellow";
-        case 3:
-          return visual ? "cyan" : "#00FFFF";
-        case 4:
-          return "white";
-        case 5:
-          return "black";
-        case 6:
-          return "orange";
-      }
-      return "";
-    }
-
     // Create health icons
     static Color _ExtraHealthColor = Color.gray;
     public void CreateHealthUI(int health)
@@ -2477,7 +2517,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
 
       // Create primitives
       //_health_UI = new GameObject[health];
-      _health_UI = new MeshRenderer[] { _UI.GetChild(3).gameObject.GetComponent<MeshRenderer>(), _UI.GetChild(4).gameObject.GetComponent<MeshRenderer>(), _UI.GetChild(5).gameObject.GetComponent<MeshRenderer>() };
+      _health_UI = new MeshRenderer[] { _ui.GetChild(3).gameObject.GetComponent<MeshRenderer>(), _ui.GetChild(4).gameObject.GetComponent<MeshRenderer>(), _ui.GetChild(5).gameObject.GetComponent<MeshRenderer>() };
       foreach (var renderer in _health_UI)
       {
         var color = GetColor();
@@ -2714,7 +2754,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     //
     public void UpdateVersusUI()
     {
-      var bg = _UI.GetChild(1).transform;
+      var bg = _ui.GetChild(1).transform;
 
       _VersusUI.gameObject.SetActive(s_GameMode == GameModes.VERSUS);
       if (s_GameMode == GameModes.VERSUS)
@@ -2755,7 +2795,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     // Update loadout index
     public void UpdateLoadoutIndex()
     {
-      var bg = _UI.GetChild(1).transform;
+      var bg = _ui.GetChild(1).transform;
 
       if (s_GameMode == GameModes.CLASSIC && SettingsModule.ShowLoadoutIndexes)
       {
@@ -2805,7 +2845,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       var utilLength_left = GetUtilitiesLength(ActiveRagdoll.Side.LEFT);
       var utilLength_right = GetUtilitiesLength(ActiveRagdoll.Side.RIGHT);
       _weaponIcons = new ItemIcon[2 + utilLength_left + utilLength_right];
-      var bg = _UI.GetChild(1).transform;
+      var bg = _ui.GetChild(1).transform;
 
       // Check for empty
       if (_weaponIcons.Length == 2 && _ItemLeft == ItemManager.Items.NONE && _ItemRight == ItemManager.Items.NONE)
@@ -2851,7 +2891,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       System.Tuple<Transform, int> LoadIcon(string name, int iter)
       {
         // Get icon
-        var item = ItemManager.GetItemUI(name, _Player, _UI);
+        var item = ItemManager.GetItemUI(name, _Player, _ui);
         var transform = item.Item1;
 
         // Move BG
@@ -3064,7 +3104,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     {
       // UI
       if (_perk_UI == null)
-        _perk_UI = new MeshRenderer[] { _UI.GetChild(2).GetChild(0).GetComponent<MeshRenderer>(), _UI.GetChild(2).GetChild(1).GetComponent<MeshRenderer>(), _UI.GetChild(2).GetChild(2).GetComponent<MeshRenderer>(), _UI.GetChild(2).GetChild(3).GetComponent<MeshRenderer>() };
+        _perk_UI = new MeshRenderer[] { _ui.GetChild(2).GetChild(0).GetComponent<MeshRenderer>(), _ui.GetChild(2).GetChild(1).GetComponent<MeshRenderer>(), _ui.GetChild(2).GetChild(2).GetComponent<MeshRenderer>(), _ui.GetChild(2).GetChild(3).GetComponent<MeshRenderer>() };
 
       // Current perks
       var perks = Shop.Perk.GetPerks(_Id);
@@ -4119,7 +4159,11 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
   public static void ToggleExitLight(bool toggle)
   {
     s_ExitLight.transform.position = PlayerspawnScript._PlayerSpawns[0].transform.position + new Vector3(0f, 3f, 0f);
-    if (!PlayerScript._TimerStarted)
+
+    if (s_GameMode != GameModes.CLASSIC && s_GameMode != GameModes.CHALLENGE)
+      s_ExitLightShow = false;
+
+    else if (!PlayerScript._TimerStarted)
       s_ExitLightShow = true;
 
     else if (!EnemyScript.AllDead() || !PlayerScript.HasExit())

@@ -2529,9 +2529,9 @@ public class Menu
 
                   // Focus / blur remove level preview
                   actions_onfocus.Add((MenuComponent component0) =>
-                      {
-                        GameScript._lp0 = TileManager.GetMapPreview(level_data).transform;
-                      });
+                  {
+                    GameScript._lp0 = TileManager.GetMapPreview(level_data).transform;
+                  });
                   actions_onblur.Add((MenuComponent component0) =>
                   {
                     if (GameScript._lp0 != null && _CurrentMenu._dropdownCount == 0)
@@ -3446,6 +3446,7 @@ public class Menu
         if (component._collider.transform.childCount == 0)
           SpawnControlUI(component, FunctionsC.Control.DPAD_UP);
       })
+
     .AddComponent($"{string.Format(format_controls, "pause:", "", "escape")} \n", MenuComponent.ComponentType.BUTTON_SIMPLE)
       .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
       {
@@ -3456,7 +3457,9 @@ public class Menu
           t.localPosition += lp;
         }
       })
+
     .AddComponent($"{string.Format(format_controls, "toggle camera type:", "", "f4")} \n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
+
     .AddComponent($"{string.Format(format_controls, "next level:", " hold", "page up")} \n", MenuComponent.ComponentType.BUTTON_SIMPLE)
       .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
       {
@@ -3469,6 +3472,21 @@ public class Menu
         if (component._collider.transform.childCount == 0)
           SpawnControlUI(component, FunctionsC.Control.DPAD_LEFT);
       })
+
+    .AddComponent($"\n<color={_COLOR_GRAY}>only in menus</color>\n")
+    .AddComponent($"{string.Format(format_controls, "cycle color:", "", "1")} \n", MenuComponent.ComponentType.BUTTON_SIMPLE)
+      .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+      {
+        if (component._collider.transform.childCount == 0)
+          SpawnControlUI(component, FunctionsC.Control.L_BUMPER);
+      })
+    .AddComponent($"{string.Format(format_controls, "cycle color:", "", "3")} \n", MenuComponent.ComponentType.BUTTON_SIMPLE)
+      .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+      {
+        if (component._collider.transform.childCount == 0)
+          SpawnControlUI(component, FunctionsC.Control.R_BUMPER);
+      })
+
     .AddComponent($"\n<color={_COLOR_GRAY}>mode - </color><color=yellow>CLASSIC</color>\n")
     .AddComponent($"{string.Format(format_controls, "cycle loadout left:", "", "z")} \n", MenuComponent.ComponentType.BUTTON_SIMPLE)
       .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
@@ -6000,17 +6018,17 @@ go to the <color=yellow>SHOP</color> to buy something~1
       {
         if (Settings._ForceKeyboard || SettingsModule.IgnoreFirstController)
         {
-          component.SetDisplayText("control options*\n");
+          component.SetDisplayText("control options*\n\n");
           component._textColor = "red";
         }
         else
         {
-          component.SetDisplayText("control options\n");
+          component.SetDisplayText("control options\n\n");
           component._textColor = "";
         }
       })
     //.AddComponent("overall stats - broke\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE, _COLOR_GRAY)
-     // .AddEvent((MenuComponent component) => { /*CommonEvents._SwitchMenu(MenuType.STATS); */})
+    // .AddEvent((MenuComponent component) => { /*CommonEvents._SwitchMenu(MenuType.STATS); */})
     // Back button; switch menu per pause setting
     .AddBackButton((MenuComponent component) =>
     {
@@ -7401,7 +7419,7 @@ there are no loadouts.~1 all items will be given in the mode!~1
         // Update dropdown data
         component.SetDropdownData("player selector - choose which players' controls to edit\n\n", selections, actions, selection_match);
       })
-    // Color
+    /*/ Color
     .AddComponent("color\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
       .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
       {
@@ -7427,7 +7445,7 @@ there are no loadouts.~1 all items will be given in the mode!~1
         }
         // Update dropdown data
         component.SetDropdownData("color select\n\n", selections, actions, selection_match);
-      })
+      })*/
     /*/ Run toggle
     .AddComponent("run\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
       .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>

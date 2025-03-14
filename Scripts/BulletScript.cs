@@ -304,10 +304,12 @@ public class BulletScript : MonoBehaviour
     if (hit_wall)
     {
 
-      //Debug.Log(collider.gameObject.name);
+      Debug.Log(collider.gameObject.name);
 
       var impactType = BulletImpactType.NORMAL;
-      if (SceneThemes._Theme._name == "Hedge" || collider.gameObject.name == "BookcaseOpen_Bush" || collider.gameObject.name == "BookcaseBig_Bush")
+      if (collider.gameObject.name == "Door_Obstacle")
+        ;//impactType = BulletImpactType.LASER;
+      else if (SceneThemes._Theme._name == "Hedge" || collider.gameObject.name == "BookcaseOpen_Bush" || collider.gameObject.name == "BookcaseBig_Bush")
         impactType = BulletImpactType.BUSHES;
       else if (collider.gameObject.name == "BookcaseOpen" || collider.gameObject.name == "BookcaseBig" || collider.gameObject.name == "Table_Flipped")
         impactType = BulletImpactType.WOOD;
@@ -504,6 +506,8 @@ public class BulletScript : MonoBehaviour
     BUSHES,
 
     MIRROR,
+
+    LASER,
   }
   public static void PlayBulletEffect(int effectIter, Vector3 position, Vector3 forward, BulletImpactType bulletImpactType = BulletImpactType.NORMAL)
   {
@@ -522,7 +526,13 @@ public class BulletScript : MonoBehaviour
         break;
 
       case 1:
-        SfxManager.PlayAudioSourceSimple(position, bulletImpactType == BulletImpactType.NORMAL ? "Etc/Bullet_impact" : (bulletImpactType == BulletImpactType.BUSHES ? "Etc/Bullet_impact_bushes" : "Etc/Bullet_impact_wood"), 0.9f, 1.1f, SfxManager.AudioClass.BULLET_SFX);
+        SfxManager.PlayAudioSourceSimple(position, bulletImpactType switch
+        {
+          BulletImpactType.WOOD => "Etc/Bullet_impact_wood",
+          BulletImpactType.BUSHES => "Etc/Bullet_impact_bushes",
+          //BulletImpactType.LASER => "Etc/Laser_sizzle",
+          _ => "Etc/Bullet_impact"
+        }, 0.9f, 1.1f, SfxManager.AudioClass.BULLET_SFX);
 
         parts = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.SPARKS)[0];
         parts.transform.position = position;
