@@ -610,10 +610,12 @@ public class GameScript : MonoBehaviour
             ActiveRagdoll.s_Ragdolls.Remove(p._Ragdoll);
             GameObject.Destroy(p.transform.parent.gameObject);
             PlayerScript.s_Players.RemoveAt(i);
-            p = PlayerspawnScript._PlayerSpawns[0].SpawnPlayer(false);
-            p.transform.position = alive_player.transform.position;
-            p.transform.parent.gameObject.SetActive(true);
-            SfxManager.PlayAudioSourceSimple(p.transform.position, "Ragdoll/Pop", 0.9f, 1.05f);
+            PlayerspawnScript._PlayerSpawns[0].SpawnPlayer((playerScript) =>
+            {
+              playerScript.transform.position = alive_player.transform.position;
+              playerScript.transform.parent.gameObject.SetActive(true);
+              SfxManager.PlayAudioSourceSimple(playerScript.transform.position, "Ragdoll/Pop", 0.9f, 1.05f);
+            }, false);
           }
         }
 
@@ -1026,10 +1028,12 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
             ActiveRagdoll.s_Ragdolls.Remove(p._Ragdoll);
             GameObject.Destroy(p.transform.parent.gameObject);
             PlayerScript.s_Players.RemoveAt(i);
-            p = PlayerspawnScript._PlayerSpawns[0].SpawnPlayer(false);
-            p.transform.position = alive_player.transform.position;
-            p.transform.parent.gameObject.SetActive(true);
-            SfxManager.PlayAudioSourceSimple(p.transform.position, "Ragdoll/Pop", 0.9f, 1.05f);
+            PlayerspawnScript._PlayerSpawns[0].SpawnPlayer((playerScript) =>
+            {
+              playerScript.transform.position = alive_player.transform.position;
+              playerScript.transform.parent.gameObject.SetActive(true);
+              SfxManager.PlayAudioSourceSimple(playerScript.transform.position, "Ragdoll/Pop", 0.9f, 1.05f);
+            }, false);
           }
         }
 
@@ -1624,7 +1628,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     if (Time.unscaledTime - _lastInputCheck > 0.25f)
     {
       _lastInputCheck = Time.unscaledTime;
-      Settings._NumberPlayers = 4;//(ControllerManager._NumberGamepads) + (Settings._ForceKeyboard ? 1 : 0);
+      Settings._NumberPlayers = (ControllerManager._NumberGamepads) + (Settings._ForceKeyboard ? 1 : 0);
       if (s_CustomNetworkManager._Connected)
         Settings._NumberPlayers += s_CustomNetworkManager._Players.Count - 1;
       if (Settings._NumberPlayers == 0)
@@ -3567,6 +3571,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
           return 1;
         case Shop.Perk.PerkType.THRUST:
         case Shop.Perk.PerkType.SPEED_UP:
+        case Shop.Perk.PerkType.SPLIT:
           return 2;
         case Shop.Perk.PerkType.EXPLOSIONS_UP:
         case Shop.Perk.PerkType.GRAPPLE_MASTER:

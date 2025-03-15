@@ -304,7 +304,7 @@ public class BulletScript : MonoBehaviour
     if (hit_wall)
     {
 
-      Debug.Log(collider.gameObject.name);
+      //Debug.Log(collider.gameObject.name);
 
       var impactType = BulletImpactType.NORMAL;
       if (collider.gameObject.name == "Door_Obstacle")
@@ -313,7 +313,6 @@ public class BulletScript : MonoBehaviour
         impactType = BulletImpactType.BUSHES;
       else if (collider.gameObject.name == "BookcaseOpen" || collider.gameObject.name == "BookcaseBig" || collider.gameObject.name == "Table_Flipped")
         impactType = BulletImpactType.WOOD;
-
 
       PlaySparks(false, 0, impactType);
     }

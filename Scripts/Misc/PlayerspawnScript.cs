@@ -1,6 +1,5 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
-using Mirror;
 
 using UnityEngine;
 
@@ -63,18 +62,26 @@ public class PlayerspawnScript : MonoBehaviour
     _PlayerSpawns.Remove(this);
   }
 
-  public PlayerScript SpawnPlayer(bool setActive = true)
+  public void SpawnPlayer(System.Action<PlayerScript> onSpawn = null, bool setActive = true)
   {
+    SpawnPlayerAt(transform.position, transform.localEulerAngles.y, onSpawn, setActive);
+  }
+
+  public static void SpawnPlayerAt(Vector3 atPosition, float rotateEulerAngle, System.Action<PlayerScript> onSpawn = null, bool setActive = true)
+  {
+    Debug.Log("Spawning player");
+
     // Create a new player
-    GameObject player = Instantiate(GameScript.s_CustomNetworkManager._Connected ? GameResources._PlayerNetwork : GameResources._Player);
+    var player = Instantiate(GameScript.s_CustomNetworkManager._Connected ? GameResources._PlayerNetwork : GameResources._Player);
     player.transform.parent = GameObject.Find("Players").transform;
     player.name = "Player";
 
     var playerScript = player.transform.GetChild(0).GetComponent<PlayerScript>();
-    playerScript._PlayerSpawnId = _id;
+    playerScript._PlayerSpawnId = 0;
 
     // Spawn them based on the this transform
-    var spawnPosition = transform.position;
+    var spawnPosition = atPosition;
+    spawnPosition += new Vector3(Random.Range(-1f, 1f) * 0.01f, 0f, Random.Range(-1f, 1f) * 0.01f);
     if ((GameScript.s_GameMode == GameScript.GameModes.VERSUS && !VersusMode.s_Settings._FreeForAll) || (GameScript.s_GameMode == GameScript.GameModes.SURVIVAL))
     {
       var numSpawns = _PlayerSpawns.Count;
@@ -86,7 +93,7 @@ public class PlayerspawnScript : MonoBehaviour
     player.transform.position = spawnPosition;
     //Debug.Log($"= Spawning player at position: [{transform.position}]");
 
-    FunctionsC.RotateLocal(ref player, transform.localEulerAngles.y);
+    FunctionsC.RotateLocal(ref player, rotateEulerAngle);
 
     // Activate the player script
     player.SetActive(setActive);
@@ -95,11 +102,11 @@ public class PlayerspawnScript : MonoBehaviour
     if (!GameScript.IsSurvival())
       GameScript.OnLevelStart();
 
-    // Check network spawn
+    /*/ Check network spawn
     var playerId = GameScript.s_CustomNetworkManager._PlayerSpawnId++;
     if (GameScript.s_CustomNetworkManager._Connected)
-      NetworkServer.Spawn(player, GameScript.s_CustomNetworkManager.GetPlayer(playerId)._NetworkBehavior.connectionToClient);
+      NetworkServer.Spawn(player, GameScript.s_CustomNetworkManager.GetPlayer(playerId)._NetworkBehavior.connectionToClient);*/
 
-    return playerScript;
+    onSpawn?.Invoke(playerScript);
   }
 }

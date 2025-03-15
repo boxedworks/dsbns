@@ -1337,7 +1337,7 @@ public class ActiveRagdoll
       if (_IsPlayer)
       {
         // Fire player events
-        _PlayerScript.OnDamageTaken();
+        _PlayerScript.OnDamageTaken(ragdollDamageSource);
         PlaySound("Enemies/Ugh0");
 
         if (_hasArmor)

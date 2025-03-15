@@ -59,7 +59,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
 
   float _spawnTimer;
 
-  public UnityEngine.AI.NavMeshAgent _agent;
+  public NavMeshAgent _agent;
 
   static float _cY, _cX;
 
@@ -105,6 +105,15 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
   public int _PlayerSpawnId;
   PlayerspawnScript _playerSpawn { get { return PlayerspawnScript._PlayerSpawns[_PlayerSpawnId]; } }
 
+  //
+  PlayerScript _connectedTwin;
+  ActiveRagdoll.Side _connectedTwinSide;
+  bool _isOriginalTwin;
+  bool _isOriginal { get { return _Id == 0 && (!_hasTwin || _isOriginalTwin); } }
+  bool _hasTwin { get { return _connectedTwin != null; } }
+  bool _isLeftTwin { get { return !_hasTwin || _connectedTwinSide == ActiveRagdoll.Side.LEFT; } }
+  bool _isRightTwin { get { return !_hasTwin || _connectedTwinSide == ActiveRagdoll.Side.RIGHT; } }
+
   // Use this for initialization
   void Start()
   {
@@ -146,31 +155,43 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
       s_Players = new List<PlayerScript>();
     s_Players.Add(this);
 
-    // Give unique _PlayerID and decide input based upon _PlayerID
-    _Id = _PLAYERID++ % Settings._NumberPlayers;
-
-    // Check all players to make sure no duplicate _PlayerID
-    var loops = 0;
-    while (true && loops++ < 5)
+    //
+    if (_hasTwin)
     {
-      var breakLoop = true;
-      foreach (var p in s_Players)
-      {
-        if (p == null) continue;
-        // If self, skip
-        if (p.transform.GetInstanceID() == transform.GetInstanceID() || p._ragdoll._IsDead) continue;
-        // If has same _PlayerID, increment id and set do not break while loop
-        if (p._Id == _Id)
-        {
-          _Id = _PLAYERID++ % Settings._NumberPlayers;
-          breakLoop = false;
-          break;
-        }
-      }
-      // If break loop, break the loop
-      if (breakLoop) break;
+
+      _Id = _connectedTwin._Id;
+
     }
-    if (loops == 5) Debug.LogError("Duplicate _PlayerID, may cause bug " + _Id);
+    else
+    {
+
+      // Give unique _PlayerID and decide input based upon _PlayerID
+      _Id = _PLAYERID++ % Settings._NumberPlayers;
+
+      // Check all players to make sure no duplicate _PlayerID
+      var loops = 0;
+      while (true && loops++ < 5)
+      {
+        var breakLoop = true;
+        foreach (var p in s_Players)
+        {
+          if (p == null) continue;
+          // If self, skip
+          if (p.transform.GetInstanceID() == transform.GetInstanceID() || p._ragdoll._IsDead) continue;
+          // If has same _PlayerID, increment id and set do not break while loop
+          if (p._Id == _Id)
+          {
+            _Id = _PLAYERID++ % Settings._NumberPlayers;
+            breakLoop = false;
+            break;
+          }
+        }
+        // If break loop, break the loop
+        if (breakLoop) break;
+      }
+      if (loops == 5) Debug.LogError("Duplicate _PlayerID, may cause bug " + _Id);
+
+    }
 
     // Create health UI
     //_profile.CreateHealthUI(health);
@@ -199,14 +220,47 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
 
     // Equip starting weapons
     _Profile._EquipmentIndex = 0;
-    _itemLeft = _Profile._ItemLeft;
-    _itemRight = _Profile._ItemRight;
+
+    // Check split mod
+    if (HasPerk(Shop.Perk.PerkType.SPLIT) && _connectedTwin == null)
+    {
+      _isOriginalTwin = true;
+
+      PlayerspawnScript.SpawnPlayerAt(transform.position, transform.localEulerAngles.y, (playerScript) =>
+      {
+        _connectedTwin = playerScript;
+        playerScript._connectedTwin = this;
+
+        _connectedTwinSide = ActiveRagdoll.Side.LEFT;
+        playerScript._connectedTwinSide = ActiveRagdoll.Side.RIGHT;
+
+        Debug.Log("Connected");
+      }, true);
+    }
+
+    _itemLeft = _isLeftTwin ? _Profile._ItemLeft : GameScript.ItemManager.Items.NONE;
+    _itemRight = _isRightTwin ? _Profile._ItemRight : GameScript.ItemManager.Items.NONE;
+
     GameScript.ItemManager.SpawnItem(_itemLeft);
     GameScript.ItemManager.SpawnItem(_itemRight);
     GameScript.ItemManager.SpawnItem(_Equipment._ItemLeft1);
     GameScript.ItemManager.SpawnItem(_Equipment._ItemRight1);
-    EquipStart();
 
+    // Equip start items
+    if (_itemLeft != GameScript.ItemManager.Items.NONE)
+      _ragdoll.EquipItem(_itemLeft, ActiveRagdoll.Side.LEFT);
+    else
+    {
+      _ragdoll.AddArmJoint(ActiveRagdoll.Side.LEFT);
+      _ragdoll.UnequipItem(ActiveRagdoll.Side.LEFT);
+    }
+    if (_itemRight != GameScript.ItemManager.Items.NONE)
+      _ragdoll.EquipItem(_itemRight, ActiveRagdoll.Side.RIGHT);
+    else if (_ragdoll._ItemL == null || !_ragdoll._ItemL._twoHanded)
+    {
+      _ragdoll.AddArmJoint(ActiveRagdoll.Side.RIGHT);
+      _ragdoll.UnequipItem(ActiveRagdoll.Side.RIGHT);
+    }
     _saveLoadoutIndex = _Profile._LoadoutIndex;
 
     // Set camera position
@@ -238,7 +292,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
     ControllerManager.GetPlayerGamepad(_Id)?.SetMotorSpeeds(0f, 0f);
 
     // Handle rain VFX
-    if (_Id == 0)
+    if (_isOriginal)
     {
 
       // Clean up old light if exists
@@ -279,7 +333,6 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
       {
         _ragdoll.AddCrown();
       }
-
   }
 
   //
@@ -300,8 +353,10 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
   public void RegisterUtilities()
   {
     // Register utilities
-    RegisterUtility(ActiveRagdoll.Side.LEFT);
-    RegisterUtility(ActiveRagdoll.Side.RIGHT);
+    if (_isLeftTwin)
+      RegisterUtility(ActiveRagdoll.Side.LEFT);
+    if (_isRightTwin)
+      RegisterUtility(ActiveRagdoll.Side.RIGHT);
   }
 
   public void RegisterUtility(ActiveRagdoll.Side side, int amount = -1)
@@ -421,25 +476,6 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
     s_Players = null;
   }
 
-  public void EquipStart()
-  {
-    // Equip start items
-    if (_itemLeft != GameScript.ItemManager.Items.NONE)
-      _ragdoll.EquipItem(_itemLeft, ActiveRagdoll.Side.LEFT);
-    else
-    {
-      _ragdoll.AddArmJoint(ActiveRagdoll.Side.LEFT);
-      _ragdoll.UnequipItem(ActiveRagdoll.Side.LEFT);
-    }
-    if (_itemRight != GameScript.ItemManager.Items.NONE)
-      _ragdoll.EquipItem(_itemRight, ActiveRagdoll.Side.RIGHT);
-    else if (_ragdoll._ItemL == null || !_ragdoll._ItemL._twoHanded)
-    {
-      _ragdoll.AddArmJoint(ActiveRagdoll.Side.RIGHT);
-      _ragdoll.UnequipItem(ActiveRagdoll.Side.RIGHT);
-    }
-  }
-
   public void ChangeRingColor(Color c)
   {
     if (_ring == null) return;
@@ -470,7 +506,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
   {
 
     // Timer
-    if (!_TimerStarted && _Id == 0 && _spawnTimer <= 0f)
+    if (!_TimerStarted && _isOriginal && _spawnTimer <= 0f)
     {
 
       var player_farthest = FunctionsC.GetFarthestPlayerFrom(_playerSpawn.transform.position);
@@ -491,7 +527,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
 
     // Ratings
     if (
-      _Id == 0 && !_level_ratings_shown && !TileManager._Level_Complete && !GameScript.s_Paused &&
+      _isOriginal && !_level_ratings_shown && !TileManager._Level_Complete && !GameScript.s_Paused &&
       (
         (!_TimerStarted && Time.time - GameScript.s_LevelStartTime > 3f) ||
         (_All_Dead && Time.unscaledTime - _ragdoll._time_dead > 3f)
@@ -718,7 +754,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
       }
       /*/if (Debug.isDebugBuild)
       {
-        if (_id == 0)
+        if (_isOriginal)
         {
           if (ControllerManager.GetKey(ControllerManager.Key.C))
             AutoPlayer.Capture();
@@ -798,7 +834,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
 
     if (GameScript.s_Paused)
     {
-      if (_Id == 0)
+      if (_isOriginal)
       {
         SfxManager.Update(0f);
       }
@@ -821,7 +857,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
     // Check for timescale change
     if (true)
     {
-      if (_Id == 0)
+      if (_isOriginal)
       {
 
         // Check should apply time
@@ -959,7 +995,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
     float unscaled_dt = Time.unscaledDeltaTime,
       dt = Time.deltaTime;
 
-    if (_Id == 0 && GameScript.s_Singleton._UseCamera)
+    if (_isOriginal && GameScript.s_Singleton._UseCamera)
     {
       var camera_height = SettingsModule.CameraZoom == Settings.SettingsSaveData.CameraZoomType.NORMAL ? 14f : SettingsModule.CameraZoom == Settings.SettingsSaveData.CameraZoomType.CLOSE ? 10f : 18f;
       if (SettingsModule.UseOrthographicCamera)
@@ -1164,7 +1200,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
     // Spawn enemies as player gets closer to goal; 3rd difficulty / game mode ?
     if (!GameScript.IsSurvival())
       if (
-        _Id == 0 &&
+        _isOriginal &&
         LevelModule.ExtraHorde == 1 &&
         Settings._Extras_CanUse &&
         (Powerup._Powerups?.Count ?? 0) > 0 &&
@@ -1291,6 +1327,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
       if (ControllerManager.GetKey(ControllerManager.Key.D, ControllerManager.InputMode.HOLD) ||
         ControllerManager.GetKey(ControllerManager.Key.ARROW_R, ControllerManager.InputMode.HOLD))
         x += 1f;
+
       // Mouse look
       var p = GameResources._Camera_Main.ScreenPointToRay(ControllerManager.GetMousePosition()).GetPoint(Vector3.Distance(GameResources._Camera_Main.transform.position, transform.position));
       transform.LookAt(new Vector3(p.x, transform.position.y, p.z));
@@ -1303,56 +1340,64 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
       if (ControllerManager.GetKey(ControllerManager.Key.X))
         ToggleFireModes();
 
-      /// Use items
-      // Left item
       // Check versus start
       if (GameScript.s_GameMode != GameScript.GameModes.VERSUS || (GameScript.s_GameMode == GameScript.GameModes.VERSUS && VersusMode.s_PlayersCanMove))
       {
-        if (ControllerManager.GetMouseInput(0, ControllerManager.InputMode.DOWN))
-          if (!_ragdoll._ItemL)
-          {
-            _ragdoll.UseRightDown();
-            saveInput.y = 1f;
-          }
-          else
-          {
-            _ragdoll.UseLeftDown();
-            saveInput.x = 1f;
-          }
-        if (ControllerManager.GetMouseInput(0, ControllerManager.InputMode.UP))
-          if (!_ragdoll._ItemL)
-          {
-            _ragdoll.UseRightUp();
-            saveInput.y = -1f;
-          }
-          else
-          {
-            _ragdoll.UseLeftUp();
-            saveInput.x = -1f;
-          }
+
+        /// Use items
+        // Left item
+        if (_isLeftTwin)
+        {
+          if (ControllerManager.GetMouseInput(0, ControllerManager.InputMode.DOWN))
+            if (!_ragdoll._ItemL)
+            {
+              _ragdoll.UseRightDown();
+              saveInput.y = 1f;
+            }
+            else
+            {
+              _ragdoll.UseLeftDown();
+              saveInput.x = 1f;
+            }
+          if (ControllerManager.GetMouseInput(0, ControllerManager.InputMode.UP))
+            if (!_ragdoll._ItemL)
+            {
+              _ragdoll.UseRightUp();
+              saveInput.y = -1f;
+            }
+            else
+            {
+              _ragdoll.UseLeftUp();
+              saveInput.x = -1f;
+            }
+        }
+
         // Right item
-        if (ControllerManager.GetMouseInput(1, ControllerManager.InputMode.DOWN))
-          if (!_ragdoll._ItemR)
-          {
-            _ragdoll.UseLeftDown();
-            saveInput.x = 1f;
-          }
-          else
-          {
-            _ragdoll.UseRightDown();
-            saveInput.y = 1f;
-          }
-        if (ControllerManager.GetMouseInput(1, ControllerManager.InputMode.UP))
-          if (!_ragdoll._ItemR)
-          {
-            _ragdoll.UseLeftUp();
-            saveInput.x = -1f;
-          }
-          else
-          {
-            _ragdoll.UseRightUp();
-            saveInput.y = -1f;
-          }
+        if (_isRightTwin)
+        {
+          if (ControllerManager.GetMouseInput(1, ControllerManager.InputMode.DOWN))
+            if (!_ragdoll._ItemR)
+            {
+              _ragdoll.UseLeftDown();
+              saveInput.x = 1f;
+            }
+            else
+            {
+              _ragdoll.UseRightDown();
+              saveInput.y = 1f;
+            }
+          if (ControllerManager.GetMouseInput(1, ControllerManager.InputMode.UP))
+            if (!_ragdoll._ItemR)
+            {
+              _ragdoll.UseLeftUp();
+              saveInput.x = -1f;
+            }
+            else
+            {
+              _ragdoll.UseRightUp();
+              saveInput.y = -1f;
+            }
+        }
 
         // Check grapple
         if (
@@ -1365,10 +1410,13 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
         }
         if (_ragdoll._grappling)
         {
-          if (_ragdoll._ItemL == null && ControllerManager.GetMouseInput(0, ControllerManager.InputMode.UP))
-            _ragdoll.Grapple(false);
-          if (_ragdoll._ItemR == null && ControllerManager.GetMouseInput(1, ControllerManager.InputMode.UP))
-            _ragdoll.Grapple(false);
+          if (_isLeftTwin)
+            if (_ragdoll._ItemL == null && ControllerManager.GetMouseInput(0, ControllerManager.InputMode.UP))
+              _ragdoll.Grapple(false);
+
+          if (_isRightTwin)
+            if (_ragdoll._ItemR == null && ControllerManager.GetMouseInput(1, ControllerManager.InputMode.UP))
+              _ragdoll.Grapple(false);
         }
       }
 
@@ -1448,37 +1496,63 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
       if (ControllerManager.GetKey(ControllerManager.Key.R, _Profile._reloadSidesSameTime ? ControllerManager.InputMode.HOLD : ControllerManager.InputMode.DOWN))
         Reload();
     }
-    else
+
     // Controller
+    else
     {
       var gamepadId = _Id - (GameScript.s_CustomNetworkManager._Connected ? GameScript.s_CustomNetworkManager._Self._NetworkBehavior._PlayerId : 0);
-      //Debug.Log($"[{_Id}] Gathering gamepad id {gamepadId} [{GameScript.s_CustomNetworkManager._Self._NetworkBehavior._PlayerId}]");
 
       // Check sticks
-      Vector2 controllerInput0 = new Vector2(ControllerManager.GetControllerAxis(gamepadId, ControllerManager.Axis.LSTICK_X),
+      Vector2 leftStick = new Vector2(ControllerManager.GetControllerAxis(gamepadId, ControllerManager.Axis.LSTICK_X),
           ControllerManager.GetControllerAxis(gamepadId, ControllerManager.Axis.LSTICK_Y)),
-        controllerInput1 = new Vector2(ControllerManager.GetControllerAxis(gamepadId, ControllerManager.Axis.RSTICK_X),
+        rightStick = new Vector2(ControllerManager.GetControllerAxis(gamepadId, ControllerManager.Axis.RSTICK_X),
           ControllerManager.GetControllerAxis(gamepadId, ControllerManager.Axis.RSTICK_Y));
-      float min = 0.125f, max = 0.85f;
-      if (Mathf.Abs(controllerInput0.x) <= min) controllerInput0.x = 0f;
-      else if (Mathf.Abs(controllerInput0.x) >= max) controllerInput0.x = 1f * Mathf.Sign(controllerInput0.x);
-      if (Mathf.Abs(controllerInput0.y) <= min) controllerInput0.y = 0f;
-      else if (Mathf.Abs(controllerInput0.y) >= max) controllerInput0.y = 1f * Mathf.Sign(controllerInput0.y);
-      if (Mathf.Abs(controllerInput1.x) <= min) controllerInput1.x = 0f;
-      else if (Mathf.Abs(controllerInput1.x) >= max) controllerInput1.x = 1f * Mathf.Sign(controllerInput1.x);
-      if (Mathf.Abs(controllerInput1.y) <= min) controllerInput1.y = 0f;
-      else if (Mathf.Abs(controllerInput1.y) >= max) controllerInput1.y = 1f * Mathf.Sign(controllerInput1.y);
-      if (controllerInput0 != Vector2.zero)
+
+      //
+      if (_hasTwin)
       {
-        x = controllerInput0.x;
-        y = controllerInput0.y;
+        if (_isLeftTwin)
+          rightStick = leftStick;
+        if (_isRightTwin)
+          leftStick = rightStick;
       }
-      if (controllerInput1 != Vector2.zero && controllerInput1.magnitude > 0.5f)
+
+      //
+      float min = 0.125f, max = 0.85f;
+
+      // Left
+      if (Mathf.Abs(leftStick.x) <= min)
+        leftStick.x = 0f;
+      else if (Mathf.Abs(leftStick.x) >= max)
+        leftStick.x = 1f * Mathf.Sign(leftStick.x);
+
+      if (Mathf.Abs(leftStick.y) <= min)
+        leftStick.y = 0f;
+      else if (Mathf.Abs(leftStick.y) >= max)
+        leftStick.y = 1f * Mathf.Sign(leftStick.y);
+
+      // Right
+      if (Mathf.Abs(rightStick.x) <= min)
+        rightStick.x = 0f;
+      else if (Mathf.Abs(rightStick.x) >= max)
+        rightStick.x = 1f * Mathf.Sign(rightStick.x);
+
+      if (Mathf.Abs(rightStick.y) <= min)
+        rightStick.y = 0f;
+      else if (Mathf.Abs(rightStick.y) >= max)
+        rightStick.y = 1f * Mathf.Sign(rightStick.y);
+
+      if (leftStick != Vector2.zero)
       {
-        x2 = controllerInput1.x;
-        y2 = controllerInput1.y;
-        _cX = Mathf.Clamp(_cX + controllerInput1.x / 2f, -1f, 1f);
-        _cY = Mathf.Clamp(_cY + controllerInput1.y / 2f, -1f, 1f);
+        x = leftStick.x;
+        y = leftStick.y;
+      }
+      if (rightStick != Vector2.zero && rightStick.magnitude > 0.5f)
+      {
+        x2 = rightStick.x;
+        y2 = rightStick.y;
+        _cX = Mathf.Clamp(_cX + rightStick.x / 2f, -1f, 1f);
+        _cY = Mathf.Clamp(_cY + rightStick.y / 2f, -1f, 1f);
       }
 
       // Move arms
@@ -1493,10 +1567,24 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
         // Use items
         if (GameScript.s_GameMode != GameScript.GameModes.VERSUS || (GameScript.s_GameMode == GameScript.GameModes.VERSUS && VersusMode.s_PlayersCanMove))
         {
+
           Vector2 input = new Vector2(ControllerManager.GetControllerAxis(gamepadId, ControllerManager.Axis.L2),
             ControllerManager.GetControllerAxis(gamepadId, ControllerManager.Axis.R2));
+
+          //
+          if (_hasTwin)
+          {
+            if (_isLeftTwin)
+              input.y = 0f;
+            if (_isRightTwin)
+              input.x = 0f;
+          }
+
+          //
           float bias = 0.4f;
           min = 0f + bias;
+
+          //
           if (input.x >= 1f - bias && _lastInputTriggers.x < 1f - bias)
             if (!_ragdoll._ItemL && !_ragdoll._ItemR)
             {
@@ -1523,6 +1611,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
               _ragdoll.UseLeftUp();
               saveInput.x = -1f;
             }
+
           if (input.y >= 1f - bias && _lastInputTriggers.y < 1f - bias)
             if (!_ragdoll._ItemL && !_ragdoll._ItemR)
             {
@@ -1630,10 +1719,13 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
           }
           if (_ragdoll._grappling)
           {
-            if (_ragdoll._ItemL == null && gamepad.leftTrigger.wasReleasedThisFrame)
-              _ragdoll.Grapple(false);
-            if (_ragdoll._ItemR == null && gamepad.rightTrigger.wasReleasedThisFrame)
-              _ragdoll.Grapple(false);
+            if (_isLeftTwin)
+              if (_ragdoll._ItemL == null && gamepad.leftTrigger.wasReleasedThisFrame)
+                _ragdoll.Grapple(false);
+
+            if (_isRightTwin)
+              if (_ragdoll._ItemR == null && gamepad.rightTrigger.wasReleasedThisFrame)
+                _ragdoll.Grapple(false);
           }
 
           // Check utilities
@@ -2199,9 +2291,13 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
     return false;
   }
 
-  public void OnDamageTaken()
+  public void OnDamageTaken(ActiveRagdoll.RagdollDamageSource ragdollDamageSource)
   {
     _Profile.UpdateHealthUI();
+
+    //
+    if (_hasTwin && !(_connectedTwin._ragdoll?._IsDead ?? true))
+      _connectedTwin._Ragdoll?.TakeDamage(ragdollDamageSource);
 
     // Controller rumble
     if (!mouseEnabled && SettingsModule.ControllerRumble)
@@ -2723,7 +2819,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
     static int _PlaybackIndex;
     public static void Playback()
     {
-      _Playing = !_Playing;
+      /*_Playing = !_Playing;
       if (!_Playing) // Stopped playback
       {
         Debug.LogError("Stopped playback");
@@ -2749,7 +2845,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
         PlayerspawnScript._PlayerSpawns[0].SpawnPlayer();
       }
 
-      Debug.LogError("Started playback");
+      Debug.LogError("Started playback");*/
     }
 
     public static void ControlPlayer(PlayerScript p, int data_iter = 0)
