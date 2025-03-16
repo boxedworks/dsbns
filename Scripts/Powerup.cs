@@ -180,7 +180,7 @@ public class Powerup : MonoBehaviour
   // Update is called once per frame
   void Update()
   {
-    if (GameScript.s_Paused || Menu._InMenus)
+    if (GameScript.s_Paused || Menu.s_InMenus)
     {
       _audio.volume = 0f;
       return;

@@ -540,7 +540,7 @@ public class TileManager
 
     // Show unlocks
     _LoadingMap = false;
-    if (!Menu._InMenus && Shop.s_UnlockString != string.Empty)
+    if (!Menu.s_InMenus && Shop.s_UnlockString != string.Empty)
       GameScript.TogglePause(Menu.MenuType.NONE);
 
     while (GameScript.s_Paused)
@@ -1016,7 +1016,7 @@ public class TileManager
       // Spawn players / hide menus
       if (_s_MapIndex > 1)
       {
-        if (Menu._InMenus)
+        if (Menu.s_InMenus)
         {
           Menu.HideMenus();
         }
@@ -1281,7 +1281,7 @@ public class TileManager
     {
       var hardmodeadd = Settings._DIFFICULTY == 1 ? "*" : "";
       _Text_LevelNum.text = $"{Levels._CurrentLevelIndex + 1}{hardmodeadd}";
-      if (Menu._InMenus)
+      if (Menu.s_InMenus)
       {
         _Text_LevelNum.gameObject.SetActive(false);
         _Text_LevelTimer.gameObject.SetActive(false);
@@ -4861,7 +4861,7 @@ public class TileManager
     {
       _SceneMaterials = new Material[13];
       for (int i = 0; i < _SceneMaterials.Length; i++)
-        _SceneMaterials[i] = new Material(Menu._Menu.GetChild(1).gameObject.GetComponent<MeshRenderer>().sharedMaterial);
+        _SceneMaterials[i] = new Material(Menu.s_Menu.GetChild(1).gameObject.GetComponent<MeshRenderer>().sharedMaterial);
     }
     void ChangeColorAndDelete(Transform t0, int index, Color c0)
     {
@@ -5167,7 +5167,7 @@ public class TileManager
     container.localScale = new Vector3(0.17f * mod, 0.17f * mod, 0.01f);
 
     // Set position
-    container.parent = Menu._Text.transform;
+    container.parent = Menu.s_Text.transform;
     if (GameScript._lp0 != null && GameScript._lp0.gameObject != null)
     {
       GameObject.Destroy(GameScript._lp0.gameObject);
@@ -5175,12 +5175,12 @@ public class TileManager
     }
 
     // Set preview pos
-    if (Menu._CurrentMenu._Type == Menu.MenuType.EDITOR_LEVELS)
+    if (Menu.s_CurrentMenu._Type == Menu.MenuType.EDITOR_LEVELS)
     {
       container.parent = GameResources._Camera_Main.transform;
       container.localPosition = new Vector3(2.8f, 1.5f, 6f);
     }
-    else if (Menu._CurrentMenu._Type == Menu.MenuType.EDITOR_PACKS_EDIT)
+    else if (Menu.s_CurrentMenu._Type == Menu.MenuType.EDITOR_PACKS_EDIT)
     {
       container.parent = GameResources._Camera_Main.transform;
       container.localPosition = new Vector3(2.8f, 1.5f, 6f);
@@ -5202,10 +5202,10 @@ public class TileManager
       // Check no longer in menu
       bool getout = false;
       if (
-        !Menu._InMenus ||
+        !Menu.s_InMenus ||
         (
-          ((Menu._CurrentMenu._Type != Menu.MenuType.LEVELS) || (Menu._CurrentMenu._Type == Menu.MenuType.LEVELS && Menu._CurrentMenu._dropdownCount == 0)) &&
-          (Menu._CurrentMenu._Type != Menu.MenuType.EDITOR_LEVELS && Menu._CurrentMenu._Type != Menu.MenuType.EDITOR_PACKS_EDIT)
+          ((Menu.s_CurrentMenu._Type != Menu.MenuType.LEVELS) || (Menu.s_CurrentMenu._Type == Menu.MenuType.LEVELS && Menu.s_CurrentMenu._dropdownCount == 0)) &&
+          (Menu.s_CurrentMenu._Type != Menu.MenuType.EDITOR_LEVELS && Menu.s_CurrentMenu._Type != Menu.MenuType.EDITOR_PACKS_EDIT)
         )
         )
       {

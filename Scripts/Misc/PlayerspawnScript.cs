@@ -64,10 +64,10 @@ public class PlayerspawnScript : MonoBehaviour
 
   public void SpawnPlayer(System.Action<PlayerScript> onSpawn = null, bool setActive = true)
   {
-    SpawnPlayerAt(transform.position, transform.localEulerAngles.y, onSpawn, setActive);
+    SpawnPlayerAt(transform.position, transform.localEulerAngles.y, onSpawn, setActive, _id);
   }
 
-  public static void SpawnPlayerAt(Vector3 atPosition, float rotateEulerAngle, System.Action<PlayerScript> onSpawn = null, bool setActive = true)
+  public static void SpawnPlayerAt(Vector3 atPosition, float rotateEulerAngle, System.Action<PlayerScript> onSpawn = null, bool setActive = true, int spawnId = 0)
   {
     Debug.Log("Spawning player");
 
@@ -77,7 +77,7 @@ public class PlayerspawnScript : MonoBehaviour
     player.name = "Player";
 
     var playerScript = player.transform.GetChild(0).GetComponent<PlayerScript>();
-    playerScript._PlayerSpawnId = 0;
+    playerScript._PlayerSpawnId = spawnId;
 
     // Spawn them based on the this transform
     var spawnPosition = atPosition;

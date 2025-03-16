@@ -342,7 +342,7 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
   {
     // Check null
     if (_Enemies_alive == null || _Enemies_alive.Count == 0 || GameScript.s_EditorEnabled) return;
-    if (Menu._InMenus || TileManager._LoadingMap || PlayerScript.s_Players == null || PlayerScript.s_Players.Count == 0) return;
+    if (Menu.s_InMenus || TileManager._LoadingMap || PlayerScript.s_Players == null || PlayerScript.s_Players.Count == 0) return;
     if (GameScript.s_GameMode != GameScript.GameModes.SURVIVAL)
     {
       // Set up handler

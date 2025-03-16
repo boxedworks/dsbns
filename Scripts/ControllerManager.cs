@@ -73,7 +73,7 @@ public static class ControllerManager
     void Input_action.IMenuActions.OnSelect(InputAction.CallbackContext context)
     {
       if (context.phase != InputActionPhase.Started) return;
-      if (!Menu._InMenus) return;
+      if (!Menu.s_InMenus) return;
       Menu.SendInput(Menu.Input.SPACE);
       FunctionsC.OnControllerInput();
     }
@@ -81,7 +81,7 @@ public static class ControllerManager
     void Input_action.IMenuActions.OnBack(InputAction.CallbackContext context)
     {
       if (context.phase != InputActionPhase.Started) return;
-      if (!Menu._InMenus) return;
+      if (!Menu.s_InMenus) return;
       Menu.SendInput(Menu.Input.BACK);
       FunctionsC.OnControllerInput();
     }
@@ -169,18 +169,18 @@ public static class ControllerManager
         }*/
 
         // Exit to menus
-        if (Menu._InMenus && Menu._InPause)
+        if (Menu.s_InMenus && Menu.s_InPause)
         {
-          Menu._InMenus = false;
-          Menu._Menu.gameObject.SetActive(false);
-          Menu._InPause = false;
+          Menu.s_InMenus = false;
+          Menu.s_Menu.gameObject.SetActive(false);
+          Menu.s_InPause = false;
           GameScript.TogglePause();
 
           // Check editing menus
           if (GameScript.s_EditorEnabled) TileManager.EditorMenus._Menu_Editor.gameObject.SetActive(true);
           else TileManager.EditorMenus._Menu_EditorTesting.gameObject.SetActive(true);
         }
-        else if (!Menu._InMenus)
+        else if (!Menu.s_InMenus)
         {
           GameScript.TogglePause();
           TileManager.EditorMenus.HideMenus();
@@ -190,14 +190,14 @@ public static class ControllerManager
       }
 
       if (GameScript.s_EditorEnabled) return;
-      if (Menu._InMenus && Menu._InPause)
+      if (Menu.s_InMenus && Menu.s_InPause)
       {
-        Menu._InMenus = false;
-        Menu._Menu.gameObject.SetActive(false);
-        Menu._InPause = false;
+        Menu.s_InMenus = false;
+        Menu.s_Menu.gameObject.SetActive(false);
+        Menu.s_InPause = false;
         GameScript.TogglePause();
       }
-      else if (!Menu._InMenus)
+      else if (!Menu.s_InMenus)
         GameScript.TogglePause();
     }
   }
@@ -263,14 +263,14 @@ public static class ControllerManager
     {
       if (context.phase != InputActionPhase.Started) return;
       // Quick-remove in menu loadout editor
-      if (Menu._InMenus && Menu._CurrentMenu._Type == Menu.MenuType.EDIT_LOADOUT)
-        Menu._CurrentMenu.QuickRemoveEdit();
+      if (Menu.s_InMenus && Menu.s_CurrentMenu._Type == Menu.MenuType.EDIT_LOADOUT)
+        Menu.s_CurrentMenu.QuickRemoveEdit();
     }
     void Input_action.IPlayerActions.OnReloadMap(InputAction.CallbackContext context)
     {
       if (context.phase != InputActionPhase.Started) return;
       if (GameScript.s_GameMode == GameScript.GameModes.VERSUS) return;
-      if (!Menu._InMenus)
+      if (!Menu.s_InMenus)
       {
         var p = GetPlayer(context);
         if (p == null)
@@ -292,7 +292,7 @@ public static class ControllerManager
     void Input_action.IPlayerActions.OnLaserSight(InputAction.CallbackContext context)
     {
       if (context.phase != InputActionPhase.Started) return;
-      if (Menu._InMenus) return;
+      if (Menu.s_InMenus) return;
       PlayerScript p = GetPlayer(context);
       if (p == null) return;
       p.ToggleLaser();

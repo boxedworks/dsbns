@@ -68,8 +68,8 @@ public static class Shop
       "use the &LD or &RD buttons on the D-PAD to cycle through your custom loadouts",
       "quickly restart the level with the   &RE   button",
       "playing with more than one person? you cannot restart unless you are alive",
-      "when changing loadouts, read the tags on items to learn more about them",
-      "when changing loadouts, press &WB to quickly remove a peice of equipment",
+      "when editing loadouts, read the tags on items to learn more about them",
+      "when editing loadouts, press &WB to quickly remove a peice of equipment",
       "you need to have enough money + max equipment points to buy things in the shop",
     };
     static string[] _Tips_Survival = new string[]
@@ -265,7 +265,8 @@ public static class Shop
     UTILITY_MIRROR,
     MOD_MARTIAL_ARTIST,
     MOD_THRUST,
-    MOD_SPLIT,
+    MOD_TWIN,
+    ITEM_STUN_BATON,
   }
 
   public static int _Max_Equipment_Points
@@ -290,6 +291,7 @@ public static class Shop
     _Unlocks_Descriptions = new Dictionary<Unlocks, Tuple<string, int>>
     {
       { Unlocks.ITEM_KNIFE, new Tuple<string, int>("melee, fast", 3) },
+      { Unlocks.ITEM_STUN_BATON, new Tuple<string, int>("melee, stuns", 5) },
       { Unlocks.ITEM_FRYING_PAN, new Tuple<string, int>("melee, fast, block", 10) },
       { Unlocks.ITEM_AXE, new Tuple<string, int>("melee, slower, wide-sweep", 10) },
       //_Unlocks_Descriptions.Add(Unlocks.ITEM_BAT, new Tuple<string, int>("melee, two-handed, wide-sweep", 10));
@@ -332,7 +334,7 @@ public static class Shop
       { Unlocks.UTILITY_C4, new Tuple<string, int>("throwable, explosive, remote-controlled", 10) },
       //{ Unlocks.UTILITY_MOLOTOV, new Tuple<string, int>("throwable, fire, duration", 10) },
       { Unlocks.UTILITY_MORTAR_STRIKE, new Tuple<string, int>("ranged, explosive, remote-controlled", 15) },
-      { Unlocks.UTILITY_STOP_WATCH, new Tuple<string, int>("useable, slows-time", 20) },
+      { Unlocks.UTILITY_STOP_WATCH, new Tuple<string, int>("useable, slows-time", 15) },
       { Unlocks.UTILITY_INVISIBILITY, new Tuple<string, int>("useable, short-invisibility", 10) },
       { Unlocks.UTILITY_TEMP_SHIELD, new Tuple<string, int>("useable, shield, requires-melee", 15) },
       //_Unlocks_Descriptions.Add(Unlocks.UTILITY_DASH, new Tuple<string, int>("useable, quick speed boost", 0));
@@ -351,7 +353,7 @@ public static class Shop
       { Unlocks.MOD_GRAPPLE_MASTER, new Tuple<string, int>("-", 5) },
       { Unlocks.MOD_MARTIAL_ARTIST, new Tuple<string, int>("-", 5) },
       { Unlocks.MOD_EXPLOSIVE_PARRY, new Tuple<string, int>("-", 10) },
-      { Unlocks.MOD_SPLIT, new Tuple<string, int>("-", 10) },
+      { Unlocks.MOD_TWIN, new Tuple<string, int>("-", 10) },
 
       { Unlocks.MAX_EQUIPMENT_POINTS_0, new Tuple<string, int>("equipment points (+1)", 5) },
       { Unlocks.MAX_EQUIPMENT_POINTS_1, new Tuple<string, int>("equipment points (+1)", 5) },
@@ -422,8 +424,8 @@ public static class Shop
     else
     {
       _Unlocks_Vault.Add("classic_0", new Unlocks[] { Unlocks.MOD_MARTIAL_ARTIST, Unlocks.ITEM_AXE, Unlocks.UTILITY_GRENADE, Unlocks.MAX_EQUIPMENT_POINTS_2, Unlocks.LOADOUT_SLOT_X2_0 });
-      _Unlocks_Vault.Add("classic_1", new Unlocks[] { Unlocks.MOD_SPLIT, Unlocks.MOD_LASER_SIGHTS, Unlocks.MOD_NO_SLOWMO, Unlocks.UTILITY_KUNAI_EXPLOSIVE, Unlocks.ITEM_PISTOL_CHARGE });
-      _Unlocks_Vault.Add("classic_2", new Unlocks[] { Unlocks.MODE_SURVIVAL, Unlocks.ITEM_RIFLE, Unlocks.ITEM_PISTOL_MACHINE, Unlocks.UTILITY_MIRROR, Unlocks.MAX_EQUIPMENT_POINTS_3, Unlocks.LOADOUT_SLOT_X2_1 });
+      _Unlocks_Vault.Add("classic_1", new Unlocks[] { Unlocks.MOD_TWIN, Unlocks.MOD_LASER_SIGHTS, Unlocks.MOD_NO_SLOWMO, Unlocks.UTILITY_KUNAI_EXPLOSIVE, Unlocks.ITEM_PISTOL_CHARGE });
+      _Unlocks_Vault.Add("classic_2", new Unlocks[] { Unlocks.MODE_SURVIVAL, Unlocks.ITEM_STUN_BATON, Unlocks.ITEM_RIFLE, Unlocks.ITEM_PISTOL_MACHINE, Unlocks.UTILITY_MIRROR, Unlocks.MAX_EQUIPMENT_POINTS_3, Unlocks.LOADOUT_SLOT_X2_1 });
       _Unlocks_Vault.Add("classic_3", new Unlocks[] { Unlocks.ITEM_PISTOL_DOUBLE, Unlocks.UTILITY_STOP_WATCH, Unlocks.UTILITY_TEMP_SHIELD, Unlocks.MOD_SPEED_UP });
       _Unlocks_Vault.Add("classic_4", new Unlocks[] { Unlocks.ITEM_REVOLVER, Unlocks.UTILITY_C4, Unlocks.UTILITY_GRENADE_STUN, Unlocks.UTILITY_SHURIKEN_BIG });
       _Unlocks_Vault.Add("classic_5", new Unlocks[] { Unlocks.ITEM_RAPIER, Unlocks.ITEM_STICKY_GUN, Unlocks.UTILITY_GRENADE_IMPACT });
@@ -727,7 +729,7 @@ public static class Shop
       MARTIAL_ARTIST,
       THRUST,
 
-      SPLIT,
+      TWIN,
 
       NONE
     }
@@ -754,7 +756,7 @@ public static class Shop
         { PerkType.MARTIAL_ARTIST, "empty hands are fists" },
         { PerkType.SPEED_UP, "1.15x movement speed" },
         { PerkType.EXPLOSIVE_PARRY, "parried bullets explode" },
-        { PerkType.SPLIT, "same but different" },
+        { PerkType.TWIN, "summon linked twin" },
       };
     }
 

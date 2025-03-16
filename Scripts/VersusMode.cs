@@ -768,12 +768,13 @@ public static class VersusMode
   //
   static GameScript.ItemManager.Items GetRandomMeleeWeapon()
   {
-    return Random.Range(0, 5) switch
+    return Random.Range(0, 6) switch
     {
       1 => GameScript.ItemManager.Items.FRYING_PAN,
       2 => GameScript.ItemManager.Items.RAPIER,
       3 => GameScript.ItemManager.Items.AXE,
       4 => GameScript.ItemManager.Items.FIST,
+      5 => GameScript.ItemManager.Items.STUN_BATON,
 
       _ => GameScript.ItemManager.Items.KNIFE,
     };
@@ -842,7 +843,7 @@ public static class VersusMode
       5 => Shop.Perk.PerkType.SPEED_UP,
       6 => Shop.Perk.PerkType.MARTIAL_ARTIST,
       7 => Shop.Perk.PerkType.THRUST,
-      8 => Shop.Perk.PerkType.SPLIT,
+      8 => Shop.Perk.PerkType.TWIN,
 
       _ => Shop.Perk.PerkType.FASTER_RELOAD
     };

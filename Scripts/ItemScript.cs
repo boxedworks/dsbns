@@ -517,12 +517,35 @@ public class ItemScript : MonoBehaviour
                 _ragdoll.BounceFromPosition(raycastInfo._ragdoll._grappled ? raycastInfo._ragdoll._grappler._Hip.position : raycastInfo._ragdoll._Hip.position, 1.5f);
                 raycastInfo._ragdoll.BounceFromPosition(_ragdoll._Hip.position, 1.5f);
 
-                // Fx
-                SfxManager.PlayAudioSourceSimple(_ragdoll._Hip.position, "Ragdoll/MeleeClash", 0.85f, 1.15f, SfxManager.AudioClass.NONE, true);
+                // Check stun from baton
+                var hasBaton = _type == ItemType.STUN_BATON;
+                var otherHasBaton = deflectData._type == ItemType.STUN_BATON;
+                if (hasBaton)
+                {
+                  raycastInfo._ragdoll.Stun();
+                  PlaySound(3);
+                }
+                if (otherHasBaton)
+                {
+                  _ragdoll.Stun();
+                  var stunBaton = raycastInfo._ragdoll._ItemL == null || raycastInfo._ragdoll._ItemL._type != ItemType.STUN_BATON ? raycastInfo._ragdoll._ItemR : raycastInfo._ragdoll._ItemL;
+                  stunBaton.PlaySound(3);
+                }
+                if (otherHasBaton || hasBaton)
+                {
+                  var parts = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.ELECTRIC_SPARK)[0];
+                  parts.transform.position = (_ragdoll._Hip.position + raycastInfo._ragdoll._Hip.position) / 2f;
+                  parts.Play();
+                }
 
-                var parts = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.BULLET_COLLIDE)[0];
-                parts.transform.position = (_ragdoll._Hip.position + raycastInfo._ragdoll._Hip.position) / 2f;
-                parts.Play();
+                // Fx
+                {
+                  SfxManager.PlayAudioSourceSimple(_ragdoll._Hip.position, "Ragdoll/MeleeClash", 0.85f, 1.15f, SfxManager.AudioClass.NONE, true);
+
+                  var parts = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.BULLET_COLLIDE)[0];
+                  parts.transform.position = (_ragdoll._Hip.position + raycastInfo._ragdoll._Hip.position) / 2f;
+                  parts.Play();
+                }
 
                 return;
               }
@@ -820,6 +843,7 @@ public class ItemScript : MonoBehaviour
 
         case ItemType.FRYING_PAN:
         case ItemType.AXE:
+        case ItemType.STUN_BATON:
           SetRotationLocal(_arm_upper, Vector3.Lerp(_save_rot_upper, _save_rot_upper + new Vector3(0f, 70f * sideMod, 0f), _meleeLerper));
           SetRotationLocal(_arm_lower, Vector3.Lerp(_save_rot_lower, _save_rot_lower + new Vector3(55f, 0f, 0f), _meleeLerper));
           break;
@@ -1184,10 +1208,11 @@ public class ItemScript : MonoBehaviour
             case ItemType.KNIFE:
             case ItemType.AXE:
             case ItemType.FRYING_PAN:
+            case ItemType.STUN_BATON:
               _ragdoll.RecoilSimple(-0.65f);
               break;
             case ItemType.FIST:
-              _ragdoll.RecoilSimple(_downTimeSave > 0.5f ? -1.3f : -1f);
+              _ragdoll.RecoilSimple(_downTimeSave > 0.5f ? -1.4f : -1f);
               break;
           }
 

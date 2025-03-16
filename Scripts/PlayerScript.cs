@@ -221,8 +221,8 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
     // Equip starting weapons
     _Profile._EquipmentIndex = 0;
 
-    // Check split mod
-    if (HasPerk(Shop.Perk.PerkType.SPLIT) && _connectedTwin == null)
+    // Check twin mod
+    if (HasPerk(Shop.Perk.PerkType.TWIN) && _connectedTwin == null)
     {
       _isOriginalTwin = true;
 
@@ -235,7 +235,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
         playerScript._connectedTwinSide = ActiveRagdoll.Side.RIGHT;
 
         Debug.Log("Connected");
-      }, true);
+      }, true, _PlayerSpawnId);
     }
 
     _itemLeft = _isLeftTwin ? _Profile._ItemLeft : GameScript.ItemManager.Items.NONE;
@@ -2144,7 +2144,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
   float[] _taunt_times;
   void Taunt(int iter)
   {
-    if (Menu._InMenus) return;
+    if (Menu.s_InMenus) return;
 
     switch (iter)
     {
@@ -2181,7 +2181,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
             GameScript.SurvivalMode.SpendPoints(_Id, points);
             var money = GameObject.Instantiate(GameResources._Money) as GameObject;
             GameScript.SurvivalMode.AddMoney(money);
-            money.name = $"Money {points}";
+            money.name = $"Credits {points}";
             money.transform.parent = GameScript.s_Singleton.transform;
             money.transform.position = _ragdoll._Hip.position + _ragdoll._Hip.transform.forward * 0.2f;
             var collider = money.GetComponent<Collider>();
@@ -2484,7 +2484,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
 
       default:
         // Pick up points
-        if (other.name.StartsWith("Money"))
+        if (other.name.StartsWith("Credits "))
         {
           var amount = other.name.Split(' ')[1].ParseIntInvariant();
           GameScript.SurvivalMode.GivePoints(_Id, amount);

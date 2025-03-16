@@ -196,6 +196,7 @@ public static class FunctionsC
     EXPLOSION_SMOKE,
     EXPLOSION_NEW,
     MUZZLE_FIRE,
+    ELECTRIC_SPARK,
   }
   static int _ExplosionIter;
   public static ParticleSystem[] GetParticleSystem(ParticleSystemType particleType, int forceParticleIndex = -1)
@@ -324,6 +325,10 @@ public static class FunctionsC
       case ParticleSystemType.CLOUD_RING:
         index = 29;
         hasChildren = true;
+        break;
+
+      case ParticleSystemType.ELECTRIC_SPARK:
+        index = 35;
         break;
     }
 
@@ -846,7 +851,7 @@ public static class FunctionsC
       if (!s_TrackSource.isPlaying && !s_transitioning)
       {
         // Check for menu music
-        if (Menu._InMenus)
+        if (Menu.s_InMenus)
         {
           if (s_CurrentTrack < s_TrackOffset)
           {
@@ -889,7 +894,7 @@ public static class FunctionsC
     public static int GetNextTrackIter()
     {
       // If main menu is showing, play main menu music
-      if (Menu._CurrentMenu._Type == Menu.MenuType.MAIN) return 0;
+      if (Menu.s_CurrentMenu._Type == Menu.MenuType.MAIN) return 0;
 
       // SURVIVAL mode music
       if (GameScript.s_GameMode == GameScript.GameModes.SURVIVAL)

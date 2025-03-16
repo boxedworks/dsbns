@@ -70,47 +70,47 @@ public class Menu
     NONE
   }
 
-  static int _SaveIndex;
+  static int s_saveIndex;
 
   public static bool s_SetNextDifficultyOnMenu;
 
   // Static container for all menus
-  static Dictionary<MenuType, Menu> _Menus;
+  static Dictionary<MenuType, Menu> s_menus;
   // Static iters for menu
-  static MenuType _CurrentMenuType;
-  public static Menu _CurrentMenu { get { return _Menus[_CurrentMenuType]; } }
-  static MenuType _PreviousMenuType;
-  public static Transform _Menu { get { return _Text.transform.parent; } }
-  public static TextMesh _Text;
-  public static string _TextBuffer;
+  static MenuType s_currentMenuType;
+  public static Menu s_CurrentMenu { get { return s_menus[s_currentMenuType]; } }
+  static MenuType s_previousMenuType;
+  public static Transform s_Menu { get { return s_Text.transform.parent; } }
+  public static TextMesh s_Text;
+  public static string s_TextBuffer;
 
-  public static bool _InMenus;
+  public static bool s_InMenus;
 
-  static float _WaitTime, _PlayTime;
+  static float s_waitTime, s_playTime;
 
   static public readonly string _COLOR_GRAY = "#202020";
 
   // Menu-specific variables
-  public static bool _InPause;
-  public static int _SaveMenuDir = -1, _SaveLevelSelected = -1;
+  public static bool s_InPause;
+  public static int s_SaveMenuDir = -1, s_SaveLevelSelected = -1;
 
 
   // Max height dictatinng number of components to show + height of text
-  static int _Start_Max_Height = 23, Max_Height = _Start_Max_Height;
-  public static int _Max_Height
+  static int s_startMaxHeight = 23, s_maxHeight = s_startMaxHeight;
+  public static int s_MaxHeight
   {
-    get { return Max_Height; }
+    get { return s_maxHeight; }
     set
     {
 
-      Max_Height = value;
-      var height = _Menu.GetChild(2).GetComponent<BoxCollider>().size.y;
-      var distance = new Vector3(-6f, Mathf.Clamp(3.4f + (height * (Max_Height - _Start_Max_Height)), 3.4f, 1000f), -3.03f) - _Text.transform.localPosition;
+      s_maxHeight = value;
+      var height = s_Menu.GetChild(2).GetComponent<BoxCollider>().size.y;
+      var distance = new Vector3(-6f, Mathf.Clamp(3.4f + (height * (s_maxHeight - s_startMaxHeight)), 3.4f, 1000f), -3.03f) - s_Text.transform.localPosition;
 
       // Move text and boxcolliders
       if (distance.magnitude == 0f) return;
-      _Text.transform.localPosition += distance;
-      foreach (var component in _CurrentMenu._menuComponents)
+      s_Text.transform.localPosition += distance;
+      foreach (var component in s_CurrentMenu._menuComponents)
         if (component._collider)
           component._collider.transform.localPosition += distance;
     }
@@ -129,11 +129,11 @@ public class Menu
   }
   public static void SetCurrentSelection(int index)
   {
-    _CurrentMenu.SetSelection(index);
+    s_CurrentMenu.SetSelection(index);
   }
   public static int GetCurrentSelection()
   {
-    return _CurrentMenu._selectionIndex;
+    return s_CurrentMenu._selectionIndex;
   }
 
   public class MenuComponent
@@ -256,10 +256,10 @@ public class Menu
       {
         _focused = true;
         if (_menu._menuComponent_lastFocused == null) return;
-        if (_Max_Height > _Start_Max_Height && component._height <= (_Max_Height - _Start_Max_Height) + 5)
-          _Max_Height = Mathf.Clamp(_Max_Height - Mathf.Clamp(_menu._menuComponent_lastFocused._height - component._height, 0, 1000), _Start_Max_Height, _menu._maxHeight);
-        else if (component._height >= _Max_Height - 5)
-          _Max_Height = Mathf.Clamp(_Max_Height - Mathf.Clamp(_menu._menuComponent_lastFocused._height - component._height, -1000, 0), _Start_Max_Height, _menu._maxHeight);
+        if (s_MaxHeight > s_startMaxHeight && component._height <= (s_MaxHeight - s_startMaxHeight) + 5)
+          s_MaxHeight = Mathf.Clamp(s_MaxHeight - Mathf.Clamp(_menu._menuComponent_lastFocused._height - component._height, 0, 1000), s_startMaxHeight, _menu._maxHeight);
+        else if (component._height >= s_MaxHeight - 5)
+          s_MaxHeight = Mathf.Clamp(s_MaxHeight - Mathf.Clamp(_menu._menuComponent_lastFocused._height - component._height, -1000, 0), s_startMaxHeight, _menu._maxHeight);
       };
       _onUnfocus += (MenuComponent component) =>
       {
@@ -284,14 +284,14 @@ public class Menu
           _menu._dropdownParentIndex = _menu._selectionIndex;
           _menu._selectedComponent._onUnfocus?.Invoke(_menu._selectedComponent);
           _menu._selectionIndex = -1;
-          _Text.text = _menu.GetDisplayText();
+          s_Text.text = _menu.GetDisplayText();
           _menu._onRendered?.Invoke();
 
           // Create prompt
           var prompt = _useDropdownPreprompt ? $"\n===========\n{_dropdownPrompt}" : _dropdownPrompt;
           _menu.AddComponent(prompt);
-          _TextBuffer = string.Empty;
-          _TextBuffer += prompt;
+          s_TextBuffer = string.Empty;
+          s_TextBuffer += prompt;
 
           // Create dropdown selections
           var iter = 0;
@@ -342,13 +342,13 @@ public class Menu
             // Update the text buffer with selection
             var displayText = _menu._menuComponent_last._obscured ? FunctionsC.GenerateGarbageText(selection) : selection;
             displayText = (_menu._menuComponent_last._buttonIndex == _menu._selectionIndex ? "[<color=yellow>*</color>" : "[ ") + $"] <color={_menu._menuComponent_last._textColor}>{displayText}</color>";
-            _TextBuffer += $"{displayText}\n";
+            s_TextBuffer += $"{displayText}\n";
             iter++;
           }
           if (_menu._selectionIndex > -1)
             _menu._selectedComponent._onFocus?.Invoke(_menu._selectedComponent);
 
-          if (_TextBuffer.Contains("..") || _Text.text.Contains(".."))
+          if (s_TextBuffer.Contains("..") || s_Text.text.Contains(".."))
           {
             _CanRender = false;
             RenderMenu();
@@ -372,8 +372,8 @@ public class Menu
       var startHeight = 0;
       // Check height of current text
       var h0 = 0;
-      if (_Text.text.Contains("\n"))
-        h0 = _Text.text.Split('\n').Length - 1;
+      if (s_Text.text.Contains("\n"))
+        h0 = s_Text.text.Split('\n').Length - 1;
       // Check height of components
       foreach (var component in menu._menuComponents)
       {
@@ -402,7 +402,7 @@ public class Menu
       // Set collider
       var gameObject = new GameObject();
       gameObject.name = text;
-      gameObject.transform.parent = _Menu;
+      gameObject.transform.parent = s_Menu;
       gameObject.transform.localEulerAngles = Vector3.zero;
       gameObject.transform.localPosition = new Vector3(-5.87f, 3.2f, -3.1f);
       _collider = gameObject.AddComponent<BoxCollider>();
@@ -548,15 +548,15 @@ public class Menu
     _canSlowLoad = true;
 
     // Add to menu list
-    if (_Menus == null) _Menus = new Dictionary<MenuType, Menu>();
+    if (s_menus == null) s_menus = new Dictionary<MenuType, Menu>();
     // Remove menu if exists already
-    if (_Menus.ContainsKey(_Type))
+    if (s_menus.ContainsKey(_Type))
     {
-      _Max_Height = _Start_Max_Height;
-      _Menus[_Type].Destroy();
+      s_MaxHeight = s_startMaxHeight;
+      s_menus[_Type].Destroy();
     }
 
-    _Menus.Add(type, this);
+    s_menus.Add(type, this);
 
     _menuComponents = new List<MenuComponent>();
     _menuComponentsSelectable = new List<MenuComponent>();
@@ -565,7 +565,7 @@ public class Menu
     _onUpdate += () =>
     {
       // Increment time displayed if is current menu
-      if (_CurrentMenuType == _Type)
+      if (s_currentMenuType == _Type)
         _timeDisplayed += Time.unscaledDeltaTime;
     };
 
@@ -601,7 +601,7 @@ public class Menu
     }
     _menuComponents = null;
     _menuComponentsSelectable = null;
-    _Menus.Remove(_Type);
+    s_menus.Remove(_Type);
   }
 
   // Concat all menu components display texts
@@ -618,10 +618,10 @@ public class Menu
       if (
 
         // Too low
-        component._height > _Max_Height ||
+        component._height > s_MaxHeight ||
 
         // Too high
-        component._height - _Max_Height + _Start_Max_Height < -2
+        component._height - s_MaxHeight + s_startMaxHeight < -2
       )
         component._visible = false;
       else
@@ -639,7 +639,7 @@ public class Menu
       else
       {
         // If near bottom, show ... to indicate a list
-        if (component._height > _Max_Height - 1 &&
+        if (component._height > s_MaxHeight - 1 &&
           _maxHeight - component._height > 0)
           displayText = "[ ] ...\n";
       }
@@ -674,14 +674,14 @@ public class Menu
 
   public void QuickRemoveEdit()
   {
-    if (!_CurrentMenu._hasDropdown)
+    if (!s_CurrentMenu._hasDropdown)
     {
-      var text = _CurrentMenu._menuComponentsSelectable[_CurrentMenu._selectionIndex].GetDisplayText(false).Trim();
+      var text = s_CurrentMenu._menuComponentsSelectable[s_CurrentMenu._selectionIndex].GetDisplayText(false).Trim();
       if ((text.Contains("left") || text.Contains("right")) && !text.Contains(" - "))
       {
         var util = text.Contains("utility");
         SendInput(Input.SPACE);
-        _CurrentMenu._selectionIndex = _CurrentMenu._menuComponentsSelectable[_CurrentMenu._menuComponentsSelectable.Count - _CurrentMenu._dropdownCount]._buttonIndex;
+        s_CurrentMenu._selectionIndex = s_CurrentMenu._menuComponentsSelectable[s_CurrentMenu._menuComponentsSelectable.Count - s_CurrentMenu._dropdownCount]._buttonIndex;
         SendInput(Input.SPACE);
         SendInput(Input.SPACE);
         if (util) SendInput(Input.BACK);
@@ -696,10 +696,10 @@ public class Menu
     }
     else
     {
-      _CurrentMenu._selectionIndex = _CurrentMenu._menuComponentsSelectable[_CurrentMenu._menuComponentsSelectable.Count - _CurrentMenu._dropdownCount]._buttonIndex;
+      s_CurrentMenu._selectionIndex = s_CurrentMenu._menuComponentsSelectable[s_CurrentMenu._menuComponentsSelectable.Count - s_CurrentMenu._dropdownCount]._buttonIndex;
       SendInput(Input.SPACE);
       SendInput(Input.SPACE);
-      if (_CurrentMenu._hasDropdown) SendInput(Input.BACK);
+      if (s_CurrentMenu._hasDropdown) SendInput(Input.BACK);
     }
   }
 
@@ -711,8 +711,8 @@ public class Menu
 
     if (_CanRender && _canSlowLoad)
     {
-      _Text.text = "";
-      _TextBuffer = text;
+      s_Text.text = "";
+      s_TextBuffer = text;
       return;
     }
 
@@ -722,9 +722,9 @@ public class Menu
   void RenderFast(bool bypass = false)
   {
     if (!_canSkip && !bypass) return;
-    _Text.text = System.Text.RegularExpressions.Regex.Replace(GetDisplayText(), "~[0-9]", "");
-    _TextBuffer = "";
-    if (_WaitTime == 0f) _WaitTime = 1.5f;
+    s_Text.text = System.Text.RegularExpressions.Regex.Replace(GetDisplayText(), "~[0-9]", "");
+    s_TextBuffer = "";
+    if (s_waitTime == 0f) s_waitTime = 1.5f;
     _onRendered?.Invoke();
   }
 
@@ -822,30 +822,30 @@ public class Menu
     public static System.Action<MenuType> _SwitchMenu = (MenuType type) =>
     {
       // Save last menu
-      _PreviousMenuType = _CurrentMenuType;
-      _CurrentMenu.ToggleColliders(false);
-      _CurrentMenu._timeDisplayed = -1f;
-      _Max_Height = _Start_Max_Height;
-      _CurrentMenu._onSwitched?.Invoke();
+      s_previousMenuType = s_currentMenuType;
+      s_CurrentMenu.ToggleColliders(false);
+      s_CurrentMenu._timeDisplayed = -1f;
+      s_MaxHeight = s_startMaxHeight;
+      s_CurrentMenu._onSwitched?.Invoke();
 
       // Switch menu type
       if (type == MenuType.NONE)
       {
         GameScript.TogglePause(type);
-        _InPause = false;
-        _InMenus = false;
-        _Menu.gameObject.SetActive(false);
+        s_InPause = false;
+        s_InMenus = false;
+        s_Menu.gameObject.SetActive(false);
       }
       else
       {
-        _CurrentMenuType = type;
-        _CurrentMenu.ToggleColliders(true);
-        _CurrentMenu._timeDisplayed = 0f;
-        if (_CurrentMenu._Type != MenuType.CREDITS)
-          _CurrentMenu._selectedComponent._focused = true;
-        _CurrentMenu._onSwitchTo?.Invoke();
+        s_currentMenuType = type;
+        s_CurrentMenu.ToggleColliders(true);
+        s_CurrentMenu._timeDisplayed = 0f;
+        if (s_CurrentMenu._Type != MenuType.CREDITS)
+          s_CurrentMenu._selectedComponent._focused = true;
+        s_CurrentMenu._onSwitchTo?.Invoke();
         // Render new menu
-        if (_CurrentMenu._Type == MenuType.CREDITS) return;
+        if (s_CurrentMenu._Type == MenuType.CREDITS) return;
         _CanRender = true;
         RenderMenu();
       }
@@ -854,7 +854,7 @@ public class Menu
     // Switch to the previous menu
     public static System.Action _SwitchMenuPrevious = () =>
     {
-      _SwitchMenu(_PreviousMenuType);
+      _SwitchMenu(s_previousMenuType);
     };
 
     //
@@ -899,7 +899,7 @@ public class Menu
       menu._onDropdownRemoved?.Invoke();
       // Re-render menu
       _CanRender = false;
-      _Max_Height = _Start_Max_Height;
+      s_MaxHeight = s_startMaxHeight;
       RenderMenu();
     }
     ,
@@ -966,21 +966,21 @@ public class Menu
   // Initialize all menus
   public static void Init()
   {
-    _InMenus = true;
+    s_InMenus = true;
 
     // Get menu text mesh
-    _Text = GameObject.Find("Menu2").transform.GetChild(0).GetComponent<TextMesh>();
+    s_Text = GameObject.Find("Menu2").transform.GetChild(0).GetComponent<TextMesh>();
 
     // Menu audio
     _MenuAudio = new Dictionary<Noise, AudioSource>();
     var index = 0;
-    foreach (var component in _Menu.gameObject.GetComponents<AudioSource>())
+    foreach (var component in s_Menu.gameObject.GetComponents<AudioSource>())
     {
       _MenuAudio.Add((Noise)index++, component);
     }
 
     // Set starting menu
-    _CurrentMenuType = MenuType.SPLASH;
+    s_currentMenuType = MenuType.SPLASH;
 
     // Custom functions
     MenuComponent ModifyMenu_TipComponents(MenuType type, int newLineCount, int afterNewLineCount = 0)
@@ -989,20 +989,20 @@ public class Menu
       while (newLineCount-- > 0) lines += "\n";
       var after_lines = "";
       while (afterNewLineCount-- > 0) after_lines += "\n";
-      _Menus[type].AddComponent(lines)
+      s_menus[type].AddComponent(lines)
         .AddComponent(Shop.Tip.GetTip(GameScript.s_GameMode) + after_lines)
         .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
         {
           component._visible = SettingsModule.ShowTips;
         });
-      return _Menus[type]._menuComponent_last;
+      return s_menus[type]._menuComponent_last;
     }
     void ModifyMenu_TipSwitch(MenuType type)
     {
       var onSwitch = new System.Action(() =>
       {
         if (!SettingsModule.ShowTips) return;
-        var last_c = _Menus[type]._menuComponents.Where(component => component.GetDisplayText(false).Contains("*tip")).Single();
+        var last_c = s_menus[type]._menuComponents.Where(component => component.GetDisplayText(false).Contains("*tip")).Single();
         var afterNewLineCount = System.Text.RegularExpressions.Regex.Matches(last_c.GetDisplayText(false), "\n").Count;
         var tip = Shop.Tip.GetTip(GameScript.s_GameMode);
 
@@ -1016,7 +1016,7 @@ public class Menu
 
           var button = spl[1].Substring(0, 2);
 
-          var parent = _Menu.GetChild(0);
+          var parent = s_Menu.GetChild(0);
 
           if (parent.childCount == 0)
           {
@@ -1063,7 +1063,7 @@ public class Menu
             }
 
             var t = SpawnControlUI(last_c, GetControl(button));
-            t.parent = _Menu.GetChild(1);
+            t.parent = s_Menu.GetChild(1);
             t.transform.position = last_c._collider.transform.position;
             var p = t.localPosition;
             p.x = -0.338f + (0.007f * width) + 0.013f;
@@ -1080,7 +1080,7 @@ public class Menu
               width += spl[1].Length + 1;
 
               t = SpawnControlUI(last_c, GetControl(button));
-              t.parent = _Menu.GetChild(1);
+              t.parent = s_Menu.GetChild(1);
               t.transform.position = last_c._collider.transform.position;
               p = t.localPosition;
               p.x = -0.338f + (0.00699f * width) + 0.013f;
@@ -1093,12 +1093,12 @@ public class Menu
         // Set the tip to display
         var lines_after = "";
         while (afterNewLineCount-- > 0) lines_after += '\n';
-        _Menus[type]._menuComponent_last.SetDisplayText(tip + lines_after);
+        s_menus[type]._menuComponent_last.SetDisplayText(tip + lines_after);
 
         // Set enable buttons
-        _Menus[type]._onRendered += () =>
+        s_menus[type]._onRendered += () =>
         {
-          var parent = _Menu.GetChild(0);
+          var parent = s_Menu.GetChild(0);
           if (parent.childCount == 0) return;
           for (var i = parent.childCount - 1; i >= 0; i--)
             if (!SettingsModule.ShowTips)
@@ -1114,17 +1114,17 @@ public class Menu
       });
       var onSwitched = new System.Action(() =>
       {
-        var parent = _Menu.GetChild(0);
+        var parent = s_Menu.GetChild(0);
         if (parent.childCount > 0)
           for (var i = parent.childCount - 1; i >= 0; i--)
           {
             var g = parent.GetChild(i).gameObject;
-            g.transform.parent = _Menu;
+            g.transform.parent = s_Menu;
             GameObject.Destroy(g);
           }
       });
-      _Menus[type]._onSwitchTo += onSwitch;
-      _Menus[type]._onSwitched += onSwitched;
+      s_menus[type]._onSwitchTo += onSwitch;
+      s_menus[type]._onSwitched += onSwitched;
     }
 
     // Splash screen
@@ -1157,14 +1157,14 @@ public class Menu
     .AddComponent(string.Format("{0,-10}<color=yellow>{1,-25}</color>........\n", "", "[boxedworks]\n\n"));
 
     // Switch to main menu after splash screen
-    _Menus[MenuType.SPLASH]._onRendered += () =>
+    s_menus[MenuType.SPLASH]._onRendered += () =>
     {
       CommonEvents._SwitchMenu(MenuType.MAIN);
     };
     // Allow skip
-    _Menus[MenuType.SPLASH]._onSpace += () =>
+    s_menus[MenuType.SPLASH]._onSpace += () =>
     {
-      _CurrentMenu.RenderFast();
+      s_CurrentMenu.RenderFast();
     };
 
     // Main menu
@@ -1344,10 +1344,10 @@ public class Menu
               CommonEvents._RemoveDropdownSelections(component0);
               CommonEvents._SwitchMenu(MenuType.EDITOR_LEVELS);
 
-              _CurrentMenu._selectionIndex = _CurrentMenu._menuComponentsSelectable.Count - 2;
+              s_CurrentMenu._selectionIndex = s_CurrentMenu._menuComponentsSelectable.Count - 2;
               _CanRender = false;
               RenderMenu();
-              _CurrentMenu._selectedComponent._onFocus?.Invoke(_CurrentMenu._selectedComponent);
+              s_CurrentMenu._selectedComponent._onFocus?.Invoke(s_CurrentMenu._selectedComponent);
               SendInput(Input.SPACE);
               _CanRender = false;
               RenderMenu();
@@ -1409,11 +1409,11 @@ public class Menu
               if (!Levels._LevelPack_SelectingLevelsFromPack)
               {
                 GameScript.s_EditorTesting = true;
-                Levels._LevelEdit_SaveIndex = _CurrentMenu._dropdownParentIndex;
+                Levels._LevelEdit_SaveIndex = s_CurrentMenu._dropdownParentIndex;
 
                 // Load map
-                _EditorSaveIndex = _CurrentMenu._dropdownParentIndex;
-                Levels._CurrentLevelIndex = _CurrentMenu._dropdownParentIndex - 1;
+                _EditorSaveIndex = s_CurrentMenu._dropdownParentIndex;
+                Levels._CurrentLevelIndex = s_CurrentMenu._dropdownParentIndex - 1;
                 var level_data = leveldata[_EditorSaveIndex - 1];
                 GameScript.NextLevel(level_data);
 
@@ -1427,13 +1427,13 @@ public class Menu
                 Levels._LevelPack_Playing = true;
 
                 // Load map
-                GameScript.NextLevel(_CurrentMenu._dropdownParentIndex);
+                GameScript.NextLevel(s_CurrentMenu._dropdownParentIndex);
 
                 // Remove menus
                 TileManager._Text_LevelNum.gameObject.SetActive(true);
                 CommonEvents._RemoveDropdownSelections(component0);
-                _Menu.gameObject.SetActive(false);
-                _InMenus = false;
+                s_Menu.gameObject.SetActive(false);
+                s_InMenus = false;
               }
               Time.timeScale = 1f;
               GameScript.s_Paused = false;
@@ -1455,20 +1455,20 @@ public class Menu
               actions.Add((MenuComponent component0) =>
               {
                 GameScript.s_EditorTesting = true;
-                Levels._LevelEdit_SaveIndex = _CurrentMenu._dropdownParentIndex;
+                Levels._LevelEdit_SaveIndex = s_CurrentMenu._dropdownParentIndex;
 
                 // Load map
-                _EditorSaveIndex = Menu._CurrentMenu._dropdownParentIndex;
+                _EditorSaveIndex = Menu.s_CurrentMenu._dropdownParentIndex;
                 var level_data = leveldata[_EditorSaveIndex - 1];
                 TileManager._EnableEditorAfterLoad = true;
-                Levels._CurrentLevelIndex = Menu._CurrentMenu._dropdownParentIndex - 1;
+                Levels._CurrentLevelIndex = Menu.s_CurrentMenu._dropdownParentIndex - 1;
                 GameScript.NextLevel(level_data);
 
                 // Remove menus
                 CommonEvents._RemoveDropdownSelections(component0);
-                _Menu.gameObject.SetActive(false);
-                _InMenus = false;
-                _InPause = false;
+                s_Menu.gameObject.SetActive(false);
+                s_InMenus = false;
+                s_InPause = false;
                 Time.timeScale = 1f;
                 GameScript.s_Paused = false;
 
@@ -1488,10 +1488,10 @@ public class Menu
               {
 
                 var rename_dialogue = TileManager.EditorMenus.ShowRenameMenuMenu();
-                var save_index = _CurrentMenu._dropdownParentIndex;
+                var save_index = s_CurrentMenu._dropdownParentIndex;
 
                 // Get current name
-                var level_data = Levels._CurrentLevelCollection._levelData[Menu._CurrentMenu._dropdownParentIndex - 1];
+                var level_data = Levels._CurrentLevelCollection._levelData[Menu.s_CurrentMenu._dropdownParentIndex - 1];
                 var level_meta = Levels.GetLevelMeta(level_data);
                 var level_name = level_meta[1];
 
@@ -1519,14 +1519,14 @@ public class Menu
                   }
 
                   // Save levels
-                  Levels._CurrentLevelCollection._levelData[Menu._CurrentMenu._dropdownParentIndex - 1] = $"{level_meta[0]} +{gottext}" + (level_meta[2] != null ? $"!{level_meta[2]}" : "");
+                  Levels._CurrentLevelCollection._levelData[Menu.s_CurrentMenu._dropdownParentIndex - 1] = $"{level_meta[0]} +{gottext}" + (level_meta[2] != null ? $"!{level_meta[2]}" : "");
                   Levels.SaveLevels();
 
                   // Reload menu
                   CommonEvents._RemoveDropdownSelections(component0);
                   CommonEvents._SwitchMenu(MenuType.EDITOR_LEVELS);
-                  Menu._CurrentMenu._selectionIndex = save_index;
-                  Menu._CurrentMenu._selectedComponent._onSelected?.Invoke(Menu._CurrentMenu._selectedComponent);
+                  Menu.s_CurrentMenu._selectionIndex = save_index;
+                  Menu.s_CurrentMenu._selectedComponent._onSelected?.Invoke(Menu.s_CurrentMenu._selectedComponent);
                   _CanRender = false;
                   RenderMenu();
 
@@ -1550,7 +1550,7 @@ public class Menu
               {
                 Levels.LevelEditor_NewMap("not matter");
 
-                var level_data = Levels._CurrentLevelCollection._levelData[Menu._CurrentMenu._dropdownParentIndex - 1];
+                var level_data = Levels._CurrentLevelCollection._levelData[Menu.s_CurrentMenu._dropdownParentIndex - 1];
                 var level_meta = Levels.GetLevelMeta(level_data);
                 var level_name = level_meta[1] == null ? "unnamed map" : level_meta[1];
                 var level_load = level_meta[2];
@@ -1562,10 +1562,10 @@ public class Menu
                 // Reload menu
                 CommonEvents._RemoveDropdownSelections(component0);
                 CommonEvents._SwitchMenu(MenuType.EDITOR_LEVELS);
-                Menu._CurrentMenu._selectionIndex = Menu._CurrentMenu._menuComponentsSelectable.Count - 2;
+                Menu.s_CurrentMenu._selectionIndex = Menu.s_CurrentMenu._menuComponentsSelectable.Count - 2;
                 _CanRender = false;
                 RenderMenu();
-                Menu._CurrentMenu._selectedComponent._onFocus?.Invoke(Menu._CurrentMenu._selectedComponent);
+                Menu.s_CurrentMenu._selectedComponent._onFocus?.Invoke(Menu.s_CurrentMenu._selectedComponent);
               });
 
               // Delete level
@@ -1576,7 +1576,7 @@ public class Menu
                 if (Levels._Delete_Iter == 0)
                 {
                   // Delete and level
-                  var save_index = _CurrentMenu._dropdownParentIndex;
+                  var save_index = s_CurrentMenu._dropdownParentIndex;
                   var data_delete = Levels._CurrentLevelCollection._levelData[save_index - 1];
                   Levels._CurrentLevelCollection._levelData = Levels._CurrentLevelCollection._levelData.Where((val, index) => index != save_index - 1).ToArray();
                   Levels.SaveLevels();
@@ -1601,10 +1601,10 @@ public class Menu
                   // Reload menu
                   CommonEvents._RemoveDropdownSelections(component0);
                   CommonEvents._SwitchMenu(MenuType.EDITOR_LEVELS);
-                  Menu._CurrentMenu._selectionIndex = save_index - 1;
+                  Menu.s_CurrentMenu._selectionIndex = save_index - 1;
                   _CanRender = false;
                   RenderMenu();
-                  Menu._CurrentMenu._selectedComponent._onFocus?.Invoke(Menu._CurrentMenu._selectedComponent);
+                  Menu.s_CurrentMenu._selectedComponent._onFocus?.Invoke(Menu.s_CurrentMenu._selectedComponent);
                 }
                 else
                 {
@@ -1620,10 +1620,10 @@ public class Menu
               {
                 ClipboardHelper.clipBoard = $"{level_data}";
 
-                var save_index = _CurrentMenu._dropdownParentIndex;
+                var save_index = s_CurrentMenu._dropdownParentIndex;
                 CommonEvents._RemoveDropdownSelections(component0);
                 CommonEvents._SwitchMenu(MenuType.EDITOR_LEVELS);
-                Menu._CurrentMenu._selectionIndex = save_index;
+                Menu.s_CurrentMenu._selectionIndex = save_index;
                 _CanRender = false;
                 RenderMenu();
               });
@@ -1637,7 +1637,7 @@ public class Menu
               actions.Add((MenuComponent component0) =>
               {
 
-                var level_data = Levels._LevelPack_Current._levelData[Menu._CurrentMenu._dropdownParentIndex];
+                var level_data = Levels._LevelPack_Current._levelData[Menu.s_CurrentMenu._dropdownParentIndex];
 
                 var savelevelcollection = Levels._CurrentLevelCollectionIndex;
                 Levels._CurrentLevelCollectionIndex = 3;
@@ -1654,9 +1654,9 @@ public class Menu
                 Levels._CurrentLevelCollectionIndex = savelevelcollection;
 
                 // Remove dropdown for feedback
-                var saveindex = _CurrentMenu._dropdownParentIndex;
+                var saveindex = s_CurrentMenu._dropdownParentIndex;
                 CommonEvents._RemoveDropdownSelections(component0);
-                _CurrentMenu._selectionIndex = saveindex;
+                s_CurrentMenu._selectionIndex = saveindex;
                 _CanRender = true;
                 RenderMenu();
 
@@ -1676,7 +1676,7 @@ public class Menu
           {
             Levels._Delete_Iter = 4;
 
-            if (_CurrentMenu._hasDropdown)
+            if (s_CurrentMenu._hasDropdown)
             {
               if (GameScript._lp0 != null)
                 GameObject.Destroy(GameScript._lp0.gameObject);
@@ -1690,7 +1690,7 @@ public class Menu
           // Add / remove map preview
           .AddEvent(EventType.ON_FOCUS, (MenuComponent component) =>
           {
-            if (!_CurrentMenu._hasDropdown)
+            if (!s_CurrentMenu._hasDropdown)
             {
               if (GameScript._lp0 != null)
                 GameObject.Destroy(GameScript._lp0.gameObject);
@@ -1702,7 +1702,7 @@ public class Menu
           })
           .AddEvent(EventType.ON_UNFOCUS, (MenuComponent component) =>
           {
-            if (GameScript._lp0 != null && !_CurrentMenu._hasDropdown)
+            if (GameScript._lp0 != null && !s_CurrentMenu._hasDropdown)
               GameObject.Destroy(GameScript._lp0.gameObject);
           });
       }
@@ -1720,7 +1720,7 @@ public class Menu
         {
           Levels._LevelPack_SelectingLevelsFromPack = false;
           CommonEvents._SwitchMenu(MenuType.EDITOR_PACKS);
-          _CurrentMenu._selectionIndex = Levels._LevelPacks_Play_SaveIndex;
+          s_CurrentMenu._selectionIndex = Levels._LevelPacks_Play_SaveIndex;
           _CanRender = false;
           RenderMenu();
           Menu.SendInput(Input.SPACE);
@@ -1742,7 +1742,7 @@ public class Menu
             _Equipment = new GameScript.PlayerProfile.Equipment()
           };
 
-        _CurrentMenu._selectedComponent?._onFocus?.Invoke(_CurrentMenu._selectedComponent);
+        s_CurrentMenu._selectedComponent?._onFocus?.Invoke(s_CurrentMenu._selectedComponent);
       };
 
       // Tip
@@ -1825,7 +1825,7 @@ public class Menu
               if (localfunc_setcurrentpack())
               {
                 Levels._LevelPack_SelectingLevelsFromPack = true;
-                Levels._LevelPacks_Play_SaveIndex = _CurrentMenu._dropdownParentIndex;
+                Levels._LevelPacks_Play_SaveIndex = s_CurrentMenu._dropdownParentIndex;
 
                 CommonEvents._SwitchMenu(MenuType.EDITOR_LEVELS);
               }
@@ -1839,7 +1839,7 @@ public class Menu
 
               if (localfunc_setcurrentpack())
               {
-                Levels._LevelPackMenu_SaveIndex = _CurrentMenu._dropdownParentIndex;
+                Levels._LevelPackMenu_SaveIndex = s_CurrentMenu._dropdownParentIndex;
                 CommonEvents._SwitchMenu(MenuType.EDITOR_PACKS_EDIT);
               }
             });
@@ -1852,7 +1852,7 @@ public class Menu
               if (localfunc_setcurrentpack())
               {
                 var rename_dialogue = TileManager.EditorMenus.ShowRenameMenuMenu();
-                var save_index = _CurrentMenu._dropdownParentIndex;
+                var save_index = s_CurrentMenu._dropdownParentIndex;
 
                 // Get current name
                 var level_pack_name = Levels._LevelPack_Current._name.Split('.')[0];
@@ -1888,8 +1888,8 @@ public class Menu
                   // Reload menu
                   CommonEvents._RemoveDropdownSelections(component0);
                   CommonEvents._SwitchMenu(MenuType.EDITOR_PACKS);
-                  Menu._CurrentMenu._selectionIndex = save_index;
-                  Menu._CurrentMenu._selectedComponent._onSelected?.Invoke(Menu._CurrentMenu._selectedComponent);
+                  Menu.s_CurrentMenu._selectionIndex = save_index;
+                  Menu.s_CurrentMenu._selectedComponent._onSelected?.Invoke(Menu.s_CurrentMenu._selectedComponent);
                   _CanRender = false;
                   RenderMenu();
 
@@ -1920,13 +1920,13 @@ public class Menu
                 System.IO.File.Copy(fileloc, $"{fileloc.Split('.')[0]}_Copy.levelpack");
 
                 // Reload menu
-                var save_index = _CurrentMenu._dropdownParentIndex;
+                var save_index = s_CurrentMenu._dropdownParentIndex;
                 CommonEvents._RemoveDropdownSelections(component0);
                 CommonEvents._SwitchMenu(MenuType.EDITOR_PACKS);
-                Menu._CurrentMenu._selectionIndex = save_index;
+                Menu.s_CurrentMenu._selectionIndex = save_index;
                 _CanRender = false;
                 RenderMenu();
-                Menu._CurrentMenu._selectedComponent._onFocus?.Invoke(Menu._CurrentMenu._selectedComponent);
+                Menu.s_CurrentMenu._selectedComponent._onFocus?.Invoke(Menu.s_CurrentMenu._selectedComponent);
               }
 
             });
@@ -1950,13 +1950,13 @@ public class Menu
                   System.IO.File.Move(fileloc, $"{filestructure_local}trashed/{Levels._LevelPack_Current._name.Split('.')[0]}-{now.Year}-{now.Month}-{now.Day}--{now.Hour}-{now.Minute}-{now.Second}.levelpack");
 
                   // Reload menu
-                  var save_index = _CurrentMenu._dropdownParentIndex;
+                  var save_index = s_CurrentMenu._dropdownParentIndex;
                   CommonEvents._RemoveDropdownSelections(component0);
                   CommonEvents._SwitchMenu(MenuType.EDITOR_PACKS);
-                  Menu._CurrentMenu._selectionIndex = save_index - 1;
+                  Menu.s_CurrentMenu._selectionIndex = save_index - 1;
                   _CanRender = false;
                   RenderMenu();
-                  Menu._CurrentMenu._selectedComponent._onFocus?.Invoke(Menu._CurrentMenu._selectedComponent);
+                  Menu.s_CurrentMenu._selectedComponent._onFocus?.Invoke(Menu.s_CurrentMenu._selectedComponent);
                 }
 
             });
@@ -2078,7 +2078,7 @@ public class Menu
               // Reload menus
               Levels._LevelPack_UploadingToWorkshop = false;
               CommonEvents._SwitchMenu(MenuType.EDITOR_PACKS);
-              _CurrentMenu._selectionIndex = _CurrentMenu._menuComponentsSelectable.Count - 2;
+              s_CurrentMenu._selectionIndex = s_CurrentMenu._menuComponentsSelectable.Count - 2;
               _CanRender = false;
               RenderMenu();
               SendInput(Input.SPACE);
@@ -2149,7 +2149,7 @@ public class Menu
                   // Reload menus
                   Levels._LevelPack_UploadingToWorkshop = false;
                   CommonEvents._SwitchMenu(MenuType.EDITOR_PACKS);
-                  _CurrentMenu._selectionIndex = _CurrentMenu._menuComponentsSelectable.Count - 2;
+                  s_CurrentMenu._selectionIndex = s_CurrentMenu._menuComponentsSelectable.Count - 2;
                   _CanRender = false;
                   RenderMenu();
                   SendInput(Input.SPACE);
@@ -2196,7 +2196,7 @@ public class Menu
 
                     // Load map
                     Levels._LevelPack_SelectingLevelsFromPack = true;
-                    Levels._LevelPacks_Play_SaveIndex = _CurrentMenu._dropdownParentIndex;
+                    Levels._LevelPacks_Play_SaveIndex = s_CurrentMenu._dropdownParentIndex;
 
                     CommonEvents._SwitchMenu(MenuType.EDITOR_LEVELS);
                   });
@@ -2283,7 +2283,7 @@ public class Menu
 
                     // Load map
                     Levels._LevelPack_SelectingLevelsFromPack = true;
-                    Levels._LevelPacks_Play_SaveIndex = _CurrentMenu._dropdownParentIndex;
+                    Levels._LevelPacks_Play_SaveIndex = s_CurrentMenu._dropdownParentIndex;
 
                     CommonEvents._SwitchMenu(MenuType.EDITOR_LEVELS);
                   });
@@ -2326,10 +2326,10 @@ public class Menu
             {
               yield return new WaitForSecondsRealtime(1f);
 
-              CommonEvents._RemoveDropdownSelections(_CurrentMenu._selectedComponent);
+              CommonEvents._RemoveDropdownSelections(s_CurrentMenu._selectedComponent);
               CommonEvents._SwitchMenu(MenuType.EDITOR_PACKS);
 
-              _CurrentMenu._selectionIndex = _CurrentMenu._menuComponentsSelectable.Count - 3;
+              s_CurrentMenu._selectionIndex = s_CurrentMenu._menuComponentsSelectable.Count - 3;
               _CanRender = false;
               RenderMenu();
             }
@@ -2472,7 +2472,7 @@ public class Menu
                     actions.Add((MenuComponent component0) => { });
                     actions_onfocus.Add((MenuComponent component0) =>
                     {
-                      if (GameScript._lp0 != null && _CurrentMenu._dropdownCount == 0)
+                      if (GameScript._lp0 != null && s_CurrentMenu._dropdownCount == 0)
                         GameObject.Destroy(GameScript._lp0.gameObject);
                     });
                     actions_onblur.Add((MenuComponent component0) => { });
@@ -2487,7 +2487,7 @@ public class Menu
                   actions.Add((MenuComponent component0) =>
                   {
 
-                    var save_selection = _CurrentMenu._selectionIndex;
+                    var save_selection = s_CurrentMenu._selectionIndex;
                     var leveldata_save = level_data;
 
                     if (Levels._LevelPack_Current._levelData == null || Levels._LevelPack_Current._levelData.Length == 0 || (Levels._LevelPack_Current._levelData.Length == 1 && Levels._LevelPack_Current._levelData[0].Trim() == ""))
@@ -2504,14 +2504,14 @@ public class Menu
                     // Reload menu
                     if (Levels._LevelPack_Current._levelData.Length < Levels._LEVELPACK_MAX)
                     {
-                      var save_index = _CurrentMenu._selectionIndex;
+                      var save_index = s_CurrentMenu._selectionIndex;
                       CommonEvents._RemoveDropdownSelections(component0);
                       CommonEvents._SwitchMenu(MenuType.EDITOR_PACKS_EDIT);
                       _CanRender = false;
                       RenderMenu();
                       Menu.SendInput(Input.SPACE);
-                      Menu._CurrentMenu._selectionIndex = save_index + 1;
-                      Menu._CurrentMenu._selectedComponent._onFocus?.Invoke(Menu._CurrentMenu._selectedComponent);
+                      Menu.s_CurrentMenu._selectionIndex = save_index + 1;
+                      Menu.s_CurrentMenu._selectedComponent._onFocus?.Invoke(Menu.s_CurrentMenu._selectedComponent);
                       _CanRender = false;
                       RenderMenu();
                     }
@@ -2519,9 +2519,9 @@ public class Menu
                     {
                       CommonEvents._RemoveDropdownSelections(component0);
                       CommonEvents._SwitchMenu(MenuType.EDITOR_PACKS_EDIT);
-                      Menu._CurrentMenu._selectedComponent._focused = false;
-                      Menu._CurrentMenu._selectionIndex = 0;
-                      Menu._CurrentMenu._selectedComponent._onFocus?.Invoke(Menu._CurrentMenu._selectedComponent);
+                      Menu.s_CurrentMenu._selectedComponent._focused = false;
+                      Menu.s_CurrentMenu._selectionIndex = 0;
+                      Menu.s_CurrentMenu._selectedComponent._onFocus?.Invoke(Menu.s_CurrentMenu._selectedComponent);
                       _CanRender = false;
                       RenderMenu();
                     }
@@ -2534,7 +2534,7 @@ public class Menu
                   });
                   actions_onblur.Add((MenuComponent component0) =>
                   {
-                    if (GameScript._lp0 != null && _CurrentMenu._dropdownCount == 0)
+                    if (GameScript._lp0 != null && s_CurrentMenu._dropdownCount == 0)
                       GameObject.Destroy(GameScript._lp0.gameObject);
                   });
                 }
@@ -2579,9 +2579,9 @@ public class Menu
               {
 
                 // Load map preview
-                if (_CurrentMenu._hasDropdown)
+                if (s_CurrentMenu._hasDropdown)
                 {
-                  if (GameScript._lp0 != null && _CurrentMenu._dropdownCount == 0)
+                  if (GameScript._lp0 != null && s_CurrentMenu._dropdownCount == 0)
                     GameObject.Destroy(GameScript._lp0.gameObject);
                   level_data = Levels._CurrentLevelCollection._levelData[component._buttonIndex];
                   GameScript._lp0 = TileManager.GetMapPreview(level_data).transform;
@@ -2602,7 +2602,7 @@ public class Menu
 
                 // Render menu
                 CommonEvents._SwitchMenu(MenuType.EDITOR_PACKS_EDIT);
-                _CurrentMenu._selectionIndex = Levels._LevelPack_SaveReorderIndex + 1;
+                s_CurrentMenu._selectionIndex = Levels._LevelPack_SaveReorderIndex + 1;
                 _CanRender = false;
                 RenderMenu();
                 SendInput(Input.SPACE);
@@ -2620,9 +2620,9 @@ public class Menu
               {
 
                 // Load map preview
-                if (!_CurrentMenu._hasDropdown)
+                if (!s_CurrentMenu._hasDropdown)
                 {
-                  if (GameScript._lp0 != null && _CurrentMenu._dropdownCount == 0)
+                  if (GameScript._lp0 != null && s_CurrentMenu._dropdownCount == 0)
                     GameObject.Destroy(GameScript._lp0.gameObject);
                   level_data = Levels._CurrentLevelCollection._levelData[component._buttonIndex];
                   GameScript._lp0 = TileManager.GetMapPreview(level_data).transform;
@@ -2635,7 +2635,7 @@ public class Menu
               {
 
                 // Unload map preview
-                if (GameScript._lp0 != null && _CurrentMenu._dropdownCount == 0 && !_CurrentMenu._hasDropdown)
+                if (GameScript._lp0 != null && s_CurrentMenu._dropdownCount == 0 && !s_CurrentMenu._hasDropdown)
                   GameObject.Destroy(GameScript._lp0.gameObject);
               });
           }
@@ -2678,7 +2678,7 @@ public class Menu
                 Levels._IsReorderingLevel = false;
 
                 // Reorder array
-                var reorderindex = _CurrentMenu._selectionIndex;
+                var reorderindex = s_CurrentMenu._selectionIndex;
                 if (reorderindex != Levels._LevelPack_SaveReorderIndex)
                 {
 
@@ -2704,7 +2704,7 @@ public class Menu
                 // Render menu
                 SpawnMenu_LevelPacks_Edit();
                 var selectionindex = Levels._LevelPack_SaveReorderIndex > reorderindex ? reorderindex + 1 : reorderindex;
-                _CurrentMenu._selectionIndex = selectionindex == 0 ? 1 : selectionindex;
+                s_CurrentMenu._selectionIndex = selectionindex == 0 ? 1 : selectionindex;
                 _CanRender = false;
                 RenderMenu();
                 SendInput(Input.SPACE);
@@ -2717,9 +2717,9 @@ public class Menu
               .AddEvent((MenuComponent component) =>
               {
                 // Load map preview
-                if (_CurrentMenu._hasDropdown)
+                if (s_CurrentMenu._hasDropdown)
                 {
-                  if (GameScript._lp0 != null && _CurrentMenu._dropdownCount == 0)
+                  if (GameScript._lp0 != null && s_CurrentMenu._dropdownCount == 0)
                     GameObject.Destroy(GameScript._lp0.gameObject);
                   level_data = Levels._LevelPack_Current._levelData[component._buttonIndex - 1];
                   GameScript._lp0 = TileManager.GetMapPreview(level_data).transform;
@@ -2741,7 +2741,7 @@ public class Menu
                 actions.Add((MenuComponent component0) =>
                 {
 
-                  var saveindex = _CurrentMenu._dropdownParentIndex - 1;
+                  var saveindex = s_CurrentMenu._dropdownParentIndex - 1;
 
                   if (Levels._LevelPack_Current._levelData.Length == 1)
                     Levels._LevelPack_Current._levelData = new string[] { };
@@ -2757,13 +2757,13 @@ public class Menu
                   Levels.LevelPack_Save();
 
                   // Reload menu
-                  var save_index = _CurrentMenu._dropdownParentIndex;
+                  var save_index = s_CurrentMenu._dropdownParentIndex;
                   CommonEvents._RemoveDropdownSelections(component0);
                   CommonEvents._SwitchMenu(MenuType.EDITOR_PACKS_EDIT);
                   _CanRender = false;
                   RenderMenu();
-                  _CurrentMenu._selectionIndex = save_index == _CurrentMenu._menuComponentsSelectable.Count - 1 ? save_index - 1 : save_index;
-                  _CurrentMenu._selectedComponent._onFocus?.Invoke(_CurrentMenu._selectedComponent);
+                  s_CurrentMenu._selectionIndex = save_index == s_CurrentMenu._menuComponentsSelectable.Count - 1 ? save_index - 1 : save_index;
+                  s_CurrentMenu._selectedComponent._onFocus?.Invoke(s_CurrentMenu._selectedComponent);
                   _CanRender = false;
                   RenderMenu();
 
@@ -2775,15 +2775,15 @@ public class Menu
                 {
 
                   Levels._IsOverwritingLevel = true;
-                  Levels._LevelPack_SaveReorderIndex = _CurrentMenu._dropdownParentIndex - 1;
+                  Levels._LevelPack_SaveReorderIndex = s_CurrentMenu._dropdownParentIndex - 1;
 
                   CommonEvents._RemoveDropdownSelections(component0);
                   CommonEvents._SwitchMenu(MenuType.EDITOR_PACKS_EDIT);
-                  _CurrentMenu._selectedComponent._focused = false;
-                  _CurrentMenu._selectionIndex = 0;
+                  s_CurrentMenu._selectedComponent._focused = false;
+                  s_CurrentMenu._selectionIndex = 0;
                   _CanRender = false;
                   RenderMenu();
-                  _CurrentMenu._selectedComponent?._onFocus?.Invoke(_CurrentMenu._selectedComponent);
+                  s_CurrentMenu._selectedComponent?._onFocus?.Invoke(s_CurrentMenu._selectedComponent);
 
                 });
 
@@ -2807,13 +2807,13 @@ public class Menu
                   else
                     level_meta[3] = ((level_meta[3].ParseIntInvariant() + 1) % SceneThemes._SceneOrder_LevelEditor.Length) + "";
 
-                  Levels._LevelPack_Current._levelData[_CurrentMenu._dropdownParentIndex - 1] = Levels.ParseLevelMeta(level_meta);
+                  Levels._LevelPack_Current._levelData[s_CurrentMenu._dropdownParentIndex - 1] = Levels.ParseLevelMeta(level_meta);
                   Levels.LevelPack_Save();
 
-                  var saveindex = _CurrentMenu._dropdownParentIndex;
+                  var saveindex = s_CurrentMenu._dropdownParentIndex;
                   CommonEvents._RemoveDropdownSelections(component0);
                   CommonEvents._SwitchMenu(MenuType.EDITOR_PACKS_EDIT);
-                  _CurrentMenu._selectionIndex = saveindex;
+                  s_CurrentMenu._selectionIndex = saveindex;
                   _CanRender = false;
                   RenderMenu();
                   SendInput(Input.SPACE);
@@ -2828,23 +2828,23 @@ public class Menu
                 {
 
                   Levels._IsReorderingLevel = true;
-                  Levels._LevelPack_SaveReorderIndex = _CurrentMenu._dropdownParentIndex - 1;
+                  Levels._LevelPack_SaveReorderIndex = s_CurrentMenu._dropdownParentIndex - 1;
 
                   CommonEvents._RemoveDropdownSelections(component0);
                   CommonEvents._SwitchMenu(MenuType.EDITOR_PACKS_EDIT);
-                  _CurrentMenu._selectionIndex = Levels._LevelPack_SaveReorderIndex;
+                  s_CurrentMenu._selectionIndex = Levels._LevelPack_SaveReorderIndex;
                   _CanRender = false;
                   RenderMenu();
 
                 });
 
                 // Set hard loadout
-                selections.Add("set loadout - " + (CurrentLoadout()._Equipment.IsEmpty() ? "not set, using CLASSIC mode loadouts" : "set, using hard-set loadout"));
+                selections.Add("set loadout - " + (CurrentLoadout()._Equipment.IsEmpty() ? "not set, using MISSIONS mode loadouts" : "set, using hard-set loadout"));
                 actions.Add((MenuComponent component0) =>
                 {
 
                   // Start editing loadout
-                  Levels._LoadoutEdit_SaveIndex = _CurrentMenu._dropdownParentIndex - 1;
+                  Levels._LoadoutEdit_SaveIndex = s_CurrentMenu._dropdownParentIndex - 1;
 
                   if (GameScript._lp0 != null)
                     GameObject.Destroy(GameScript._lp0.gameObject);
@@ -2858,7 +2858,7 @@ public class Menu
                 actions.Add((MenuComponent component0) =>
                 {
 
-                  var level_data = Levels._LevelPack_Current._levelData[Menu._CurrentMenu._dropdownParentIndex - 1];
+                  var level_data = Levels._LevelPack_Current._levelData[Menu.s_CurrentMenu._dropdownParentIndex - 1];
 
                   var savelevelcollection = Levels._CurrentLevelCollectionIndex;
                   Levels._CurrentLevelCollectionIndex = 3;
@@ -2875,9 +2875,9 @@ public class Menu
                   Levels._CurrentLevelCollectionIndex = savelevelcollection;
 
                   // Remove dropdown for feedback
-                  var saveindex = _CurrentMenu._dropdownParentIndex;
+                  var saveindex = s_CurrentMenu._dropdownParentIndex;
                   CommonEvents._RemoveDropdownSelections(component0);
-                  _CurrentMenu._selectionIndex = saveindex;
+                  s_CurrentMenu._selectionIndex = saveindex;
                   _CanRender = true;
                   RenderMenu();
 
@@ -2895,9 +2895,9 @@ public class Menu
               {
 
                 // Load map preview
-                if (!_CurrentMenu._hasDropdown)
+                if (!s_CurrentMenu._hasDropdown)
                 {
-                  if (GameScript._lp0 != null && _CurrentMenu._dropdownCount == 0)
+                  if (GameScript._lp0 != null && s_CurrentMenu._dropdownCount == 0)
                     GameObject.Destroy(GameScript._lp0.gameObject);
                   level_data = Levels._LevelPack_Current._levelData[component._buttonIndex - 1];
                   GameScript._lp0 = TileManager.GetMapPreview(level_data).transform;
@@ -2910,7 +2910,7 @@ public class Menu
               {
 
                 // Unload map preview
-                if (GameScript._lp0 != null && _CurrentMenu._dropdownCount == 0 && !_CurrentMenu._hasDropdown)
+                if (GameScript._lp0 != null && s_CurrentMenu._dropdownCount == 0 && !s_CurrentMenu._hasDropdown)
                   GameObject.Destroy(GameScript._lp0.gameObject);
               });
 
@@ -2935,7 +2935,7 @@ public class Menu
             Levels._IsReorderingLevel = Levels._IsOverwritingLevel = false;
 
             SpawnMenu_LevelPacks_Edit();
-            _CurrentMenu._selectionIndex = Levels._LevelPack_SaveReorderIndex + 1;
+            s_CurrentMenu._selectionIndex = Levels._LevelPack_SaveReorderIndex + 1;
             _CanRender = false;
             RenderMenu();
             SendInput(Input.SPACE);
@@ -2958,7 +2958,7 @@ public class Menu
             if (GameScript._lp0 != null)
               GameObject.Destroy(GameScript._lp0.gameObject);
 
-            _CurrentMenu._selectionIndex = Levels._LevelPackMenu_SaveIndex;
+            s_CurrentMenu._selectionIndex = Levels._LevelPackMenu_SaveIndex;
             _CanRender = false;
             RenderMenu();
             Menu.SendInput(Input.SPACE);
@@ -3011,7 +3011,7 @@ public class Menu
         .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
         {
           if (component._focused)
-            component.SetDisplayText($"</color><color={_COLOR_GRAY}>available ($$): {Shop._AvailablePoints}</color>       <-- get ($$) by completing new CLASSIC levels<color=white>\n");
+            component.SetDisplayText($"</color><color={_COLOR_GRAY}>available ($$): {Shop._AvailablePoints}</color>       <-- get ($$) by completing new MISSIONC levels<color=white>\n");
           else
           {
             var color = Shop._AvailablePoints > 0 ? "yellow" : "red";
@@ -3040,7 +3040,7 @@ public class Menu
             Shop._DisplayMode++;
 
             SpawnMenu_Shop();
-            _CurrentMenu._selectionIndex = component._buttonIndex;
+            s_CurrentMenu._selectionIndex = component._buttonIndex;
             _CanRender = false;
             RenderMenu();
           })
@@ -3279,13 +3279,13 @@ public class Menu
                 Settings.LevelSaveData.Save();
 
                 // Re-render menu
-                var save_selection = _CurrentMenu._selectionIndex;
+                var save_selection = s_CurrentMenu._selectionIndex;
                 SpawnMenu_Shop();
-                _CurrentMenu._selectionIndex = save_selection;
-                if (_CurrentMenu._selectedComponent.GetDisplayText(false).Trim().EndsWith("back"))
-                  _CurrentMenu._selectionIndex--;
-                _CurrentMenu._menuComponent_lastFocused = _CurrentMenu._menuComponentsSelectable[0];
-                _CurrentMenu._selectedComponent._onFocus(_CurrentMenu._selectedComponent);
+                s_CurrentMenu._selectionIndex = save_selection;
+                if (s_CurrentMenu._selectedComponent.GetDisplayText(false).Trim().EndsWith("back"))
+                  s_CurrentMenu._selectionIndex--;
+                s_CurrentMenu._menuComponent_lastFocused = s_CurrentMenu._menuComponentsSelectable[0];
+                s_CurrentMenu._selectedComponent._onFocus(s_CurrentMenu._selectedComponent);
                 _CanRender = false;
                 RenderMenu();
                 PlayNoise(Noise.PURCHASE);
@@ -3301,11 +3301,11 @@ public class Menu
           m.AddEvent((MenuComponent component) =>
           {
             // Save selection
-            var save_selection = _CurrentMenu._selectionIndex;
+            var save_selection = s_CurrentMenu._selectionIndex;
             GenericMenu(new string[]
             {
             Shop._AvailablePoints < cost ?
-            "cannot afford item\n\n- you do not have enough <color=yellow>($$)</color> to buy this item\n\n- complete classic mode ranks to get more <color=yellow>($$)</color>\n\n"
+            "cannot afford item\n\n- you do not have enough <color=yellow>($$)</color> to buy this item\n\n- complete MISSIONS mode ranks to get more <color=yellow>($$)</color>\n\n"
             :
             "cannot equip / purchase item\n\n- you do not have enough <color=yellow>equipment_points</color> to equip this item if you purchased it\n\n- buy more <color=yellow>MAX_EQUIP_POINTS</color> in the SHOP to equip / buy this\n\n"
             },
@@ -3315,7 +3315,7 @@ public class Menu
             true,
             (MenuComponent component1) =>
             {
-              _Menus[MenuType.SHOP]._selectionIndex = save_selection;
+              s_menus[MenuType.SHOP]._selectionIndex = save_selection;
               RenderMenu();
             });
           });
@@ -3325,10 +3325,10 @@ public class Menu
       m.AddComponent("\n")
       .AddBackButton((MenuComponent component) =>
       {
-        CommonEvents._SwitchMenu(_PreviousMenuType == MenuType.GENERIC_MENU || _InPause ? MenuType.PAUSE : MenuType.GAMETYPE_CLASSIC);
-        if (_InPause)
+        CommonEvents._SwitchMenu(s_previousMenuType == MenuType.GENERIC_MENU || s_InPause ? MenuType.PAUSE : MenuType.GAMETYPE_CLASSIC);
+        if (s_InPause)
         {
-          _CurrentMenu._selectionIndex = 1;
+          s_CurrentMenu._selectionIndex = 1;
           _CanRender = true;
           RenderMenu();
         }
@@ -3337,7 +3337,7 @@ public class Menu
       {
         Shop._DisplayMode = 0;
         SpawnMenu_Shop();
-        _CurrentMenu._selectionIndex = Shop.Unlocked(Shop.Unlocks.TUTORIAL_PART1) ? 3 : 2;
+        s_CurrentMenu._selectionIndex = Shop.Unlocked(Shop.Unlocks.TUTORIAL_PART1) ? 3 : 2;
         _CanRender = false;
         RenderMenu();
       };
@@ -3349,7 +3349,7 @@ public class Menu
     {
 
     }
-    .AddComponent($"<color={_COLOR_GRAY}>how to play</color>\n\n")
+    .AddComponent($"<color={_COLOR_GRAY}>briefing/color>\n\n")
     .AddComponent("controls\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
       .AddEvent((MenuComponent component) => { CommonEvents._SwitchMenu(MenuType.CONTROLS); })
     .AddBackButton(MenuType.MAIN);
@@ -3434,12 +3434,6 @@ public class Menu
         if (component._collider.transform.childCount == 0)
           SpawnControlUI(component, FunctionsC.Control.A);
       })
-    .AddComponent($"{string.Format(format_controls, "flip table:", "", "f")} \n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-      .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
-      {
-        if (component._collider.transform.childCount == 0)
-          SpawnControlUI(component, FunctionsC.Control.B);
-      })
     .AddComponent($"{string.Format(format_controls, "swap weapons' hand:", "", "g")} \n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
       .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
       {
@@ -3460,19 +3454,6 @@ public class Menu
 
     .AddComponent($"{string.Format(format_controls, "toggle camera type:", "", "f4")} \n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
 
-    .AddComponent($"{string.Format(format_controls, "next level:", " hold", "page up")} \n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-      .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
-      {
-        if (component._collider.transform.childCount == 0)
-          SpawnControlUI(component, FunctionsC.Control.DPAD_RIGHT);
-      })
-    .AddComponent($"{string.Format(format_controls, "previous level:", " hold", "page down")} \n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-      .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
-      {
-        if (component._collider.transform.childCount == 0)
-          SpawnControlUI(component, FunctionsC.Control.DPAD_LEFT);
-      })
-
     .AddComponent($"\n<color={_COLOR_GRAY}>only in menus</color>\n")
     .AddComponent($"{string.Format(format_controls, "cycle color:", "", "1")} \n", MenuComponent.ComponentType.BUTTON_SIMPLE)
       .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
@@ -3487,21 +3468,21 @@ public class Menu
           SpawnControlUI(component, FunctionsC.Control.R_BUMPER);
       })
 
-    .AddComponent($"\n<color={_COLOR_GRAY}>mode - </color><color=yellow>CLASSIC</color>\n")
+    .AddComponent($"\n<color={_COLOR_GRAY}>mode - </color><color=yellow>MISSIONS</color>\n")
     .AddComponent($"{string.Format(format_controls, "cycle loadout left:", "", "z")} \n", MenuComponent.ComponentType.BUTTON_SIMPLE)
       .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
       {
         if (component._collider.transform.childCount == 0)
           SpawnControlUI(component, FunctionsC.Control.DPAD_LEFT);
       })
-    .AddComponent($"{string.Format(format_controls, "cycle loadout right:", "", "c")} \n", MenuComponent.ComponentType.BUTTON_SIMPLE)
+    .AddComponent($"{string.Format(format_controls, "cycle loadout right:", "", "c")} \n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
       .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
       {
         if (component._collider.transform.childCount == 0)
           SpawnControlUI(component, FunctionsC.Control.DPAD_RIGHT);
       })
-    .AddComponent("\n")
-    .AddComponent($"{string.Format(format_controls, "restart map:", "", "left control/backspace")} \n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
+
+    .AddComponent($"{string.Format(format_controls, "restart mission:", "", "left control/backspace")} \n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
       .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
       {
         if (component._collider.transform.childCount == 0)
@@ -3511,14 +3492,34 @@ public class Menu
           t.localPosition += lp;
         }
       })
-      .AddComponent($"{string.Format(format_controls, "whistle:", "", "v")} \n", MenuComponent.ComponentType.BUTTON_SIMPLE)
+
+    .AddComponent($"{string.Format(format_controls, "next mission:", " hold", "page up")} \n", MenuComponent.ComponentType.BUTTON_SIMPLE)
+      .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+      {
+        if (component._collider.transform.childCount == 0)
+          SpawnControlUI(component, FunctionsC.Control.DPAD_RIGHT);
+      })
+    .AddComponent($"{string.Format(format_controls, "previous mission:", " hold", "page down")} \n", MenuComponent.ComponentType.BUTTON_SIMPLE)
+      .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+      {
+        if (component._collider.transform.childCount == 0)
+          SpawnControlUI(component, FunctionsC.Control.DPAD_LEFT);
+      })
+
+    .AddComponent($"{string.Format(format_controls, "flip table:", "", "f")} \n", MenuComponent.ComponentType.BUTTON_SIMPLE)
+      .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+      {
+        if (component._collider.transform.childCount == 0)
+          SpawnControlUI(component, FunctionsC.Control.B);
+      })
+    .AddComponent($"{string.Format(format_controls, "whistle:", "", "v")} \n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
       .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
       {
         if (component._collider.transform.childCount == 0)
           SpawnControlUI(component, FunctionsC.Control.DPAD_DOWN);
       })
-    .AddComponent("\n")
-    .AddComponent($"\n<color={_COLOR_GRAY}>mode - </color><color=yellow>SURVIVAL</color>\n")
+
+    .AddComponent($"\n<color={_COLOR_GRAY}>mode - </color><color=yellow>ZOMBIE</color>\n")
     .AddComponent($"{string.Format(format_controls, "purchase (auto):", "", "f")} \n", MenuComponent.ComponentType.BUTTON_SIMPLE)
       .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
       {
@@ -3539,7 +3540,7 @@ public class Menu
           SpawnControlUI(component, FunctionsC.Control.DPAD_RIGHT);
       })
     .AddComponent("\n")
-    .AddComponent($"{string.Format(format_controls, "drop money:", "", "v")} \n", MenuComponent.ComponentType.BUTTON_SIMPLE)
+    .AddComponent($"{string.Format(format_controls, "drop credits:", "", "v")} \n", MenuComponent.ComponentType.BUTTON_SIMPLE)
       .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
       {
         if (component._collider.transform.childCount == 0)
@@ -3547,27 +3548,27 @@ public class Menu
       })
     .AddComponent("\n")
     .AddBackButton(MenuType.OPTIONS);
-    _Menus[MenuType.CONTROLS]._onSwitchTo += () =>
+    s_menus[MenuType.CONTROLS]._onSwitchTo += () =>
     {
-      foreach (var component in _Menus[MenuType.CONTROLS]._menuComponents)
+      foreach (var component in s_menus[MenuType.CONTROLS]._menuComponents)
         if (component._collider.transform.childCount != 0)
           component._collider.transform.GetChild(0).gameObject.SetActive(true);
     };
-    _Menus[MenuType.CONTROLS]._onSwitched += () =>
+    s_menus[MenuType.CONTROLS]._onSwitched += () =>
     {
-      foreach (var component in _Menus[MenuType.CONTROLS]._menuComponents)
+      foreach (var component in s_menus[MenuType.CONTROLS]._menuComponents)
         if (component._collider.transform.childCount != 0)
           component._collider.transform.GetChild(0).gameObject.SetActive(false);
     };
 
     // Mode selection menu
-    var format_mode = "{0,-15} - {1,-50}\n";
+    var format_mode = "{0,-10} - {1,-50}\n";
     new Menu(MenuType.MODE_SELECTION)
     {
 
     }
     .AddComponent($"<color={_COLOR_GRAY}>mode selection</color>\n\n")
-    .AddComponent(string.Format(format_mode, "classic", "hand-placed enemies, choose loadouts"), MenuComponent.ComponentType.BUTTON_SIMPLE)
+    .AddComponent(string.Format(format_mode, "missions", "clean site and retrieve DATA"), MenuComponent.ComponentType.BUTTON_SIMPLE)
       .AddEvent((MenuComponent component) =>
       {
         GameScript.s_GameMode = GameScript.GameModes.CLASSIC;
@@ -3584,7 +3585,7 @@ public class Menu
             new string[] {
               @"welcome,~1
 
-if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' menu~1
+if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
 
 "
             },
@@ -3598,7 +3599,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
       })
 
     // Switch to survival mode menu
-    .AddComponent(string.Format(format_mode, "survival", "waves of enemies\n"), MenuComponent.ComponentType.BUTTON_SIMPLE)
+    .AddComponent(string.Format(format_mode, "zombie", "endure waves of the undead\n"), MenuComponent.ComponentType.BUTTON_SIMPLE)
       .AddEvent((MenuComponent component) =>
       {
         Levels._CurrentLevelCollectionIndex = 2;
@@ -3616,7 +3617,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
       })
 
     // Switch to versus mode menu
-    .AddComponent(string.Format(format_mode, "versus", "local co-op party\n"), MenuComponent.ComponentType.BUTTON_SIMPLE)
+    .AddComponent(string.Format(format_mode, "party", "versus\n"), MenuComponent.ComponentType.BUTTON_SIMPLE)
       .AddEvent((MenuComponent component) =>
       {
         Levels._CurrentLevelCollectionIndex = 4;
@@ -3632,7 +3633,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
     // Fire event on menu switch; save last selected
     ._onSwitchTo += () =>
     {
-      _SaveMenuDir = _SaveLevelSelected = -1;
+      s_SaveMenuDir = s_SaveLevelSelected = -1;
 
       GameScript.SurvivalMode.OnLeaveMode();
 
@@ -3650,10 +3651,10 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
       {
 
       }
-      .AddComponent($"mode: <color={_COLOR_GRAY}>VERSUS</color>\n\n")
+      .AddComponent($"mode: <color={_COLOR_GRAY}>PARTY</color>\n\n")
 
       // Mode
-      .AddComponent("mode: endurance\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
+      .AddComponent("rules: endurance\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
        .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
         {
           // Set display text
@@ -3684,7 +3685,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
             });
           }
 
-          component.SetDropdownData("mode\n*play different versus modes\n\n", selections, actions, selection_match);
+          component.SetDropdownData("mode\n*select different rules\n\n", selections, actions, selection_match);
         })
 
       // Team setting
@@ -3849,7 +3850,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
         })
 
       // Tutorial
-      .AddComponent("how to play\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
+      .AddComponent("briefing\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
         .AddEvent((MenuComponent component) => { CommonEvents._SwitchMenu(MenuType.HOWTOPLAY_VERSUS); })
 
       // Back button
@@ -3868,7 +3869,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
 
       }
       .AddComponent(GameScript.s_GameMode == GameScript.GameModes.CLASSIC ?
-          string.Format($"<color={_COLOR_GRAY}>{format_subdirs}</color>", "levels", "rank", "", "") + "\n\n"
+          string.Format($"<color={_COLOR_GRAY}>{format_subdirs}</color>", "missions", "rank", "", "") + "\n\n"
         :
           string.Format($"<color={_COLOR_GRAY}>{format_subdirs}</color>", "levels", "highest wave", "") + "\n\n"
         );
@@ -3935,16 +3936,16 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
             string.Format(format_subdirs, $"\\dir{i}", $"{rank_lowest}    ", "", "") + '\n'
           :
             string.Format(format_subdirs, $"\\dir{i}", $"{wave}    ", "") + '\n';
-        _Menus[MenuType.LEVELS].AddComponent(display_text,
+        s_menus[MenuType.LEVELS].AddComponent(display_text,
           MenuComponent.ComponentType.BUTTON_DROPDOWN)
           .AddEvent(EventType.ON_UNFOCUS, (MenuComponent component) =>
           {
-            _SaveLevelSelected = -1;
+            s_SaveLevelSelected = -1;
           })
           // Save selected dir
           .AddEventFront((MenuComponent component) =>
           {
-            _SaveMenuDir = component._buttonIndex;
+            s_SaveMenuDir = component._buttonIndex;
 
             //if(GameScript._GameMode == GameScript.GameModes.SURVIVAL)
             //  GameScript._lp0 = TileManager.GetMapPreview(Levels._CurrentLevelCollection._leveldata[component._buttonIndex], 0).transform;
@@ -4022,7 +4023,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
                   actions.Add((MenuComponent component0) =>
                   {
                     // Save selected level iter
-                    _SaveLevelSelected = component0._dropdownIndex;
+                    s_SaveLevelSelected = component0._dropdownIndex;
 
                     // Load level
                     var levelIter = component0.GetDisplayText().Split(' ')[2].Trim().Substring(1).ParseIntInvariant() - 1;
@@ -4078,11 +4079,11 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
 
               // Get dropdown match
               var match = "";
-              if (_SaveLevelSelected != -1 && _SaveLevelSelected < selections.Count)
+              if (s_SaveLevelSelected != -1 && s_SaveLevelSelected < selections.Count)
               {
-                match = selections[_SaveLevelSelected];
+                match = selections[s_SaveLevelSelected];
               }
-              else if (_PreviousMenuType == MenuType.GAMETYPE_CLASSIC)
+              else if (s_previousMenuType == MenuType.GAMETYPE_CLASSIC)
               {
                 var lastIter = 0;
                 foreach (var selection in selections)
@@ -4110,7 +4111,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
               }
 
               // Check for last level
-              if (_PreviousMenuType == MenuType.GAMETYPE_CLASSIC && Levels.LevelCompleted(131))
+              if (s_previousMenuType == MenuType.GAMETYPE_CLASSIC && Levels.LevelCompleted(131))
                 match = selections[0];
 
               if (match == "")
@@ -4119,24 +4120,24 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
               }
 
               // Set dropdown data
-              component.SetDropdownData($"=== {string.Format(format_subdirs, "level", "time", "rank", "preview")}\n\n", selections, actions, match, actions_onCreated, null, actions_onFocus, actions_onUnfocus);
+              component.SetDropdownData($"=== {string.Format(format_subdirs, "mission", "time", "rank", "layout")}\n\n", selections, actions, match, actions_onCreated, null, actions_onFocus, actions_onUnfocus);
             }
 
             // CHALLENGE levels; WIP
             else if (GameScript.s_GameMode == GameScript.GameModes.CHALLENGE)
             {
               // Update dropdown data
-              var prompt = $"=== {string.Format(format_subdirs, "level", "time", "preview")}\n\n";
+              var prompt = $"=== {string.Format(format_subdirs, "level", "time", "layout")}\n\n";
               var selections = new List<string>();
               var actions = new List<System.Action<MenuComponent>>();
               selections.Add("yes");
               actions.Add((MenuComponent component0) =>
               {
-                GameScript.NextLevel(_SaveMenuDir);
+                GameScript.NextLevel(s_SaveMenuDir);
                 CommonEvents._RemoveDropdownSelections(component0);
                 // Remove menus
-                _Menu.gameObject.SetActive(false);
-                _InMenus = false;
+                s_Menu.gameObject.SetActive(false);
+                s_InMenus = false;
                 TileManager._Text_LevelNum.gameObject.SetActive(true);
                 TileManager._Text_LevelTimer.gameObject.SetActive(true);
                 TileManager._Text_LevelTimer_Best.gameObject.SetActive(true);
@@ -4157,12 +4158,12 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
               selections.Add("select");
               actions.Add((MenuComponent component0) =>
               {
-                GameScript.NextLevel(_SaveMenuDir);
+                GameScript.NextLevel(s_SaveMenuDir);
                 CommonEvents._RemoveDropdownSelections(component0);
                 // Remove menus
                 TileManager._Text_LevelTimer.gameObject.SetActive(true);
-                _Menu.gameObject.SetActive(false);
-                _InMenus = false;
+                s_Menu.gameObject.SetActive(false);
+                s_InMenus = false;
               });
               // Set dropdown data
               component.SetDropdownData(prompt, selections, actions, "select");
@@ -4172,7 +4173,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
       // Add 'level settings' if CLASSIC mode
       if (GameScript.s_GameMode == GameScript.GameModes.CLASSIC)
       {
-        m.AddComponent($"\n<color={_COLOR_GRAY}>level settings</color>\n\n")
+        m.AddComponent($"\n<color={_COLOR_GRAY}>mission settings</color>\n\n")
         .AddComponent("difficulty\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
           .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
           {
@@ -4191,12 +4192,12 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
             {
               Settings._DIFFICULTY = difficulty;
               Levels._CurrentLevelCollectionIndex = (GameScript.s_GameMode == GameScript.GameModes.SURVIVAL ? 2 : 0 + difficulty);
-              _SaveMenuDir = -1;
+              s_SaveMenuDir = -1;
               _CanRender = false;
               Levels.BufferLevelTimeDatas();
 
               SpawnMenu_Levels();
-              _CurrentMenu._selectionIndex = _CurrentMenu._menuComponentsSelectable.Count - 2;
+              s_CurrentMenu._selectionIndex = s_CurrentMenu._menuComponentsSelectable.Count - 2;
               _CanRender = false;
               RenderMenu();
               SendInput(Input.SPACE);
@@ -4247,16 +4248,16 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
       // Back button
       m.AddBackButton((MenuComponent component) =>
       {
-        _SaveMenuDir = -1;
-        _SaveLevelSelected = -1;
+        s_SaveMenuDir = -1;
+        s_SaveLevelSelected = -1;
         CommonEvents._SwitchMenu(GameScript.s_GameMode == GameScript.GameModes.CLASSIC ? MenuType.GAMETYPE_CLASSIC : MenuType.GAMETYPE_SURVIVAL);
       });
 
       // Destroy map preview on dropdown removed
       m._onDropdownRemoved += () =>
       {
-        if (_Text.transform.childCount == 1)
-          GameObject.Destroy(_Text.transform.GetChild(0).gameObject);
+        if (s_Text.transform.childCount == 1)
+          GameObject.Destroy(s_Text.transform.GetChild(0).gameObject);
       };
 
       m._onSwitchTo += () =>
@@ -4264,10 +4265,10 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
         SpawnMenu_Levels();
 
         // Check for saved dirs
-        if (_SaveMenuDir == -1)
+        if (s_SaveMenuDir == -1)
         {
           var saveIndex0 = 0;
-          foreach (var component0 in _CurrentMenu._menuComponentsSelectable)
+          foreach (var component0 in s_CurrentMenu._menuComponentsSelectable)
           {
             if (saveIndex0 == 0) { saveIndex0++; continue; }
             var first_level_iter = component0._buttonIndex * levels_per_dir;
@@ -4280,18 +4281,18 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
             }
             saveIndex0++;
           }
-          _CurrentMenu._selectionIndex = saveIndex0 <= 0 ? 0 : Mathf.Clamp(saveIndex0 - 1, 0, dirs - 1);
+          s_CurrentMenu._selectionIndex = saveIndex0 <= 0 ? 0 : Mathf.Clamp(saveIndex0 - 1, 0, dirs - 1);
           return;
         }
-        var component = _Menus[MenuType.LEVELS]._menuComponentsSelectable[_SaveMenuDir];
-        var save_saveLevelSelected = _SaveLevelSelected;
+        var component = s_menus[MenuType.LEVELS]._menuComponentsSelectable[s_SaveMenuDir];
+        var save_saveLevelSelected = s_SaveLevelSelected;
         component._onRender?.Invoke(component);
         component._onSelected?.Invoke(component);
         if (save_saveLevelSelected != -1)
         {
-          _CurrentMenu._selectionIndex = _CurrentMenu._menuComponentsSelectable.Count - _CurrentMenu._dropdownCount + save_saveLevelSelected;
-          _CurrentMenu._menuComponent_lastFocused = _CurrentMenu._menuComponentsSelectable[_CurrentMenu._menuComponentsSelectable.Count - _CurrentMenu._dropdownCount];
-          _CurrentMenu._selectedComponent._onFocus?.Invoke(_CurrentMenu._selectedComponent);
+          s_CurrentMenu._selectionIndex = s_CurrentMenu._menuComponentsSelectable.Count - s_CurrentMenu._dropdownCount + save_saveLevelSelected;
+          s_CurrentMenu._menuComponent_lastFocused = s_CurrentMenu._menuComponentsSelectable[s_CurrentMenu._menuComponentsSelectable.Count - s_CurrentMenu._dropdownCount];
+          s_CurrentMenu._selectedComponent._onFocus?.Invoke(s_CurrentMenu._selectedComponent);
         }
         // Render
         RenderMenu();
@@ -4479,7 +4480,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
         displayText += "\n\n";*/
 
         // Set text
-        _Menus[MenuType.SELECT_LOADOUT].AddComponent(displayText, MenuComponent.ComponentType.BUTTON_SIMPLE)
+        s_menus[MenuType.SELECT_LOADOUT].AddComponent(displayText, MenuComponent.ComponentType.BUTTON_SIMPLE)
 
         // Edit loadout when selected
         .AddEvent((MenuComponent component) =>
@@ -4490,7 +4491,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
       }
 
       // Back button
-      _Menus[MenuType.SELECT_LOADOUT].AddBackButton((MenuComponent component) =>
+      s_menus[MenuType.SELECT_LOADOUT].AddBackButton((MenuComponent component) =>
       {
 
         // Check for empty loadout for tutorial
@@ -4503,17 +4504,17 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
           }
 
         // Switch back
-        CommonEvents._SwitchMenu(_InPause ? MenuType.PAUSE : MenuType.GAMETYPE_CLASSIC);
-        if (_InPause)
+        CommonEvents._SwitchMenu(s_InPause ? MenuType.PAUSE : MenuType.GAMETYPE_CLASSIC);
+        if (s_InPause)
         {
-          _CurrentMenu._selectionIndex = 2;
+          s_CurrentMenu._selectionIndex = 2;
           _CanRender = true;
           RenderMenu();
         }
       });
 
       // Check for empty player profiles
-      _Menus[MenuType.SELECT_LOADOUT]._onSwitchTo += () =>
+      s_menus[MenuType.SELECT_LOADOUT]._onSwitchTo += () =>
       {
         SpawnMenu_SelectLoadout();
         var allEmpty = true;
@@ -4529,7 +4530,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
               profile._LoadoutIndex++;
 
         // Set selected loadout
-        if (_PreviousMenuType != MenuType.EDIT_LOADOUT)
+        if (s_previousMenuType != MenuType.EDIT_LOADOUT)
         {
 
           Menu.SetCurrentSelection(0);
@@ -4537,7 +4538,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
           Menu._CanRender = true;
           Menu.RenderMenu();
         }
-        _PreviousMenuType = MenuType.SELECT_LOADOUT;
+        s_previousMenuType = MenuType.SELECT_LOADOUT;
       };
     }
     SpawnMenu_SelectLoadout();
@@ -4600,7 +4601,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
 
             SpawnMenu_LoadoutEditor();
 
-            _CurrentMenu._selectionIndex = component._buttonIndex;
+            s_CurrentMenu._selectionIndex = component._buttonIndex;
 
             _CanRender = false;
             RenderMenu();
@@ -4686,8 +4687,8 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
                 {
                   CurrentLoadout()._Equipment._ItemRight0 = item_other;
                   //
-                  var save_selection = _CurrentMenu._dropdownParentIndex;
-                  var save_dropdown = _CurrentMenu._selectionIndex;
+                  var save_selection = s_CurrentMenu._dropdownParentIndex;
+                  var save_dropdown = s_CurrentMenu._selectionIndex;
                   var typ = "item";
                   GenericMenu(new string[]
                   {
@@ -4699,10 +4700,10 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
                   true,
                   (MenuComponent component1) =>
                   {
-                    _Menus[MenuType.EDIT_LOADOUT]._selectionIndex = save_selection;
+                    s_menus[MenuType.EDIT_LOADOUT]._selectionIndex = save_selection;
                     SendInput(Input.SPACE);
                     SendInput(Input.SPACE);
-                    _Menus[MenuType.EDIT_LOADOUT]._selectionIndex = save_dropdown;
+                    s_menus[MenuType.EDIT_LOADOUT]._selectionIndex = save_dropdown;
                     RenderMenu();
                   });
                 }
@@ -4791,8 +4792,8 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
                 {
                   CurrentLoadout()._Equipment._ItemLeft0 = item_other;
                   //
-                  var save_selection = _CurrentMenu._dropdownParentIndex;
-                  var save_dropdown = _CurrentMenu._selectionIndex;
+                  var save_selection = s_CurrentMenu._dropdownParentIndex;
+                  var save_dropdown = s_CurrentMenu._selectionIndex;
                   var typ = "item";
                   GenericMenu(new string[]
                   {
@@ -4804,10 +4805,10 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
                   true,
                   (MenuComponent component1) =>
                   {
-                    _Menus[MenuType.EDIT_LOADOUT]._selectionIndex = save_selection;
+                    s_menus[MenuType.EDIT_LOADOUT]._selectionIndex = save_selection;
                     SendInput(Input.SPACE);
                     SendInput(Input.SPACE);
-                    _Menus[MenuType.EDIT_LOADOUT]._selectionIndex = save_dropdown;
+                    s_menus[MenuType.EDIT_LOADOUT]._selectionIndex = save_dropdown;
                     RenderMenu();
                   });
                 }
@@ -4892,8 +4893,8 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
                   {
                     CurrentLoadout()._Equipment._ItemRight1 = item_other;
                     //
-                    var save_selection = _CurrentMenu._dropdownParentIndex;
-                    var save_dropdown = _CurrentMenu._selectionIndex;
+                    var save_selection = s_CurrentMenu._dropdownParentIndex;
+                    var save_dropdown = s_CurrentMenu._selectionIndex;
                     var typ = "item";
                     GenericMenu(new string[]
                     {
@@ -4905,10 +4906,10 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
                     true,
                     (MenuComponent component1) =>
                     {
-                      _Menus[MenuType.EDIT_LOADOUT]._selectionIndex = save_selection;
+                      s_menus[MenuType.EDIT_LOADOUT]._selectionIndex = save_selection;
                       SendInput(Input.SPACE);
                       SendInput(Input.SPACE);
-                      _Menus[MenuType.EDIT_LOADOUT]._selectionIndex = save_dropdown;
+                      s_menus[MenuType.EDIT_LOADOUT]._selectionIndex = save_dropdown;
                       RenderMenu();
                     });
                   }
@@ -4989,8 +4990,8 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
                   {
                     CurrentLoadout()._Equipment._ItemLeft1 = item_other;
                     //
-                    var save_selection = _CurrentMenu._dropdownParentIndex;
-                    var save_dropdown = _CurrentMenu._selectionIndex;
+                    var save_selection = s_CurrentMenu._dropdownParentIndex;
+                    var save_dropdown = s_CurrentMenu._selectionIndex;
                     var typ = "item";
                     GenericMenu(new string[]
                     {
@@ -5002,10 +5003,10 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
                     true,
                     (MenuComponent component1) =>
                     {
-                      _Menus[MenuType.EDIT_LOADOUT]._selectionIndex = save_selection;
+                      s_menus[MenuType.EDIT_LOADOUT]._selectionIndex = save_selection;
                       SendInput(Input.SPACE);
                       SendInput(Input.SPACE);
-                      _Menus[MenuType.EDIT_LOADOUT]._selectionIndex = save_dropdown;
+                      s_menus[MenuType.EDIT_LOADOUT]._selectionIndex = save_dropdown;
                       RenderMenu();
                     });
                   }                // Update UI
@@ -5119,8 +5120,8 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
                   CurrentLoadout()._Equipment._UtilitiesLeft = new UtilityScript.UtilityType[] { utility_selected };
                 else
                 {
-                  var save_selection = _CurrentMenu._dropdownParentIndex;
-                  var save_dropdown = _CurrentMenu._selectionIndex;
+                  var save_selection = s_CurrentMenu._dropdownParentIndex;
+                  var save_dropdown = s_CurrentMenu._selectionIndex;
                   var typ = "utility";
                   GenericMenu(new string[]
                   {
@@ -5132,10 +5133,10 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
                   true,
                   (MenuComponent component1) =>
                   {
-                    _Menus[MenuType.EDIT_LOADOUT]._selectionIndex = save_selection;
+                    s_menus[MenuType.EDIT_LOADOUT]._selectionIndex = save_selection;
                     SendInput(Input.SPACE);
                     SendInput(Input.SPACE);
-                    _Menus[MenuType.EDIT_LOADOUT]._selectionIndex = save_dropdown;
+                    s_menus[MenuType.EDIT_LOADOUT]._selectionIndex = save_dropdown;
                     RenderMenu();
                   });
                 }
@@ -5221,8 +5222,8 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
                   CurrentLoadout()._Equipment._UtilitiesRight = new UtilityScript.UtilityType[] { utility_selected };
                 else
                 {
-                  var save_selection = _CurrentMenu._dropdownParentIndex;
-                  var save_dropdown = _CurrentMenu._selectionIndex;
+                  var save_selection = s_CurrentMenu._dropdownParentIndex;
+                  var save_dropdown = s_CurrentMenu._selectionIndex;
                   var typ = "utility";
                   GenericMenu(new string[]
                   {
@@ -5234,10 +5235,10 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
                   true,
                   (MenuComponent component1) =>
                   {
-                    _Menus[MenuType.EDIT_LOADOUT]._selectionIndex = save_selection;
+                    s_menus[MenuType.EDIT_LOADOUT]._selectionIndex = save_selection;
                     SendInput(Input.SPACE);
                     SendInput(Input.SPACE);
-                    _Menus[MenuType.EDIT_LOADOUT]._selectionIndex = save_dropdown;
+                    s_menus[MenuType.EDIT_LOADOUT]._selectionIndex = save_dropdown;
                     RenderMenu();
                   });
                 }
@@ -5342,8 +5343,8 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
                 // Check for max perks
                 else if (perks.Count == 4)
                 {
-                  var save_selection = _CurrentMenu._dropdownParentIndex;
-                  var save_dropdown = _CurrentMenu._selectionIndex;
+                  var save_selection = s_CurrentMenu._dropdownParentIndex;
+                  var save_dropdown = s_CurrentMenu._selectionIndex;
                   GenericMenu(new string[]
                   {
                      "cannot equip mod\n\n- the maximum number of mods you can equip is 4\n\n- try unequipping a mod\n"
@@ -5354,10 +5355,10 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
                   true,
                   (MenuComponent component1) =>
                   {
-                    _Menus[MenuType.EDIT_LOADOUT]._selectionIndex = save_selection;
+                    s_menus[MenuType.EDIT_LOADOUT]._selectionIndex = save_selection;
                     SendInput(Input.SPACE);
                     SendInput(Input.SPACE);
-                    _Menus[MenuType.EDIT_LOADOUT]._selectionIndex = save_dropdown;
+                    s_menus[MenuType.EDIT_LOADOUT]._selectionIndex = save_dropdown;
                     RenderMenu();
                   });
                 }
@@ -5367,8 +5368,8 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
                   perks.Add(perk_selected);
                 else
                 {
-                  var save_selection = _CurrentMenu._dropdownParentIndex;
-                  var save_dropdown = _CurrentMenu._selectionIndex;
+                  var save_selection = s_CurrentMenu._dropdownParentIndex;
+                  var save_dropdown = s_CurrentMenu._selectionIndex;
                   var typ = "mod";
                   GenericMenu(new string[]
                   {
@@ -5380,10 +5381,10 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
                   true,
                   (MenuComponent component1) =>
                   {
-                    _Menus[MenuType.EDIT_LOADOUT]._selectionIndex = save_selection;
+                    s_menus[MenuType.EDIT_LOADOUT]._selectionIndex = save_selection;
                     SendInput(Input.SPACE);
                     SendInput(Input.SPACE);
-                    _Menus[MenuType.EDIT_LOADOUT]._selectionIndex = save_dropdown;
+                    s_menus[MenuType.EDIT_LOADOUT]._selectionIndex = save_dropdown;
                     RenderMenu();
                   });
                 }
@@ -5416,7 +5417,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
             var leveliter = Levels._LoadoutEdit_SaveIndex;
             var leveldata = Levels._LevelPack_Current._levelData[leveliter];
 
-            _CurrentMenu._selectionIndex = leveliter + 1;
+            s_CurrentMenu._selectionIndex = leveliter + 1;
             RenderMenu();
 
             // Loop through players and equip loadout
@@ -5481,7 +5482,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
                   player.EquipLoadout(CurrentLoadout()._id, false);
               }
           });
-      _Menus[MenuType.EDIT_LOADOUT]._onDropdownRemoved += () =>
+      s_menus[MenuType.EDIT_LOADOUT]._onDropdownRemoved += () =>
       {
         foreach (var loadout in GameScript.ItemManager.Loadout._Loadouts)
           loadout.Save();
@@ -5492,14 +5493,14 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
       };
 
       // Reload menu on switch
-      _Menus[MenuType.EDIT_LOADOUT]._onSwitchTo += () =>
+      s_menus[MenuType.EDIT_LOADOUT]._onSwitchTo += () =>
       {
         SpawnMenu_LoadoutEditor();
-        _CurrentMenu._selectionIndex = Shop.Unlocked(Shop.Unlocks.TUTORIAL_PART1) && has_item ? 2 : 1;
+        s_CurrentMenu._selectionIndex = Shop.Unlocked(Shop.Unlocks.TUTORIAL_PART1) && has_item ? 2 : 1;
         _CanRender = false;
         RenderMenu();
       };
-      _Menus[MenuType.EDIT_LOADOUT]._onSwitched += () =>
+      s_menus[MenuType.EDIT_LOADOUT]._onSwitched += () =>
       {
         Settings.LevelSaveData.Save();
       };
@@ -5565,7 +5566,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
     {
       var mPause = new Menu(MenuType.PAUSE)
       {
-        _onSwitchTo = () => { _InPause = true; }
+        _onSwitchTo = () => { s_InPause = true; }
       };
       mPause.AddComponent($"<color={_COLOR_GRAY}>pause</color>\n\n")
       // Unpause and hide menu
@@ -5574,9 +5575,9 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
         {
           //Debug.Log("resume pressed");
           GameScript.TogglePause();
-          _InPause = false;
-          _InMenus = false;
-          _Menu.gameObject.SetActive(false);
+          s_InPause = false;
+          s_InMenus = false;
+          s_Menu.gameObject.SetActive(false);
 
           // Check editing
           if (GameScript.s_EditorTesting)
@@ -5648,9 +5649,9 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
           .AddEvent((MenuComponent component) =>
           {
             GameScript.TogglePause();
-            _InPause = false;
-            _InMenus = false;
-            _Menu.gameObject.SetActive(false);
+            s_InPause = false;
+            s_InMenus = false;
+            s_Menu.gameObject.SetActive(false);
             TileManager.ReloadMap();
           });
 
@@ -5661,9 +5662,9 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
           .AddEvent((MenuComponent component) =>
           {
             GameScript.TogglePause();
-            _InPause = false;
-            _InMenus = false;
-            _Menu.gameObject.SetActive(false);
+            s_InPause = false;
+            s_InMenus = false;
+            s_Menu.gameObject.SetActive(false);
             GameScript.NextLevel(0);
           });
       }
@@ -5717,11 +5718,11 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
       {
         // Switch to level select
         mPause
-          .AddComponent("exit to level pack select\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
+          .AddComponent("exit to mission pack select\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
             .AddEvent((MenuComponent component) =>
             {
               // Exit to level select
-              _SaveIndex = 5;
+              s_saveIndex = 5;
               CommonEvents._SwitchMenu(MenuType.MODE_EXIT_CONFIRM);
             })
             .AddEvent(EventType.ON_RENDER, CommonEvents._OnRender_XSelector)
@@ -5731,7 +5732,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
             {
 
               // Exit to main menu
-              _SaveIndex = 6;
+              s_saveIndex = 6;
               CommonEvents._SwitchMenu(MenuType.MODE_EXIT_CONFIRM);
             })
             .AddEvent(EventType.ON_RENDER, CommonEvents._OnRender_XSelector);
@@ -5741,11 +5742,11 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
       {
         // Switch to level select
         mPause
-          .AddComponent("save and exit to level editor select\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
+          .AddComponent("save and exit to mission editor select\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
             .AddEvent((MenuComponent component) =>
             {
               // Exit to level select
-              _SaveIndex = 5;
+              s_saveIndex = 5;
               CommonEvents._SwitchMenu(MenuType.MODE_EXIT_CONFIRM);
             })
             .AddEvent(EventType.ON_RENDER, CommonEvents._OnRender_XSelector)
@@ -5755,7 +5756,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
             {
 
               // Exit to main menu
-              _SaveIndex = 6;
+              s_saveIndex = 6;
               CommonEvents._SwitchMenu(MenuType.MODE_EXIT_CONFIRM);
             })
             .AddEvent(EventType.ON_RENDER, CommonEvents._OnRender_XSelector);
@@ -5765,10 +5766,10 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
       {
         // Switch to versus mode menu
         mPause
-          .AddComponent("exit to versus menu\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
+          .AddComponent("exit to PARTY mode menu\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
             .AddEvent((MenuComponent component) =>
             {
-              _SaveIndex = 2;
+              s_saveIndex = 2;
               CommonEvents._SwitchMenu(MenuType.MODE_EXIT_CONFIRM);
             })
             .AddEvent(EventType.ON_RENDER, CommonEvents._OnRender_XSelector)
@@ -5777,7 +5778,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
           .AddComponent("exit to main menu\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
             .AddEvent((MenuComponent component) =>
             {
-              _SaveIndex = 3;
+              s_saveIndex = 3;
               CommonEvents._SwitchMenu(MenuType.MODE_EXIT_CONFIRM);
             })
             .AddEvent(EventType.ON_RENDER, CommonEvents._OnRender_XSelector);
@@ -5790,7 +5791,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
           .AddComponent("exit to level select\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
             .AddEvent((MenuComponent component) =>
             {
-              _SaveIndex = 6;
+              s_saveIndex = 6;
               CommonEvents._SwitchMenu(MenuType.MODE_EXIT_CONFIRM);
             })
             .AddEvent(EventType.ON_RENDER, CommonEvents._OnRender_XSelector)
@@ -5798,7 +5799,7 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
           .AddComponent("exit to main menu\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
             .AddEvent((MenuComponent component) =>
             {
-              _SaveIndex = 7;
+              s_saveIndex = 7;
               CommonEvents._SwitchMenu(MenuType.MODE_EXIT_CONFIRM);
             })
             .AddEvent(EventType.ON_RENDER, CommonEvents._OnRender_XSelector);
@@ -5820,14 +5821,14 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
       }
       ;
       // Set the onback function to be resume
-      _Menus[MenuType.PAUSE]._onBack = () =>
+      s_menus[MenuType.PAUSE]._onBack = () =>
       {
-        _CurrentMenu._selectedComponent._focused = false;
-        _CurrentMenu._selectionIndex = 0;
+        s_CurrentMenu._selectedComponent._focused = false;
+        s_CurrentMenu._selectionIndex = 0;
         SendInput(Input.SPACE);
       };
       // Spawn menu
-      _Menus[MenuType.PAUSE]._onSwitchTo += () =>
+      s_menus[MenuType.PAUSE]._onSwitchTo += () =>
       {
         SpawnMenu_Pause();
       };
@@ -5847,9 +5848,9 @@ if you don't know how to play, visit the '<color=yellow>HOW TO PLAY</color>' men
     {
 
     }
-    .AddComponent($"mode: <color={_COLOR_GRAY}>CLASSIC</color>\n\n")
+    .AddComponent($"mode: <color={_COLOR_GRAY}>MISSIONS</color>\n\n")
     // Select level
-    .AddComponent("select level\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
+    .AddComponent("select mission\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
       .AddEvent((MenuComponent component) =>
       {
         if (component._textColor == "")
@@ -5942,7 +5943,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
     });
 
     // Tutorial
-    menu_classic.AddComponent("how to play\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
+    menu_classic.AddComponent("briefing\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
       .AddEvent((MenuComponent component) => { CommonEvents._SwitchMenu(MenuType.HOWTOPLAY_CLASSIC); })
       .AddEvent(EventType.ON_RENDER, (MenuComponent c) =>
       {
@@ -5957,11 +5958,11 @@ go to the <color=yellow>SHOP</color> to buy something~1
     //
     ._onSwitchTo += () =>
     {
-      if (_PreviousMenuType == MenuType.MODE_SELECTION)
+      if (s_previousMenuType == MenuType.MODE_SELECTION)
         if (!Shop.Unlocked(Shop.Unlocks.TUTORIAL_PART0))
-          _CurrentMenu._selectionIndex = 2;
+          s_CurrentMenu._selectionIndex = 2;
         else if (!Shop.Unlocked(Shop.Unlocks.TUTORIAL_PART1))
-          _CurrentMenu._selectionIndex = 1;
+          s_CurrentMenu._selectionIndex = 1;
     };
     // Tip
     ModifyMenu_TipComponents(MenuType.GAMETYPE_CLASSIC, 12);
@@ -5972,14 +5973,14 @@ go to the <color=yellow>SHOP</color> to buy something~1
     {
 
     }
-    .AddComponent($"mode: <color={_COLOR_GRAY}>SURVIVAL</color>\n\n")
+    .AddComponent($"system mode: <color={_COLOR_GRAY}>ZOMBIE</color>\n\n")
 
     // Select level
     .AddComponent("select level\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
       .AddEvent((MenuComponent component) => { CommonEvents._SwitchMenu(MenuType.LEVELS); })
 
     // Tutorial
-    .AddComponent("how to play\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
+    .AddComponent("briefing\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
       .AddEvent((MenuComponent component) => { CommonEvents._SwitchMenu(MenuType.HOWTOPLAY_SURVIVAL); })
 
     // Back
@@ -6034,10 +6035,10 @@ go to the <color=yellow>SHOP</color> to buy something~1
     {
       component._menu._selectedComponent._focused = false;
       component._menu._selectionIndex = 0;
-      CommonEvents._SwitchMenu(_InPause ? MenuType.PAUSE : MenuType.MAIN);
-      if (_InPause)
+      CommonEvents._SwitchMenu(s_InPause ? MenuType.PAUSE : MenuType.MAIN);
+      if (s_InPause)
       {
-        _CurrentMenu._selectionIndex = 4;
+        s_CurrentMenu._selectionIndex = 4;
         _CanRender = true;
         RenderMenu();
       }
@@ -6454,7 +6455,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
     // Back button
     .AddBackButton(MenuType.OPTIONS);
 
-    _Menus[MenuType.OPTIONS_SETTINGS]._onSwitched += () =>
+    s_menus[MenuType.OPTIONS_SETTINGS]._onSwitched += () =>
     {
       Settings.SettingsSaveData.Save();
     };
@@ -6639,43 +6640,43 @@ go to the <color=yellow>SHOP</color> to buy something~1
       })
 
     // Level end behavior
-    .AddComponent("level completion\n\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
+    .AddComponent("mission completion\n\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
       .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
       {
         // Set display text
-        var selection = "next level";
+        var selection = "next mission";
         switch (SettingsModule.LevelCompletionBehavior)
         {
           case Settings.SettingsSaveData.LevelCompletionBehaviorType.RELOAD_LEVEL:
-            selection = "reload level";
+            selection = "reload mission";
             break;
           case Settings.SettingsSaveData.LevelCompletionBehaviorType.NOTHING:
             selection = "nothing";
             break;
           case Settings.SettingsSaveData.LevelCompletionBehaviorType.PREVIOUS_LEVEL:
-            selection = "previous level";
+            selection = "previous mission";
             break;
           case Settings.SettingsSaveData.LevelCompletionBehaviorType.RANDOM_LEVEL:
-            selection = "random level (current difficulty)";
+            selection = "random mission (current difficulty)";
             break;
           case Settings.SettingsSaveData.LevelCompletionBehaviorType.RANDOM_LEVEL_ALL:
-            selection = "random level (any difficulty)";
+            selection = "random mission (any difficulty)";
             break;
         }
-        component.SetDisplayText(string.Format(format_options + '\n', "level completion:", selection));
+        component.SetDisplayText(string.Format(format_options + '\n', "mission completion:", selection));
 
         // Set dropdown data
         var selections = new List<string>();
         var actions = new List<System.Action<MenuComponent>>();
 
-        selections.Add("next level     - load the next level [DEFAULT]");
+        selections.Add("next mission     - load the next mission [DEFAULT]");
         actions.Add((MenuComponent component0) =>
         {
           SettingsModule.LevelCompletionBehavior = Settings.SettingsSaveData.LevelCompletionBehaviorType.NEXT_LEVEL;
           _CanRender = false;
           RenderMenu();
         });
-        selections.Add("reload level   - replay the same level");
+        selections.Add("reload mission   - replay the same mission");
         actions.Add((MenuComponent component0) =>
         {
           SettingsModule.LevelCompletionBehavior = Settings.SettingsSaveData.LevelCompletionBehaviorType.RELOAD_LEVEL;
@@ -6689,21 +6690,21 @@ go to the <color=yellow>SHOP</color> to buy something~1
           _CanRender = false;
           RenderMenu();
         });
-        selections.Add("previous level - load the previous level");
+        selections.Add("previous mission - load the previous mission");
         actions.Add((MenuComponent component0) =>
         {
           SettingsModule.LevelCompletionBehavior = Settings.SettingsSaveData.LevelCompletionBehaviorType.PREVIOUS_LEVEL;
           _CanRender = false;
           RenderMenu();
         });
-        selections.Add("random level (current difficulty) - load any unlocked level");
+        selections.Add("random mission (current difficulty) - load any unlocked mission");
         actions.Add((MenuComponent component0) =>
         {
           SettingsModule.LevelCompletionBehavior = Settings.SettingsSaveData.LevelCompletionBehaviorType.RANDOM_LEVEL;
           _CanRender = false;
           RenderMenu();
         });
-        selections.Add("random level (any difficulty)     - load any unlocked level");
+        selections.Add("random mission (any difficulty)     - load any unlocked mission");
         actions.Add((MenuComponent component0) =>
         {
           SettingsModule.LevelCompletionBehavior = Settings.SettingsSaveData.LevelCompletionBehaviorType.RANDOM_LEVEL_ALL;
@@ -6712,7 +6713,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
         });
 
         // Update dropdown data
-        component.SetDropdownData("when you beat a level, what should happen?\n\n", selections, actions, selection);
+        component.SetDropdownData("when you complete a mission, what should happen?\n\n", selections, actions, selection);
       })
 
     // Fast text
@@ -6816,7 +6817,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
         });
 
         // Update dropdown data
-        component.SetDropdownData("show loadout numbers in CLASSIC mode?\n\n", selections, actions, selection_match);
+        component.SetDropdownData("show loadout numbers in MISSIONS mode?\n\n", selections, actions, selection_match);
       })
 
     // Toggle smoke
@@ -6913,8 +6914,8 @@ go to the <color=yellow>SHOP</color> to buy something~1
 
 
             // Do not pause
-            _InPause = false;
-            _SaveMenuDir = _SaveLevelSelected = -1;
+            s_InPause = false;
+            s_SaveMenuDir = s_SaveLevelSelected = -1;
 
             // Erase save
             if (File.Exists("save.json.backup"))
@@ -6957,7 +6958,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
     //ModifyMenu_TipComponents(MenuType.OPTIONS_GAME, 11, 1);
     //ModifyMenu_TipSwitch(MenuType.OPTIONS_GAME);
 
-    _Menus[MenuType.OPTIONS_GAME]._onSwitched += () =>
+    s_menus[MenuType.OPTIONS_GAME]._onSwitched += () =>
     {
       if (!SettingsModule.UseBlood)
         TileManager.ResetParticles();
@@ -7033,8 +7034,8 @@ www.reddit.com/u/quaterniusdev
       foreach (string musicCredit in FunctionsC.MusicManager.s_TrackNames)
         credits += $"<color={_COLOR_GRAY}>{musicCredit.ToLower()}</color>, kevin macleod (incompetech.com)\nlicensed under creative commons: by attribution 3.0\nhttp://creativecommons.org/licenses/by/3.0/\n\n";
 
-      _Text.text = credits;
-      _Text.transform.localPosition = new Vector3(-6f, -3.5f, -3.03f);
+      s_Text.text = credits;
+      s_Text.transform.localPosition = new Vector3(-6f, -3.5f, -3.03f);
       if (FunctionsC.MusicManager.s_CurrentTrack != 2)
         FunctionsC.MusicManager.TransitionTo(2);
 
@@ -7043,7 +7044,7 @@ www.reddit.com/u/quaterniusdev
         float t = 1f;
         while (t > 0f)
         {
-          _Text.transform.localPosition = new Vector3(-6f, Mathf.Lerp(-3.5f, 30.15f, 1f - t), -3.03f);
+          s_Text.transform.localPosition = new Vector3(-6f, Mathf.Lerp(-3.5f, 30.15f, 1f - t), -3.03f);
           t -= 0.0001f * (ControllerManager.GetAnyButton() && t < 0.98f ? 20f : 1f);
           yield return new WaitForSecondsRealtime(0.01f);
         }
@@ -7062,31 +7063,30 @@ www.reddit.com/u/quaterniusdev
 
     }
     .AddComponent(
-    $@"<color={_COLOR_GRAY}>how to play - CLASSIC mode</color>~1
-
+    $@"receiving briefing on.~1.~1.~1 <color={_COLOR_GRAY}> MISSIONS</color>~9
 
 <color={_COLOR_GRAY}>overview</color>~1
-in this mode, you will complete levels.~1 collect the <color=yellow>CUBE</color>~1 and bring
-it back to the start of the level.~1 complete levels quickly
-to earn ranks and earn <color=yellow>money ($$)</color> to spend at the SHOP.~1 customize
-your loadouts in the EDIT_LOADOUT menu.~1
+system requires you to:~1 <color={_COLOR_GRAY}>CLEAN</color> site and <color={_COLOR_GRAY}>RETRIEVE</color> data from each
+mission.~9 the faster missions are completed, the more <color=yellow>CREDITS ($$)</color>
+you will earn to spend at the <color={_COLOR_GRAY}>SHOP</color>.~9 assemble your loadouts
+in the <color={_COLOR_GRAY}>EDIT LOADOUT</color> menu.~9
 
+allocating authorization level~1.~1.~1. <color=cyan>DEFINITELY SNEAKY BUT NOT SNEAKY [DSBNS]</color>:~9
+<color=cyan>D</color>ECEIVE~9
+<color=cyan>S</color>UBTERFUGE~9
+<color=cyan>B</color>UT~9.~9.~9.~9
+<color=cyan>N</color>O
+<color=cyan>S</color>URVIVORS~9
 
-<color={_COLOR_GRAY}>special controls</color>~1
-cycle between multiple custom loadouts using the <color=yellow>LEFT and RIGHT D-PAD</color>
-buttons.~1 for basic controls for the game, see CONTROLS in the
-OPTIONS menu~1 or just figure it out as you play.~1
+emphasis code:~1 [B~1N~1S~1]~9 <color=cyan>BUT... NO SURVIVORS</color>~9
 
-
-<color=cyan>quick start guide</color>:~1
-* <color=yellow>purchase</color> an item from the SHOP~1
-* <color=yellow>equip</color> the item to a loadout in the EDIT_LOADOUT menu~1
-* <color=yellow>select</color> a level to play in the LEVEL_SELECT menu~1
-
-
+information~1.~1.~1. <color=yellow>quick deploy guide</color>:~9
+* <color=yellow>purchase</color> an item from the <color={_COLOR_GRAY}>SHOP</color>~9
+* <color=yellow>equip</color> the item to a loadout in the <color={_COLOR_GRAY}>EDIT LOADOUT</color> menu~9
+* <color=yellow>select</color> a mission to play in the <color={_COLOR_GRAY}>LEVEL SELECT</color> menu~9
 
 ")
-    .AddBackButton(MenuType.GAMETYPE_CLASSIC, "very cool");
+    .AddBackButton(MenuType.GAMETYPE_CLASSIC, "acknowledge");
 
     // Survival how to play
     new Menu(MenuType.HOWTOPLAY_SURVIVAL)
@@ -7094,30 +7094,29 @@ OPTIONS menu~1 or just figure it out as you play.~1
 
     }
     .AddComponent(
-    $@"<color={_COLOR_GRAY}>how to play - SURVIVAL mode</color>~1
-
+    $@"receiving briefing on.~1.~1.~1 <color={_COLOR_GRAY}> ZOMBIE</color>~9
 
 <color={_COLOR_GRAY}>overview</color>~1
-in this mode, you will fend off waves of enemies.~1 killing enemies
-gives you points,~1 spend points on upgrades in-game to get stronger.~1
-the mode never ends,~1 try to last as long as possible.~1
+system requires you to:~1 <color=yellow>PURGE</color> the rogue undead in each
+mission site.~9 gain temporary <color=yellow>CREDITS ($$)</color> for every
+destroyed undead and wave clear.~9 spend credits at shops
+placed throughout the location.~9
 
+receiving ultimatum~1.~1.:~9 <color=yellow>survive or die</color>~9
 
-<color={_COLOR_GRAY}>special controls</color>~1
-there are no loadouts.~1 buy items in-game with the <color=red>B or CIRCLE</color> button~1
-or specify a side to buy for with the <color=yellow>LEFT and RIGHT D-PAD</color> buttons.~1
-for other controls for SURVIVAL mode, see CONTROLS in the OPTIONS
-menu.~1
+downloading custom specifications.~1.~1.~9 <color={_COLOR_GRAY}>special controls</color>~9
+due to lacking funds, system can only provide you with a knife.~9
+aquire alternative means in-mission at shops with the
+<color=red>B or CIRCLE</color> button~9 or specify a hand to buy with the
+<color=yellow>LEFT and RIGHT D-PAD</color> buttons.~9 for other controls for ZOMBIE
+mode, see CONTROLS in the OPTIONS menu.~9
 
-
-<color={_COLOR_GRAY}>notes</color>~1
-* if you die, you lose your items and upgrades.~1
-* you have two weapon pairs;~1 meaning you can hold 4 weapons total.~1
-
-
+<color={_COLOR_GRAY}>debug notes</color>~9
+* if you die, you lose your items and upgrades.~9
+* you have two weapon pairs;~1 meaning you can hold 4 weapons total.~9
 
 ")
-    .AddBackButton(MenuType.GAMETYPE_SURVIVAL, "very cool");
+    .AddBackButton(MenuType.GAMETYPE_SURVIVAL, "acknowledge");
 
     // Editor how to use
     new Menu(MenuType.HOWTOPLAY_EDITOR)
@@ -7125,30 +7124,28 @@ menu.~1
 
     }
     .AddComponent(
-    $@"<color={_COLOR_GRAY}>how to use - EDITOR LEVEL</color>~1
+    $@"downloading.~1.~1.~1 <color={_COLOR_GRAY}>EDITOR quick guide</color>~9
 
+mission generation access.~1.~1.~1: <color=yellow>GRANTED</color>~3
 
 <color={_COLOR_GRAY}>overview</color>~1
 with the level editor, you are able to make any levels you have seen in the
-<color=yellow>CLASSIC mode</color> and more.~1 string together levels into level packs. edit per level
+<color=yellow>MISSIONS</color> mode and more.~9 string together levels into level packs. edit per level
 options in the level pack editor such as: <color=yellow>level theme, order, and hard-set
-loadout</color>.~1 finally, publish or overwrite your own level packs, and download
-others' level packs on the <color=yellow>steam workshop</color>.~1
+loadout</color>.~9 finally, publish or overwrite your own level packs, and download
+others' level packs on the <color=yellow>steam workshop</color>.~9
 
-<color={_COLOR_GRAY}>special controls</color>~1
-level editing controls are restricted to <color=red>mouse and keyboard</color>~1- all
-keymappings are shown in the editor.~1 level testing will be done with
-a gampad if plugged in.~1
+<color={_COLOR_GRAY}>special controls</color>~4
+level editing controls are restricted to <color=red>mouse and keyboard</color>~9- all
+keymappings are shown in the editor.~9 level testing will be done with
+a gampad if plugged in.~9
 
-
-<color={_COLOR_GRAY}>notes</color>~1
-* updating levels in a level pack requires overwriting them.~1
-* naming scheme for levels and levelpacks is a-z, 0-9, and '-'.~1
-
-
+<color={_COLOR_GRAY}>notes</color>~9
+* updating levels in a level pack requires overwriting them.~9
+* naming scheme for levels and levelpacks is a-z, 0-9, and '-'.~9
 
 ")
-    .AddBackButton(MenuType.EDITOR_MAIN, "ok then");
+    .AddBackButton(MenuType.EDITOR_MAIN, "acknowledge");
 
     // Versus how to play
     new Menu(MenuType.HOWTOPLAY_VERSUS)
@@ -7156,25 +7153,21 @@ a gampad if plugged in.~1
 
     }
     .AddComponent(
-    $@"<color={_COLOR_GRAY}>how to play - VERSUS mode</color>~1
-
+    $@"receiving briefing on.~1.~1.~1 <color={_COLOR_GRAY}> PARTY</color>~9
 
 <color={_COLOR_GRAY}>overview</color>~1
-in this mode, you can go head-to-head against your friends!~1 last person
-or team standing will give you a point.~1 reach the score to win, to win!~1
+system demands you go <color=yellow>HEAD-TO-HEAD</color> against your closest allies.~9
+requires <color=yellow>2-4 PLAYERS</color>.~9 select different rulesets such as last-man-standing
+or kills for points~1 to win!~2
 
+transmission.~1.~1.~1 <color={_COLOR_GRAY}>special controls</color>~9
+system will provide and configure all loadouts.~9
 
-<color={_COLOR_GRAY}>special controls</color>~1
-there are no loadouts.~1 all items will be given in the mode!~1
-
-
-<color={_COLOR_GRAY}>notes</color>~1
-* check out the different VERSUS mode settings!
-
-
+<color={_COLOR_GRAY}>final notes</color>~9
+* check out the different PARTY mode settings!~1
 
 ")
-    .AddBackButton(MenuType.VERSUS, "very cool");
+    .AddBackButton(MenuType.VERSUS, "acknowledge");
 
     // Confirm exit game
     new Menu(MenuType.EXIT_GAME_CONFIRM)
@@ -7217,13 +7210,13 @@ there are no loadouts.~1 all items will be given in the mode!~1
           Levels._LevelPack_Playing = false;
           GameScript.s_EditorTesting = false;
 
-          var menutype = _Menus[MenuType.PAUSE]._selectionIndex == _Menus[MenuType.PAUSE]._menuComponentsSelectable.Count - 1 ? MenuType.MAIN : MenuType.EDITOR_PACKS;
+          var menutype = s_menus[MenuType.PAUSE]._selectionIndex == s_menus[MenuType.PAUSE]._menuComponentsSelectable.Count - 1 ? MenuType.MAIN : MenuType.EDITOR_PACKS;
           CommonEvents._SwitchMenu(menutype);
 
           if (menutype == MenuType.EDITOR_PACKS)
           {
             Levels._LevelPack_SelectingLevelsFromPack = false;
-            _CurrentMenu._selectionIndex = Levels._LevelPacks_Play_SaveIndex;
+            s_CurrentMenu._selectionIndex = Levels._LevelPacks_Play_SaveIndex;
             _CanRender = false;
             RenderMenu();
             SendInput(Input.SPACE);
@@ -7244,12 +7237,12 @@ there are no loadouts.~1 all items will be given in the mode!~1
             TileManager.EditorDisabled(null);
           }
 
-          var menutype = _Menus[MenuType.PAUSE]._selectionIndex == _Menus[MenuType.PAUSE]._menuComponentsSelectable.Count - 1 ? MenuType.MAIN : MenuType.EDITOR_LEVELS;
+          var menutype = s_menus[MenuType.PAUSE]._selectionIndex == s_menus[MenuType.PAUSE]._menuComponentsSelectable.Count - 1 ? MenuType.MAIN : MenuType.EDITOR_LEVELS;
           CommonEvents._SwitchMenu(menutype);
 
           if (menutype == MenuType.EDITOR_LEVELS)
           {
-            _CurrentMenu._selectionIndex = Levels._LevelEdit_SaveIndex;
+            s_CurrentMenu._selectionIndex = Levels._LevelEdit_SaveIndex;
             RenderMenu();
           }
         }
@@ -7257,9 +7250,9 @@ there are no loadouts.~1 all items will be given in the mode!~1
         // Versus mode
         else if (GameScript.s_GameMode == GameScript.GameModes.VERSUS)
         {
-          var switchMenu = _Menus[MenuType.PAUSE]._selectionIndex == 2 ? MenuType.VERSUS : MenuType.MAIN;
+          var switchMenu = s_menus[MenuType.PAUSE]._selectionIndex == 2 ? MenuType.VERSUS : MenuType.MAIN;
           CommonEvents._SwitchMenu(switchMenu);
-          _InPause = false;
+          s_InPause = false;
 
           VersusMode.Reset();
           if (switchMenu == MenuType.VERSUS)
@@ -7269,9 +7262,9 @@ there are no loadouts.~1 all items will be given in the mode!~1
         // Normal pause
         else
         {
-          var switchMenu = _Menus[MenuType.PAUSE]._selectionIndex == (GameScript.s_GameMode == GameScript.GameModes.CLASSIC ? 6 : 3) ? MenuType.LEVELS : MenuType.MAIN;
+          var switchMenu = s_menus[MenuType.PAUSE]._selectionIndex == (GameScript.s_GameMode == GameScript.GameModes.CLASSIC ? 6 : 3) ? MenuType.LEVELS : MenuType.MAIN;
           CommonEvents._SwitchMenu(switchMenu);
-          _InPause = false;
+          s_InPause = false;
         }
       })
         .AddEvent(EventType.ON_RENDER, CommonEvents._OnRender_XSelector)
@@ -7279,8 +7272,8 @@ there are no loadouts.~1 all items will be given in the mode!~1
       .AddBackButton(MenuType.PAUSE, "back")
         .AddEvent((MenuComponent c) =>
         {
-          _CurrentMenu._selectionIndex = _SaveIndex;
-          _CurrentMenu._selectedComponent._onFocus?.Invoke(_CurrentMenu._selectedComponent);
+          s_CurrentMenu._selectionIndex = s_saveIndex;
+          s_CurrentMenu._selectedComponent._onFocus?.Invoke(s_CurrentMenu._selectedComponent);
           _CanRender = true;
           RenderMenu();
         });
@@ -7523,7 +7516,7 @@ there are no loadouts.~1 all items will be given in the mode!~1
     // Tip
     //ModifyMenu_TipComponents(MenuType.OPTIONS_CONTROLS, 16, 1);
     //ModifyMenu_TipSwitch(MenuType.OPTIONS_CONTROLS);
-    _Menus[MenuType.OPTIONS_CONTROLS]._onSwitched += () =>
+    s_menus[MenuType.OPTIONS_CONTROLS]._onSwitched += () =>
     {
       Settings.SettingsSaveData.Save();
     };
@@ -7541,7 +7534,7 @@ there are no loadouts.~1 all items will be given in the mode!~1
 
       }
       .AddComponent($"<color={_COLOR_GRAY}>extras</color>\n\n")
-      .AddComponent($"settings here affect the <color={_COLOR_GRAY}>CLASSIC</color> mode!\n*you cannot save best time with extras on\n\n");
+      .AddComponent($"settings here affect <color={_COLOR_GRAY}>MISSIONS</color>!\n*you cannot save best time with extras on\n\n");
 
       // Wrapper function to add component to extras menu
       void AddExtraSelection(
@@ -7921,7 +7914,7 @@ about extras</color>
 
 -unlock extras by satisfying the requirements <color=red>solo</color> at the bottom of the extras menu
 
--extras only work in the <color={_COLOR_GRAY}>CLASSIC</color> mode
+-extras only work in <color={_COLOR_GRAY}>MISSIONS</color> mnode
 
 -extras change game mechanics around. use and combine them for interesting game modes!
 
@@ -7930,7 +7923,7 @@ about extras</color>
  "
     }, "neat", MenuType.EXTRAS, null, true, null, (MenuComponent m) =>
     {
-      _Menus[MenuType.EXTRAS]._selectionIndex = _Menus[MenuType.EXTRAS]._menuComponentsSelectable.Count - 3;
+      s_menus[MenuType.EXTRAS]._selectionIndex = s_menus[MenuType.EXTRAS]._menuComponentsSelectable.Count - 3;
       _CanRender = true;
       RenderMenu();
     });
@@ -7962,14 +7955,14 @@ about extras</color>
       // Back button
       menu_extras.AddBackButton((MenuComponent component) =>
       {
-        if (_InPause)
+        if (s_InPause)
         {
-          _Menus[MenuType.PAUSE]._selectionIndex = 5;
+          s_menus[MenuType.PAUSE]._selectionIndex = 5;
           SwitchMenu(MenuType.PAUSE);
         }
         else
         {
-          _Menus[MenuType.GAMETYPE_CLASSIC]._selectionIndex = 3;
+          s_menus[MenuType.GAMETYPE_CLASSIC]._selectionIndex = 3;
           SwitchMenu(MenuType.GAMETYPE_CLASSIC);
         }
       })
@@ -8030,14 +8023,14 @@ about extras</color>
         });
 
       // Spawn menu
-      _Menus[MenuType.EXTRAS]._onSwitchTo += () =>
+      s_menus[MenuType.EXTRAS]._onSwitchTo += () =>
       {
         SpawnMenu_Extras();
-        _Menus[MenuType.EXTRAS]._selectedComponent._onFocus(_Menus[MenuType.EXTRAS]._selectedComponent);
+        s_menus[MenuType.EXTRAS]._selectedComponent._onFocus(s_menus[MenuType.EXTRAS]._selectedComponent);
       };
 
       //
-      _Menus[MenuType.EXTRAS]._onSwitched += () =>
+      s_menus[MenuType.EXTRAS]._onSwitched += () =>
       {
         Settings.LevelSaveData.Save();
       };
@@ -8070,13 +8063,13 @@ about extras</color>
 
         //
         GameScript.TogglePause();
-        _InPause = false;
-        _InMenus = false;
-        _Menu.gameObject.SetActive(false);
+        s_InPause = false;
+        s_InMenus = false;
+        s_Menu.gameObject.SetActive(false);
       });
 
     // Hide menu colliders
-    foreach (var menu in _Menus)
+    foreach (var menu in s_menus)
       menu.Value.ToggleColliders(false);
 
     // Render splash screen
@@ -8085,12 +8078,12 @@ about extras</color>
 
   static public void CustomMenu_DifficultyComplete(int difficulty)
   {
-    _Menus[MenuType.DIFFICULTY_COMPLETE] = new Menu(MenuType.DIFFICULTY_COMPLETE)
+    s_menus[MenuType.DIFFICULTY_COMPLETE] = new Menu(MenuType.DIFFICULTY_COMPLETE)
     {
 
     }
       .AddComponent("<color=yellow>difficulty beaten</color>\n\n")
-      .AddComponent(difficulty == 0 ? "you have unlocked a new difficulty for the CLASSIC mode!\n\nchange difficulty in the level selection menu.\n\n" : "you have beaten the hardest difficulty!\n\ncheck out the survival mode!\n\n")
+      .AddComponent(difficulty == 0 ? "you have unlocked a new difficulty for MISSIONS mode!\n\nchange difficulty in the missions selection menu.\n\n" : "you have beaten the hardest difficulty!\n\ncheck out ZOMBIE mode!\n\n")
       .AddBackButton(MenuType.LEVELS, difficulty == 0 ? "cool" : "wow");
     SwitchMenu(MenuType.DIFFICULTY_COMPLETE);
   }
@@ -8111,13 +8104,13 @@ about extras</color>
     }
     _LastMousePosition = ControllerManager.GetMousePosition();
 
-    if (!_InMenus) return;
+    if (!s_InMenus) return;
 
     if (CanSendInput())
     {
 
       // Update menus
-      foreach (var menu in _Menus)
+      foreach (var menu in s_menus)
         menu.Value._onUpdate?.Invoke();
 
       // Check input
@@ -8129,21 +8122,21 @@ about extras</color>
           var r = GameResources._Camera_Menu.ScreenPointToRay(ControllerManager.GetMousePosition());
           if (Physics.SphereCast(r, 0.1f, out h, 100f))
           {
-            foreach (var component in _CurrentMenu._menuComponents)
+            foreach (var component in s_CurrentMenu._menuComponents)
             {
               if (!component._collider) continue;
 
               if (component._collider.GetInstanceID() == h.collider.GetInstanceID() &&
-                _CurrentMenu._selectionIndex != component._buttonIndex)
+                s_CurrentMenu._selectionIndex != component._buttonIndex)
               {
                 // Trigger focus and unfocus component events
                 if (component._type != MenuComponent.ComponentType.DISPLAY)
                 {
-                  _CurrentMenu._selectedComponent._onUnfocus?.Invoke(_CurrentMenu._selectedComponent);
-                  _CurrentMenu._selectionIndex = component._buttonIndex;
+                  s_CurrentMenu._selectedComponent._onUnfocus?.Invoke(s_CurrentMenu._selectedComponent);
+                  s_CurrentMenu._selectionIndex = component._buttonIndex;
                 }
                 component._onFocus?.Invoke(component);
-                if (_CurrentMenu._timeDisplayed > 0.2f)
+                if (s_CurrentMenu._timeDisplayed > 0.2f)
                 {
                   _CanRender = false;
                   RenderMenu();
@@ -8165,7 +8158,8 @@ about extras</color>
     if (_CanRender)
     {
       // Check for wait
-      if (_WaitTime > 0f) { _WaitTime -= Time.unscaledDeltaTime; return; }
+      if (s_waitTime > 0f) { s_waitTime -= Time.unscaledDeltaTime; return; }
+
       // Parse text
       var length = 1;
       var text = "";
@@ -8176,20 +8170,22 @@ about extras</color>
       var richTextNest = 0;
       for (int i = 0; i < length; i++)
       {
-        if (_TextBuffer.Length == 0 ||
-          length == _TextBuffer.Length + 1 ||
-          System.Text.RegularExpressions.Regex.Matches(_Text.text, "\n").Count == _Max_Height + 1)
+        if (s_TextBuffer.Length == 0 ||
+          length == s_TextBuffer.Length + 1 ||
+          System.Text.RegularExpressions.Regex.Matches(s_Text.text, "\n").Count == s_MaxHeight + 1)
         {
           _CanRender = false;
           onRender = true;
           break;
         }
         ;
-        var nextChar = _TextBuffer[i];
-        var nextNextChar = i < _TextBuffer.Length - 1 && i >= 0 ? _TextBuffer[i + 1] : ' ';
+        var nextChar = s_TextBuffer[i];
+        var nextNextChar = i < s_TextBuffer.Length - 1 && i >= 0 ? s_TextBuffer[i + 1] : ' ';
         if (nextChar == '~')
         {
-          _WaitTime = (_TextBuffer[i + 1] + "").ParseFloatInvariant();
+          s_waitTime = (s_TextBuffer[i + 1] + "").ParseFloatInvariant();
+          if ((int)s_waitTime == 9)
+            s_waitTime = 100f;
           display = false;
           length++;
         }
@@ -8213,33 +8209,33 @@ about extras</color>
         }
         text += nextChar;
       }
-      if (length < _TextBuffer.Length + 1) _TextBuffer = _TextBuffer.Substring(length);
+      if (length < s_TextBuffer.Length + 1) s_TextBuffer = s_TextBuffer.Substring(length);
       if (display)
-        _Text.text += text;
+        s_Text.text += text;
 
-      if (onRender) _CurrentMenu._onRendered?.Invoke();
+      if (onRender) s_CurrentMenu._onRendered?.Invoke();
       // Check for typing noise
       if (text.Trim() != "")
-        if (_PlayTime <= 0f)
+        if (s_playTime <= 0f)
         {
-          _PlayTime = 0.04f;
+          s_playTime = 0.04f;
           PlayNoise(Noise.TYPE);
         }
-      _PlayTime -= Time.unscaledDeltaTime;
+      s_playTime -= Time.unscaledDeltaTime;
     }
   }
 
   public static void TriggerActionSwapTo(MenuType menuType)
   {
-    _Menus[menuType]._onSwitchTo?.Invoke();
+    s_menus[menuType]._onSwitchTo?.Invoke();
   }
   public static void TriggerActionOnFocus(MenuType menuType)
   {
-    _Menus[menuType]._selectedComponent._onFocus?.Invoke(_Menus[menuType]._selectedComponent);
+    s_menus[menuType]._selectedComponent._onFocus?.Invoke(s_menus[menuType]._selectedComponent);
   }
   public static void TriggerActionUnFocus(MenuType menuType)
   {
-    _Menus[menuType]._selectedComponent._onUnfocus?.Invoke(_Menus[menuType]._selectedComponent);
+    s_menus[menuType]._selectedComponent._onUnfocus?.Invoke(s_menus[menuType]._selectedComponent);
   }
 
   // Toggle collider selections
@@ -8256,11 +8252,11 @@ about extras</color>
   // Draw current menu
   public static void RenderMenu()
   {
-    if (_CanRender && SettingsModule.TextSpeedFast && _CurrentMenu._Type != MenuType.SPLASH)
+    if (_CanRender && SettingsModule.TextSpeedFast && s_CurrentMenu._Type != MenuType.SPLASH)
       _CanRender = false;
 
     // Check special
-    if (_CurrentMenu._Type == MenuType.OPTIONS_SETTINGS)
+    if (s_CurrentMenu._Type == MenuType.OPTIONS_SETTINGS)
     {
       // Check window swap
       if (Screen.fullScreen != SettingsModule.Fullscreen)
@@ -8271,7 +8267,7 @@ about extras</color>
     }
 
     // Render
-    _CurrentMenu.Render();
+    s_CurrentMenu.Render();
   }
 
   public enum Input
@@ -8291,7 +8287,7 @@ about extras</color>
     if (Time.unscaledTime - GameScript._LastPause < 0.1f) return false;
 
     // Check if not in menus
-    if (!_InMenus) return false;
+    if (!s_InMenus) return false;
 
     // Check for editor input
     if (TileManager.EditorMenus._Menu_Map_Rename.gameObject.activeSelf) return false;
@@ -8322,67 +8318,123 @@ about extras</color>
     //
     //Debug.Log("input " + input);
 
+    //
+    bool isHowToPlayMenu()
+    {
+      if (s_currentMenuType == MenuType.HOWTOPLAY_CLASSIC || s_currentMenuType == MenuType.HOWTOPLAY_EDITOR || s_currentMenuType == MenuType.HOWTOPLAY_SURVIVAL || s_currentMenuType == MenuType.HOWTOPLAY_VERSUS)
+      {
+        if (s_TextBuffer.Length > 0)
+        {
+          s_waitTime = 0f;
+          return true;
+        }
+      }
+      return false;
+    }
+
     // Switch input
     switch (input)
     {
+
       // Arrow keys
       case Input.UP:
-        if (_CurrentMenu._menuComponentsSelectable.Count == 0) break;
-        _CurrentMenu._selectedComponent._onUnfocus?.Invoke(_CurrentMenu._selectedComponent);
-        _CurrentMenu._selectionIndex = (_CurrentMenu._selectionIndex - 1) % _CurrentMenu._menuComponentsSelectable.Count;
+
+        //
+        if (isHowToPlayMenu())
+          break;
+
+        //
+        if (s_CurrentMenu._menuComponentsSelectable.Count == 0) break;
+        s_CurrentMenu._selectedComponent._onUnfocus?.Invoke(s_CurrentMenu._selectedComponent);
+        s_CurrentMenu._selectionIndex = (s_CurrentMenu._selectionIndex - 1) % s_CurrentMenu._menuComponentsSelectable.Count;
+
         // Check for dropdown settings
-        if (_CurrentMenu._dropdownCount > 0)
+        if (s_CurrentMenu._dropdownCount > 0)
         {
-          if (_CurrentMenu._selectionIndex < _CurrentMenu._menuComponentsSelectable.Count - _CurrentMenu._dropdownCount)
-            _CurrentMenu._selectionIndex = _CurrentMenu._menuComponentsSelectable.Count - 1;
+          if (s_CurrentMenu._selectionIndex < s_CurrentMenu._menuComponentsSelectable.Count - s_CurrentMenu._dropdownCount)
+            s_CurrentMenu._selectionIndex = s_CurrentMenu._menuComponentsSelectable.Count - 1;
         }
-        if (_CurrentMenu._selectionIndex < 0) _CurrentMenu._selectionIndex = _CurrentMenu._menuComponentsSelectable.Count - _CurrentMenu._selectionIndex;
-        _CurrentMenu._selectedComponent._onFocus?.Invoke(_CurrentMenu._selectedComponent);
+        if (s_CurrentMenu._selectionIndex < 0) s_CurrentMenu._selectionIndex = s_CurrentMenu._menuComponentsSelectable.Count - s_CurrentMenu._selectionIndex;
+        s_CurrentMenu._selectedComponent._onFocus?.Invoke(s_CurrentMenu._selectedComponent);
         _CanRender = false;
         RenderMenu();
+
         // Play noise
         PlayNoise(Noise.TYPE);
+
         break;
+
       case Input.DOWN:
-        if (_CurrentMenu._menuComponentsSelectable.Count == 0) break;
-        _CurrentMenu._selectedComponent._onUnfocus?.Invoke(_CurrentMenu._selectedComponent);
-        _CurrentMenu._selectionIndex = (_CurrentMenu._selectionIndex + 1) % _CurrentMenu._menuComponentsSelectable.Count;
+
+        //
+        if (isHowToPlayMenu())
+          break;
+
+        //
+        if (s_CurrentMenu._menuComponentsSelectable.Count == 0) break;
+        s_CurrentMenu._selectedComponent._onUnfocus?.Invoke(s_CurrentMenu._selectedComponent);
+        s_CurrentMenu._selectionIndex = (s_CurrentMenu._selectionIndex + 1) % s_CurrentMenu._menuComponentsSelectable.Count;
+
         // Check for dropdown settings
-        if (_CurrentMenu._dropdownCount > 0)
+        if (s_CurrentMenu._dropdownCount > 0)
         {
-          if (_CurrentMenu._selectionIndex < _CurrentMenu._menuComponentsSelectable.Count - _CurrentMenu._dropdownCount)
-            _CurrentMenu._selectionIndex = _CurrentMenu._menuComponentsSelectable.Count - _CurrentMenu._dropdownCount;
+          if (s_CurrentMenu._selectionIndex < s_CurrentMenu._menuComponentsSelectable.Count - s_CurrentMenu._dropdownCount)
+            s_CurrentMenu._selectionIndex = s_CurrentMenu._menuComponentsSelectable.Count - s_CurrentMenu._dropdownCount;
         }
-        _CurrentMenu._selectedComponent._onFocus?.Invoke(_CurrentMenu._selectedComponent);
+        s_CurrentMenu._selectedComponent._onFocus?.Invoke(s_CurrentMenu._selectedComponent);
         _CanRender = false;
         RenderMenu();
+
         // Play noise
         PlayNoise(Noise.TYPE);
+
         break;
+
       // Add select input
       case Input.SPACE:
-        if (_TextBuffer != string.Empty && _TextBuffer.Length > 10)
+
+        //
+        if (isHowToPlayMenu())
+          break;
+
+        //
+        if (s_TextBuffer != string.Empty && s_TextBuffer.Length > 10)
         {
           _CanRender = false;
           RenderMenu();
           break;
         }
-        _CurrentMenu._onSpace?.Invoke();
-        var save_selected = _CurrentMenu._selectedComponent;
-        var save_selectedLast = _CurrentMenu._menuComponent_lastSelected;
+        s_CurrentMenu._onSpace?.Invoke();
+        var save_selected = s_CurrentMenu._selectedComponent;
+        var save_selectedLast = s_CurrentMenu._menuComponent_lastSelected;
         if (save_selected != null && !save_selected._obscured)
         {
           save_selected?._onSelected?.Invoke(save_selected);
+
           // Check for double select
           if (save_selectedLast != null && save_selectedLast._index == save_selected._index)
             save_selected._onDoubleSelect?.Invoke(save_selected);
+
           // Play noise
           PlayNoise(Noise.SELECT);
         }
+
         break;
+
       // Back button input
       case Input.BACK:
-        _CurrentMenu._onBack?.Invoke();
+
+        //
+        if (isHowToPlayMenu())
+        {
+          _CanRender = false;
+          RenderMenu();
+          break;
+        }
+
+        //
+        s_CurrentMenu._onBack?.Invoke();
+
         // Play noise
         PlayNoise(Noise.BACK);
         break;
@@ -8440,7 +8492,7 @@ about extras</color>
       s_times = new float[7];
     }
 
-    if (!_Menu.gameObject.activeSelf) return;
+    if (!s_Menu.gameObject.activeSelf) return;
     if (Time.unscaledTime - s_times[(int)noise] < 0.05f) return;
     s_times[(int)noise] = Time.unscaledTime;
     var audioSource = GetNoise(noise);
@@ -8454,24 +8506,24 @@ about extras</color>
 
   public static bool CanPause()
   {
-    return _Menus.ContainsKey(MenuType.PAUSE);
+    return s_menus.ContainsKey(MenuType.PAUSE);
   }
 
   static int _EditorSaveIndex;
   public static void OnPause(MenuType afterUnlockMenu)
   {
-    _InMenus = true;
+    s_InMenus = true;
 
-    _Menu.gameObject.SetActive(true);
-    _Menus[MenuType.PAUSE]._selectedComponent._focused = false;
-    _Menus[MenuType.PAUSE]._selectionIndex = 0;
+    s_Menu.gameObject.SetActive(true);
+    s_menus[MenuType.PAUSE]._selectedComponent._focused = false;
+    s_menus[MenuType.PAUSE]._selectionIndex = 0;
 
     // Show unlock menu
     if (Shop.s_UnlockString != string.Empty)
     {
       var unlockString = Shop.s_UnlockString;
       Shop.ShowUnlocks(afterUnlockMenu);
-      var menu = _Menus[MenuType.GENERIC_MENU];
+      var menu = s_menus[MenuType.GENERIC_MENU];
 
       var hasShopItem = unlockString.Contains("ITEM_") || unlockString.Contains("UTILITY_") || unlockString.Contains("MOD_") || unlockString.Contains("MAX_EQUIPMENT_POINTS_") || unlockString.Contains("LOADOUT_SLOT_X2_");
       var hasExtra = unlockString.Contains("EXTRA_");
@@ -8507,7 +8559,7 @@ about extras</color>
             .AddEvent((MenuComponent c) =>
             {
               CommonEvents._SwitchMenu(MenuType.EXTRAS);
-              _InPause = true;
+              s_InPause = true;
             });
         /*if (hasSurvival)
           menu
@@ -8533,8 +8585,8 @@ about extras</color>
     if (afterUnlockMenu == MenuType.EDITOR_LEVELS)
     {
       CommonEvents._SwitchMenu(afterUnlockMenu);
-      _CurrentMenu._selectionIndex = _EditorSaveIndex;
-      _CurrentMenu._selectedComponent._onFocus?.Invoke(_CurrentMenu._selectedComponent);
+      s_CurrentMenu._selectionIndex = _EditorSaveIndex;
+      s_CurrentMenu._selectedComponent._onFocus?.Invoke(s_CurrentMenu._selectedComponent);
 
       _CanRender = false;
       RenderMenu();
@@ -8559,33 +8611,33 @@ about extras</color>
     // Pause
     GameScript.s_Paused = true;
     Time.timeScale = 0f;
-    _InMenus = true;
+    s_InMenus = true;
 
     _Save_NumPlayers = saveamount;
 
     // Set menu prompt
     if (Settings._NumberPlayers == 0)
-      _Menus[MenuType.CONTROLLERS_CHANGED]._menuComponents[1].SetDisplayText("looks like your controller got unplugged! plug it back in to resume or\npress 'ok' to play with keyboard instead\n\n");
+      s_menus[MenuType.CONTROLLERS_CHANGED]._menuComponents[1].SetDisplayText("looks like your controller got unplugged! plug it back in to resume or\npress 'ok' to play with keyboard instead\n\n");
     else if (GameScript.s_GameMode == GameScript.GameModes.SURVIVAL)
-      _Menus[MenuType.CONTROLLERS_CHANGED]._menuComponents[1].SetDisplayText("looks like a controller got unplugged! plug it back in to resume or\npress 'ok' to resume the game (you must manually restart in survival mode)\n\n");
+      s_menus[MenuType.CONTROLLERS_CHANGED]._menuComponents[1].SetDisplayText("looks like a controller got unplugged! plug it back in to resume or\npress 'ok' to resume the game (you must manually restart in ZOMBIE mode)\n\n");
     else if (GameScript.s_GameMode == GameScript.GameModes.VERSUS)
     {
       // Check if still enough players
-      _Menus[MenuType.CONTROLLERS_CHANGED]._menuComponents[1].SetDisplayText("looks like a controller got unplugged! plug it back in to resume or\npress 'ok' to escape to versus mode menu\n\n");
+      s_menus[MenuType.CONTROLLERS_CHANGED]._menuComponents[1].SetDisplayText("looks like a controller got unplugged! plug it back in to resume or\npress 'ok' to escape to PARTY menu\n\n");
     }
     else
-      _Menus[MenuType.CONTROLLERS_CHANGED]._menuComponents[1].SetDisplayText("looks like a controller got unplugged! plug it back in to resume or\npress 'ok' to restart the level and play with less people\n\n");
+      s_menus[MenuType.CONTROLLERS_CHANGED]._menuComponents[1].SetDisplayText("looks like a controller got unplugged! plug it back in to resume or\npress 'ok' to restart the level and play with less people\n\n");
 
     // Show controllers changed menu
-    _Menu.gameObject.SetActive(true);
+    s_Menu.gameObject.SetActive(true);
     SwitchMenu(MenuType.CONTROLLERS_CHANGED);
   }
   public static void OnControllersChangedFix()
   {
     GameScript.TogglePause();
-    _InPause = false;
-    _InMenus = false;
-    _Menu.gameObject.SetActive(false);
+    s_InPause = false;
+    s_InMenus = false;
+    s_Menu.gameObject.SetActive(false);
   }
 
   /*public static void OnLoadoutChanged()
@@ -8607,11 +8659,11 @@ about extras</color>
 
   public static void HideMenus()
   {
-    if (_CurrentMenu._hasDropdown)
-      CommonEvents._RemoveDropdownSelections(_CurrentMenu._menuComponentsSelectable[0]);
-    _Menu.gameObject.SetActive(false);
-    _InMenus = false;
-    _InPause = false;
+    if (s_CurrentMenu._hasDropdown)
+      CommonEvents._RemoveDropdownSelections(s_CurrentMenu._menuComponentsSelectable[0]);
+    s_Menu.gameObject.SetActive(false);
+    s_InMenus = false;
+    s_InPause = false;
   }
 
   public static void AppendToEditMaps(string map_data)
@@ -8621,13 +8673,13 @@ about extras</color>
     Levels._CurrentLevelCollection._levelData[Levels._CurrentLevelCollection._levelData.Length - 1] = map_data;
 
     // Reload menu
-    CommonEvents._RemoveDropdownSelections(_CurrentMenu._menuComponentsSelectable[0]);
+    CommonEvents._RemoveDropdownSelections(s_CurrentMenu._menuComponentsSelectable[0]);
     CommonEvents._SwitchMenu(MenuType.EDITOR_LEVELS);
 
-    _CurrentMenu._selectionIndex = _CurrentMenu._menuComponentsSelectable.Count - 2;
+    s_CurrentMenu._selectionIndex = s_CurrentMenu._menuComponentsSelectable.Count - 2;
     _CanRender = false;
     RenderMenu();
-    _CurrentMenu._selectedComponent._onFocus?.Invoke(_CurrentMenu._selectedComponent);
+    s_CurrentMenu._selectedComponent._onFocus?.Invoke(s_CurrentMenu._selectedComponent);
     SendInput(Input.SPACE);
     _CanRender = false;
     RenderMenu();
@@ -8635,16 +8687,16 @@ about extras</color>
 
   public static void QuickEnableMenus()
   {
-    _InMenus = true;
-    _InPause = true;
+    s_InMenus = true;
+    s_InPause = true;
     GameScript.s_Paused = true;
     Time.timeScale = 0f;
 
-    _CurrentMenu._selectedComponent._focused = false;
-    _CurrentMenu._selectionIndex = 0;
+    s_CurrentMenu._selectedComponent._focused = false;
+    s_CurrentMenu._selectionIndex = 0;
     _CanRender = true;
     RenderMenu();
-    _Menu.gameObject.SetActive(true);
+    s_Menu.gameObject.SetActive(true);
   }
 
 }

@@ -85,7 +85,6 @@ public class GameScript : MonoBehaviour
   static float _levelEndTimer;
   public static PlayerScript s_InLevelEndPlayer;
   public static bool _inLevelEnd { get { return s_InLevelEndPlayer != null; } }
-  static ParticleSystem _LevelEndParticles;
 
   public static void UpdateAmbientLight()
   {
@@ -1333,13 +1332,13 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
 
       // Update score text
       var text = "";
-      if (!s_Paused && !Menu._InMenus)
+      if (!s_Paused && !Menu.s_InMenus)
         for (var i = 0; i < Settings._NumberPlayers; i++)
           text += $"<color={PlayerProfile.s_Profiles[i].GetColorName(false)}>p{i + 1}:</color> {_PlayerScores[i]}\n";
       _Text_Scores.text = text;
 
       // Check if paused or in menu
-      if (s_Paused || Menu._InMenus || CustomObstacle._CustomSpawners == null) return;
+      if (s_Paused || Menu.s_InMenus || CustomObstacle._CustomSpawners == null) return;
 
       IncrementalUpdate();
 
@@ -1531,8 +1530,8 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         TileManager._Text_LevelTimer.text = "";
       if (!TileManager._Level_Complete && PlayerScript._TimerStarted)
       {
-        TileManager._LevelTimer += Menu._InMenus ? Time.unscaledDeltaTime : Time.deltaTime;
-        if (!Menu._InMenus)
+        TileManager._LevelTimer += Menu.s_InMenus ? Time.unscaledDeltaTime : Time.deltaTime;
+        if (!Menu.s_InMenus)
           TileManager._Text_LevelTimer.text = TileManager._LevelTimer.ToStringTimer();
       }
 
@@ -1645,11 +1644,11 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
           ui.GetChild(i).gameObject.SetActive(i < Settings._NumberPlayers);
 
         // Pause if a controller was unplugged and playing
-        if (!Menu._InMenus && (!s_EditorTesting) && Settings._NumberControllers != PlayerScript.s_Players.Count)
+        if (!Menu.s_InMenus && (!s_EditorTesting) && Settings._NumberControllers != PlayerScript.s_Players.Count)
           Menu.OnControllersChanged(Settings._NumberControllers - numcontrollers_save, numcontrollers_save);
 
         // Check if menu
-        if (Menu._InMenus && Menu._CurrentMenu._Type == Menu.MenuType.VERSUS)
+        if (Menu.s_InMenus && Menu.s_CurrentMenu._Type == Menu.MenuType.VERSUS)
         {
           Menu._CanRender = false;
           Menu.RenderMenu();
@@ -1665,7 +1664,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     ProgressBar.Update();
 
     // Check play mode
-    if (!Menu._InMenus)
+    if (!Menu.s_InMenus)
     {
       if (!s_Paused)
       {
@@ -1761,26 +1760,6 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
           }
           else
             _levelEndTimer = Mathf.Clamp(_levelEndTimer - Time.deltaTime, 0f, timeToEnd);
-
-          // Check timer with particles
-          {
-            if (_LevelEndParticles == null && _inLevelEnd) _LevelEndParticles = PlayerspawnScript._PlayerSpawns[s_InLevelEndPlayer?._PlayerSpawnId ?? 0].GetComponent<ParticleSystem>();
-            if (_inLevelEnd && !_LevelEndParticles.isPlaying)
-            {
-              _LevelEndParticles.Play();
-            }
-            else if (!_inLevelEnd && (_LevelEndParticles?.isPlaying ?? false))
-            {
-              _LevelEndParticles.Stop();
-              _LevelEndParticles = null;
-            }
-            /*if (_LevelEndParticles.isPlaying && _levelEndTimer > 0f)
-            {
-              // Emit particles for feedback
-              var emit = _LevelEndParticles.emission;
-              emit.rateOverTime = 700f;
-            }*/
-          }
         }
 
         // Enable editor
@@ -1954,7 +1933,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         profile.HandleMenuInput();
 
       // Check if checking for controllers
-      if (Menu._CurrentMenu._Type == Menu.MenuType.CONTROLLERS_CHANGED)
+      if (Menu.s_CurrentMenu._Type == Menu.MenuType.CONTROLLERS_CHANGED)
       {
         var numplayers = (ControllerManager._NumberGamepads) + (Settings._ForceKeyboard ? 1 : 0);
         if (numplayers >= Menu._Save_NumPlayers)
@@ -2050,10 +2029,10 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         UpdateIcons();
 
         // If in loadout menu, update colors
-        if (Menu._InMenus)
+        if (Menu.s_InMenus)
         {
           Menu.PlayNoise(Menu.Noise.LOADOUT_SWAP);
-          if (Menu._CurrentMenu._Type == Menu.MenuType.SELECT_LOADOUT)
+          if (Menu.s_CurrentMenu._Type == Menu.MenuType.SELECT_LOADOUT)
           {
 
             Menu.TriggerActionSwapTo(Menu.MenuType.SELECT_LOADOUT);
@@ -2456,9 +2435,9 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         // Check loadout change
         if (ControllerManager.GetKey(ControllerManager.Key.Z))
         {
-          if (Menu._CurrentMenu._Type == Menu.MenuType.VERSUS)
+          if (Menu.s_CurrentMenu._Type == Menu.MenuType.VERSUS)
           {
-            if (Menu._InMenus)
+            if (Menu.s_InMenus)
               VersusMode.IncrementPlayerTeam(_Id, -1);
           }
           else
@@ -2466,9 +2445,9 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         }
         if (ControllerManager.GetKey(ControllerManager.Key.C))
         {
-          if (Menu._CurrentMenu._Type == Menu.MenuType.VERSUS)
+          if (Menu.s_CurrentMenu._Type == Menu.MenuType.VERSUS)
           {
-            if (Menu._InMenus)
+            if (Menu.s_InMenus)
               VersusMode.IncrementPlayerTeam(_Id, 1);
           }
           else
@@ -2479,21 +2458,21 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       }
 
       // Check in menus
-      if (!Menu._InMenus)
+      if (!Menu.s_InMenus)
         return;
 
       // Check axis selections
       var gamepad = ControllerManager.GetPlayerGamepad(_Id);
       if (gamepad.dpad.left.wasPressedThisFrame)
       {
-        if (Menu._CurrentMenu._Type == Menu.MenuType.VERSUS)
+        if (Menu.s_CurrentMenu._Type == Menu.MenuType.VERSUS)
           VersusMode.IncrementPlayerTeam(_Id, -1);
         else
           _LoadoutIndex--;
       }
       if (gamepad.dpad.right.wasPressedThisFrame)
       {
-        if (Menu._CurrentMenu._Type == Menu.MenuType.VERSUS)
+        if (Menu.s_CurrentMenu._Type == Menu.MenuType.VERSUS)
           VersusMode.IncrementPlayerTeam(_Id, 1);
         else
           _LoadoutIndex++;
@@ -2919,6 +2898,11 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
             transform.localScale = new Vector3(0.1f, 0.12f, 0.1f);
             transform.localEulerAngles += new Vector3(90f, 0f, 0f);
             break;
+          case "STUN_BATON":
+            transform.localPosition += new Vector3(-0.11f, 0.03f, 0f);
+            transform.localScale = new Vector3(0.1f, 0.12f, 0.1f);
+            transform.localEulerAngles += new Vector3(70f, 90f, 0f);
+            break;
           case ("FRYING_PAN"):
             transform.localPosition += new Vector3(-0.2f, 0.03f, 0f);
             transform.localScale = new Vector3(0.13f, 0.17f, 0.13f);
@@ -3155,7 +3139,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
 #endif
 
     if (!focus)
-      if (!Menu._InMenus && !s_EditorEnabled)
+      if (!Menu.s_InMenus && !s_EditorEnabled)
         TogglePause();
   }
 
@@ -3429,6 +3413,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       RAPIER,
       RIFLE_CHARGE,
       FIST,
+      STUN_BATON,
     }
 
     // Spawn a single item
@@ -3492,6 +3477,8 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
           return 0;
         case Items.KNIFE:
           return 1;
+        case Items.STUN_BATON:
+          return 2;
         case Items.FRYING_PAN:
         case Items.AXE:
         case Items.ROCKET_FIST:
@@ -3571,7 +3558,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
           return 1;
         case Shop.Perk.PerkType.THRUST:
         case Shop.Perk.PerkType.SPEED_UP:
-        case Shop.Perk.PerkType.SPLIT:
+        case Shop.Perk.PerkType.TWIN:
           return 2;
         case Shop.Perk.PerkType.EXPLOSIONS_UP:
         case Shop.Perk.PerkType.GRAPPLE_MASTER:
@@ -3705,7 +3692,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
 
             TogglePause(Menu.MenuType.EDITOR_PACKS);
             Menu.SwitchMenu(Menu.MenuType.EDITOR_PACKS);
-            Menu._CurrentMenu._selectionIndex = Levels._LevelPacks_Play_SaveIndex;
+            Menu.s_CurrentMenu._selectionIndex = Levels._LevelPacks_Play_SaveIndex;
             Menu._CanRender = false;
             Menu.RenderMenu();
             _LastPause = Time.unscaledTime - 0.2f;
@@ -3736,7 +3723,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
 
             TogglePause(Menu.MenuType.EDITOR_PACKS);
             Menu.SwitchMenu(Menu.MenuType.EDITOR_PACKS);
-            Menu._CurrentMenu._selectionIndex = Levels._LevelPacks_Play_SaveIndex;
+            Menu.s_CurrentMenu._selectionIndex = Levels._LevelPacks_Play_SaveIndex;
             Menu._CanRender = false;
             Menu.RenderMenu();
             _LastPause = Time.unscaledTime - 0.2f;
@@ -3879,16 +3866,16 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
   static void IncrementLevelMenu(int by)
   {
     // Increment menu selector
-    Menu._SaveLevelSelected += by;
-    if (Menu._SaveLevelSelected == 12)
+    Menu.s_SaveLevelSelected += by;
+    if (Menu.s_SaveLevelSelected == 12)
     {
-      Menu._SaveLevelSelected = 0;
-      Menu._SaveMenuDir++;
+      Menu.s_SaveLevelSelected = 0;
+      Menu.s_SaveMenuDir++;
     }
-    else if (Menu._SaveLevelSelected == -1)
+    else if (Menu.s_SaveLevelSelected == -1)
     {
-      Menu._SaveLevelSelected = 11;
-      Menu._SaveMenuDir--;
+      Menu.s_SaveLevelSelected = 11;
+      Menu.s_SaveMenuDir--;
     }
   }
 
@@ -3957,7 +3944,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
 
         if (Settings._DifficultyUnlocked <= 0)
         {
-          Menu._SaveMenuDir = -1;
+          Menu.s_SaveMenuDir = -1;
           Settings._DifficultyUnlocked = 1;
           Shop.s_UnlockString += $"- new difficulty unlocked: <color=cyan>sneakier</color>\n";
           Menu.s_SetNextDifficultyOnMenu = true;
