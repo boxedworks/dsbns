@@ -1338,8 +1338,8 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
   {
     var p = _path.GetPatrolPoint().position;
     if (MathC.Get2DDistance(p, transform.position) == 0f) return;
-    if (_survivalAttributes != null)
-      Debug.Log(_agent.enabled);
+    //if (_survivalAttributes != null)
+    //  Debug.Log(_agent.enabled);
     _agent.SetDestination(p);
   }
   void SetNextPatrolPoint()

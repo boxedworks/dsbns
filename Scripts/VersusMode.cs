@@ -168,6 +168,8 @@ public static class VersusMode
   {
     if (!s_gamePlaying)
       return;
+    if (!playerDied._IsOriginal)
+      return;
 
     // Check all / last dead
     IEnumerator CheckPlayerDeathStatusCo()

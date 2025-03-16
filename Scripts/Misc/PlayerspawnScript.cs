@@ -69,7 +69,6 @@ public class PlayerspawnScript : MonoBehaviour
 
   public static void SpawnPlayerAt(Vector3 atPosition, float rotateEulerAngle, System.Action<PlayerScript> onSpawn = null, bool setActive = true, int spawnId = 0)
   {
-    Debug.Log("Spawning player");
 
     // Create a new player
     var player = Instantiate(GameScript.s_CustomNetworkManager._Connected ? GameResources._PlayerNetwork : GameResources._Player);
@@ -91,7 +90,6 @@ public class PlayerspawnScript : MonoBehaviour
         spawnPosition += new Vector3(Random.Range(-0.35f, 0.35f), 0f, Random.Range(-0.35f, 0.35f));
     }
     player.transform.position = spawnPosition;
-    //Debug.Log($"= Spawning player at position: [{transform.position}]");
 
     FunctionsC.RotateLocal(ref player, rotateEulerAngle);
 

@@ -817,7 +817,7 @@ public class ActiveRagdoll
 
   public void UnequipItem(Side side)
   {
-    var item = (side == Side.LEFT ? _ItemL : _ItemR);
+    var item = side == Side.LEFT ? _ItemL : _ItemR;
     if (side == Side.LEFT)
     {
       _transform_parts.SetDefault(_transform_parts._arm_upper_l);
@@ -837,7 +837,6 @@ public class ActiveRagdoll
   // Switch item hands
   public void SwapItemHands(int index)
   {
-    //_playerScript?.ResetLoadout();
 
     SwapItems(
       new WeaponSwapData()
@@ -858,10 +857,9 @@ public class ActiveRagdoll
     );
   }
 
-  float _lastItemSwap;
   public bool CanSwapWeapons()
   {
-    return !_IsDead && !_IsSwinging && Time.time - _lastItemSwap > 0.5f && !_IsReloading && !_HasItemsInUse;
+    return !_IsDead && !_IsSwinging && !_IsReloading && !_HasItemsInUse;
   }
 
   //
@@ -949,15 +947,15 @@ public class ActiveRagdoll
     public int ItemClip, ItemId;
     public float ItemUseItem;
   }
-  public void SwapItems(WeaponSwapData item_left, WeaponSwapData item_right, int index, bool checkCanSwap = true)
+  public void SwapItems(WeaponSwapData item_left, WeaponSwapData item_right, int index)
   {
-    if (!CanSwapWeapons() && checkCanSwap) return;
+    if (!CanSwapWeapons()) return;
     if (_ItemL != null && _ItemL._twoHanded || _ItemR != null && _ItemR._twoHanded)
     {
       //DisplayText("two handed problems");
       //return;
     }
-    _lastItemSwap = Time.time;
+    //_lastItemSwap = Time.time;
 
     var itemL_type = item_left.ItemType;
     var itemL_id = item_left.ItemId;
@@ -970,14 +968,31 @@ public class ActiveRagdoll
     var itemR_useTime = item_right.ItemUseItem;
 
     // Equip items
-    if (itemL_type != GameScript.ItemManager.Items.NONE)
+    if (_IsPlayer && _PlayerScript._HasTwin && !_PlayerScript._IsOriginalTwin)
+    {
+      if (_ItemR != null && !_ItemR._twoHanded)
+      {
+        AddArmJoint(Side.LEFT);
+        UnequipItem(Side.LEFT);
+      }
+    }
+    else if (itemL_type != GameScript.ItemManager.Items.NONE)
       EquipItem(itemL_type, Side.LEFT, itemL_clip, itemL_useTime, itemL_id);
     else
     {
       AddArmJoint(Side.LEFT);
       UnequipItem(Side.LEFT);
     }
-    if (itemR_type != GameScript.ItemManager.Items.NONE)
+
+    if (_IsPlayer && _PlayerScript._IsOriginalTwin)
+    {
+      if (_ItemR != null && !_ItemL._twoHanded)
+      {
+        AddArmJoint(Side.RIGHT);
+        UnequipItem(Side.RIGHT);
+      }
+    }
+    else if (itemR_type != GameScript.ItemManager.Items.NONE)
       EquipItem(itemR_type, Side.RIGHT, itemR_clip, itemR_useTime, itemR_id);
     else
     {
@@ -2416,6 +2431,7 @@ public class ActiveRagdoll
   public static void SoftReset()
   {
     if (PlayerScript.s_Players == null || s_Ragdolls == null) return;
+
     // Remove current ragdolls if dead
     for (var i = s_Ragdolls.Count - 1; i > 0; i--)
     {

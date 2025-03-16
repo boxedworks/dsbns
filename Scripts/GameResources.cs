@@ -136,7 +136,7 @@ public static class GameResources
     _CameraFader = GameObject.Find("Fader").GetComponent<MeshRenderer>();
 
     _Container_Objects = GameObject.Find("Objects").transform;
-    _UI_Player = _Camera_Main.transform.GetChild(0).GetChild(2);
+    _UI_Player = _Camera_Main.transform.GetChild(0).GetChild(1);
 
     _Armor = Resources.Load("Armor") as GameObject;
     _Crown = Resources.Load("Crown") as GameObject;

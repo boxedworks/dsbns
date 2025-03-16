@@ -2607,7 +2607,7 @@ public class TileManager
       _Pointer.gameObject.name = "Pointer";
       _Pointer.parent = GameScript.s_Singleton.transform;
       _Pointer.gameObject.layer = 2;
-      MeshRenderer m = _Pointer.GetComponent<MeshRenderer>();
+      var m = _Pointer.GetComponent<MeshRenderer>();
       m.sharedMaterial = GameObject.Find("BlackFade").GetComponent<MeshRenderer>().sharedMaterial;
       Color c = Color.red;
       c.a = 0.5f;

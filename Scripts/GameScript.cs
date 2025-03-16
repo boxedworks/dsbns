@@ -41,8 +41,6 @@ public class GameScript : MonoBehaviour
   public static Light s_CameraLight, s_ExitLight;
   public static bool s_ExitLightShow;
 
-  static MeshRenderer s_BlackFade;
-
   public static AudioSource s_Music, s_SfxRain;
   static AudioSource s_sfxThunder;
 
@@ -216,9 +214,6 @@ public class GameScript : MonoBehaviour
 
     TileManager.EditorMenus.Init();
     TileManager.EditorMenus.HideMenus();
-
-    s_BlackFade = GameObject.Find("BlackFade").GetComponent<MeshRenderer>();
-    FadeIn();
 
     // Init playerprofile and loadouts
     PlayerScript.s_Materials_Ring = new Material[4];
@@ -2006,26 +2001,31 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         if (s_GameMode != GameModes.CLASSIC) return;
         if (_Player?._Ragdoll?._grappling ?? false) return;
 
+        // Locate valid loadout to equip
         var iter = ItemManager.Loadout._Loadouts.Length;
         var difference = value - _LoadoutIndex;
 
         var profileSettings = _profileSettings;
-
+        var setIndex = profileSettings.LoadoutIndex;
         while (iter >= 0)
         {
-          profileSettings.LoadoutIndex = (profileSettings.LoadoutIndex + difference) % ItemManager.Loadout._Loadouts.Length;
-          if (profileSettings.LoadoutIndex < 0) profileSettings.LoadoutIndex = ItemManager.Loadout._Loadouts.Length + profileSettings.LoadoutIndex;
-          SettingsModule.UpdatePlayerProfile(_Id, profileSettings);
+          setIndex = (setIndex + difference) % ItemManager.Loadout._Loadouts.Length;
+          if (setIndex < 0) setIndex = ItemManager.Loadout._Loadouts.Length + setIndex;
 
-          if (!_Equipment.IsEmpty()) break;
+          var equipment = ItemManager.Loadout._Loadouts[setIndex]._Equipment;
+          if (!equipment.IsEmpty()) break;
           iter--;
         }
-        if (iter == -1 && _Equipment.IsEmpty())
+
         {
-          profileSettings.LoadoutIndex = 0;
-          SettingsModule.UpdatePlayerProfile(_Id, profileSettings);
+          var equipment = ItemManager.Loadout._Loadouts[setIndex]._Equipment;
+          if (iter == -1 && equipment.IsEmpty())
+            setIndex = 0;
         }
 
+        // Set loadout index
+        profileSettings.LoadoutIndex = setIndex;
+        SettingsModule.UpdatePlayerProfile(_Id, profileSettings);
         UpdateIcons();
 
         // If in loadout menu, update colors
@@ -2033,15 +2033,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         {
           Menu.PlayNoise(Menu.Noise.LOADOUT_SWAP);
           if (Menu.s_CurrentMenu._Type == Menu.MenuType.SELECT_LOADOUT)
-          {
-
             Menu.TriggerActionSwapTo(Menu.MenuType.SELECT_LOADOUT);
-            /*var save_selection = Menu2.GetCurrentSelection();
-            Menu2.SetCurrentSelection(0);
-            Menu2.SetCurrentSelection(save_selection);
-            Menu2._CanRender = false;
-            Menu2.RenderMenu();*/
-          }
         }
       }
     }
@@ -2899,9 +2891,9 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
             transform.localEulerAngles += new Vector3(90f, 0f, 0f);
             break;
           case "STUN_BATON":
-            transform.localPosition += new Vector3(-0.11f, 0.03f, 0f);
-            transform.localScale = new Vector3(0.1f, 0.12f, 0.1f);
-            transform.localEulerAngles += new Vector3(70f, 90f, 0f);
+            transform.localPosition += new Vector3(-0.03f, 0.03f, 0f);
+            transform.localScale = new Vector3(0.17f, 0.17f, 0.17f);
+            transform.localEulerAngles = new Vector3(75f, 90f, 0f);
             break;
           case ("FRYING_PAN"):
             transform.localPosition += new Vector3(-0.2f, 0.03f, 0f);
@@ -3158,7 +3150,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     while (t < 1f)
     {
       t = Mathf.Clamp(t + 0.02f, 0f, 1f);
-      s_CameraLight.intensity = Mathf.Lerp(0f, 1.1f, toggle ? t : 1f - t);
+      s_CameraLight.intensity = Mathf.Lerp(0f, 13f, toggle ? t : 1f - t);
       yield return new WaitForSecondsRealtime(0.01f);
     }
     if (!toggle) s_CameraLight.enabled = false;
@@ -4162,28 +4154,6 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       s_ExitLightShow = false;
     else
       s_ExitLightShow = toggle;
-  }
-
-  public static void FadeIn()
-  {
-    s_Singleton.StartCoroutine(FadeScreen(true));
-  }
-  public static void FadeOut()
-  {
-    s_Singleton.StartCoroutine(FadeScreen(false));
-  }
-  static IEnumerator FadeScreen(bool toggle)
-  {
-    float t = 0f;
-    float toggleT = toggle ? 1f - t : t;
-    s_BlackFade.sharedMaterial.color = new Color(s_BlackFade.sharedMaterial.color.r, s_BlackFade.sharedMaterial.color.g, s_BlackFade.sharedMaterial.color.b, toggleT);
-    while (t < 1f)
-    {
-      t += 0.03f;
-      toggleT = toggle ? 1f - t : t;
-      s_BlackFade.sharedMaterial.color = new Color(s_BlackFade.sharedMaterial.color.r, s_BlackFade.sharedMaterial.color.g, s_BlackFade.sharedMaterial.color.b, toggleT);
-      yield return new WaitForSeconds(0.03f);
-    }
   }
 
 }

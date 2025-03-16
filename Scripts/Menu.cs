@@ -5424,7 +5424,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
             if (PlayerScript.s_Players != null)
               foreach (var player in PlayerScript.s_Players)
               {
-                player.EquipLoadout(CurrentLoadout()._id, false);
+                player.EquipLoadout(CurrentLoadout()._id);
               }
 
             var has_forced_load = leveldata.Contains("!");
@@ -5479,7 +5479,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
               {
                 if (player == null || player._Ragdoll == null || player._Ragdoll._IsDead) continue;
                 if (player._Profile._LoadoutIndex == CurrentLoadout()._id)
-                  player.EquipLoadout(CurrentLoadout()._id, false);
+                  player.SetNewLoadout();
               }
           });
       s_menus[MenuType.EDIT_LOADOUT]._onDropdownRemoved += () =>

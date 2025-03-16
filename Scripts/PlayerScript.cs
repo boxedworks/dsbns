@@ -79,6 +79,10 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
   }
 
   int _saveLoadoutIndex;
+  public void SetNewLoadout()
+  {
+    _saveLoadoutIndex = -1;
+  }
 
   //
   [System.NonSerialized]
@@ -108,11 +112,11 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
   //
   PlayerScript _connectedTwin;
   ActiveRagdoll.Side _connectedTwinSide;
-  bool _isOriginalTwin;
-  bool _isOriginal { get { return _Id == 0 && (!_hasTwin || _isOriginalTwin); } }
-  bool _hasTwin { get { return _connectedTwin != null; } }
-  bool _isLeftTwin { get { return !_hasTwin || _connectedTwinSide == ActiveRagdoll.Side.LEFT; } }
-  bool _isRightTwin { get { return !_hasTwin || _connectedTwinSide == ActiveRagdoll.Side.RIGHT; } }
+  public bool _IsOriginalTwin;
+  public bool _IsOriginal { get { return _Id == 0 && (!_HasTwin || _IsOriginalTwin); } }
+  public bool _HasTwin { get { return _connectedTwin != null; } }
+  bool _isLeftTwin { get { return !_HasTwin || _connectedTwinSide == ActiveRagdoll.Side.LEFT; } }
+  bool _isRightTwin { get { return !_HasTwin || _connectedTwinSide == ActiveRagdoll.Side.RIGHT; } }
 
   // Use this for initialization
   void Start()
@@ -122,7 +126,6 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
     _SlowmoTimer = 0f;
     Time.timeScale = 1f;
     _spawnRunCheck = LevelModule.ExtraTime == 0;
-    //_camHeight = Vector3.Distance(GameResources._Camera_Main.transform.position, transform.position);
 
     // Setup ragdoll
     var ragdollObj = Instantiate(
@@ -137,7 +140,6 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
       _IsPlayer = true,
       _health = health
     };
-    //_ragdoll._hip.gameObject.AddComponent<RagdollTriggerScript>();
 
     // Check armor for editor maps
     if (!GameScript.IsSurvival())
@@ -156,7 +158,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
     s_Players.Add(this);
 
     //
-    if (_hasTwin)
+    if (_HasTwin)
     {
 
       _Id = _connectedTwin._Id;
@@ -176,8 +178,10 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
         foreach (var p in s_Players)
         {
           if (p == null) continue;
+
           // If self, skip
           if (p.transform.GetInstanceID() == transform.GetInstanceID() || p._ragdoll._IsDead) continue;
+
           // If has same _PlayerID, increment id and set do not break while loop
           if (p._Id == _Id)
           {
@@ -221,30 +225,10 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
     // Equip starting weapons
     _Profile._EquipmentIndex = 0;
 
-    // Check twin mod
-    if (HasPerk(Shop.Perk.PerkType.TWIN) && _connectedTwin == null)
-    {
-      _isOriginalTwin = true;
+    CheckSpawnTwin();
 
-      PlayerspawnScript.SpawnPlayerAt(transform.position, transform.localEulerAngles.y, (playerScript) =>
-      {
-        _connectedTwin = playerScript;
-        playerScript._connectedTwin = this;
-
-        _connectedTwinSide = ActiveRagdoll.Side.LEFT;
-        playerScript._connectedTwinSide = ActiveRagdoll.Side.RIGHT;
-
-        Debug.Log("Connected");
-      }, true, _PlayerSpawnId);
-    }
-
-    _itemLeft = _isLeftTwin ? _Profile._ItemLeft : GameScript.ItemManager.Items.NONE;
-    _itemRight = _isRightTwin ? _Profile._ItemRight : GameScript.ItemManager.Items.NONE;
-
-    GameScript.ItemManager.SpawnItem(_itemLeft);
-    GameScript.ItemManager.SpawnItem(_itemRight);
-    GameScript.ItemManager.SpawnItem(_Equipment._ItemLeft1);
-    GameScript.ItemManager.SpawnItem(_Equipment._ItemRight1);
+    _itemLeft = _isLeftTwin || Shop.IsActuallyTwoHanded(_Profile._ItemLeft) ? _Profile._ItemLeft : GameScript.ItemManager.Items.NONE;
+    _itemRight = _isRightTwin || Shop.IsActuallyTwoHanded(_Profile._ItemRight) ? _Profile._ItemRight : GameScript.ItemManager.Items.NONE;
 
     // Equip start items
     if (_itemLeft != GameScript.ItemManager.Items.NONE)
@@ -292,7 +276,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
     ControllerManager.GetPlayerGamepad(_Id)?.SetMotorSpeeds(0f, 0f);
 
     // Handle rain VFX
-    if (_isOriginal)
+    if (_IsOriginal)
     {
 
       // Clean up old light if exists
@@ -506,7 +490,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
   {
 
     // Timer
-    if (!_TimerStarted && _isOriginal && _spawnTimer <= 0f)
+    if (!_TimerStarted && _IsOriginal && _spawnTimer <= 0f)
     {
 
       var player_farthest = FunctionsC.GetFarthestPlayerFrom(_playerSpawn.transform.position);
@@ -527,7 +511,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
 
     // Ratings
     if (
-      _isOriginal && !_level_ratings_shown && !TileManager._Level_Complete && !GameScript.s_Paused &&
+      _IsOriginal && !_level_ratings_shown && !TileManager._Level_Complete && !GameScript.s_Paused &&
       (
         (!_TimerStarted && Time.time - GameScript.s_LevelStartTime > 3f) ||
         (_All_Dead && Time.unscaledTime - _ragdoll._time_dead > 3f)
@@ -834,7 +818,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
 
     if (GameScript.s_Paused)
     {
-      if (_isOriginal)
+      if (_IsOriginal)
       {
         SfxManager.Update(0f);
       }
@@ -857,7 +841,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
     // Check for timescale change
     if (true)
     {
-      if (_isOriginal)
+      if (_IsOriginal)
       {
 
         // Check should apply time
@@ -995,7 +979,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
     float unscaled_dt = Time.unscaledDeltaTime,
       dt = Time.deltaTime;
 
-    if (_isOriginal && GameScript.s_Singleton._UseCamera)
+    if (_IsOriginal && GameScript.s_Singleton._UseCamera)
     {
       var camera_height = SettingsModule.CameraZoom == Settings.SettingsSaveData.CameraZoomType.NORMAL ? 14f : SettingsModule.CameraZoom == Settings.SettingsSaveData.CameraZoomType.CLOSE ? 10f : 18f;
       if (SettingsModule.UseOrthographicCamera)
@@ -1184,6 +1168,26 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
 
   float _crazyZombieTimer;
 
+  //
+  void CheckSpawnTwin()
+  {
+    // Check twin mod
+    if (HasPerk(Shop.Perk.PerkType.TWIN) && _connectedTwin == null)
+    {
+      _IsOriginalTwin = true;
+
+      PlayerspawnScript.SpawnPlayerAt(transform.position, transform.localEulerAngles.y, (playerScript) =>
+      {
+        _connectedTwin = playerScript;
+        playerScript._connectedTwin = this;
+
+        _connectedTwinSide = ActiveRagdoll.Side.LEFT;
+        playerScript._connectedTwinSide = ActiveRagdoll.Side.RIGHT;
+      }, true, _PlayerSpawnId);
+    }
+  }
+
+  //
   void HandleInput()
   {
     // Check if application is focused
@@ -1200,7 +1204,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
     // Spawn enemies as player gets closer to goal; 3rd difficulty / game mode ?
     if (!GameScript.IsSurvival())
       if (
-        _isOriginal &&
+        _IsOriginal &&
         LevelModule.ExtraHorde == 1 &&
         Settings._Extras_CanUse &&
         (Powerup._Powerups?.Count ?? 0) > 0 &&
@@ -1335,10 +1339,6 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
       // Throw money
       if (ControllerManager.GetKey(ControllerManager.Key.V))
         Taunt(1);
-
-      // Fire modes
-      if (ControllerManager.GetKey(ControllerManager.Key.X))
-        ToggleFireModes();
 
       // Check versus start
       if (GameScript.s_GameMode != GameScript.GameModes.VERSUS || (GameScript.s_GameMode == GameScript.GameModes.VERSUS && VersusMode.s_PlayersCanMove))
@@ -1509,7 +1509,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
           ControllerManager.GetControllerAxis(gamepadId, ControllerManager.Axis.RSTICK_Y));
 
       //
-      if (_hasTwin)
+      if (_HasTwin)
       {
         if (_isLeftTwin)
           rightStick = leftStick;
@@ -1572,7 +1572,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
             ControllerManager.GetControllerAxis(gamepadId, ControllerManager.Axis.R2));
 
           //
-          if (_hasTwin)
+          if (_HasTwin)
           {
             if (_isLeftTwin)
               input.y = 0f;
@@ -1664,24 +1664,12 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
         var dpadHoldTime = 0.6f;
         if (gamepad.dpad.left.wasReleasedThisFrame)
         {
-          if (GameScript.s_GameMode == GameScript.GameModes.CLASSIC)
-          {
-            if (_dpadPressed[2] != 0f && Time.unscaledTime - _dpadPressed[2] < dpadHoldTime)
-              _Profile._LoadoutIndex--;
-          }
-          else
-            Taunt(2);
+          Taunt(2);
           _dpadPressed[2] = 0f;
         }
         else if (gamepad.dpad.right.wasReleasedThisFrame)
         {
-          if (GameScript.s_GameMode == GameScript.GameModes.CLASSIC)
-          {
-            if (_dpadPressed[3] != 0f && Time.unscaledTime - _dpadPressed[3] < dpadHoldTime)
-              _Profile._LoadoutIndex++;
-          }
-          else
-            Taunt(3);
+          Taunt(3);
           _dpadPressed[3] = 0f;
         }
 
@@ -1882,7 +1870,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
         moveSpeed *= Mathf.Clamp(Time.timeScale * 1.3f, 0f, 1f);
         Debug.Log($"{Time.timeScale} ... {moveSpeed}");
       }*/
-      var dis2 = (Vector3.right * input.x * moveSpeed) + (Vector3.forward * input.y * moveSpeed);
+      var dis2 = (input.x * moveSpeed * Vector3.right) + (input.y * moveSpeed * Vector3.forward);
       var savepos = _agent.transform.position;
 
       // Try to move agent
@@ -1913,6 +1901,31 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
   public void ResetLoadout()
   {
     if (_ragdoll._IsDead) return;
+    if (!_IsOriginal)
+    {
+      if (_HasTwin)
+      {
+        _connectedTwin._IsOriginalTwin = false;
+        _connectedTwin._connectedTwin = null;
+
+        _ragdoll.TakeDamage(
+          new ActiveRagdoll.RagdollDamageSource()
+          {
+            Source = _ragdoll,
+
+            HitForce = Vector3.zero,
+
+            Damage = 100,
+            DamageSource = _ragdoll._Hip.position,
+            DamageSourceType = ActiveRagdoll.DamageSourceType.MELEE,
+
+            SpawnBlood = false,
+            SpawnGiblets = false
+          });
+      }
+      return;
+    }
+    if (_HasTwin) return;
 
     // Check changed loadout profile
     if (_Profile._LoadoutIndex != _saveLoadoutIndex)
@@ -1928,45 +1941,46 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
     }
   }
 
-  public void EquipLoadout(int loadoutIndex, bool checkCanSwap = true)
+  public void EquipLoadout(int loadoutIndex)
   {
     _Profile._LoadoutIndex = loadoutIndex;
 
     _Profile._EquipmentIndex = 0;
-    if (!checkCanSwap || _ragdoll.CanSwapWeapons())
+    if (_ragdoll.CanSwapWeapons())
     {
+
+      CheckSpawnTwin();
+
+      var leftItem = _Profile._ItemLeft;
+      var rightItem = _Profile._ItemRight;
+
       _ragdoll.SwapItems(
         new ActiveRagdoll.WeaponSwapData()
         {
-          ItemType = _Profile._ItemLeft,
+          ItemType = leftItem,
           ItemId = -1,
           ItemClip = -1,
           ItemUseItem = -1f
         },
         new ActiveRagdoll.WeaponSwapData()
         {
-          ItemType = _Profile._ItemRight,
+          ItemType = rightItem,
           ItemId = -1,
           ItemClip = -1,
           ItemUseItem = -1f
         },
-        _Profile._EquipmentIndex,
-        checkCanSwap
+        _Profile._EquipmentIndex
       );
 
       // Despawn utilities
       if (_UtilitiesLeft != null)
-        for (int i = _UtilitiesLeft.Count - 1; i > 0; i--)
-        {
+        for (int i = _UtilitiesLeft.Count - 1; i >= 0; i--)
           if (_UtilitiesLeft[i] != null)
             GameObject.Destroy(_UtilitiesLeft[i].gameObject);
-        }
       if (_UtilitiesRight != null)
-        for (int i = _UtilitiesRight.Count - 1; i > 0; i--)
-        {
+        for (int i = _UtilitiesRight.Count - 1; i >= 0; i--)
           if (_UtilitiesRight[i] != null)
             GameObject.Destroy(_UtilitiesRight[i].gameObject);
-        }
 
       RegisterUtilities();
       _Profile.UpdateIcons();
@@ -2106,25 +2120,6 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
     }
   }
 
-  void ToggleFireModes()
-  {
-    /*float useMult = 4f;
-    void changeAuto(params ItemScript[] items)
-    {
-      foreach (ItemScript item in items)
-      {
-        if (item == null || item._type != ItemScript.ItemType.GUN) continue;
-        item._auto = !item._auto;
-        if (item._auto)
-          item._useRate /= useMult;
-        else
-          item._useRate *= useMult;
-        FunctionsC.PlaySound(ref _ragdoll._audioPlayer_steps, "Ragdoll/Footstep", 1.15f, 1.2f);
-      }
-    }
-    changeAuto(_ragdoll._itemL, _ragdoll._itemR);*/
-  }
-
   // 'Spread' arms for 90 degree angle
   void ExtendArms()
   {
@@ -2158,8 +2153,12 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
     {
       // Up
       case (0):
-        _ragdoll.SwapItemHands(_Profile._EquipmentIndex);
-        _Profile.UpdateIcons();
+
+        if (!_HasTwin)
+        {
+          _ragdoll.SwapItemHands(_Profile._EquipmentIndex);
+          _Profile.UpdateIcons();
+        }
         break;
 
       // Down
@@ -2232,7 +2231,8 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
 
         if (GameScript.s_GameMode == GameScript.GameModes.CLASSIC)
         {
-          _Profile._LoadoutIndex--;
+          if (_IsOriginal)
+            _Profile._LoadoutIndex--;
           break;
         }
 
@@ -2246,7 +2246,8 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
 
         if (GameScript.s_GameMode == GameScript.GameModes.CLASSIC)
         {
-          _Profile._LoadoutIndex++;
+          if (_IsOriginal)
+            _Profile._LoadoutIndex++;
           break;
         }
 
@@ -2296,7 +2297,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
     _Profile.UpdateHealthUI();
 
     //
-    if (_hasTwin && !(_connectedTwin._ragdoll?._IsDead ?? true))
+    if (_HasTwin && _connectedTwin._HasTwin && !(_connectedTwin._ragdoll?._IsDead ?? true))
       _connectedTwin._Ragdoll?.TakeDamage(ragdollDamageSource);
 
     // Controller rumble
@@ -2380,7 +2381,26 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
       }
       if (_ring != null) _ring[0].transform.parent.gameObject.SetActive(false);
     }
-    GameScript.s_Singleton.StartCoroutine(fadeRing());
+    IEnumerator fadeRing2()
+    {
+      float t = 1f;
+      var ring = _ring[0].transform.parent;
+      var startScale = ring.transform.localScale;
+      while (t >= 0f)
+      {
+        t -= 0.02f;
+        ring.localScale = Vector3.Lerp(Vector3.one * 0.01f, startScale, t);
+        yield return new WaitForSeconds(0.05f);
+        if (this == null || _ragdoll == null || _ragdoll._Hip == null) break;
+      }
+      if (_ring != null) _ring[0].transform.parent.gameObject.SetActive(false);
+    }
+    if (_IsOriginal)
+      GameScript.s_Singleton.StartCoroutine(fadeRing());
+
+    // Switching loadouts with twin
+    else if (_HasTwin && !_connectedTwin._HasTwin)
+      GameScript.s_Singleton.StartCoroutine(fadeRing2());
 
     // Slow motion on player death
     var lastplayer = true;
@@ -2390,6 +2410,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
         lastplayer = false;
         break;
       }
+    if (!_IsOriginal) lastplayer = false;
     if (Settings._Slowmo_on_death && lastplayer && !HasPerk(Shop.Perk.PerkType.NO_SLOWMO)) _SlowmoTimer += 2f;
 
     // Check for restart tutorial
@@ -2532,17 +2553,13 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
   {
     // Despawn utilities
     if (_UtilitiesLeft != null)
-      for (int i = _UtilitiesLeft.Count - 1; i > 0; i--)
-      {
+      for (var i = _UtilitiesLeft.Count - 1; i >= 0; i--)
         if (_UtilitiesLeft[i] != null)
           GameObject.Destroy(_UtilitiesLeft[i].gameObject);
-      }
     if (_UtilitiesRight != null)
-      for (int i = _UtilitiesRight.Count - 1; i > 0; i--)
-      {
+      for (var i = _UtilitiesRight.Count - 1; i >= 0; i--)
         if (_UtilitiesRight[i] != null)
           GameObject.Destroy(_UtilitiesRight[i].gameObject);
-      }
 
     // Despawn ring
     if (_ring == null || _ring[0] == null || _ring[0].transform.parent == null) return;
