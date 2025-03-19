@@ -1708,7 +1708,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
               }
               clipLoudness /= sample_length;
 
-              c = clipLoudness * 18f;
+              c = clipLoudness * 15f;
             }
 
             //RenderSettings.ambientLight = new Color(c, c, c);
@@ -3136,12 +3136,19 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
   }
 
   static Coroutine _movecam = null;
+  static bool s_cameraLightToggle;
   public static void ToggleCameraLight(bool toggle)
   {
     if (toggle && s_CameraLight.intensity != 0f) return;
     else if (!toggle && s_CameraLight.intensity == 0f) return;
     if (_movecam != null) return;
+
+    s_cameraLightToggle = toggle;
     _movecam = s_Singleton.StartCoroutine(ToggleCameraLightCo(toggle));
+  }
+  public static void ToggleCameraLight()
+  {
+    ToggleCameraLight(!s_cameraLightToggle);
   }
   static IEnumerator ToggleCameraLightCo(bool toggle)
   {

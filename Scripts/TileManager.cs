@@ -22,7 +22,6 @@ public class TileManager
 
   static List<PlayerScript> Players { get { return PlayerScript.s_Players; } }
 
-  static Transform _Tile_begin, _Tile_end;
   public static Transform _Map, _Tile;
   public static Transform _Floor { get { return _Map.transform.GetChild(0); } }
   public static Unity.AI.Navigation.NavMeshSurface _navMeshSurface, _navMeshSurface2;
@@ -2030,7 +2029,7 @@ public class TileManager
     }
 
     // Reload certain objects
-    var reloadObjectTypes = new string[] { "e_", "door_", "p_", "button_", "playerspawn_", (GameScript.s_GameMode == GameScript.GameModes.SURVIVAL ? "candel" : "__") };
+    var reloadObjectTypes = new string[] { "e_", "door_", "p_", "button_", "playerspawn_", GameScript.s_GameMode == GameScript.GameModes.SURVIVAL ? "candel" : "__" };
     foreach (var levelObjectData in s_levelObjectData)
     {
       var loaded = false;
@@ -2059,6 +2058,11 @@ public class TileManager
         break;
       }
     }
+
+    // Reload flipped candles
+    if (GameScript.s_GameMode != GameScript.GameModes.SURVIVAL)
+      foreach (var candle in CandleScript.s_Candles)
+        candle.HandleFlipped();
 
     // Check for light max
     if (!GameScript.IsSurvival())
@@ -4229,6 +4233,13 @@ public class TileManager
           textmesh.text = "[,] Snap precison: Free";
         }
       }
+
+      // Toggle camera light
+      if (ControllerManager.GetKey(Key.L))
+      {
+        GameScript.ToggleCameraLight();
+      }
+
       // Increment mouseID
       //if (ControllerManager.GetMouseInput(0, ControllerManager.InputMode.UP))
       // Change mode to current click
@@ -4432,7 +4443,7 @@ public class TileManager
       {
 
         // Set amount to rotate
-        var rotate_degree = (float)Mathf.RoundToInt(UnityEngine.InputSystem.Mouse.current.scroll.y.ReadValue() * 5f);
+        var rotate_degree = (float)Mathf.RoundToInt(UnityEngine.InputSystem.Mouse.current.scroll.y.ReadValue() * 10f);
         if (ControllerManager.GetKey(Key.R))
           rotate_degree = 45f;
         if (ControllerManager.ShiftHeld()) rotate_degree /= 3f;

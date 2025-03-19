@@ -30,6 +30,10 @@ public class CandleScript : MonoBehaviour
   public float _NormalizedEnable;
   float normalizedEnable;
 
+  bool _flipped;
+  Vector3 _startPosition;
+  Quaternion _startRotation;
+
   // Use this for initialization
   void Start()
   {
@@ -80,5 +84,30 @@ public class CandleScript : MonoBehaviour
     _enabled = false;
     _particles.Stop();
     _light.intensity = 0f;
+  }
+
+  public void Flip()
+  {
+    if (_flipped) return;
+    _flipped = true;
+
+    _startPosition = transform.position;
+    _startRotation = transform.rotation;
+
+    gameObject.AddComponent<Rigidbody>();
+    gameObject.GetComponent<BoxCollider>().isTrigger = false;
+  }
+
+  //
+  public void HandleFlipped()
+  {
+    if (!_flipped) return;
+    _flipped = false;
+
+    GameObject.DestroyImmediate(gameObject.GetComponent<Rigidbody>());
+    gameObject.GetComponent<BoxCollider>().isTrigger = true;
+
+    transform.position = _startPosition;
+    transform.rotation = _startRotation;
   }
 }

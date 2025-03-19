@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.InputSystem;
+using System.Net.Sockets;
+
 
 
 #if !DISABLESTEAMWORKS
@@ -1319,22 +1321,58 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
     // Check arrow keys
     if (mouseEnabled)
     {
-      if (ControllerManager.GetKey(ControllerManager.Key.W, ControllerManager.InputMode.HOLD) ||
-        ControllerManager.GetKey(ControllerManager.Key.ARROW_U, ControllerManager.InputMode.HOLD))
-        y += 1f;
-      if (ControllerManager.GetKey(ControllerManager.Key.S, ControllerManager.InputMode.HOLD) ||
-        ControllerManager.GetKey(ControllerManager.Key.ARROW_D, ControllerManager.InputMode.HOLD))
-        y += -1f;
-      if (ControllerManager.GetKey(ControllerManager.Key.A, ControllerManager.InputMode.HOLD) ||
-        ControllerManager.GetKey(ControllerManager.Key.ARROW_L, ControllerManager.InputMode.HOLD))
-        x += -1f;
-      if (ControllerManager.GetKey(ControllerManager.Key.D, ControllerManager.InputMode.HOLD) ||
-        ControllerManager.GetKey(ControllerManager.Key.ARROW_R, ControllerManager.InputMode.HOLD))
-        x += 1f;
 
-      // Mouse look
-      var p = GameResources._Camera_Main.ScreenPointToRay(ControllerManager.GetMousePosition()).GetPoint(Vector3.Distance(GameResources._Camera_Main.transform.position, transform.position));
-      transform.LookAt(new Vector3(p.x, transform.position.y, p.z));
+      if (_HasTwin)
+      {
+
+        if (_isLeftTwin)
+        {
+          if (ControllerManager.GetKey(ControllerManager.Key.W, ControllerManager.InputMode.HOLD))
+            y += 1f;
+          if (ControllerManager.GetKey(ControllerManager.Key.S, ControllerManager.InputMode.HOLD))
+            y -= 1f;
+          if (ControllerManager.GetKey(ControllerManager.Key.D, ControllerManager.InputMode.HOLD))
+            x += 1f;
+          if (ControllerManager.GetKey(ControllerManager.Key.A, ControllerManager.InputMode.HOLD))
+            x -= 1f;
+        }
+        else
+        {
+          if (ControllerManager.GetKey(ControllerManager.Key.ARROW_U, ControllerManager.InputMode.HOLD))
+            y += 1f;
+          if (ControllerManager.GetKey(ControllerManager.Key.ARROW_D, ControllerManager.InputMode.HOLD))
+            y -= 1f;
+          if (ControllerManager.GetKey(ControllerManager.Key.ARROW_R, ControllerManager.InputMode.HOLD))
+            x += 1f;
+          if (ControllerManager.GetKey(ControllerManager.Key.ARROW_L, ControllerManager.InputMode.HOLD))
+            x -= 1f;
+        }
+
+        // Look
+        transform.LookAt(transform.position + new Vector3(x, 0f, y));
+      }
+
+      // Normal movement
+      else
+      {
+
+        if (ControllerManager.GetKey(ControllerManager.Key.W, ControllerManager.InputMode.HOLD) ||
+          ControllerManager.GetKey(ControllerManager.Key.ARROW_U, ControllerManager.InputMode.HOLD))
+          y += 1f;
+        if (ControllerManager.GetKey(ControllerManager.Key.S, ControllerManager.InputMode.HOLD) ||
+          ControllerManager.GetKey(ControllerManager.Key.ARROW_D, ControllerManager.InputMode.HOLD))
+          y += -1f;
+        if (ControllerManager.GetKey(ControllerManager.Key.A, ControllerManager.InputMode.HOLD) ||
+          ControllerManager.GetKey(ControllerManager.Key.ARROW_L, ControllerManager.InputMode.HOLD))
+          x += -1f;
+        if (ControllerManager.GetKey(ControllerManager.Key.D, ControllerManager.InputMode.HOLD) ||
+          ControllerManager.GetKey(ControllerManager.Key.ARROW_R, ControllerManager.InputMode.HOLD))
+          x += 1f;
+
+        // Mouse look
+        var p = GameResources._Camera_Main.ScreenPointToRay(ControllerManager.GetMousePosition()).GetPoint(Vector3.Distance(GameResources._Camera_Main.transform.position, transform.position));
+        transform.LookAt(new Vector3(p.x, transform.position.y, p.z));
+      }
 
       // Throw money
       if (ControllerManager.GetKey(ControllerManager.Key.V))
@@ -1489,8 +1527,12 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
       {
         if (_currentInteractable != null)
           _currentInteractable.Interact(this, CustomObstacle.InteractSide.DEFAULT);
-        else
-          FlipTable();
+        else if (FlipTable(_ragdoll._Hip.position, transform.forward))
+        {
+#if !DISABLESTEAMWORKS
+          SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.TABLE_FLIP);
+#endif
+        }
       }
       // Check reload
       if (ControllerManager.GetKey(ControllerManager.Key.R, _Profile._reloadSidesSameTime ? ControllerManager.InputMode.HOLD : ControllerManager.InputMode.DOWN))
@@ -1760,8 +1802,12 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
         {
           if (_currentInteractable != null)
             _currentInteractable.Interact(this, CustomObstacle.InteractSide.DEFAULT);
-          else
-            FlipTable();
+          else if (FlipTable(_ragdoll._Hip.position, transform.forward))
+          {
+#if !DISABLESTEAMWORKS
+            SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.TABLE_FLIP);
+#endif
+          }
         }
 
         // Check reload
@@ -2584,13 +2630,13 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
     return System.Tuple.Create(false, side);
   }
 
-  void FlipTable()
+  public static bool FlipTable(Vector3 effectorPos, Vector3 forwardDir, float checkDistance = 0.6f)
   {
-    if (!GameScript.s_InteractableObjects) return;
+    if (!GameScript.s_InteractableObjects) return false;
 
     // Raycast table
     var raycastinfo = new RaycastHit();
-    if (Physics.SphereCast(new Ray(_ragdoll._Hip.position + -transform.forward * 0.2f + -Vector3.up * 0.3f, transform.forward), 0.15f, out raycastinfo, 0.6f, LayerMask.GetMask("ParticleCollision")))
+    if (Physics.SphereCast(new Ray(effectorPos + -forwardDir * 0.2f + -Vector3.up * 0.3f, forwardDir), 0.15f, out raycastinfo, checkDistance, LayerMask.GetMask("ParticleCollision")))
     {
       if (raycastinfo.collider.name == "Table")
       {
@@ -2599,7 +2645,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
         var startRotation = table.transform.localRotation;
         var startPosition = table.transform.position;
 
-        var distanceToTable = transform.position - table.transform.position;
+        var distanceToTable = effectorPos - table.transform.position;
         distanceToTable.y = 0f;
         distanceToTable = distanceToTable.normalized;
         distanceToTable = Quaternion.Euler(0f, -table.transform.localEulerAngles.y, 0f) * distanceToTable;
@@ -2630,7 +2676,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
         var applyPositionRotated = Quaternion.Euler(0f, 90f, 0f) * applyPosition.normalized;
         var rotateLongways = applyRotation.x != 0f;
 
-        // Check can flip (no tv or lights)
+        // Check can flip
         var canFlip = true;
 
         var tableOrigin = table.transform.position;
@@ -2655,7 +2701,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
         {
           if (PositionInBounds(candle.transform.position) && candle.gameObject.name != "CandelBig")
           {
-            canFlip = false;
+            candle.Flip();
             break;
           }
         }
@@ -2663,6 +2709,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
         // Raycast to get stuff on top of table
         var hitsTableTop = Physics.SphereCastAll(new Ray(table.transform.position, Vector3.up), 1f, 2f, LayerMask.GetMask("ParticleCollision"));
         var books = new List<Collider>();
+        var tvs = new List<TVScript>();
         foreach (var hit in hitsTableTop)
         {
 
@@ -2674,7 +2721,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
           switch (hit.collider.name)
           {
             case "Television":
-              canFlip = false;
+              tvs.Add(hit.collider.GetComponent<TVScript>());
               break;
             case "Books":
               books.Add(hit.collider);
@@ -2687,7 +2734,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
 
         if (!canFlip)
         {
-          _ragdoll.DisplayText("it's too heavy..");
+          //_ragdoll.DisplayText("it's too heavy..");
         }
         else
         {
@@ -2720,11 +2767,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
 
           //
           table.name = "Table_Flipped";
-          SfxManager.PlayAudioSourceSimple(transform.position, "Etc/Table_flip");
-
-#if !DISABLESTEAMWORKS
-          SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.TABLE_FLIP);
-#endif
+          SfxManager.PlayAudioSourceSimple(effectorPos, "Etc/Table_flip");
 
           IEnumerator FlipTable()
           {
@@ -2734,7 +2777,11 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
 
             // Explode books
             foreach (var book in books)
-              FunctionsC.BookManager.ExplodeBooks(book, transform.position);
+              FunctionsC.BookManager.ExplodeBooks(book, effectorPos);
+
+            // TVs
+            foreach (var tv in tvs)
+              tv?.Flip();
 
             var t = 0f;
             var lastTime = Time.time;
@@ -2743,37 +2790,47 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
               t += (Time.time - lastTime) * 3.5f;
               lastTime = Time.time;
 
-              table.transform.localRotation = Quaternion.Lerp(startRotation, endRotation, t);
-              table.transform.position = Vector3.Lerp(startPosition, endPosition, t);
+              if (table != null)
+              {
+                table.transform.localRotation = Quaternion.Lerp(startRotation, endRotation, t);
+                table.transform.position = Vector3.Lerp(startPosition, endPosition, t);
+              }
 
               yield return new WaitForSecondsRealtime(0.01f);
 
             }
 
-            table.transform.localRotation = endRotation;
-            table.transform.position = endPosition;
+            if (table != null)
+            {
+              table.transform.localRotation = endRotation;
+              table.transform.position = endPosition;
 
-            navmeshobs.carveOnlyStationary = true;
+              navmeshobs.carveOnlyStationary = true;
 
-            var parts = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.TABLE_FLIP)[0];
-            var partsPos = table.transform.position;
-            partsPos.y = -1.1f;
-            parts.transform.position = partsPos;
-            var angles = parts.transform.localEulerAngles;
-            angles.y = table.transform.localEulerAngles.y;
-            parts.transform.localEulerAngles = angles;
+              var parts = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.TABLE_FLIP)[0];
+              var partsPos = table.transform.position;
+              partsPos.y = -1.1f;
+              parts.transform.position = partsPos;
+              var angles = parts.transform.localEulerAngles;
+              angles.y = table.transform.localEulerAngles.y;
+              parts.transform.localEulerAngles = angles;
 
-            var partsShapeModule = parts.shape;
-            partsShapeModule.scale = new Vector3(0.37f, rotateLongways ? 0.37f : 1f, 1f);
+              var partsShapeModule = parts.shape;
+              partsShapeModule.scale = new Vector3(0.37f, rotateLongways ? 0.37f : 1f, 1f);
 
-            parts.Play();
+              parts.Play();
 
-            EnemyScript.CheckSound(table.transform.position, EnemyScript.Loudness.NORMAL);
+              EnemyScript.CheckSound(table.transform.position, EnemyScript.Loudness.NORMAL);
+            }
           }
-          StartCoroutine(FlipTable());
+          GameScript.s_Singleton.StartCoroutine(FlipTable());
         }
       }
+      return true;
+
     }
+
+    return false;
   }
 
   public static class AutoPlayer

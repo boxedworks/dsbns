@@ -1181,7 +1181,7 @@ public class Menu
 #endif
 
     // Show game modes menu
-    main_menu.AddComponent("play\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
+    main_menu.AddComponent("start\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
       .AddEvent((MenuComponent component) =>
       {
         CommonEvents._SwitchMenu(MenuType.MODE_SELECTION);
@@ -1402,7 +1402,7 @@ public class Menu
             var actions = new List<System.Action<MenuComponent>>();
 
             // Play
-            selections.Add("play");
+            selections.Add("start");
             actions.Add((MenuComponent component0) =>
             {
 
@@ -1669,7 +1669,7 @@ public class Menu
 
 
             // Set dropdown data
-            component.SetDropdownData(prompt, selections, actions, "play");
+            component.SetDropdownData(prompt, selections, actions, "start");
 
           })
           .AddEvent(EventType.ON_SELECTED, (MenuComponent component) =>
@@ -1818,7 +1818,7 @@ public class Menu
             }
 
             // Play level pack
-            selections.Add("play");
+            selections.Add("start");
             actions.Add((MenuComponent component0) =>
             {
 
@@ -1989,7 +1989,7 @@ public class Menu
             }
 
             // Set dropdown data
-            component.SetDropdownData(prompt, selections, actions, "play");
+            component.SetDropdownData(prompt, selections, actions, "start");
 
           })
           .AddEvent(EventType.ON_SELECTED, (MenuComponent component) =>
@@ -2114,7 +2114,7 @@ public class Menu
               var prompt = $"<color={_COLOR_GRAY}>=== level pack: </color>{item_p.Value.m_pchFileName}\n<color={_COLOR_GRAY}>=== level pack options</color>\n\n";
               var selections = new List<string>();
               var actions = new List<System.Action<MenuComponent>>();
-              var first_selection = "play";
+              var first_selection = "start";
 
               if (Levels._LevelPack_UploadingToWorkshop)
               {
@@ -2173,7 +2173,7 @@ public class Menu
                 }
                 else
                 {
-                  selections.Add("play\n");
+                  selections.Add("start\n");
                   actions.Add((MenuComponent component0) =>
                   {
 
@@ -2247,7 +2247,7 @@ public class Menu
                 var prompt = $"<color={_COLOR_GRAY}>=== level pack: </color>{item_p.Value.m_pchFileName}\n<color={_COLOR_GRAY}>=== level pack options</color>\n\n";
                 var selections = new List<string>();
                 var actions = new List<System.Action<MenuComponent>>();
-                var first_selection = "play";
+                var first_selection = "start";
 
                 var is_installed = SteamManager.Workshop_GetInstalledLocation(item_p.Value.m_nPublishedFileId) != null;
                 if (!is_installed)
@@ -2260,7 +2260,7 @@ public class Menu
                 }
                 else
                 {
-                  selections.Add("play\n");
+                  selections.Add("start\n");
                   actions.Add((MenuComponent component0) =>
                   {
 
@@ -2976,21 +2976,31 @@ public class Menu
     // Social
     new Menu(MenuType.SOCIAL)
     .AddComponent($"<color={_COLOR_GRAY}>social</color>\n\n")
+
+    // Open discord channel
+    .AddComponent("youtube\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
+      .AddEvent((MenuComponent component0) => { Application.OpenURL("https://www.youtube.com/channel/UCmK-_yhO3IyzOb1ILcwGAKg"); })
+
+    // Open discord channel
+    .AddComponent("discord\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
+      .AddEvent((MenuComponent component0) => { Application.OpenURL("https://discord.gg/gTa8dmc"); })
+
     // Open reddit page
     .AddComponent("reddit\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
       .AddEvent((MenuComponent component0) => { Application.OpenURL("https://reddit.com/r/boxedworksGames/"); })
+
     // Open twitter page
-    .AddComponent("twitter\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
+    .AddComponent("twitter\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
       .AddEvent((MenuComponent component0) => { Application.OpenURL("https://www.twitter.com/boxedworks"); })
-    // Open discord channel
-    .AddComponent("discord\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-      .AddEvent((MenuComponent component0) => { Application.OpenURL("https://discord.gg/gTa8dmc"); })
+
     // Open music source
     .AddComponent("music\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
       .AddEvent((MenuComponent component0) => { Application.OpenURL("https://incompetech.com/music/royalty-free/?genre=Jazz"); })
+
     .AddBackButton(MenuType.MAIN);
+
     // Tip
-    ModifyMenu_TipComponents(MenuType.SOCIAL, 15, 1);
+    ModifyMenu_TipComponents(MenuType.SOCIAL, 12, 1);
     ModifyMenu_TipSwitch(MenuType.SOCIAL);
 
     // Shop menu
@@ -3011,7 +3021,7 @@ public class Menu
         .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
         {
           if (component._focused)
-            component.SetDisplayText($"</color><color={_COLOR_GRAY}>available ($$): {Shop._AvailablePoints}</color>       <-- get ($$) by completing new MISSIONC levels<color=white>\n");
+            component.SetDisplayText($"</color><color={_COLOR_GRAY}>available ($$): {Shop._AvailablePoints}</color>       <-- get ($$) by completing MISSIONS<color=white>\n");
           else
           {
             var color = Shop._AvailablePoints > 0 ? "yellow" : "red";
@@ -3805,7 +3815,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
         })
 
       // Start button
-      .AddComponent("play\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
+      .AddComponent("start\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
         .AddEvent((MenuComponent component) =>
         {
           if (!VersusMode.HasMultipleTeams()) return;
@@ -3843,10 +3853,10 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
               component.SetDisplayText($"</color><color=red>play</color><color=white> <-- {obscuredMessage}\n\n");
             }
             else
-              component.SetDisplayText("play\n\n");
+              component.SetDisplayText("start\n\n");
           }
           else
-            component.SetDisplayText("play\n\n");
+            component.SetDisplayText("start\n\n");
         })
 
       // Tutorial
@@ -6045,7 +6055,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
     });
 
     // Tip
-    ModifyMenu_TipComponents(MenuType.OPTIONS, 13);
+    ModifyMenu_TipComponents(MenuType.OPTIONS, 14);
     ModifyMenu_TipSwitch(MenuType.OPTIONS);
 
     // Game settings menu

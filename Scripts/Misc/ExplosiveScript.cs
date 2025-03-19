@@ -139,6 +139,20 @@ public class ExplosiveScript : MonoBehaviour
         e.Trigger(source, 0.25f);
       }
 
+      // Check for nearby tables
+      var mapObjects = GameObject.Find("Map_Objects").transform;
+      for (var i = 0; i < mapObjects.childCount; i++)
+      {
+        var c = mapObjects.GetChild(i);
+        if (c.gameObject.name != "Table") continue;
+        if (MathC.Get2DDistance(transform.position, c.position) > _radius * 1f) continue;
+
+        // Flip table
+        var explosionPosition = transform.position;
+        explosionPosition.y = -0.56f;
+        PlayerScript.FlipTable(explosionPosition, MathC.Get2DVector((c.position - transform.position).normalized), _radius * 1f);
+      }
+
     }
 
     // Set sound alert

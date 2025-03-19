@@ -16,6 +16,8 @@ public class TVScript : MonoBehaviour
 
   float _lastUpdate;
 
+  bool _flipped;
+
   // Start is called before the first frame update
   void Start()
   {
@@ -87,9 +89,18 @@ public class TVScript : MonoBehaviour
     _light.type = LightType.Point;
     _light.color = new Color(1f, 0.4087965f, 0.01568627f);
 
-    _collider.enabled = false;
+    gameObject.layer = 2;
   }
 
+  public void Flip()
+  {
+    if (_flipped) return;
+    _flipped = true;
+
+    gameObject.AddComponent<Rigidbody>();
+  }
+
+  //
   public void OnDestroy()
   {
     if (_sfx != null)

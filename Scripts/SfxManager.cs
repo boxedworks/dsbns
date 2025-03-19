@@ -6,6 +6,9 @@ using UnityEngine;
 public static class SfxManager
 {
 
+  static float s_sfxModifier = 0.6f;
+  public static float s_MusicModifier = 0.8f;
+
   //
   public enum AudioClass
   {
@@ -45,7 +48,7 @@ public static class SfxManager
 
       var audioSource = audioGameObject.AddComponent<AudioSource>();
       audioSource.playOnAwake = false;
-      audioSource.spatialBlend = 0.75f;
+      //audioSource.spatialBlend = 0.75f;
 
       s_audioSourcesAvailable.Enqueue(audioSource);
     }
@@ -145,7 +148,7 @@ public static class SfxManager
 #if UNITY_EDITOR
     audioSource.gameObject.name = audioSource.clip.name;
 #endif
-    audioSource.volume *= Settings.s_SaveData.Settings.VolumeSFX / 5f;
+    audioSource.volume *= Settings.s_SaveData.Settings.VolumeSFX / 5f * s_sfxModifier;
     audioSource.Play();
 
     s_audioClassCounts[audioClass]++;
@@ -216,7 +219,7 @@ public static class SfxManager
       }
 
       // Update volume and pitch
-      audioSource.volume = audioData._volume * (Settings.s_SaveData.Settings.VolumeSFX / 5f);
+      audioSource.volume = audioData._volume * (Settings.s_SaveData.Settings.VolumeSFX / 5f) * s_sfxModifier;
       if (audioData._changePitch)
         audioSource.pitch = audioData._pitch * pitch;
     }

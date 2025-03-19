@@ -795,9 +795,11 @@ public static class FunctionsC
       {
         ResourceRequest musicRequest = LoadAudioClipAsync(trackIndex);
         while (!musicRequest.isDone) yield return new WaitForSecondsRealtime(0.06f);
-        s_TrackSource.clip = musicRequest.asset as AudioClip;
-        s_TrackSource.Play();
         s_CurrentTrack = trackIndex;
+        s_TrackSource.clip = musicRequest.asset as AudioClip;
+        s_TrackSource.volume = Settings._VolumeMusic / 5f * SfxManager.s_MusicModifier;
+        if (s_CurrentTrack == 1) s_TrackSource.volume *= 0.7f;
+        s_TrackSource.Play();
         s_transitioning = false;
       }
       GameScript.s_Singleton.StartCoroutine(LoadAsync());
@@ -812,15 +814,16 @@ public static class FunctionsC
       {
 
         // Load next track
-        ResourceRequest musicRequest = LoadAudioClipAsync(trackIndex);
+        var musicRequest = LoadAudioClipAsync(trackIndex);
 
         // Fade out
-        float t = 1f;
+        var t = 1f;
         while (t > 0f)
         {
           t = Mathf.Clamp(t - 0.05f, 0f, 1f);
           yield return new WaitForSecondsRealtime(0.05f);
-          s_TrackSource.volume = t * (Settings._VolumeMusic / 5f);
+          s_TrackSource.volume = t * (Settings._VolumeMusic / 5f) * SfxManager.s_MusicModifier;
+          if (s_CurrentTrack == 1) s_TrackSource.volume *= 0.7f;
         }
         UnloadCurrentTrack();
 
@@ -829,10 +832,11 @@ public static class FunctionsC
         s_TrackSource.Stop();
 
         // Play new song
-        s_TrackSource.clip = musicRequest.asset as AudioClip;
-        s_TrackSource.Play();
-        s_TrackSource.volume = (Settings._VolumeMusic / 5f);
         s_CurrentTrack = trackIndex;
+        s_TrackSource.clip = musicRequest.asset as AudioClip;
+        s_TrackSource.volume = Settings._VolumeMusic / 5f * SfxManager.s_MusicModifier;
+        if (s_CurrentTrack == 1) s_TrackSource.volume *= 0.7f;
+        s_TrackSource.Play();
         s_transitioning = false;
       }
       GameScript.s_Singleton.StartCoroutine(TransitionToCo());
