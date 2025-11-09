@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 public static class ProgressBar
 {
@@ -37,7 +35,7 @@ public static class ProgressBar
   public static void Update()
   {
     // Update each progress bar with it's parent's position
-    foreach(var progress_bar in _ProgressBars)
+    foreach (var progress_bar in _ProgressBars)
     {
       var p = progress_bar._parent;
 
@@ -57,7 +55,7 @@ public static class ProgressBar
       progress_bar._slider.localPosition = new Vector3(0.47f + (-0.47f * 2f * (progress_bar._timer / progress_bar._timer_start)), 0f, 0f);
 
       // If timer is up, set parent to null and fire action
-      if(progress_bar._timer <= 0f)
+      if (progress_bar._timer <= 0f)
       {
         progress_bar._parent = null;
         progress_bar._enabled = false;

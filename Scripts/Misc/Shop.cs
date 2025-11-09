@@ -54,15 +54,15 @@ public static class Shop
     };
     static string[] _Tips_Classic = new string[]
     {
-      "beat classic levels quickly to get the highest rank and $$",
+      "beat MISSION levels quickly to get the highest rank and $$",
       "each new level rank gives money for the shop (up to $4 per level)",
-      "complete classic level directories to add more unlocks to the shop",
+      "complete MISSION level directories to add more unlocks to the shop",
       "buy 'MAX_EQUIPMENT_POINTS' in the shop to equip more in your loadouts",
       "you can only equip as many items as you have equipment points",
       "use filters in the shop or unlock menus to make them easier to read",
       "most actions make noise that can alert enemies",
       "stuck on a level? try making a different loadout",
-      "you only have 1 health in classic mode",
+      "you only have 1 health in MISSION mode",
       "equip two of the same weapon or utility if you have enough points",
       "switch weapons or edit a loadout mid-game if you are at the start area",
       "use the &LD or &RD buttons on the D-PAD to cycle through your custom loadouts",
@@ -75,9 +75,9 @@ public static class Shop
     static string[] _Tips_Survival = new string[]
     {
       "use the &LD or &RD buttons on the D-PAD to specify a side to buy an item for",
-      "you start with 3 health in survival mode",
-      "you always start with just a knife in survival mode",
-      "buy upgrades in survival with the &EB button",
+      "you start with 3 health in ZOMBIE mode",
+      "you always start with just a knife in ZOMBIE mode",
+      "buy upgrades in ZOMBIE with the &EB button",
       "playing with other people? share money with the &DD button",
       "the more people there are, the more zombies spawn each wave",
       "the last kill of each wave grants bonus points",
@@ -87,10 +87,10 @@ public static class Shop
       "you get your utilities back at the start of each wave",
       "earn points to buy upgrades by killing enemies",
       "explore the map to find better upgrades",
-      "you can't hide in survival",
+      "you can't hide in ZOMBIE mode",
       "weapon placement is somewhat random each time you play",
       "on death, you lose all of your equipment",
-      "in survival mode, you need the akimbo perk to two-hand some weapons"
+      "in ZOMBIE mode, you need the akimbo perk to two-hand some weapons"
     };
     static string[] _Tips_Versus = new string[]
     {
@@ -100,9 +100,9 @@ public static class Shop
     public static string GetTip(GameScript.GameModes mode)
     {
       // Check modes
-      var array = mode == GameScript.GameModes.CLASSIC ? _Tips_Classic : (mode == GameScript.GameModes.SURVIVAL ? _Tips_Survival : _Tips_Versus);
+      var array = mode == GameScript.GameModes.MISSIONS ? _Tips_Classic : (mode == GameScript.GameModes.ZOMBIE ? _Tips_Survival : _Tips_Versus);
       var mode_string = mode.ToString().ToLower();
-      if (UnityEngine.Random.value <= 0.5f || mode == GameScript.GameModes.VERSUS)
+      if (UnityEngine.Random.value <= 0.5f || mode == GameScript.GameModes.PARTY)
       {
         array = _Tips_General;
         mode_string = "general";
@@ -240,7 +240,7 @@ public static class Shop
     LOADOUT_SLOT_X2_4,
     LOADOUT_SLOT_X2_5,
 
-    MODE_SURVIVAL,
+    MODE_ZOMBIE,
     MODE_EXTRAS,
 
     EXTRA_TIME,
@@ -267,6 +267,7 @@ public static class Shop
     MOD_THRUST,
     MOD_TWIN,
     ITEM_STUN_BATON,
+    UTILITY_BEAR_TRAP,
   }
 
   public static int _Max_Equipment_Points
@@ -332,9 +333,10 @@ public static class Shop
       { Unlocks.UTILITY_GRENADE_IMPACT, new Tuple<string, int>("throwable, contact-explosive", 15) },
       { Unlocks.UTILITY_GRENADE_STUN, new Tuple<string, int>("throwable, corner-killer", 10) },
       { Unlocks.UTILITY_C4, new Tuple<string, int>("throwable, explosive, remote-controlled", 10) },
-      //{ Unlocks.UTILITY_MOLOTOV, new Tuple<string, int>("throwable, fire, duration", 10) },
+      { Unlocks.UTILITY_BEAR_TRAP, new Tuple<string, int>("throwable, trap", 5) },
+      { Unlocks.UTILITY_MOLOTOV, new Tuple<string, int>("throwable, fire, duration", 10) },
       { Unlocks.UTILITY_MORTAR_STRIKE, new Tuple<string, int>("ranged, explosive, remote-controlled", 15) },
-      { Unlocks.UTILITY_STOP_WATCH, new Tuple<string, int>("useable, slows-time", 15) },
+      { Unlocks.UTILITY_STOP_WATCH, new Tuple<string, int>("useable, slows-time", 10) },
       { Unlocks.UTILITY_INVISIBILITY, new Tuple<string, int>("useable, short-invisibility", 10) },
       { Unlocks.UTILITY_TEMP_SHIELD, new Tuple<string, int>("useable, shield, requires-melee", 15) },
       //_Unlocks_Descriptions.Add(Unlocks.UTILITY_DASH, new Tuple<string, int>("useable, quick speed boost", 0));
@@ -374,7 +376,7 @@ public static class Shop
       { Unlocks.LOADOUT_SLOT_X2_4, new Tuple<string, int>("loadout slot (+2)", 25) },
       { Unlocks.LOADOUT_SLOT_X2_5, new Tuple<string, int>("loadout slot (+2)", 30) },
 
-      { Unlocks.MODE_SURVIVAL, new Tuple<string, int>("unlocks 'survival' mode", 0) },
+      { Unlocks.MODE_ZOMBIE, new Tuple<string, int>("unlocks 'zombie' mode", 0) },
       { Unlocks.MODE_EXTRAS, new Tuple<string, int>("unlocks 'extras' menu", 0) },
 
       { Unlocks.EXTRA_GRAVITY, new Tuple<string, int>("unlocks 'gravity' extra", 0) },
@@ -425,9 +427,9 @@ public static class Shop
     {
       _Unlocks_Vault.Add("classic_0", new Unlocks[] { Unlocks.MOD_MARTIAL_ARTIST, Unlocks.ITEM_AXE, Unlocks.UTILITY_GRENADE, Unlocks.MAX_EQUIPMENT_POINTS_2, Unlocks.LOADOUT_SLOT_X2_0 });
       _Unlocks_Vault.Add("classic_1", new Unlocks[] { Unlocks.MOD_TWIN, Unlocks.MOD_LASER_SIGHTS, Unlocks.MOD_NO_SLOWMO, Unlocks.UTILITY_KUNAI_EXPLOSIVE, Unlocks.ITEM_PISTOL_CHARGE });
-      _Unlocks_Vault.Add("classic_2", new Unlocks[] { Unlocks.MODE_SURVIVAL, Unlocks.ITEM_STUN_BATON, Unlocks.ITEM_RIFLE, Unlocks.ITEM_PISTOL_MACHINE, Unlocks.UTILITY_MIRROR, Unlocks.MAX_EQUIPMENT_POINTS_3, Unlocks.LOADOUT_SLOT_X2_1 });
+      _Unlocks_Vault.Add("classic_2", new Unlocks[] { Unlocks.MODE_ZOMBIE, Unlocks.ITEM_STUN_BATON, Unlocks.ITEM_RIFLE, Unlocks.ITEM_PISTOL_MACHINE, Unlocks.UTILITY_MIRROR, Unlocks.MAX_EQUIPMENT_POINTS_3, Unlocks.LOADOUT_SLOT_X2_1 });
       _Unlocks_Vault.Add("classic_3", new Unlocks[] { Unlocks.ITEM_PISTOL_DOUBLE, Unlocks.UTILITY_STOP_WATCH, Unlocks.UTILITY_TEMP_SHIELD, Unlocks.MOD_SPEED_UP });
-      _Unlocks_Vault.Add("classic_4", new Unlocks[] { Unlocks.ITEM_REVOLVER, Unlocks.UTILITY_C4, Unlocks.UTILITY_GRENADE_STUN, Unlocks.UTILITY_SHURIKEN_BIG });
+      _Unlocks_Vault.Add("classic_4", new Unlocks[] { Unlocks.ITEM_REVOLVER, Unlocks.UTILITY_C4, Unlocks.UTILITY_BEAR_TRAP, Unlocks.UTILITY_GRENADE_STUN, Unlocks.UTILITY_SHURIKEN_BIG });
       _Unlocks_Vault.Add("classic_5", new Unlocks[] { Unlocks.ITEM_RAPIER, Unlocks.ITEM_STICKY_GUN, Unlocks.UTILITY_GRENADE_IMPACT });
       _Unlocks_Vault.Add("classic_6", new Unlocks[] { Unlocks.ITEM_FRYING_PAN, Unlocks.ITEM_CROSSBOW, Unlocks.ITEM_GRENADE_LAUNCHER, Unlocks.UTILITY_TACTICAL_BULLET, Unlocks.MAX_EQUIPMENT_POINTS_4 });
       _Unlocks_Vault.Add("classic_7", new Unlocks[] { Unlocks.MOD_THRUST, Unlocks.UTILITY_KUNAI_STICKY, Unlocks.UTILITY_INVISIBILITY, Unlocks.LOADOUT_SLOT_X2_2 });
@@ -492,7 +494,6 @@ public static class Shop
       GameScript.ItemManager.Items.KATANA,
       GameScript.ItemManager.Items.BAT
     };
-
   }
 
   // Get a list of items with ItemManager.Items enum
@@ -565,7 +566,7 @@ public static class Shop
     // Auto unlock modes
     switch (unlock)
     {
-      case Unlocks.MODE_SURVIVAL:
+      case Unlocks.MODE_ZOMBIE:
       case Unlocks.MODE_EXTRAS:
 
       case Unlocks.EXTRA_CHASE:
@@ -576,7 +577,7 @@ public static class Shop
     // Check notify player
     if (alert)
     {
-      if (unlock == Unlocks.MODE_SURVIVAL)
+      if (unlock == Unlocks.MODE_ZOMBIE)
         s_UnlockString += $"- new mode unlocked: <color=red>{unlock}</color>\n";
       else if (unlock == Unlocks.MODE_EXTRAS)
         s_UnlockString += $"- pause menu option unlocked: <color=magenta>EXTRAS</color>\n";
@@ -777,7 +778,7 @@ public static class Shop
 
     public static void BuyPerk(int playerId, PerkType perk)
     {
-      if (GameScript.s_GameMode != GameScript.GameModes.SURVIVAL) return;
+      if (GameScript.s_GameMode != GameScript.GameModes.ZOMBIE) return;
 
       GameScript.PlayerProfile.s_Profiles[playerId]._Equipment._Perks.Add(perk);
       GameScript.PlayerProfile.s_Profiles[playerId].UpdatePerkIcons();

@@ -72,11 +72,25 @@ public static class FunctionsC
 
     // If player, check modes
     // Survival / Classic, always look for enemies only
-    if (GameScript.s_GameMode == GameScript.GameModes.SURVIVAL || GameScript.s_GameMode == GameScript.GameModes.CLASSIC)
+    if (GameScript.s_GameMode == GameScript.GameModes.ZOMBIE)
       return GetClosestEnemyTo(pos, ragdollIdFilter, include_chaser);
+    if (GameScript.s_GameMode == GameScript.GameModes.MISSIONS)
+    {
+      // Check if all enemies dead, use other players as targets
+      if (EnemyScript._Enemies_alive.Count == 0 && PlayerScript.s_Players.Count > 1)
+      {
+        var targetList = new List<PlayerScript.IHasRagdoll>(PlayerScript.s_Players);
+        // Remove self
+        targetList.RemoveAll(p => p._Ragdoll._PlayerScript._Id == isPlayerId);
+        return GetClosestTargetOf(pos, targetList, ragdollIdFilter);
+      }
+
+      // Normal behavior
+      return GetClosestEnemyTo(pos, ragdollIdFilter, include_chaser);
+    }
 
     // Versus, group enemies and enemy players together (teams)
-    if (GameScript.s_GameMode == GameScript.GameModes.VERSUS)
+    if (GameScript.s_GameMode == GameScript.GameModes.PARTY)
     {
       var targetList = new List<PlayerScript.IHasRagdoll>(EnemyScript._Enemies_alive);
       var enemyPlayers = VersusMode.GetEnemyPlayers(isPlayerId);
@@ -114,7 +128,7 @@ public static class FunctionsC
   //
   static DistanceInfo GetClosestTargetOf(Vector3 atPos, List<PlayerScript.IHasRagdoll> ofRagdolls, int ragdollIdFilter = -1, bool include_chaser = false)
   {
-    if (ofRagdolls == null) return null;
+    if (ofRagdolls == null || ofRagdolls.Count == 0) return null;
 
     var info = new DistanceInfo
     {
@@ -517,11 +531,11 @@ public static class FunctionsC
 
 #if UNITY_STANDALONE
           if (numKilled == 5)
-            SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.DEMO_LEVEL_0);
+            Achievements.UnlockAchievement(Achievements.Achievement.DEMO_LEVEL_0);
           else if (numKilled == 10)
-            SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.DEMO_LEVEL_1);
+            Achievements.UnlockAchievement(Achievements.Achievement.DEMO_LEVEL_1);
           else if (numKilled == 25)
-            SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.DEMO_LEVEL_2);
+            Achievements.UnlockAchievement(Achievements.Achievement.DEMO_LEVEL_2);
 #endif
         }
       }
@@ -798,7 +812,7 @@ public static class FunctionsC
         s_CurrentTrack = trackIndex;
         s_TrackSource.clip = musicRequest.asset as AudioClip;
         s_TrackSource.volume = Settings._VolumeMusic / 5f * SfxManager.s_MusicModifier;
-        if (s_CurrentTrack == 1) s_TrackSource.volume *= 0.7f;
+        if (s_CurrentTrack == 1) s_TrackSource.volume *= 0.6f;
         s_TrackSource.Play();
         s_transitioning = false;
       }
@@ -823,7 +837,7 @@ public static class FunctionsC
           t = Mathf.Clamp(t - 0.05f, 0f, 1f);
           yield return new WaitForSecondsRealtime(0.05f);
           s_TrackSource.volume = t * (Settings._VolumeMusic / 5f) * SfxManager.s_MusicModifier;
-          if (s_CurrentTrack == 1) s_TrackSource.volume *= 0.7f;
+          if (s_CurrentTrack == 1) s_TrackSource.volume *= 0.6f;
         }
         UnloadCurrentTrack();
 
@@ -835,7 +849,7 @@ public static class FunctionsC
         s_CurrentTrack = trackIndex;
         s_TrackSource.clip = musicRequest.asset as AudioClip;
         s_TrackSource.volume = Settings._VolumeMusic / 5f * SfxManager.s_MusicModifier;
-        if (s_CurrentTrack == 1) s_TrackSource.volume *= 0.7f;
+        if (s_CurrentTrack == 1) s_TrackSource.volume *= 0.6f;
         s_TrackSource.Play();
         s_transitioning = false;
       }
@@ -901,7 +915,7 @@ public static class FunctionsC
       if (Menu.s_CurrentMenu._Type == Menu.MenuType.MAIN) return 0;
 
       // SURVIVAL mode music
-      if (GameScript.s_GameMode == GameScript.GameModes.SURVIVAL)
+      if (GameScript.s_GameMode == GameScript.GameModes.ZOMBIE)
       {
         if (s_CurrentTrack == 0 || s_CurrentTrack == 1 || s_CurrentTrack == 2)
           s_CurrentTrack = 3;
@@ -915,7 +929,7 @@ public static class FunctionsC
       {
 
         // Level pack music; random
-        if (Levels._LevelPack_Playing || GameScript.s_EditorTesting || GameScript.s_GameMode == GameScript.GameModes.VERSUS)
+        if (Levels._LevelPack_Playing || GameScript.s_EditorTesting || GameScript.s_GameMode == GameScript.GameModes.PARTY)
         {
 
           var songs_length = s_TrackNames.Length - 3;

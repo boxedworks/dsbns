@@ -75,14 +75,14 @@ public static class Settings
   {
     get
     {
-      if (GameScript.s_GameMode == GameScript.GameModes.CLASSIC)
+      if (GameScript.s_GameMode == GameScript.GameModes.MISSIONS)
         return LevelModule.HighestDifficultyUnlockedClassic;
       else
         return LevelModule.HighestDifficultyUnlockedSurvival;
     }
     set
     {
-      if (GameScript.s_GameMode == GameScript.GameModes.CLASSIC)
+      if (GameScript.s_GameMode == GameScript.GameModes.MISSIONS)
         LevelModule.HighestDifficultyUnlockedClassic = value;
       else
         LevelModule.HighestDifficultyUnlockedSurvival = value;
@@ -93,7 +93,7 @@ public static class Settings
   {
     get
     {
-      if (GameScript.s_GameMode == GameScript.GameModes.CLASSIC)
+      if (GameScript.s_GameMode == GameScript.GameModes.MISSIONS)
         return LevelModule.Difficulty;
       else return 0;
     }
@@ -158,7 +158,7 @@ public static class Settings
   }
 
   // Extras
-  public static bool _Extras_CanUse { get { return GameScript.s_GameMode == GameScript.GameModes.CLASSIC && !_LevelEditorEnabled; } }
+  public static bool _Extras_CanUse { get { return GameScript.s_GameMode == GameScript.GameModes.MISSIONS && !_LevelEditorEnabled; } }
   public static bool _Extras_UsingAny
   {
     get
@@ -187,7 +187,7 @@ public static class Settings
     }
   }
 
-  public static float _VERSION = 1.52f;
+  public static float _VERSION = 1.53f;
 
   // Struct holding info what item pair gets unlocked at what level
   public class WeaponPair
@@ -690,12 +690,12 @@ public static class Settings
       GameResources._Camera_Main.orthographic = GameResources._Camera_IgnorePP.orthographic = true;
       GameResources._Camera_Main.orthographicSize = GameResources._Camera_IgnorePP.orthographicSize =
         SettingsModule.CameraZoom == SettingsSaveData.CameraZoomType.NORMAL ? 7.6f : (SettingsModule.CameraZoom == SettingsSaveData.CameraZoomType.CLOSE ? 5.9f : 10.8f);
-      GameResources._Camera_Main.transform.eulerAngles = GameResources._Camera_IgnorePP.transform.eulerAngles = new Vector3(88f, 0f, 0f);
+      GameResources._Camera_Main.transform.eulerAngles = new Vector3(88f, 0f, 0f);
     }
     else
     {
       GameResources._Camera_Main.orthographic = GameResources._Camera_IgnorePP.orthographic = false;
-      GameResources._Camera_Main.transform.eulerAngles = GameResources._Camera_IgnorePP.transform.eulerAngles = new Vector3(89.9f, 0f, 0f);
+      GameResources._Camera_Main.transform.eulerAngles =  new Vector3(89.9f, 0f, 0f);
     }
 
     //
@@ -917,7 +917,7 @@ public static class Settings
     public bool UseDefaultTargetFramerate = true;
     public bool UseOrthographicCamera = true;
 
-    public int Brightness = 2;
+    public int Brightness = 3;
     public int BloomAmount = 2;
     public int DepthOfFieldAmount = 2;
 

@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 public class DoorScript : CustomEntity
@@ -29,7 +28,7 @@ public class DoorScript : CustomEntity
   public List<EnemyScript> _EnemiesEditor;
   public List<EnemyScript> _EnemiesGame;
 
-  bool _forceExtrasOpen { get { return Settings.s_SaveData.LevelData.ExtraEnemyMultiplier == 2 && GameScript.s_GameMode == GameScript.GameModes.CLASSIC && !GameScript.s_EditorEnabled; } }
+  bool _forceExtrasOpen { get { return Settings.s_SaveData.LevelData.ExtraEnemyMultiplier == 2 && GameScript.s_GameMode == GameScript.GameModes.MISSIONS && !GameScript.s_EditorEnabled; } }
 
   // Use this for initialization
   void Start()

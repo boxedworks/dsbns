@@ -28,7 +28,7 @@ public class ItemScript : MonoBehaviour
   public int _clipSize, _minimumClipToFire, _projectilesPerShot, _burstPerShot, _penatrationAmount;
   public bool _reloading, _isMelee, _twoHanded, _runWhileUse, _reloadOneAtTime, _silenced, _throwable, _dismember, _useOnRelease, _randomSpread, _chargeHold;
   public float _useTime, _reloadTime, _useRate, _downTime, _burstRate, _hit_force, _bullet_spread, _shoot_force, _shoot_forward_force;
-  float _downTimeSave;
+  protected float _downTimeSave;
   public FireMode _fireMode;
 
   float _upTime;
@@ -284,7 +284,7 @@ public class ItemScript : MonoBehaviour
     // Spawn lasersight
     _laserSight = GameObject.Instantiate(GameResources._LaserBeam) as GameObject;
     _laserSight.name = "laser";
-    _laserSight.layer = 2;
+    _laserSight.layer = 12;
     GameObject.Destroy(_laserSight.GetComponent<Collider>());
     var renderer = _laserSight.GetComponent<Renderer>();
   }
@@ -419,7 +419,7 @@ public class ItemScript : MonoBehaviour
             isHit = false;
 
           // Check ragdoll grappled is targetted by holder
-          if (raycastInfo._ragdoll._Id == (_ragdoll._grappler?._Id ?? -1))
+          if (raycastInfo._ragdoll._Id == (_ragdoll._Grappler?._Id ?? -1))
             isHit = false;
         }
 
@@ -431,7 +431,7 @@ public class ItemScript : MonoBehaviour
           if (!_ragdoll.Active() || _ragdoll._IsStunned) return;
 
           // Check grappler
-          if (raycastInfo._ragdoll._grappling)
+          if (raycastInfo._ragdoll._IsGrappling)
           {
 
             // Get dir from target to swinger; if hostage is held in front of knife, kill hostage
@@ -441,18 +441,18 @@ public class ItemScript : MonoBehaviour
             if ((dir - target_frwd).magnitude > 1f)
             {
               RegisterHitRagdoll(raycastInfo._ragdoll);
-              raycastInfo._ragdoll = raycastInfo._ragdoll._grapplee;
+              raycastInfo._ragdoll = raycastInfo._ragdoll._Grapplee;
             }
           }
 
           // Check graplee
-          if (_ragdoll._grapplee == raycastInfo._ragdoll) return;
+          if (_ragdoll._Grapplee == raycastInfo._ragdoll) return;
 
           // Check zombie invisible 2nd weapon
           if (_isZombie && _side == ActiveRagdoll.Side.RIGHT) return;
 
           // If is enemy, and isn't two handed, don't kill friendlies
-          if (!_ragdoll._IsPlayer && !_canMeleePenatrate && !raycastInfo._ragdoll._IsPlayer && !raycastInfo._ragdoll._grappled && !_ragdoll._grappled) return;
+          if (!_ragdoll._IsPlayer && !_canMeleePenatrate && !raycastInfo._ragdoll._IsPlayer && !raycastInfo._ragdoll._IsGrappled && !_ragdoll._IsGrappled) return;
 
           // If is player v player, is two handed, and hit enemy before, dont hit
           if (_ragdoll._IsPlayer && raycastInfo._ragdoll._IsPlayer && _canMeleePenatrate && _hasHitEnemy) return;
@@ -485,7 +485,7 @@ public class ItemScript : MonoBehaviour
                 if (_isZombie && !deflectData._hitAnthingOverride)
                 {
                   // Die self
-                  deflectData.MeleeDamageOther(_ragdoll._grappling ? _ragdoll._grapplee : _ragdoll);
+                  deflectData.MeleeDamageOther(_ragdoll._IsGrappling ? _ragdoll._Grapplee : _ragdoll);
                   return;
                 }
                 else if (deflectData._isZombie && !_hitAnthingOverride)
@@ -499,7 +499,7 @@ public class ItemScript : MonoBehaviour
                 if (_type == ItemType.FIST && deflectData._type != ItemType.FIST)
                 {
                   // Die self
-                  deflectData.MeleeDamageOther(_ragdoll._grappling ? _ragdoll._grapplee : _ragdoll);
+                  deflectData.MeleeDamageOther(_ragdoll._IsGrappling ? _ragdoll._Grapplee : _ragdoll);
                   return;
                 }
                 else if (_type != ItemType.FIST && deflectData._type == ItemType.FIST)
@@ -514,7 +514,7 @@ public class ItemScript : MonoBehaviour
                 SetHitOverride();
 
                 // Bounce both ragdolls backward
-                _ragdoll.BounceFromPosition(raycastInfo._ragdoll._grappled ? raycastInfo._ragdoll._grappler._Hip.position : raycastInfo._ragdoll._Hip.position, 1.5f);
+                _ragdoll.BounceFromPosition(raycastInfo._ragdoll._IsGrappled ? raycastInfo._ragdoll._Grappler._Hip.position : raycastInfo._ragdoll._Hip.position, 1.5f);
                 raycastInfo._ragdoll.BounceFromPosition(_ragdoll._Hip.position, 1.5f);
 
                 // Check stun from baton
@@ -686,13 +686,6 @@ public class ItemScript : MonoBehaviour
               smokeParts.transform.position = spawn_pos + new Vector3(0f, 0.5f, 0f);
               smokeParts.Emit(Mathf.Clamp(use_penatrationAmount, 1, 6));
             }
-
-          /*/ Check gun smoke on
-          if (_type == ItemType.REVOLVER)
-          {
-            _gunSmoke = transform.GetChild(3).GetComponent<ParticleSystem>();
-            _gunSmoke.Play();
-          }*/
         }
 
         // Custom projectile
@@ -933,11 +926,14 @@ public class ItemScript : MonoBehaviour
 
         var dist = 0f;
         var forward = MathC.Get2DVector(transform.forward).normalized;
-        var start = _forward.position + forward * -0.5f;
+        var start = _forward.position + forward * -0.4f;
 
         RaycastHit hit = new RaycastHit();
         if (Physics.Raycast(new Ray(start, forward), out hit))
+        {
           dist = hit.distance;
+          //Debug.Log(hit.collider.name);
+        }
 
         if (dist <= 0.5f) dist = 0f;
 
@@ -1064,7 +1060,7 @@ public class ItemScript : MonoBehaviour
       // Check grapple release
       if (_isMelee)
       {
-        if (_ragdoll._grappling)
+        if (_ragdoll._IsGrappling)
         {
           var snap_neck = false;
           if (_side == ActiveRagdoll.Side.RIGHT)
@@ -1086,7 +1082,7 @@ public class ItemScript : MonoBehaviour
 #if UNITY_STANDALONE
             // Grapple achievement
             if (_ragdoll._IsPlayer)
-              SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.GRAPPLE_NECK);
+              Achievements.UnlockAchievement(Achievements.Achievement.GRAPPLE_NECK);
 #endif
 
             /*_swinging = false;
@@ -1920,7 +1916,7 @@ public class ItemScript : MonoBehaviour
   bool MeleeCast(RaycastInfo raycastInfo, int iter)
   {
     _ragdoll.ToggleRaycasting(false);
-    _ragdoll._grappler?.ToggleRaycasting(false);
+    _ragdoll._Grappler?.ToggleRaycasting(false);
 
     var add = Vector3.zero;
     switch (iter % 3)
@@ -1934,7 +1930,7 @@ public class ItemScript : MonoBehaviour
     }
 
     // Cast ray from startPos to dir (cast a ray from the handle forwards)
-    var forward = _ragdoll._grappled ? _ragdoll._grappler._Controller.forward : _ragdoll._Controller.forward;
+    var forward = _ragdoll._IsGrappled ? _ragdoll._Grappler._Controller.forward : _ragdoll._Controller.forward;
     forward.y = 0f;
     var ray = new Ray(
       _ragdoll._Hip.position - _ragdoll._Hip.transform.forward * 0.1f + Vector3.up * 0.4f + add * 0.1f,
@@ -1967,7 +1963,7 @@ public class ItemScript : MonoBehaviour
 
     //
     _ragdoll.ToggleRaycasting(true);
-    _ragdoll._grappler?.ToggleRaycasting(true);
+    _ragdoll._Grappler?.ToggleRaycasting(true);
 
     //
     return hit;

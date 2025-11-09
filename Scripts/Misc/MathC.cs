@@ -1,8 +1,7 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
-public static class MathC {
+public static class MathC
+{
 
   public static Vector3 Get2DVector(Vector3 v)
   {

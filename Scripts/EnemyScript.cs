@@ -188,7 +188,7 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
   public State _state;
 
   public bool _IsZombie { get { return _survivalAttributes != null; } }
-  public bool _IsZombieReal { get { return _IsZombie && (GameScript.s_GameMode == GameScript.GameModes.SURVIVAL || _isZombieRealOverride); } }
+  public bool _IsZombieReal { get { return _IsZombie && (GameScript.s_GameMode == GameScript.GameModes.ZOMBIE || _isZombieRealOverride); } }
   bool _isZombieRealOverride;
 
   public class SurvivalAttributes
@@ -343,7 +343,7 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
     // Check null
     if (_Enemies_alive == null || _Enemies_alive.Count == 0 || GameScript.s_EditorEnabled) return;
     if (Menu.s_InMenus || TileManager._LoadingMap || PlayerScript.s_Players == null || PlayerScript.s_Players.Count == 0) return;
-    if (GameScript.s_GameMode != GameScript.GameModes.SURVIVAL)
+    if (GameScript.s_GameMode != GameScript.GameModes.ZOMBIE)
     {
       // Set up handler
       var count = (_Enemies_alive.Count) * SpherecastHandler._NumSpherecasts;
@@ -395,7 +395,7 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
       _ragdoll._hip.transform.parent.rotation = rot;*/
 
       _beganPatrolling = true;
-      if (!_ragdoll._grappled)
+      if (!_ragdoll._IsGrappled)
       {
         _agent.enabled = true;
       }
@@ -418,7 +418,7 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
     {
 
       // Check for attacking
-      if (_ragdoll._grappled && _ragdoll._grappler._IsPlayer)
+      if (_ragdoll._IsGrappled && _ragdoll._Grappler._IsPlayer)
       {
         DrawBackMelee();
 
@@ -779,7 +779,7 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
                       _moveSpeed = PlayerScript.RUNSPEED;
 
                     // If grappling, slower
-                    if (_ragdoll._grappling) { _moveSpeed *= 0.9f; }
+                    if (_ragdoll._IsGrappling) { _moveSpeed *= 0.9f; }
 
                     // Only attack if is alive, the target is alive, and (the target is in front, or has a machine gun, or has a melee weapon)
                     if (!_ragdoll._IsDead && !_ragdollTarget._IsDead && (_targetDirectlyInFront || HasMachineGun() || !_ragdoll.HasGun()))
@@ -930,7 +930,7 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
     // Local
     void UseLeft()
     {
-      if (_ragdoll._ItemL.IsMelee() && _ragdoll._grapplee != null) return;
+      if (_ragdoll._ItemL.IsMelee() && _ragdoll._Grapplee != null) return;
       if (_ragdoll._ItemL._useOnRelease)
         _ragdoll._ItemL.UseUp();
       else
@@ -938,7 +938,7 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
     }
     void UseRight()
     {
-      if (_ragdoll._ItemR.IsMelee() && _ragdoll._grapplee != null) return;
+      if (_ragdoll._ItemR.IsMelee() && _ragdoll._Grapplee != null) return;
       if (_ragdoll._ItemR._useOnRelease)
         _ragdoll._ItemR.UseUp();
       else
@@ -1043,7 +1043,7 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
   void Move()
   {
 
-    if (!_canMove || _ragdoll._grappled) return;
+    if (!_canMove || _ragdoll._IsGrappled) return;
 
     // Check survial
     if (GameScript.IsSurvival())
@@ -1064,7 +1064,7 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
   }
   void LookAt(Vector3 lookAtPos)
   {
-    if (_ragdoll?._grappled ?? true) return;
+    if (_ragdoll?._IsGrappled ?? true) return;
 
     var forward = transform.forward;
     if ((_ragdoll.HasMelee() && !_ragdoll._IsSwinging) || !_ragdoll.HasMelee() || IsChaser())
@@ -1778,7 +1778,7 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
 
       // Get a kill
       if (_Enemies_dead == null || _Enemies_dead.Count == 0)
-        SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.KILL);
+        Achievements.UnlockAchievement(Achievements.Achievement.KILL);
 #endif
 
       /*/ Save stats
@@ -1816,8 +1816,8 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
 #if UNITY_STANDALONE
 
     // Grapple achievement
-    if (!(source?._IsPlayer ?? true) && source._grappled && (source._grappler?._IsPlayer ?? false))
-      SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.GRAPPLE_KILL);
+    if (!(source?._IsPlayer ?? true) && source._IsGrappled && (source._Grappler?._IsPlayer ?? false))
+      Achievements.UnlockAchievement(Achievements.Achievement.GRAPPLE_KILL);
 #endif
 
     if (!_linkedDoorTriggered)
@@ -1896,7 +1896,7 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
         PlayerScript._SlowmoTimer += 1.3f;
 
       // Check mode
-      if (GameScript.s_GameMode == GameScript.GameModes.SURVIVAL)
+      if (GameScript.s_GameMode == GameScript.GameModes.ZOMBIE)
       {
         if (source._IsPlayer)
           GameScript.SurvivalMode.GivePoints(source._PlayerScript._Id, 5 * GameScript.SurvivalMode._Wave, true);
@@ -1908,7 +1908,7 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
         // Level timer
         TileManager._Level_Complete = true;
 
-        if (GameScript.s_GameMode == GameScript.GameModes.CLASSIC && !GameScript.s_EditorTesting && !Levels._LevelPack_Playing)
+        if (GameScript.s_GameMode == GameScript.GameModes.MISSIONS && !GameScript.s_EditorTesting && !Levels._LevelPack_Playing)
         {
 
           var levelComplete = Levels._CurrentLevelCollectionIndex > 1 ? false : LevelModule.LevelData[Levels._CurrentLevelCollectionIndex].Data[Levels._CurrentLevelIndex].Completed;
@@ -2331,11 +2331,11 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
 #if UNITY_STANDALONE
 
                     // Unlock one achievement
-                    SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.EXTRA_UNLOCK1);
+                    Achievements.UnlockAchievement(Achievements.Achievement.EXTRA_UNLOCK1);
 
                     // Unlocked all achievements
                     if (Shop.AllExtrasUnlocked())
-                      SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.EXTRA_UNLOCK_ALL);
+                      Achievements.UnlockAchievement(Achievements.Achievement.EXTRA_UNLOCK_ALL);
 #endif
                   }
               }
@@ -2346,14 +2346,14 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
             {
               // Achievement
 #if UNITY_STANDALONE
-              SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.TIME_BEAT_SNEAKY);
+              Achievements.UnlockAchievement(Achievements.Achievement.TIME_BEAT_SNEAKY);
 #endif
 
               if (LevelModule.IsTopRatedClassic1)
               {
                 // Achievement
 #if UNITY_STANDALONE
-                SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.TIME_BEAT_ALL);
+                Achievements.UnlockAchievement(Achievements.Achievement.TIME_BEAT_ALL);
 #endif
               }
             }
@@ -2428,7 +2428,7 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
     }
 
     // Increment survival score
-    if (GameScript.s_GameMode == GameScript.GameModes.SURVIVAL && source._IsPlayer)
+    if (GameScript.s_GameMode == GameScript.GameModes.ZOMBIE && source._IsPlayer)
       GameScript.SurvivalMode.IncrementScore(source._PlayerScript._Id);
   }
 

@@ -6,7 +6,6 @@ using System.Linq;
 using UnityEngine;
 
 #if !DISABLESTEAMWORKS
-using Steamworks;
 #endif
 
 public class Menu
@@ -46,13 +45,13 @@ public class Menu
     EDITOR_PACKS,
     EDITOR_PACKS_EDIT,
 
-    GAMETYPE_CLASSIC,
-    GAMETYPE_SURVIVAL,
+    GAMETYPE_MISSION,
+    GAMETYPE_ZOMBIE,
 
-    HOWTOPLAY_CLASSIC,
-    HOWTOPLAY_SURVIVAL,
+    HOWTOPLAY_MISSION,
+    HOWTOPLAY_ZOMBIE,
     HOWTOPLAY_EDITOR,
-    HOWTOPLAY_VERSUS,
+    HOWTOPLAY_PARTY,
 
     CREDITS,
 
@@ -808,9 +807,9 @@ public class Menu
       })
       .AddEvent(EventType.ON_RENDER, CommonEvents._OnRender_XSelector);
   }
-  Menu AddBackButton(System.Action<MenuComponent> action)
+  Menu AddBackButton(System.Action<MenuComponent> action, string text = "")
   {
-    return AddComponent("back\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
+    return AddComponent(text == "" ? "back\n" : text, MenuComponent.ComponentType.BUTTON_SIMPLE)
       .AddEvent(EventType.ON_SELECTED, action)
       .AddEvent(EventType.ON_RENDER, CommonEvents._OnRender_XSelector);
 
@@ -1152,9 +1151,7 @@ public class Menu
     .AddComponent(string.Format("{0,-10}<color=yellow>{1,-25}</color>........\n", "", "[boxedworks]"))
     .AddComponent(string.Format("{0,-10}<color=yellow>{1,-25}</color>........\n", "", "[boxedworks]"))
     .AddComponent(string.Format("{0,-10}<color=yellow>{1,-25}</color>........\n", "", "[boxedworks]"))
-    .AddComponent(string.Format("{0,-10}<color=yellow>{1,-25}</color>........\n", "", "[boxedworks]\n\n"))
-    .AddComponent(string.Format("{0,-10}<color=yellow>{1,-25}</color>........\n", "", "[boxedworks]\n\n"))
-    .AddComponent(string.Format("{0,-10}<color=yellow>{1,-25}</color>........\n", "", "[boxedworks]\n\n"));
+    ;
 
     // Switch to main menu after splash screen
     s_menus[MenuType.SPLASH]._onRendered += () =>
@@ -1187,7 +1184,7 @@ public class Menu
         CommonEvents._SwitchMenu(MenuType.MODE_SELECTION);
 
 #if !DISABLESTEAMWORKS
-        SteamManager.Achievements.LoadAchievements();
+        Achievements.LoadAchievements();
 #endif
 
         TileManager._CurrentLevel_Name = "";
@@ -1195,10 +1192,10 @@ public class Menu
       });
 
 #if UNITY_STANDALONE
-    // Show level editor menu
+    // Show mission editor menu
     if (GameScript.s_UsingSteam)
     {
-      main_menu.AddComponent("level editor\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
+      main_menu.AddComponent("mission editor\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
         .AddEvent((MenuComponent component) =>
         {
           CommonEvents._SwitchMenu(MenuType.EDITOR_MAIN);
@@ -1266,12 +1263,12 @@ public class Menu
 #endif
     ModifyMenu_TipSwitch(MenuType.MAIN);
 
-    // Level editor main
+    // mission editor main
     new Menu(MenuType.EDITOR_MAIN)
     {
 
     }
-    .AddComponent($"<color={_COLOR_GRAY}>level editor</color>\n\n")
+    .AddComponent($"<color={_COLOR_GRAY}>mission editor</color>\n\n")
     // Local levels
     .AddComponent("local levels\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
       .AddEvent((MenuComponent component) => { CommonEvents._SwitchMenu(MenuType.EDITOR_LEVELS); })
@@ -1288,7 +1285,7 @@ public class Menu
     //ModifyMenu_TipComponents(MenuType.EDITOR_MAIN, 16, 1);
     //ModifyMenu_TipSwitch(MenuType.EDITOR_MAIN);
 
-    // Level editor - levels
+    // mission editor - levels
     void SpawnMenu_LevelEditorLevels()
     {
       var menu = new Menu(MenuType.EDITOR_LEVELS)
@@ -1298,7 +1295,7 @@ public class Menu
 
       if (!Levels._LevelPack_SelectingLevelsFromPack)
         menu
-        .AddComponent($"<color={_COLOR_GRAY}>level editor - local levels</color>\n\n");
+        .AddComponent($"<color={_COLOR_GRAY}>mission editor - local levels</color>\n\n");
       else
       {
         var levelpack_name = Levels._LevelPack_Current._name;
@@ -1374,7 +1371,7 @@ public class Menu
 
       // Add local levels
       Levels._CurrentLevelCollectionIndex = 3;
-      GameScript.s_GameMode = GameScript.GameModes.CLASSIC;
+      GameScript.s_GameMode = GameScript.GameModes.MISSIONS;
 
       var leveldata = Levels._LevelPack_SelectingLevelsFromPack ? Levels._LevelPack_Current._levelData : Levels._CurrentLevelCollection._levelData;
 
@@ -1738,7 +1735,7 @@ public class Menu
         if (Levels._HardcodedLoadout == null)
           Levels._HardcodedLoadout = new GameScript.ItemManager.Loadout()
           {
-            _id = -1,
+            _Id = -1,
             _Equipment = new GameScript.PlayerProfile.Equipment()
           };
 
@@ -1764,7 +1761,7 @@ public class Menu
       if (!Levels._LevelPack_UploadingToWorkshop)
       {
         menu_levelpacks
-        .AddComponent($"<color={_COLOR_GRAY}>level editor - level packs</color>\n\n")
+        .AddComponent($"<color={_COLOR_GRAY}>mission editor - level packs</color>\n\n")
 
         // Create a new level pack
         .AddComponent("new level pack\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
@@ -2004,7 +2001,7 @@ public class Menu
       {
 
         menu_levelpacks
-        .AddComponent($"<color={_COLOR_GRAY}>level editor - choose level pack to overwrite</color>\n\n");
+        .AddComponent($"<color={_COLOR_GRAY}>mission editor - choose level pack to overwrite</color>\n\n");
 
       }
 
@@ -2386,13 +2383,13 @@ public class Menu
 
         // Set current level collection to editor levels
         Levels._CurrentLevelCollectionIndex = 3;
-        GameScript.s_GameMode = GameScript.GameModes.CLASSIC;
+        GameScript.s_GameMode = GameScript.GameModes.MISSIONS;
 
         // Set up loadout editing
         if (Levels._HardcodedLoadout == null)
           Levels._HardcodedLoadout = new GameScript.ItemManager.Loadout()
           {
-            _id = -1,
+            _Id = -1,
             _Equipment = new GameScript.PlayerProfile.Equipment()
           };
         Levels._EditingLoadout = true;
@@ -2593,7 +2590,7 @@ public class Menu
                 // Overwrite level pack level with data
                 Levels._IsOverwritingLevel = false;
 
-                //Debug.Log($"Replacing in level pack index {Levels._LevelPack_SaveReorderIndex} with level editor map index {component._buttonIndex}");
+                //Debug.Log($"Replacing in level pack index {Levels._LevelPack_SaveReorderIndex} with mission editor map index {component._buttonIndex}");
                 var levelmeta_old = Levels.GetLevelMeta(Levels._LevelPack_Current._levelData[Levels._LevelPack_SaveReorderIndex]);
                 var levelmeta_new = Levels.GetLevelMeta(Levels._CurrentLevelCollection._levelData[component._buttonIndex]);
                 levelmeta_new[2] = levelmeta_old[2];
@@ -2710,7 +2707,7 @@ public class Menu
                 SendInput(Input.SPACE);
               });
 
-          // Show level edit selctions
+          // Show mission edit selctions
           else
             menu_editpacks
             .AddComponent($"{level_name}\n{lineend}", MenuComponent.ComponentType.BUTTON_DROPDOWN)
@@ -3021,7 +3018,7 @@ public class Menu
         .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
         {
           if (component._focused)
-            component.SetDisplayText($"</color><color={_COLOR_GRAY}>available ($$): {Shop._AvailablePoints}</color>       <-- get ($$) by completing MISSIONS<color=white>\n");
+            component.SetDisplayText($"</color><color={_COLOR_GRAY}>available ($$): {Shop._AvailablePoints}</color>      <-- get ($$) by getting MISSIONS ranks<color=white>\n");
           else
           {
             var color = Shop._AvailablePoints > 0 ? "yellow" : "red";
@@ -3315,7 +3312,7 @@ public class Menu
             GenericMenu(new string[]
             {
             Shop._AvailablePoints < cost ?
-            "cannot afford item\n\n- you do not have enough <color=yellow>($$)</color> to buy this item\n\n- complete MISSIONS mode ranks to get more <color=yellow>($$)</color>\n\n"
+            "cannot afford item\n\n- you do not have enough <color=yellow>($$)</color> to buy this item\n\n- gather MISSIONS mode ranks to get more <color=yellow>($$)</color>\n\n"
             :
             "cannot equip / purchase item\n\n- you do not have enough <color=yellow>equipment_points</color> to equip this item if you purchased it\n\n- buy more <color=yellow>MAX_EQUIP_POINTS</color> in the SHOP to equip / buy this\n\n"
             },
@@ -3335,7 +3332,7 @@ public class Menu
       m.AddComponent("\n")
       .AddBackButton((MenuComponent component) =>
       {
-        CommonEvents._SwitchMenu(s_previousMenuType == MenuType.GENERIC_MENU || s_InPause ? MenuType.PAUSE : MenuType.GAMETYPE_CLASSIC);
+        CommonEvents._SwitchMenu(s_previousMenuType == MenuType.GENERIC_MENU || s_InPause ? MenuType.PAUSE : MenuType.GAMETYPE_MISSION);
         if (s_InPause)
         {
           s_CurrentMenu._selectionIndex = 1;
@@ -3581,12 +3578,12 @@ public class Menu
     .AddComponent(string.Format(format_mode, "missions", "clean site and retrieve DATA"), MenuComponent.ComponentType.BUTTON_SIMPLE)
       .AddEvent((MenuComponent component) =>
       {
-        GameScript.s_GameMode = GameScript.GameModes.CLASSIC;
+        GameScript.s_GameMode = GameScript.GameModes.MISSIONS;
         Levels._CurrentLevelCollectionIndex = Settings._DIFFICULTY;
         Settings.OnGamemodeChanged(Settings.GamemodeChange.CLASSIC);
 
         if (Shop.Unlocked(Shop.Unlocks.TUTORIAL_PART1))
-          CommonEvents._SwitchMenu(MenuType.GAMETYPE_CLASSIC);
+          CommonEvents._SwitchMenu(MenuType.GAMETYPE_MISSION);
 
         // Tutorial
         else
@@ -3600,7 +3597,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
 "
             },
             "cool",
-            MenuType.GAMETYPE_CLASSIC,
+            MenuType.GAMETYPE_MISSION,
             null,
             true
           );
@@ -3613,8 +3610,8 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
       .AddEvent((MenuComponent component) =>
       {
         Levels._CurrentLevelCollectionIndex = 2;
-        GameScript.s_GameMode = GameScript.GameModes.SURVIVAL;
-        CommonEvents._SwitchMenu(MenuType.GAMETYPE_SURVIVAL);
+        GameScript.s_GameMode = GameScript.GameModes.ZOMBIE;
+        CommonEvents._SwitchMenu(MenuType.GAMETYPE_ZOMBIE);
 
         Settings.OnGamemodeChanged(Settings.GamemodeChange.SURVIVAL);
       })
@@ -3623,7 +3620,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
 #if UNITY_EDITOR
         return;
 #endif
-        component._obscured = !Shop.Unlocked(Shop.Unlocks.MODE_SURVIVAL);
+        component._obscured = !Shop.Unlocked(Shop.Unlocks.MODE_ZOMBIE);
       })
 
     // Switch to versus mode menu
@@ -3631,7 +3628,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
       .AddEvent((MenuComponent component) =>
       {
         Levels._CurrentLevelCollectionIndex = 4;
-        GameScript.s_GameMode = GameScript.GameModes.VERSUS;
+        GameScript.s_GameMode = GameScript.GameModes.PARTY;
         CommonEvents._SwitchMenu(MenuType.VERSUS);
 
         Settings.OnGamemodeChanged(Settings.GamemodeChange.VERSUS);
@@ -3647,7 +3644,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
 
       GameScript.SurvivalMode.OnLeaveMode();
 
-      GameScript.s_GameMode = GameScript.GameModes.CLASSIC;
+      GameScript.s_GameMode = GameScript.GameModes.MISSIONS;
       Settings.OnGamemodeChanged(Settings.GamemodeChange.CLASSIC);
     };
     // Set tip
@@ -3861,7 +3858,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
 
       // Tutorial
       .AddComponent("briefing\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-        .AddEvent((MenuComponent component) => { CommonEvents._SwitchMenu(MenuType.HOWTOPLAY_VERSUS); })
+        .AddEvent((MenuComponent component) => { CommonEvents._SwitchMenu(MenuType.HOWTOPLAY_PARTY); })
 
       // Back button
       .AddBackButton(MenuType.MODE_SELECTION);
@@ -3872,13 +3869,13 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
     var levels_per_dir = 12;
     void SpawnMenu_Levels()
     {
-      var format_subdirs = GameScript.s_GameMode == GameScript.GameModes.CLASSIC ? "{0,-7}{1,15}{2,15}{3,33}" : "{0,-20}{1,20}{2,40}";
+      var format_subdirs = GameScript.s_GameMode == GameScript.GameModes.MISSIONS ? "{0,-7}{1,15}{2,15}{3,33}" : "{0,-20}{1,20}{2,40}";
       // Create new menu
       var m = new Menu(MenuType.LEVELS)
       {
 
       }
-      .AddComponent(GameScript.s_GameMode == GameScript.GameModes.CLASSIC ?
+      .AddComponent(GameScript.s_GameMode == GameScript.GameModes.MISSIONS ?
           string.Format($"<color={_COLOR_GRAY}>{format_subdirs}</color>", "missions", "rank", "", "") + "\n\n"
         :
           string.Format($"<color={_COLOR_GRAY}>{format_subdirs}</color>", "levels", "highest wave", "") + "\n\n"
@@ -3900,24 +3897,24 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
       };
 
       // Set level directory options
-      if (GameScript.s_GameMode == GameScript.GameModes.CLASSIC)
+      if (GameScript.s_GameMode == GameScript.GameModes.MISSIONS)
       {
         dirs = Mathf.CeilToInt((float)Levels._CurrentLevelCollection._levelData.Length / levels_per_dir);
       }
-      else if (GameScript.s_GameMode == GameScript.GameModes.CHALLENGE || GameScript.s_GameMode == GameScript.GameModes.SURVIVAL)
+      else if (GameScript.s_GameMode == GameScript.GameModes.CHALLENGE || GameScript.s_GameMode == GameScript.GameModes.ZOMBIE)
         dirs = Levels._CurrentLevelCollection._levelData.Length;
 
       for (var i = 0; i < dirs; i++)
       {
         var wave = "-";
         var rank_lowest = "";
-        if (GameScript.s_GameMode == GameScript.GameModes.SURVIVAL)
+        if (GameScript.s_GameMode == GameScript.GameModes.ZOMBIE)
         {
           wave = LevelModule.GetHighestSurvivalWave(i) + "";
           if (wave == "0")
             wave = "-";
         }
-        else if (GameScript.s_GameMode == GameScript.GameModes.CLASSIC)
+        else if (GameScript.s_GameMode == GameScript.GameModes.MISSIONS)
         {
           // Get lowest rank from all levels in dir
           for (var u = i == 0 ? 1 : 0; u < 12; u++)
@@ -3942,7 +3939,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
         }
 
         var display_text =
-          GameScript.s_GameMode == GameScript.GameModes.CLASSIC ?
+          GameScript.s_GameMode == GameScript.GameModes.MISSIONS ?
             string.Format(format_subdirs, $"\\dir{i}", $"{rank_lowest}    ", "", "") + '\n'
           :
             string.Format(format_subdirs, $"\\dir{i}", $"{wave}    ", "") + '\n';
@@ -3965,7 +3962,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
           {
 
             // Obscur dir if first level not unlocked
-            if (GameScript.s_GameMode != GameScript.GameModes.SURVIVAL)
+            if (GameScript.s_GameMode != GameScript.GameModes.ZOMBIE)
             {
               var first_level_iter = component._buttonIndex * levels_per_dir;
               if (first_level_iter > 0 && !Levels.LevelCompleted(first_level_iter - 1))
@@ -3997,7 +3994,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
             component._obscured = false;
 
             // Load CLASSIC levels
-            if (GameScript.s_GameMode == GameScript.GameModes.CLASSIC)
+            if (GameScript.s_GameMode == GameScript.GameModes.MISSIONS)
             {
               // Update dropdown data
               var selections = new List<string>();
@@ -4093,7 +4090,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
               {
                 match = selections[s_SaveLevelSelected];
               }
-              else if (s_previousMenuType == MenuType.GAMETYPE_CLASSIC)
+              else if (s_previousMenuType == MenuType.GAMETYPE_MISSION)
               {
                 var lastIter = 0;
                 foreach (var selection in selections)
@@ -4121,7 +4118,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
               }
 
               // Check for last level
-              if (s_previousMenuType == MenuType.GAMETYPE_CLASSIC && Levels.LevelCompleted(131))
+              if (s_previousMenuType == MenuType.GAMETYPE_MISSION && Levels.LevelCompleted(131))
                 match = selections[0];
 
               if (match == "")
@@ -4159,7 +4156,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
             }
 
             // SURVIVAL
-            else if (GameScript.s_GameMode == GameScript.GameModes.SURVIVAL)
+            else if (GameScript.s_GameMode == GameScript.GameModes.ZOMBIE)
             {
               // Update dropdown data
               var prompt = $"=== {string.Format(format_subdirs, "", "", "")}\n\n";
@@ -4181,7 +4178,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
           });
       }
       // Add 'level settings' if CLASSIC mode
-      if (GameScript.s_GameMode == GameScript.GameModes.CLASSIC)
+      if (GameScript.s_GameMode == GameScript.GameModes.MISSIONS)
       {
         m.AddComponent($"\n<color={_COLOR_GRAY}>mission settings</color>\n\n")
         .AddComponent("difficulty\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
@@ -4201,7 +4198,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
             void Local_SetDifficulty(int difficulty)
             {
               Settings._DIFFICULTY = difficulty;
-              Levels._CurrentLevelCollectionIndex = (GameScript.s_GameMode == GameScript.GameModes.SURVIVAL ? 2 : 0 + difficulty);
+              Levels._CurrentLevelCollectionIndex = (GameScript.s_GameMode == GameScript.GameModes.ZOMBIE ? 2 : 0 + difficulty);
               s_SaveMenuDir = -1;
               _CanRender = false;
               Levels.BufferLevelTimeDatas();
@@ -4260,7 +4257,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
       {
         s_SaveMenuDir = -1;
         s_SaveLevelSelected = -1;
-        CommonEvents._SwitchMenu(GameScript.s_GameMode == GameScript.GameModes.CLASSIC ? MenuType.GAMETYPE_CLASSIC : MenuType.GAMETYPE_SURVIVAL);
+        CommonEvents._SwitchMenu(GameScript.s_GameMode == GameScript.GameModes.MISSIONS ? MenuType.GAMETYPE_MISSION : MenuType.GAMETYPE_ZOMBIE);
       });
 
       // Destroy map preview on dropdown removed
@@ -4514,7 +4511,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
           }
 
         // Switch back
-        CommonEvents._SwitchMenu(s_InPause ? MenuType.PAUSE : MenuType.GAMETYPE_CLASSIC);
+        CommonEvents._SwitchMenu(s_InPause ? MenuType.PAUSE : MenuType.GAMETYPE_MISSION);
         if (s_InPause)
         {
           s_CurrentMenu._selectionIndex = 2;
@@ -4584,7 +4581,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
       m.AddComponent($"<color={_COLOR_GRAY}>edit loadout</color>\n\n")
         .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
         {
-          component.SetDisplayText($"<color={_COLOR_GRAY}>edit loadout {CurrentLoadout()._id + 1}</color>\n\n");
+          component.SetDisplayText($"<color={_COLOR_GRAY}>edit loadout {CurrentLoadout()._Id + 1}</color>\n\n");
         })
       .AddComponent("===\n\n");
       if (Shop.Unlocked(Shop.Unlocks.TUTORIAL_PART1) && has_item)
@@ -4984,6 +4981,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
                 {
                   var item_selected = (GameScript.ItemManager.Items)System.Enum.Parse(typeof(GameScript.ItemManager.Items), component0.GetDisplayText(false).Trim().Split(' ')[2].Split('>')[2]);
                   var item_other = CurrentLoadout()._Equipment._ItemLeft1;
+
                   // Check for two handed
                   if (((item_selected == GameScript.ItemManager.Items.BAT || item_selected == GameScript.ItemManager.Items.KATANA) &&
                     (item_other != GameScript.ItemManager.Items.NONE)) ||
@@ -4991,38 +4989,45 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
                     (item_selected != GameScript.ItemManager.Items.NONE))
                     )
                     CurrentLoadout()._Equipment._ItemLeft1 = GameScript.ItemManager.Items.NONE;
+
                   if (CurrentLoadout().CanEquipItem(ActiveRagdoll.Side.RIGHT, 1, item_selected))
                   {
                     CurrentLoadout()._Equipment._ItemRight1 = item_selected;
                     SendInput(Input.BACK);
                   }
+
                   else
                   {
                     CurrentLoadout()._Equipment._ItemLeft1 = item_other;
+
                     //
                     var save_selection = s_CurrentMenu._dropdownParentIndex;
                     var save_dropdown = s_CurrentMenu._selectionIndex;
                     var typ = "item";
-                    GenericMenu(new string[]
-                    {
-                    string.Format(format_editLoadout, typ)
-                    },
-                    "ok",
-                    MenuType.EDIT_LOADOUT,
-                    null,
-                    true,
-                    (MenuComponent component1) =>
-                    {
-                      s_menus[MenuType.EDIT_LOADOUT]._selectionIndex = save_selection;
-                      SendInput(Input.SPACE);
-                      SendInput(Input.SPACE);
-                      s_menus[MenuType.EDIT_LOADOUT]._selectionIndex = save_dropdown;
-                      RenderMenu();
-                    });
-                  }                // Update UI
+                    GenericMenu(
+                      new string[]
+                      {
+                      string.Format(format_editLoadout, typ)
+                      },
+                      "ok",
+                      MenuType.EDIT_LOADOUT,
+                      null,
+                      true,
+                      (MenuComponent component1) =>
+                      {
+                        s_menus[MenuType.EDIT_LOADOUT]._selectionIndex = save_selection;
+                        SendInput(Input.SPACE);
+                        SendInput(Input.SPACE);
+                        s_menus[MenuType.EDIT_LOADOUT]._selectionIndex = save_dropdown;
+                        RenderMenu();
+                      });
+                  }
+
+                  // Update UI
                   foreach (var profile in GameScript.PlayerProfile.s_Profiles)
                     profile.UpdateIcons();
                 });
+
                 // Check if item is unlocked
                 if (item0 == GameScript.ItemManager.Items.NONE)
                   actions_onCreated.Add((MenuComponent component0) => { });
@@ -5035,6 +5040,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
                     actions_onCreated.Add((MenuComponent component0) => { component0._obscured = true; });
                 }
               }
+
               // Update dropdown data
               component.SetDropdownData("=== " + string.Format(loadout_format, "item", "tags", "point value") + "\n\n", selections, actions, selection_match, actions_onCreated);
             });
@@ -5331,6 +5337,26 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
                 if (Shop._LoadoutDisplayMode == 0 && !Shop.Unlocked(unlock)) continue;
               }
 
+              //
+              void HandlePerkRemoved(Shop.Perk.PerkType perkType)
+              {
+                switch (perkType)
+                {
+                  case Shop.Perk.PerkType.MARTIAL_ARTIST:
+                    var equipment = CurrentLoadout()._Equipment;
+                    if (equipment._ItemLeft0 == GameScript.ItemManager.Items.FIST)
+                      equipment._ItemLeft0 = GameScript.ItemManager.Items.NONE;
+                    if (equipment._ItemLeft1 == GameScript.ItemManager.Items.FIST)
+                      equipment._ItemLeft1 = GameScript.ItemManager.Items.NONE;
+                    if (equipment._ItemRight0 == GameScript.ItemManager.Items.FIST)
+                      equipment._ItemRight0 = GameScript.ItemManager.Items.NONE;
+                    if (equipment._ItemRight1 == GameScript.ItemManager.Items.FIST)
+                      equipment._ItemRight1 = GameScript.ItemManager.Items.NONE;
+                    break;
+                }
+              }
+
+              //
               var per_val = GameScript.ItemManager.GetPerkValue(perk0);
               var use_color = per_val > CurrentLoadout()._available_points ? "red" : "white";
               var use_color2 = use_color == "white" ? "white" : _COLOR_GRAY;
@@ -5344,11 +5370,20 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
 
                 // Check for none selection
                 if (perk_selected == Shop.Perk.PerkType.NONE)
+                {
+                  foreach (var perk in CurrentLoadout()._Equipment._Perks)
+                    HandlePerkRemoved(perk);
                   CurrentLoadout()._Equipment._Perks = new List<Shop.Perk.PerkType>();
+                }
 
                 // Check for selected already
                 else if (perks.Contains(perk_selected))
+                {
                   perks.Remove(perk_selected);
+
+                  // Special cases
+                  HandlePerkRemoved(perk_selected);
+                }
 
                 // Check for max perks
                 else if (perks.Count == 4)
@@ -5434,7 +5469,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
             if (PlayerScript.s_Players != null)
               foreach (var player in PlayerScript.s_Players)
               {
-                player.EquipLoadout(CurrentLoadout()._id);
+                player.EquipLoadout(CurrentLoadout()._Id);
               }
 
             var has_forced_load = leveldata.Contains("!");
@@ -5479,18 +5514,12 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
         m.AddBackButton(MenuType.SELECT_LOADOUT)
           .AddEvent((MenuComponent component) =>
           {
-            for (var i = 0; i < CurrentLoadout()._id; i++)
+            for (var i = 0; i < CurrentLoadout()._Id; i++)
               SendInput(Input.DOWN);
             RenderMenu();
 
-            // Loop through players
-            if (PlayerScript.s_Players != null)
-              foreach (var player in PlayerScript.s_Players)
-              {
-                if (player == null || player._Ragdoll == null || player._Ragdoll._IsDead) continue;
-                if (player._Profile._LoadoutIndex == CurrentLoadout()._id)
-                  player.SetNewLoadout();
-              }
+            //
+            PlayerScript.CheckSetNewLoadouts(CurrentLoadout()._Id);
           });
       s_menus[MenuType.EDIT_LOADOUT]._onDropdownRemoved += () =>
       {
@@ -5612,7 +5641,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
           });
       }
 
-      else if (GameScript.s_GameMode != GameScript.GameModes.SURVIVAL && GameScript.s_GameMode != GameScript.GameModes.VERSUS)
+      else if (GameScript.s_GameMode != GameScript.GameModes.ZOMBIE && GameScript.s_GameMode != GameScript.GameModes.PARTY)
       {
         // Switch to store
         mPause.AddComponent("shop\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
@@ -5653,7 +5682,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
           });
       }
 
-      if ((!GameScript.s_EditorTesting || (GameScript.s_EditorTesting && !GameScript.s_EditorEnabled)) && GameScript.s_GameMode != GameScript.GameModes.VERSUS)
+      if ((!GameScript.s_EditorTesting || (GameScript.s_EditorTesting && !GameScript.s_EditorEnabled)) && GameScript.s_GameMode != GameScript.GameModes.PARTY)
         // Restart the map
         mPause.AddComponent("restart\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
           .AddEvent((MenuComponent component) =>
@@ -5700,7 +5729,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
           }
         });
 
-      if (!GameScript.IsSurvival() && GameScript.s_GameMode != GameScript.GameModes.VERSUS)
+      if (!GameScript.IsSurvival() && GameScript.s_GameMode != GameScript.GameModes.PARTY)
       {
         mPause.AddComponent("extras*\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE);
         if (Shop.Unlocked(Shop.Unlocks.MODE_EXTRAS))
@@ -5772,7 +5801,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
             .AddEvent(EventType.ON_RENDER, CommonEvents._OnRender_XSelector);
       }
 
-      else if (GameScript.s_GameMode == GameScript.GameModes.VERSUS)
+      else if (GameScript.s_GameMode == GameScript.GameModes.PARTY)
       {
         // Switch to versus mode menu
         mPause
@@ -5817,8 +5846,8 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
 
       // Add pause menu stats (?)
       var format_stats = "=<color={0}>{1,-15}</color>{2,-11}{3,-11}{4,-11}{5,-11}\n";
-      mPause.AddComponent((GameScript.s_GameMode == GameScript.GameModes.SURVIVAL ? "\n" : "") + $"\n\n<color={_COLOR_GRAY}>current session stats</color>\n")
-        .AddComponent(string.Format(format_stats, "white", "===", "kills", "deaths", Settings._NumberPlayers > 1 ? "teamkills" : "", GameScript.s_GameMode == GameScript.GameModes.SURVIVAL ? "points" : "") + "\n");      // Gather player stats
+      mPause.AddComponent((GameScript.s_GameMode == GameScript.GameModes.ZOMBIE ? "\n" : "") + $"\n\n<color={_COLOR_GRAY}>current session stats</color>\n")
+        .AddComponent(string.Format(format_stats, "white", "===", "kills", "deaths", Settings._NumberPlayers > 1 ? "teamkills" : "", GameScript.s_GameMode == GameScript.GameModes.ZOMBIE ? "points" : "") + "\n");      // Gather player stats
       for (var i = 0; i < 4; i++)
       {
         if (i >= Settings._NumberPlayers)
@@ -5827,7 +5856,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
           continue;
         }
         var stat = Stats._Stats[i];
-        mPause.AddComponent(string.Format(format_stats, GameScript.PlayerProfile.s_Profiles[i].GetColorName(), $"P{i + 1}/", $"{stat._kills}", $"{stat._deaths}", Settings._NumberPlayers > 1 ? $"{stat._teamkills}" : "", GameScript.s_GameMode == GameScript.GameModes.SURVIVAL ? $"{stat._points}" : ""));
+        mPause.AddComponent(string.Format(format_stats, GameScript.PlayerProfile.s_Profiles[i].GetColorName(), $"P{i + 1}/", $"{stat._kills}", $"{stat._deaths}", Settings._NumberPlayers > 1 ? $"{stat._teamkills}" : "", GameScript.s_GameMode == GameScript.GameModes.ZOMBIE ? $"{stat._points}" : ""));
       }
       ;
       // Set the onback function to be resume
@@ -5845,8 +5874,8 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
       // Tip
       ModifyMenu_TipComponents(MenuType.PAUSE, GameScript.s_GameMode switch
       {
-        GameScript.GameModes.SURVIVAL => 5,
-        GameScript.GameModes.VERSUS => 7,
+        GameScript.GameModes.ZOMBIE => 5,
+        GameScript.GameModes.PARTY => 7,
         _ => 3,
       });
       ModifyMenu_TipSwitch(MenuType.PAUSE);
@@ -5854,7 +5883,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
     SpawnMenu_Pause();
 
     // Classic mode menu
-    var menu_classic = new Menu(MenuType.GAMETYPE_CLASSIC)
+    var menu_classic = new Menu(MenuType.GAMETYPE_MISSION)
     {
 
     }
@@ -5879,7 +5908,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
 
 " },
     "ok",
-    MenuType.GAMETYPE_CLASSIC,
+    MenuType.GAMETYPE_MISSION,
     null,
     true
     );
@@ -5893,7 +5922,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
 
 " },
     "ok",
-    MenuType.GAMETYPE_CLASSIC,
+    MenuType.GAMETYPE_MISSION,
     null,
     true
     );
@@ -5919,7 +5948,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
 
 " },
             "ok",
-            MenuType.GAMETYPE_CLASSIC,
+            MenuType.GAMETYPE_MISSION,
             null,
             true
             );
@@ -5954,7 +5983,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
 
     // Tutorial
     menu_classic.AddComponent("briefing\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-      .AddEvent((MenuComponent component) => { CommonEvents._SwitchMenu(MenuType.HOWTOPLAY_CLASSIC); })
+      .AddEvent((MenuComponent component) => { CommonEvents._SwitchMenu(MenuType.HOWTOPLAY_MISSION); })
       .AddEvent(EventType.ON_RENDER, (MenuComponent c) =>
       {
         c._textColor = Shop.Unlocked(Shop.Unlocks.TUTORIAL_PART1) ? "white" : "yellow";
@@ -5975,11 +6004,11 @@ go to the <color=yellow>SHOP</color> to buy something~1
           s_CurrentMenu._selectionIndex = 1;
     };
     // Tip
-    ModifyMenu_TipComponents(MenuType.GAMETYPE_CLASSIC, 12);
-    ModifyMenu_TipSwitch(MenuType.GAMETYPE_CLASSIC);
+    ModifyMenu_TipComponents(MenuType.GAMETYPE_MISSION, 12);
+    ModifyMenu_TipSwitch(MenuType.GAMETYPE_MISSION);
 
     // Survival mode menu
-    new Menu(MenuType.GAMETYPE_SURVIVAL)
+    new Menu(MenuType.GAMETYPE_ZOMBIE)
     {
 
     }
@@ -5991,14 +6020,14 @@ go to the <color=yellow>SHOP</color> to buy something~1
 
     // Tutorial
     .AddComponent("briefing\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-      .AddEvent((MenuComponent component) => { CommonEvents._SwitchMenu(MenuType.HOWTOPLAY_SURVIVAL); })
+      .AddEvent((MenuComponent component) => { CommonEvents._SwitchMenu(MenuType.HOWTOPLAY_ZOMBIE); })
 
     // Back
     .AddBackButton(MenuType.MODE_SELECTION);
 
     // Tip
-    ModifyMenu_TipComponents(MenuType.GAMETYPE_SURVIVAL, 16);
-    ModifyMenu_TipSwitch(MenuType.GAMETYPE_SURVIVAL);
+    ModifyMenu_TipComponents(MenuType.GAMETYPE_ZOMBIE, 16);
+    ModifyMenu_TipSwitch(MenuType.GAMETYPE_ZOMBIE);
 
     // Options menu
     var format_options = "{0,-25}{1,28}\n";
@@ -6358,8 +6387,8 @@ go to the <color=yellow>SHOP</color> to buy something~1
           {
             0 => "0",
             1 => "1",
-            2 => "2 [DEFAULT]",
-            3 => "3",
+            2 => "2",
+            3 => "3 [DEFAULT]",
             4 => "4",
             5 => "5",
             6 => "6",
@@ -6392,7 +6421,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
           0 => "off",
           1 => "low",
           2 => "normal",
-          3 => "high"
+          _ => "high"
         };
         component.SetDisplayText(string.Format(format_options, "bloom:", selection_match));
 
@@ -6406,7 +6435,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
             0 => "high",
             1 => "normal [DEFAULT]",
             2 => "low",
-            3 => "off"
+            _ => "off"
           });
           actions.Add((MenuComponent component0) =>
           {
@@ -6432,7 +6461,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
         {
           0 => "off",
           1 => "low",
-          2 => "normal"
+          _ => "normal"
         };
         component.SetDisplayText(string.Format(format_options, "depth of field:", selection_match) + '\n');
 
@@ -6445,7 +6474,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
           {
             0 => "normal [DEFAULT]",
             1 => "low",
-            2 => "off",
+            _ => "off",
           });
           actions.Add((MenuComponent component0) =>
           {
@@ -7068,7 +7097,7 @@ www.reddit.com/u/quaterniusdev
     };
 
     // Classic how to play
-    new Menu(MenuType.HOWTOPLAY_CLASSIC)
+    new Menu(MenuType.HOWTOPLAY_MISSION)
     {
 
     }
@@ -7077,9 +7106,9 @@ www.reddit.com/u/quaterniusdev
 
 <color={_COLOR_GRAY}>overview</color>~1
 system requires you to:~1 <color={_COLOR_GRAY}>CLEAN</color> site and <color={_COLOR_GRAY}>RETRIEVE</color> data from each
-mission.~9 the faster missions are completed, the more <color=yellow>CREDITS ($$)</color>
-you will earn to spend at the <color={_COLOR_GRAY}>SHOP</color>.~9 assemble your loadouts
-in the <color={_COLOR_GRAY}>EDIT LOADOUT</color> menu.~9
+mission.~9 complete missions quickly to earn ranks and <color=yellow>CREDITS ($$)</color>
+to spend at the <color={_COLOR_GRAY}>SHOP</color>.~9 assemble your loadouts in the <color={_COLOR_GRAY}>EDIT LOADOUT</color>
+menu.~9
 
 allocating authorization level~1.~1.~1. <color=cyan>DEFINITELY SNEAKY BUT NOT SNEAKY [DSBNS]</color>:~9
 <color=cyan>D</color>ECEIVE~9
@@ -7096,10 +7125,18 @@ information~1.~1.~1. <color=yellow>quick deploy guide</color>:~9
 * <color=yellow>select</color> a mission to play in the <color={_COLOR_GRAY}>LEVEL SELECT</color> menu~9
 
 ")
-    .AddBackButton(MenuType.GAMETYPE_CLASSIC, "acknowledge");
+    .AddBackButton((MenuComponent c) =>
+    {
+      SwitchMenu(MenuType.GAMETYPE_MISSION);
+
+      // Achievement
+#if UNITY_STANDALONE
+      Achievements.UnlockAchievement(Achievements.Achievement.BRIEFING);
+#endif
+    }, "acknowledge");
 
     // Survival how to play
-    new Menu(MenuType.HOWTOPLAY_SURVIVAL)
+    new Menu(MenuType.HOWTOPLAY_ZOMBIE)
     {
 
     }
@@ -7126,7 +7163,7 @@ mode, see CONTROLS in the OPTIONS menu.~9
 * you have two weapon pairs;~1 meaning you can hold 4 weapons total.~9
 
 ")
-    .AddBackButton(MenuType.GAMETYPE_SURVIVAL, "acknowledge");
+    .AddBackButton(MenuType.GAMETYPE_ZOMBIE, "acknowledge");
 
     // Editor how to use
     new Menu(MenuType.HOWTOPLAY_EDITOR)
@@ -7139,14 +7176,14 @@ mode, see CONTROLS in the OPTIONS menu.~9
 mission generation access.~1.~1.~1: <color=yellow>GRANTED</color>~3
 
 <color={_COLOR_GRAY}>overview</color>~1
-with the level editor, you are able to make any levels you have seen in the
+with the mission editor, you are able to make any levels you have seen in the
 <color=yellow>MISSIONS</color> mode and more.~9 string together levels into level packs. edit per level
 options in the level pack editor such as: <color=yellow>level theme, order, and hard-set
 loadout</color>.~9 finally, publish or overwrite your own level packs, and download
 others' level packs on the <color=yellow>steam workshop</color>.~9
 
 <color={_COLOR_GRAY}>special controls</color>~4
-level editing controls are restricted to <color=red>mouse and keyboard</color>~9- all
+mission editing controls are restricted to <color=red>mouse and keyboard</color>~9- all
 keymappings are shown in the editor.~9 level testing will be done with
 a gampad if plugged in.~9
 
@@ -7158,7 +7195,7 @@ a gampad if plugged in.~9
     .AddBackButton(MenuType.EDITOR_MAIN, "acknowledge");
 
     // Versus how to play
-    new Menu(MenuType.HOWTOPLAY_VERSUS)
+    new Menu(MenuType.HOWTOPLAY_PARTY)
     {
 
     }
@@ -7233,7 +7270,7 @@ system will provide and configure all loadouts.~9
           }
         }
 
-        // Check for level editor
+        // Check for mission editor
         else if (GameScript.s_EditorTesting)
         {
           GameScript.s_EditorTesting = false;
@@ -7258,7 +7295,7 @@ system will provide and configure all loadouts.~9
         }
 
         // Versus mode
-        else if (GameScript.s_GameMode == GameScript.GameModes.VERSUS)
+        else if (GameScript.s_GameMode == GameScript.GameModes.PARTY)
         {
           var switchMenu = s_menus[MenuType.PAUSE]._selectionIndex == 2 ? MenuType.VERSUS : MenuType.MAIN;
           CommonEvents._SwitchMenu(switchMenu);
@@ -7272,7 +7309,7 @@ system will provide and configure all loadouts.~9
         // Normal pause
         else
         {
-          var switchMenu = s_menus[MenuType.PAUSE]._selectionIndex == (GameScript.s_GameMode == GameScript.GameModes.CLASSIC ? 6 : 3) ? MenuType.LEVELS : MenuType.MAIN;
+          var switchMenu = s_menus[MenuType.PAUSE]._selectionIndex == (GameScript.s_GameMode == GameScript.GameModes.MISSIONS ? 6 : 3) ? MenuType.LEVELS : MenuType.MAIN;
           CommonEvents._SwitchMenu(switchMenu);
           s_InPause = false;
         }
@@ -7972,8 +8009,8 @@ about extras</color>
         }
         else
         {
-          s_menus[MenuType.GAMETYPE_CLASSIC]._selectionIndex = 3;
-          SwitchMenu(MenuType.GAMETYPE_CLASSIC);
+          s_menus[MenuType.GAMETYPE_MISSION]._selectionIndex = 3;
+          SwitchMenu(MenuType.GAMETYPE_MISSION);
         }
       })
       .AddEvent(EventType.ON_FOCUS, (MenuComponent c) =>
@@ -8065,7 +8102,7 @@ about extras</color>
         if (ControllerManager._NumberGamepads == 0)
           _Confirmed_SwitchToKeyboard = true;
 
-        if (GameScript.s_GameMode == GameScript.GameModes.VERSUS)
+        if (GameScript.s_GameMode == GameScript.GameModes.PARTY)
         {
           CommonEvents._SwitchMenu(MenuType.VERSUS);
           return;
@@ -8331,7 +8368,7 @@ about extras</color>
     //
     bool isHowToPlayMenu()
     {
-      if (s_currentMenuType == MenuType.HOWTOPLAY_CLASSIC || s_currentMenuType == MenuType.HOWTOPLAY_EDITOR || s_currentMenuType == MenuType.HOWTOPLAY_SURVIVAL || s_currentMenuType == MenuType.HOWTOPLAY_VERSUS)
+      if (s_currentMenuType == MenuType.HOWTOPLAY_MISSION || s_currentMenuType == MenuType.HOWTOPLAY_EDITOR || s_currentMenuType == MenuType.HOWTOPLAY_ZOMBIE || s_currentMenuType == MenuType.HOWTOPLAY_PARTY)
       {
         if (s_TextBuffer.Length > 0)
         {
@@ -8628,9 +8665,9 @@ about extras</color>
     // Set menu prompt
     if (Settings._NumberPlayers == 0)
       s_menus[MenuType.CONTROLLERS_CHANGED]._menuComponents[1].SetDisplayText("looks like your controller got unplugged! plug it back in to resume or\npress 'ok' to play with keyboard instead\n\n");
-    else if (GameScript.s_GameMode == GameScript.GameModes.SURVIVAL)
+    else if (GameScript.s_GameMode == GameScript.GameModes.ZOMBIE)
       s_menus[MenuType.CONTROLLERS_CHANGED]._menuComponents[1].SetDisplayText("looks like a controller got unplugged! plug it back in to resume or\npress 'ok' to resume the game (you must manually restart in ZOMBIE mode)\n\n");
-    else if (GameScript.s_GameMode == GameScript.GameModes.VERSUS)
+    else if (GameScript.s_GameMode == GameScript.GameModes.PARTY)
     {
       // Check if still enough players
       s_menus[MenuType.CONTROLLERS_CHANGED]._menuComponents[1].SetDisplayText("looks like a controller got unplugged! plug it back in to resume or\npress 'ok' to escape to PARTY menu\n\n");

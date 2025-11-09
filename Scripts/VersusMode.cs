@@ -1,6 +1,5 @@
 using System.Collections;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using UnityEngine;
 
 // Holds functions for versus mode
@@ -814,7 +813,7 @@ public static class VersusMode
 
   static UtilityScript.UtilityType GetRandomUtility()
   {
-    return Random.Range(0, 12) switch
+    return Random.Range(0, 13) switch
     {
       1 => UtilityScript.UtilityType.GRENADE_IMPACT,
       2 => UtilityScript.UtilityType.GRENADE_STUN,
@@ -830,6 +829,8 @@ public static class VersusMode
       9 => UtilityScript.UtilityType.C4,
       10 => UtilityScript.UtilityType.INVISIBILITY,
       11 => UtilityScript.UtilityType.TEMP_SHIELD,
+
+      12 => UtilityScript.UtilityType.BEAR_TRAP,
 
       _ => UtilityScript.UtilityType.GRENADE
     };

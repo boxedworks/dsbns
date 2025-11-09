@@ -154,7 +154,7 @@ public static class ControllerManager
     {
       if (context.phase != InputActionPhase.Started) return;
 
-      // Level editor
+      // mission editor
       if (GameScript.s_EditorTesting)
       {
 
@@ -192,10 +192,21 @@ public static class ControllerManager
       if (GameScript.s_EditorEnabled) return;
       if (Menu.s_InMenus && Menu.s_InPause)
       {
+        // Check loadout reset
+        var loadoutReset = Menu.s_CurrentMenu._Type == Menu.MenuType.EDIT_LOADOUT;
+        if (loadoutReset)
+        {
+          var loadoutIndex = GameScript.ItemManager.Loadout._CurrentLoadout._Id;
+          PlayerScript.CheckSetNewLoadouts(loadoutIndex);
+        }
+
+        //
         Menu.s_InMenus = false;
         Menu.s_Menu.gameObject.SetActive(false);
         Menu.s_InPause = false;
         GameScript.TogglePause();
+
+
       }
       else if (!Menu.s_InMenus)
         GameScript.TogglePause();
@@ -269,7 +280,7 @@ public static class ControllerManager
     void Input_action.IPlayerActions.OnReloadMap(InputAction.CallbackContext context)
     {
       if (context.phase != InputActionPhase.Started) return;
-      if (GameScript.s_GameMode == GameScript.GameModes.VERSUS) return;
+      if (GameScript.s_GameMode == GameScript.GameModes.PARTY) return;
       if (!Menu.s_InMenus)
       {
         var p = GetPlayer(context);

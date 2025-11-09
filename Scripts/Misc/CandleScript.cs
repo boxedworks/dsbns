@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 public class CandleScript : MonoBehaviour
@@ -41,11 +40,11 @@ public class CandleScript : MonoBehaviour
 
     _light = transform.GetChild(2).GetComponent<Light>();
 
-    if (GameScript.s_GameMode != GameScript.GameModes.SURVIVAL)
+    if (GameScript.s_GameMode != GameScript.GameModes.ZOMBIE)
       _enabled = true;
 
-    _NormalizedEnable = GameScript.s_GameMode != GameScript.GameModes.SURVIVAL ? 1f : 0f;
-    if (GameScript.s_GameMode == GameScript.GameModes.SURVIVAL)
+    _NormalizedEnable = GameScript.s_GameMode != GameScript.GameModes.ZOMBIE ? 1f : 0f;
+    if (GameScript.s_GameMode == GameScript.GameModes.ZOMBIE)
       _light.range = 8.3f;
   }
 

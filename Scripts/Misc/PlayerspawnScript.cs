@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 using UnityEngine;
 
@@ -81,7 +80,7 @@ public class PlayerspawnScript : MonoBehaviour
     // Spawn them based on the this transform
     var spawnPosition = atPosition;
     spawnPosition += new Vector3(Random.Range(-1f, 1f) * 0.01f, 0f, Random.Range(-1f, 1f) * 0.01f);
-    if ((GameScript.s_GameMode == GameScript.GameModes.VERSUS && !VersusMode.s_Settings._FreeForAll) || (GameScript.s_GameMode == GameScript.GameModes.SURVIVAL))
+    if ((GameScript.s_GameMode == GameScript.GameModes.PARTY && !VersusMode.s_Settings._FreeForAll) || (GameScript.s_GameMode == GameScript.GameModes.ZOMBIE))
     {
       var numSpawns = _PlayerSpawns.Count;
       var numPlayers = Settings._NumberPlayers;

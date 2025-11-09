@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 using System.IO;
 
@@ -216,7 +215,7 @@ public class Levels : MonoBehaviour
 
   public static bool LevelCompleted(int levelIter)
   {
-    if(_CurrentLevelCollectionIndex > 1) return false;
+    if (_CurrentLevelCollectionIndex > 1) return false;
     return LevelModule.LevelData[_CurrentLevelCollectionIndex].Data[levelIter].Completed;
   }
 

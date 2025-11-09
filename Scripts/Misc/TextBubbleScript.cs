@@ -1,8 +1,8 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
-public class TextBubbleScript : MonoBehaviour {
+public class TextBubbleScript : MonoBehaviour
+{
 
   public TMPro.TextMeshPro _textMesh;
   float _timeStart;
@@ -11,7 +11,7 @@ public class TextBubbleScript : MonoBehaviour {
 
   static List<TextBubbleScript> _bubbles;
 
-	public TMPro.TextMeshPro Init(string text, Transform source, Color color)
+  public TMPro.TextMeshPro Init(string text, Transform source, Color color)
   {
     if (_bubbles == null) _bubbles = new List<TextBubbleScript>();
     _bubbles.Add(this);
@@ -28,10 +28,11 @@ public class TextBubbleScript : MonoBehaviour {
     return _textMesh;
   }
 
-	// Update is called once per frame
-	void Update () {
+  // Update is called once per frame
+  void Update()
+  {
     // Check for null source
-    if(_source == null)
+    if (_source == null)
     {
       Destroy(gameObject);
       return;
@@ -53,12 +54,12 @@ public class TextBubbleScript : MonoBehaviour {
       scale = Vector3.Lerp(Vector3.zero, new Vector3(1f, 1f, 1f), Easings.Interpolate(time / middle, Easings.Functions.BounceEaseInOut));
     else
       scale = Vector3.Lerp(new Vector3(1f, 1f, 1f), Vector3.zero, Easings.Interpolate((time - middle) / (length - middle), Easings.Functions.CircularEaseIn));
-    if(scale.x > 0f)
+    if (scale.x > 0f)
       transform.localScale = scale;
     // Destroy after 2 seconds
     if (time > length)
       Destroy(gameObject);
-	}
+  }
 
   private void OnDestroy()
   {
@@ -68,7 +69,7 @@ public class TextBubbleScript : MonoBehaviour {
   public static void ToggleBubbles(bool toggle)
   {
     if (_bubbles == null) return;
-    foreach(TextBubbleScript t in _bubbles)
+    foreach (TextBubbleScript t in _bubbles)
       t._renderer.enabled = toggle;
   }
 }

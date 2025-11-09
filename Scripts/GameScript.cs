@@ -1,7 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
+
+using Random = UnityEngine.Random;
 
 public class GameScript : MonoBehaviour
 {
@@ -86,7 +87,7 @@ public class GameScript : MonoBehaviour
 
   public static void UpdateAmbientLight()
   {
-    RenderSettings.ambientLight = SettingsModule.Brightness switch
+    /*RenderSettings.ambientLight = SettingsModule.Brightness switch
     {
       1 => new Color(0.025f, 0.025f, 0.025f),
       2 => new Color(0.0549f, 0.0549f, 0.0549f),
@@ -99,17 +100,71 @@ public class GameScript : MonoBehaviour
       9 => new Color(0.65f, 0.65f, 0.65f),
 
       _ => Color.black
-    };
+    };*/
+
+    // Color adjustments
+    var profile_ = GameResources._Camera_Main.GetComponent<UnityEngine.Rendering.Volume>().profile;
+    UnityEngine.Rendering.Universal.ColorAdjustments colorAdj = null;
+    if (profile_.TryGet(out colorAdj))
+    {
+      colorAdj.postExposure.value = SettingsModule.Brightness switch
+      {
+        1 => -1.2f,
+        2 => -0.6f,
+        3 => 0f,
+        4 => 0.75f,
+        5 => 1.5f,
+        6 => 2.25f,
+        7 => 3f,
+        8 => 3.75f,
+        9 => 4.5f,
+
+        _ => -2f
+      };
+
+      UnityEngine.Rendering.Universal.Bloom bloom = null;
+      if (profile_.TryGet(out bloom))
+      {
+        bloom.scatter.value = SettingsModule.Brightness switch
+        {
+          4 => 0.35f,
+          5 => 0.1f,
+          6 => 0f,
+          7 => 0f,
+          8 => 0f,
+          9 => 0f,
+
+          _ => 0.5f
+        };
+      }
+
+      // Bullets
+      if (ItemScript._BulletPool != null)
+        foreach (var bullet in ItemScript._BulletPool)
+        {
+          bullet.SetLightIntensity(SettingsModule.Brightness switch
+          {
+            4 => 0.8f,
+            5 => 0.6f,
+            6 => 0.3f,
+            7 => 0.1f,
+            8 => 0f,
+            9 => 0f,
+
+            _ => 1f
+          });
+        }
+    }
   }
 
   public enum GameModes
   {
-    CLASSIC,
-    SURVIVAL,
+    MISSIONS,
+    ZOMBIE,
 
     CHALLENGE,
 
-    VERSUS
+    PARTY
   }
   public static GameModes s_GameMode;
 
@@ -179,7 +234,7 @@ public class GameScript : MonoBehaviour
     UpdateLevelVault();
 
     SteamManager.SteamMenus.Init();
-    //SteamManager.Achievements.Init();
+    //Achievements.Init();
 #if UNITY_STANDALONE
     if (s_UsingSteam)
       SteamManager.Workshop_GetUserItems(true);
@@ -277,10 +332,10 @@ public class GameScript : MonoBehaviour
     var numPlayers = Settings._NumberPlayers;
     var numTeams = VersusMode.GetNumberTeams();
 
-    if ((s_GameMode == GameModes.VERSUS && !VersusMode.s_Settings._FreeForAll ? numTeams : numPlayers) <= numSpawns || s_GameMode != GameModes.VERSUS || (s_GameMode == GameModes.VERSUS && VersusMode.s_Settings._FreeForAll))
+    if ((s_GameMode == GameModes.PARTY && !VersusMode.s_Settings._FreeForAll ? numTeams : numPlayers) <= numSpawns || s_GameMode != GameModes.PARTY || (s_GameMode == GameModes.PARTY && VersusMode.s_Settings._FreeForAll))
     {
       var spawnLocation = new int[numPlayers];
-      if (s_GameMode == GameModes.VERSUS && !VersusMode.s_Settings._FreeForAll && numPlayers > numSpawns)
+      if (s_GameMode == GameModes.PARTY && !VersusMode.s_Settings._FreeForAll && numPlayers > numSpawns)
       {
         var teamListSpawn = new Dictionary<int, int>();
         var spawnList_ = new List<int>(spawnList);
@@ -374,7 +429,7 @@ public class GameScript : MonoBehaviour
               Settings.SettingsSaveData.CameraZoomType.AUTO => 0.8f,
               Settings.SettingsSaveData.CameraZoomType.CLOSE => 0.8f,
               Settings.SettingsSaveData.CameraZoomType.NORMAL => -0.2f,
-              Settings.SettingsSaveData.CameraZoomType.FAR => -1.2f
+              _ => -1.2f
             }) : Vector3.zero);
             pos.y = ypos;
             TutorialInformation._TutorialArrow.position = pos;
@@ -388,7 +443,7 @@ public class GameScript : MonoBehaviour
               Settings.SettingsSaveData.CameraZoomType.AUTO => -0.8f,
               Settings.SettingsSaveData.CameraZoomType.CLOSE => -0.8f,
               Settings.SettingsSaveData.CameraZoomType.NORMAL => 0.2f,
-              Settings.SettingsSaveData.CameraZoomType.FAR => 1.2f
+              _ => 1.2f
             }) : Vector3.zero);
             pos.y = ypos;
             TutorialInformation._TutorialArrow.position += (pos - TutorialInformation._TutorialArrow.position) * 0.05f;
@@ -939,7 +994,7 @@ public class GameScript : MonoBehaviour
         {
 
 #if UNITY_STANDALONE
-          SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.SURVIVAL_MAP0_10);
+          Achievements.UnlockAchievement(Achievements.Achievement.SURVIVAL_MAP0_10);
 #endif
 
           if (highestWave < 10)
@@ -964,7 +1019,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         else if (_Wave == 20)
         {
 #if UNITY_STANDALONE
-          SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.SURVIVAL_MAP0_20);
+          Achievements.UnlockAchievement(Achievements.Achievement.SURVIVAL_MAP0_20);
 #endif
         }
       }
@@ -975,13 +1030,13 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         if (_Wave == 10)
         {
 #if UNITY_STANDALONE
-          SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.SURVIVAL_MAP1_10);
+          Achievements.UnlockAchievement(Achievements.Achievement.SURVIVAL_MAP1_10);
 #endif
         }
         else if (_Wave == 20)
         {
 #if UNITY_STANDALONE
-          SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.SURVIVAL_MAP1_20);
+          Achievements.UnlockAchievement(Achievements.Achievement.SURVIVAL_MAP1_20);
 #endif
         }
       }
@@ -1502,7 +1557,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
 
   // Update is called once per frame
   public static bool s_Backrooms;
-  public static bool s_InteractableObjects { get { return s_GameMode == GameModes.CLASSIC || s_GameMode == GameModes.VERSUS; } }
+  public static bool s_InteractableObjects { get { return s_GameMode == GameModes.MISSIONS || s_GameMode == GameModes.PARTY; } }
   public Light _GlobalLight;
   void Update()
   {
@@ -1717,7 +1772,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         }
 
         // Check normal mode
-        if (!IsSurvival() && !s_EditorEnabled && s_GameMode != GameModes.VERSUS)
+        if (!IsSurvival() && !s_EditorEnabled && s_GameMode != GameModes.PARTY)
         {
           // Check endgame
           var timeToEnd = 2.2f;
@@ -1828,7 +1883,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
           }
 
           // Next / previous level
-          if (!s_EditorEnabled && !IsSurvival() && (s_GameMode != GameModes.VERSUS || Debug.isDebugBuild))
+          if (!s_EditorEnabled && !IsSurvival() && (s_GameMode != GameModes.PARTY || Debug.isDebugBuild))
           {
             if (!TileManager._LoadingMap)
             {
@@ -1998,8 +2053,8 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       set
       {
         if (Levels._HardcodedLoadout != null && !s_EditorTesting) return;
-        if (s_GameMode != GameModes.CLASSIC) return;
-        if (_Player?._Ragdoll?._grappling ?? false) return;
+        if (s_GameMode != GameModes.MISSIONS) return;
+        if (_Player?._Ragdoll?._IsGrappling ?? false) return;
 
         // Locate valid loadout to equip
         var iter = ItemManager.Loadout._Loadouts.Length;
@@ -2033,7 +2088,11 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         {
           Menu.PlayNoise(Menu.Noise.LOADOUT_SWAP);
           if (Menu.s_CurrentMenu._Type == Menu.MenuType.SELECT_LOADOUT)
+          {
             Menu.TriggerActionSwapTo(Menu.MenuType.SELECT_LOADOUT);
+            Menu._CanRender = false;
+            Menu.RenderMenu();
+          }
         }
       }
     }
@@ -2052,10 +2111,10 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         if (Levels._HardcodedLoadout != null && !GameScript.s_EditorTesting) return Levels._HardcodedLoadout;
 
         // VERSUS mode
-        if (s_GameMode == GameModes.VERSUS) return VersusMode.s_PlayerLoadouts;
+        if (s_GameMode == GameModes.PARTY) return VersusMode.s_PlayerLoadouts;
 
         // SURVIVAL mode
-        if (s_GameMode == GameModes.SURVIVAL && SurvivalMode.s_PlayerLoadouts != null) return SurvivalMode.s_PlayerLoadouts[_Id];
+        if (s_GameMode == GameModes.ZOMBIE && SurvivalMode.s_PlayerLoadouts != null) return SurvivalMode.s_PlayerLoadouts[_Id];
 
         // CLASSIC mode
         if (_LoadoutIndex > ItemManager.Loadout._Loadouts.Length)
@@ -2589,6 +2648,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         // Create ammo meshes
         _ammo = new Transform[_ammoCount];
         Vector3 localScale = new Vector3(0.8f / _ammoCount * (_ammoCount >= 3 ? (_ammoCount >= 12 ? 0.5f : 0.7f) : 0.82f), 0.18f, 0.001f);
+
         // Hide ammo if in-game
         var ammo = _ammoCount;
         if (item_data.Item1 != null)
@@ -2597,11 +2657,21 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
           var isUtility = item_data.Item2;
           var side = item_data.Item3;
           if (!isUtility)
-            if (side == ActiveRagdoll.Side.LEFT) ammo = player._Ragdoll._ItemL != null ? player._Ragdoll._ItemL.Clip() : ammo;
-            else ammo = player._Ragdoll._ItemR != null ? player._Ragdoll._ItemR.Clip() : ammo;
+          {
+            if (side == ActiveRagdoll.Side.LEFT)
+              ammo = player._Ragdoll._ItemL != null ? player._Ragdoll._ItemL.Clip() : ammo;
+            else
+              ammo = player._Ragdoll._ItemR != null ? player._Ragdoll._ItemR.Clip() : ammo;
+          }
+          else if (side == ActiveRagdoll.Side.LEFT)
+            ammo = player._UtilitiesLeft != null ? player._UtilitiesLeft.Count : ammo;
           else
-            if (side == ActiveRagdoll.Side.LEFT) ammo = player._UtilitiesLeft != null ? player._UtilitiesLeft.Count : ammo;
-          else ammo = player._UtilitiesRight != null ? player._UtilitiesRight.Count : ammo;
+          {
+            if (player._HasTwin)
+              ammo = player._ConnectedTwin._UtilitiesRight != null ? player._ConnectedTwin._UtilitiesRight.Count : ammo;
+            else
+              ammo = player._UtilitiesRight != null ? player._UtilitiesRight.Count : ammo;
+          }
         }
         if (ammo != _ammoCount) _ammoVisible = ammo;
 
@@ -2731,8 +2801,8 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     {
       var bg = _ui.GetChild(1).transform;
 
-      _VersusUI.gameObject.SetActive(s_GameMode == GameModes.VERSUS);
-      if (s_GameMode == GameModes.VERSUS)
+      _VersusUI.gameObject.SetActive(s_GameMode == GameModes.PARTY);
+      if (s_GameMode == GameModes.PARTY)
       {
 
         var xpos = 0.701f;
@@ -2772,7 +2842,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     {
       var bg = _ui.GetChild(1).transform;
 
-      if (s_GameMode == GameModes.CLASSIC && SettingsModule.ShowLoadoutIndexes)
+      if (s_GameMode == GameModes.MISSIONS && SettingsModule.ShowLoadoutIndexes)
       {
         _loadoutIndexText.enabled = true;
         _loadoutIndexText.text = $"{_LoadoutIndex + 1}";
@@ -2832,6 +2902,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         UpdateLoadoutIndex();
         return;
       }
+
       var equipmentIter = 0;
       if (_ItemLeft != ItemManager.Items.NONE)
       {
@@ -2843,6 +2914,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         _weaponIcons[equipmentIter] = new ItemIcon();
         _weaponIcons[equipmentIter].Init(LoadIcon(_ItemRight.ToString(), equipmentIter), equipmentIter++, System.Tuple.Create(_Player, false, ActiveRagdoll.Side.RIGHT), false);
       }
+
       // Load utilities
       var loaded_utils = new List<System.Tuple<Transform, int, int, ActiveRagdoll.Side>>();
       if (_Equipment._UtilitiesLeft.Length > 0)
@@ -2860,7 +2932,6 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         _weaponIcons[util.Item3] = new ItemIcon();
         _weaponIcons[util.Item3].Init(System.Tuple.Create(util.Item1, util.Item2), util.Item3, System.Tuple.Create(_Player, true, util.Item4), true);
       }
-      loaded_utils = null;
 
       // Local parsing function
       System.Tuple<Transform, int> LoadIcon(string name, int iter)
@@ -2879,13 +2950,13 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         transform.localEulerAngles = new Vector3(0f, 90f, 0f);
         switch (transform.name)
         {
-          case ("KNIFE"):
-          case ("ROCKET_FIST"):
+          case "KNIFE":
+          case "ROCKET_FIST":
             transform.localPosition += new Vector3(-0.11f, -0.02f, 0f);
             transform.localScale = new Vector3(0.13f, 0.13f, 0.13f);
             transform.localEulerAngles += new Vector3(6.8f, 0f, 0f);
             break;
-          case ("AXE"):
+          case "AXE":
             transform.localPosition += new Vector3(-0.11f, 0.03f, 0f);
             transform.localScale = new Vector3(0.1f, 0.12f, 0.1f);
             transform.localEulerAngles += new Vector3(90f, 0f, 0f);
@@ -2895,12 +2966,12 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
             transform.localScale = new Vector3(0.17f, 0.17f, 0.17f);
             transform.localEulerAngles = new Vector3(75f, 90f, 0f);
             break;
-          case ("FRYING_PAN"):
+          case "FRYING_PAN":
             transform.localPosition += new Vector3(-0.2f, 0.03f, 0f);
             transform.localScale = new Vector3(0.13f, 0.17f, 0.13f);
             transform.localEulerAngles = new Vector3(0f, 0f, 270f);
             break;
-          case ("BAT"):
+          case "BAT":
             transform.localPosition += new Vector3(-0.15f, 0f, 0f);
             transform.localScale = new Vector3(0.11f, 0.12f, 0.11f);
             transform.localEulerAngles += new Vector3(81f, 0f, 0f);
@@ -2930,55 +3001,55 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
             transform.localPosition += new Vector3(-0.19f, 0.08f, 0f);
             transform.localScale = new Vector3(0.14f, 0.14f, 0.14f);
             break;
-          case ("REVOLVER"):
+          case "REVOLVER":
             transform.localPosition += new Vector3(-0.22f, -0.01f, 0f);
             transform.localScale = new Vector3(0.13f, 0.13f, 0.13f);
             break;
-          case ("SHOTGUN_DOUBLE"):
+          case "SHOTGUN_DOUBLE":
             transform.localPosition += new Vector3(0.08f, 0.04f, 0f);
             transform.localScale = new Vector3(0.16f, 0.16f, 0.16f);
             break;
-          case ("SHOTGUN_PUMP"):
+          case "SHOTGUN_PUMP":
             transform.localPosition += new Vector3(0f, 0.02f, 0f);
             transform.localScale = new Vector3(0.1f, 0.09f, 0.1f);
             break;
-          case ("SHOTGUN_BURST"):
+          case "SHOTGUN_BURST":
             transform.localPosition += new Vector3(0.01f, 0f, 0f);
             transform.localScale = new Vector3(0.11f, 0.1f, 0.13f);
             break;
-          case ("UZI"):
+          case "UZI":
             transform.localPosition += new Vector3(-0.16f, 0.07f, 0f);
             transform.localScale = new Vector3(0.14f, 0.14f, 0.14f);
             break;
-          case ("AK47"):
-          case ("FLAMETHROWER"):
+          case "AK47":
+          case "FLAMETHROWER":
             transform.localPosition += new Vector3(-0.11f, 0.03f, 0f);
             transform.localScale = new Vector3(0.09f, 0.09f, 0.09f);
             break;
-          case ("M16"):
+          case "M16":
             transform.localPosition += new Vector3(-0.14f, 0.03f, 0f);
             transform.localScale = new Vector3(0.09f, 0.11f, 0.08f);
             break;
-          case ("DMR"):
-          case ("RIFLE"):
-          case ("RIFLE_LEVER"):
+          case "DMR":
+          case "RIFLE":
+          case "RIFLE_LEVER":
             transform.localPosition += new Vector3(-0.14f, 0.03f, 0f);
             transform.localScale = new Vector3(0.09f, 0.11f, 0.08f);
             break;
-          case ("CROSSBOW"):
+          case "CROSSBOW":
             transform.localPosition += new Vector3(-0.35f, -0.07f, 0f);
             transform.localScale = new Vector3(0.08f, 0.08f, 0.08f);
             transform.localEulerAngles = new Vector3(-30f, 90f, 90f);
             break;
-          case ("GRENADE_LAUNCHER"):
+          case "GRENADE_LAUNCHER":
             transform.localPosition += new Vector3(-0.21f, 0.05f, 0f);
             transform.localScale = new Vector3(0.11f, 0.11f, 0.11f);
             break;
-          case ("MORTAR_STRIKE"):
+          case "MORTAR_STRIKE":
             transform.localPosition += new Vector3(-0.15f, 0.05f, 0f);
             transform.localScale = new Vector3(0.09f, 0.09f, 0.09f);
             break;
-          case ("SNIPER"):
+          case "SNIPER":
             transform.localPosition += new Vector3(-0.14f, 0.03f, 0f);
             transform.localScale = new Vector3(0.09f, 0.11f, 0.08f);
             break;
@@ -2999,50 +3070,49 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
             transform.localEulerAngles = new Vector3(0f, 180f, -16f);
             transform.localScale = new Vector3(0.8f, 0.8f, 0.2f);
             break;
-          case ("C4"):
+          case "C4":
             transform.localPosition += new Vector3(-0.17f, 0.0f, 0f);
             transform.localEulerAngles = new Vector3(0f, 90f, -90f);
             transform.localScale = new Vector3(0.8f, 0.8f, 0.8f);
             break;
-          case ("SHURIKEN"):
-          case ("SHURIKEN_BIG"):
+          case "BEAR_TRAP":
+            transform.localPosition += new Vector3(-0.17f, 0.0f, 0f);
+            transform.localEulerAngles = new Vector3(0f, 90f, -30f);
+            transform.localScale = new Vector3(0.4f, 0.4f, 0.4f);
+            break;
+          case "SHURIKEN":
+          case "SHURIKEN_BIG":
             transform.localPosition += new Vector3(-0.22f, 0.02f, 0f);
             transform.localEulerAngles = new Vector3(90f, 0f, 0f);
             transform.localScale = new Vector3(0.7f, 0.7f, 0.7f);
             break;
-          case ("KUNAI_EXPLOSIVE"):
-          case ("KUNAI_STICKY"):
+          case "KUNAI_EXPLOSIVE":
+          case "KUNAI_STICKY":
             transform.localPosition += new Vector3(-0.14f, -0.03f, 0f);
             transform.localEulerAngles = new Vector3(0f, 90f, 90f);
             transform.localScale = new Vector3(0.7f, 0.7f, 0.7f);
             break;
-          case ("STOP_WATCH"):
-          case ("INVISIBILITY"):
+          case "STOP_WATCH":
+          case "INVISIBILITY":
             transform.localPosition += new Vector3(-0.25f, 0f, 0f);
             transform.localEulerAngles = new Vector3(0f, 90f, -90f);
             transform.localScale = new Vector3(0.6f, 0.6f, 0.6f);
             break;
-          case ("STICKY_GUN"):
+          case "STICKY_GUN":
             transform.localPosition += new Vector3(-0.06f, 0.03f, 0f);
             transform.localScale = new Vector3(0.15f, 0.15f, 0.15f);
             break;
-
-          case ("GRENADE_STUN"):
-
+          case "GRENADE_STUN":
             transform.localPosition += new Vector3(-0.13f, -0.01f, 0f);
             transform.localEulerAngles = new Vector3(0f, 0f, -90f);
             transform.localScale = new Vector3(0.85f, 0.85f, 0.85f);
-
             break;
-
-          case ("TEMP_SHIELD"):
-
+          case "TEMP_SHIELD":
             transform.localPosition += new Vector3(-0.2f, 0.03f, 0f);
             transform.localEulerAngles = new Vector3(90f, 0f, 0f);
             transform.localScale = new Vector3(0.7f, 0.7f, 0.7f);
 
             break;
-
           default:
             Debug.LogWarning($"Unhandled positioning of Utility UI type: {name}");
 
@@ -3195,16 +3265,16 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       {
         get
         {
-          // Return level editor max points
+          // Return mission editor max points
           if (Levels._EditingLoadout)
             return Levels._LOADOUT_MAX_POINTS;
 
-          // Else, return CLASSIC mode shop points
+          // Else, return MISSION mode shop points
           return Shop._Max_Equipment_Points;
         }
       }
 
-      public int _id;
+      public int _Id;
       public int _available_points
       {
         get
@@ -3252,7 +3322,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
 
       public Loadout(int id)
       {
-        _id = id;
+        _Id = id;
 
         // Load saved equipment
         Load();
@@ -3290,7 +3360,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         var pairs = _two_weapon_pairs ? 1 : 0;
         savestring += $"two_pairs:{pairs}|";
 
-        LevelModule.SetLoadout(_id, savestring);
+        LevelModule.SetLoadout(_Id, savestring);
       }
 
       public void Load()
@@ -3299,7 +3369,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
 
         try
         {
-          var loadstring = LevelModule.GetLoadout(_id);
+          var loadstring = LevelModule.GetLoadout(_Id);
 
           if (loadstring.Trim().Length == 0) return;
           // Parse load string
@@ -3526,6 +3596,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         case UtilityScript.UtilityType.GRENADE_STUN:
         case UtilityScript.UtilityType.TACTICAL_BULLET:
         case UtilityScript.UtilityType.MIRROR:
+        case UtilityScript.UtilityType.BEAR_TRAP:
           return 1;
         case UtilityScript.UtilityType.GRENADE:
         case UtilityScript.UtilityType.GRENADE_IMPACT:
@@ -3618,11 +3689,11 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     {
       Time.timeScale = 1f;
       // Check player amount change
-      if (s_GameMode == GameModes.CLASSIC)
+      if (s_GameMode == GameModes.MISSIONS)
         if (PlayerScript.s_Players != null && Settings._NumberPlayers != PlayerScript.s_Players.Count) TileManager.ReloadMap();
       TileManager._Text_LevelNum.gameObject.SetActive(true);
       TileManager._Text_LevelTimer.gameObject.SetActive(true);
-      if (s_GameMode == GameModes.CLASSIC && !Levels._LevelPack_Playing && !s_EditorTesting)
+      if (s_GameMode == GameModes.MISSIONS && !Levels._LevelPack_Playing && !s_EditorTesting)
         TileManager._Text_LevelTimer_Best.gameObject.SetActive(true);
       TileManager._Text_GameOver.gameObject.SetActive(true);
       TileManager._Text_Money.gameObject.SetActive(true);
@@ -3661,7 +3732,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     // Check achievements
 #if UNITY_STANDALONE
     if (LevelModule.ExtraTime == 1 && Settings._Extras_CanUse)
-      SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.EXTRA_SUPERH);
+      Achievements.UnlockAchievement(Achievements.Achievement.EXTRA_SUPERH);
 #endif
   }
 
@@ -3741,7 +3812,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       return;
     }
 
-    // Check level editor levels
+    // Check mission editor levels
     if (s_EditorTesting)
     {
       ReloadMap();
@@ -3905,7 +3976,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       }
 
       // Check mode-specific unlocks
-      if (s_GameMode == GameModes.CLASSIC)
+      if (s_GameMode == GameModes.MISSIONS)
       {
         // Award shop point
         //Shop._AvailablePoints++;
@@ -3924,7 +3995,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         // Check for achievements
         if (Levels._CurrentLevelIndex == 0 && Settings._DIFFICULTY == 0)
         {
-          SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.LEVEL_0_COMPLETED);
+          Achievements.UnlockAchievement(Achievements.Achievement.LEVEL_0_COMPLETED);
         }
 #endif
       }
@@ -3938,7 +4009,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
 
         // Achievement
 #if UNITY_STANDALONE
-        SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.DIFFICULTY_1);
+        Achievements.UnlockAchievement(Achievements.Achievement.DIFFICULTY_1);
 #endif
 
         if (Settings._DifficultyUnlocked <= 0)
@@ -3956,7 +4027,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
 
         // Achievement
 #if UNITY_STANDALONE
-        SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.DIFFICULTY_2);
+        Achievements.UnlockAchievement(Achievements.Achievement.DIFFICULTY_2);
 #endif
 
         if (Settings._DifficultyUnlocked <= 1)
@@ -3964,7 +4035,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
 
           Settings._DifficultyUnlocked = 2;
 
-          Shop.s_UnlockString += $"- you have beaten the classic mode!\n- try out the survival mode or try to unlock the optional extra settings!";
+          Shop.s_UnlockString += $"- you have beaten MISSIONS mode!\n- try out ZOMBIE mode or unlock the optional EXTRA settings!";
           return true;
         }
       }
@@ -4130,7 +4201,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
 
   public static bool IsSurvival()
   {
-    return s_GameMode == GameModes.SURVIVAL;
+    return s_GameMode == GameModes.ZOMBIE;
   }
 
   // When called, the player can exit / complete the level
@@ -4151,7 +4222,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
   {
     s_ExitLight.transform.position = PlayerspawnScript._PlayerSpawns[0].transform.position + new Vector3(0f, 3f, 0f);
 
-    if (s_GameMode != GameModes.CLASSIC && s_GameMode != GameModes.CHALLENGE)
+    if (s_GameMode != GameModes.MISSIONS && s_GameMode != GameModes.CHALLENGE)
       s_ExitLightShow = false;
 
     else if (!PlayerScript._TimerStarted)

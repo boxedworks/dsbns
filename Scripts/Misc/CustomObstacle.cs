@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 public class CustomObstacle : MonoBehaviour
@@ -162,7 +161,8 @@ public class CustomObstacle : MonoBehaviour
       _BUYABLE_UTILITY_TIERS[1].Add(System.Tuple.Create(UtilityScript.UtilityType.C4, 40));
       _BUYABLE_UTILITY_TIERS[1].Add(System.Tuple.Create(UtilityScript.UtilityType.STOP_WATCH, 40));
       _BUYABLE_UTILITY_TIERS[1].Add(System.Tuple.Create(UtilityScript.UtilityType.MORTAR_STRIKE, 45));
-      _BUYABLE_UTILITY_TIERS[1].Add(System.Tuple.Create(UtilityScript.UtilityType.MOLOTOV, 65));
+      //_BUYABLE_UTILITY_TIERS[1].Add(System.Tuple.Create(UtilityScript.UtilityType.MOLOTOV, 65));
+      _BUYABLE_UTILITY_TIERS[1].Add(System.Tuple.Create(UtilityScript.UtilityType.BEAR_TRAP, 30));
     }
 
   }
@@ -485,7 +485,7 @@ public class CustomObstacle : MonoBehaviour
 
 #if UNITY_STANDALONE
         // Achievement
-        SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.SURVIVAL_BUY_ITEM);
+        Achievements.UnlockAchievement(Achievements.Achievement.SURVIVAL_BUY_ITEM);
 #endif
       }
       else if (use_type == InteractType.BUYUTILITY)
@@ -632,7 +632,7 @@ public class CustomObstacle : MonoBehaviour
 
 #if UNITY_STANDALONE
         // Achievement
-        SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.SURVIVAL_BUY_ITEM);
+        Achievements.UnlockAchievement(Achievements.Achievement.SURVIVAL_BUY_ITEM);
 #endif
       }
       else if (use_type == InteractType.BUYPERK)
@@ -664,8 +664,8 @@ public class CustomObstacle : MonoBehaviour
 
 #if UNITY_STANDALONE
         // Achievement
-        SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.SURVIVAL_BUY_ITEM);
-        SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.SURVIVAL_BUY_MOD);
+        Achievements.UnlockAchievement(Achievements.Achievement.SURVIVAL_BUY_ITEM);
+        Achievements.UnlockAchievement(Achievements.Achievement.SURVIVAL_BUY_MOD);
 #endif
       }
 

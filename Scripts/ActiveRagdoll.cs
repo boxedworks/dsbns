@@ -321,19 +321,18 @@ public class ActiveRagdoll
     var dt = _PlayerScript != null ? Time.unscaledDeltaTime : Time.deltaTime;
 
     // Update grabbed rd
-    if (_grapplee != null)
+    if (_IsGrappling)
     {
-      if (_grapplee._IsDead)
-      {
-        _grapplee = null;
-      }
+      if (_Grapplee._IsDead)
+        _Grapplee = null;
+
       else
       {
         // Get melee side
         var left_weapon = _ItemL != null && _ItemL.IsMelee();
 
-        _grapplee._Hip.position = _Hip.position + _Hip.transform.forward * 0.45f + _Hip.transform.right * 0.09f * (left_weapon ? -1f : 1f);
-        _grapplee._Hip.rotation = _Hip.rotation;
+        _Grapplee._Hip.position = _Hip.position + _Hip.transform.forward * 0.45f + _Hip.transform.right * 0.09f * (left_weapon ? -1f : 1f);
+        _Grapplee._Hip.rotation = _Hip.rotation;
       }
     }
 
@@ -387,7 +386,7 @@ public class ActiveRagdoll
         var force_apply = _ForceGlobal * Time.deltaTime * 10f;
 
         var agent = _IsPlayer ? _PlayerScript._agent : _EnemyScript._agent;
-        if (!_grappled)
+        if (!_IsGrappled)
           agent.Move(force_apply);
         _ForceGlobal -= force_apply;
       }
@@ -416,7 +415,7 @@ public class ActiveRagdoll
     }
 
     // If can't move, set movepos and distance to origin
-    if (!_CanMove || _grappled)
+    if (!_CanMove || _IsGrappled)
     {
       movePos = _Hip.position;
       _Distance = Vector3.zero;
@@ -432,7 +431,7 @@ public class ActiveRagdoll
       _movementIter2 = Mathf.PingPong(_movementIter * 2.8f, 1f);
 
       // Play footsteps  based on controller distance moved
-      if (!_IsRagdolled && !_grappled && ((save < 0.5f && _movementIter2 >= 0.5f) || (save > 0.5f && _movementIter2 <= 0.5f)))
+      if (!_IsRagdolled && !_IsGrappled && ((save < 0.5f && _movementIter2 >= 0.5f) || (save > 0.5f && _movementIter2 <= 0.5f)))
       {
         // If player, send footstep sound to enemies to check for detection
         if (_IsPlayer && _PlayerScript._CanDetect && _Distance.magnitude > 0.1f)
@@ -452,7 +451,7 @@ public class ActiveRagdoll
     if (_bloodFootprintTimer > 0f)
       _bloodFootprintTimer -= Time.deltaTime;
 
-    //
+    // Set rotation
     var posSave = _Hip.position;
     var rot = _Hip.rotation;
     var f = _Controller.rotation.eulerAngles.y;
@@ -463,14 +462,16 @@ public class ActiveRagdoll
     // Don't move to ragdoll if is not active
     if (Active())
     {
-      // Move / rotate hip (base)
-      _Hip.MovePosition(movePos);
-      if (_IsPlayer)
-      {
-        dt = Time.unscaledDeltaTime;
-      }
 
-      _Hip.MoveRotation(Quaternion.RotateTowards(_Hip.rotation, rot, dt * (Time.timeScale < 0.75f && _IsPlayer ? 4f : 14f) * _rotSpeed * Mathf.Abs(Quaternion.Angle(_Hip.rotation, rot))));
+      // Move / rotate hip (base)
+      if (!_IsGrappled)
+      {
+        _Hip.MovePosition(movePos);
+        if (_IsPlayer)
+          dt = Time.unscaledDeltaTime;
+
+        _Hip.MoveRotation(Quaternion.RotateTowards(_Hip.rotation, rot, dt * (Time.timeScale < 0.75f && _IsPlayer ? 4f : 14f) * _rotSpeed * Mathf.Abs(Quaternion.Angle(_Hip.rotation, rot))));
+      }
 
       // Use iter to move joints
       _movementIter += (_Distance.magnitude / 3f) * Time.deltaTime * 65f;
@@ -784,10 +785,7 @@ public class ActiveRagdoll
     var side_other = side == Side.LEFT ? Side.RIGHT : Side.LEFT;
 
     // Unequip if equipped already
-    if (side == Side.LEFT)
-      UnequipItem(Side.LEFT);
-    else
-      UnequipItem(Side.RIGHT);
+    UnequipItem(side);
     if (two_hands)
       UnequipItem(side_other);
 
@@ -950,12 +948,6 @@ public class ActiveRagdoll
   public void SwapItems(WeaponSwapData item_left, WeaponSwapData item_right, int index)
   {
     if (!CanSwapWeapons()) return;
-    if (_ItemL != null && _ItemL._twoHanded || _ItemR != null && _ItemR._twoHanded)
-    {
-      //DisplayText("two handed problems");
-      //return;
-    }
-    //_lastItemSwap = Time.time;
 
     var itemL_type = item_left.ItemType;
     var itemL_id = item_left.ItemId;
@@ -970,26 +962,23 @@ public class ActiveRagdoll
     // Equip items
     if (_IsPlayer && _PlayerScript._HasTwin && !_PlayerScript._IsOriginalTwin)
     {
-      if (_ItemR != null && !_ItemR._twoHanded)
-      {
-        AddArmJoint(Side.LEFT);
-        UnequipItem(Side.LEFT);
-      }
+      UnequipItem(Side.LEFT);
+      AddArmJoint(Side.LEFT);
     }
     else if (itemL_type != GameScript.ItemManager.Items.NONE)
       EquipItem(itemL_type, Side.LEFT, itemL_clip, itemL_useTime, itemL_id);
     else
     {
-      AddArmJoint(Side.LEFT);
       UnequipItem(Side.LEFT);
+      AddArmJoint(Side.LEFT);
     }
 
     if (_IsPlayer && _PlayerScript._IsOriginalTwin)
     {
-      if (_ItemR != null && !_ItemL._twoHanded)
+      if (_ItemL == null || !_ItemL._twoHanded)
       {
-        AddArmJoint(Side.RIGHT);
         UnequipItem(Side.RIGHT);
+        AddArmJoint(Side.RIGHT);
       }
     }
     else if (itemR_type != GameScript.ItemManager.Items.NONE)
@@ -998,8 +987,8 @@ public class ActiveRagdoll
     {
       if (_ItemL == null || !_ItemL._twoHanded)
       {
-        AddArmJoint(Side.RIGHT);
         UnequipItem(Side.RIGHT);
+        AddArmJoint(Side.RIGHT);
       }
     }
 
@@ -1262,7 +1251,7 @@ public class ActiveRagdoll
        startColor1 = mesh.sharedMaterials[1].color;
 
       SetLerpAmount(ref mesh, c, 1f, startColor0, startColor1);
-      _PlayerScript?.ChangeRingColor(GameScript.s_GameMode == GameScript.GameModes.VERSUS && !VersusMode.s_Settings._FreeForAll ? VersusMode.GetTeamColorFromPlayerId(_PlayerScript._Id) : c);
+      _PlayerScript?.ChangeRingColor(GameScript.s_GameMode == GameScript.GameModes.PARTY && !VersusMode.s_Settings._FreeForAll ? VersusMode.GetTeamColorFromPlayerId(_PlayerScript._Id) : c);
       return;
     }
     if (_color_Coroutine != null)
@@ -1433,9 +1422,9 @@ public class ActiveRagdoll
   }
 
   // Grab a ragdoll in front of
-  public bool _grappling { get { return _grapplee != null; } }
-  public bool _grappled;
-  public ActiveRagdoll _grappler, _grapplee;
+  public bool _IsGrappling { get { return _Grapplee != null; } }
+  public bool _IsGrappled;
+  public ActiveRagdoll _Grappler, _Grapplee;
   float _lastTryGrapple;
   float _kickTimer, _kickTimer_start;
   bool _kicking;
@@ -1443,13 +1432,13 @@ public class ActiveRagdoll
   {
 
     // Throw grappled ragdoll
-    if (_grapplee != null)
+    if (_IsGrappling)
     {
 
       // If not player, throw
       if (!gentle)
       {
-        _grapplee.TakeDamage(
+        _Grapplee.TakeDamage(
           new RagdollDamageSource()
           {
             Source = this,
@@ -1463,8 +1452,8 @@ public class ActiveRagdoll
             SpawnBlood = false,
             SpawnGiblets = false
           });
-        _grapplee._Hip.AddForce(_Controller.forward * (1000f + Random.value * 250f));
-        _grapplee._Hip.AddTorque(new Vector3(Random.value < 0.5f ? -1f : 1f, 0f, 0f) * 10000000f);
+        _Grapplee._Hip.AddForce(_Controller.forward * (1000f + Random.value * 250f));
+        _Grapplee._Hip.AddTorque(new Vector3(Random.value < 0.5f ? -1f : 1f, 0f, 0f) * 10000000f);
 
         PlaySound("Ragdoll/Neck_snap", 0.85f, 1.2f);
       }
@@ -1472,10 +1461,10 @@ public class ActiveRagdoll
       // Else, gently let go (?)
       else
       {
-        _grapplee._Controller.position = _grapplee._Hip.position;
-        _grapplee._Controller.rotation = _Controller.rotation;
+        _Grapplee._Controller.position = _Grapplee._Hip.position;
+        _Grapplee._Controller.rotation = _Controller.rotation;
 
-        var agent = _grapplee._IsPlayer ? (_grapplee._PlayerScript?._agent) : (_grapplee._EnemyScript?._agent);
+        var agent = _Grapplee._IsPlayer ? (_Grapplee._PlayerScript?._agent) : (_Grapplee._EnemyScript?._agent);
         if (agent != null)
         {
           agent.enabled = true;
@@ -1484,16 +1473,16 @@ public class ActiveRagdoll
         // Check armor perk
         if (_PlayerScript?.HasPerk(Shop.Perk.PerkType.GRAPPLE_MASTER) ?? false)
         {
-          if (_grapplee._hasArmor)
+          if (_Grapplee._hasArmor)
           {
-            _grapplee.RemoveArmor(Vector3.zero);
-            _grapplee._health = 1;
+            _Grapplee.RemoveArmor(Vector3.zero);
+            _Grapplee._health = 1;
           }
         }
       }
-      _grapplee._grappled = false;
-      _grapplee._grappler = null;
-      _grapplee = null;
+      _Grapplee._IsGrappled = false;
+      _Grapplee._Grappler = null;
+      _Grapplee = null;
 
       PlaySound("Enemies/Grapple", 0.65f, 0.8f);
     }
@@ -1564,11 +1553,11 @@ public class ActiveRagdoll
 
   void Grapple(ActiveRagdoll other)
   {
-    if (_grappling) return;
+    if (_IsGrappling) return;
 
-    _grapplee = other;
-    other._grappled = true;
-    other._grappler = this;
+    _Grapplee = other;
+    other._IsGrappled = true;
+    other._Grappler = this;
     var agent = other._IsPlayer ? (other._PlayerScript?._agent) : (other._EnemyScript?._agent);
     if (agent != null)
     {
@@ -1616,10 +1605,10 @@ public class ActiveRagdoll
     _time_dead = Time.unscaledTime;
 
     // Check grapplee
-    if (_grapplee != null)
-      if (!_grapplee._IsDead)
+    if (_IsGrappling)
+      if (!_Grapplee._IsDead)
       {
-        var graplee = _grapplee;
+        var graplee = _Grapplee;
         Grapple(true);
         graplee?._EnemyScript?.OnGrapplerRemoved();
       }
@@ -1732,7 +1721,7 @@ public class ActiveRagdoll
 
         // Achievement
 #if UNITY_STANDALONE
-        SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.EXTRA_USE_CONFETTI);
+        Achievements.UnlockAchievement(Achievements.Achievement.EXTRA_USE_CONFETTI);
 #endif
       }
 
@@ -1981,7 +1970,7 @@ public class ActiveRagdoll
 
   public void Recoil(Vector3 dir, float force, bool overright = true)
   {
-    _grappler?.Recoil(dir, force * 0.75f, overright);
+    _Grappler?.Recoil(dir, force * 0.75f, overright);
 
     if (overright)
     {
@@ -1998,7 +1987,7 @@ public class ActiveRagdoll
         force *= 2f;
 
     //
-    Recoil(_grappled ? -_Hip.transform.forward : -_Controller.forward, force);
+    Recoil(_IsGrappled ? -_Hip.transform.forward : -_Controller.forward, force);
   }
 
   IEnumerator Rise()
@@ -2112,7 +2101,7 @@ public class ActiveRagdoll
 
     // Checks
     if (_IsDead) return;
-    if (_grappling) return;
+    if (_IsGrappling) return;
     if (GameScript.s_EditorEnabled) return;
     if (!_CanGrapple) return;
 
@@ -2172,11 +2161,11 @@ public class ActiveRagdoll
       (_ItemL?._type ?? GameScript.ItemManager.Items.NONE) == item ||
       (_ItemR?._type ?? GameScript.ItemManager.Items.NONE) == item);
   }
-  public bool HasBulletDeflector()
+  public bool HasActiveBulletDeflector()
   {
     return
-      (_ItemL?._IsBulletDeflector ?? false) ||
-      (_ItemR?._IsBulletDeflector ?? false);
+      ((_ItemL?._IsSwinging ?? false) && _ItemL._IsBulletDeflector) ||
+      ((_ItemR?._IsSwinging ?? false) && _ItemR._IsBulletDeflector);
   }
 
   public bool Active()
@@ -2412,6 +2401,11 @@ public class ActiveRagdoll
       default:
         return null;
     }
+  }
+
+  public float GetDistanceTo(Vector3 position)
+  {
+    return MathC.Get2DDistance(_Hip.position, position);
   }
 
   public void PlaySound(string soundPath, float min = 1f, float max = 1f, SfxManager.AudioClass audioClass = SfxManager.AudioClass.NONE, bool changePitch = true)

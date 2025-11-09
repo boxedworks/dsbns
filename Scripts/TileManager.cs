@@ -388,7 +388,7 @@ public class TileManager
       for (int i = 0; i < enemies.childCount; i++)
       {
         var e = enemies.GetChild(i).GetChild(0).GetComponent<EnemyScript>();
-        // Don't save bat enemy if not level editor
+        // Don't save bat enemy if not mission editor
         /*if (Settings._DIFFICULTY > 0)*/
         if (!GameScript.s_EditorTesting)
           if (e._itemLeft == GameScript.ItemManager.Items.BAT || e._itemRight == GameScript.ItemManager.Items.BAT) continue;
@@ -465,7 +465,7 @@ public class TileManager
     {
       var obj = objects[i];
       var pos_use = obj.position - offset;
-      // Check each gameobject in Objects against level editor objects to see if it can be saved
+      // Check each gameobject in Objects against mission editor objects to see if it can be saved
       foreach (var leo in LevelEditorObject._Objects)
       {
         // Check if has a save function
@@ -624,7 +624,7 @@ public class TileManager
       }
       else if (GameScript.IsSurvival())
         SceneThemes.ChangeMapTheme(SceneThemes._Instance._ThemeOrder[2]);
-      else if (GameScript.s_GameMode == GameScript.GameModes.VERSUS)
+      else if (GameScript.s_GameMode == GameScript.GameModes.PARTY)
       {
         if (_CurrentLevel_Theme != -1)
           SceneThemes.ChangeMapTheme(SceneThemes._SceneOrder_LevelEditor[_CurrentLevel_Theme % SceneThemes._SceneOrder_LevelEditor.Length]);
@@ -1021,7 +1021,7 @@ public class TileManager
         }
 
         // Versus mode
-        if (GameScript.s_GameMode == GameScript.GameModes.VERSUS)
+        if (GameScript.s_GameMode == GameScript.GameModes.PARTY)
           VersusMode.OnLevelLoad();
 
         // Spawn player
@@ -1276,7 +1276,7 @@ public class TileManager
     }
 
     // Display level #
-    if (GameScript.s_GameMode == GameScript.GameModes.CLASSIC && !GameScript.s_EditorTesting)
+    if (GameScript.s_GameMode == GameScript.GameModes.MISSIONS && !GameScript.s_EditorTesting)
     {
       var hardmodeadd = Settings._DIFFICULTY == 1 ? "*" : "";
       _Text_LevelNum.text = $"{Levels._CurrentLevelIndex + 1}{hardmodeadd}";
@@ -2020,7 +2020,7 @@ public class TileManager
     for (var i = mapObjects.childCount - 1; i >= 0; i--)
     {
       var mapObject = mapObjects.GetChild(i).gameObject;
-      if (GameScript.s_GameMode != GameScript.GameModes.SURVIVAL && mapObject.name.Contains("Candel"))
+      if (GameScript.s_GameMode != GameScript.GameModes.ZOMBIE && mapObject.name.Contains("Candel"))
       {
         candles.Add(mapObject);
         continue;
@@ -2029,7 +2029,7 @@ public class TileManager
     }
 
     // Reload certain objects
-    var reloadObjectTypes = new string[] { "e_", "door_", "p_", "button_", "playerspawn_", GameScript.s_GameMode == GameScript.GameModes.SURVIVAL ? "candel" : "__" };
+    var reloadObjectTypes = new string[] { "e_", "door_", "p_", "button_", "playerspawn_", GameScript.s_GameMode == GameScript.GameModes.ZOMBIE ? "candel" : "__" };
     foreach (var levelObjectData in s_levelObjectData)
     {
       var loaded = false;
@@ -2060,7 +2060,7 @@ public class TileManager
     }
 
     // Reload flipped candles
-    if (GameScript.s_GameMode != GameScript.GameModes.SURVIVAL)
+    if (GameScript.s_GameMode != GameScript.GameModes.ZOMBIE)
       foreach (var candle in CandleScript.s_Candles)
         candle.HandleFlipped();
 
@@ -3894,7 +3894,7 @@ public class TileManager
     }
 
     /// <summary>
-    /// Returns the current level editor object via LevelEditorObject._Object_iter
+    /// Returns the current mission editor object via LevelEditorObject._Object_iter
     /// </summary>
     /// <returns></returns>
     public static LevelEditorObject GetCurrentObject()
@@ -3903,7 +3903,7 @@ public class TileManager
     }
 
     /// <summary>
-    /// Increments the current level editor object by amount
+    /// Increments the current mission editor object by amount
     /// </summary>
     /// <param name="amount"></param>
     public static void IncrementIter(int amount, bool skip = false)
@@ -5196,7 +5196,7 @@ public class TileManager
       container.parent = GameResources._Camera_Main.transform;
       container.localPosition = new Vector3(2.8f, 1.5f, 6f);
     }
-    else if (GameScript.s_GameMode == GameScript.GameModes.CLASSIC)
+    else if (GameScript.s_GameMode == GameScript.GameModes.MISSIONS)
       container.localPosition = new Vector3(8.88f, -7.26f, 0f);
     else
       container.localPosition = new Vector3(8.88f, -3.78f, 0f);

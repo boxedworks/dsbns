@@ -92,6 +92,12 @@ public class BulletScript : MonoBehaviour
     module.startSize = 0.13f * scale;
   }
 
+  //
+  public void SetLightIntensity(float intensity)
+  {
+    _light.intensity = intensity;
+  }
+
   // Update is called once per frame
   void FixedUpdate()
   {
@@ -214,14 +220,14 @@ public class BulletScript : MonoBehaviour
         {
 
           var logic = true;
-          if (_sourceItemRagdoll._grappled)
+          if (_sourceItemRagdoll._IsGrappled)
           {
-            if (_sourceDamageRagdoll._Id == _sourceItemRagdoll._Id && item._ragdoll._Id == _sourceDamageRagdoll._grappler._Id)
+            if (_sourceDamageRagdoll._Id == _sourceItemRagdoll._Id && item._ragdoll._Id == _sourceDamageRagdoll._Grappler._Id)
               logic = false;
           }
           if (logic)
           {
-            if (item._ragdoll?._IsSwinging ?? false)
+            if (item._IsSwinging)
             {
 
               Deflect(item, true);
@@ -231,10 +237,10 @@ public class BulletScript : MonoBehaviour
               // Check achievements
               if (item._ragdoll._IsPlayer)
               {
-                SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.BAT_DEFLECT);
+                Achievements.UnlockAchievement(Achievements.Achievement.BAT_DEFLECT);
 
                 if (item._type == GameScript.ItemManager.Items.FRYING_PAN && SceneThemes._Theme._name == "Hedge")
-                  SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.FRYING_PAN_RAIN);
+                  Achievements.UnlockAchievement(Achievements.Achievement.FRYING_PAN_RAIN);
               }
 #endif
             }
@@ -265,23 +271,23 @@ public class BulletScript : MonoBehaviour
 
         if (r._IsDead) return;
         if (r._Id == _lastRagdollId) return;
-        if ((r._grappler?._Id ?? -1) == GetRagdollID()) return;
+        if ((r._Grappler?._Id ?? -1) == GetRagdollID()) return;
         _lastRagdollId = r._Id;
         if (r._Id == _sourceDamageRagdoll._Id && !_canDamageSource) return;
 
         // If bullet hit is swinging and has a two-handed weapon (sword), reflect bullet
-        if (r._IsSwinging && r.HasBulletDeflector())
+        if (r.HasActiveBulletDeflector())
         {
 
 #if UNITY_STANDALONE
           // Check achievements
           if (r._IsPlayer)
           {
-            SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.BAT_DEFLECT);
+            Achievements.UnlockAchievement(Achievements.Achievement.BAT_DEFLECT);
 
             ItemScript swingingItem = (r._ItemR?._IsSwinging ?? false) ? r._ItemR : ((r._ItemL?._IsSwinging ?? false) ? r._ItemL : null);
             if ((swingingItem?._type ?? GameScript.ItemManager.Items.NONE) == GameScript.ItemManager.Items.FRYING_PAN && SceneThemes._Theme._name == "Hedge")
-              SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.FRYING_PAN_RAIN);
+              Achievements.UnlockAchievement(Achievements.Achievement.FRYING_PAN_RAIN);
           }
 #endif
 

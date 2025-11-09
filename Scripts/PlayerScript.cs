@@ -1,14 +1,13 @@
 ﻿using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.AI;
 using UnityEngine.InputSystem;
-using System.Net.Sockets;
+using UnityEngine.AI;
 
+using Random = UnityEngine.Random;
+using System.Collections.Generic;
 
 
 #if !DISABLESTEAMWORKS
-using Steamworks;
 #endif
 
 public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
@@ -85,6 +84,17 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
   {
     _saveLoadoutIndex = -1;
   }
+  public static void CheckSetNewLoadouts(int loadoutIndex)
+  {
+    // Loop through players
+    if (s_Players != null)
+      foreach (var player in s_Players)
+      {
+        if (player == null || player._Ragdoll == null || player._Ragdoll._IsDead) continue;
+        if (player._Profile._LoadoutIndex == loadoutIndex)
+          player.SetNewLoadout();
+      }
+  }
 
   //
   [System.NonSerialized]
@@ -112,11 +122,14 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
   PlayerspawnScript _playerSpawn { get { return PlayerspawnScript._PlayerSpawns[_PlayerSpawnId]; } }
 
   //
-  PlayerScript _connectedTwin;
+  [System.NonSerialized]
+  public PlayerScript _ConnectedTwin;
   ActiveRagdoll.Side _connectedTwinSide;
+  [System.NonSerialized]
   public bool _IsOriginalTwin;
-  public bool _IsOriginal { get { return _Id == 0 && (!_HasTwin || _IsOriginalTwin); } }
-  public bool _HasTwin { get { return _connectedTwin != null; } }
+  public bool _IsPlayer1 { get { return _Id == 0 && _IsOriginal; } }
+  public bool _IsOriginal { get { return !_HasTwin || _IsOriginalTwin; } }
+  public bool _HasTwin { get { return _ConnectedTwin != null; } }
   bool _isLeftTwin { get { return !_HasTwin || _connectedTwinSide == ActiveRagdoll.Side.LEFT; } }
   bool _isRightTwin { get { return !_HasTwin || _connectedTwinSide == ActiveRagdoll.Side.RIGHT; } }
 
@@ -136,7 +149,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
       transform.rotation * Quaternion.Euler(0f, 90f, 0f),
       transform.parent
     );
-    var health = GameScript.s_GameMode == GameScript.GameModes.VERSUS ? VersusMode.s_Settings._PlayerHealth : (GameScript.IsSurvival() ? 3 : 1);
+    var health = GameScript.s_GameMode == GameScript.GameModes.PARTY ? VersusMode.s_Settings._PlayerHealth : (GameScript.IsSurvival() ? 3 : 1);
     _ragdoll = new ActiveRagdoll(ragdollObj, transform)
     {
       _IsPlayer = true,
@@ -163,7 +176,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
     if (_HasTwin)
     {
 
-      _Id = _connectedTwin._Id;
+      _Id = _ConnectedTwin._Id;
 
     }
     else
@@ -263,7 +276,8 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
     _taunt_times = new float[4];
     _dpadPressed = new float[4];
 
-    GameScript.UpdateAmbientLight();
+    if (_IsPlayer1)
+      GameScript.UpdateAmbientLight();
     if (!TileManager._HasLocalLighting)
     {
       if (!GameScript.s_Backrooms)
@@ -278,7 +292,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
     ControllerManager.GetPlayerGamepad(_Id)?.SetMotorSpeeds(0f, 0f);
 
     // Handle rain VFX
-    if (_IsOriginal)
+    if (_IsPlayer1)
     {
 
       // Clean up old light if exists
@@ -324,7 +338,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
   //
   Color GetRingColor()
   {
-    if (GameScript.s_GameMode == GameScript.GameModes.VERSUS && !VersusMode.s_Settings._FreeForAll)
+    if (GameScript.s_GameMode == GameScript.GameModes.PARTY && !VersusMode.s_Settings._FreeForAll)
       return VersusMode.GetTeamColorFromPlayerId(_Id);
     return _Profile.GetColor();
   }
@@ -492,7 +506,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
   {
 
     // Timer
-    if (!_TimerStarted && _IsOriginal && _spawnTimer <= 0f)
+    if (!_TimerStarted && _IsPlayer1 && _spawnTimer <= 0f)
     {
 
       var player_farthest = FunctionsC.GetFarthestPlayerFrom(_playerSpawn.transform.position);
@@ -513,7 +527,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
 
     // Ratings
     if (
-      _IsOriginal && !_level_ratings_shown && !TileManager._Level_Complete && !GameScript.s_Paused &&
+      _IsPlayer1 && !_level_ratings_shown && !TileManager._Level_Complete && !GameScript.s_Paused &&
       (
         (!_TimerStarted && Time.time - GameScript.s_LevelStartTime > 3f) ||
         (_All_Dead && Time.unscaledTime - _ragdoll._time_dead > 3f)
@@ -570,7 +584,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
           pos = _ragdoll._Hip.position;
           maxD = 6f;
         }
-        if (GameScript.s_GameMode == GameScript.GameModes.CLASSIC)
+        if (GameScript.s_GameMode == GameScript.GameModes.MISSIONS)
         {
 
           if (!HasExit())
@@ -820,10 +834,8 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
 
     if (GameScript.s_Paused)
     {
-      if (_IsOriginal)
-      {
+      if (_IsPlayer1)
         SfxManager.Update(0f);
-      }
       return;
     }
 
@@ -843,11 +855,11 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
     // Check for timescale change
     if (true)
     {
-      if (_IsOriginal)
+      if (_IsPlayer1)
       {
 
         // Check should apply time
-        if ((GameScript.s_GameMode == GameScript.GameModes.VERSUS && VersusMode.s_Settings._UseSlowmo) || GameScript.s_GameMode != GameScript.GameModes.VERSUS)
+        if ((GameScript.s_GameMode == GameScript.GameModes.PARTY && VersusMode.s_Settings._UseSlowmo) || GameScript.s_GameMode != GameScript.GameModes.PARTY)
         {
 
           // Update time via player speed
@@ -914,7 +926,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
                   var bulletSourceId = bullet.GetRagdollID();
                   if (
                     bulletSourceId == p._ragdoll._Id ||
-                    bulletSourceId == (p._ragdoll._grapplee?._Id ?? -1)
+                    bulletSourceId == (p._ragdoll._Grapplee?._Id ?? -1)
                   )
                     continue;
 
@@ -939,7 +951,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
                 onealive = true; break;
               }
             }
-            if (!onealive && GameScript.s_GameMode != GameScript.GameModes.VERSUS) desiredTimeScale = 0f;
+            if (!onealive && GameScript.s_GameMode != GameScript.GameModes.PARTY) desiredTimeScale = 0f;
 
             // Update timescale
             {
@@ -981,7 +993,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
     float unscaled_dt = Time.unscaledDeltaTime,
       dt = Time.deltaTime;
 
-    if (_IsOriginal && GameScript.s_Singleton._UseCamera)
+    if (_IsPlayer1 && GameScript.s_Singleton._UseCamera)
     {
       var camera_height = SettingsModule.CameraZoom == Settings.SettingsSaveData.CameraZoomType.NORMAL ? 14f : SettingsModule.CameraZoom == Settings.SettingsSaveData.CameraZoomType.CLOSE ? 10f : 18f;
       if (SettingsModule.UseOrthographicCamera)
@@ -1174,18 +1186,41 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
   void CheckSpawnTwin()
   {
     // Check twin mod
-    if (HasPerk(Shop.Perk.PerkType.TWIN) && _connectedTwin == null)
+    if (HasPerk(Shop.Perk.PerkType.TWIN) && _ConnectedTwin == null)
     {
       _IsOriginalTwin = true;
 
-      PlayerspawnScript.SpawnPlayerAt(transform.position, transform.localEulerAngles.y, (playerScript) =>
+      var spawnPos = transform.position + transform.right * 0.1f;
+      PlayerspawnScript.SpawnPlayerAt(spawnPos, transform.localEulerAngles.y, (playerScript) =>
       {
-        _connectedTwin = playerScript;
-        playerScript._connectedTwin = this;
+        _ConnectedTwin = playerScript;
+        playerScript._ConnectedTwin = this;
 
         _connectedTwinSide = ActiveRagdoll.Side.LEFT;
         playerScript._connectedTwinSide = ActiveRagdoll.Side.RIGHT;
       }, true, _PlayerSpawnId);
+
+      // FX
+      _ragdoll?.PlaySound("Ragdoll/Pop");
+
+      // Achievement
+#if UNITY_STANDALONE
+      Achievements.UnlockAchievement(Achievements.Achievement.MOD_SPLIT);
+#endif
+
+      // Check for old twin body
+      for (var i = s_Players.Count - 1; i >= 0; i--)
+      {
+        var p = s_Players[i];
+        if (p._Id != _Id || p._ragdoll == null || !p._ragdoll._IsDead) continue;
+
+        // Remove old twin
+        ActiveRagdoll.s_Ragdolls.Remove(p._ragdoll);
+        s_Players.RemoveAt(i);
+        Destroy(p.transform.parent.gameObject);
+
+        break;
+      }
     }
   }
 
@@ -1206,7 +1241,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
     // Spawn enemies as player gets closer to goal; 3rd difficulty / game mode ?
     if (!GameScript.IsSurvival())
       if (
-        _IsOriginal &&
+        _IsPlayer1 &&
         LevelModule.ExtraHorde == 1 &&
         Settings._Extras_CanUse &&
         (Powerup._Powerups?.Count ?? 0) > 0 &&
@@ -1218,7 +1253,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
         foreach (var player in s_Players)
         {
           if ((player?._ragdoll._health ?? -1) <= 0) continue;
-          var spawnDistance = MathC.Get2DDistance(player._ragdoll._Hip.position, player._playerSpawn.transform.position);
+          var spawnDistance = player._ragdoll.GetDistanceTo(player._playerSpawn.transform.position);
 
           if (spawnDistance > minSpawnDistance)
             minSpawnDistance = spawnDistance;
@@ -1349,7 +1384,8 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
         }
 
         // Look
-        transform.LookAt(transform.position + new Vector3(x, 0f, y));
+        if (!_ragdoll._IsGrappled)
+          transform.LookAt(transform.position + new Vector3(x, 0f, y));
       }
 
       // Normal movement
@@ -1370,8 +1406,11 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
           x += 1f;
 
         // Mouse look
-        var p = GameResources._Camera_Main.ScreenPointToRay(ControllerManager.GetMousePosition()).GetPoint(Vector3.Distance(GameResources._Camera_Main.transform.position, transform.position));
-        transform.LookAt(new Vector3(p.x, transform.position.y, p.z));
+        if (!_ragdoll._IsGrappled)
+        {
+          var p = GameResources._Camera_Main.ScreenPointToRay(ControllerManager.GetMousePosition()).GetPoint(Vector3.Distance(GameResources._Camera_Main.transform.position, transform.position));
+          transform.LookAt(new Vector3(p.x, transform.position.y, p.z));
+        }
       }
 
       // Throw money
@@ -1379,7 +1418,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
         Taunt(1);
 
       // Check versus start
-      if (GameScript.s_GameMode != GameScript.GameModes.VERSUS || (GameScript.s_GameMode == GameScript.GameModes.VERSUS && VersusMode.s_PlayersCanMove))
+      if (GameScript.s_GameMode != GameScript.GameModes.PARTY || (GameScript.s_GameMode == GameScript.GameModes.PARTY && VersusMode.s_PlayersCanMove))
       {
 
         /// Use items
@@ -1437,7 +1476,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
             }
         }
 
-        // Check grapple
+        // Start grapple
         if (
           !_ragdoll._IsDead &&
           _ragdoll._CanGrapple &&
@@ -1446,7 +1485,9 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
         {
           _ragdoll.Grapple(true);
         }
-        if (_ragdoll._grappling)
+
+        // End grapple (violently)
+        if (_ragdoll._IsGrappling)
         {
           if (_isLeftTwin)
             if (_ragdoll._ItemL == null && ControllerManager.GetMouseInput(0, ControllerManager.InputMode.UP))
@@ -1456,6 +1497,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
             if (_ragdoll._ItemR == null && ControllerManager.GetMouseInput(1, ControllerManager.InputMode.UP))
               _ragdoll.Grapple(false);
         }
+
       }
 
       // Move arms
@@ -1475,7 +1517,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
       }
 
       // Check utility
-      if (GameScript.s_GameMode != GameScript.GameModes.VERSUS || (GameScript.s_GameMode == GameScript.GameModes.VERSUS && VersusMode.s_PlayersCanMove))
+      if (GameScript.s_GameMode != GameScript.GameModes.PARTY || (GameScript.s_GameMode == GameScript.GameModes.PARTY && VersusMode.s_PlayersCanMove))
       {
         if (ControllerManager.GetKey(ControllerManager.Key.Q))
         {
@@ -1530,7 +1572,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
         else if (FlipTable(_ragdoll._Hip.position, transform.forward))
         {
 #if !DISABLESTEAMWORKS
-          SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.TABLE_FLIP);
+          Achievements.UnlockAchievement(Achievements.Achievement.TABLE_FLIP);
 #endif
         }
       }
@@ -1607,7 +1649,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
           _ragdoll.ArmsDown();
 
         // Use items
-        if (GameScript.s_GameMode != GameScript.GameModes.VERSUS || (GameScript.s_GameMode == GameScript.GameModes.VERSUS && VersusMode.s_PlayersCanMove))
+        if (GameScript.s_GameMode != GameScript.GameModes.PARTY || (GameScript.s_GameMode == GameScript.GameModes.PARTY && VersusMode.s_PlayersCanMove))
         {
 
           Vector2 input = new Vector2(ControllerManager.GetControllerAxis(gamepadId, ControllerManager.Axis.L2),
@@ -1630,7 +1672,8 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
           if (input.x >= 1f - bias && _lastInputTriggers.x < 1f - bias)
             if (!_ragdoll._ItemL && !_ragdoll._ItemR)
             {
-              SwapLoadouts();
+              if (!_HasTwin)
+                SwapLoadouts();
             }
             else if (!_ragdoll._ItemL)
             {
@@ -1657,7 +1700,8 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
           if (input.y >= 1f - bias && _lastInputTriggers.y < 1f - bias)
             if (!_ragdoll._ItemL && !_ragdoll._ItemR)
             {
-              SwapLoadouts();
+              if (!_HasTwin)
+                SwapLoadouts();
             }
             else if (!_ragdoll._ItemR)
             {
@@ -1706,13 +1750,19 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
         var dpadHoldTime = 0.6f;
         if (gamepad.dpad.left.wasReleasedThisFrame)
         {
-          Taunt(2);
-          _dpadPressed[2] = 0f;
+          if (_dpadPressed[2] != 0f)
+          {
+            Taunt(2);
+            _dpadPressed[2] = 0f;
+          }
         }
         else if (gamepad.dpad.right.wasReleasedThisFrame)
         {
-          Taunt(3);
-          _dpadPressed[3] = 0f;
+          if (_dpadPressed[3] != 0f)
+          {
+            Taunt(3);
+            _dpadPressed[3] = 0f;
+          }
         }
 
         // Change levels
@@ -1737,17 +1787,21 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
         runKeyDown = gamepad.leftStickButton.isPressed;
 
         // Check grapple
-        if (GameScript.s_GameMode != GameScript.GameModes.VERSUS || (GameScript.s_GameMode == GameScript.GameModes.VERSUS && VersusMode.s_PlayersCanMove))
+        if (GameScript.s_GameMode != GameScript.GameModes.PARTY || (GameScript.s_GameMode == GameScript.GameModes.PARTY && VersusMode.s_PlayersCanMove))
         {
+
+          // Start grapple
           if (
             !_ragdoll._IsDead &&
             _ragdoll._CanGrapple &&
-            gamepad.rightStickButton.wasPressedThisFrame
+            (_isRightTwin ? gamepad.rightStickButton.wasPressedThisFrame : gamepad.leftStickButton.wasPressedThisFrame)
           )
           {
             _ragdoll.Grapple(true);
           }
-          if (_ragdoll._grappling)
+
+          // End grapple (violently)
+          if (_ragdoll._IsGrappling)
           {
             if (_isLeftTwin)
               if (_ragdoll._ItemL == null && gamepad.leftTrigger.wasReleasedThisFrame)
@@ -1805,7 +1859,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
           else if (FlipTable(_ragdoll._Hip.position, transform.forward))
           {
 #if !DISABLESTEAMWORKS
-            SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.TABLE_FLIP);
+            Achievements.UnlockAchievement(Achievements.Achievement.TABLE_FLIP);
 #endif
           }
         }
@@ -1871,10 +1925,10 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
     }
 
     // Move player
-    if (!_ragdoll._grappled)
+    if (!_ragdoll._IsGrappled)
     {
       _saveInput = xy;
-      if (GameScript.s_GameMode != GameScript.GameModes.VERSUS || (GameScript.s_GameMode == GameScript.GameModes.VERSUS && VersusMode.s_PlayersCanMove))
+      if (GameScript.s_GameMode != GameScript.GameModes.PARTY || (GameScript.s_GameMode == GameScript.GameModes.PARTY && VersusMode.s_PlayersCanMove))
         MovePlayer(unscaled_dt, movespeed, _saveInput);
 
       // Rotate player
@@ -1906,7 +1960,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
   public void MovePlayer(float deltaTime, float moveSpeed, Vector2 input)
   {
     // Decrease movespead
-    if (_ragdoll._grappling) { moveSpeed *= 0.9f; }
+    if (_ragdoll._IsGrappling) { moveSpeed *= 0.9f; }
 
     // Move player
     if (_ragdoll.Active() && !_ragdoll._IsStunned && _agent != null)
@@ -1951,8 +2005,8 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
     {
       if (_HasTwin)
       {
-        _connectedTwin._IsOriginalTwin = false;
-        _connectedTwin._connectedTwin = null;
+        _ConnectedTwin._IsOriginalTwin = false;
+        _ConnectedTwin._ConnectedTwin = null;
 
         _ragdoll.TakeDamage(
           new ActiveRagdoll.RagdollDamageSource()
@@ -2100,7 +2154,8 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
     _loadout_info[2] = _ragdoll._ItemL?._useTime ?? -1f;
     _loadout_info[3] = _ragdoll._ItemR?._useTime ?? -1f;
 
-    _Profile._EquipmentIndex++;
+    if (_IsOriginal)
+      _Profile._EquipmentIndex++;
     _ragdoll.SwapItems(
       new ActiveRagdoll.WeaponSwapData()
       {
@@ -2200,6 +2255,9 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
       // Up
       case (0):
 
+        if (_ragdoll?._IsDead ?? true)
+          return;
+
         if (!_HasTwin)
         {
           _ragdoll.SwapItemHands(_Profile._EquipmentIndex);
@@ -2209,6 +2267,10 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
 
       // Down
       case (1):
+
+        if (_ragdoll?._IsDead ?? true)
+          return;
+
         // If survival, throw money
         if (GameScript.IsSurvival())
         {
@@ -2275,7 +2337,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
       // Left
       case (2):
 
-        if (GameScript.s_GameMode == GameScript.GameModes.CLASSIC)
+        if (GameScript.s_GameMode == GameScript.GameModes.MISSIONS)
         {
           if (_IsOriginal)
             _Profile._LoadoutIndex--;
@@ -2290,7 +2352,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
       // Right
       case (3):
 
-        if (GameScript.s_GameMode == GameScript.GameModes.CLASSIC)
+        if (GameScript.s_GameMode == GameScript.GameModes.MISSIONS)
         {
           if (_IsOriginal)
             _Profile._LoadoutIndex++;
@@ -2343,8 +2405,8 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
     _Profile.UpdateHealthUI();
 
     //
-    if (_HasTwin && _connectedTwin._HasTwin && !(_connectedTwin._ragdoll?._IsDead ?? true))
-      _connectedTwin._Ragdoll?.TakeDamage(ragdollDamageSource);
+    if (_HasTwin && _ConnectedTwin._HasTwin && !(_ConnectedTwin._ragdoll?._IsDead ?? true))
+      _ConnectedTwin._Ragdoll?.TakeDamage(ragdollDamageSource);
 
     // Controller rumble
     if (!mouseEnabled && SettingsModule.ControllerRumble)
@@ -2391,20 +2453,20 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
     // Check achievements
     if (source != null)
     {
-      SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.DIE);
+      Achievements.UnlockAchievement(Achievements.Achievement.DIE);
       if (source._IsPlayer && source._PlayerScript != null && source._PlayerScript._Id != _Id)
-        SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.TEAM_KILL);
+        Achievements.UnlockAchievement(Achievements.Achievement.TEAM_KILL);
       if (damageSourceType == ActiveRagdoll.DamageSourceType.EXPLOSION)
-        SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.EXPLODE);
+        Achievements.UnlockAchievement(Achievements.Achievement.EXPLODE);
     }
 #endif
 
     // Survival
-    if (GameScript.s_GameMode == GameScript.GameModes.SURVIVAL)
+    if (GameScript.s_GameMode == GameScript.GameModes.ZOMBIE)
       GameScript.SurvivalMode.OnPlayerDead(_Id);
 
     // Versus
-    if (GameScript.s_GameMode == GameScript.GameModes.VERSUS)
+    if (GameScript.s_GameMode == GameScript.GameModes.PARTY)
     {
       VersusMode.OnPlayerDeath(this, source._PlayerScript);
     }
@@ -2441,11 +2503,12 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
       }
       if (_ring != null) _ring[0].transform.parent.gameObject.SetActive(false);
     }
+
     if (_IsOriginal)
       GameScript.s_Singleton.StartCoroutine(fadeRing());
 
     // Switching loadouts with twin
-    else if (_HasTwin && !_connectedTwin._HasTwin)
+    else if (_HasTwin && !_ConnectedTwin._HasTwin)
       GameScript.s_Singleton.StartCoroutine(fadeRing2());
 
     // Slow motion on player death
@@ -2460,7 +2523,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
     if (Settings._Slowmo_on_death && lastplayer && !HasPerk(Shop.Perk.PerkType.NO_SLOWMO)) _SlowmoTimer += 2f;
 
     // Check for restart tutorial
-    if (lastplayer && GameScript.s_GameMode != GameScript.GameModes.VERSUS)
+    if (lastplayer && GameScript.s_GameMode != GameScript.GameModes.PARTY)
     {
       _All_Dead = true;
 
@@ -2824,10 +2887,10 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
             }
           }
           GameScript.s_Singleton.StartCoroutine(FlipTable());
+
+          return true;
         }
       }
-      return true;
-
     }
 
     return false;

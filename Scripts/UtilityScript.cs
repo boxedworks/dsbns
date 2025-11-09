@@ -33,6 +33,8 @@ public class UtilityScript : ItemScript
     MOLOTOV,
 
     MIRROR,
+
+    BEAR_TRAP,
   }
 
   public UtilityType _utility_type;
@@ -42,7 +44,8 @@ public class UtilityScript : ItemScript
 
   bool _thrown,
     _spinYAxis,
-    _spin;
+    _spin,
+    _ignoreSourceCollisions;
 
   int _flag;
 
@@ -163,6 +166,7 @@ public class UtilityScript : ItemScript
     _spawnDirection = Vector3.zero;
     _forceModifier = 1f;
     _expirationTimer = 30f;
+    _ignoreSourceCollisions = true;
     var explosionType = ExplosiveScript.ExplosionType.AWAY;
 
     // Check utility-specific items
@@ -204,6 +208,12 @@ public class UtilityScript : ItemScript
       case UtilityType.C4:
         explosion_radius = 3f;
         _expirationTimer = 90f;
+        break;
+
+      case UtilityType.BEAR_TRAP:
+        _expirationTimer = 90f;
+        _ignoreSourceCollisions = false;
+        _spinYAxis = true;
         break;
 
       case UtilityType.MORTAR_STRIKE:
@@ -436,7 +446,7 @@ public class UtilityScript : ItemScript
             if (rag != null)
             {
               if (rag._Id == _ragdoll._Id) return;
-              if (rag._Id == (_ragdoll._grapplee?._Id ?? -1)) return;
+              if (rag._Id == (_ragdoll._Grapplee?._Id ?? -1)) return;
               if (!rag._IsDead)
               {
                 // Check for same ragdoll
@@ -941,6 +951,93 @@ public class UtilityScript : ItemScript
           }
           break;
 
+        //
+        case UtilityType.BEAR_TRAP:
+
+          //
+          _onTriggerEnter += (Collider c) =>
+          {
+
+            // Projectile handler
+            if (SimpleProjectileHandler(_c, c))
+              return;
+          };
+          _onCollisionEnter += (Collision c) =>
+          {
+
+            // Projectile handler
+            if (SimpleProjectileHandler(_c, c.collider))
+              return;
+
+            // Kill first person walked into
+            if (_flag == 0)
+            {
+              var rag = ActiveRagdoll.GetRagdoll(c.collider.gameObject);
+              if (rag != null)
+              {
+
+                //
+                if (Time.time - _thrownTimer < 0.5f)
+                  if (rag._Id == _ragdoll._Id) return;
+
+                var distance = rag.GetDistanceTo(transform.position);
+                if (distance > 0.4f) return;
+                Debug.Log(distance);
+
+                // Check grappler
+                Transform stickToTransform = c.transform;
+                if (rag._Grapplee != null)
+                {
+                  var grappleeDistance = rag._Grapplee.GetDistanceTo(transform.position);
+                  if (grappleeDistance < distance)
+                  {
+                    rag = rag._Grapplee;
+                    stickToTransform = (rag._leg_lower_l != null ? rag._leg_lower_l : rag._leg_lower_r).transform;
+                  }
+                }
+
+                //
+                _flag = 1;
+                rag.TakeDamage(new ActiveRagdoll.RagdollDamageSource()
+                {
+                  Source = _ragdoll,
+
+                  //HitForce = new Vector3(0f, 1f, 0f),
+
+                  Damage = 1,
+                  DamageSource = _ragdoll._Hip.position,
+                  DamageSourceType = ActiveRagdoll.DamageSourceType.MELEE,
+
+                  SpawnBlood = true,
+                  SpawnGiblets = false
+                });
+
+                // Stick to ragdol
+                transform.parent = c.transform;
+                transform.localPosition = Vector3.zero + Random.onUnitSphere * 0.25f;
+                GameObject.Destroy(_rb);
+                _expirationTimer = -1f;
+
+                // Model update
+                var claw0 = transform.GetChild(0).GetChild(0);
+                var claw1 = transform.GetChild(0).GetChild(1);
+
+                claw0.localRotation = Quaternion.Euler(-20f, 90f, -90f);
+                claw1.localRotation = Quaternion.Euler(-30f, -90f, 90f);
+
+                //
+                PlaySound(Audio.UTILITY_ACTION);
+              }
+            }
+          };
+
+          // Throw
+          Throw();
+          Unregister();
+
+          break;
+
+        //
         case UtilityType.STOP_WATCH:
 
           PlayerScript._SlowmoTimer += 2f;
@@ -950,7 +1047,7 @@ public class UtilityScript : ItemScript
 
         case UtilityType.TEMP_SHIELD:
 
-          if (_ragdoll._grappling)
+          if (_ragdoll._IsGrappling)
           {
             _ragdoll.Grapple(false);
           }
@@ -993,7 +1090,7 @@ public class UtilityScript : ItemScript
       //
       if (_thrown)
       {
-        if (Time.time - _thrownTimer > _expirationTimer)
+        if (_expirationTimer != -1f && Time.time - _thrownTimer > _expirationTimer)
         {
           if (_utility_type == UtilityType.C4)
           {
@@ -1096,14 +1193,17 @@ public class UtilityScript : ItemScript
     _ragdoll = source;
 
     // Ignore holder's ragdoll
-    if (_utility_type == UtilityType.SHURIKEN_BIG)
+    if (_ignoreSourceCollisions)
     {
-      source.IgnoreCollision(transform.GetChild(2).GetComponent<Collider>());
-      source.IgnoreCollision(transform.GetChild(3).GetComponent<Collider>());
-      source.IgnoreCollision(transform.GetChild(4).GetComponent<Collider>());
+      if (_utility_type == UtilityType.SHURIKEN_BIG)
+      {
+        source.IgnoreCollision(transform.GetChild(2).GetComponent<Collider>());
+        source.IgnoreCollision(transform.GetChild(3).GetComponent<Collider>());
+        source.IgnoreCollision(transform.GetChild(4).GetComponent<Collider>());
+      }
+      else if (_c != null)
+        source.IgnoreCollision(_c);
     }
-    else if (_c != null)
-      source.IgnoreCollision(_c);
 
     // Register
     _unregister = unregister;
@@ -1142,7 +1242,7 @@ public class UtilityScript : ItemScript
     // Ignore collisions
     if (_utility_type != UtilityType.C4)
     {
-      _ragdoll._grapplee?.IgnoreCollision(_c);
+      _ragdoll._Grapplee?.IgnoreCollision(_c);
     }
 
     //
@@ -1168,7 +1268,7 @@ public class UtilityScript : ItemScript
 
     // Add force
     _rb.AddForce(
-      MathC.Get2DVector(forward * 250f * (_throwSpeed + Mathf.Clamp(_downTime, 0f, 4f)) +
+      MathC.Get2DVector(forward * 250f * (_throwSpeed + Mathf.Clamp(_downTimeSave, 0f, 4f)) +
       Vector3.up * 55f +
       _ragdoll._Hip.linearVelocity * 1.3f) * _forceModifier);
 
@@ -1424,7 +1524,7 @@ public class UtilityScript : ItemScript
       // Check achievement
 #if UNITY_STANDALONE
       if (p0._IsBullet && p1._IsBullet && greater._DamageSource._IsPlayer)
-        SteamManager.Achievements.UnlockAchievement(SteamManager.Achievements.Achievement.BULLET_DESTROY);
+        Achievements.UnlockAchievement(Achievements.Achievement.BULLET_DESTROY);
 #endif
     }
 
