@@ -280,7 +280,7 @@ public static class ControllerManager
     void Input_action.IPlayerActions.OnReloadMap(InputAction.CallbackContext context)
     {
       if (context.phase != InputActionPhase.Started) return;
-      if (GameScript.s_GameMode == GameScript.GameModes.PARTY) return;
+      if (GameScript.s_IsPartyGameMode) return;
       if (!Menu.s_InMenus)
       {
         var p = GetPlayer(context);
@@ -318,21 +318,21 @@ public static class ControllerManager
     if (g == null) return 0f;
     switch (axis)
     {
-      case (Axis.LSTICK_X):
+      case Axis.LSTICK_X:
         return g.leftStick.x.ReadValue();
-      case (Axis.LSTICK_Y):
+      case Axis.LSTICK_Y:
         return g.leftStick.y.ReadValue();
-      case (Axis.RSTICK_X):
+      case Axis.RSTICK_X:
         return g.rightStick.x.ReadValue();
-      case (Axis.RSTICK_Y):
+      case Axis.RSTICK_Y:
         return g.rightStick.y.ReadValue();
-      case (Axis.DPAD_X):
+      case Axis.DPAD_X:
         return g.dpad.ReadValue().x;
-      case (Axis.DPAD_Y):
+      case Axis.DPAD_Y:
         return g.dpad.ReadValue().y;
-      case (Axis.L2):
+      case Axis.L2:
         return g.leftTrigger.ReadValue();
-      case (Axis.R2):
+      case Axis.R2:
         return g.rightTrigger.ReadValue();
     }
     return -1f;
@@ -347,8 +347,8 @@ public static class ControllerManager
   public static bool GetMouseInput(int iter, InputMode mode)
   {
     if (Mouse.current == null) return false;
-    UnityEngine.InputSystem.Controls.ButtonControl button = (iter == 0 ? Mouse.current.leftButton :
-      iter == 1 ? Mouse.current.rightButton : Mouse.current.middleButton);
+    UnityEngine.InputSystem.Controls.ButtonControl button = iter == 0 ? Mouse.current.leftButton :
+      iter == 1 ? Mouse.current.rightButton : Mouse.current.middleButton;
     if (mode == InputMode.HOLD)
       return button.isPressed;
     else if (mode == InputMode.DOWN)
@@ -441,194 +441,194 @@ public static class ControllerManager
     if (keyboard == null) return false;
     switch (key)
     {
-      case (Key.W):
+      case Key.W:
         gotKey = keyboard.wKey;
         break;
-      case (Key.A):
+      case Key.A:
         gotKey = keyboard.aKey;
         break;
-      case (Key.S):
+      case Key.S:
         gotKey = keyboard.sKey;
         break;
-      case (Key.D):
+      case Key.D:
         gotKey = keyboard.dKey;
         break;
-      case (Key.ARROW_U):
+      case Key.ARROW_U:
         gotKey = keyboard.upArrowKey;
         break;
-      case (Key.ARROW_D):
+      case Key.ARROW_D:
         gotKey = keyboard.downArrowKey;
         break;
-      case (Key.ARROW_L):
+      case Key.ARROW_L:
         gotKey = keyboard.leftArrowKey;
         break;
-      case (Key.ARROW_R):
+      case Key.ARROW_R:
         gotKey = keyboard.rightArrowKey;
         break;
-      case (Key.R):
+      case Key.R:
         gotKey = keyboard.rKey;
         break;
-      case (Key.SPACE):
+      case Key.SPACE:
         gotKey = keyboard.spaceKey;
         break;
-      case (Key.SHIFT_L):
+      case Key.SHIFT_L:
         gotKey = keyboard.leftShiftKey;
         break;
-      case (Key.SHIFT_R):
+      case Key.SHIFT_R:
         gotKey = keyboard.rightShiftKey;
         break;
-      case (Key.T):
+      case Key.T:
         gotKey = keyboard.tKey;
         break;
-      case (Key.V):
+      case Key.V:
         gotKey = keyboard.vKey;
         break;
-      case (Key.N):
+      case Key.N:
         gotKey = keyboard.nKey;
         break;
-      case (Key.B):
+      case Key.B:
         gotKey = keyboard.bKey;
         break;
-      case (Key.X):
+      case Key.X:
         gotKey = keyboard.xKey;
         break;
-      case (Key.F):
+      case Key.F:
         gotKey = keyboard.fKey;
         break;
-      case (Key.BACKSPACE):
+      case Key.BACKSPACE:
         gotKey = keyboard.backspaceKey;
         break;
-      case (Key.BACKSLASH):
+      case Key.BACKSLASH:
         gotKey = keyboard.backslashKey;
         break;
-      case (Key.DELETE):
+      case Key.DELETE:
         gotKey = keyboard.deleteKey;
         break;
-      case (Key.C):
+      case Key.C:
         gotKey = keyboard.cKey;
         break;
-      case (Key.Z):
+      case Key.Z:
         gotKey = keyboard.zKey;
         break;
-      case (Key.G):
+      case Key.G:
         gotKey = keyboard.gKey;
         break;
-      case (Key.L):
+      case Key.L:
         gotKey = keyboard.lKey;
         break;
-      case (Key.O):
+      case Key.O:
         gotKey = keyboard.oKey;
         break;
       case Key.J:
         gotKey = keyboard.jKey;
         break;
-      case (Key.PERIOD):
+      case Key.PERIOD:
         gotKey = keyboard.periodKey;
         break;
-      case (Key.PERIOD_NUMPAD):
+      case Key.PERIOD_NUMPAD:
         gotKey = keyboard.numpadPeriodKey;
         break;
-      case (Key.MINUS):
+      case Key.MINUS:
         gotKey = keyboard.minusKey;
         break;
-      case (Key.EQUALS):
+      case Key.EQUALS:
         gotKey = keyboard.equalsKey;
         break;
-      case (Key.Q):
+      case Key.Q:
         gotKey = keyboard.qKey;
         break;
-      case (Key.E):
+      case Key.E:
         gotKey = keyboard.eKey;
         break;
-      case (Key.INSERT):
+      case Key.INSERT:
         gotKey = keyboard.insertKey;
         break;
-      case (Key.U):
+      case Key.U:
         gotKey = keyboard.uKey;
         break;
-      case (Key.M):
+      case Key.M:
         gotKey = keyboard.mKey;
         break;
-      case (Key.K):
+      case Key.K:
         gotKey = keyboard.kKey;
         break;
-      case (Key.H):
+      case Key.H:
         gotKey = keyboard.hKey;
         break;
-      case (Key.PAGE_UP):
+      case Key.PAGE_UP:
         gotKey = keyboard.pageUpKey;
         break;
-      case (Key.PAGE_DOWN):
+      case Key.PAGE_DOWN:
         gotKey = keyboard.pageDownKey;
         break;
-      case (Key.MULTIPLY_NUMPAD):
+      case Key.MULTIPLY_NUMPAD:
         gotKey = keyboard.numpadMultiplyKey;
         break;
-      case (Key.HOME):
+      case Key.HOME:
         gotKey = keyboard.homeKey;
         break;
-      case (Key.ESCAPE):
+      case Key.ESCAPE:
         gotKey = keyboard.escapeKey;
         break;
-      case (Key.END):
+      case Key.END:
         gotKey = keyboard.endKey;
         break;
-      case (Key.CONTROL_LEFT):
+      case Key.CONTROL_LEFT:
         gotKey = keyboard.leftCtrlKey;
         break;
-      case (Key.CONTROL_RIGHT):
+      case Key.CONTROL_RIGHT:
         gotKey = keyboard.rightCtrlKey;
         break;
-      case (Key.ONE):
+      case Key.ONE:
         gotKey = keyboard.digit1Key;
         break;
-      case (Key.TWO):
+      case Key.TWO:
         gotKey = keyboard.digit2Key;
         break;
-      case (Key.THREE):
+      case Key.THREE:
         gotKey = keyboard.digit3Key;
         break;
-      case (Key.FOUR):
+      case Key.FOUR:
         gotKey = keyboard.digit4Key;
         break;
-      case (Key.FIVE):
+      case Key.FIVE:
         gotKey = keyboard.digit5Key;
         break;
-      case (Key.SIX):
+      case Key.SIX:
         gotKey = keyboard.digit6Key;
         break;
-      case (Key.SEVEN):
+      case Key.SEVEN:
         gotKey = keyboard.digit7Key;
         break;
-      case (Key.EIGHT):
+      case Key.EIGHT:
         gotKey = keyboard.digit8Key;
         break;
-      case (Key.NINE):
+      case Key.NINE:
         gotKey = keyboard.digit9Key;
         break;
-      case (Key.ZERO):
+      case Key.ZERO:
         gotKey = keyboard.digit0Key;
         break;
-      case (Key.COMMA):
+      case Key.COMMA:
         gotKey = keyboard.commaKey;
         break;
-      case (Key.TAB):
+      case Key.TAB:
         gotKey = keyboard.tabKey;
         break;
 
-      case (Key.F1):
+      case Key.F1:
         gotKey = keyboard.f1Key;
         break;
-      case (Key.F2):
+      case Key.F2:
         gotKey = keyboard.f2Key;
         break;
-      case (Key.F3):
+      case Key.F3:
         gotKey = keyboard.f3Key;
         break;
-      case (Key.F4):
+      case Key.F4:
         gotKey = keyboard.f4Key;
         break;
-      case (Key.F5):
+      case Key.F5:
         gotKey = keyboard.f5Key;
         break;
 
@@ -647,11 +647,11 @@ public static class ControllerManager
     }
     switch (mode)
     {
-      case (InputMode.DOWN):
+      case InputMode.DOWN:
         return gotKey.wasPressedThisFrame;
-      case (InputMode.UP):
+      case InputMode.UP:
         return gotKey.wasReleasedThisFrame;
-      case (InputMode.HOLD):
+      case InputMode.HOLD:
         return gotKey.isPressed;
     }
     return false;

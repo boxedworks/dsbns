@@ -282,10 +282,10 @@ public class ItemScript : MonoBehaviour
     if (_laserSight) return;
 
     // Spawn lasersight
-    _laserSight = GameObject.Instantiate(GameResources._LaserBeam) as GameObject;
+    _laserSight = Instantiate(GameResources._LaserBeam) as GameObject;
     _laserSight.name = "laser";
     _laserSight.layer = 12;
-    GameObject.Destroy(_laserSight.GetComponent<Collider>());
+    Destroy(_laserSight.GetComponent<Collider>());
     var renderer = _laserSight.GetComponent<Renderer>();
   }
 
@@ -306,7 +306,7 @@ public class ItemScript : MonoBehaviour
   {
 
     // Mod
-    if (_laserSight) GameObject.Destroy(_laserSight);
+    if (_laserSight) Destroy(_laserSight);
 
     // Sfx
     if (_sfx0 != null)
@@ -961,7 +961,7 @@ public class ItemScript : MonoBehaviour
       // Particles
       if (flames.isPlaying && (!_used || _reloading || _clip == 0))
         flames.Stop(true);
-      else if (!flames.isEmitting && (_used && !_reloading && _clip > 0))
+      else if (!flames.isEmitting && _used && !_reloading && _clip > 0)
         flames.Play(true);
 
       // Sfx
@@ -982,7 +982,7 @@ public class ItemScript : MonoBehaviour
         _sfx0 = null;
       }
 
-      if ((_clip < 10 && !flames.isEmitting) && _sfx1 != null)
+      if (_clip < 10 && !flames.isEmitting && _sfx1 != null)
       {
         _sfx1.loop = false;
         _sfx1.Stop();
@@ -1301,7 +1301,7 @@ public class ItemScript : MonoBehaviour
     var rb = newBullet._rb;
     rb.linearVelocity = Vector3.zero;
     rb.position = spawnPos;
-    var speedMod = 0.5f * (itemType == ItemType.FLAMETHROWER ? 1f : (penatrationAmount > 0 ? 1.35f : 1f)) + (bulletIter == 0 ? 0f : (UnityEngine.Random.value * 0.15f) - 0.075f);
+    var speedMod = 0.5f * (itemType == ItemType.FLAMETHROWER ? 1f : (penatrationAmount > 0 ? 1.35f : 1f)) + (bulletIter == 0 ? 0f : (Random.value * 0.15f) - 0.075f);
     speedMod *= bulletSpeedMod;
     var addforce = Vector3.zero;
     if (projectilesPerShot > 1)
@@ -1771,7 +1771,7 @@ public class ItemScript : MonoBehaviour
     // Reload animation
     float totalTime = reloadTime,
       halfTime = totalTime * 0.5f,
-      side_mod = (_side == ActiveRagdoll.Side.LEFT ? -1f : 1f);
+      side_mod = _side == ActiveRagdoll.Side.LEFT ? -1f : 1f;
     if (_reloadTime > 1f)
     {
       AnimateTransformAdditive(_arm_lower, _save_rot_lower, -60f, 0f, 20f * -side_mod, totalTime * 0.7f, halfTime * 0.7f,
@@ -1816,7 +1816,7 @@ public class ItemScript : MonoBehaviour
         {
           var projectile = _customProjectiles[i];
           if (projectile == null || (projectile.Thrown() && projectile.Explosive())) continue;
-          GameObject.Destroy(projectile.gameObject);
+          Destroy(projectile.gameObject);
         }
 
       // Spawn in new

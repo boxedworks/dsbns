@@ -91,7 +91,7 @@ public class ExplosiveScript : MonoBehaviour
     if (disableGameobject)
     {
       //transform.GetChild(0).gameObject.SetActive(false);
-      GameObject.Destroy(gameObject);
+      Destroy(gameObject);
     }
 
     // Particles

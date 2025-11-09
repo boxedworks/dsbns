@@ -275,15 +275,15 @@ public class ActiveRagdoll
   public void RemoveArmJoint(Side side)
   {
     var joints = new HingeJoint[] {
-      (side == Side.LEFT ? _arm_upper_l : _arm_upper_r),
-      (side == Side.LEFT ? _arm_lower_l : _arm_lower_r)
+      side == Side.LEFT ? _arm_upper_l : _arm_upper_r,
+      side == Side.LEFT ? _arm_lower_l : _arm_lower_r
     };
     foreach (var joint in joints)
     {
       if (joint == null) continue;
       var rb = joint.gameObject.GetComponent<Rigidbody>();
-      GameObject.DestroyImmediate(joint);
-      GameObject.DestroyImmediate(rb);
+      UnityEngine.Object.DestroyImmediate(joint);
+      UnityEngine.Object.DestroyImmediate(rb);
     }
     // Set arms to default
     _transform_parts.SetDefault(_transform_parts._spine);
@@ -435,7 +435,7 @@ public class ActiveRagdoll
       {
         // If player, send footstep sound to enemies to check for detection
         if (_IsPlayer && _PlayerScript._CanDetect && _Distance.magnitude > 0.1f)
-          EnemyScript.CheckSound(_Controller.position, (_Distance.magnitude > 0.2f ? EnemyScript.Loudness.SOFT : (EnemyScript.Loudness.SUPERSOFT)));
+          EnemyScript.CheckSound(_Controller.position, _Distance.magnitude > 0.2f ? EnemyScript.Loudness.SOFT : EnemyScript.Loudness.SUPERSOFT);
 
         // Sfx
         var footstepAudioSource = false && _bloodFootprintTimer > 0f ? SceneThemes._footstepBloody : SceneThemes._footstep;
@@ -474,7 +474,7 @@ public class ActiveRagdoll
       }
 
       // Use iter to move joints
-      _movementIter += (_Distance.magnitude / 3f) * Time.deltaTime * 65f;
+      _movementIter += _Distance.magnitude / 3f * Time.deltaTime * 65f;
 
       // Check melee movement
       var moveDir = (movePos - posSave).normalized;
@@ -512,7 +512,7 @@ public class ActiveRagdoll
       _Controller.position = _Hip.position;
 
       // Use iter to move joints
-      _movementIter += (_Distance.magnitude / 10f) * Time.deltaTime * 50f;
+      _movementIter += _Distance.magnitude / 10f * Time.deltaTime * 50f;
     }
 
     // Kick
@@ -535,7 +535,7 @@ public class ActiveRagdoll
           ToggleRaycasting(false);
           if (Physics.SphereCast(_Controller.position, 0.25f, _Controller.forward, out hit, 0.5f, GameResources._Layermask_Ragdoll))
           {
-            var ragdoll = ActiveRagdoll.GetRagdoll(hit.collider.gameObject);
+            var ragdoll = GetRagdoll(hit.collider.gameObject);
             if (ragdoll != null)
             {
               var hitForce = MathC.Get2DVector(
@@ -596,16 +596,16 @@ public class ActiveRagdoll
           movementIter = _movementIter2;
         }
 
-        j.targetPosition = (opposite ?
+        j.targetPosition = opposite ?
           joint.limits.min + (joint.limits.max - joint.limits.min) * movementIter :
-          joint.limits.max - (joint.limits.max - joint.limits.min) * movementIter);
+          joint.limits.max - (joint.limits.max - joint.limits.min) * movementIter;
       }
 
       // Normal walking
       else
-        j.targetPosition = (opposite ?
+        j.targetPosition = opposite ?
           joint.limits.min + (joint.limits.max - joint.limits.min) * _movementIter2 :
-          joint.limits.max - (joint.limits.max - joint.limits.min) * _movementIter2);
+          joint.limits.max - (joint.limits.max - joint.limits.min) * _movementIter2;
       joint.spring = j;
       opposite = !opposite;
     }
@@ -657,17 +657,17 @@ public class ActiveRagdoll
         // Remove HingeJoint
         var j = part.GetComponent<HingeJoint>();
         if (j)
-          GameObject.Destroy(j);
+          UnityEngine.Object.Destroy(j);
 
         // Remove Rigidbody
         var r = part.GetComponent<Rigidbody>();
         if (r)
-          GameObject.Destroy(r);
+          UnityEngine.Object.Destroy(r);
 
         // Remove Collider
         var c = part.GetComponent<Collider>();
         if (c)
-          GameObject.Destroy(c);
+          UnityEngine.Object.Destroy(c);
         yield return new WaitForSecondsRealtime(0.05f);
       }
     }
@@ -791,7 +791,7 @@ public class ActiveRagdoll
 
     // Rotate / positon per specific item
     var rb = item.GetComponent<Rigidbody>();
-    if (rb != null) GameObject.Destroy(rb);
+    if (rb != null) UnityEngine.Object.Destroy(rb);
 
     // Remove joints for better aiming
     RemoveArmJoint(side);
@@ -827,7 +827,7 @@ public class ActiveRagdoll
       _transform_parts.SetDefault(_transform_parts._arm_lower_r);
     }
     if (item == null) return;
-    GameObject.DestroyImmediate(item.gameObject);
+    UnityEngine.Object.DestroyImmediate(item.gameObject);
     if (side == Side.LEFT) _ItemL = null;
     else _ItemR = null;
   }
@@ -1240,7 +1240,7 @@ public class ActiveRagdoll
   Coroutine _color_Coroutine;
   public void ChangeColor(Color c, float lerpAmount = 0f)
   {
-    if (Color.Equals(_Color, Color.blue * 1.3f))
+    if (Equals(_Color, Color.blue * 1.3f))
       _Color = c;
 
     // Gather mesh renderers by amount of materials and final color
@@ -1251,7 +1251,7 @@ public class ActiveRagdoll
        startColor1 = mesh.sharedMaterials[1].color;
 
       SetLerpAmount(ref mesh, c, 1f, startColor0, startColor1);
-      _PlayerScript?.ChangeRingColor(GameScript.s_GameMode == GameScript.GameModes.PARTY && !VersusMode.s_Settings._FreeForAll ? VersusMode.GetTeamColorFromPlayerId(_PlayerScript._Id) : c);
+      _PlayerScript?.ChangeRingColor(GameScript.s_IsPartyGameMode && !VersusMode.s_Settings._FreeForAll ? VersusMode.GetTeamColorFromPlayerId(_PlayerScript._Id) : c);
       return;
     }
     if (_color_Coroutine != null)
@@ -1347,7 +1347,7 @@ public class ActiveRagdoll
         if (_hasArmor)
         {
           spawnBlood = false;
-          var health_threshhold = GameScript.IsSurvival() ? 3 : 1;
+          var health_threshhold = GameScript.s_IsZombieGameMode ? 3 : 1;
           if (save_health > health_threshhold && _health <= health_threshhold)
             RemoveArmor(hitForce, false);
           else
@@ -1513,7 +1513,7 @@ public class ActiveRagdoll
             dir += -_Controller.right * 0.25f;
           if (Physics.SphereCast(_spine != null ? _spine.transform.position : _Hip.transform.position, 0.3f, dir, out hit, 0.75f, GameResources._Layermask_Ragdoll))
           {
-            var ragdoll = ActiveRagdoll.GetRagdoll(hit.collider.gameObject);
+            var ragdoll = GetRagdoll(hit.collider.gameObject);
             if (ragdoll == null)
             {
               continue;
@@ -1702,7 +1702,7 @@ public class ActiveRagdoll
         var rotationConfetti = confetti.transform.localRotation;
         rotationConfetti.eulerAngles = new Vector3(0f, rotationConfetti.eulerAngles.y, rotationConfetti.eulerAngles.z);
         confetti.transform.localRotation = rotationConfetti;
-        confetti.transform.Rotate(new Vector3(1f, 0f, 0f), UnityEngine.Random.value * -20f);
+        confetti.transform.Rotate(new Vector3(1f, 0f, 0f), Random.value * -20f);
         rotationConfetti = confetti.transform.localRotation;
 
         GameScript.s_Singleton.StartCoroutine(BloodFollow(confetti));
@@ -1807,7 +1807,7 @@ public class ActiveRagdoll
       FunctionsC.AoeHandler.RegisterAoeEffect(this, FunctionsC.AoeHandler.AoeType.BLOOD, _Hip.position, 1f, 20f);
 
       // Audio
-      PlaySound($"Ragdoll/Blood{(/*Random.Range(0, 10) < 3 ? 1 : */0)}", 1.1f, 1.5f);
+      PlaySound($"Ragdoll/Blood{/*Random.Range(0, 10) < 3 ? 1 : */0}", 1.1f, 1.5f);
     }
   }
 
@@ -1910,7 +1910,7 @@ public class ActiveRagdoll
           var explode_script = _Hip.gameObject.AddComponent<ExplosiveScript>();
           explode_script._explosionType = ExplosiveScript.ExplosionType.AWAY;
           explode_script._radius = 3 * 0.8f;
-          explode_script.Trigger(source, (damageSourceType == DamageSourceType.MELEE ? 1f : 0.1f), false, true);
+          explode_script.Trigger(source, damageSourceType == DamageSourceType.MELEE ? 1f : 0.1f, false, true);
         }
       }
 
@@ -2015,7 +2015,7 @@ public class ActiveRagdoll
   {
     if (_hasCrown) return;
 
-    var crown = GameObject.Instantiate(GameResources._Crown).transform;
+    var crown = UnityEngine.Object.Instantiate(GameResources._Crown).transform;
 
     crown.transform.parent = _head.transform;
     crown.localScale = Vector3.one * 2f;
@@ -2028,7 +2028,7 @@ public class ActiveRagdoll
   {
     if (!_hasCrown) return;
 
-    GameObject.Destroy(_head.transform.GetChild(0).gameObject);
+    UnityEngine.Object.Destroy(_head.transform.GetChild(0).gameObject);
 
     _hasCrown = false;
   }
@@ -2038,7 +2038,7 @@ public class ActiveRagdoll
   {
     if (_hasArmor) return;
 
-    var armor = GameObject.Instantiate(GameResources._Armor);
+    var armor = UnityEngine.Object.Instantiate(GameResources._Armor);
     var helmet = armor.transform.GetChild(0);
 
     PlaySound("Enemies/Armor_give", 0.9f, 1.1f);
@@ -2051,7 +2051,7 @@ public class ActiveRagdoll
     helmet.localEulerAngles = new Vector3(-90f, 180f, 0f);
     helmet.localPosition = new Vector3(0f, 2.1f, 0.9f);
 
-    GameObject.Destroy(armor);
+    UnityEngine.Object.Destroy(armor);
 
     _hasArmor = true;
   }
@@ -2157,9 +2157,9 @@ public class ActiveRagdoll
   }
   public bool HasItem(GameScript.ItemManager.Items item)
   {
-    return (
+    return
       (_ItemL?._type ?? GameScript.ItemManager.Items.NONE) == item ||
-      (_ItemR?._type ?? GameScript.ItemManager.Items.NONE) == item);
+      (_ItemR?._type ?? GameScript.ItemManager.Items.NONE) == item;
   }
   public bool HasActiveBulletDeflector()
   {
@@ -2177,7 +2177,7 @@ public class ActiveRagdoll
   public bool IsSelf(GameObject o)
   {
     foreach (GameObject part in _parts)
-      if (GameObject.ReferenceEquals(part, o))
+      if (ReferenceEquals(part, o))
         return true;
     return false;
   }
@@ -2188,7 +2188,7 @@ public class ActiveRagdoll
     foreach (var part in _parts)
     {
       if (part == null) continue;
-      part.layer = (enable ? 10 : 2);
+      part.layer = enable ? 10 : 2;
     }
   }
 
@@ -2261,7 +2261,7 @@ public class ActiveRagdoll
       return;
     }
     // Create a new container for the text
-    GameObject g = GameObject.Instantiate(Resources.Load("TextBubble") as GameObject);
+    GameObject g = UnityEngine.Object.Instantiate(Resources.Load("TextBubble") as GameObject);
     g.transform.parent = GameResources._Container_Objects;
     g.transform.position = _head.transform.position;
     // Get the TextBubbleScript and init with text, position, and colot
@@ -2340,7 +2340,7 @@ public class ActiveRagdoll
     // Dismember
     var t = joint.transform;
     joint.gameObject.layer = 2;
-    GameObject.Destroy(joint);
+    UnityEngine.Object.Destroy(joint);
     t.parent = _Hip.transform.parent;
 
     // Make sure has collider (arm joint)
@@ -2436,7 +2436,7 @@ public class ActiveRagdoll
         PlayerScript.s_Players.Remove(r._PlayerScript);
         if (r._Controller == null)
           continue;
-        GameObject.Destroy(r._Controller.parent.gameObject);
+        UnityEngine.Object.Destroy(r._Controller.parent.gameObject);
       }
     }
     // Add players' ragdolls

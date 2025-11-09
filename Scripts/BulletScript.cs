@@ -359,7 +359,7 @@ public class BulletScript : MonoBehaviour
     // Check 2nd closest enemy
     var bulletPos = _rb.position + new Vector3(0f, 0.6f, 0f);
     var raycastinfo = new RaycastHit();
-    if (targetPosition != Vector3.zero && (Physics.SphereCast(new Ray(bulletPos, MathC.Get2DVector(targetPosition - _rb.position).normalized), 0.05f, out raycastinfo, 100f, LayerMask.GetMask("ParticleCollision")) && raycastinfo.distance < target._distance))
+    if (targetPosition != Vector3.zero && Physics.SphereCast(new Ray(bulletPos, MathC.Get2DVector(targetPosition - _rb.position).normalized), 0.05f, out raycastinfo, 100f, LayerMask.GetMask("ParticleCollision")) && raycastinfo.distance < target._distance)
     {
       //Debug.Log($"{raycastinfo.distance} <? {target._distance * 0.95f} [{raycastinfo.collider.name}]");
 
@@ -480,7 +480,7 @@ public class BulletScript : MonoBehaviour
       es.Start();
       es.Explode(_sourceDamageRagdoll, false, true);
 
-      GameObject.Destroy(es);
+      Destroy(es);
     }
   }
 

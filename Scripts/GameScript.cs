@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Mirror.Examples.Basic;
 using UnityEngine;
 
 using Random = UnityEngine.Random;
@@ -167,6 +168,9 @@ public class GameScript : MonoBehaviour
     PARTY
   }
   public static GameModes s_GameMode;
+  public static bool s_IsMissionsGameMode { get { return s_GameMode == GameModes.MISSIONS; } }
+  public static bool s_IsZombieGameMode { get { return s_GameMode == GameModes.ZOMBIE; } }
+  public static bool s_IsPartyGameMode { get { return s_GameMode == GameModes.PARTY; } }
 
   public static int s_CrownPlayer, s_CrownEnemy;
 
@@ -332,10 +336,10 @@ public class GameScript : MonoBehaviour
     var numPlayers = Settings._NumberPlayers;
     var numTeams = VersusMode.GetNumberTeams();
 
-    if ((s_GameMode == GameModes.PARTY && !VersusMode.s_Settings._FreeForAll ? numTeams : numPlayers) <= numSpawns || s_GameMode != GameModes.PARTY || (s_GameMode == GameModes.PARTY && VersusMode.s_Settings._FreeForAll))
+    if ((s_IsPartyGameMode && !VersusMode.s_Settings._FreeForAll ? numTeams : numPlayers) <= numSpawns || !s_IsPartyGameMode || (s_IsPartyGameMode && VersusMode.s_Settings._FreeForAll))
     {
       var spawnLocation = new int[numPlayers];
-      if (s_GameMode == GameModes.PARTY && !VersusMode.s_Settings._FreeForAll && numPlayers > numSpawns)
+      if (s_IsPartyGameMode && !VersusMode.s_Settings._FreeForAll && numPlayers > numSpawns)
       {
         var teamListSpawn = new Dictionary<int, int>();
         var spawnList_ = new List<int>(spawnList);
@@ -657,7 +661,7 @@ public class GameScript : MonoBehaviour
           if (p == null || p._Ragdoll == null || p._Ragdoll._IsDead)
           {
             ActiveRagdoll.s_Ragdolls.Remove(p._Ragdoll);
-            GameObject.Destroy(p.transform.parent.gameObject);
+            Destroy(p.transform.parent.gameObject);
             PlayerScript.s_Players.RemoveAt(i);
             PlayerspawnScript._PlayerSpawns[0].SpawnPlayer((playerScript) =>
             {
@@ -704,21 +708,21 @@ public class GameScript : MonoBehaviour
       // Populate wave with enemies
       switch (_Wave)
       {
-        case (1):
+        case 1:
           SpawnLogic._SpawnTime = 1.2f;
           QueueEnemyType(EnemyType.KNIFE_WALK_SLOW, 7);
           break;
-        case (2):
+        case 2:
           SpawnLogic._SpawnTime = 1.1f;
           QueueEnemyType(EnemyType.KNIFE_WALK_SLOW, 12);
           break;
-        case (3):
+        case 3:
           SpawnLogic._SpawnTime = 1f;
           QueueEnemyType(EnemyType.KNIFE_WALK_SLOW, 6);
           QueueEnemyType(EnemyType.KNIFE_WALK, 4);
           QueueEnemyType(EnemyType.KNIFE_WALK_SLOW, 6);
           break;
-        case (4):
+        case 4:
           SpawnLogic._SpawnTime = 0.9f;
           QueueEnemyType(EnemyType.KNIFE_WALK_SLOW, 5, 5);
           QueueEnemyType(EnemyType.KNIFE_WALK, 5, 3);
@@ -728,7 +732,7 @@ public class GameScript : MonoBehaviour
         //case (5):
         //  RandomSpecialWave();
         //  break;
-        case (5):
+        case 5:
           SpawnLogic._SpawnTime = 0.8f;
           EnemyScript._MAX_RAGDOLLS_ALIVE = 35;
           QueueEnemyType(EnemyType.KNIFE_WALK_SLOW, 3);
@@ -737,7 +741,7 @@ public class GameScript : MonoBehaviour
           QueueEnemyType(EnemyType.KNIFE_WALK_SLOW, 8);
           QueueEnemyType(EnemyType.KNIFE_WALK, 3);
           break;
-        case (6):
+        case 6:
           SpawnLogic._SpawnTime = 0.7f;
           QueueEnemyType(EnemyType.KNIFE_WALK_SLOW, 5);
           QueueEnemyType(EnemyType.KNIFE_WALK_SLOW, 8, 10);
@@ -747,14 +751,14 @@ public class GameScript : MonoBehaviour
           QueueEnemyType(EnemyType.KNIFE_WALK_SLOW, 6);
           QueueEnemyType(EnemyType.KNIFE_WALK, 5);
           break;
-        case (7):
+        case 7:
           QueueEnemyType(EnemyType.KNIFE_WALK_SLOW, 5);
           QueueEnemyType(EnemyType.KNIFE_WALK_SLOW, 6, 10);
           QueueEnemyType(EnemyType.KNIFE_WALK_SLOW, 10, 10);
           QueueEnemyType(EnemyType.KNIFE_WALK_SLOW, 10);
           QueueEnemyType(EnemyType.KNIFE_WALK, 5);
           break;
-        case (8):
+        case 8:
           SpawnLogic._SpawnTime = 0.65f;
           QueueEnemyType(EnemyType.KNIFE_WALK_SLOW, 8, 10);
           QueueEnemyType(EnemyType.KNIFE_WALK, 5);
@@ -763,12 +767,12 @@ public class GameScript : MonoBehaviour
         //case (10):
         //  RandomSpecialWave();
         //  break;
-        case (9):
+        case 9:
           QueueEnemyType(EnemyType.KNIFE_WALK_SLOW, 15, 20);
           QueueEnemyType(EnemyType.KNIFE_WALK, 7);
           QueueEnemyType(EnemyType.KNIFE_WALK_SLOW, 30);
           break;
-        case (10):
+        case 10:
           SpawnLogic._SpawnTime = 0.6f;
           EnemyScript._MAX_RAGDOLLS_ALIVE = 50;
           QueueEnemyType(EnemyType.KNIFE_WALK_SLOW, 15, 20);
@@ -776,14 +780,14 @@ public class GameScript : MonoBehaviour
           QueueEnemyType(EnemyType.KNIFE_WALK_SLOW, 30);
           QueueEnemyType(EnemyType.KNIFE_WALK, 8);
           break;
-        case (11):
+        case 11:
           QueueEnemyType(EnemyType.KNIFE_WALK_SLOW, 20, 15);
           QueueEnemyTypeGroup(EnemyType.KNIFE_WALK_SLOW, 10, 15);
           QueueEnemyType(EnemyType.KNIFE_WALK, 15, 10);
           QueueEnemyType(EnemyType.KNIFE_WALK_SLOW, 20, 15);
           QueueEnemyType(EnemyType.KNIFE_WALK, 10);
           break;
-        case (12):
+        case 12:
           SpawnLogic._SpawnTime = 0.5f;
           QueueEnemyType(EnemyType.KNIFE_WALK_SLOW, 20, 15);
           QueueEnemyTypeGroup(EnemyType.KNIFE_WALK_SLOW, 10, 15);
@@ -796,7 +800,7 @@ public class GameScript : MonoBehaviour
         //case (15):
         //RandomSpecialWave();
         //break;
-        case (13):
+        case 13:
           QueueEnemyType(EnemyType.KNIFE_WALK, 10, 5);
           QueueEnemyType(EnemyType.KNIFE_WALK_SLOW, 20);
           QueueEnemyType(EnemyType.KNIFE_WALK, 15);
@@ -805,7 +809,7 @@ public class GameScript : MonoBehaviour
           QueueEnemyTypeGroup(EnemyType.KNIFE_WALK_SLOW, 20, 15);
           QueueEnemyType(EnemyType.KNIFE_WALK, 15);
           break;
-        case (14):
+        case 14:
           QueueEnemyType(EnemyType.KNIFE_WALK_SLOW, 15, 15);
           QueueEnemyType(EnemyType.KNIFE_WALK, 7);
           QueueEnemyType(EnemyType.KNIFE_JOG, 3);
@@ -817,7 +821,7 @@ public class GameScript : MonoBehaviour
           QueueEnemyType(EnemyType.KNIFE_WALK, 10);
           QueueEnemyType(EnemyType.KNIFE_WALK_SLOW, 15);
           break;
-        case (15):
+        case 15:
           SpawnLogic._SpawnTime = 0.45f;
           EnemyScript._MAX_RAGDOLLS_ALIVE = 60;
           QueueEnemyType(EnemyType.KNIFE_WALK_SLOW, 20, 25);
@@ -831,7 +835,7 @@ public class GameScript : MonoBehaviour
           QueueEnemyType(EnemyType.KNIFE_WALK, 13);
           QueueEnemyType(EnemyType.KNIFE_WALK_SLOW, 20);
           break;
-        case (16):
+        case 16:
           QueueEnemyType(EnemyType.KNIFE_WALK_SLOW, 30, 35);
           QueueEnemyType(EnemyType.KNIFE_WALK, 15);
           QueueEnemyType(EnemyType.KNIFE_JOG, 7);
@@ -846,7 +850,7 @@ public class GameScript : MonoBehaviour
         //case (20):
         // RandomSpecialWave();
         // break;
-        case (17):
+        case 17:
           SpawnLogic._SpawnTime = 0.4f;
           QueueEnemyType(EnemyType.KNIFE_WALK_SLOW, 30, 45);
           QueueEnemyType(EnemyType.KNIFE_WALK, 5);
@@ -861,7 +865,7 @@ public class GameScript : MonoBehaviour
           QueueEnemyType(EnemyType.KNIFE_WALK, 20, 10);
           QueueEnemyType(EnemyType.KNIFE_WALK_SLOW, 35);
           break;
-        case (18):
+        case 18:
           QueueEnemyType(EnemyType.KNIFE_WALK_SLOW, 35, 45);
           QueueEnemyType(EnemyType.KNIFE_WALK, 7);
           QueueEnemyType(EnemyType.KNIFE_JOG, 10, 15);
@@ -875,7 +879,7 @@ public class GameScript : MonoBehaviour
           QueueEnemyType(EnemyType.KNIFE_WALK, 20);
           QueueEnemyType(EnemyType.KNIFE_WALK_SLOW, 50);
           break;
-        case (19):
+        case 19:
           QueueEnemyType(EnemyType.KNIFE_WALK, 15, 20);
           QueueEnemyType(EnemyType.KNIFE_WALK_SLOW, 50);
           QueueEnemyType(EnemyType.ARMORED, 3, 15);
@@ -889,7 +893,7 @@ public class GameScript : MonoBehaviour
           QueueEnemyType(EnemyType.KNIFE_WALK, 25);
           QueueEnemyType(EnemyType.KNIFE_WALK_SLOW, 50);
           break;
-        case (20):
+        case 20:
           SpawnLogic._SpawnTime = 0.35f;
           EnemyScript._MAX_RAGDOLLS_ALIVE = 75;
           QueueEnemyType(EnemyType.ARMORED, 3, 15);
@@ -913,7 +917,7 @@ public class GameScript : MonoBehaviour
         //  break;
         default:
           var mod = Mathf.Clamp((_Wave - 20f) * 0.1f, 1f, 5f);
-          max_zombies = (200 * (int)mod);
+          max_zombies = 200 * (int)mod;
           while (max_zombies > 0)
           {
             QueueEnemyType(EnemyType.KNIFE_WALK, 15, 50);
@@ -1075,7 +1079,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
           if (p == null || p._Ragdoll == null || p._Ragdoll._IsDead)
           {
             ActiveRagdoll.s_Ragdolls.Remove(p._Ragdoll);
-            GameObject.Destroy(p.transform.parent.gameObject);
+            Destroy(p.transform.parent.gameObject);
             PlayerScript.s_Players.RemoveAt(i);
             PlayerspawnScript._PlayerSpawns[0].SpawnPlayer((playerScript) =>
             {
@@ -1092,7 +1096,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         {
           var obj = objects.GetChild(i);
           if (obj.name == "BookcaseOpen" || obj.name == "Interactable") continue;
-          GameObject.Destroy(obj.gameObject);
+          Destroy(obj.gameObject);
         }
 
         // Heal and reload all players
@@ -1243,7 +1247,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
           if (Time.time - pair.Item2 > 45f)
           {
             _Money.RemoveAt(index);
-            GameObject.Destroy(pair.Item1);
+            Destroy(pair.Item1);
           }
         }
       }
@@ -1335,7 +1339,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
             rb.mass = 0.5f;
             rb.AddForce(new Vector3(0f, 1f, 0f) * (350f + Random.value * 200f));
             rb.AddTorque(new Vector3(1f - (Random.value * 2f), 1f - (Random.value * 2f), 1f - (Random.value * 2f)) * (250f + Random.value * 200f));
-            GameObject.Destroy(rb.gameObject, 10f);
+            Destroy(rb.gameObject, 10f);
           }
       }
     }
@@ -1451,33 +1455,33 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
             var health = 1;
             switch (survivalAttributes._enemyType)
             {
-              case (EnemyType.KNIFE_WALK_SLOW):
+              case EnemyType.KNIFE_WALK_SLOW:
                 movespeed = 0.25f;
                 break;
-              case (EnemyType.KNIFE_WALK):
-              case (EnemyType.PISTOL_WALK):
+              case EnemyType.KNIFE_WALK:
+              case EnemyType.PISTOL_WALK:
                 movespeed = 0.5f;
                 break;
-              case (EnemyType.SET_ALLSPAWN):
+              case EnemyType.SET_ALLSPAWN:
                 SetAllSpawn();
                 break;
-              case (EnemyType.REMOVE_ALLSPAWN):
+              case EnemyType.REMOVE_ALLSPAWN:
                 RemoveAllSpawn();
                 break;
-              case (EnemyType.KNIFE_JOG):
-              case (EnemyType.GRENADE_JOG):
+              case EnemyType.KNIFE_JOG:
+              case EnemyType.GRENADE_JOG:
                 movespeed = 0.7f;
                 break;
-              case (EnemyType.KNIFE_RUN):
+              case EnemyType.KNIFE_RUN:
                 movespeed = 1f;
                 break;
-              case (EnemyType.KNIFE_BEEFY_SLOW):
+              case EnemyType.KNIFE_BEEFY_SLOW:
                 movespeed = 0.15f;
                 health = 4;
                 e?._Ragdoll.ChangeColor((Color.red + Color.yellow) / 3f);//new Color(0, 30, 0));
                 //e.GetRagdoll()._hip.transform.localScale *= 1.6f;
                 break;
-              case (EnemyType.ARMORED):
+              case EnemyType.ARMORED:
                 movespeed = 0.25f;
                 health = 4;
                 e._Ragdoll.ChangeColor(Color.gray);
@@ -1557,7 +1561,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
 
   // Update is called once per frame
   public static bool s_Backrooms;
-  public static bool s_InteractableObjects { get { return s_GameMode == GameModes.MISSIONS || s_GameMode == GameModes.PARTY; } }
+  public static bool s_InteractableObjects { get { return s_IsMissionsGameMode || s_IsPartyGameMode; } }
   public Light _GlobalLight;
   void Update()
   {
@@ -1566,14 +1570,14 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     {
       if (!s_ExitLight.enabled)
         s_ExitLight.enabled = true;
-      s_ExitLight.spotAngle += ((40f - Mathf.Sin(Time.time * 4f) * 2.5f) - s_ExitLight.spotAngle) * Time.deltaTime * 5f;
+      s_ExitLight.spotAngle += (40f - Mathf.Sin(Time.time * 4f) * 2.5f - s_ExitLight.spotAngle) * Time.deltaTime * 5f;
       s_ExitLight.innerSpotAngle = s_ExitLight.spotAngle - 6;
     }
     else
       s_ExitLight.spotAngle += (0f - s_ExitLight.spotAngle) * Time.deltaTime * 5f;
 
     //
-    if (!IsSurvival())
+    if (!s_IsZombieGameMode)
     {
       // Update level timer
       if (s_Backrooms)
@@ -1677,13 +1681,13 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     if (Time.unscaledTime - _lastInputCheck > 0.25f)
     {
       _lastInputCheck = Time.unscaledTime;
-      Settings._NumberPlayers = (ControllerManager._NumberGamepads) + (Settings._ForceKeyboard ? 1 : 0);
+      Settings._NumberPlayers = ControllerManager._NumberGamepads + (Settings._ForceKeyboard ? 1 : 0);
       if (s_CustomNetworkManager._Connected)
         Settings._NumberPlayers += s_CustomNetworkManager._Players.Count - 1;
       if (Settings._NumberPlayers == 0)
         Settings._NumberPlayers = 1;
       var numcontrollers_save = Settings._NumberControllers;
-      Settings._NumberControllers = (ControllerManager._NumberGamepads) + (Settings._ForceKeyboard ? 1 : 0);
+      Settings._NumberControllers = ControllerManager._NumberGamepads + (Settings._ForceKeyboard ? 1 : 0);
       if (Settings._NumberControllers == 0 && Menu._Confirmed_SwitchToKeyboard)
         Settings._NumberControllers = 1;
 
@@ -1707,7 +1711,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     }
 
     // Update survial mode
-    if (IsSurvival() && !s_EditorEnabled)
+    if (s_IsZombieGameMode && !s_EditorEnabled)
       SurvivalMode.Update();
 
     // Update progress bars
@@ -1772,7 +1776,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         }
 
         // Check normal mode
-        if (!IsSurvival() && !s_EditorEnabled && s_GameMode != GameModes.PARTY)
+        if (!s_IsZombieGameMode && !s_EditorEnabled && !s_IsPartyGameMode)
         {
           // Check endgame
           var timeToEnd = 2.2f;
@@ -1781,7 +1785,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
             _levelEndTimer += Time.deltaTime;
 
             // Check time
-            if (_levelEndTimer > timeToEnd || (EnemyScript.NumberAlive() == 0 && Time.time - _goalPickupTime > 0.8f))
+            if (/*_levelEndTimer > timeToEnd || */Time.time - _goalPickupTime > 0.8f && EnemyScript.NumberAlive() == 0 && (LevelModule.ExtraCrownMode == 0 || (PlayerScript.GetNumberAlivePlayers() == 1)))
             {
 
               if (_levelEndTimer > timeToEnd || Levels._CurrentLevelIndex == 0)
@@ -1833,7 +1837,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
             if (!s_EditorEnabled)
             {
               // Increment survival wave
-              if (IsSurvival())
+              if (s_IsZombieGameMode)
               {
                 if (ControllerManager.GetKey(ControllerManager.Key.PAGE_UP, ControllerManager.InputMode.DOWN))
                 {
@@ -1883,7 +1887,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
           }
 
           // Next / previous level
-          if (!s_EditorEnabled && !IsSurvival() && (s_GameMode != GameModes.PARTY || Debug.isDebugBuild))
+          if (!s_EditorEnabled && !s_IsZombieGameMode && (!s_IsPartyGameMode || Debug.isDebugBuild))
           {
             if (!TileManager._LoadingMap)
             {
@@ -1985,7 +1989,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       // Check if checking for controllers
       if (Menu.s_CurrentMenu._Type == Menu.MenuType.CONTROLLERS_CHANGED)
       {
-        var numplayers = (ControllerManager._NumberGamepads) + (Settings._ForceKeyboard ? 1 : 0);
+        var numplayers = ControllerManager._NumberGamepads + (Settings._ForceKeyboard ? 1 : 0);
         if (numplayers >= Menu._Save_NumPlayers)
         {
           Menu.OnControllersChangedFix();
@@ -2053,7 +2057,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       set
       {
         if (Levels._HardcodedLoadout != null && !s_EditorTesting) return;
-        if (s_GameMode != GameModes.MISSIONS) return;
+        if (!s_IsMissionsGameMode) return;
         if (_Player?._Ragdoll?._IsGrappling ?? false) return;
 
         // Locate valid loadout to equip
@@ -2108,15 +2112,15 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       get
       {
         // Level packs
-        if (Levels._HardcodedLoadout != null && !GameScript.s_EditorTesting) return Levels._HardcodedLoadout;
+        if (Levels._HardcodedLoadout != null && !s_EditorTesting) return Levels._HardcodedLoadout;
 
-        // VERSUS mode
-        if (s_GameMode == GameModes.PARTY) return VersusMode.s_PlayerLoadouts;
+        // PARTY mode
+        if (s_IsPartyGameMode) return VersusMode.s_PlayerLoadouts;
 
-        // SURVIVAL mode
-        if (s_GameMode == GameModes.ZOMBIE && SurvivalMode.s_PlayerLoadouts != null) return SurvivalMode.s_PlayerLoadouts[_Id];
+        // ZOMBIE mode
+        if (s_IsZombieGameMode && SurvivalMode.s_PlayerLoadouts != null) return SurvivalMode.s_PlayerLoadouts[_Id];
 
-        // CLASSIC mode
+        // MISSIONS mode
         if (_LoadoutIndex > ItemManager.Loadout._Loadouts.Length)
           _LoadoutIndex = 0;
         return ItemManager.Loadout._Loadouts[_LoadoutIndex];
@@ -2296,6 +2300,9 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         if (PlayerScript.s_Players != null)
           foreach (PlayerScript p in PlayerScript.s_Players)
             if (p._Id == _Id && !p._Ragdoll._IsDead) p._Ragdoll.ChangeColor(GetColor());
+
+        // Play SFX
+        Menu.PlayNoise(Menu.Noise.COLOR_CHANGE);
 
         // Update UI
         CreateHealthUI(_Player == null ? 1 : _Player._Ragdoll._health);
@@ -2587,7 +2594,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       if (_health_UI != null && _health_UI.Length > 0)
       {
         for (int i = _health_UI.Length - 1; i >= 0; i--)
-          GameObject.Destroy(_health_UI[i]);
+          Destroy(_health_UI[i]);
         _health_UI = null;
       }
     }
@@ -2624,10 +2631,10 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
 
       public void Destroy()
       {
-        GameObject.Destroy(_base.gameObject);
+        Object.Destroy(_base.gameObject);
         foreach (var t in _ammo)
-          GameObject.Destroy(t.gameObject);
-        GameObject.Destroy(_ammoUI.gameObject);
+          Object.Destroy(t.gameObject);
+        Object.Destroy(_ammoUI.gameObject);
       }
 
       public void Init(System.Tuple<Transform, int> data, int index, System.Tuple<PlayerScript, bool, ActiveRagdoll.Side> item_data, bool is_utility)
@@ -2638,7 +2645,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
 
         // Spawn ammo border
         GameResources.s_AmmoSideUi.text = !is_utility ? "" : item_data.Item3 == ActiveRagdoll.Side.LEFT ? "L" : "R";
-        _ammoUI = GameObject.Instantiate(GameResources.s_AmmoUi).transform;
+        _ammoUI = Instantiate(GameResources.s_AmmoUi).transform;
         _ammoUI.gameObject.layer = 11;
         _ammoUI.parent = _base.parent;
         _ammoUI.localPosition = new Vector3(0.8f + index * 0.8f, -0.15f, 0f);
@@ -2801,8 +2808,8 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     {
       var bg = _ui.GetChild(1).transform;
 
-      _VersusUI.gameObject.SetActive(s_GameMode == GameModes.PARTY);
-      if (s_GameMode == GameModes.PARTY)
+      _VersusUI.gameObject.SetActive(s_IsPartyGameMode);
+      if (s_IsPartyGameMode)
       {
 
         var xpos = 0.701f;
@@ -2842,7 +2849,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     {
       var bg = _ui.GetChild(1).transform;
 
-      if (s_GameMode == GameModes.MISSIONS && SettingsModule.ShowLoadoutIndexes)
+      if (s_IsMissionsGameMode && SettingsModule.ShowLoadoutIndexes)
       {
         _loadoutIndexText.enabled = true;
         _loadoutIndexText.text = $"{_LoadoutIndex + 1}";
@@ -3071,12 +3078,12 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
             transform.localScale = new Vector3(0.8f, 0.8f, 0.2f);
             break;
           case "C4":
-            transform.localPosition += new Vector3(-0.17f, 0.0f, 0f);
+            transform.localPosition += new Vector3(-0.15f, 0.02f, 0f);
             transform.localEulerAngles = new Vector3(0f, 90f, -90f);
             transform.localScale = new Vector3(0.8f, 0.8f, 0.8f);
             break;
           case "BEAR_TRAP":
-            transform.localPosition += new Vector3(-0.17f, 0.0f, 0f);
+            transform.localPosition += new Vector3(-0.21f, 0.04f, 0f);
             transform.localEulerAngles = new Vector3(0f, 90f, -30f);
             transform.localScale = new Vector3(0.4f, 0.4f, 0.4f);
             break;
@@ -3281,12 +3288,12 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         {
           var total = 0;
           // Items
-          foreach (var item in (_two_weapon_pairs ? new Items[] {
+          foreach (var item in _two_weapon_pairs ? new Items[] {
             _Equipment._ItemLeft0, _Equipment._ItemRight0,
             _Equipment._ItemLeft1, _Equipment._ItemRight1,
           } : new Items[] {
             _Equipment._ItemLeft0, _Equipment._ItemRight0,
-          }))
+          })
             total += GetItemValue(item);
           // Utils
           foreach (var utility in _Equipment._UtilitiesLeft)
@@ -3512,14 +3519,14 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       var script = new_item.GetComponent<ItemScript>();
       script._ragdoll = player != null ? player._Ragdoll : null;
       var clipSize = script.GetClipSize();
-      GameObject.DestroyImmediate(script);
+      DestroyImmediate(script);
 
       var colliders = new_item.GetComponents<Collider>();
       for (var i = 0; i < colliders.Length; i++)
-        GameObject.DestroyImmediate(colliders[i]);
+        DestroyImmediate(colliders[i]);
 
       var rigidbody = new_item.GetComponent<Rigidbody>();
-      if (rigidbody) GameObject.DestroyImmediate(rigidbody);
+      if (rigidbody) DestroyImmediate(rigidbody);
 
       return System.Tuple.Create(new_item.transform, clipSize);
     }
@@ -3689,11 +3696,11 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     {
       Time.timeScale = 1f;
       // Check player amount change
-      if (s_GameMode == GameModes.MISSIONS)
+      if (s_IsMissionsGameMode)
         if (PlayerScript.s_Players != null && Settings._NumberPlayers != PlayerScript.s_Players.Count) TileManager.ReloadMap();
       TileManager._Text_LevelNum.gameObject.SetActive(true);
       TileManager._Text_LevelTimer.gameObject.SetActive(true);
-      if (s_GameMode == GameModes.MISSIONS && !Levels._LevelPack_Playing && !s_EditorTesting)
+      if (s_IsMissionsGameMode && !Levels._LevelPack_Playing && !s_EditorTesting)
         TileManager._Text_LevelTimer_Best.gameObject.SetActive(true);
       TileManager._Text_GameOver.gameObject.SetActive(true);
       TileManager._Text_Money.gameObject.SetActive(true);
@@ -3719,7 +3726,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     var numDirs1 = Levels._LevelCollections[1]._levelData.Length / dirsPerLevel;
     for (var i = 0; i < numDirs1; i++)
       if (LevelModule.LevelData[1].Data[(i * dirsPerLevel) + (dirsPerLevel - 1)].Completed)
-        Shop.AddAvailableUnlockVault($"classic_{(numDirs0) + i}");
+        Shop.AddAvailableUnlockVault($"classic_{numDirs0 + i}");
   }
 
   // Fired on last enemy killed
@@ -3727,7 +3734,8 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
   {
     s_Singleton._goalPickupTime = Time.time;
 
-    ToggleExitLight(true);
+    if (LevelModule.ExtraCrownMode == 0 || PlayerScript.GetNumberAlivePlayers() < 2)
+      ToggleExitLight(true);
 
     // Check achievements
 #if UNITY_STANDALONE
@@ -3740,7 +3748,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
   static public void OnLevelComplete()
   {
     // Check survival
-    if (IsSurvival()) return;
+    if (s_IsZombieGameMode) return;
 
     // Check level pack
     if (Levels._LevelPack_Playing)
@@ -3976,7 +3984,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       }
 
       // Check mode-specific unlocks
-      if (s_GameMode == GameModes.MISSIONS)
+      if (s_IsMissionsGameMode)
       {
         // Award shop point
         //Shop._AvailablePoints++;
@@ -4051,7 +4059,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     if (
       s_EditorEnabled ||
       s_EditorTesting ||
-      IsSurvival() ||
+      s_IsZombieGameMode ||
       TileManager._LoadingMap
     )
       return false;
@@ -4087,7 +4095,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     if (
       s_EditorEnabled ||
       s_EditorTesting ||
-      IsSurvival() ||
+      s_IsZombieGameMode ||
       TileManager._LoadingMap
     )
       return false;
@@ -4120,7 +4128,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
   public static void NextLevel(int levelIndex)
   {
     // Unpause if paused
-    if (GameScript.s_Paused) GameScript.TogglePause();
+    if (s_Paused) TogglePause();
 
     // Check last level
     if (levelIndex >= Levels._CurrentLevelCollection._levelData.Length)
@@ -4199,14 +4207,9 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     }
   }
 
-  public static bool IsSurvival()
-  {
-    return s_GameMode == GameModes.ZOMBIE;
-  }
-
   // When called, the player can exit / complete the level
   public float _goalPickupTime;
-  public static void ToggleExit(bool toggle = true)
+  public static void ToggleExit(bool toggle)
   {
     ToggleExitLight(toggle);
 
@@ -4222,13 +4225,13 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
   {
     s_ExitLight.transform.position = PlayerspawnScript._PlayerSpawns[0].transform.position + new Vector3(0f, 3f, 0f);
 
-    if (s_GameMode != GameModes.MISSIONS && s_GameMode != GameModes.CHALLENGE)
+    if (!s_IsMissionsGameMode && s_GameMode != GameModes.CHALLENGE)
       s_ExitLightShow = false;
 
     else if (!PlayerScript._TimerStarted)
       s_ExitLightShow = true;
 
-    else if (!EnemyScript.AllDead() || !PlayerScript.HasExit())
+    else if (!EnemyScript.AllDead() || !PlayerScript.HasExit() || (LevelModule.ExtraCrownMode != 0 && PlayerScript.GetNumberAlivePlayers() > 1))
       s_ExitLightShow = false;
     else
       s_ExitLightShow = toggle;

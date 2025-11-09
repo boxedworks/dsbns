@@ -162,7 +162,7 @@ public class TileManager
         {
 
           monieText.transform.localPosition = new Vector3(
-            Mathf.Lerp(posStart.x, _Positions_Monies[4].x, (1f - Mathf.Clamp(t, 0f, 1f))),
+            Mathf.Lerp(posStart.x, _Positions_Monies[4].x, 1f - Mathf.Clamp(t, 0f, 1f)),
             Mathf.Lerp(posStart.y, _Positions_Monies[4].y, Easings.QuarticEaseIn(1f - Mathf.Clamp(t, 0f, 1f))),
             posStart.z
           );
@@ -280,7 +280,7 @@ public class TileManager
     if (_Tiles != null)
     {
       for (var i = _Map.childCount - 1; i > 2; i--)
-        GameObject.DestroyImmediate(_Map.GetChild(i).gameObject);
+        Object.DestroyImmediate(_Map.GetChild(i).gameObject);
       _Tiles = null;
     }
     if (_Tile != null)
@@ -327,13 +327,13 @@ public class TileManager
       navmesh_mods = _Map.GetChild(1),
       items = game.transform.GetChild(1);
     for (int i = enemies.childCount - 1; i >= 0; i--)
-      GameObject.Destroy(enemies.GetChild(i).gameObject);
+      Object.Destroy(enemies.GetChild(i).gameObject);
     for (int i = objects.childCount - 1; i >= 0; i--)
-      GameObject.Destroy(objects.GetChild(i).gameObject);
+      Object.Destroy(objects.GetChild(i).gameObject);
     for (int i = navmesh_mods.childCount - 1; i >= 0; i--)
-      GameObject.Destroy(navmesh_mods.GetChild(i).gameObject);
+      Object.Destroy(navmesh_mods.GetChild(i).gameObject);
     for (int i = items.childCount - 1; i >= 0; i--)
-      GameObject.Destroy(items.GetChild(i).gameObject);
+      Object.Destroy(items.GetChild(i).gameObject);
   }
 
   public static string SaveMap(bool saveToClipboard = true)
@@ -352,8 +352,8 @@ public class TileManager
       if (tile.position.z > max_z) max_z = tile.position.z;
     }
     // Calculate dimensions of the map
-    float dis_x = (max_x - min_x),
-      dis_z = (max_z - min_z);
+    float dis_x = max_x - min_x,
+      dis_z = max_z - min_z;
     int width = (int)(dis_x / _Tile_spacing) + 1,
       height = (int)(dis_z / _Tile_spacing) + 1;
     returnString = string.Format("{0} {1} ", width, height);
@@ -382,7 +382,7 @@ public class TileManager
     }
 
     // Add enemy information
-    if (!GameScript.IsSurvival())
+    if (!GameScript.s_IsZombieGameMode)
     {
       var enemies = GameObject.Find("Game").transform.GetChild(0);
       for (int i = 0; i < enemies.childCount; i++)
@@ -400,21 +400,21 @@ public class TileManager
         {
           switch (item)
           {
-            case (GameScript.ItemManager.Items.KNIFE):
+            case GameScript.ItemManager.Items.KNIFE:
               return "knife";
-            case (GameScript.ItemManager.Items.PISTOL):
+            case GameScript.ItemManager.Items.PISTOL:
               return "pistol";
-            case (GameScript.ItemManager.Items.PISTOL_SILENCED):
+            case GameScript.ItemManager.Items.PISTOL_SILENCED:
               return "pistolsilenced";
-            case (GameScript.ItemManager.Items.REVOLVER):
+            case GameScript.ItemManager.Items.REVOLVER:
               return "revolver";
-            case (GameScript.ItemManager.Items.GRENADE_HOLD):
+            case GameScript.ItemManager.Items.GRENADE_HOLD:
               return "grenade";
-            case (GameScript.ItemManager.Items.SHOTGUN_PUMP):
+            case GameScript.ItemManager.Items.SHOTGUN_PUMP:
               return "shotgun";
-            case (GameScript.ItemManager.Items.GRENADE_LAUNCHER):
+            case GameScript.ItemManager.Items.GRENADE_LAUNCHER:
               return "grenadelauncher";
-            case (GameScript.ItemManager.Items.BAT):
+            case GameScript.ItemManager.Items.BAT:
               return "bat";
           }
           //throw new System.Exception("No weapon set for " + item);
@@ -622,9 +622,9 @@ public class TileManager
         else
           SceneThemes.ChangeMapTheme(SceneThemes._Instance._ThemeOrder[3]);
       }
-      else if (GameScript.IsSurvival())
+      else if (GameScript.s_IsZombieGameMode)
         SceneThemes.ChangeMapTheme(SceneThemes._Instance._ThemeOrder[2]);
-      else if (GameScript.s_GameMode == GameScript.GameModes.PARTY)
+      else if (GameScript.s_IsPartyGameMode)
       {
         if (_CurrentLevel_Theme != -1)
           SceneThemes.ChangeMapTheme(SceneThemes._SceneOrder_LevelEditor[_CurrentLevel_Theme % SceneThemes._SceneOrder_LevelEditor.Length]);
@@ -658,7 +658,7 @@ public class TileManager
         if (Levels._CurrentLevelIndex < 12 && Levels._CurrentLevelIndex > (Settings._DIFFICULTY == 1 ? 8 : 7))
           SceneThemes.ChangeMapTheme(SceneThemes._Instance._ThemeOrder[1]);
         else
-          SceneThemes.ChangeMapTheme(SceneThemes._Instance._ThemeOrder[(Levels._CurrentLevelIndex / 12) % 12]);
+          SceneThemes.ChangeMapTheme(SceneThemes._Instance._ThemeOrder[Levels._CurrentLevelIndex / 12 % 12]);
       }
       data_iter = width * height + 2;
 
@@ -737,7 +737,7 @@ public class TileManager
         var endpoint_tilepos = TransformPositionOntoTiles(usePos.x, usePos.z);
         endpoint_tilepos = new Vector2(Mathf.Abs(endpoint_tilepos.x), Mathf.Abs(endpoint_tilepos.y));
 
-        var newStartPos = (endpoint_tilepos + new Vector2(1, 1));
+        var newStartPos = endpoint_tilepos + new Vector2(1, 1);
         difference = newStartPos - new Vector2(_Width / 2, _Height / 2);
 
         // Offset the map so the start position is always in the center
@@ -772,7 +772,7 @@ public class TileManager
       foreach (var name in names)
       {
         GameObject old = GameObject.Find(name);
-        if (old != null) GameObject.Destroy(old);
+        if (old != null) Object.Destroy(old);
       }
 
       // Get List of tiles to toggle
@@ -895,7 +895,7 @@ public class TileManager
       }
 
       // Check for light max
-      if (!GameScript.IsSurvival())
+      if (!GameScript.s_IsZombieGameMode)
         if (candles.Count > 4)
         {
           Debug.LogWarning("Max light sources! Adding light dimmers");
@@ -916,7 +916,7 @@ public class TileManager
           var r = ActiveRagdoll.s_Ragdolls[i];
           if (r == null || r._Hip == null)
           {
-            if (r._Controller != null) GameObject.Destroy(r._Controller);
+            if (r._Controller != null) Object.Destroy(r._Controller);
             ActiveRagdoll.s_Ragdolls.Remove(r);
           }
         }
@@ -968,7 +968,7 @@ public class TileManager
 
       // Bake navmesh
       _navMeshSurface.BuildNavMesh();
-      if (GameScript.IsSurvival())
+      if (GameScript.s_IsZombieGameMode)
         _navMeshSurface2.BuildNavMesh();
 
       // Combine meshes
@@ -987,9 +987,9 @@ public class TileManager
         backrooms.gameObject.SetActive(true);
         backrooms.position = new Vector3(-42.49f, -2.3f, -53.95f);
 
-        GameObject.Destroy(GameObject.Find("Meshes_Tiles_Up"));
-        GameObject.Destroy(GameObject.Find("Meshes_Tiles_Down"));
-        GameObject.Destroy(GameObject.Find("Meshes_Tiles_Sides"));
+        Object.Destroy(GameObject.Find("Meshes_Tiles_Up"));
+        Object.Destroy(GameObject.Find("Meshes_Tiles_Down"));
+        Object.Destroy(GameObject.Find("Meshes_Tiles_Sides"));
       }
 
       // Mark level loaded
@@ -1021,7 +1021,7 @@ public class TileManager
         }
 
         // Versus mode
-        if (GameScript.s_GameMode == GameScript.GameModes.PARTY)
+        if (GameScript.s_IsPartyGameMode)
           VersusMode.OnLevelLoad();
 
         // Spawn player
@@ -1189,7 +1189,7 @@ public class TileManager
       // Clean up
       var delete_self = !pair.Item2;
       for (var i = list.Count - 1; i >= 0; i--)
-        GameObject.Destroy(delete_self ? list[i] : list[i].transform.parent.gameObject);
+        Object.Destroy(delete_self ? list[i] : list[i].transform.parent.gameObject);
     }
     // Handle tiles
     if (combine_tiles)
@@ -1199,7 +1199,7 @@ public class TileManager
       foreach (var name in names)
       {
         var old = GameObject.Find(name);
-        if (old != null) GameObject.Destroy(old);
+        if (old != null) Object.Destroy(old);
       }
       // Gather tiles
       var map = GameObject.Find("Map").transform;
@@ -1248,7 +1248,7 @@ public class TileManager
     _Text_LevelTimer.text = _LevelTimer.ToStringTimer();
 
     // Check survival
-    if (GameScript.IsSurvival()) GameScript.SurvivalMode.Init();
+    if (GameScript.s_IsZombieGameMode) GameScript.SurvivalMode.Init();
 
     // Check if there is bat enemy to spawn
     if (!GameScript.s_EditorTesting)
@@ -1276,7 +1276,7 @@ public class TileManager
     }
 
     // Display level #
-    if (GameScript.s_GameMode == GameScript.GameModes.MISSIONS && !GameScript.s_EditorTesting)
+    if (GameScript.s_IsMissionsGameMode && !GameScript.s_EditorTesting)
     {
       var hardmodeadd = Settings._DIFFICULTY == 1 ? "*" : "";
       _Text_LevelNum.text = $"{Levels._CurrentLevelIndex + 1}{hardmodeadd}";
@@ -1322,7 +1322,7 @@ public class TileManager
     {
 
       // Load enemy
-      case ("e"):
+      case "e":
 
         if (!enemy_original)
         {
@@ -1380,8 +1380,8 @@ public class TileManager
           switch (object_type)
           {
             // Waypoint
-            case ("w"):
-              current_waypoint = GameObject.Instantiate(default_waypoint.gameObject as GameObject).transform;
+            case "w":
+              current_waypoint = Object.Instantiate(default_waypoint.gameObject as GameObject).transform;
               current_waypoint.name = "Waypoint";
               current_waypoint.parent = default_waypoint.parent;
               current_waypoint.localScale = new Vector3(0.3f, 0.3f, 0.2f);
@@ -1392,8 +1392,8 @@ public class TileManager
               current_waypoint.localPosition = new Vector3(current_waypoint.localPosition.x, current_waypoint.localPosition.y, 0f);
               break;
             // Lookpoint
-            case ("l"):
-              Transform lookpoint = GameObject.Instantiate(default_lookpoint.gameObject as GameObject).transform;
+            case "l":
+              Transform lookpoint = Object.Instantiate(default_lookpoint.gameObject as GameObject).transform;
               lookpoint.name = "Lookpoint";
               lookpoint.parent = current_waypoint;
               lookpoint.localScale = new Vector3(0.5f, 0.5f, 0.5f);
@@ -1404,30 +1404,30 @@ public class TileManager
               lookpoint.localPosition = new Vector3(lookpoint.localPosition.x, lookpoint.localPosition.y, 0f);
               break;
             // Left / right item
-            case ("li"):
-            case ("ri"):
+            case "li":
+            case "ri":
               GameScript.ItemManager.Items item;
               switch (subobject_base._modifier0)
               {
-                case ("pistol"):
+                case "pistol":
                   item = GameScript.ItemManager.Items.PISTOL;
                   break;
-                case ("pistolsilenced"):
+                case "pistolsilenced":
                   item = GameScript.ItemManager.Items.PISTOL_SILENCED;
                   break;
-                case ("revolver"):
+                case "revolver":
                   item = GameScript.ItemManager.Items.REVOLVER;
                   break;
-                case ("grenade"):
+                case "grenade":
                   item = GameScript.ItemManager.Items.GRENADE_HOLD;
                   break;
-                case ("shotgun"):
+                case "shotgun":
                   item = GameScript.ItemManager.Items.SHOTGUN_PUMP;
                   break;
-                case ("grenadelauncher"):
+                case "grenadelauncher":
                   item = GameScript.ItemManager.Items.GRENADE_LAUNCHER;
                   break;
-                case ("bat"):
+                case "bat":
                   item = GameScript.ItemManager.Items.BAT;
                   break;
                 default:
@@ -1439,15 +1439,15 @@ public class TileManager
               else script._itemLeft = item;
               break;
             // Move mode; if difficulty 2; always can move
-            case ("canmove"):
+            case "canmove":
               if (Settings._DIFFICULTY > 1)
                 script._canMove = true;
               else
-                script._canMove = (subobject_base._modifier0.Equals("true") ? true : false);
+                script._canMove = subobject_base._modifier0.Equals("true") ? true : false;
               break;
             // Hear mode
-            case ("canhear"):
-              script._reactToSound = (subobject_base._modifier0.Equals("true") ? true : false);
+            case "canhear":
+              script._reactToSound = subobject_base._modifier0.Equals("true") ? true : false;
               break;
             // Default
             default:
@@ -1462,14 +1462,14 @@ public class TileManager
         }
         else
         {
-          GameObject.DestroyImmediate(default_waypoint.gameObject);
-          GameObject.DestroyImmediate(default_lookpoint.gameObject);
+          Object.DestroyImmediate(default_waypoint.gameObject);
+          Object.DestroyImmediate(default_lookpoint.gameObject);
         }
         break;
       // Load powerup
-      case ("p"):
+      case "p":
         // Check survival mode
-        if (GameScript.IsSurvival())
+        if (GameScript.s_IsZombieGameMode)
         {
           break;
         }
@@ -1485,7 +1485,7 @@ public class TileManager
           switch (object_data_split[++object_data_iter])
           {
             // Check for doors
-            case ("door"):
+            case "door":
 
               var loadstring = string.Format("{0}_{1}_{2}_rot_{3}",
                 object_data_split[object_data_iter++],
@@ -1518,7 +1518,7 @@ public class TileManager
         powerup_script.Init();
         break;
       // Load button
-      case ("button"):
+      case "button":
         loadedObject = object_base.LoadResource("Button", container_objects, new Vector3(0.6f, 0.1f, 0.6f), -1.28f);
         var button_script = loadedObject.GetComponent<CustomEntityUI>();
         button_script.gameObject.layer = GameScript.s_EditorEnabled ? 0 : 2;
@@ -1528,7 +1528,7 @@ public class TileManager
           switch (object_data_split[object_data_iter])
           {
             // Check for doors
-            case ("door"):
+            case "door":
               var door_new = LoadObject(string.Format("{0}_{1}_{2}_rot_{3}_open_{4}", object_data_split[object_data_iter++], object_data_split[object_data_iter++], object_data_split[object_data_iter++], object_data_split[++object_data_iter], object_data_split[++object_data_iter + 1]));
               object_data_iter++;
               object_data_iter++;
@@ -1539,7 +1539,7 @@ public class TileManager
           }
         break;
       // Check for doors
-      case ("door"):
+      case "door":
         loadedObject = object_base.LoadResource("Door", container_objects, _LEO_Door._movementSettings._localPos);
         var door_script0 = loadedObject.GetComponent<DoorScript2>();
         door_script0.enabled = false;
@@ -1551,18 +1551,18 @@ public class TileManager
           switch (pair.Key)
           {
             // Rotation
-            case ("rot"):
+            case "rot":
               Quaternion rot = loadedObject.transform.localRotation;
               rot.eulerAngles = new Vector3(rot.eulerAngles.x, pair.Value.ParseFloatInvariant(), rot.eulerAngles.z);
               loadedObject.transform.rotation = rot;
               break;
             // Set the open status
-            case ("open"):
+            case "open":
               int open = pair.Value.ParseIntInvariant();
               door_script0._Opened = open == 1;
               door_script0.enabled = true;
               break;
-            case ("enemypos"):
+            case "enemypos":
               if (pair.Value.Trim() == "") break;
               foreach (var id in pair.Value.Split('|'))
               {
@@ -1593,7 +1593,7 @@ public class TileManager
         }
         break;
       // Check for laser
-      case ("laser"):
+      case "laser":
         loadedObject = object_base.LoadResource("Laser", container_objects);
         // Get properties
         {
@@ -1604,15 +1604,15 @@ public class TileManager
             switch (pair.Key)
             {
               // Rotation
-              case ("rot"):
+              case "rot":
                 FunctionsC.RotateLocal(ref loadedObject, pair.Value.ParseFloatInvariant());
                 break;
               // Set the rotation speed
-              case ("rotspeed"):
+              case "rotspeed":
                 laser_script._rotationSpeed = pair.Value.ParseFloatInvariant();
                 break;
               // Set the type
-              case ("type"):
+              case "type":
                 laser_script._type = pair.Value.Equals("alarm") ? LaserScript.LaserType.ALARM : LaserScript.LaserType.KILL;
                 break;
               default:
@@ -1624,12 +1624,12 @@ public class TileManager
         }
         break;
       // Check for explosive barrels
-      case ("expbarrel"):
+      case "expbarrel":
         loadedObject = object_base.LoadResource("ExplosiveBarrel", container_objects);
         loadedObject.transform.localPosition = new Vector3(loadedObject.transform.localPosition.x, _LEO_ExplosiveBarrel._movementSettings._localPos, loadedObject.transform.localPosition.z);
         break;
       // Check for player spawn
-      case ("playerspawn"):
+      case "playerspawn":
         loadedObject = PlayerspawnScript.GetPlayerSpawnScript().gameObject;
         loadedObject.transform.position = new Vector3(object_base._x, loadedObject.transform.position.y, object_base._z);
         // Move barricade
@@ -1639,10 +1639,10 @@ public class TileManager
           switch (pair.Key)
           {
             // Rotation
-            case ("rot"):
+            case "rot":
               FunctionsC.RotateLocal(ref loadedObject, pair.Value.ParseFloatInvariant());
               break;
-            case ("co"):
+            case "co":
               var co = loadedObject.AddComponent<CustomObstacle>();
               var split = pair.Value.Split('.');
               var index = split[1].ParseIntInvariant();
@@ -1662,7 +1662,7 @@ public class TileManager
       {
         if (leo == null) Debug.LogError("LEO");
         if (!object_base._type.Equals(leo._name.ToLower())) continue;
-        var isNavMesh = (leo._name.Equals(_LEO_NavMeshBarrier._name));
+        var isNavMesh = leo._name.Equals(_LEO_NavMeshBarrier._name);
         loadedObject = object_base.LoadResource(leo._name, _Map.GetChild(1));
         if ((isNavMesh || leo._name.Equals(_LEO_RugRectangle._name)) && !GameScript.s_EditorEnabled) { loadedObject.GetComponent<BoxCollider>().enabled = false; }
         loadedObject.transform.localPosition = new Vector3(loadedObject.transform.localPosition.x, leo._movementSettings._localPos, loadedObject.transform.localPosition.z);
@@ -1677,7 +1677,7 @@ public class TileManager
           var inner_mesh = GameObject.Find("Tile_" + SceneThemes._Theme._tile).transform.GetChild(0).GetChild(0);
           for (var i = 0; i < 2; i++)
           {
-            var inner0 = GameObject.Instantiate(inner_mesh.gameObject) as GameObject;
+            var inner0 = Object.Instantiate(inner_mesh.gameObject) as GameObject;
             inner0.transform.parent = inner_container;
             inner0.transform.localScale = inner_mesh.localScale;
             inner0.transform.localPosition = new Vector3(0f, inner_mesh.localPosition.y, (inner_mesh.localPosition.z - 0.35f) * (i == 0 ? -1f : 1f));
@@ -1702,10 +1702,10 @@ public class TileManager
           switch (pair.Key)
           {
             // Rotation
-            case ("rot"):
+            case "rot":
               FunctionsC.RotateLocal(ref loadedObject, pair.Value.ParseFloatInvariant());
               break;
-            case ("co"):
+            case "co":
               var co = loadedObject.GetComponent<CustomObstacle>();
               var split = pair.Value.Split('.');
               var type = (CustomObstacle.InteractType)System.Enum.Parse(typeof(CustomObstacle.InteractType), split[0]);
@@ -1832,95 +1832,95 @@ public class TileManager
       GameObject resource;
       switch (resourceName)
       {
-        case ("Enemy"):
+        case "Enemy":
           resource = GameResources._Enemy;
           break;
-        case ("Door"):
+        case "Door":
           resource = GameResources._Door;
           break;
-        case ("Button"):
+        case "Button":
           resource = GameResources._Button;
           break;
-        case ("Playerspawn"):
+        case "Playerspawn":
           resource = GameResources._Playerspawn;
           break;
-        case ("ExplosiveBarrel"):
+        case "ExplosiveBarrel":
           resource = GameResources._Barrel_Explosive;
           break;
-        case ("Table"):
+        case "Table":
           resource = SceneThemes._Theme._name == "Hedge" && !GameScript.s_EditorEnabled ? GameResources._Table_Bush : GameResources._Table;
           resourceName = SceneThemes._Theme._name == "Hedge" && !GameScript.s_EditorEnabled ? resourceName + "_Bush" : resourceName;
           break;
-        case ("TableSmall"):
+        case "TableSmall":
           resource = SceneThemes._Theme._name == "Hedge" && !GameScript.s_EditorEnabled ? GameResources._TableSmall_Bush : GameResources._TableSmall;
           resourceName = SceneThemes._Theme._name == "Hedge" && !GameScript.s_EditorEnabled ? resourceName + "_Bush" : resourceName;
           break;
-        case ("Chair"):
+        case "Chair":
           resource = SceneThemes._Theme._name == "Hedge" && !GameScript.s_EditorEnabled ? GameResources._Chair_Stump : GameResources._Chair;
           resourceName = SceneThemes._Theme._name == "Hedge" && !GameScript.s_EditorEnabled ? resourceName + "_Stump" : resourceName;
           break;
-        case ("BookcaseClosed"):
+        case "BookcaseClosed":
           resource = GameResources._BookcaseClosed;
           break;
-        case ("BookcaseOpen"):
+        case "BookcaseOpen":
           resource = SceneThemes._Theme._name == "Hedge" && !GameScript.s_EditorEnabled ? GameResources._BookcaseOpen_Bush : GameResources._BookcaseOpen;
           resourceName = SceneThemes._Theme._name == "Hedge" && !GameScript.s_EditorEnabled ? resourceName + "_Bush" : resourceName;
           break;
-        case ("BookcaseBig"):
+        case "BookcaseBig":
           resource = SceneThemes._Theme._name == "Hedge" && !GameScript.s_EditorEnabled ? GameResources._BookcaseBig_Bush : GameResources._BookcaseBig;
           resourceName = SceneThemes._Theme._name == "Hedge" && !GameScript.s_EditorEnabled ? resourceName + "_Bush" : resourceName;
           break;
-        case ("RugRectangle"):
+        case "RugRectangle":
           resource = GameResources._RugRectangle;
           break;
-        case ("Barrel"):
+        case "Barrel":
           resource = SceneThemes._Theme._name == "Hedge" && !GameScript.s_EditorEnabled ? GameResources._Barrel_Rock : GameResources._Barrel;
           resourceName = SceneThemes._Theme._name == "Hedge" && !GameScript.s_EditorEnabled ? resourceName + "_Rock" : resourceName;
           localScale.y *= 0.8f;
           break;
-        case ("Column"):
+        case "Column":
           resource = GameResources._ColumnNormal;
           break;
-        case ("ColumnBroken"):
+        case "ColumnBroken":
           resource = GameResources._ColumnBroken;
           break;
-        case ("Rock0"):
+        case "Rock0":
           resource = GameResources._Rock0;
           break;
-        case ("Rock1"):
+        case "Rock1":
           resource = GameResources._Rock1;
           break;
-        case ("CandelBig"):
+        case "CandelBig":
           resource = GameResources._CandelBig;
           break;
-        case ("CandelTable"):
+        case "CandelTable":
           resource = GameResources._CandelTable;
           break;
-        case ("CandelBarrel"):
+        case "CandelBarrel":
           resource = GameResources._CandelBarrel;
           break;
-        case ("Powerup"):
+        case "Powerup":
           resource = GameResources._Powerup;
           break;
-        case ("NavMeshBarrier"):
+        case "NavMeshBarrier":
           resource = GameResources._NavmeshBarrier;
           break;
-        case ("Interactable"):
+        case "Interactable":
           resource = GameResources._Interactable;
           break;
-        case ("FakeTile"):
+        case "FakeTile":
           resource = GameResources._Fake_Tile;
           break;
-        case ("TileWall"):
+        case "TileWall":
           resource = GameResources._Tile_Wall;
           break;
-        case ("Arch"):
+        case "Arch":
           resource = GameResources._Arch;
           break;
-        case ("Television"):
+        case "Television":
           resource = GameResources._Television;
           break;
-        case ("Books"):
+        case "Books":
           resource = GameResources._Books;
           break;
         default:
@@ -1928,7 +1928,7 @@ public class TileManager
           resource = Resources.Load(resourceName) as GameObject;
           break;
       }
-      var new_gameobject = GameObject.Instantiate(resource);
+      var new_gameobject = Object.Instantiate(resource);
       new_gameobject.transform.parent = parent;
       new_gameobject.name = resourceName;
 
@@ -1943,7 +1943,7 @@ public class TileManager
   static float _LastReloadTime;
   public static bool CanReloadMap()
   {
-    return (!GameScript.s_EditorEnabled && !_LoadingMap && Time.unscaledTime - _LastReloadTime >= 0.3f);
+    return !GameScript.s_EditorEnabled && !_LoadingMap && Time.unscaledTime - _LastReloadTime >= 0.3f;
   }
   public static void ReloadMap()
   {
@@ -1979,7 +1979,7 @@ public class TileManager
     {
       var rag = ActiveRagdoll.s_Ragdolls[i];
       if (rag._Controller == null) continue;
-      GameObject.DestroyImmediate(rag._Controller.parent.gameObject);
+      Object.DestroyImmediate(rag._Controller.parent.gameObject);
     }
     ActiveRagdoll.Reset();
     EnemyScript.Reset();
@@ -2012,7 +2012,7 @@ public class TileManager
         e.Reset2();
         continue;
       }
-      GameObject.Destroy(child);
+      Object.Destroy(child);
     }
 
     var mapObjects = _Map.GetChild(1);
@@ -2020,16 +2020,16 @@ public class TileManager
     for (var i = mapObjects.childCount - 1; i >= 0; i--)
     {
       var mapObject = mapObjects.GetChild(i).gameObject;
-      if (GameScript.s_GameMode != GameScript.GameModes.ZOMBIE && mapObject.name.Contains("Candel"))
+      if (!GameScript.s_IsZombieGameMode && mapObject.name.Contains("Candel"))
       {
         candles.Add(mapObject);
         continue;
       }
-      GameObject.Destroy(mapObject);
+      Object.Destroy(mapObject);
     }
 
     // Reload certain objects
-    var reloadObjectTypes = new string[] { "e_", "door_", "p_", "button_", "playerspawn_", GameScript.s_GameMode == GameScript.GameModes.ZOMBIE ? "candel" : "__" };
+    var reloadObjectTypes = new string[] { "e_", "door_", "p_", "button_", "playerspawn_", GameScript.s_IsZombieGameMode ? "candel" : "__" };
     foreach (var levelObjectData in s_levelObjectData)
     {
       var loaded = false;
@@ -2060,12 +2060,12 @@ public class TileManager
     }
 
     // Reload flipped candles
-    if (GameScript.s_GameMode != GameScript.GameModes.ZOMBIE)
+    if (!GameScript.s_IsZombieGameMode)
       foreach (var candle in CandleScript.s_Candles)
         candle.HandleFlipped();
 
     // Check for light max
-    if (!GameScript.IsSurvival())
+    if (!GameScript.s_IsZombieGameMode)
       if (candles.Count > 4)
       {
 
@@ -2164,7 +2164,7 @@ public class TileManager
 
   static Tile SpawnTile(int width, int height)
   {
-    var tile = GameObject.Instantiate(_Tile.gameObject as GameObject).transform;
+    var tile = Object.Instantiate(_Tile.gameObject as GameObject).transform;
     tile.gameObject.name = "Tile";
     tile.parent = _Map;
     tile.localPosition = new Vector3(width * _Tile_spacing, _Tile.localPosition.y, height * _Tile_spacing);
@@ -2510,16 +2510,16 @@ public class TileManager
 
     // Remove player
     foreach (PlayerScript p in Players)
-      GameObject.Destroy(p.transform.parent.gameObject);
+      Object.Destroy(p.transform.parent.gameObject);
     PlayerScript.Reset();
 
     // Reload map objects
     Transform objects = GameResources._Container_Objects,
       navmesh_mods = _Map.GetChild(1);
     for (var i = objects.childCount - 1; i >= 0; i--)
-      GameObject.Destroy(objects.GetChild(i).gameObject);
+      Object.Destroy(objects.GetChild(i).gameObject);
     for (var i = navmesh_mods.childCount - 1; i >= 0; i--)
-      GameObject.Destroy(navmesh_mods.GetChild(i).gameObject);
+      Object.Destroy(navmesh_mods.GetChild(i).gameObject);
     var notloadObjects = new string[] { "e_", "playerspawn_" };
     foreach (var data in s_levelObjectData)
     {
@@ -2551,14 +2551,14 @@ public class TileManager
     _CameraZoom = GameResources._Camera_Main.transform.position.y;
 
     // Remove enemies and show paths
-    if (!GameScript.IsSurvival())
+    if (!GameScript.s_IsZombieGameMode)
     {
       if (EnemyScript._Enemies_alive != null)
         foreach (var e in EnemyScript._Enemies_alive)
         {
           if (e._IsZombie)
           {
-            GameObject.Destroy(e.transform.parent.gameObject);
+            Object.Destroy(e.transform.parent.gameObject);
             continue;
           }
           e.enabled = false;
@@ -2567,14 +2567,14 @@ public class TileManager
           var controller_visual = GiveEnemyVisual(ref controller);
           ChangeEnemyType(e, controller_visual.GetComponent<MeshRenderer>());
           controller.GetComponent<NavMeshAgent>().enabled = false;
-          GameObject.Destroy(e._Ragdoll.Transform.gameObject);
+          Object.Destroy(e._Ragdoll.Transform.gameObject);
         }
       if (EnemyScript._Enemies_dead != null)
         foreach (var e in EnemyScript._Enemies_dead)
         {
           if (e._IsZombie)
           {
-            GameObject.Destroy(e.transform.parent.gameObject);
+            Object.Destroy(e.transform.parent.gameObject);
             continue;
           }
           e.enabled = false;
@@ -2583,7 +2583,7 @@ public class TileManager
           var controller_visual = GiveEnemyVisual(ref controller);
           ChangeEnemyType(e, controller_visual.GetComponent<MeshRenderer>());
           controller.GetComponent<NavMeshAgent>().enabled = false;
-          GameObject.Destroy(e._Ragdoll.Transform.gameObject);
+          Object.Destroy(e._Ragdoll.Transform.gameObject);
         }
     }
     // If survival, don't save enemy positions
@@ -2591,10 +2591,10 @@ public class TileManager
     {
       if (EnemyScript._Enemies_alive != null)
         foreach (var e in EnemyScript._Enemies_alive)
-          GameObject.Destroy(e.transform.parent.gameObject);
+          Object.Destroy(e.transform.parent.gameObject);
       if (EnemyScript._Enemies_dead != null)
         foreach (var e in EnemyScript._Enemies_dead)
-          GameObject.Destroy(e.transform.parent.gameObject);
+          Object.Destroy(e.transform.parent.gameObject);
     }
     // Clear ragdolls
     ActiveRagdoll.Reset();
@@ -2607,7 +2607,7 @@ public class TileManager
     if (_Pointer == null)
     {
       _Pointer = GameObject.CreatePrimitive(PrimitiveType.Sphere).transform;
-      GameObject.Destroy(_Pointer.GetComponent<Collider>());
+      Object.Destroy(_Pointer.GetComponent<Collider>());
       _Pointer.gameObject.name = "Pointer";
       _Pointer.parent = GameScript.s_Singleton.transform;
       _Pointer.gameObject.layer = 2;
@@ -2649,11 +2649,11 @@ public class TileManager
 
     // Remove combined meshes and enable tile renderers
     var meshes = GameObject.Find("Meshes_Tiles_Up");
-    if (meshes) GameObject.Destroy(meshes);
+    if (meshes) Object.Destroy(meshes);
     meshes = GameObject.Find("Meshes_Tiles_Down");
-    if (meshes) GameObject.Destroy(meshes);
+    if (meshes) Object.Destroy(meshes);
     meshes = GameObject.Find("Meshes_Tiles_Sides");
-    if (meshes) GameObject.Destroy(meshes);
+    if (meshes) Object.Destroy(meshes);
     foreach (var t in _Tiles)
     {
       if (t == null) continue;
@@ -2836,7 +2836,7 @@ public class TileManager
           // Add powerup type
           switch (p._type)
           {
-            case (Powerup.PowerupType.END):
+            case Powerup.PowerupType.END:
               returnString += "end_";
               break;
           }
@@ -4050,8 +4050,8 @@ public class TileManager
     {
       if (!g.name.Equals(leo._name)) return null;
       var returnString = "";
-      returnString += LevelEditorObject._SaveFunction_Pos(leo, pos_use) + "_" +
-        LevelEditorObject._SaveFunction_Rot(g);
+      returnString += _SaveFunction_Pos(leo, pos_use) + "_" +
+        _SaveFunction_Rot(g);
       var co = g.GetComponent<CustomObstacle>();
       if (co != null)
         returnString += $"_co_{co._type}.{co._index}.{co._index2}";
@@ -4063,8 +4063,8 @@ public class TileManager
     {
       if (!g.name.Equals(leo._name)) return null;
       var returnString = "";
-      returnString += LevelEditorObject._SaveFunction_Pos(leo, pos_use) + "_" +
-        LevelEditorObject._SaveFunction_Rot(g);
+      returnString += _SaveFunction_Pos(leo, pos_use) + "_" +
+        _SaveFunction_Rot(g);
       var doorScript = g.GetComponent<DoorScript2>();
       if (doorScript != null)
       {
@@ -4198,9 +4198,9 @@ public class TileManager
     {
       GameScript.s_EditorEnabled = false;
       //if (_EditorEnabled) StartCoroutine(TileManager.EditorEnabled());
-      string mapdata = TileManager.SaveMap();
-      TileManager.EditorDisabled(mapdata);
-      TileManager.SaveFileOverwrite(mapdata);
+      string mapdata = SaveMap();
+      EditorDisabled(mapdata);
+      SaveFileOverwrite(mapdata);
 
       // Show menu
       EditorMenus._Menu_EditorTesting.gameObject.SetActive(true);
@@ -4406,7 +4406,7 @@ public class TileManager
             if (co == null)
               _SelectedObject.gameObject.AddComponent<CustomObstacle>();
             else
-              GameObject.DestroyImmediate(_SelectedObject.gameObject.GetComponent<CustomObstacle>());
+              Object.DestroyImmediate(_SelectedObject.gameObject.GetComponent<CustomObstacle>());
             //ClearText();
             //UpdateText();
           }
@@ -4504,7 +4504,7 @@ public class TileManager
             PlayerspawnScript._PlayerSpawns.Remove(playerspawnScript);
           }
 
-          GameObject.Destroy(delete_target.gameObject);
+          Object.Destroy(delete_target.gameObject);
           _CurrentMode = EditorMode.NONE;
           _SelectedObject = null;
           _Ring.position = new Vector3(0f, -100f, 0f);
@@ -4606,7 +4606,7 @@ public class TileManager
     var copy_target = LevelEditorObject.GetTransformTarget(copySettings._target);
 
     // Copy the item
-    var copy = GameObject.Instantiate(copy_target.gameObject).transform;
+    var copy = Object.Instantiate(copy_target.gameObject).transform;
 
     // Initialize local variables
     copy.name = copy_target.name;
@@ -4664,40 +4664,40 @@ public class TileManager
     script._itemLeft = script._itemRight = GameScript.ItemManager.Items.NONE;
     switch (currentType)
     {
-      case (0):
+      case 0:
         script._itemLeft = GameScript.ItemManager.Items.NONE;
         changeColor.material.color = Color.white;
         break;
-      case (1):
+      case 1:
         script._itemLeft = GameScript.ItemManager.Items.KNIFE;
         changeColor.material.color = Color.green;
         break;
-      case (2):
+      case 2:
         script._itemLeft = GameScript.ItemManager.Items.PISTOL;
         changeColor.material.color = Color.magenta;
         break;
-      case (3):
+      case 3:
         script._itemLeft = GameScript.ItemManager.Items.PISTOL_SILENCED;
         changeColor.material.color = Color.magenta / 3f;
         break;
-      case (4):
+      case 4:
         script._itemLeft = GameScript.ItemManager.Items.REVOLVER;
         script._itemRight = GameScript.ItemManager.Items.REVOLVER;
         changeColor.material.color = (Color.red + Color.yellow) / 3f;
         break;
-      case (5):
+      case 5:
         script._itemLeft = GameScript.ItemManager.Items.SHOTGUN_PUMP;
         changeColor.material.color = Color.gray * 1.5f;
         break;
-      case (6):
+      case 6:
         script._itemLeft = GameScript.ItemManager.Items.GRENADE_HOLD;
         changeColor.material.color = Color.red + Color.yellow;
         break;
-      case (7):
+      case 7:
         script._itemLeft = GameScript.ItemManager.Items.GRENADE_LAUNCHER;
         changeColor.material.color = Color.yellow;
         break;
-      case (8):
+      case 8:
         script._itemLeft = GameScript.ItemManager.Items.BAT;
         changeColor.material.color = Color.gray * 1.5f;
         break;
@@ -4742,7 +4742,7 @@ public class TileManager
     // Switch per object name
     switch (_SelectedObject.name)
     {
-      case ("Enemy"):
+      case "Enemy":
         var path = _SelectedObject.GetChild(1);
         var positions = new List<Vector3>();
         positions.Add(_SelectedObject.position + new Vector3(0.01f, 0f, 0f));
@@ -4763,7 +4763,7 @@ public class TileManager
         _LineRenderers[0].positionCount = positions.Count;
         _LineRenderers[0].SetPositions(positions.ToArray());
         break;
-      case ("Waypoint"):
+      case "Waypoint":
 
         for (int i = 0; i < _SelectedObject.childCount; i++)
         {
@@ -4771,12 +4771,12 @@ public class TileManager
           _LineRenderers[i].SetPositions(new Vector3[] { _SelectedObject.position + new Vector3(0f, 0.5f, 0f), _SelectedObject.GetChild(i).position + new Vector3(0f, 0.5f, 0f) });
         }
         break;
-      case ("Lookpoint"):
+      case "Lookpoint":
 
         _LineRenderers[0].positionCount = 2;
         _LineRenderers[0].SetPositions(new Vector3[] { _SelectedObject.position + new Vector3(0f, 0.5f, 0f), _SelectedObject.parent.position + new Vector3(0f, 0.5f, 0f) });
         break;
-      case ("Button"):
+      case "Button":
         int iter = 0;
         foreach (var c in _SelectedObject.GetComponent<CustomEntityUI>()._activate)
         {
@@ -4788,7 +4788,7 @@ public class TileManager
           _LineRenderers[iter++].SetPositions(positions.ToArray());
         }
         break;
-      case ("Goal"):
+      case "Goal":
         iter = 0;
         foreach (var c in _SelectedObject.parent.GetComponent<CustomEntityUI>()._activate)
         {
@@ -4894,7 +4894,7 @@ public class TileManager
     {
       var up = data_split[data_iter].ParseIntInvariant() == 1;
 
-      int current_column = ((data_iter - 2) % height),
+      int current_column = (data_iter - 2) % height,
         current_row = (int)((data_iter - 2) / height);
       var tile_new = GameObject.CreatePrimitive(PrimitiveType.Cube).transform;
       tile_new.gameObject.layer = 11;
@@ -4915,8 +4915,8 @@ public class TileManager
 
     // Add border to map to make 16:9 aspect
     int widthBorder = 0, heightBorder = 0;
-    if (width < height * (16f / 9f)) widthBorder = ((int)((height + 2) * (16f / 9f)) - width);
-    else if (height < width) heightBorder = (width - height);
+    if (width < height * (16f / 9f)) widthBorder = (int)((height + 2) * (16f / 9f)) - width;
+    else if (height < width) heightBorder = width - height;
     if (widthBorder % 2 != 0) widthBorder++;
     if (widthBorder == 0) widthBorder = 2;
     if (heightBorder == 0) heightBorder = 2;
@@ -4930,8 +4930,8 @@ public class TileManager
           current_row = width + (i - widthBorder / 2);
         else
           current_row = -1 - i;
-        bool spawnTile = (current_row == -1 || current_row == width);
-        var tile_new = (spawnTile ? GameObject.CreatePrimitive(PrimitiveType.Cube).transform : new GameObject().transform);
+        bool spawnTile = current_row == -1 || current_row == width;
+        var tile_new = spawnTile ? GameObject.CreatePrimitive(PrimitiveType.Cube).transform : new GameObject().transform;
         tile_new.gameObject.layer = 11;
         tile_new.parent = background;
         tile_new.localScale = new Vector3(2.5f, 2.5f, 20f);
@@ -4947,8 +4947,8 @@ public class TileManager
           current_column = height + (i - heightBorder / 2);
         else
           current_column = -1 - i;
-        var spawnTile = (current_column == -1 || current_column == height);
-        var tile_new = (spawnTile ? GameObject.CreatePrimitive(PrimitiveType.Cube).transform : new GameObject().transform);
+        var spawnTile = current_column == -1 || current_column == height;
+        var tile_new = spawnTile ? GameObject.CreatePrimitive(PrimitiveType.Cube).transform : new GameObject().transform;
         tile_new.gameObject.layer = 11;
         tile_new.parent = background;
         tile_new.localScale = new Vector3(2.5f, 2.5f, 20f);
@@ -4976,7 +4976,7 @@ public class TileManager
       switch (type)
       {
         // Check enemy
-        case ("e"):
+        case "e":
           object_new = GameObject.CreatePrimitive(PrimitiveType.Sphere).transform;
           int color_iter = 0;
           var ec = Color.green;
@@ -5014,7 +5014,7 @@ public class TileManager
           object_new.gameObject.layer = 2;
           break;
         // Check goal
-        case ("p"):
+        case "p":
           object_new = GameObject.CreatePrimitive(PrimitiveType.Cube).transform;
           ChangeColorAndDelete(object_new, 0, Color.yellow * 2f);
           object_new.gameObject.layer = 2;
@@ -5032,12 +5032,12 @@ public class TileManager
           object_new2.gameObject.layer = 11;
           break;
         // Check spawn
-        case ("playerspawn"):
+        case "playerspawn":
           object_new = GameObject.CreatePrimitive(PrimitiveType.Sphere).transform;
           ChangeColorAndDelete(object_new, 2, Color.blue);
           object_new.gameObject.layer = 2;
           break;
-        case ("button"):
+        case "button":
           object_new = GameObject.CreatePrimitive(PrimitiveType.Sphere).transform;
           ChangeColorAndDelete(object_new, 3, Color.red);
           object_new.gameObject.layer = 2;
@@ -5054,39 +5054,39 @@ public class TileManager
           object_new2.localRotation = rot;
           object_new2.gameObject.layer = 11;
           break;
-        case ("barrel"):
+        case "barrel":
           object_new = GameObject.CreatePrimitive(PrimitiveType.Sphere).transform;
           ChangeColorAndDelete(object_new, 4, new Color(139f / 255f, 69f / 255f, 19f / 255f, 1f));
           scale *= 0.8f;
           break;
-        case ("expbarrel"):
+        case "expbarrel":
           object_new = GameObject.CreatePrimitive(PrimitiveType.Sphere).transform;
           ChangeColorAndDelete(object_new, 3, Color.red);
           scale *= 0.8f;
           break;
-        case ("bookcaseopen"):
-        case ("bookcaseclosed"):
+        case "bookcaseopen":
+        case "bookcaseclosed":
           object_new = GameObject.CreatePrimitive(PrimitiveType.Cube).transform;
           ChangeColorAndDelete(object_new, 4, new Color(139f / 255f, 69f / 255f, 19f / 255f, 1f));
           scale = new Vector3(scale.x * 1.5f, scale.y * 0.8f, scale.z);
           break;
-        case ("bookcasebig"):
+        case "bookcasebig":
           object_new = GameObject.CreatePrimitive(PrimitiveType.Cube).transform;
           ChangeColorAndDelete(object_new, 4, new Color(139f / 255f, 69f / 255f, 19f / 255f, 1f));
           scale = new Vector3(scale.x * 3f, scale.y * 0.8f, scale.z);
           break;
-        case ("chair"):
-        case ("tablesmall"):
+        case "chair":
+        case "tablesmall":
           object_new = GameObject.CreatePrimitive(PrimitiveType.Cube).transform;
           ChangeColorAndDelete(object_new, 4, new Color(139f / 255f, 69f / 255f, 19f / 255f, 1f));
           scale *= 0.6f;
           break;
-        case ("table"):
+        case "table":
           object_new = GameObject.CreatePrimitive(PrimitiveType.Cube).transform;
           ChangeColorAndDelete(object_new, 4, new Color(139f / 255f, 69f / 255f, 19f / 255f, 1f));
           scale.y *= 2f;
           break;
-        case ("laser"):
+        case "laser":
           object_new = GameObject.CreatePrimitive(PrimitiveType.Sphere).transform;
           ChangeColorAndDelete(object_new, 4, Color.black);
           // Laser beam
@@ -5116,12 +5116,12 @@ public class TileManager
           {
             switch (property.Key)
             {
-              case ("rot"):
+              case "rot":
                 var rot = object_new.localRotation;
                 rot.eulerAngles = new Vector3(0f, 0f, 1f) * (property.Value.ParseFloatInvariant() + 90f);
                 object_new.localRotation = rot;
                 break;
-              case ("rotspeed"):
+              case "rotspeed":
                 var rotspeed = property.Value.ParseFloatInvariant();
                 var script = object_new.gameObject.AddComponent<MapPreviewActor>();
                 script._properties = new float[] { rotspeed };
@@ -5170,7 +5170,7 @@ public class TileManager
     //GameObject.Destroy(background.gameObject);
     //GameObject.Destroy(container_objects.gameObject);
     foreach (var child in objects)
-      child.localPosition += new Vector3(-(height) / 2f * 2.5f - (2.5f * 0.5f), -(width) / 2f * 2.5f, 0f);
+      child.localPosition += new Vector3(-height / 2f * 2.5f - (2.5f * 0.5f), -width / 2f * 2.5f, 0f);
 
     // Rotate / scale map
     container.Rotate(new Vector3(1f, 0f, 1f) * -90f);
@@ -5181,7 +5181,7 @@ public class TileManager
     container.parent = Menu.s_Text.transform;
     if (GameScript._lp0 != null && GameScript._lp0.gameObject != null)
     {
-      GameObject.Destroy(GameScript._lp0.gameObject);
+      Object.Destroy(GameScript._lp0.gameObject);
       GameScript._lp0 = null;
     }
 
@@ -5196,7 +5196,7 @@ public class TileManager
       container.parent = GameResources._Camera_Main.transform;
       container.localPosition = new Vector3(2.8f, 1.5f, 6f);
     }
-    else if (GameScript.s_GameMode == GameScript.GameModes.MISSIONS)
+    else if (GameScript.s_IsMissionsGameMode)
       container.localPosition = new Vector3(8.88f, -7.26f, 0f);
     else
       container.localPosition = new Vector3(8.88f, -3.78f, 0f);
@@ -5216,12 +5216,12 @@ public class TileManager
         !Menu.s_InMenus ||
         (
           ((Menu.s_CurrentMenu._Type != Menu.MenuType.LEVELS) || (Menu.s_CurrentMenu._Type == Menu.MenuType.LEVELS && Menu.s_CurrentMenu._dropdownCount == 0)) &&
-          (Menu.s_CurrentMenu._Type != Menu.MenuType.EDITOR_LEVELS && Menu.s_CurrentMenu._Type != Menu.MenuType.EDITOR_PACKS_EDIT)
+          Menu.s_CurrentMenu._Type != Menu.MenuType.EDITOR_LEVELS && Menu.s_CurrentMenu._Type != Menu.MenuType.EDITOR_PACKS_EDIT
         )
         )
       {
         if (GameScript._lp0 != null)
-          GameObject.Destroy(GameScript._lp0.gameObject);
+          Object.Destroy(GameScript._lp0.gameObject);
         getout = true;
       }
       if (getout) break;
@@ -5317,7 +5317,7 @@ public class TileManager
       float t = 0f;
       MeshRenderer m = _tile.GetComponent<MeshRenderer>();
       Color startColor = !GameScript.s_EditorEnabled ? m.sharedMaterial.color : m.material.color;
-      if (!Color.Equals(startColor, c))
+      if (!Equals(startColor, c))
         while (t < time)
         {
           yield return new WaitForSecondsRealtime(0.01f);

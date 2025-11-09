@@ -63,7 +63,7 @@ public class PathScript : MonoBehaviour
   }
   int GetPatrolPointIter()
   {
-    return _pingPong ? Mathf.RoundToInt(Mathf.PingPong(_currentPatrolPoint, transform.childCount - 1)) : _currentPatrolPoint % (transform.childCount);
+    return _pingPong ? Mathf.RoundToInt(Mathf.PingPong(_currentPatrolPoint, transform.childCount - 1)) : _currentPatrolPoint % transform.childCount;
   }
   public float GetPatrolWait()
   {
@@ -80,7 +80,7 @@ public class PathScript : MonoBehaviour
   public float GetLookWait()
   {
     if (_lookTimes_parsed == null) return 3f + (Random.value * 3f);
-    return _lookTimes_parsed[GetPatrolPointIter()][Mathf.Abs(_currentLookPoint % (_lookTimes_parsed[GetPatrolPointIter()].Length))];
+    return _lookTimes_parsed[GetPatrolPointIter()][Mathf.Abs(_currentLookPoint % _lookTimes_parsed[GetPatrolPointIter()].Length)];
   }
 
   // Find nearest patrol point to a position

@@ -188,7 +188,7 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
   public State _state;
 
   public bool _IsZombie { get { return _survivalAttributes != null; } }
-  public bool _IsZombieReal { get { return _IsZombie && (GameScript.s_GameMode == GameScript.GameModes.ZOMBIE || _isZombieRealOverride); } }
+  public bool _IsZombieReal { get { return _IsZombie && (GameScript.s_IsZombieGameMode || _isZombieRealOverride); } }
   bool _isZombieRealOverride;
 
   public class SurvivalAttributes
@@ -239,7 +239,7 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
 
     // Get NavAgent
     _agent = GetComponent<UnityEngine.AI.NavMeshAgent>();
-    if (_IsZombie && GameScript.IsSurvival())
+    if (_IsZombie && GameScript.s_IsZombieGameMode)
       _agent.agentTypeID = TileManager._navMeshSurface2.agentTypeID;
     else
       _agent.agentTypeID = TileManager._navMeshSurface.agentTypeID;
@@ -252,10 +252,21 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
       transform.parent
     );
     _ragdoll = new ActiveRagdoll(ragdollObj, transform);
+
+    // Check crown
+    if (GameScript.s_IsMissionsGameMode)
+      if (LevelModule.ExtraCrownMode != 0)
+        if (GameScript.s_CrownEnemy == _Id)
+        {
+          _ragdoll.AddCrown();
+        }
+
+    // Check enemy type
     if (_enemyType == EnemyType.NORMAL)
       switch (_itemLeft)
       {
-        case (GameScript.ItemManager.Items.KNIFE):
+
+        case GameScript.ItemManager.Items.KNIFE:
           if (Random.value < 0.5f)
           {
             _itemLeft = GameScript.ItemManager.Items.NONE;
@@ -263,24 +274,30 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
           }
           _ragdoll.ChangeColor(Color.green);
           break;
-        case (GameScript.ItemManager.Items.PISTOL):
+
+        case GameScript.ItemManager.Items.PISTOL:
           _ragdoll.ChangeColor(Color.magenta);
           break;
-        case (GameScript.ItemManager.Items.PISTOL_SILENCED):
+
+        case GameScript.ItemManager.Items.PISTOL_SILENCED:
           _ragdoll.ChangeColor(Color.magenta / 3f);
           _itemRight = GameScript.ItemManager.Items.KNIFE;
           break;
-        case (GameScript.ItemManager.Items.REVOLVER):
+
+        case GameScript.ItemManager.Items.REVOLVER:
           _ragdoll.ChangeColor((Color.red + Color.yellow) / 3f);
           break;
-        case (GameScript.ItemManager.Items.GRENADE_HOLD):
+
+        case GameScript.ItemManager.Items.GRENADE_HOLD:
           _ragdoll.ChangeColor(Color.red + Color.yellow);
           break;
-        case (GameScript.ItemManager.Items.SHOTGUN_PUMP):
+
+        case GameScript.ItemManager.Items.SHOTGUN_PUMP:
           _ragdoll.ChangeColor(Color.white);
           _enemyType = EnemyType.ROBOT;
           break;
-        case (GameScript.ItemManager.Items.BAT):
+
+        case GameScript.ItemManager.Items.BAT:
           //_itemLeft = GameScript.ItemManager.Items.SHOTGUN_DOUBLE;
           _ragdoll.ChangeColor(Color.white);
           _enemyType = EnemyType.ROBOT;
@@ -288,7 +305,8 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
           _canMove = false;
           _Chaser = this;
           break;
-        case (GameScript.ItemManager.Items.GRENADE_LAUNCHER):
+
+        case GameScript.ItemManager.Items.GRENADE_LAUNCHER:
           _itemLeft = GameScript.ItemManager.Items.GRENADE_LAUNCHER;
           _ragdoll.ChangeColor(Color.yellow);
           break;
@@ -327,13 +345,6 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
       }
     }
 
-    // Check crown
-    if (LevelModule.ExtraCrownMode != 0)
-      if (GameScript.s_CrownEnemy == _Id)
-      {
-        _ragdoll.AddCrown();
-      }
-
     // Start cycle
     Walk();
   }
@@ -343,10 +354,10 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
     // Check null
     if (_Enemies_alive == null || _Enemies_alive.Count == 0 || GameScript.s_EditorEnabled) return;
     if (Menu.s_InMenus || TileManager._LoadingMap || PlayerScript.s_Players == null || PlayerScript.s_Players.Count == 0) return;
-    if (GameScript.s_GameMode != GameScript.GameModes.ZOMBIE)
+    if (!GameScript.s_IsZombieGameMode)
     {
       // Set up handler
-      var count = (_Enemies_alive.Count) * SpherecastHandler._NumSpherecasts;
+      var count = _Enemies_alive.Count * SpherecastHandler._NumSpherecasts;
       SpherecastHandler.Init(count);
 
       // Queury spherecasts
@@ -444,7 +455,7 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
               if (HasMachineGun())
                 _attackTime = Time.time + useItem.UseRate();
               else
-                _attackTime = Time.time + (/*0.2f + Random.value */ (_ragdoll.HasSilencedWeapon() || _itemLeft == GameScript.ItemManager.Items.REVOLVER ? 0.25f : 0.55f));
+                _attackTime = Time.time + /*0.2f + Random.value */ (_ragdoll.HasSilencedWeapon() || _itemLeft == GameScript.ItemManager.Items.REVOLVER ? 0.25f : 0.55f);
             }
           }
 
@@ -483,7 +494,7 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
               var close_data = FunctionsC.GetClosestTargetTo(_ragdoll, transform.position);
               if (close_data._ragdoll != null)
               {
-                lookAtPos = (close_data._ragdoll.Transform.position);
+                lookAtPos = close_data._ragdoll.Transform.position;
                 LookAt(lookAtPos);
               }
             }
@@ -583,7 +594,7 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
                   _agent.Move(_path.GetPatrolPoint().position - transform.position);
 
                   // Wait until next movement
-                  Wait(_path.GetPatrolWait(), (_path.GetPathLength() > 1));
+                  Wait(_path.GetPatrolWait(), _path.GetPathLength() > 1);
                 }
               }
               else
@@ -637,7 +648,7 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
               _agent.SetDestination(_lastKnownPos);
 
               _time_lost = 0f;
-              _searchDir = -MathC.Get2DVector((transform.position - _lastKnownPos)).normalized * 3f;
+              _searchDir = -MathC.Get2DVector(transform.position - _lastKnownPos).normalized * 3f;
             }
 
             //
@@ -804,7 +815,7 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
                           _attackTime = Time.time + useitem.UseRate();
                         else
                         {
-                          _attackTime = Time.time + (/*0.2f + Random.value */ (_ragdoll.HasSilencedWeapon() || _itemLeft == GameScript.ItemManager.Items.REVOLVER ? 0.25f : 0.55f));
+                          _attackTime = Time.time + /*0.2f + Random.value */ (_ragdoll.HasSilencedWeapon() || _itemLeft == GameScript.ItemManager.Items.REVOLVER ? 0.25f : 0.55f);
                         }
                       }
                     }
@@ -996,7 +1007,7 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
 
   public bool IsChaser()
   {
-    return (_enemyType == EnemyType.ROBOT);
+    return _enemyType == EnemyType.ROBOT;
   }
 
   //
@@ -1046,7 +1057,7 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
     if (!_canMove || _ragdoll._IsGrappled) return;
 
     // Check survial
-    if (GameScript.IsSurvival())
+    if (GameScript.s_IsZombieGameMode)
     {
       if (GameScript.SurvivalMode._Wave_enemies == null) return;
       if (GameScript.SurvivalMode._Wave_enemies.Count <= 1 ||
@@ -1055,9 +1066,9 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
       else return;
     }
 
-    var moveDir = (_agent.steeringTarget - transform.position);
+    var moveDir = _agent.steeringTarget - transform.position;
     var movePos = moveDir.normalized * PlayerScript.MOVESPEED * Time.deltaTime * _moveSpeed_lerped;
-    if (!Vector3.Equals(_agent.destination, transform.position))
+    if (!Equals(_agent.destination, transform.position))
     {
       _agent.Move(movePos);
     }
@@ -1133,7 +1144,7 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
         else if (_state != State.SEARCHING && _time_lost > 11f)
         {
           ChangeState(State.SEARCHING);
-          if (!Vector3.Equals(_agent.destination, _lastKnownPos))
+          if (!Equals(_agent.destination, _lastKnownPos))
             _agent.SetDestination(_lastKnownPos);
         }
 
@@ -1375,13 +1386,13 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
         var filter = new UnityEngine.AI.NavMeshQueryFilter
         {
           areaMask = 1,
-          agentTypeID = _IsZombie && GameScript.IsSurvival() ? TileManager._navMeshSurface2.agentTypeID : TileManager._navMeshSurface.agentTypeID
+          agentTypeID = _IsZombie && GameScript.s_IsZombieGameMode ? TileManager._navMeshSurface2.agentTypeID : TileManager._navMeshSurface.agentTypeID
         };
         if (!UnityEngine.AI.NavMesh.CalculatePath(transform.position, _lastKnownPos, filter, path_new)) Debug.LogError("Failed to find path. (agent enabled): " + _agent.enabled);
         int useIter = 2;
         // Check if the enemy is about to redirect
         if (!_targetInFront)
-          if (path_new.corners.Length > useIter && path.corners.Length > useIter && !Vector3.Equals(path.corners[useIter], path_new.corners[useIter]))
+          if (path_new.corners.Length > useIter && path.corners.Length > useIter && !Equals(path.corners[useIter], path_new.corners[useIter]))
           {
             Vector3 ang0 = (MathC.Get2DVector(path_new.corners[1]) - MathC.Get2DVector(path_new.corners[0])).normalized,
              ang1 = (MathC.Get2DVector(path.corners[1]) - MathC.Get2DVector(path.corners[0])).normalized;
@@ -1460,14 +1471,14 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
 
   public void SetRandomStrafe()
   {
-    _strafeRight = (Random.Range(0, 2) == 0 ? true : false);
+    _strafeRight = Random.Range(0, 2) == 0 ? true : false;
   }
 
   bool CheckShouldPanic()
   {
     _playerKnownWeapon = true;
     if (_ragdollTarget != null) _playerKnownWeaponValue = _ragdollTarget.HasWeapon();
-    if (_playerKnownWeapon) return (!HasWeapon());
+    if (_playerKnownWeapon) return !HasWeapon();
     return false;
   }
   void Panic()
@@ -1513,7 +1524,7 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
       _patroling = false;
       // Update last known position and move towards
       _lastKnownPos = source;
-      if (!Vector3.Equals(_lastKnownPos, _agent.destination))
+      if (!Equals(_lastKnownPos, _agent.destination))
       {
         _agent.SetDestination(_lastKnownPos);
       }
@@ -1522,7 +1533,7 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
       {
         Run();
         _time_lost = 0f;
-        _searchDir = -MathC.Get2DVector((transform.position - _lastKnownPos)).normalized * 3f;
+        _searchDir = -MathC.Get2DVector(transform.position - _lastKnownPos).normalized * 3f;
         _ragdoll.DisplayText("?");
         _ragdoll.PlaySound("Enemies/Suspicious", 0.9f, 1.1f);
       }
@@ -1632,7 +1643,7 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
 
   public static EnemyScript LoadEnemy(Vector3 position)
   {
-    GameObject new_gameobject = GameObject.Instantiate(GameResources._Enemy);
+    GameObject new_gameobject = Instantiate(GameResources._Enemy);
     new_gameobject.transform.parent = GameResources.s_Game.transform.GetChild(0);
     new_gameobject.transform.localScale = new Vector3(0.1f, 0.1f, 1f);
     new_gameobject.transform.position = position;
@@ -1896,7 +1907,7 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
         PlayerScript._SlowmoTimer += 1.3f;
 
       // Check mode
-      if (GameScript.s_GameMode == GameScript.GameModes.ZOMBIE)
+      if (GameScript.s_IsZombieGameMode)
       {
         if (source._IsPlayer)
           GameScript.SurvivalMode.GivePoints(source._PlayerScript._Id, 5 * GameScript.SurvivalMode._Wave, true);
@@ -1908,7 +1919,7 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
         // Level timer
         TileManager._Level_Complete = true;
 
-        if (GameScript.s_GameMode == GameScript.GameModes.MISSIONS && !GameScript.s_EditorTesting && !Levels._LevelPack_Playing)
+        if (GameScript.s_IsMissionsGameMode && !GameScript.s_EditorTesting && !Levels._LevelPack_Playing)
         {
 
           var levelComplete = Levels._CurrentLevelCollectionIndex > 1 ? false : LevelModule.LevelData[Levels._CurrentLevelCollectionIndex].Data[Levels._CurrentLevelIndex].Completed;
@@ -2361,7 +2372,7 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
             // Last killed settings
             if (last_killed && SettingsModule.LevelEndCondition == Settings.SettingsSaveData.LevelEndConditionType.LAST_ENEMY_KILLED)
             {
-              if (LevelModule.ExtraHorde == 1 && !PlayerScript.HasExit())
+              if ((LevelModule.ExtraHorde == 1 && !PlayerScript.HasExit()) || (LevelModule.ExtraCrownMode != 0 && PlayerScript.GetNumberAlivePlayers() > 1))
               { }
               else
               {
@@ -2428,7 +2439,7 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
     }
 
     // Increment survival score
-    if (GameScript.s_GameMode == GameScript.GameModes.ZOMBIE && source._IsPlayer)
+    if (GameScript.s_IsZombieGameMode && source._IsPlayer)
       GameScript.SurvivalMode.IncrementScore(source._PlayerScript._Id);
   }
 
@@ -2536,7 +2547,7 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
   /// </summary>
   public static void CheckSound(Vector3 noisePosition, Vector3 sourcePosition, Loudness loudness, int bulletID = -1, bool slowReaction = true)
   {
-    if (_Enemies_alive == null || GameScript.IsSurvival()) return;
+    if (_Enemies_alive == null || GameScript.s_IsZombieGameMode) return;
 
     // Decide distance
     var minDistance = loudness == Loudness.SUPERSOFT ? 1.5f : (loudness == Loudness.SOFT ? 3f : (loudness == Loudness.NORMAL ? 6f : 9f));
@@ -2610,11 +2621,11 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
     {
       switch (past)
       {
-        case (Loudness.LOUD):
+        case Loudness.LOUD:
           return false;
-        case (Loudness.NORMAL):
-        case (Loudness.SOFT):
-        case (Loudness.SUPERSOFT):
+        case Loudness.NORMAL:
+        case Loudness.SOFT:
+        case Loudness.SUPERSOFT:
           return true;
       }
     }
@@ -2622,11 +2633,11 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
     {
       switch (past)
       {
-        case (Loudness.LOUD):
-        case (Loudness.NORMAL):
+        case Loudness.LOUD:
+        case Loudness.NORMAL:
           return false;
-        case (Loudness.SOFT):
-        case (Loudness.SUPERSOFT):
+        case Loudness.SOFT:
+        case Loudness.SUPERSOFT:
           return true;
       }
     }
@@ -2634,11 +2645,11 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
     {
       switch (past)
       {
-        case (Loudness.LOUD):
-        case (Loudness.NORMAL):
-        case (Loudness.SOFT):
+        case Loudness.LOUD:
+        case Loudness.NORMAL:
+        case Loudness.SOFT:
           return false;
-        case (Loudness.SUPERSOFT):
+        case Loudness.SUPERSOFT:
           return true;
       }
     }

@@ -73,7 +73,7 @@ public class LaserScript : CustomEntity
           switch (_type)
           {
             // Slice ragdoll in half and kill
-            case (LaserType.KILL):
+            case LaserType.KILL:
               if (r._IsDead) break;
               // If ragdoll does not take damage, dismember
               if (!r.TakeDamage(
@@ -102,7 +102,7 @@ public class LaserScript : CustomEntity
               r.PlaySound("Etc/Sizzle");
               break;
             // Alert AIs
-            case (LaserType.ALARM):
+            case LaserType.ALARM:
               _canTrigger = false;
               foreach (EnemyScript e in EnemyScript._Enemies_alive)
               {

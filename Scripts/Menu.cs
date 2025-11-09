@@ -92,6 +92,7 @@ public class Menu
   // Menu-specific variables
   public static bool s_InPause;
   public static int s_SaveMenuDir = -1, s_SaveLevelSelected = -1;
+  static int s_extrasPage;
 
 
   // Max height dictatinng number of components to show + height of text
@@ -255,7 +256,7 @@ public class Menu
       {
         _focused = true;
         if (_menu._menuComponent_lastFocused == null) return;
-        if (s_MaxHeight > s_startMaxHeight && component._height <= (s_MaxHeight - s_startMaxHeight) + 5)
+        if (s_MaxHeight > s_startMaxHeight && component._height <= s_MaxHeight - s_startMaxHeight + 5)
           s_MaxHeight = Mathf.Clamp(s_MaxHeight - Mathf.Clamp(_menu._menuComponent_lastFocused._height - component._height, 0, 1000), s_startMaxHeight, _menu._maxHeight);
         else if (component._height >= s_MaxHeight - 5)
           s_MaxHeight = Mathf.Clamp(s_MaxHeight - Mathf.Clamp(_menu._menuComponent_lastFocused._height - component._height, -1000, 0), s_startMaxHeight, _menu._maxHeight);
@@ -596,7 +597,7 @@ public class Menu
       var component = _menuComponents[i];
       if (_menuComponentsSelectable.Contains(component)) _menuComponentsSelectable.Remove(component);
       _menuComponents.Remove(component);
-      GameObject.Destroy(component._collider.gameObject);
+      Object.Destroy(component._collider.gameObject);
     }
     _menuComponents = null;
     _menuComponentsSelectable = null;
@@ -885,12 +886,12 @@ public class Menu
         var component0 = menu._menuComponentsSelectable[menu._menuComponentsSelectable.Count - 1];
         menu._menuComponents.Remove(component0);
         menu._menuComponentsSelectable.Remove(component0);
-        GameObject.Destroy(component0._collider.gameObject);
+        Object.Destroy(component0._collider.gameObject);
       }
       // Remove prompt
       var component1 = menu._menuComponents[menu._menuComponents.Count - 1];
       menu._menuComponents.Remove(component1);
-      GameObject.Destroy(component1._collider.gameObject);
+      Object.Destroy(component1._collider.gameObject);
       // Reset dropdown count
       menu._dropdownCount = 0;
       menu._dropdownParentIndex = -1;
@@ -971,11 +972,11 @@ public class Menu
     s_Text = GameObject.Find("Menu2").transform.GetChild(0).GetComponent<TextMesh>();
 
     // Menu audio
-    _MenuAudio = new Dictionary<Noise, AudioSource>();
+    s_MenuAudio = new Dictionary<Noise, AudioSource>();
     var index = 0;
     foreach (var component in s_Menu.gameObject.GetComponents<AudioSource>())
     {
-      _MenuAudio.Add((Noise)index++, component);
+      s_MenuAudio.Add((Noise)index++, component);
     }
 
     // Set starting menu
@@ -1023,37 +1024,37 @@ public class Menu
             {
               switch (b)
               {
-                case ("NB"):
+                case "NB":
                   return FunctionsC.Control.Y;
-                case ("SB"):
+                case "SB":
                   return FunctionsC.Control.A;
-                case ("EB"):
+                case "EB":
                   return FunctionsC.Control.B;
-                case ("WB"):
+                case "WB":
                   return FunctionsC.Control.X;
-                case ("LT"):
+                case "LT":
                   return FunctionsC.Control.L_TRIGGER;
-                case ("RT"):
+                case "RT":
                   return FunctionsC.Control.R_TRIGGER;
-                case ("LB"):
+                case "LB":
                   return FunctionsC.Control.L_BUMPER;
-                case ("RB"):
+                case "RB":
                   return FunctionsC.Control.R_BUMPER;
-                case ("LD"):
+                case "LD":
                   return FunctionsC.Control.DPAD_LEFT;
-                case ("RD"):
+                case "RD":
                   return FunctionsC.Control.DPAD_RIGHT;
-                case ("UD"):
+                case "UD":
                   return FunctionsC.Control.DPAD_UP;
-                case ("DD"):
+                case "DD":
                   return FunctionsC.Control.DPAD_DOWN;
-                case ("PU"):
+                case "PU":
                   return FunctionsC.Control.START;
-                case ("RE"):
+                case "RE":
                   return FunctionsC.Control.SELECT;
-                case ("LS"):
+                case "LS":
                   return FunctionsC.Control.L_STICK;
-                case ("RS"):
+                case "RS":
                   return FunctionsC.Control.R_STICK;
                 default:
                   Debug.LogError("unknown control");
@@ -1119,7 +1120,7 @@ public class Menu
           {
             var g = parent.GetChild(i).gameObject;
             g.transform.parent = s_Menu;
-            GameObject.Destroy(g);
+            Object.Destroy(g);
           }
       });
       s_menus[type]._onSwitchTo += onSwitch;
@@ -1442,7 +1443,7 @@ public class Menu
 
               // Remove level preview
               if (GameScript._lp0 != null)
-                GameObject.Destroy(GameScript._lp0.gameObject);
+                Object.Destroy(GameScript._lp0.gameObject);
             });
 
             // Edit
@@ -1455,10 +1456,10 @@ public class Menu
                 Levels._LevelEdit_SaveIndex = s_CurrentMenu._dropdownParentIndex;
 
                 // Load map
-                _EditorSaveIndex = Menu.s_CurrentMenu._dropdownParentIndex;
+                _EditorSaveIndex = s_CurrentMenu._dropdownParentIndex;
                 var level_data = leveldata[_EditorSaveIndex - 1];
                 TileManager._EnableEditorAfterLoad = true;
-                Levels._CurrentLevelIndex = Menu.s_CurrentMenu._dropdownParentIndex - 1;
+                Levels._CurrentLevelIndex = s_CurrentMenu._dropdownParentIndex - 1;
                 GameScript.NextLevel(level_data);
 
                 // Remove menus
@@ -1475,7 +1476,7 @@ public class Menu
 
                 // Remove level preview
                 if (GameScript._lp0 != null)
-                  GameObject.Destroy(GameScript._lp0.gameObject);
+                  Object.Destroy(GameScript._lp0.gameObject);
 
               });
 
@@ -1488,7 +1489,7 @@ public class Menu
                 var save_index = s_CurrentMenu._dropdownParentIndex;
 
                 // Get current name
-                var level_data = Levels._CurrentLevelCollection._levelData[Menu.s_CurrentMenu._dropdownParentIndex - 1];
+                var level_data = Levels._CurrentLevelCollection._levelData[s_CurrentMenu._dropdownParentIndex - 1];
                 var level_meta = Levels.GetLevelMeta(level_data);
                 var level_name = level_meta[1];
 
@@ -1516,14 +1517,14 @@ public class Menu
                   }
 
                   // Save levels
-                  Levels._CurrentLevelCollection._levelData[Menu.s_CurrentMenu._dropdownParentIndex - 1] = $"{level_meta[0]} +{gottext}" + (level_meta[2] != null ? $"!{level_meta[2]}" : "");
+                  Levels._CurrentLevelCollection._levelData[s_CurrentMenu._dropdownParentIndex - 1] = $"{level_meta[0]} +{gottext}" + (level_meta[2] != null ? $"!{level_meta[2]}" : "");
                   Levels.SaveLevels();
 
                   // Reload menu
                   CommonEvents._RemoveDropdownSelections(component0);
                   CommonEvents._SwitchMenu(MenuType.EDITOR_LEVELS);
-                  Menu.s_CurrentMenu._selectionIndex = save_index;
-                  Menu.s_CurrentMenu._selectedComponent._onSelected?.Invoke(Menu.s_CurrentMenu._selectedComponent);
+                  s_CurrentMenu._selectionIndex = save_index;
+                  s_CurrentMenu._selectedComponent._onSelected?.Invoke(s_CurrentMenu._selectedComponent);
                   _CanRender = false;
                   RenderMenu();
 
@@ -1547,7 +1548,7 @@ public class Menu
               {
                 Levels.LevelEditor_NewMap("not matter");
 
-                var level_data = Levels._CurrentLevelCollection._levelData[Menu.s_CurrentMenu._dropdownParentIndex - 1];
+                var level_data = Levels._CurrentLevelCollection._levelData[s_CurrentMenu._dropdownParentIndex - 1];
                 var level_meta = Levels.GetLevelMeta(level_data);
                 var level_name = level_meta[1] == null ? "unnamed map" : level_meta[1];
                 var level_load = level_meta[2];
@@ -1559,10 +1560,10 @@ public class Menu
                 // Reload menu
                 CommonEvents._RemoveDropdownSelections(component0);
                 CommonEvents._SwitchMenu(MenuType.EDITOR_LEVELS);
-                Menu.s_CurrentMenu._selectionIndex = Menu.s_CurrentMenu._menuComponentsSelectable.Count - 2;
+                s_CurrentMenu._selectionIndex = s_CurrentMenu._menuComponentsSelectable.Count - 2;
                 _CanRender = false;
                 RenderMenu();
-                Menu.s_CurrentMenu._selectedComponent._onFocus?.Invoke(Menu.s_CurrentMenu._selectedComponent);
+                s_CurrentMenu._selectedComponent._onFocus?.Invoke(s_CurrentMenu._selectedComponent);
               });
 
               // Delete level
@@ -1586,22 +1587,22 @@ public class Menu
                   var filestructure_local = "Levelpacks/Local/";
                   var trashed_files = new System.IO.DirectoryInfo($"{filestructure_local}trashed/").GetFiles().OrderBy(p => p.LastWriteTime).ToArray();
                   if (trashed_files.Length > 10)
-                    System.IO.File.Delete(trashed_files[0].FullName);
+                    File.Delete(trashed_files[0].FullName);
 
                   var now = System.DateTime.Now;
                   Levels.WriteToFile($"{filestructure_local}trashed/{level_name}-{now.Year}-{now.Month}-{now.Day}--{now.Hour}-{now.Minute}-{now.Second}.txt", data_delete);
 
                   // Remove preview
                   if (GameScript._lp0 != null)
-                    GameObject.Destroy(GameScript._lp0.gameObject);
+                    Object.Destroy(GameScript._lp0.gameObject);
 
                   // Reload menu
                   CommonEvents._RemoveDropdownSelections(component0);
                   CommonEvents._SwitchMenu(MenuType.EDITOR_LEVELS);
-                  Menu.s_CurrentMenu._selectionIndex = save_index - 1;
+                  s_CurrentMenu._selectionIndex = save_index - 1;
                   _CanRender = false;
                   RenderMenu();
-                  Menu.s_CurrentMenu._selectedComponent._onFocus?.Invoke(Menu.s_CurrentMenu._selectedComponent);
+                  s_CurrentMenu._selectedComponent._onFocus?.Invoke(s_CurrentMenu._selectedComponent);
                 }
                 else
                 {
@@ -1620,7 +1621,7 @@ public class Menu
                 var save_index = s_CurrentMenu._dropdownParentIndex;
                 CommonEvents._RemoveDropdownSelections(component0);
                 CommonEvents._SwitchMenu(MenuType.EDITOR_LEVELS);
-                Menu.s_CurrentMenu._selectionIndex = save_index;
+                s_CurrentMenu._selectionIndex = save_index;
                 _CanRender = false;
                 RenderMenu();
               });
@@ -1634,7 +1635,7 @@ public class Menu
               actions.Add((MenuComponent component0) =>
               {
 
-                var level_data = Levels._LevelPack_Current._levelData[Menu.s_CurrentMenu._dropdownParentIndex];
+                var level_data = Levels._LevelPack_Current._levelData[s_CurrentMenu._dropdownParentIndex];
 
                 var savelevelcollection = Levels._CurrentLevelCollectionIndex;
                 Levels._CurrentLevelCollectionIndex = 3;
@@ -1676,7 +1677,7 @@ public class Menu
             if (s_CurrentMenu._hasDropdown)
             {
               if (GameScript._lp0 != null)
-                GameObject.Destroy(GameScript._lp0.gameObject);
+                Object.Destroy(GameScript._lp0.gameObject);
               GameScript._lp0 = TileManager.GetMapPreview(level_data).transform;
 
               level_meta = Levels.GetLevelMeta(level_data);
@@ -1690,7 +1691,7 @@ public class Menu
             if (!s_CurrentMenu._hasDropdown)
             {
               if (GameScript._lp0 != null)
-                GameObject.Destroy(GameScript._lp0.gameObject);
+                Object.Destroy(GameScript._lp0.gameObject);
               GameScript._lp0 = TileManager.GetMapPreview(level_data).transform;
 
               level_meta = Levels.GetLevelMeta(level_data);
@@ -1700,7 +1701,7 @@ public class Menu
           .AddEvent(EventType.ON_UNFOCUS, (MenuComponent component) =>
           {
             if (GameScript._lp0 != null && !s_CurrentMenu._hasDropdown)
-              GameObject.Destroy(GameScript._lp0.gameObject);
+              Object.Destroy(GameScript._lp0.gameObject);
           });
       }
 
@@ -1710,7 +1711,7 @@ public class Menu
 
         // Remove map preview
         if (GameScript._lp0 != null)
-          GameObject.Destroy(GameScript._lp0.gameObject);
+          Object.Destroy(GameScript._lp0.gameObject);
 
         // Switch back to editor main
         if (Levels._LevelPack_SelectingLevelsFromPack)
@@ -1780,7 +1781,7 @@ public class Menu
 
         // Load list of level packs
         Levels.LevelPacks_InitFolders();
-        var levelpacks = System.IO.Directory.GetFiles("Levelpacks/Local");
+        var levelpacks = Directory.GetFiles("Levelpacks/Local");
         for (var i = 0; i < levelpacks.Length; i++)
         {
           var levelpack_name = levelpacks[i].Substring("Levelpacks/Local/".Length).Split('.')[0];
@@ -1801,7 +1802,7 @@ public class Menu
               // Make sure file exists
               var filename = $"{levelpack_name}.levelpack";
               var filename_full = $"Levelpacks/Local/{filename}";
-              if (!System.IO.File.Exists(filename_full))
+              if (!File.Exists(filename_full))
                 return false;
 
               // Load level pack info into level collection
@@ -1876,17 +1877,17 @@ public class Menu
 
                   // Rename pack
                   var name_new = $"{gottext}.levelpack";
-                  if (System.IO.File.Exists($"{filestructure_local}{name_new}"))
+                  if (File.Exists($"{filestructure_local}{name_new}"))
                     return;
 
-                  System.IO.File.Move($"{filestructure_local}{Levels._LevelPack_Current._name}", $"{filestructure_local}{name_new}");
+                  File.Move($"{filestructure_local}{Levels._LevelPack_Current._name}", $"{filestructure_local}{name_new}");
                   Levels._LevelPack_Current._name = name_new;
 
                   // Reload menu
                   CommonEvents._RemoveDropdownSelections(component0);
                   CommonEvents._SwitchMenu(MenuType.EDITOR_PACKS);
-                  Menu.s_CurrentMenu._selectionIndex = save_index;
-                  Menu.s_CurrentMenu._selectedComponent._onSelected?.Invoke(Menu.s_CurrentMenu._selectedComponent);
+                  s_CurrentMenu._selectionIndex = save_index;
+                  s_CurrentMenu._selectedComponent._onSelected?.Invoke(s_CurrentMenu._selectedComponent);
                   _CanRender = false;
                   RenderMenu();
 
@@ -1914,16 +1915,16 @@ public class Menu
               if (localfunc_setcurrentpack())
               {
                 var fileloc = $"{filestructure_local}{Levels._LevelPack_Current._name}";
-                System.IO.File.Copy(fileloc, $"{fileloc.Split('.')[0]}_Copy.levelpack");
+                File.Copy(fileloc, $"{fileloc.Split('.')[0]}_Copy.levelpack");
 
                 // Reload menu
                 var save_index = s_CurrentMenu._dropdownParentIndex;
                 CommonEvents._RemoveDropdownSelections(component0);
                 CommonEvents._SwitchMenu(MenuType.EDITOR_PACKS);
-                Menu.s_CurrentMenu._selectionIndex = save_index;
+                s_CurrentMenu._selectionIndex = save_index;
                 _CanRender = false;
                 RenderMenu();
-                Menu.s_CurrentMenu._selectedComponent._onFocus?.Invoke(Menu.s_CurrentMenu._selectedComponent);
+                s_CurrentMenu._selectedComponent._onFocus?.Invoke(s_CurrentMenu._selectedComponent);
               }
 
             });
@@ -1941,19 +1942,19 @@ public class Menu
 
                   var trashed_files = new System.IO.DirectoryInfo($"{filestructure_local}trashed/").GetFiles().OrderBy(p => p.LastWriteTime).ToArray();
                   if (trashed_files.Length > 10)
-                    System.IO.File.Delete(trashed_files[0].FullName);
+                    File.Delete(trashed_files[0].FullName);
 
                   var now = System.DateTime.Now;
-                  System.IO.File.Move(fileloc, $"{filestructure_local}trashed/{Levels._LevelPack_Current._name.Split('.')[0]}-{now.Year}-{now.Month}-{now.Day}--{now.Hour}-{now.Minute}-{now.Second}.levelpack");
+                  File.Move(fileloc, $"{filestructure_local}trashed/{Levels._LevelPack_Current._name.Split('.')[0]}-{now.Year}-{now.Month}-{now.Day}--{now.Hour}-{now.Minute}-{now.Second}.levelpack");
 
                   // Reload menu
                   var save_index = s_CurrentMenu._dropdownParentIndex;
                   CommonEvents._RemoveDropdownSelections(component0);
                   CommonEvents._SwitchMenu(MenuType.EDITOR_PACKS);
-                  Menu.s_CurrentMenu._selectionIndex = save_index - 1;
+                  s_CurrentMenu._selectionIndex = save_index - 1;
                   _CanRender = false;
                   RenderMenu();
-                  Menu.s_CurrentMenu._selectedComponent._onFocus?.Invoke(Menu.s_CurrentMenu._selectedComponent);
+                  s_CurrentMenu._selectedComponent._onFocus?.Invoke(s_CurrentMenu._selectedComponent);
                 }
 
             });
@@ -2052,21 +2053,21 @@ public class Menu
               // Make sure file exists / copy
               var filename = Levels._LevelPack_Current._name;
               var filename_full = $"Levelpacks/Local/{filename}";
-              if (!System.IO.File.Exists(filename_full))
+              if (!File.Exists(filename_full))
                 return;
 
               // Create dir
-              if (System.IO.Directory.Exists($"{filestructure_workshop}{title}"))
-                System.IO.Directory.Delete($"{filestructure_workshop}{title}", true);
-              System.IO.Directory.CreateDirectory($"{filestructure_workshop}{title}");
-              System.IO.File.Copy(filename_full, $"{filestructure_workshop}{title}/{filename}");
+              if (Directory.Exists($"{filestructure_workshop}{title}"))
+                Directory.Delete($"{filestructure_workshop}{title}", true);
+              Directory.CreateDirectory($"{filestructure_workshop}{title}");
+              File.Copy(filename_full, $"{filestructure_workshop}{title}/{filename}");
 
               // Copy file to workshop
               SteamManager.Workshop_CreateNew(new SteamManager.SteamWorkshopItem()
               {
                 _title = title,
                 _description = desc,
-                _filelocation = $"{System.IO.Directory.GetCurrentDirectory()}/{filestructure_workshop}{title}"
+                _filelocation = $"{Directory.GetCurrentDirectory()}/{filestructure_workshop}{title}"
               });
 
               // Hide menu
@@ -2124,23 +2125,23 @@ public class Menu
                   // Make sure file exists / copy
                   var filename = Levels._LevelPack_Current._name;
                   var filename_full = $"Levelpacks/Local/{filename}";
-                  if (!System.IO.File.Exists(filename_full))
+                  if (!File.Exists(filename_full))
                     return;
 
                   var title = item_p.Value.m_rgchTitle;
                   var desc = item_p.Value.m_rgchDescription;
 
                   // Create dir
-                  if (System.IO.Directory.Exists($"{filestructure_workshop}{title}"))
-                    System.IO.Directory.Delete($"{filestructure_workshop}{title}", true);
-                  System.IO.Directory.CreateDirectory($"{filestructure_workshop}{title}");
+                  if (Directory.Exists($"{filestructure_workshop}{title}"))
+                    Directory.Delete($"{filestructure_workshop}{title}", true);
+                  Directory.CreateDirectory($"{filestructure_workshop}{title}");
                   // Copy file
-                  System.IO.File.Copy(filename_full, $"{filestructure_workshop}{title}/{filename}");
+                  File.Copy(filename_full, $"{filestructure_workshop}{title}/{filename}");
 
                   // Copy file to workshop
                   SteamManager.Workshop_Update(item_p.Value.m_nPublishedFileId, new SteamManager.SteamWorkshopItem()
                   {
-                    _filelocation = $"{System.IO.Directory.GetCurrentDirectory()}/{filestructure_workshop}{title}"
+                    _filelocation = $"{Directory.GetCurrentDirectory()}/{filestructure_workshop}{title}"
                   });
 
                   // Reload menus
@@ -2180,7 +2181,7 @@ public class Menu
                       return;
 
                     // Load level pack info into level collection
-                    var workshop_folder = System.IO.Directory.GetFiles(file_loc);
+                    var workshop_folder = Directory.GetFiles(file_loc);
                     if (workshop_folder.Length != 1) return;
 
                     var filename = workshop_folder[0];
@@ -2470,7 +2471,7 @@ public class Menu
                     actions_onfocus.Add((MenuComponent component0) =>
                     {
                       if (GameScript._lp0 != null && s_CurrentMenu._dropdownCount == 0)
-                        GameObject.Destroy(GameScript._lp0.gameObject);
+                        Object.Destroy(GameScript._lp0.gameObject);
                     });
                     actions_onblur.Add((MenuComponent component0) => { });
                     continue;
@@ -2507,8 +2508,8 @@ public class Menu
                       _CanRender = false;
                       RenderMenu();
                       Menu.SendInput(Input.SPACE);
-                      Menu.s_CurrentMenu._selectionIndex = save_index + 1;
-                      Menu.s_CurrentMenu._selectedComponent._onFocus?.Invoke(Menu.s_CurrentMenu._selectedComponent);
+                      s_CurrentMenu._selectionIndex = save_index + 1;
+                      s_CurrentMenu._selectedComponent._onFocus?.Invoke(s_CurrentMenu._selectedComponent);
                       _CanRender = false;
                       RenderMenu();
                     }
@@ -2516,9 +2517,9 @@ public class Menu
                     {
                       CommonEvents._RemoveDropdownSelections(component0);
                       CommonEvents._SwitchMenu(MenuType.EDITOR_PACKS_EDIT);
-                      Menu.s_CurrentMenu._selectedComponent._focused = false;
-                      Menu.s_CurrentMenu._selectionIndex = 0;
-                      Menu.s_CurrentMenu._selectedComponent._onFocus?.Invoke(Menu.s_CurrentMenu._selectedComponent);
+                      s_CurrentMenu._selectedComponent._focused = false;
+                      s_CurrentMenu._selectionIndex = 0;
+                      s_CurrentMenu._selectedComponent._onFocus?.Invoke(s_CurrentMenu._selectedComponent);
                       _CanRender = false;
                       RenderMenu();
                     }
@@ -2532,7 +2533,7 @@ public class Menu
                   actions_onblur.Add((MenuComponent component0) =>
                   {
                     if (GameScript._lp0 != null && s_CurrentMenu._dropdownCount == 0)
-                      GameObject.Destroy(GameScript._lp0.gameObject);
+                      Object.Destroy(GameScript._lp0.gameObject);
                   });
                 }
               }
@@ -2579,7 +2580,7 @@ public class Menu
                 if (s_CurrentMenu._hasDropdown)
                 {
                   if (GameScript._lp0 != null && s_CurrentMenu._dropdownCount == 0)
-                    GameObject.Destroy(GameScript._lp0.gameObject);
+                    Object.Destroy(GameScript._lp0.gameObject);
                   level_data = Levels._CurrentLevelCollection._levelData[component._buttonIndex];
                   GameScript._lp0 = TileManager.GetMapPreview(level_data).transform;
 
@@ -2620,7 +2621,7 @@ public class Menu
                 if (!s_CurrentMenu._hasDropdown)
                 {
                   if (GameScript._lp0 != null && s_CurrentMenu._dropdownCount == 0)
-                    GameObject.Destroy(GameScript._lp0.gameObject);
+                    Object.Destroy(GameScript._lp0.gameObject);
                   level_data = Levels._CurrentLevelCollection._levelData[component._buttonIndex];
                   GameScript._lp0 = TileManager.GetMapPreview(level_data).transform;
 
@@ -2633,7 +2634,7 @@ public class Menu
 
                 // Unload map preview
                 if (GameScript._lp0 != null && s_CurrentMenu._dropdownCount == 0 && !s_CurrentMenu._hasDropdown)
-                  GameObject.Destroy(GameScript._lp0.gameObject);
+                  Object.Destroy(GameScript._lp0.gameObject);
               });
           }
 
@@ -2717,7 +2718,7 @@ public class Menu
                 if (s_CurrentMenu._hasDropdown)
                 {
                   if (GameScript._lp0 != null && s_CurrentMenu._dropdownCount == 0)
-                    GameObject.Destroy(GameScript._lp0.gameObject);
+                    Object.Destroy(GameScript._lp0.gameObject);
                   level_data = Levels._LevelPack_Current._levelData[component._buttonIndex - 1];
                   GameScript._lp0 = TileManager.GetMapPreview(level_data).transform;
 
@@ -2844,7 +2845,7 @@ public class Menu
                   Levels._LoadoutEdit_SaveIndex = s_CurrentMenu._dropdownParentIndex - 1;
 
                   if (GameScript._lp0 != null)
-                    GameObject.Destroy(GameScript._lp0.gameObject);
+                    Object.Destroy(GameScript._lp0.gameObject);
 
                   CommonEvents._SwitchMenu(MenuType.EDIT_LOADOUT);
 
@@ -2855,7 +2856,7 @@ public class Menu
                 actions.Add((MenuComponent component0) =>
                 {
 
-                  var level_data = Levels._LevelPack_Current._levelData[Menu.s_CurrentMenu._dropdownParentIndex - 1];
+                  var level_data = Levels._LevelPack_Current._levelData[s_CurrentMenu._dropdownParentIndex - 1];
 
                   var savelevelcollection = Levels._CurrentLevelCollectionIndex;
                   Levels._CurrentLevelCollectionIndex = 3;
@@ -2895,7 +2896,7 @@ public class Menu
                 if (!s_CurrentMenu._hasDropdown)
                 {
                   if (GameScript._lp0 != null && s_CurrentMenu._dropdownCount == 0)
-                    GameObject.Destroy(GameScript._lp0.gameObject);
+                    Object.Destroy(GameScript._lp0.gameObject);
                   level_data = Levels._LevelPack_Current._levelData[component._buttonIndex - 1];
                   GameScript._lp0 = TileManager.GetMapPreview(level_data).transform;
 
@@ -2908,7 +2909,7 @@ public class Menu
 
                 // Unload map preview
                 if (GameScript._lp0 != null && s_CurrentMenu._dropdownCount == 0 && !s_CurrentMenu._hasDropdown)
-                  GameObject.Destroy(GameScript._lp0.gameObject);
+                  Object.Destroy(GameScript._lp0.gameObject);
               });
 
         }
@@ -2926,7 +2927,7 @@ public class Menu
           .AddEvent(EventType.ON_SELECTED, (MenuComponent component) =>
           {
             if (GameScript._lp0 != null)
-              GameObject.Destroy(GameScript._lp0.gameObject);
+              Object.Destroy(GameScript._lp0.gameObject);
 
             var wasoverwriting = Levels._IsOverwritingLevel;
             Levels._IsReorderingLevel = Levels._IsOverwritingLevel = false;
@@ -2945,7 +2946,7 @@ public class Menu
           .AddEvent(EventType.ON_FOCUS, (MenuComponent c) =>
           {
             if (GameScript._lp0 != null)
-              GameObject.Destroy(GameScript._lp0.gameObject);
+              Object.Destroy(GameScript._lp0.gameObject);
           });
       else
         menu_editpacks
@@ -2953,7 +2954,7 @@ public class Menu
           .AddEvent(EventType.ON_SELECTED, (MenuComponent component) =>
           {
             if (GameScript._lp0 != null)
-              GameObject.Destroy(GameScript._lp0.gameObject);
+              Object.Destroy(GameScript._lp0.gameObject);
 
             s_CurrentMenu._selectionIndex = Levels._LevelPackMenu_SaveIndex;
             _CanRender = false;
@@ -2964,7 +2965,7 @@ public class Menu
           .AddEvent(EventType.ON_FOCUS, (MenuComponent c) =>
           {
             if (GameScript._lp0 != null)
-              GameObject.Destroy(GameScript._lp0.gameObject);
+              Object.Destroy(GameScript._lp0.gameObject);
           });
 #endif
     }
@@ -3249,7 +3250,7 @@ public class Menu
             var cts1 = cts0[1].Split(']');
             ct = $"{cts0[0]}<color={_COLOR_GRAY}>[{cts1[0]}]</color>{cts1[1]}";
           }
-          m.AddComponent(($"{ct}\n"), MenuComponent.ComponentType.BUTTON_SIMPLE)
+          m.AddComponent($"{ct}\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
             .AddEvent((MenuComponent component) =>
             {
               var displayText = component.GetDisplayText(false);
@@ -3869,13 +3870,13 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
     var levels_per_dir = 12;
     void SpawnMenu_Levels()
     {
-      var format_subdirs = GameScript.s_GameMode == GameScript.GameModes.MISSIONS ? "{0,-7}{1,15}{2,15}{3,33}" : "{0,-20}{1,20}{2,40}";
+      var format_subdirs = GameScript.s_IsMissionsGameMode ? "{0,-7}{1,15}{2,15}{3,33}" : "{0,-20}{1,20}{2,40}";
       // Create new menu
       var m = new Menu(MenuType.LEVELS)
       {
 
       }
-      .AddComponent(GameScript.s_GameMode == GameScript.GameModes.MISSIONS ?
+      .AddComponent(GameScript.s_IsMissionsGameMode ?
           string.Format($"<color={_COLOR_GRAY}>{format_subdirs}</color>", "missions", "rank", "", "") + "\n\n"
         :
           string.Format($"<color={_COLOR_GRAY}>{format_subdirs}</color>", "levels", "highest wave", "") + "\n\n"
@@ -3897,24 +3898,24 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
       };
 
       // Set level directory options
-      if (GameScript.s_GameMode == GameScript.GameModes.MISSIONS)
+      if (GameScript.s_IsMissionsGameMode)
       {
         dirs = Mathf.CeilToInt((float)Levels._CurrentLevelCollection._levelData.Length / levels_per_dir);
       }
-      else if (GameScript.s_GameMode == GameScript.GameModes.CHALLENGE || GameScript.s_GameMode == GameScript.GameModes.ZOMBIE)
+      else if (GameScript.s_GameMode == GameScript.GameModes.CHALLENGE || GameScript.s_IsZombieGameMode)
         dirs = Levels._CurrentLevelCollection._levelData.Length;
 
       for (var i = 0; i < dirs; i++)
       {
         var wave = "-";
         var rank_lowest = "";
-        if (GameScript.s_GameMode == GameScript.GameModes.ZOMBIE)
+        if (GameScript.s_IsZombieGameMode)
         {
           wave = LevelModule.GetHighestSurvivalWave(i) + "";
           if (wave == "0")
             wave = "-";
         }
-        else if (GameScript.s_GameMode == GameScript.GameModes.MISSIONS)
+        else if (GameScript.s_IsMissionsGameMode)
         {
           // Get lowest rank from all levels in dir
           for (var u = i == 0 ? 1 : 0; u < 12; u++)
@@ -3939,7 +3940,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
         }
 
         var display_text =
-          GameScript.s_GameMode == GameScript.GameModes.MISSIONS ?
+          GameScript.s_IsMissionsGameMode ?
             string.Format(format_subdirs, $"\\dir{i}", $"{rank_lowest}    ", "", "") + '\n'
           :
             string.Format(format_subdirs, $"\\dir{i}", $"{wave}    ", "") + '\n';
@@ -3962,7 +3963,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
           {
 
             // Obscur dir if first level not unlocked
-            if (GameScript.s_GameMode != GameScript.GameModes.ZOMBIE)
+            if (!GameScript.s_IsZombieGameMode)
             {
               var first_level_iter = component._buttonIndex * levels_per_dir;
               if (first_level_iter > 0 && !Levels.LevelCompleted(first_level_iter - 1))
@@ -3994,7 +3995,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
             component._obscured = false;
 
             // Load CLASSIC levels
-            if (GameScript.s_GameMode == GameScript.GameModes.MISSIONS)
+            if (GameScript.s_IsMissionsGameMode)
             {
               // Update dropdown data
               var selections = new List<string>();
@@ -4022,7 +4023,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
                 var level_rating = Levels.GetLevelRating(dev_time, level_time_best);
                 var text_rating = level_time_best == -1f ? "-" : level_rating == null ? "?" : level_rating.Item1;
 
-                selections.Add(string.Format(format_subdirs, $"\\{(level_iter + 1)}", text_levelTimeBest, text_rating, ""));
+                selections.Add(string.Format(format_subdirs, $"\\{level_iter + 1}", text_levelTimeBest, text_rating, ""));
 
                 // Check if unlocked
                 if (level_unlocked)
@@ -4156,7 +4157,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
             }
 
             // SURVIVAL
-            else if (GameScript.s_GameMode == GameScript.GameModes.ZOMBIE)
+            else if (GameScript.s_IsZombieGameMode)
             {
               // Update dropdown data
               var prompt = $"=== {string.Format(format_subdirs, "", "", "")}\n\n";
@@ -4178,78 +4179,171 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
           });
       }
       // Add 'level settings' if CLASSIC mode
-      if (GameScript.s_GameMode == GameScript.GameModes.MISSIONS)
+      if (GameScript.s_IsMissionsGameMode)
       {
-        m.AddComponent($"\n<color={_COLOR_GRAY}>mission settings</color>\n\n")
-        .AddComponent("difficulty\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
-          .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
-          {
-            var selection = Settings._DIFFICULTY == 0 ? "sneaky" : "sneakier";
-            var color = selection == "sneaky" ? _COLOR_GRAY : "cyan";
-            var ratings_lowest = Levels._Ranks_Lowest;
-            var rating_lowest = ratings_lowest[Settings._DIFFICULTY];
-            component.SetDisplayText($"difficulty: </color><color={color}>{selection} {rating_lowest}</color><color=white>\n");
+        m
+          .AddComponent($"\n<color={_COLOR_GRAY}>mission settings</color>\n\n")
 
-            // Update dropdown data
-            var selections = new List<string>();
-            var actions = new List<System.Action<MenuComponent>>();
-            var actions_onCreated = new List<System.Action<MenuComponent>>();
-            // Set difficulty options
-            void Local_SetDifficulty(int difficulty)
+          // Difficulty setting
+          .AddComponent("difficulty\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
+            .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
             {
-              Settings._DIFFICULTY = difficulty;
-              Levels._CurrentLevelCollectionIndex = (GameScript.s_GameMode == GameScript.GameModes.ZOMBIE ? 2 : 0 + difficulty);
-              s_SaveMenuDir = -1;
-              _CanRender = false;
-              Levels.BufferLevelTimeDatas();
+              var selection = Settings._DIFFICULTY == 0 ? "sneaky" : "sneakier";
+              var color = selection == "sneaky" ? _COLOR_GRAY : "cyan";
+              var ratings_lowest = Levels._Ranks_Lowest;
+              var rating_lowest = ratings_lowest[Settings._DIFFICULTY];
+              component.SetDisplayText($"difficulty: </color><color={color}>{selection} {rating_lowest}</color><color=white>\n");
 
-              SpawnMenu_Levels();
-              s_CurrentMenu._selectionIndex = s_CurrentMenu._menuComponentsSelectable.Count - 2;
-              _CanRender = false;
-              RenderMenu();
-              SendInput(Input.SPACE);
-              _CanRender = false;
-              RenderMenu();
-            }
-
-            var format_ds = "{0,-9}{1,-4} - {2,-30}";
-            selections.Add(string.Format(format_ds, $"sneaky", ratings_lowest[0], "base difficulty"));
-            actions.Add((MenuComponent component0) =>
-            {
-              if (Settings._DIFFICULTY != 0)
+              // Update dropdown data
+              var selections = new List<string>();
+              var actions = new List<System.Action<MenuComponent>>();
+              var actions_onCreated = new List<System.Action<MenuComponent>>();
+              // Set difficulty options
+              void Local_SetDifficulty(int difficulty)
               {
-                Local_SetDifficulty(0);
-                Settings.LevelSaveData.Save();
-              }
-            });
-            actions_onCreated.Add((MenuComponent component0) => { });
-            var difficultyUnlocked = Settings._DifficultyUnlocked > 0;
-#if UNITY_EDITOR
-            //difficultyUnlocked = true;
-#endif
+                Settings._DIFFICULTY = difficulty;
+                Levels._CurrentLevelCollectionIndex = GameScript.s_IsZombieGameMode ? 2 : 0 + difficulty;
+                s_SaveMenuDir = -1;
+                _CanRender = false;
+                Levels.BufferLevelTimeDatas();
 
-            selections.Add(string.Format(format_ds, $"sneakier", ratings_lowest[1], "more enemies, harder levels, pressure"));
-            if (difficultyUnlocked)
-            {
+                SpawnMenu_Levels();
+                s_CurrentMenu._selectionIndex = s_CurrentMenu._menuComponentsSelectable.Count - 2;
+                _CanRender = false;
+                RenderMenu();
+                SendInput(Input.SPACE);
+                _CanRender = false;
+                RenderMenu();
+              }
+
+              var format_ds = "{0,-9}{1,-4} - {2,-30}";
+              selections.Add(string.Format(format_ds, $"sneaky", ratings_lowest[0], "base difficulty"));
               actions.Add((MenuComponent component0) =>
               {
-                if (Settings._DIFFICULTY != 1)
+                if (Settings._DIFFICULTY != 0)
                 {
-                  Local_SetDifficulty(1);
+                  Local_SetDifficulty(0);
                   Settings.LevelSaveData.Save();
                 }
               });
               actions_onCreated.Add((MenuComponent component0) => { });
-            }
-            else
-            {
-              actions.Add((MenuComponent component0) => { });
-              actions_onCreated.Add((MenuComponent component0) => { component0._obscured = true; });
-            }
+              var difficultyUnlocked = Settings._DifficultyUnlocked > 0;
+#if UNITY_EDITOR
+              //difficultyUnlocked = true;
+#endif
 
-            // Set dropdown data
-            component.SetDropdownData("difficulty level\n\n", selections, actions, Settings._DIFFICULTY == 0 ? "sneaky" : "sneakier", actions_onCreated);
-          });
+              selections.Add(string.Format(format_ds, $"sneakier", ratings_lowest[1], "more enemies, harder levels, pressure"));
+              if (difficultyUnlocked)
+              {
+                actions.Add((MenuComponent component0) =>
+                {
+                  if (Settings._DIFFICULTY != 1)
+                  {
+                    Local_SetDifficulty(1);
+                    Settings.LevelSaveData.Save();
+                  }
+                });
+                actions_onCreated.Add((MenuComponent component0) => { });
+              }
+              else
+              {
+                actions.Add((MenuComponent component0) => { });
+                actions_onCreated.Add((MenuComponent component0) => { component0._obscured = true; });
+              }
+
+              // Set dropdown data
+              component.SetDropdownData("difficulty level\n\n", selections, actions, Settings._DIFFICULTY == 0 ? "sneaky" : "sneakier", actions_onCreated);
+            })
+
+            // Crown mode setting
+            .AddComponent("crown\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
+              .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+              {
+
+                /*/ Crown mode
+AddExtraSelection(
+  "crown",
+  () =>
+  {
+    switch (LevelModule.ExtraCrownMode)
+    {
+      case 0:
+        return "off";
+      case 1:
+        return "on";
+      case 2:
+        return "on - but no enemy bonuses";
+    }
+    return "N/A";
+  },
+  new DropdownSelectionComponent[] {
+  new DropdownSelectionComponent("off", "", (MenuComponent component) => {
+    LevelModule.ExtraCrownMode = 0;
+  }),
+  new DropdownSelectionComponent("on", "", (MenuComponent component) => {
+    LevelModule.ExtraCrownMode = 1;
+  }),
+  new DropdownSelectionComponent("on - but no enemy bonuses", "", (MenuComponent component) => {
+    LevelModule.ExtraCrownMode = 2;
+  }),
+  },
+  "a crown shows the victor! enemies wearing the crown gain bonuses",
+
+  Shop.Unlocks.EXTRA_CROWNMODE,
+  () => { return Shop.Unlocked(Shop.Unlocks.EXTRA_CROWNMODE); }
+);*/
+
+                var selection = "";
+                var color = "";
+                switch (LevelModule.ExtraCrownMode)
+                {
+                  case 0:
+                    selection = "off";
+                    color = _COLOR_GRAY;
+                    break;
+                  case 1:
+                    selection = "on";
+                    color = "cyan";
+                    break;
+                  case 2:
+                    selection = "on - no enemy bonuses";
+                    color = "white";
+                    break;
+                }
+                component.SetDisplayText($"crown     : </color><color={color}>{selection}</color><color=white>\n");
+
+                // Update dropdown data
+                var selections = new List<string>();
+                var actions = new List<System.Action<MenuComponent>>();
+                var actions_onCreated = new List<System.Action<MenuComponent>>();
+
+                selections.Add("off");
+                actions.Add((MenuComponent component0) =>
+                {
+                  LevelModule.ExtraCrownMode = 0;
+                  Settings.LevelSaveData.Save();
+                });
+                actions_onCreated.Add((MenuComponent component0) => { });
+
+                selections.Add("on");
+                actions.Add((MenuComponent component0) =>
+                {
+                  LevelModule.ExtraCrownMode = 1;
+                  Settings.LevelSaveData.Save();
+                });
+                actions_onCreated.Add((MenuComponent component0) => { });
+
+                selections.Add("on - no enemy bonuses");
+                actions.Add((MenuComponent component0) =>
+                {
+                  LevelModule.ExtraCrownMode = 2;
+                  Settings.LevelSaveData.Save();
+                });
+                actions_onCreated.Add((MenuComponent component0) => { });
+
+                // Set dropdown data
+                component.SetDropdownData("crown mode\n\nyou must be the last one standing to win...\na crown shows the victor! enemies wearing the crown gain bonuses\n\n", selections, actions, selection, actions_onCreated);
+              });
       }
       m.AddComponent("\n");
       // Back button
@@ -4257,7 +4351,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
       {
         s_SaveMenuDir = -1;
         s_SaveLevelSelected = -1;
-        CommonEvents._SwitchMenu(GameScript.s_GameMode == GameScript.GameModes.MISSIONS ? MenuType.GAMETYPE_MISSION : MenuType.GAMETYPE_ZOMBIE);
+        CommonEvents._SwitchMenu(GameScript.s_IsMissionsGameMode ? MenuType.GAMETYPE_MISSION : MenuType.GAMETYPE_ZOMBIE);
       });
 
       // Destroy map preview on dropdown removed
@@ -4354,7 +4448,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
         if (isValidItemType(loadout._Equipment._ItemRight0))
         {
           if (equipment != "") equipment += ", ";
-          equipment += (loadout._Equipment._ItemRight0.ToString());
+          equipment += loadout._Equipment._ItemRight0.ToString();
         }
 
         var equipment1 = "";
@@ -4363,7 +4457,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
         if (isValidItemType(loadout._Equipment._ItemRight1))
         {
           if (equipment1 != "") equipment1 += ", ";
-          equipment1 += (loadout._Equipment._ItemRight1.ToString());
+          equipment1 += loadout._Equipment._ItemRight1.ToString();
         }
 
         // Gather utilities
@@ -4650,7 +4744,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
               component.SetDisplayText(string.Format(loadoutEquip_format, "left hand", $"{item_name}", $"{item_cost}") + "\n", true);
 
             // Check for two handed
-            component._obscured = (CurrentLoadout()._Equipment._ItemRight0 == GameScript.ItemManager.Items.KATANA);
+            component._obscured = CurrentLoadout()._Equipment._ItemRight0 == GameScript.ItemManager.Items.KATANA;
 
             // Set dropdown data
             var selections = new List<string>();
@@ -4748,7 +4842,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
               component.SetDisplayText(string.Format(loadoutEquip_format, "right hand", $"{item_name}", $"{item_cost}") + "\n\n", true);
 
             // Check for two handed
-            component._obscured = (CurrentLoadout()._Equipment._ItemLeft0 == GameScript.ItemManager.Items.KATANA);
+            component._obscured = CurrentLoadout()._Equipment._ItemLeft0 == GameScript.ItemManager.Items.KATANA;
 
             // Set dropdown data
             var selections = new List<string>();
@@ -4856,7 +4950,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
                 component.SetDisplayText(string.Format(loadoutEquip_format, "left hand", $"{item_name}", $"{item_cost}") + "\n", true);
 
               // Check for two handed
-              component._obscured = (CurrentLoadout()._Equipment._ItemRight1 == GameScript.ItemManager.Items.KATANA);
+              component._obscured = CurrentLoadout()._Equipment._ItemRight1 == GameScript.ItemManager.Items.KATANA;
 
               // Set dropdown data
               var selections = new List<string>();
@@ -4953,7 +5047,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
                 component.SetDisplayText(string.Format(loadoutEquip_format, "right hand", $"{item_name}", $"{item_cost}") + "\n\n", true);
 
               // Check for two handed
-              component._obscured = (CurrentLoadout()._Equipment._ItemLeft1 == GameScript.ItemManager.Items.KATANA);
+              component._obscured = CurrentLoadout()._Equipment._ItemLeft1 == GameScript.ItemManager.Items.KATANA;
 
               // Set dropdown data
               var selections = new List<string>();
@@ -5109,7 +5203,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
               var ut_val = GameScript.ItemManager.GetUtilityValue(utility0);
               var use_color = ut_val > CurrentLoadout()._available_points + utility_cost ? "red" : "white";
               var use_color2 = use_color == "white" ? "white" : _COLOR_GRAY;
-              if (utility0.ToString() == utility_name && utility_name != (UtilityScript.UtilityType.NONE).ToString()) use_color = use_color2 = "yellow";
+              if (utility0.ToString() == utility_name && utility_name != UtilityScript.UtilityType.NONE.ToString()) use_color = use_color2 = "yellow";
               selections.Add(string.Format($"</color><color={use_color2}>{loadout_format}<color=white>", utility0, desc, $"</color><color={use_color}>{ut_val}</color>"));
               actions.Add((MenuComponent component0) =>
               {
@@ -5212,7 +5306,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
               var ut_val = GameScript.ItemManager.GetUtilityValue(utility0);
               var use_color = ut_val > CurrentLoadout()._available_points + utility_cost ? "red" : "white";
               var use_color2 = use_color == "white" ? "white" : _COLOR_GRAY;
-              if (utility0.ToString() == utility_name && utility_name != (UtilityScript.UtilityType.NONE).ToString()) use_color = use_color2 = "yellow";
+              if (utility0.ToString() == utility_name && utility_name != UtilityScript.UtilityType.NONE.ToString()) use_color = use_color2 = "yellow";
               selections.Add(string.Format($"</color><color={use_color2}>{loadout_format}<color=white>", utility0, desc, $"</color><color={use_color}>{ut_val}</color>"));
               actions.Add((MenuComponent component0) =>
               {
@@ -5641,7 +5735,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
           });
       }
 
-      else if (GameScript.s_GameMode != GameScript.GameModes.ZOMBIE && GameScript.s_GameMode != GameScript.GameModes.PARTY)
+      else if (!GameScript.s_IsZombieGameMode && !GameScript.s_IsPartyGameMode)
       {
         // Switch to store
         mPause.AddComponent("shop\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
@@ -5682,7 +5776,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
           });
       }
 
-      if ((!GameScript.s_EditorTesting || (GameScript.s_EditorTesting && !GameScript.s_EditorEnabled)) && GameScript.s_GameMode != GameScript.GameModes.PARTY)
+      if ((!GameScript.s_EditorTesting || (GameScript.s_EditorTesting && !GameScript.s_EditorEnabled)) && !GameScript.s_IsPartyGameMode)
         // Restart the map
         mPause.AddComponent("restart\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
           .AddEvent((MenuComponent component) =>
@@ -5709,7 +5803,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
       }
 
       // Switch to options menu
-      var extrachar = GameScript.IsSurvival() ? "\n" : "";
+      var extrachar = GameScript.s_IsZombieGameMode ? "\n" : "";
       mPause.AddComponent("options\n" + extrachar, MenuComponent.ComponentType.BUTTON_SIMPLE)
         .AddEvent((MenuComponent component) =>
         {
@@ -5729,7 +5823,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
           }
         });
 
-      if (!GameScript.IsSurvival() && GameScript.s_GameMode != GameScript.GameModes.PARTY)
+      if (!GameScript.s_IsZombieGameMode && !GameScript.s_IsPartyGameMode)
       {
         mPause.AddComponent("extras*\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE);
         if (Shop.Unlocked(Shop.Unlocks.MODE_EXTRAS))
@@ -5801,7 +5895,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
             .AddEvent(EventType.ON_RENDER, CommonEvents._OnRender_XSelector);
       }
 
-      else if (GameScript.s_GameMode == GameScript.GameModes.PARTY)
+      else if (GameScript.s_IsPartyGameMode)
       {
         // Switch to versus mode menu
         mPause
@@ -5846,8 +5940,8 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
 
       // Add pause menu stats (?)
       var format_stats = "=<color={0}>{1,-15}</color>{2,-11}{3,-11}{4,-11}{5,-11}\n";
-      mPause.AddComponent((GameScript.s_GameMode == GameScript.GameModes.ZOMBIE ? "\n" : "") + $"\n\n<color={_COLOR_GRAY}>current session stats</color>\n")
-        .AddComponent(string.Format(format_stats, "white", "===", "kills", "deaths", Settings._NumberPlayers > 1 ? "teamkills" : "", GameScript.s_GameMode == GameScript.GameModes.ZOMBIE ? "points" : "") + "\n");      // Gather player stats
+      mPause.AddComponent((GameScript.s_IsZombieGameMode ? "\n" : "") + $"\n\n<color={_COLOR_GRAY}>current session stats</color>\n")
+        .AddComponent(string.Format(format_stats, "white", "===", "kills", "deaths", Settings._NumberPlayers > 1 ? "teamkills" : "", GameScript.s_IsZombieGameMode ? "points" : "") + "\n");      // Gather player stats
       for (var i = 0; i < 4; i++)
       {
         if (i >= Settings._NumberPlayers)
@@ -5856,7 +5950,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
           continue;
         }
         var stat = Stats._Stats[i];
-        mPause.AddComponent(string.Format(format_stats, GameScript.PlayerProfile.s_Profiles[i].GetColorName(), $"P{i + 1}/", $"{stat._kills}", $"{stat._deaths}", Settings._NumberPlayers > 1 ? $"{stat._teamkills}" : "", GameScript.s_GameMode == GameScript.GameModes.ZOMBIE ? $"{stat._points}" : ""));
+        mPause.AddComponent(string.Format(format_stats, GameScript.PlayerProfile.s_Profiles[i].GetColorName(), $"P{i + 1}/", $"{stat._kills}", $"{stat._deaths}", Settings._NumberPlayers > 1 ? $"{stat._teamkills}" : "", GameScript.s_IsZombieGameMode ? $"{stat._points}" : ""));
       }
       ;
       // Set the onback function to be resume
@@ -6108,7 +6202,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
         for (int i = 0; i < 6; i++)
         {
           // Add volume level
-          selections.Add((i).ToString());
+          selections.Add(i.ToString());
           // Add action to update music volume
           actions.Add((MenuComponent component0) =>
           {
@@ -6131,7 +6225,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
         for (int i = 0; i < 6; i++)
         {
           // Add volume level
-          selections.Add((i).ToString());
+          selections.Add(i.ToString());
           // Add action to update sfx volume
           actions.Add((MenuComponent component0) =>
           {
@@ -6324,7 +6418,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
           for (var i = 0; i < 6; i++)
           {
             // Add quality level
-            selections.Add((i).ToString());
+            selections.Add(i.ToString());
 
             // Add action to update quality
             actions.Add((MenuComponent component0) =>
@@ -7295,7 +7389,7 @@ system will provide and configure all loadouts.~9
         }
 
         // Versus mode
-        else if (GameScript.s_GameMode == GameScript.GameModes.PARTY)
+        else if (GameScript.s_IsPartyGameMode)
         {
           var switchMenu = s_menus[MenuType.PAUSE]._selectionIndex == 2 ? MenuType.VERSUS : MenuType.MAIN;
           CommonEvents._SwitchMenu(switchMenu);
@@ -7309,7 +7403,7 @@ system will provide and configure all loadouts.~9
         // Normal pause
         else
         {
-          var switchMenu = s_menus[MenuType.PAUSE]._selectionIndex == (GameScript.s_GameMode == GameScript.GameModes.MISSIONS ? 6 : 3) ? MenuType.LEVELS : MenuType.MAIN;
+          var switchMenu = s_menus[MenuType.PAUSE]._selectionIndex == (GameScript.s_IsMissionsGameMode ? 6 : 3) ? MenuType.LEVELS : MenuType.MAIN;
           CommonEvents._SwitchMenu(switchMenu);
           s_InPause = false;
         }
@@ -7441,11 +7535,11 @@ system will provide and configure all loadouts.~9
       .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
       {
         // Set display text
-        component.SetDisplayText(string.Format(format_options, "player:", (GameScript.PlayerProfile.s_CurrentSettingsProfileID + 1) + ""));
+        component.SetDisplayText(string.Format(format_options, "player:", GameScript.PlayerProfile.s_CurrentSettingsProfileID + 1 + ""));
         // Set dropdown data
         var selections = new List<string>();
         var actions = new List<System.Action<MenuComponent>>();
-        var selection_match = (GameScript.PlayerProfile.s_CurrentSettingsProfileID + 1) + "";
+        var selection_match = GameScript.PlayerProfile.s_CurrentSettingsProfileID + 1 + "";
         for (int i = 0; i < 4; i++)
         {
           // Add quality level
@@ -7671,11 +7765,80 @@ system will provide and configure all loadouts.~9
         });
       }
 
-      // Gravity direction
-      AddExtraSelection(
-        "gravity",
-        () => { return LevelModule.ExtraGravity == 1 ? "inverted" : LevelModule.ExtraGravity == 2 ? "north" : LevelModule.ExtraGravity == 3 ? "none" : "normal"; },
-        new DropdownSelectionComponent[] {
+      if (s_extrasPage == 0)
+      {
+
+        /*/ Crown mode
+        AddExtraSelection(
+          "crown",
+          () =>
+          {
+            switch (LevelModule.ExtraCrownMode)
+            {
+              case 0:
+                return "off";
+              case 1:
+                return "on";
+              case 2:
+                return "on - but no enemy bonuses";
+            }
+            return "N/A";
+          },
+          new DropdownSelectionComponent[] {
+          new DropdownSelectionComponent("off", "", (MenuComponent component) => {
+            LevelModule.ExtraCrownMode = 0;
+          }),
+          new DropdownSelectionComponent("on", "", (MenuComponent component) => {
+            LevelModule.ExtraCrownMode = 1;
+          }),
+          new DropdownSelectionComponent("on - but no enemy bonuses", "", (MenuComponent component) => {
+            LevelModule.ExtraCrownMode = 2;
+          }),
+          },
+          "a crown shows the victor! enemies wearing the crown gain bonuses",
+
+          Shop.Unlocks.EXTRA_CROWNMODE,
+          () => { return Shop.Unlocked(Shop.Unlocks.EXTRA_CROWNMODE); }
+        );*/
+
+        // Remove bat guy
+        AddExtraSelection(
+          "chaser",
+          () =>
+          {
+            switch (LevelModule.ExtraRemoveChaser)
+            {
+              case 0:
+                return "on";
+              case 1:
+                return "on - always";
+              case 2:
+                return "off";
+            }
+            return "N/A";
+          },
+          new DropdownSelectionComponent[] {
+        new DropdownSelectionComponent("on", "in sneakier difficulty, a person with a bat will chase you", (MenuComponent component) => {
+          LevelModule.ExtraRemoveChaser = 0;
+        }),
+        new DropdownSelectionComponent("on - always", "a person with a bat will chase you in any difficulty", (MenuComponent component) => {
+          LevelModule.ExtraRemoveChaser = 1;
+        }),
+        new DropdownSelectionComponent("off", "...that guy won't exist", (MenuComponent component) => {
+          LevelModule.ExtraRemoveChaser = 2;
+        }),
+          },
+          "modify the chasing guy",
+
+          Shop.Unlocks.EXTRA_CHASE,
+          () => { return Shop.Unlocked(Shop.Unlocks.EXTRA_CHASE); }
+        );
+
+        // Gravity direction
+        AddExtraSelection(
+          "gravity",
+          () => { return LevelModule.ExtraGravity == 1 ? "inverted" : LevelModule.ExtraGravity == 2 ? "north" : LevelModule.ExtraGravity == 3 ? "none" : "normal"; },
+          new DropdownSelectionComponent[] {
           new DropdownSelectionComponent("normal", "normal gravity", (MenuComponent component) => {
             LevelModule.ExtraGravity = 0;
             Physics.gravity = new Vector3(0f, -9.81f, 0f);
@@ -7692,140 +7855,106 @@ system will provide and configure all loadouts.~9
             LevelModule.ExtraGravity = 3;
             Physics.gravity = Vector3.zero;
           }),
-        },
-        "set gravity's direction",
+          },
+          "set gravity's direction",
 
-        Shop.Unlocks.EXTRA_GRAVITY,
-        () => { return Shop.Unlocked(Shop.Unlocks.EXTRA_GRAVITY); }
-      );
+          Shop.Unlocks.EXTRA_GRAVITY,
+          () => { return Shop.Unlocked(Shop.Unlocks.EXTRA_GRAVITY); }
+        );
 
-      // Remove bat guy
-      AddExtraSelection(
-        "chaser",
-        () =>
-        {
-          switch (LevelModule.ExtraRemoveChaser)
+        // Ammo
+        AddExtraSelection(
+          "player ammo",
+          () =>
           {
-            case 0:
-              return "on";
-            case 1:
-              return "on - always";
-            case 2:
-              return "off";
-          }
-          return "N/A";
-        },
-        new DropdownSelectionComponent[] {
-        new DropdownSelectionComponent("on", "in sneakier difficulty, a person with a bat will chase you", (MenuComponent component) => {
-          LevelModule.ExtraRemoveChaser = 0;
-        }),
-        new DropdownSelectionComponent("on - always", "a person with a bat will chase you in any difficulty", (MenuComponent component) => {
-          LevelModule.ExtraRemoveChaser = 1;
-        }),
-        new DropdownSelectionComponent("off", "...that guy won't exist", (MenuComponent component) => {
-          LevelModule.ExtraRemoveChaser = 2;
-        }),
-        },
-        "modify the chasing guy",
-
-        Shop.Unlocks.EXTRA_CHASE,
-        () => { return Shop.Unlocked(Shop.Unlocks.EXTRA_CHASE); }
-      );
-
-
-      // Ammo
-      AddExtraSelection(
-        "player ammo",
-        () =>
-        {
-          switch (LevelModule.ExtraPlayerAmmo)
-          {
-            case 0:
-              return "1x";
-            case 1:
-              return "2x";
-            case 2:
-              return "0.5x";
-            case 3:
-              return "infinite";
-          }
-          return "N/A";
-        },
-        new DropdownSelectionComponent[] {
+            switch (LevelModule.ExtraPlayerAmmo)
+            {
+              case 0:
+                return "1x";
+              case 1:
+                return "2x";
+              case 2:
+                return "0.5x";
+              case 3:
+                return "infinite";
+            }
+            return "N/A";
+          },
+          new DropdownSelectionComponent[] {
           new DropdownSelectionComponent("1x", "", (MenuComponent component) => {
             LevelModule.ExtraPlayerAmmo = 0;
           }),
           new DropdownSelectionComponent("2x", "", (MenuComponent component) => {
             LevelModule.ExtraPlayerAmmo = 1;
           }),
-                    new DropdownSelectionComponent("0.5x", "", (MenuComponent component) => {
+          new DropdownSelectionComponent("0.5x", "", (MenuComponent component) => {
             LevelModule.ExtraPlayerAmmo = 2;
           }),
-                    new DropdownSelectionComponent("infinite", "", (MenuComponent component) => {
+          new DropdownSelectionComponent("infinite", "", (MenuComponent component) => {
             LevelModule.ExtraPlayerAmmo = 3;
           }),
-        },
-        "change the max ammo of your weapons / utilities",
+          },
+          "change the max ammo of your weapons / utilities",
 
-        Shop.Unlocks.EXTRA_PLAYER_AMMO,
-        () => { return Shop.Unlocked(Shop.Unlocks.EXTRA_PLAYER_AMMO); },
+          Shop.Unlocks.EXTRA_PLAYER_AMMO,
+          () => { return Shop.Unlocked(Shop.Unlocks.EXTRA_PLAYER_AMMO); },
 
-        "\n\n"
-      );
+          "\n\n"
+        );
 
-      // Superhot
-      AddExtraSelection(
-        "time",
-        () => { return LevelModule.ExtraTime == 1 ? "movement" : "normal"; },
-        new DropdownSelectionComponent[] {
+        // Superhot
+        AddExtraSelection(
+          "time",
+          () => { return LevelModule.ExtraTime == 1 ? "movement" : "normal"; },
+          new DropdownSelectionComponent[] {
         new DropdownSelectionComponent("normal", "time is normal", (MenuComponent component) => {
             LevelModule.ExtraTime = 0;
         }),
         new DropdownSelectionComponent("movement", "time only moves when you move", (MenuComponent component) => {
             LevelModule.ExtraTime = 1;
         }),
-        },
-        "set the speed that time passes",
+          },
+          "set the speed that time passes",
 
-        Shop.Unlocks.EXTRA_TIME,
-        () => { return Shop.Unlocked(Shop.Unlocks.EXTRA_TIME); }
-      );
+          Shop.Unlocks.EXTRA_TIME,
+          () => { return Shop.Unlocked(Shop.Unlocks.EXTRA_TIME); }
+        );
 
-      // Crazy zombies
-      AddExtraSelection(
-        "horde",
-        () => { return LevelModule.ExtraHorde == 1 ? "on" : "off"; },
-        new DropdownSelectionComponent[] {
+        // Crazy zombies
+        AddExtraSelection(
+          "horde",
+          () => { return LevelModule.ExtraHorde == 1 ? "on" : "off"; },
+          new DropdownSelectionComponent[] {
         new DropdownSelectionComponent("off", "no horde", (MenuComponent component) => {
             LevelModule.ExtraHorde = 0;
         }),
         new DropdownSelectionComponent("on", "a horde spawns until you pick up the cube", (MenuComponent component) => {
             LevelModule.ExtraHorde = 1;
         }),
-        },
-        "toggle a horde mode",
+          },
+          "toggle a horde mode",
 
-        Shop.Unlocks.EXTRA_HORDE,
-        () => { return Shop.Unlocked(Shop.Unlocks.EXTRA_HORDE); }
-      );
+          Shop.Unlocks.EXTRA_HORDE,
+          () => { return Shop.Unlocked(Shop.Unlocks.EXTRA_HORDE); }
+        );
 
-      // Enemy off
-      AddExtraSelection(
-        "enemy off",
-        () =>
-        {
-          switch (LevelModule.ExtraEnemyMultiplier)
+        // Enemy off
+        AddExtraSelection(
+          "enemy off",
+          () =>
           {
-            case 0:
-              return "1x";
-            case 1:
-              return "2x";
-            case 2:
-              return "0x";
-          }
-          return "N/A";
-        },
-        new DropdownSelectionComponent[] {
+            switch (LevelModule.ExtraEnemyMultiplier)
+            {
+              case 0:
+                return "1x";
+              case 1:
+                return "2x";
+              case 2:
+                return "0x";
+            }
+            return "N/A";
+          },
+          new DropdownSelectionComponent[] {
         new DropdownSelectionComponent("1x", "normal amount of enemies", (MenuComponent component) => {
           LevelModule.ExtraEnemyMultiplier = 0;
         }),
@@ -7835,117 +7964,85 @@ system will provide and configure all loadouts.~9
         new DropdownSelectionComponent("0x", "no enemies", (MenuComponent component) => {
           LevelModule.ExtraEnemyMultiplier = 2;
         }),
-        },
-        "modify the number of enemies spawned",
+          },
+          "modify the number of enemies spawned",
 
-        Shop.Unlocks.EXTRA_ENEMY_OFF,
-        () => { return Shop.Unlocked(Shop.Unlocks.EXTRA_ENEMY_OFF); }
-      );
+          Shop.Unlocks.EXTRA_ENEMY_OFF,
+          () => { return Shop.Unlocked(Shop.Unlocks.EXTRA_ENEMY_OFF); }
+        );
 
-      // Blood type
-      AddExtraSelection(
-        "blood fx`",
-        () =>
-        {
-          switch (LevelModule.ExtraBloodType)
+        // Blood type
+        AddExtraSelection(
+          "blood fx`",
+          () =>
           {
-            case 0:
-              return "normal";
-            case 1:
-              return "confetti";
-          }
-          return "N/A";
-        },
-        new DropdownSelectionComponent[] {
+            switch (LevelModule.ExtraBloodType)
+            {
+              case 0:
+                return "normal";
+              case 1:
+                return "confetti";
+            }
+            return "N/A";
+          },
+          new DropdownSelectionComponent[] {
         new DropdownSelectionComponent("normal", "blood", (MenuComponent component) => {
           LevelModule.ExtraBloodType = 0;
         }),
         new DropdownSelectionComponent("confetti", "party time", (MenuComponent component) => {
           LevelModule.ExtraBloodType = 1;
         }),
-        },
-        "change what blood looks like",
+          },
+          "change what blood looks like",
 
-        Shop.Unlocks.EXTRA_BLOOD_FX,
-        () => { return Shop.Unlocked(Shop.Unlocks.EXTRA_BLOOD_FX); }
-      );
+          Shop.Unlocks.EXTRA_BLOOD_FX,
+          () => { return Shop.Unlocked(Shop.Unlocks.EXTRA_BLOOD_FX); }
+        );
 
-      // Body explode
-      AddExtraSelection(
-        "explode death",
-        () =>
-        {
-          switch (LevelModule.ExtraBodyExplode)
+        // Body explode
+        AddExtraSelection(
+          "explode death",
+          () =>
           {
-            case 0:
-              return "off";
-            case 1:
-              return "all";
-            case 2:
-              return "enemies";
-            case 3:
-              return "players";
-          }
-          return "N/A";
-        },
-        new DropdownSelectionComponent[] {
-        new DropdownSelectionComponent("off", "", (MenuComponent component) => {
-          LevelModule.ExtraBodyExplode = 0;
-        }),
-        new DropdownSelectionComponent("all", "", (MenuComponent component) => {
-          LevelModule.ExtraBodyExplode = 1;
-        }),
-        new DropdownSelectionComponent("enemies", "", (MenuComponent component) => {
-          LevelModule.ExtraBodyExplode = 2;
-        }),
-        new DropdownSelectionComponent("players", "", (MenuComponent component) => {
-          LevelModule.ExtraBodyExplode = 3;
-        }),
-        },
-        "explode on death",
-
-        Shop.Unlocks.EXTRA_EXPLODED,
-        () => { return Shop.Unlocked(Shop.Unlocks.EXTRA_EXPLODED); },
-
-        "\n\n"
-      );
-
-      /*/ Crown mode
-      AddExtraSelection(
-        "crown",
-        () =>
-        {
-          switch (Settings._Extra_CrownMode._value)
+            switch (LevelModule.ExtraBodyExplode)
+            {
+              case 0:
+                return "off";
+              case 1:
+                return "all";
+              case 2:
+                return "enemies";
+              case 3:
+                return "players";
+            }
+            return "N/A";
+          },
+          new DropdownSelectionComponent[] {
+            new DropdownSelectionComponent("off", "", (MenuComponent component) =>
           {
-            case 0:
-              return "off";
-            case 1:
-              return "all";
-            case 2:
-              return "enemies";
-            case 3:
-              return "players";
-          }
-          return "N/A";
-        },
-        new DropdownSelectionComponent[] {
-        new DropdownSelectionComponent("off", "", (MenuComponent component) => {
-          Settings._Extra_CrownMode._value = 0;
-        }),
-        new DropdownSelectionComponent("on", "", (MenuComponent component) => {
-          Settings._Extra_CrownMode._value = 1;
-        }),
-        new DropdownSelectionComponent("on - but no enemy bonuses", "", (MenuComponent component) => {
-          Settings._Extra_CrownMode._value = 2;
-        }),
-        },
-        "a crown shows the victor! enemies wearing the crown gain bonuses",
+                LevelModule.ExtraBodyExplode = 0;
+              }),
+            new DropdownSelectionComponent("all", "", (MenuComponent component) =>
+          {
+                LevelModule.ExtraBodyExplode = 1;
+              }),
+            new DropdownSelectionComponent("enemies", "", (MenuComponent component) =>
+          {
+                LevelModule.ExtraBodyExplode = 2;
+              }),
+            new DropdownSelectionComponent("players", "", (MenuComponent component) =>
+          {
+                LevelModule.ExtraBodyExplode = 3;
+              }),
+          },
+          "explode on death",
 
-        Shop.Unlocks.EXTRA_CROWNMODE,
-        () => { return Shop.Unlocked(Shop.Unlocks.EXTRA_CROWNMODE); },
+          Shop.Unlocks.EXTRA_EXPLODED,
+          () => { return Shop.Unlocked(Shop.Unlocks.EXTRA_EXPLODED); },
 
-        "\n\n"
-      );*/
+          "\n\n"
+        );
+      }
 
       // Extra infos
       menu_extras.AddComponent("about\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
@@ -8102,7 +8199,7 @@ about extras</color>
         if (ControllerManager._NumberGamepads == 0)
           _Confirmed_SwitchToKeyboard = true;
 
-        if (GameScript.s_GameMode == GameScript.GameModes.PARTY)
+        if (GameScript.s_IsPartyGameMode)
         {
           CommonEvents._SwitchMenu(MenuType.VERSUS);
           return;
@@ -8517,26 +8614,30 @@ about extras</color>
     BACK,
     PURCHASE,
     LOADOUT_SWAP,
-    TEAM_SWAP
+    TEAM_SWAP,
+    COLOR_CHANGE,
   }
-  static Dictionary<Noise, AudioSource> _MenuAudio;
-  public static AudioSource GetNoise(Noise noise)
+  static Dictionary<Noise, AudioSource> s_MenuAudio;
+  static AudioSource GetNoise(Noise noise)
   {
-    return _MenuAudio[noise];
+    return s_MenuAudio[noise];
   }
   static float[] s_volumes, s_times;
   public static void PlayNoise(Noise noise)
   {
+    if (s_MenuAudio == null)
+      return;
+
     if (s_volumes == null)
     {
-      s_volumes = new float[7];
+      s_volumes = new float[s_Menu.gameObject.GetComponents<AudioSource>().Length];
       for (var i = 0; i < s_volumes.Length; i++)
       {
         var a = GetNoise((Noise)i);
         s_volumes[i] = a.volume;
       }
 
-      s_times = new float[7];
+      s_times = new float[s_volumes.Length];
     }
 
     if (!s_Menu.gameObject.activeSelf) return;
@@ -8665,9 +8766,9 @@ about extras</color>
     // Set menu prompt
     if (Settings._NumberPlayers == 0)
       s_menus[MenuType.CONTROLLERS_CHANGED]._menuComponents[1].SetDisplayText("looks like your controller got unplugged! plug it back in to resume or\npress 'ok' to play with keyboard instead\n\n");
-    else if (GameScript.s_GameMode == GameScript.GameModes.ZOMBIE)
+    else if (GameScript.s_IsZombieGameMode)
       s_menus[MenuType.CONTROLLERS_CHANGED]._menuComponents[1].SetDisplayText("looks like a controller got unplugged! plug it back in to resume or\npress 'ok' to resume the game (you must manually restart in ZOMBIE mode)\n\n");
-    else if (GameScript.s_GameMode == GameScript.GameModes.PARTY)
+    else if (GameScript.s_IsPartyGameMode)
     {
       // Check if still enough players
       s_menus[MenuType.CONTROLLERS_CHANGED]._menuComponents[1].SetDisplayText("looks like a controller got unplugged! plug it back in to resume or\npress 'ok' to escape to PARTY menu\n\n");

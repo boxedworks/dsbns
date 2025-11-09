@@ -16,7 +16,7 @@ public class PlayerspawnScript : MonoBehaviour
         var playerSpawn = _PlayerSpawns[i];
 
         _PlayerSpawns.RemoveAt(i);
-        GameObject.DestroyImmediate(playerSpawn.gameObject);
+        DestroyImmediate(playerSpawn.gameObject);
       }
   }
   static int s_playerSpawnIndex;
@@ -24,7 +24,7 @@ public class PlayerspawnScript : MonoBehaviour
   {
     if (s_playerSpawnIndex == _PlayerSpawns.Count)
     {
-      var newSpawn = GameObject.Instantiate(_PlayerSpawns[0].gameObject);
+      var newSpawn = Instantiate(_PlayerSpawns[0].gameObject);
       newSpawn.name = _PlayerSpawns[0].name;
       return newSpawn.GetComponent<PlayerspawnScript>();
     }
@@ -80,7 +80,7 @@ public class PlayerspawnScript : MonoBehaviour
     // Spawn them based on the this transform
     var spawnPosition = atPosition;
     spawnPosition += new Vector3(Random.Range(-1f, 1f) * 0.01f, 0f, Random.Range(-1f, 1f) * 0.01f);
-    if ((GameScript.s_GameMode == GameScript.GameModes.PARTY && !VersusMode.s_Settings._FreeForAll) || (GameScript.s_GameMode == GameScript.GameModes.ZOMBIE))
+    if ((GameScript.s_IsPartyGameMode && !VersusMode.s_Settings._FreeForAll) || (GameScript.s_IsZombieGameMode))
     {
       var numSpawns = _PlayerSpawns.Count;
       var numPlayers = Settings._NumberPlayers;
@@ -96,7 +96,7 @@ public class PlayerspawnScript : MonoBehaviour
     player.SetActive(setActive);
 
     // Fire level load
-    if (!GameScript.IsSurvival())
+    if (!GameScript.s_IsZombieGameMode)
       GameScript.OnLevelStart();
 
     /*/ Check network spawn

@@ -5,7 +5,7 @@ public class billboard : MonoBehaviour
 
   void Start()
   {
-    if (billboard.cam == null)
+    if (cam == null)
     {
       cam = GameObject.FindGameObjectWithTag("MainCamera").GetComponent<Transform>();
     }
@@ -17,7 +17,7 @@ public class billboard : MonoBehaviour
 
   void LateUpdate()
   {
-    this.transform.LookAt(billboard.cam);
+    this.transform.LookAt(cam);
     transform.Rotate(0, 180, 0);
     eangles = transform.eulerAngles;
     eangles.x *= freeRotation.x;

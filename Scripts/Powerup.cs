@@ -165,14 +165,14 @@ public class Powerup : MonoBehaviour
           //_audio.Stop();
           //GameScript.NextLevel();
 
-          GameScript.ToggleExit();
+          GameScript.ToggleExit(true);
 
           break;
         }
         break;
     }
     _touch.GetComponent<BoxCollider>().enabled = false;
-    if (remove) GameObject.Destroy(gameObject);
+    if (remove) Destroy(gameObject);
   }
 
   // Update is called once per frame
@@ -207,7 +207,7 @@ public class Powerup : MonoBehaviour
       // If activated2, move icon into sky
       if (_activated2)
       {
-        _rb.MovePosition(_rb.position + ((new Vector3(_icon.transform.position.x, transform.position.y + 21f, _icon.transform.position.z)) - _rb.position) * Time.deltaTime * 3f);
+        _rb.MovePosition(_rb.position + (new Vector3(_icon.transform.position.x, transform.position.y + 21f, _icon.transform.position.z) - _rb.position) * Time.deltaTime * 3f);
         if (_icon.transform.position.y > transform.position.y + 20f)
         {
           Destroy(_icon);
@@ -219,7 +219,7 @@ public class Powerup : MonoBehaviour
       {
         //Vector3 newPos = MathC.Get2DVector(_icon.transform.position - GameObject.Find("EndLight").transform.position);
         //if (newPos.magnitude > 1f) newPos.Normalize();
-        _rb.MovePosition(_rb.position + ((_activator._Controller.transform.position - _activator._Hip.transform.forward + new Vector3(0f, 1f, 0f)) - _rb.position) * Time.deltaTime * 4f);
+        _rb.MovePosition(_rb.position + (_activator._Controller.transform.position - _activator._Hip.transform.forward + new Vector3(0f, 1f, 0f) - _rb.position) * Time.deltaTime * 4f);
       }
 
     }

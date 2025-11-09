@@ -72,9 +72,9 @@ public static class FunctionsC
 
     // If player, check modes
     // Survival / Classic, always look for enemies only
-    if (GameScript.s_GameMode == GameScript.GameModes.ZOMBIE)
+    if (GameScript.s_IsZombieGameMode)
       return GetClosestEnemyTo(pos, ragdollIdFilter, include_chaser);
-    if (GameScript.s_GameMode == GameScript.GameModes.MISSIONS)
+    if (GameScript.s_IsMissionsGameMode)
     {
       // Check if all enemies dead, use other players as targets
       if (EnemyScript._Enemies_alive.Count == 0 && PlayerScript.s_Players.Count > 1)
@@ -90,7 +90,7 @@ public static class FunctionsC
     }
 
     // Versus, group enemies and enemy players together (teams)
-    if (GameScript.s_GameMode == GameScript.GameModes.PARTY)
+    if (GameScript.s_IsPartyGameMode)
     {
       var targetList = new List<PlayerScript.IHasRagdoll>(EnemyScript._Enemies_alive);
       var enemyPlayers = VersusMode.GetEnemyPlayers(isPlayerId);
@@ -429,7 +429,7 @@ public static class FunctionsC
 
   public static Powerup SpawnPowerup(Powerup.PowerupType type)
   {
-    var powerup = GameObject.Instantiate(Resources.Load("Powerup") as GameObject);
+    var powerup = Object.Instantiate(Resources.Load("Powerup") as GameObject);
     var s = powerup.GetComponent<Powerup>();
     s._type = type;
     powerup.transform.parent = GameResources._Container_Objects;
@@ -461,7 +461,7 @@ public static class FunctionsC
   public static void SpawnExplosionScar(Vector3 position, float scale = 1f)
   {
     var particle_system_type = scale < 2.3f ? ParticleSystemType.EXPLOSION_MARK_SMALL : ParticleSystemType.EXPLOSION_MARK;
-    FunctionsC.PlayComplexParticleSystemAt(particle_system_type, position);
+    PlayComplexParticleSystemAt(particle_system_type, position);
   }
 
   // Apply damage and force in a radius to Ragdolls
@@ -614,7 +614,7 @@ public static class FunctionsC
       if (_Meshes == null) _Meshes = new Dictionary<string, Mesh>();
       if (_Meshes.ContainsKey(key))
       {
-        GameObject.Destroy(_Meshes[key]);
+        Object.Destroy(_Meshes[key]);
         _Meshes.Remove(key);
       }
       _Meshes.Add(key, mesh);
@@ -684,8 +684,8 @@ public static class FunctionsC
     // Clean up submeshes
     for (var i = master_filters.Count - 1; i >= 0; i--)
     {
-      GameObject.Destroy(master_filters[i].sharedMesh);
-      GameObject.Destroy(master_filters[i].gameObject);
+      Object.Destroy(master_filters[i].sharedMesh);
+      Object.Destroy(master_filters[i].gameObject);
     }
     // Store in dictionary
     store(master_mesh);
@@ -715,7 +715,7 @@ public static class FunctionsC
       c.enabled = false;
       c.transform.GetChild(0).gameObject.SetActive(false);
 
-      var particles = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.PAPER);
+      var particles = GetParticleSystem(ParticleSystemType.PAPER);
       if (particles == null || particles.Length == 0) return;
       var paper = particles[0];
       paper.transform.position = c.transform.position + new Vector3(0f, 0.3f, 0f);// + _hip.transform.forward * 0.2f;//point;
@@ -724,7 +724,7 @@ public static class FunctionsC
       var q = paper.transform.localRotation;
       q.eulerAngles = new Vector3(0f, q.eulerAngles.y, q.eulerAngles.z);
       paper.transform.localRotation = q;
-      paper.transform.Rotate(new Vector3(1f, 0f, 0f), UnityEngine.Random.value * -20f);
+      paper.transform.Rotate(new Vector3(1f, 0f, 0f), Random.value * -20f);
       paper.Play();
 
       SfxManager.PlayAudioSourceSimple(source_pos, "Etc/Papers");
@@ -732,10 +732,10 @@ public static class FunctionsC
 
     public static void RegisterBooks(Transform books)
     {
-      FunctionsC.s_BookManager._books.Add(books);
+      s_BookManager._books.Add(books);
     }
 
-    public static List<Transform> _Books { get { return FunctionsC.s_BookManager._books; } }
+    public static List<Transform> _Books { get { return s_BookManager._books; } }
 
   }
 
@@ -915,7 +915,7 @@ public static class FunctionsC
       if (Menu.s_CurrentMenu._Type == Menu.MenuType.MAIN) return 0;
 
       // SURVIVAL mode music
-      if (GameScript.s_GameMode == GameScript.GameModes.ZOMBIE)
+      if (GameScript.s_IsZombieGameMode)
       {
         if (s_CurrentTrack == 0 || s_CurrentTrack == 1 || s_CurrentTrack == 2)
           s_CurrentTrack = 3;
@@ -929,7 +929,7 @@ public static class FunctionsC
       {
 
         // Level pack music; random
-        if (Levels._LevelPack_Playing || GameScript.s_EditorTesting || GameScript.s_GameMode == GameScript.GameModes.PARTY)
+        if (Levels._LevelPack_Playing || GameScript.s_EditorTesting || GameScript.s_IsPartyGameMode)
         {
 
           var songs_length = s_TrackNames.Length - 3;
@@ -939,7 +939,7 @@ public static class FunctionsC
         }
 
         // CLASSIC mode music
-        var iter_base = Mathf.RoundToInt((Levels._CurrentLevelIndex) / ((float)_TrackLevelRange) / ((float)s_TrackNames.Length / 3f - 1));
+        var iter_base = Mathf.RoundToInt(Levels._CurrentLevelIndex / ((float)_TrackLevelRange) / ((float)s_TrackNames.Length / 3f - 1));
         iter_base *= 3;
         iter_base += s_TrackOffset;
         var iter = 0;
@@ -1036,7 +1036,7 @@ public static class FunctionsC
       control == Control.R_STICK
       )
     {
-      t = GameObject.Instantiate(Resources.Load(@"UI\Controller_other") as GameObject).transform;
+      t = Object.Instantiate(Resources.Load(@"UI\Controller_other") as GameObject).transform;
       switch (control)
       {
         case Control.DPAD:
@@ -1076,7 +1076,7 @@ public static class FunctionsC
       // Remove other buttons
       for (var i = t.childCount - 1; i >= 0; i--)
         if (i != index)
-          GameObject.Destroy(t.GetChild(i).gameObject);
+          Object.Destroy(t.GetChild(i).gameObject);
     }
     else if (
         control == Control.A ||
@@ -1085,7 +1085,7 @@ public static class FunctionsC
         control == Control.Y
       )
     {
-      t = GameObject.Instantiate(Resources.Load(@"UI\Controller_buttons") as GameObject).transform;
+      t = Object.Instantiate(Resources.Load(@"UI\Controller_buttons") as GameObject).transform;
       switch (control)
       {
         case Control.A:
@@ -1111,7 +1111,7 @@ public static class FunctionsC
          control == Control.SELECT
        )
     {
-      t = GameObject.Instantiate(Resources.Load(@"UI\Controller_special") as GameObject).transform;
+      t = Object.Instantiate(Resources.Load(@"UI\Controller_special") as GameObject).transform;
       switch (control)
       {
         case Control.SELECT:
@@ -1159,7 +1159,7 @@ public static class FunctionsC
       FIRE
     }
 
-    struct AoeEffect
+    public struct AoeEffect
     {
       public AoeType Type;
       public Vector3 Position;
@@ -1168,6 +1168,8 @@ public static class FunctionsC
       public float Duration;
 
       public ActiveRagdoll Source;
+
+      public System.Action OnUpdate, OnExpire;
     }
 
     // Containers
@@ -1180,7 +1182,7 @@ public static class FunctionsC
     }
 
     // Register a new AOE
-    public static void RegisterAoeEffect(ActiveRagdoll source, AoeType type, Vector3 position, float radius, float duration)
+    public static AoeEffect RegisterAoeEffect(ActiveRagdoll source, AoeType type, Vector3 position, float radius, float duration)
     {
       s_aoeEffects.Add(new AoeEffect()
       {
@@ -1191,6 +1193,7 @@ public static class FunctionsC
         Radius = radius,
         Duration = duration == -1f ? -1f : Time.time + duration
       });
+      return s_aoeEffects[^1];
     }
 
     // Check ragdolls in AOE
@@ -1213,10 +1216,12 @@ public static class FunctionsC
         if (aoe.Duration != -1f && Time.time >= aoe.Duration)
         {
           s_aoeEffects.RemoveAt(s_i);
+          aoe.OnExpire?.Invoke();
 
           if (s_aoeEffects.Count == 0) break;
           continue;
         }
+        aoe.OnUpdate?.Invoke();
 
         //Debug.DrawRay(aoe._Position, Vector3.up * 100f, Color.yellow);
 
@@ -1297,7 +1302,7 @@ public static class FunctionsC
       var trash = s_trash[trashIndex];
       if (Time.time - trash.Item2 > 10f)
       {
-        GameObject.Destroy(trash.Item1);
+        Object.Destroy(trash.Item1);
         s_trash.RemoveAt(trashIndex);
       }
 

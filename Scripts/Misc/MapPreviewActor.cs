@@ -23,7 +23,7 @@ public class MapPreviewActor : MonoBehaviour
     switch (_type)
     {
       // Rotate and scale
-      case (ActorType.LASER):
+      case ActorType.LASER:
         transform.Rotate(new Vector3(0f, 0f, 1f) * _properties[0] * Time.unscaledDeltaTime);
 
         RaycastHit h;

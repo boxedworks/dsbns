@@ -434,7 +434,7 @@ public class CustomObstacle : MonoBehaviour
                 var equip_info2 = CheckEquip(p, current_item, InteractSide.DEFAULT, hasAkimbo, 1);
                 var equip_side2 = equip_info2.Item2;
 
-                var current_item2 = (equip_side2 == ActiveRagdoll.Side.LEFT ? p._Profile._ItemLeft_Other : p._Profile._ItemRight_Other);
+                var current_item2 = equip_side2 == ActiveRagdoll.Side.LEFT ? p._Profile._ItemLeft_Other : p._Profile._ItemRight_Other;
                 if (current_item2 == GameScript.ItemManager.Items.NONE)
                   if (equip_info2.Item1)
                   {
@@ -449,14 +449,14 @@ public class CustomObstacle : MonoBehaviour
         }
         else
         {
-          var current_item = (equip_side == ActiveRagdoll.Side.LEFT ? p._Profile._ItemLeft : p._Profile._ItemRight);
+          var current_item = equip_side == ActiveRagdoll.Side.LEFT ? p._Profile._ItemLeft : p._Profile._ItemRight;
           if (current_item != GameScript.ItemManager.Items.NONE)
           {
             // Try to equip in other slots
             var equip_info2 = CheckEquip(p, current_item, InteractSide.DEFAULT, hasAkimbo, 1);
             var equip_side2 = equip_info2.Item2;
 
-            var current_item2 = (equip_side2 == ActiveRagdoll.Side.LEFT ? p._Profile._ItemLeft_Other : p._Profile._ItemRight_Other);
+            var current_item2 = equip_side2 == ActiveRagdoll.Side.LEFT ? p._Profile._ItemLeft_Other : p._Profile._ItemRight_Other;
             if (current_item2 == GameScript.ItemManager.Items.NONE)
               if (equip_info2.Item1)
               {
@@ -604,7 +604,7 @@ public class CustomObstacle : MonoBehaviour
         }
 
         // Check if replacing utility
-        var utilities = (equip_side == ActiveRagdoll.Side.LEFT ? equipment._UtilitiesLeft : equipment._UtilitiesRight);
+        var utilities = equip_side == ActiveRagdoll.Side.LEFT ? equipment._UtilitiesLeft : equipment._UtilitiesRight;
 
         // Equip
         var saveamount = add ? p.UtilityCount(equip_side) + 1 : -1;
@@ -783,7 +783,7 @@ public class CustomObstacle : MonoBehaviour
           {
             if (item_type == item_type_r)
             {
-              text = (text_haveAlready);
+              text = text_haveAlready;
               return System.Tuple.Create(false, ActiveRagdoll.Side.RIGHT, text);
             }
             return System.Tuple.Create(true, ActiveRagdoll.Side.RIGHT, text);
@@ -803,7 +803,7 @@ public class CustomObstacle : MonoBehaviour
             {
               if (item_type == item_type_l)
               {
-                text = (text_haveAlready);
+                text = text_haveAlready;
                 return System.Tuple.Create(false, ActiveRagdoll.Side.LEFT, text);
               }
               return System.Tuple.Create(true, ActiveRagdoll.Side.LEFT, text);
@@ -831,7 +831,7 @@ public class CustomObstacle : MonoBehaviour
       {
         if (item_type_l == item_type)
         {
-          text = (text_haveAlready);
+          text = text_haveAlready;
           return System.Tuple.Create(false, ActiveRagdoll.Side.LEFT, text);
         }
       }
@@ -841,7 +841,7 @@ public class CustomObstacle : MonoBehaviour
         {
           if (item_type_l == item_type)
           {
-            text = (text_haveAlready);
+            text = text_haveAlready;
             return System.Tuple.Create(false, equip_side, text);
           }
         }
@@ -851,13 +851,13 @@ public class CustomObstacle : MonoBehaviour
             return System.Tuple.Create(true, ActiveRagdoll.Side.LEFT, text);
           else
           {
-            text = (text_needAkimbo);
+            text = text_needAkimbo;
             return System.Tuple.Create(false, equip_side, text);
           }
         }
         else if (item_type_l == item_type)
         {
-          text = (text_haveAlready);
+          text = text_haveAlready;
           return System.Tuple.Create(false, equip_side, text);
         }
       }
@@ -871,7 +871,7 @@ public class CustomObstacle : MonoBehaviour
               return System.Tuple.Create(true, ActiveRagdoll.Side.LEFT, text);
             else
             {
-              text = (text_needAkimbo);
+              text = text_needAkimbo;
               return System.Tuple.Create(false, equip_side, text);
             }
           }
@@ -897,7 +897,7 @@ public class CustomObstacle : MonoBehaviour
       {
         if (item_type_r == item_type)
         {
-          text = (text_haveAlready);
+          text = text_haveAlready;
           return System.Tuple.Create(false, ActiveRagdoll.Side.RIGHT, text);
         }
       }
@@ -907,7 +907,7 @@ public class CustomObstacle : MonoBehaviour
         {
           if (item_type_r == item_type)
           {
-            text = (text_haveAlready);
+            text = text_haveAlready;
             return System.Tuple.Create(false, equip_side, text);
           }
         }
@@ -917,13 +917,13 @@ public class CustomObstacle : MonoBehaviour
             return System.Tuple.Create(true, ActiveRagdoll.Side.RIGHT, text);
           else
           {
-            text = (text_needAkimbo);
+            text = text_needAkimbo;
             return System.Tuple.Create(false, equip_side, text);
           }
         }
         else if (item_type_r == item_type)
         {
-          text = (text_haveAlready);
+          text = text_haveAlready;
           return System.Tuple.Create(false, equip_side, text);
         }
       }
@@ -937,7 +937,7 @@ public class CustomObstacle : MonoBehaviour
               return System.Tuple.Create(true, ActiveRagdoll.Side.RIGHT, text);
             else
             {
-              text = (text_needAkimbo);
+              text = text_needAkimbo;
               return System.Tuple.Create(false, equip_side, text);
             }
           }
@@ -976,7 +976,7 @@ public class CustomObstacle : MonoBehaviour
         var path = new UnityEngine.AI.NavMeshPath();
         var filter = new UnityEngine.AI.NavMeshQueryFilter();
         filter.areaMask = 1;
-        filter.agentTypeID = GameScript.IsSurvival() ? TileManager._navMeshSurface2.agentTypeID : TileManager._navMeshSurface.agentTypeID;
+        filter.agentTypeID = GameScript.s_IsZombieGameMode ? TileManager._navMeshSurface2.agentTypeID : TileManager._navMeshSurface.agentTypeID;
         var usePosition = transform.position;
         if (ctype == CType.CANDLE)
         {
@@ -995,12 +995,12 @@ public class CustomObstacle : MonoBehaviour
       }
 
       if (ctype == CType.INTERACT)
-        _desiredScale = (min_dist < 0.6f ? 0.3f : (min_dist < 1.5f ? 0.15f : 0f));
+        _desiredScale = min_dist < 0.6f ? 0.3f : (min_dist < 1.5f ? 0.15f : 0f);
       else if (ctype == CType.CANDLE)
       {
         //Debug.Log(min_dist);
-        var min = GameScript.IsSurvival() ? 5.5f : 7;
-        var max = GameScript.IsSurvival() ? 8.5f : 12f;
+        var min = GameScript.s_IsZombieGameMode ? 5.5f : 7;
+        var max = GameScript.s_IsZombieGameMode ? 8.5f : 12f;
         if (min_dist < min) _candleScript._NormalizedEnable = 1f;
         else if (min_dist > max) _candleScript._NormalizedEnable = 0f;
         else _candleScript._NormalizedEnable = 1f - ((min_dist - min) / (max - min));

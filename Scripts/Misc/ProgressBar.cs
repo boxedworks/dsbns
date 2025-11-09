@@ -25,7 +25,7 @@ public static class ProgressBar
     for (var i = 0; i < _ProgressBars.Length; i++)
     {
       _ProgressBars[i] = new instance();
-      _ProgressBars[i]._transform = (GameObject.Instantiate(Resources.Load("ProgressBar")) as GameObject).transform;
+      _ProgressBars[i]._transform = (Object.Instantiate(Resources.Load("ProgressBar")) as GameObject).transform;
       _ProgressBars[i]._transform.position = new Vector3(1000f, 0f, 0f);
       _ProgressBars[i]._slider = _ProgressBars[i]._transform.GetChild(0);
     }

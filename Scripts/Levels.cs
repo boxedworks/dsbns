@@ -16,7 +16,7 @@ public class Levels : MonoBehaviour
     public string _name;
     public string[] _levelData;
   }
-  public static LevelCollection _CurrentLevelCollection { get { if (Levels._LevelPack_Playing) return Levels._LevelPack_Current; return _LevelCollections[_CurrentLevelCollectionIndex]; } }
+  public static LevelCollection _CurrentLevelCollection { get { if (_LevelPack_Playing) return _LevelPack_Current; return _LevelCollections[_CurrentLevelCollectionIndex]; } }
   public static int _CurrentLevelCollectionIndex;
   public static string _CurrentLevelCollection_Name { get { return _CurrentLevelCollection._name; } }
 
@@ -336,7 +336,7 @@ public class Levels : MonoBehaviour
     System.Array.Copy(levelData, 0, newMaps, 0, mapIter);
     System.Array.Copy(levelData, mapIter + 1, newMaps, mapIter, levelData.Length - mapIter - 1);
 
-    _LevelCollections[Levels._CurrentLevelCollectionIndex]._levelData = newMaps;
+    _LevelCollections[_CurrentLevelCollectionIndex]._levelData = newMaps;
 
     // Save to file
     SaveLevels();
@@ -526,7 +526,7 @@ public class Levels : MonoBehaviour
 
     void UpdateLoadoutUI()
     {
-      Levels._HardcodedLoadout._Equipment = equipment;
+      _HardcodedLoadout._Equipment = equipment;
 
       if (GameScript.PlayerProfile.s_Profiles != null)
         foreach (var profile in GameScript.PlayerProfile.s_Profiles)

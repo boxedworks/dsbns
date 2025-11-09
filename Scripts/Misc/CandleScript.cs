@@ -40,11 +40,11 @@ public class CandleScript : MonoBehaviour
 
     _light = transform.GetChild(2).GetComponent<Light>();
 
-    if (GameScript.s_GameMode != GameScript.GameModes.ZOMBIE)
+    if (!GameScript.s_IsZombieGameMode)
       _enabled = true;
 
-    _NormalizedEnable = GameScript.s_GameMode != GameScript.GameModes.ZOMBIE ? 1f : 0f;
-    if (GameScript.s_GameMode == GameScript.GameModes.ZOMBIE)
+    _NormalizedEnable = !GameScript.s_IsZombieGameMode ? 1f : 0f;
+    if (GameScript.s_IsZombieGameMode)
       _light.range = 8.3f;
   }
 
@@ -56,7 +56,7 @@ public class CandleScript : MonoBehaviour
 
     // Lerp brightness
     if (_enabled)
-      _light.intensity = Mathf.Clamp((Time.time - 1f) - _start_time, 0f, 1f) * _baseIntensity * normalizedEnable;
+      _light.intensity = Mathf.Clamp(Time.time - 1f - _start_time, 0f, 1f) * _baseIntensity * normalizedEnable;
     if (Time.time - GameScript.s_LevelStartTime < 0.25f)
       normalizedEnable = _NormalizedEnable;
     else
@@ -103,7 +103,7 @@ public class CandleScript : MonoBehaviour
     if (!_flipped) return;
     _flipped = false;
 
-    GameObject.DestroyImmediate(gameObject.GetComponent<Rigidbody>());
+    DestroyImmediate(gameObject.GetComponent<Rigidbody>());
     gameObject.GetComponent<BoxCollider>().isTrigger = true;
 
     transform.position = _startPosition;

@@ -124,7 +124,7 @@ public static class Achievements
     if (
       //GameScript._Singleton._IsDemo ||
       //Debug.isDebugBuild ||
-      (!SteamManager.Initialized && GameScript.s_UsingSteam)
+      !SteamManager.Initialized && GameScript.s_UsingSteam
     )
       return;
 

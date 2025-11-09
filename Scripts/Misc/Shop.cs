@@ -334,7 +334,7 @@ public static class Shop
       { Unlocks.UTILITY_GRENADE_STUN, new Tuple<string, int>("throwable, corner-killer", 10) },
       { Unlocks.UTILITY_C4, new Tuple<string, int>("throwable, explosive, remote-controlled", 10) },
       { Unlocks.UTILITY_BEAR_TRAP, new Tuple<string, int>("throwable, trap", 5) },
-      { Unlocks.UTILITY_MOLOTOV, new Tuple<string, int>("throwable, fire, duration", 10) },
+      //{ Unlocks.UTILITY_MOLOTOV, new Tuple<string, int>("throwable, fire, duration", 10) },
       { Unlocks.UTILITY_MORTAR_STRIKE, new Tuple<string, int>("ranged, explosive, remote-controlled", 15) },
       { Unlocks.UTILITY_STOP_WATCH, new Tuple<string, int>("useable, slows-time", 10) },
       { Unlocks.UTILITY_INVISIBILITY, new Tuple<string, int>("useable, short-invisibility", 10) },
@@ -369,8 +369,8 @@ public static class Shop
       { Unlocks.MAX_EQUIPMENT_POINTS_9, new Tuple<string, int>("equipment points (+1)", 40) },
       { Unlocks.MAX_EQUIPMENT_POINTS_10, new Tuple<string, int>("equipment points (+1)", 45) },
 
-      { Unlocks.LOADOUT_SLOT_X2_0, new Tuple<string, int>("loadout slot (+2)", 3) },
-      { Unlocks.LOADOUT_SLOT_X2_1, new Tuple<string, int>("loadout slot (+2)", 8) },
+      { Unlocks.LOADOUT_SLOT_X2_0, new Tuple<string, int>("loadout slot (+2)", 4) },
+      { Unlocks.LOADOUT_SLOT_X2_1, new Tuple<string, int>("loadout slot (+2)", 10) },
       { Unlocks.LOADOUT_SLOT_X2_2, new Tuple<string, int>("loadout slot (+2)", 15) },
       { Unlocks.LOADOUT_SLOT_X2_3, new Tuple<string, int>("loadout slot (+2)", 20) },
       { Unlocks.LOADOUT_SLOT_X2_4, new Tuple<string, int>("loadout slot (+2)", 25) },
@@ -403,6 +403,7 @@ public static class Shop
       Unlocks.MOD_ARMOR_UP,
       Unlocks.MOD_PENETRATION_UP,
 
+      Unlocks.EXTRA_CHASE,
       Unlocks.EXTRA_CROWNMODE,
     };
 
@@ -570,6 +571,7 @@ public static class Shop
       case Unlocks.MODE_EXTRAS:
 
       case Unlocks.EXTRA_CHASE:
+      case Unlocks.EXTRA_CROWNMODE:
         Unlock(unlock);
         break;
     }
@@ -593,7 +595,6 @@ public static class Shop
   {
     return
     UnlockUnlocked(Unlocks.EXTRA_BLOOD_FX) &&
-    UnlockUnlocked(Unlocks.EXTRA_CHASE) &&
     UnlockUnlocked(Unlocks.EXTRA_ENEMY_OFF) &&
     UnlockUnlocked(Unlocks.EXTRA_EXPLODED) &&
     UnlockUnlocked(Unlocks.EXTRA_GRAVITY) &&
@@ -605,7 +606,6 @@ public static class Shop
   {
     return
     UnlockUnlocked(Unlocks.EXTRA_BLOOD_FX) ||
-    UnlockUnlocked(Unlocks.EXTRA_CHASE) ||
     UnlockUnlocked(Unlocks.EXTRA_ENEMY_OFF) ||
     UnlockUnlocked(Unlocks.EXTRA_EXPLODED) ||
     UnlockUnlocked(Unlocks.EXTRA_GRAVITY) ||
@@ -778,7 +778,7 @@ public static class Shop
 
     public static void BuyPerk(int playerId, PerkType perk)
     {
-      if (GameScript.s_GameMode != GameScript.GameModes.ZOMBIE) return;
+      if (!GameScript.s_IsZombieGameMode) return;
 
       GameScript.PlayerProfile.s_Profiles[playerId]._Equipment._Perks.Add(perk);
       GameScript.PlayerProfile.s_Profiles[playerId].UpdatePerkIcons();
@@ -786,7 +786,7 @@ public static class Shop
       switch (perk)
       {
         // Increase max ammo
-        case (PerkType.MAX_AMMO_UP):
+        case PerkType.MAX_AMMO_UP:
           foreach (var player in PlayerScript.s_Players)
           {
             if (player._Id == playerId)
@@ -798,7 +798,7 @@ public static class Shop
           }
           break;
         // Give laser sights to ranged weapons
-        case (PerkType.LASER_SIGHTS):
+        case PerkType.LASER_SIGHTS:
           foreach (var player in PlayerScript.s_Players)
           {
             if (player._Id == playerId)
@@ -810,7 +810,7 @@ public static class Shop
           }
           break;
         // Give two extra health
-        case (PerkType.ARMOR_UP):
+        case PerkType.ARMOR_UP:
           foreach (var player in PlayerScript.s_Players)
           {
             if (player._Id == playerId)

@@ -164,9 +164,9 @@ public class SceneThemes : MonoBehaviour
       {
         for (var u = 0; u < 4; u++)
           enabled[u] = t._tile.transform.GetChild(0).GetChild(u).gameObject.activeSelf ? 1 : 0;
-        GameObject.DestroyImmediate(t._tile.transform.GetChild(0).gameObject);
+        DestroyImmediate(t._tile.transform.GetChild(0).gameObject);
       }
-      var newinner = GameObject.Instantiate(inner.gameObject, t._tile.transform);
+      var newinner = Instantiate(inner.gameObject, t._tile.transform);
       for (var u = 0; u < 4; u++)
         newinner.transform.GetChild(u).gameObject.SetActive(enabled[u] == 1);
       newinner.transform.localPosition = Vector3.zero;

@@ -25,7 +25,7 @@ public class DoorScript2 : CustomEntity
   public List<EnemyScript> _EnemiesEditor;
   public List<EnemyScript> _EnemiesGame;
 
-  bool _forceExtrasOpen { get { return Settings.s_SaveData.LevelData.ExtraEnemyMultiplier == 2 && GameScript.s_GameMode == GameScript.GameModes.MISSIONS && !GameScript.s_EditorEnabled; } }
+  bool _forceExtrasOpen { get { return Settings.s_SaveData.LevelData.ExtraEnemyMultiplier == 2 && GameScript.s_IsMissionsGameMode && !GameScript.s_EditorEnabled; } }
 
   // Use this for initialization
   void Start()

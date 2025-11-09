@@ -115,9 +115,9 @@ public class UtilityScript : ItemScript
     //
     if (_utility_type == UtilityType.MORTAR_STRIKE)
     {
-      _mortarAim = GameObject.Instantiate(GameObject.Find("ring")).transform;
+      _mortarAim = Instantiate(GameObject.Find("ring")).transform;
       _mortarAim.name = "MortarAim";
-      GameObject.Destroy(_mortarAim.GetChild(1).gameObject);
+      Destroy(_mortarAim.GetChild(1).gameObject);
       //_mortarAim.localScale *= 0.5f;
     }
   }
@@ -258,7 +258,7 @@ public class UtilityScript : ItemScript
     // If has radius, add ring and explosion
     if (explosion_radius != -1f)
     {
-      _ring = GameObject.Instantiate(TileManager._Ring.gameObject).transform.GetChild(0).GetComponent<MeshRenderer>();
+      _ring = Instantiate(TileManager._Ring.gameObject).transform.GetChild(0).GetComponent<MeshRenderer>();
       _ring.transform.parent.gameObject.SetActive(true);
 
       _explosion = gameObject.AddComponent<ExplosiveScript>();
@@ -404,7 +404,7 @@ public class UtilityScript : ItemScript
 
             EnemyScript.CheckSound(transform.position, killed ? EnemyScript.Loudness.SUPERSOFT : EnemyScript.Loudness.SOFT);
             transform.GetChild(1).GetComponent<ParticleSystem>().Stop();
-            GameObject.Destroy(_rb);
+            Destroy(_rb);
             _stuck = true;
 
             // Stop ignoring holder's ragdoll
@@ -475,7 +475,7 @@ public class UtilityScript : ItemScript
             else
             {
               transform.GetChild(1).GetComponent<ParticleSystem>().Stop();
-              GameObject.Destroy(_rb);
+              Destroy(_rb);
               _stuck = true;
 
               // Stop ignoring holder's ragdoll
@@ -557,7 +557,7 @@ public class UtilityScript : ItemScript
               else
                 PlaySound(Audio.UTILITY_HIT_FLOOR);
               transform.GetChild(1).GetComponent<ParticleSystem>().Stop();
-              GameObject.Destroy(_rb);
+              Destroy(_rb);
               //_rb.isKinematic = true;
 
               // Trigger explosion
@@ -611,7 +611,7 @@ public class UtilityScript : ItemScript
               else
                 PlaySound(Audio.UTILITY_HIT_FLOOR);
               transform.GetChild(1).GetComponent<ParticleSystem>().Stop();
-              GameObject.Destroy(_rb);
+              Destroy(_rb);
             }
           };
           _explosion._onExplode += () =>
@@ -680,7 +680,7 @@ public class UtilityScript : ItemScript
           Unregister();
 
           // Ring
-          _ring = GameObject.Instantiate(TileManager._Ring.gameObject).transform.GetChild(0).GetComponent<MeshRenderer>();
+          _ring = Instantiate(TileManager._Ring.gameObject).transform.GetChild(0).GetComponent<MeshRenderer>();
           _ring.transform.parent.gameObject.SetActive(true);
 
           var localscale = _ring.transform.localScale;
@@ -756,7 +756,7 @@ public class UtilityScript : ItemScript
               PlaySound(Audio.UTILITY_HIT_FLOOR);
             transform.GetChild(1).GetComponent<ParticleSystem>().Stop();
             EnemyScript.CheckSound(transform.position, killed ? EnemyScript.Loudness.SUPERSOFT : EnemyScript.Loudness.SOFT);
-            GameObject.Destroy(_rb);
+            Destroy(_rb);
 
             //
             IEnumerator SpawnBulletCo(float delay)
@@ -873,7 +873,7 @@ public class UtilityScript : ItemScript
 
             EnemyScript.CheckSound(transform.position, killed ? EnemyScript.Loudness.SUPERSOFT : EnemyScript.Loudness.SOFT);
             transform.GetChild(1).GetComponent<ParticleSystem>().Stop();
-            GameObject.Destroy(_rb);
+            Destroy(_rb);
             _stuck = true;
 
             // Stop ignoring holder's ragdoll
@@ -924,7 +924,7 @@ public class UtilityScript : ItemScript
                 {
                   if (rag._Id == _ragdoll._Id) return;
                   transform.parent = c.transform;
-                  GameObject.Destroy(_rb);
+                  Destroy(_rb);
                   _explosion.enabled = false;
                 }
               }
@@ -1015,7 +1015,7 @@ public class UtilityScript : ItemScript
                 // Stick to ragdol
                 transform.parent = c.transform;
                 transform.localPosition = Vector3.zero + Random.onUnitSphere * 0.25f;
-                GameObject.Destroy(_rb);
+                Destroy(_rb);
                 _expirationTimer = -1f;
 
                 // Model update
@@ -1235,7 +1235,7 @@ public class UtilityScript : ItemScript
       var util = utils_thrown[0];
       utils_thrown.Remove(util);
       if (util != null)
-        GameObject.Destroy(util.gameObject);
+        Destroy(util.gameObject);
     }
     utils_thrown.Add(this);
 
@@ -1257,7 +1257,7 @@ public class UtilityScript : ItemScript
     }
 
     var spawnPosition = _spawnLocation != Vector3.zero ? _spawnLocation :
-      _ragdoll._spine.transform.position + forward * 0.5f + new Vector3(0f, (_explosion != null ? 0.25f : 0.1f), 0f);
+      _ragdoll._spine.transform.position + forward * 0.5f + new Vector3(0f, _explosion != null ? 0.25f : 0.1f, 0f);
     spawnPosition.y = BulletScript.s_BULLET_HEIGHT;
     _rb.position = _throwPosition = spawnPosition;
 
@@ -1329,7 +1329,7 @@ public class UtilityScript : ItemScript
             player._Ragdoll.PlaySound("Ragdoll/Pickup");
 
             // Disable and hide
-            GameObject.Destroy(gameObject, 2f);
+            Destroy(gameObject, 2f);
             gameObject.SetActive(false);
           }
         }
@@ -1345,7 +1345,7 @@ public class UtilityScript : ItemScript
       player._Ragdoll.PlaySound("Ragdoll/Pickup");
 
       // Disable and hide
-      GameObject.Destroy(gameObject, 2f);
+      Destroy(gameObject, 2f);
       gameObject.SetActive(false);
     }
   }
@@ -1370,17 +1370,9 @@ public class UtilityScript : ItemScript
           _ring.enabled = false;
         _c.enabled = false;
         transform.GetChild(0).gameObject.SetActive(false);
-        GameObject.Destroy(gameObject, 6.6f);
+        Destroy(gameObject, 6.6f);
 
         // Fire AOE on impact
-        _rb.isKinematic = true;
-        FunctionsC.AoeHandler.RegisterAoeEffect(
-          _ragdoll,
-          FunctionsC.AoeHandler.AoeType.FIRE,
-          _rb.position,
-          2f * 0.6f,
-          5f
-        );
         var particles = transform.GetChild(1).GetComponent<ParticleSystem>();
         particles.transform.parent = transform.parent;
         var pos = particles.transform.position;
@@ -1388,7 +1380,21 @@ public class UtilityScript : ItemScript
         particles.transform.position = pos;
         particles.transform.localEulerAngles = new Vector3(270f, 0f, 0f);
         particles.Play();
-        GameObject.Destroy(particles.gameObject, 6.5f);
+
+        _rb.isKinematic = true;
+        var aoeEffect = FunctionsC.AoeHandler.RegisterAoeEffect(
+          _ragdoll,
+          FunctionsC.AoeHandler.AoeType.FIRE,
+          _rb.position,
+          2f * 0.6f,
+          5f
+        );
+
+        aoeEffect.OnExpire += () =>
+        {
+          particles.Stop();
+          Destroy(particles.gameObject, 6f);
+        };
 
       }
 
@@ -1413,13 +1419,13 @@ public class UtilityScript : ItemScript
   private void OnDestroy()
   {
     //
-    if (_ring != null && _ring.transform.parent != null) GameObject.Destroy(_ring.transform.parent.gameObject);
+    if (_ring != null && _ring.transform.parent != null) Destroy(_ring.transform.parent.gameObject);
 
     //
     if (_utility_type == UtilityType.MORTAR_STRIKE)
     {
       if (_mortarAim != null)
-        GameObject.Destroy(_mortarAim.gameObject);
+        Destroy(_mortarAim.gameObject);
 
       if (_mortarAudioSource != null)
       {

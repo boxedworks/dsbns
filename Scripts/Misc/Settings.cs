@@ -75,14 +75,14 @@ public static class Settings
   {
     get
     {
-      if (GameScript.s_GameMode == GameScript.GameModes.MISSIONS)
+      if (GameScript.s_IsMissionsGameMode)
         return LevelModule.HighestDifficultyUnlockedClassic;
       else
         return LevelModule.HighestDifficultyUnlockedSurvival;
     }
     set
     {
-      if (GameScript.s_GameMode == GameScript.GameModes.MISSIONS)
+      if (GameScript.s_IsMissionsGameMode)
         LevelModule.HighestDifficultyUnlockedClassic = value;
       else
         LevelModule.HighestDifficultyUnlockedSurvival = value;
@@ -93,7 +93,7 @@ public static class Settings
   {
     get
     {
-      if (GameScript.s_GameMode == GameScript.GameModes.MISSIONS)
+      if (GameScript.s_IsMissionsGameMode)
         return LevelModule.Difficulty;
       else return 0;
     }
@@ -158,7 +158,7 @@ public static class Settings
   }
 
   // Extras
-  public static bool _Extras_CanUse { get { return GameScript.s_GameMode == GameScript.GameModes.MISSIONS && !_LevelEditorEnabled; } }
+  public static bool _Extras_CanUse { get { return GameScript.s_IsMissionsGameMode && !_LevelEditorEnabled; } }
   public static bool _Extras_UsingAny
   {
     get
@@ -181,8 +181,8 @@ public static class Settings
         LevelModule.ExtraEnemyMultiplier != 0 ||
         LevelModule.ExtraPlayerAmmo != 0 ||
         LevelModule.ExtraEnemyAmmo != 0 ||
-        LevelModule.ExtraBodyExplode != 0 ||
-        LevelModule.ExtraCrownMode != 0
+        LevelModule.ExtraBodyExplode != 0
+      //LevelModule.ExtraCrownMode != 0
       ;
     }
   }
@@ -427,7 +427,15 @@ public static class Settings
           var unlockDat = LevelModule.ShopUnlocksOrdered[unlock];
           unlockDat.UnlockValue = LevelSaveData.ShopUnlock.UnlockValueType.LOCKED;
           LevelModule.ShopUnlocksOrdered[unlock] = unlockDat;
-          Shop.Unlock(unlock);
+
+          try
+          {
+            Shop.Unlock(unlock);
+          }
+          catch (System.Exception ex)
+          {
+            Debug.LogError($"Failed to load unlock [{unlock}]: {ex}");
+          }
         }
       }
     }
@@ -442,10 +450,47 @@ public static class Settings
     Shop.AddAvailableUnlock(Shop.Unlocks.ITEM_PISTOL_SILENCED);
 
     // Extras
-    s_Extra_UnlockCriterea = new Dictionary<Shop.Unlocks, UnlockCriteria>();
+    s_Extra_UnlockCriterea = new Dictionary<Shop.Unlocks, UnlockCriteria>
+    {
 
-    // Gravity
-    s_Extra_UnlockCriterea.Add(
+      // Crown mode
+      {
+        Shop.Unlocks.EXTRA_CROWNMODE,
+        new UnlockCriteria
+        {
+          level = -1,
+          difficulty = 0,
+          rating = 0,
+          extras = null,
+          loadoutDesc = "auto-unlocked",
+          items = new GameScript.ItemManager.Items[] {
+            GameScript.ItemManager.Items.KNIFE
+          },
+          utilities = null,
+          perks = null
+        }
+      },
+
+      // Chaser
+      {
+        Shop.Unlocks.EXTRA_CHASE,
+        new UnlockCriteria
+        {
+          level = -1,
+          difficulty = 0,
+          rating = 0,
+          extras = null,
+          loadoutDesc = "auto-unlocked",
+          items = new GameScript.ItemManager.Items[] {
+            GameScript.ItemManager.Items.KNIFE
+          },
+          utilities = null,
+          perks = null
+        }
+      },
+
+      // Gravity
+      {
         Shop.Unlocks.EXTRA_GRAVITY,
         new UnlockCriteria
         {
@@ -461,10 +506,10 @@ public static class Settings
           utilities = null,
           perks = null
         }
-    );
+      },
 
-    // Player ammo
-    s_Extra_UnlockCriterea.Add(
+      // Player ammo
+      {
         Shop.Unlocks.EXTRA_PLAYER_AMMO,
         new UnlockCriteria
         {
@@ -480,28 +525,10 @@ public static class Settings
           utilities = null,
           perks = null
         }
-    );
+      },
 
-    // Chaser
-    s_Extra_UnlockCriterea.Add(
-        Shop.Unlocks.EXTRA_CHASE,
-        new UnlockCriteria
-        {
-          level = -1,
-          difficulty = 0,
-          rating = 0,
-          extras = null,
-          loadoutDesc = "auto-unlocked",
-          items = new GameScript.ItemManager.Items[] {
-            GameScript.ItemManager.Items.KNIFE
-          },
-          utilities = null,
-          perks = null
-        }
-    );
-
-    // Enemy off
-    s_Extra_UnlockCriterea.Add(
+      // Enemy off
+      {
         Shop.Unlocks.EXTRA_ENEMY_OFF,
         new UnlockCriteria
         {
@@ -516,10 +543,10 @@ public static class Settings
           utilities = null,
           perks = null
         }
-    );
+      },
 
-    // Horde
-    s_Extra_UnlockCriterea.Add(
+      // Horde
+      {
         Shop.Unlocks.EXTRA_HORDE,
         new UnlockCriteria
         {
@@ -535,10 +562,10 @@ public static class Settings
           utilities = null,
           perks = null
         }
-    );
+      },
 
-    // Time
-    s_Extra_UnlockCriterea.Add(
+      // Time
+      {
         Shop.Unlocks.EXTRA_TIME,
         new UnlockCriteria
         {
@@ -554,10 +581,10 @@ public static class Settings
           utilities = null,
           perks = null
         }
-    );
+      },
 
-    // Blood FX
-    s_Extra_UnlockCriterea.Add(
+      // Blood FX
+      {
         Shop.Unlocks.EXTRA_BLOOD_FX,
         new UnlockCriteria
         {
@@ -575,10 +602,10 @@ public static class Settings
           },
           perks = null
         }
-    );
+      },
 
-    // Explode on death
-    s_Extra_UnlockCriterea.Add(
+      // Explode on death
+      {
         Shop.Unlocks.EXTRA_EXPLODED,
         new UnlockCriteria
         {
@@ -600,7 +627,8 @@ public static class Settings
             Shop.Perk.PerkType.EXPLOSION_RESISTANCE
           }
         }
-    );
+      }
+    };
 
     //
     SettingsSaveData.Save();
@@ -695,7 +723,7 @@ public static class Settings
     else
     {
       GameResources._Camera_Main.orthographic = GameResources._Camera_IgnorePP.orthographic = false;
-      GameResources._Camera_Main.transform.eulerAngles =  new Vector3(89.9f, 0f, 0f);
+      GameResources._Camera_Main.transform.eulerAngles = new Vector3(89.9f, 0f, 0f);
     }
 
     //
