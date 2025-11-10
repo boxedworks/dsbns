@@ -154,9 +154,9 @@ public class SceneThemes : MonoBehaviour
     {
       // Check fog movements
       if (fog_movement == 1)
-        RenderSettings.fogStartDistance = Mathf.Lerp(FOG_START, FOG_END, (float)iter_tile++ / (float)TileManager._Tiles.Count);
+        RenderSettings.fogStartDistance = Mathf.Lerp(FOG_START, FOG_END, iter_tile++ / (float)TileManager._Tiles.Count);
       else if (fog_movement == -1)
-        RenderSettings.fogStartDistance = Mathf.Lerp(FOG_END, FOG_START, (float)iter_tile++ / (float)TileManager._Tiles.Count);
+        RenderSettings.fogStartDistance = Mathf.Lerp(FOG_END, FOG_START, iter_tile++ / (float)TileManager._Tiles.Count);
 
       if (t._tile == null) continue;
       var enabled = new int[4];

@@ -853,7 +853,7 @@ public static class Settings
     var targetaspect = 16.0f / 9.0f;
 
     // determine the game window's current aspect ratio
-    var windowaspect = (float)_ScreenResolution.width / (float)_ScreenResolution.height;
+    var windowaspect = _ScreenResolution.width / (float)_ScreenResolution.height;
 
     // current viewport height should be scaled by this amount
     var scaleheight = windowaspect / targetaspect;

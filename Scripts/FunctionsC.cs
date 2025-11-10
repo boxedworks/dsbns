@@ -939,7 +939,7 @@ public static class FunctionsC
         }
 
         // CLASSIC mode music
-        var iter_base = Mathf.RoundToInt(Levels._CurrentLevelIndex / ((float)_TrackLevelRange) / ((float)s_TrackNames.Length / 3f - 1));
+        var iter_base = Mathf.RoundToInt(Levels._CurrentLevelIndex / ((float)_TrackLevelRange) / (s_TrackNames.Length / 3f - 1));
         iter_base *= 3;
         iter_base += s_TrackOffset;
         var iter = 0;

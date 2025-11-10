@@ -219,7 +219,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
     _ragdoll.ChangeColor(_Profile.GetColor());
 
     // Create ring
-    var new_ring = Instantiate(TileManager._Ring.gameObject) as GameObject;
+    var new_ring = Instantiate(TileManager._Ring.gameObject);
     _ring = new MeshRenderer[] { new_ring.transform.GetChild(0).GetComponent<MeshRenderer>(), new_ring.transform.GetChild(1).GetComponent<MeshRenderer>() };
     Resources.UnloadAsset(_ring[0].sharedMaterial);
     Resources.UnloadAsset(_ring[1].sharedMaterial);
@@ -2279,7 +2279,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
             if (points == 0) return;
 
             GameScript.SurvivalMode.SpendPoints(_Id, points);
-            var money = Instantiate(GameResources._Money) as GameObject;
+            var money = Instantiate(GameResources._Money);
             GameScript.SurvivalMode.AddMoney(money);
             money.name = $"Credits {points}";
             money.transform.parent = GameScript.s_Singleton.transform;

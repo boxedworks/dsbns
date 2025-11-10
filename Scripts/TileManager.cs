@@ -172,7 +172,7 @@ public class TileManager
         if (IsActive())
         {
           monieText.transform.localPosition = _Positions_Monies[4];
-          var monie = _Text_Money.text.Substring(2).ParseIntInvariant();
+          var monie = _Text_Money.text[2..].ParseIntInvariant();
           _Text_Money.text = $"$${monie + 1}";
           SfxManager.PlayAudioSourceSimple(GameResources.s_AudioListener.transform.position, "Etc/Monie_store", 0.95f, 1f);
         }
@@ -1381,7 +1381,7 @@ public class TileManager
           {
             // Waypoint
             case "w":
-              current_waypoint = Object.Instantiate(default_waypoint.gameObject as GameObject).transform;
+              current_waypoint = Object.Instantiate(default_waypoint.gameObject).transform;
               current_waypoint.name = "Waypoint";
               current_waypoint.parent = default_waypoint.parent;
               current_waypoint.localScale = new Vector3(0.3f, 0.3f, 0.2f);
@@ -1393,7 +1393,7 @@ public class TileManager
               break;
             // Lookpoint
             case "l":
-              Transform lookpoint = Object.Instantiate(default_lookpoint.gameObject as GameObject).transform;
+              Transform lookpoint = Object.Instantiate(default_lookpoint.gameObject).transform;
               lookpoint.name = "Lookpoint";
               lookpoint.parent = current_waypoint;
               lookpoint.localScale = new Vector3(0.5f, 0.5f, 0.5f);
@@ -1677,7 +1677,7 @@ public class TileManager
           var inner_mesh = GameObject.Find("Tile_" + SceneThemes._Theme._tile).transform.GetChild(0).GetChild(0);
           for (var i = 0; i < 2; i++)
           {
-            var inner0 = Object.Instantiate(inner_mesh.gameObject) as GameObject;
+            var inner0 = Object.Instantiate(inner_mesh.gameObject);
             inner0.transform.parent = inner_container;
             inner0.transform.localScale = inner_mesh.localScale;
             inner0.transform.localPosition = new Vector3(0f, inner_mesh.localPosition.y, (inner_mesh.localPosition.z - 0.35f) * (i == 0 ? -1f : 1f));
@@ -2035,7 +2035,7 @@ public class TileManager
       var loaded = false;
       foreach (var reloadObjectType in reloadObjectTypes)
       {
-        if (levelObjectData.Length <= reloadObjectType.Length || !levelObjectData.Substring(0, reloadObjectType.Length).Equals(reloadObjectType)) continue;
+        if (levelObjectData.Length <= reloadObjectType.Length || !levelObjectData[..reloadObjectType.Length].Equals(reloadObjectType)) continue;
         LoadObject(levelObjectData);
         loaded = true;
         break;
@@ -2050,7 +2050,7 @@ public class TileManager
         {
           continue;
         }
-        if (levelObjectData.Length <= s.Length || !levelObjectData.Substring(0, s.Length).Equals(s)) continue;
+        if (levelObjectData.Length <= s.Length || !levelObjectData[..s.Length].Equals(s)) continue;
 
         var loadedObject = LoadObject(levelObjectData);
         OnObjectLoad(loadedObject);
@@ -2164,7 +2164,7 @@ public class TileManager
 
   static Tile SpawnTile(int width, int height)
   {
-    var tile = Object.Instantiate(_Tile.gameObject as GameObject).transform;
+    var tile = Object.Instantiate(_Tile.gameObject).transform;
     tile.gameObject.name = "Tile";
     tile.parent = _Map;
     tile.localPosition = new Vector3(width * _Tile_spacing, _Tile.localPosition.y, height * _Tile_spacing);
@@ -2525,7 +2525,7 @@ public class TileManager
     {
       var found = false;
       foreach (var data_type in notloadObjects)
-        if (data.Length > data_type.Length && data.Substring(0, data_type.Length).Equals(data_type))
+        if (data.Length > data_type.Length && data[..data_type.Length].Equals(data_type))
         {
           found = true;
           break;
@@ -3218,7 +3218,7 @@ public class TileManager
               continue;
             }
           }
-          returnString = returnString.Substring(0, returnString.Length - 1) + " ";
+          returnString = returnString[..^1] + " ";
           return returnString;
         }
         return null;
@@ -4895,7 +4895,7 @@ public class TileManager
       var up = data_split[data_iter].ParseIntInvariant() == 1;
 
       int current_column = (data_iter - 2) % height,
-        current_row = (int)((data_iter - 2) / height);
+        current_row = (data_iter - 2) / height;
       var tile_new = GameObject.CreatePrimitive(PrimitiveType.Cube).transform;
       tile_new.gameObject.layer = 11;
       tile_new.parent = background;

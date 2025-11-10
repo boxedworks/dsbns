@@ -661,9 +661,9 @@ public class Menu
         var textColor = component._textColor;
         if (component._obscured) textColor = _COLOR_GRAY;
         if (textColor != "white" && textColor != "")
-          displayText = $"{selector} <color={textColor}>{displayText.Substring(4)}</color>";
+          displayText = $"{selector} <color={textColor}>{displayText[4..]}</color>";
         else
-          displayText = $"{selector} <color=white>{displayText.Substring(4)}</color>";
+          displayText = $"{selector} <color=white>{displayText[4..]}</color>";
       }
 
       text += displayText;
@@ -1010,11 +1010,11 @@ public class Menu
         if (tip.Contains("&"))
         {
           var spl = tip.Split('&');
-          tip = spl[0] + "   " + spl[1].Substring(2);
+          tip = spl[0] + "   " + spl[1][2..];
 
           var width = spl[0].Length - 22;
 
-          var button = spl[1].Substring(0, 2);
+          var button = spl[1][..2];
 
           var parent = s_Menu.GetChild(0);
 
@@ -1074,9 +1074,9 @@ public class Menu
             // Check for second control UI
             if (spl.Length == 3)
             {
-              tip += "   " + spl[2].Substring(2);
+              tip += "   " + spl[2][2..];
 
-              button = spl[2].Substring(0, 2);
+              button = spl[2][..2];
               width += spl[1].Length + 1;
 
               t = SpawnControlUI(last_c, GetControl(button));
@@ -1311,7 +1311,7 @@ public class Menu
           levelpack_name = splitname[splitname.Length - 1].Trim();
         }
         if (levelpack_name.EndsWith(".levelpack"))
-          levelpack_name = levelpack_name.Substring(0, levelpack_name.Length - 10);
+          levelpack_name = levelpack_name[..^10];
 
         menu
         .AddComponent($"<color={_COLOR_GRAY}>level pack - {levelpack_name}</color>\n<color={_COLOR_GRAY}>level pack - select level to start</color>\n\n");
@@ -1784,7 +1784,7 @@ public class Menu
         var levelpacks = Directory.GetFiles("Levelpacks/Local");
         for (var i = 0; i < levelpacks.Length; i++)
         {
-          var levelpack_name = levelpacks[i].Substring("Levelpacks/Local/".Length).Split('.')[0];
+          var levelpack_name = levelpacks[i]["Levelpacks/Local/".Length..].Split('.')[0];
           var extraline = i == levelpacks.Length - 1 ? "\n" : "";
 
           menu_levelpacks
@@ -3093,22 +3093,22 @@ public class Menu
         var itemType = 0;
         if (name.StartsWith("ITEM_"))
         {
-          name = string.Format("{0,-20}{1,6}", name.Substring(5), "[item]");
-          equip_cost = GameScript.ItemManager.GetItemValue((GameScript.ItemManager.Items)System.Enum.Parse(typeof(GameScript.ItemManager.Items), unlock_s.Substring(5), true));
+          name = string.Format("{0,-20}{1,6}", name[5..], "[item]");
+          equip_cost = GameScript.ItemManager.GetItemValue((GameScript.ItemManager.Items)System.Enum.Parse(typeof(GameScript.ItemManager.Items), unlock_s[5..], true));
         }
         else if (name.StartsWith("UTILITY_"))
         {
           itemType = 1;
 
-          name = string.Format("{0,-17}{1,9}", name.Substring(8), "[utility]");
-          equip_cost = GameScript.ItemManager.GetUtilityValue((UtilityScript.UtilityType)System.Enum.Parse(typeof(UtilityScript.UtilityType), unlock_s.Substring(8), true));
+          name = string.Format("{0,-17}{1,9}", name[8..], "[utility]");
+          equip_cost = GameScript.ItemManager.GetUtilityValue((UtilityScript.UtilityType)System.Enum.Parse(typeof(UtilityScript.UtilityType), unlock_s[8..], true));
         }
         else if (name.StartsWith("MOD_"))
         {
           itemType = 2;
 
-          name = string.Format("{0,-21}{1,5}", name.Substring(4), "[mod]");
-          var perk = (Shop.Perk.PerkType)System.Enum.Parse(typeof(Shop.Perk.PerkType), unlock_s.Substring(4), true);
+          name = string.Format("{0,-21}{1,5}", name[4..], "[mod]");
+          var perk = (Shop.Perk.PerkType)System.Enum.Parse(typeof(Shop.Perk.PerkType), unlock_s[4..], true);
           equip_cost = GameScript.ItemManager.GetPerkValue(perk);
           shop_details = System.Tuple.Create(Shop.Perk._PERK_DESCRIPTIONS[perk], shop_details.Item2);
         }
@@ -3124,13 +3124,13 @@ public class Menu
         {
           itemType = 5;
 
-          name = string.Format("{0,-20}{1,6}", name.Substring(5), "[mode]");
+          name = string.Format("{0,-20}{1,6}", name[5..], "[mode]");
         }
         else if (name.StartsWith("EXTRA_"))
         {
           itemType = 6;
 
-          name = string.Format("{0,-19}{1,7}", name.Substring(6), "[extra]");
+          name = string.Format("{0,-19}{1,7}", name[6..], "[extra]");
         }
 
         // If not unlocked, only show if showing all
@@ -4034,7 +4034,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
                     s_SaveLevelSelected = component0._dropdownIndex;
 
                     // Load level
-                    var levelIter = component0.GetDisplayText().Split(' ')[2].Trim().Substring(1).ParseIntInvariant() - 1;
+                    var levelIter = component0.GetDisplayText().Split(' ')[2].Trim()[1..].ParseIntInvariant() - 1;
                     GameScript.NextLevel(levelIter);
 
                     // Play music
@@ -4057,7 +4057,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
 
                     component0._textColor = "white";
 
-                    var levelIter = component0.GetDisplayText().Split(' ')[2].Trim().Substring(1).ParseIntInvariant() - 1;
+                    var levelIter = component0.GetDisplayText().Split(' ')[2].Trim()[1..].ParseIntInvariant() - 1;
                     GameScript._lp0 = TileManager.GetMapPreview(Levels._CurrentLevelCollection._levelData[levelIter]).transform;
                   });
                   actions_onCreated.Add((MenuComponent component0) => { });
@@ -4097,7 +4097,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
                 foreach (var selection in selections)
                 {
                   if (lastIter == 0) { lastIter++; continue; }
-                  var level_unlocked = Levels.LevelCompleted(selection.Split(' ')[0].Substring(1).ParseIntInvariant() - 2);
+                  var level_unlocked = Levels.LevelCompleted(selection.Split(' ')[0][1..].ParseIntInvariant() - 2);
                   if (!level_unlocked)
                   {
                     //Debug.Log($"Level not unlocked {selections[lastIter - 1]}");
@@ -4112,7 +4112,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
                 // Check for all completed
                 if (lastIter == levels_per_dir)
                 {
-                  var level_unlocked = Levels.LevelCompleted(selections[levels_per_dir - 1].Split(' ')[0].Substring(1).ParseIntInvariant() - 1);
+                  var level_unlocked = Levels.LevelCompleted(selections[levels_per_dir - 1].Split(' ')[0][1..].ParseIntInvariant() - 1);
                   if (level_unlocked)
                     match = selections[0];
                 }
@@ -6329,7 +6329,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
               // Action to change resolution
               actions.Add((MenuComponent component0) =>
               {
-                var resolutionText = component0.GetDisplayText().Substring(4).Trim();
+                var resolutionText = component0.GetDisplayText()[4..].Trim();
                 if (System.Text.RegularExpressions.Regex.Match(resolutionText, "<color=").Success)
                   resolutionText = resolutionText.Split('>')[1].Split('<')[0];
                 var refresh_rate = Settings._ScreenResolution.refreshRate;
@@ -6383,7 +6383,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
               // Action to change resolution
               actions.Add((MenuComponent component0) =>
         {
-          var refreshText = component0.GetDisplayText().Substring(4).Trim();
+          var refreshText = component0.GetDisplayText()[4..].Trim();
           if (System.Text.RegularExpressions.Regex.Match(refreshText, "<color=").Success)
             refreshText = refreshText.Split('>')[1].Split('<')[0];
           var resolutionText = component0._menu._menuComponentsSelectable[component._buttonIndex - 1].GetDisplayText(false).Split(':')[1].Trim();
@@ -8353,7 +8353,7 @@ about extras</color>
         }
         text += nextChar;
       }
-      if (length < s_TextBuffer.Length + 1) s_TextBuffer = s_TextBuffer.Substring(length);
+      if (length < s_TextBuffer.Length + 1) s_TextBuffer = s_TextBuffer[length..];
       if (display)
         s_Text.text += text;
 

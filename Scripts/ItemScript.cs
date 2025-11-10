@@ -282,7 +282,7 @@ public class ItemScript : MonoBehaviour
     if (_laserSight) return;
 
     // Spawn lasersight
-    _laserSight = Instantiate(GameResources._LaserBeam) as GameObject;
+    _laserSight = Instantiate(GameResources._LaserBeam);
     _laserSight.name = "laser";
     _laserSight.layer = 12;
     Destroy(_laserSight.GetComponent<Collider>());

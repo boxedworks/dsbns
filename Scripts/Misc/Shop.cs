@@ -504,7 +504,7 @@ public static class Shop
     list.Add(GameScript.ItemManager.Items.NONE);
     foreach (var entry in _Unlocks_Descriptions)
       if (entry.Key.ToString().StartsWith("ITEM_"))
-        list.Add((GameScript.ItemManager.Items)Enum.Parse(typeof(GameScript.ItemManager.Items), entry.Key.ToString().Substring(5)));
+        list.Add((GameScript.ItemManager.Items)Enum.Parse(typeof(GameScript.ItemManager.Items), entry.Key.ToString()[5..]));
     return list.ToArray();
   }
   // Get a list of utilities with UtilityScript.UtilityType enum
@@ -514,7 +514,7 @@ public static class Shop
     list.Add(UtilityScript.UtilityType.NONE);
     foreach (var entry in _Unlocks_Descriptions)
       if (entry.Key.ToString().StartsWith("UTILITY_"))
-        list.Add((UtilityScript.UtilityType)Enum.Parse(typeof(UtilityScript.UtilityType), entry.Key.ToString().Substring(8)));
+        list.Add((UtilityScript.UtilityType)Enum.Parse(typeof(UtilityScript.UtilityType), entry.Key.ToString()[8..]));
     return list.ToArray();
   }
   // Get a list of perks with Perk.PerkType enum
@@ -526,7 +526,7 @@ public static class Shop
     };
     foreach (var entry in _Unlocks_Descriptions)
       if (entry.Key.ToString().StartsWith("MOD_"))
-        list.Add((Perk.PerkType)Enum.Parse(typeof(Perk.PerkType), entry.Key.ToString().Substring(4)));
+        list.Add((Perk.PerkType)Enum.Parse(typeof(Perk.PerkType), entry.Key.ToString()[4..]));
     return list.ToArray();
   }
 
