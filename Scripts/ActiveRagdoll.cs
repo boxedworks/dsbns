@@ -841,14 +841,14 @@ public class ActiveRagdoll
       {
         ItemType = _ItemR?._type ?? GameScript.ItemManager.Items.NONE,
         ItemId = _ItemR?._ItemId ?? -1,
-        ItemClip = _ItemR?.Clip() ?? -1,
+        ItemClip = _ItemR?.GetClip() ?? -1,
         ItemUseItem = _ItemR?._useTime ?? -1f
       },
       new WeaponSwapData()
       {
         ItemType = _ItemL?._type ?? GameScript.ItemManager.Items.NONE,
         ItemId = _ItemL?._ItemId ?? -1,
-        ItemClip = _ItemL?.Clip() ?? -1,
+        ItemClip = _ItemL?.GetClip() ?? -1,
         ItemUseItem = _ItemL?._useTime ?? -1f
       },
       index
@@ -1019,6 +1019,7 @@ public class ActiveRagdoll
     if (_ItemL != null && _ItemL.CanReload() && !_ItemL.IsChargeWeapon())
     {
       _ItemL.Reload();
+
       // Check player settings
       if (_IsPlayer && !_PlayerScript._Profile._reloadSidesSameTime) return;
       else
@@ -1831,21 +1832,29 @@ public class ActiveRagdoll
 
     // Check crown
     if (LevelModule.ExtraCrownMode != 0)
-      if (_hasCrown)
-      {
-        GameScript.s_CrownPlayer = GameScript.s_CrownEnemy = -1;
-        if (source != null)
+      if (source != null)
+        if (_hasCrown)
         {
+          GameScript.s_CrownPlayer = GameScript.s_CrownEnemy = -1;
 
           RemoveCrown();
           source.AddCrown();
 
           if (source._IsPlayer)
             GameScript.s_CrownPlayer = source._PlayerScript._Profile._Id;
-          else
+          else if (!source._EnemyScript.IsChaser())
             GameScript.s_CrownEnemy = source._EnemyScript._Id;
+
         }
-      }
+        else if (GameScript.s_CrownPlayer == -1 && GameScript.s_CrownEnemy == -1)
+        {
+          if (_IsPlayer && source._IsEnemy)
+          {
+            if (!source._EnemyScript.IsChaser())
+              GameScript.s_CrownEnemy = source._EnemyScript._Id;
+            source.AddCrown();
+          }
+        }
 
     // Invert values
     _Hip.isKinematic = !_Hip.isKinematic;
@@ -2011,6 +2020,7 @@ public class ActiveRagdoll
   }
 
   bool _hasCrown;
+  public bool _HasCrown { get { return _hasCrown; } }
   public void AddCrown()
   {
     if (_hasCrown) return;
@@ -2142,6 +2152,14 @@ public class ActiveRagdoll
   public bool HasAutomatic()
   {
     return (_ItemL != null && _ItemL._fireMode == ItemScript.FireMode.AUTOMATIC) || (_ItemR != null && _ItemR._fireMode == ItemScript.FireMode.AUTOMATIC);
+  }
+  public bool HasUseOnReleaseWeapon()
+  {
+    return (_ItemL != null && _ItemL._useOnRelease) || (_ItemR != null && _ItemR._useOnRelease);
+  }
+  public bool HasSemiAutomatic()
+  {
+    return (_ItemL != null && _ItemL._fireMode == ItemScript.FireMode.SEMI) || (_ItemR != null && _ItemR._fireMode == ItemScript.FireMode.SEMI);
   }
   public bool HasSilencedWeapon()
   {

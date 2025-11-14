@@ -2141,8 +2141,8 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
     _item_info[0] = _ragdoll._ItemL?._ItemId ?? -1;
     _item_info[1] = _ragdoll._ItemR?._ItemId ?? -1;
 
-    _loadout_info[0] = _ragdoll._ItemL?.Clip() ?? -1;
-    _loadout_info[1] = _ragdoll._ItemR?.Clip() ?? -1;
+    _loadout_info[0] = _ragdoll._ItemL?.GetClip() ?? -1;
+    _loadout_info[1] = _ragdoll._ItemR?.GetClip() ?? -1;
 
     _loadout_info[2] = _ragdoll._ItemL?._useTime ?? -1f;
     _loadout_info[3] = _ragdoll._ItemR?._useTime ?? -1f;

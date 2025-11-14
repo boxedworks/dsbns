@@ -1885,7 +1885,7 @@ public class ItemScript : MonoBehaviour
     public System.Action _OnUse;
   }
 
-  public int Clip()
+  public int GetClip()
   {
     if (_isMelee) return 1;
     return _clip;

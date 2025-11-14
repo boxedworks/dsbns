@@ -2666,9 +2666,9 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
           if (!isUtility)
           {
             if (side == ActiveRagdoll.Side.LEFT)
-              ammo = player._Ragdoll._ItemL != null ? player._Ragdoll._ItemL.Clip() : ammo;
+              ammo = player._Ragdoll._ItemL != null ? player._Ragdoll._ItemL.GetClip() : ammo;
             else
-              ammo = player._Ragdoll._ItemR != null ? player._Ragdoll._ItemR.Clip() : ammo;
+              ammo = player._Ragdoll._ItemR != null ? player._Ragdoll._ItemR.GetClip() : ammo;
           }
           else if (side == ActiveRagdoll.Side.LEFT)
             ammo = player._UtilitiesLeft != null ? player._UtilitiesLeft.Count : ammo;
@@ -4060,21 +4060,24 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       s_EditorEnabled ||
       s_EditorTesting ||
       s_IsZombieGameMode ||
+      s_IsPartyGameMode ||
       TileManager._LoadingMap
     )
       return false;
+
+    var returnCode = false;
 
     //
     if (SettingsModule.LevelCompletionBehavior == Settings.SettingsSaveData.LevelCompletionBehaviorType.RANDOM_LEVEL)
     {
       LoadRandomLevel();
-      return true;
+      returnCode = true;
     }
 
     else if (SettingsModule.LevelCompletionBehavior == Settings.SettingsSaveData.LevelCompletionBehaviorType.RANDOM_LEVEL_ALL)
     {
       LoadRandomLevel(true);
-      return true;
+      returnCode = true;
     }
 
     //
@@ -4082,11 +4085,15 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     {
       NextLevel(Levels._CurrentLevelIndex + 1);
       IncrementLevelMenu(1);
-      return true;
+      returnCode = true;
     }
 
     //
-    return false;
+    if (returnCode)
+      s_CrownPlayer = s_CrownEnemy = -1;
+
+    //
+    return returnCode;
   }
 
   public static bool PreviousLevelSafe()
@@ -4096,21 +4103,24 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       s_EditorEnabled ||
       s_EditorTesting ||
       s_IsZombieGameMode ||
+      s_IsPartyGameMode ||
       TileManager._LoadingMap
     )
       return false;
+
+    var returnCode = false;
 
     //
     if (SettingsModule.LevelCompletionBehavior == Settings.SettingsSaveData.LevelCompletionBehaviorType.RANDOM_LEVEL)
     {
       LoadRandomLevel();
-      return true;
+      returnCode = true;
     }
 
     else if (SettingsModule.LevelCompletionBehavior == Settings.SettingsSaveData.LevelCompletionBehaviorType.RANDOM_LEVEL_ALL)
     {
       LoadRandomLevel(true);
-      return true;
+      returnCode = true;
     }
 
     //
@@ -4118,11 +4128,15 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     {
       NextLevel(Levels._CurrentLevelIndex - 1);
       IncrementLevelMenu(-1);
-      return true;
+      returnCode = true;
     }
 
     //
-    return false;
+    if (returnCode)
+      s_CrownPlayer = s_CrownEnemy = -1;
+
+    //
+    return returnCode;
   }
 
   public static void NextLevel(int levelIndex)

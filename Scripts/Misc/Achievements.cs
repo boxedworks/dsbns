@@ -63,18 +63,27 @@ public static class Achievements
 
     foreach (var achievement in System.Enum.GetValues(typeof(Achievement)))
     {
-      var isUnlocked = false;
-      if (checkSteam && SteamUserStats.GetAchievement(((Achievement)achievement).ToString(), out isUnlocked))
-      {
-        //Debug.Log($"Achievement {achievement} unlocked: {isUnlocked}");
-        if (isUnlocked)
-        {
-          _Achievement_Last.Add((Achievement)achievement, -2f);
-          continue;
-        }
-      }
 
-      _Achievement_Last.Add((Achievement)achievement, -1f);
+      try
+      {
+        var isUnlocked = false;
+        if (checkSteam && SteamUserStats.GetAchievement(((Achievement)achievement).ToString(), out isUnlocked))
+        {
+          //Debug.Log($"Achievement {achievement} unlocked: {isUnlocked}");
+          if (isUnlocked)
+          {
+            _Achievement_Last.Add((Achievement)achievement, -2f);
+            continue;
+          }
+        }
+
+        _Achievement_Last.Add((Achievement)achievement, -1f);
+      }
+      catch (System.Exception e)
+      {
+        Debug.LogError(e.ToString());
+        break;
+      }
     }
 
     // Check missed achievments

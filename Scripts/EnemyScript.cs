@@ -42,7 +42,7 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
 
     public static void QueueSpherecast(Vector3 origin, Vector3 direction, float radius)
     {
-      _Commands[_Commands_Iter++] = new SpherecastCommand(origin, radius, direction, 100f, GameResources._Layermask_Ragdoll);
+      _Commands[_Commands_Iter++] = new SpherecastCommand(origin, radius, direction, new QueryParameters(GameResources._Layermask_Ragdoll), 100f);
     }
 
     public static void ScheduleAllSpherecasts()
@@ -75,7 +75,6 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
   void ScheduleSpherecasts()
   {
     if (_IsZombieReal) return;
-    if (_ragdoll._IsDead) throw new System.Exception("Ragdoll dead in ScehduleSpherecast");
 
     // Register to handler to index this._id
     SpherecastHandler.Register(this);
@@ -254,11 +253,19 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
     _ragdoll = new ActiveRagdoll(ragdollObj, transform);
 
     // Check crown
+    bool getCrownBonuses = false;
+    float crownRandom = 0f;
     if (GameScript.s_IsMissionsGameMode)
       if (LevelModule.ExtraCrownMode != 0)
         if (GameScript.s_CrownEnemy == _Id)
         {
           _ragdoll.AddCrown();
+
+          if (LevelModule.ExtraCrownMode == 1)
+          {
+            getCrownBonuses = true;
+            crownRandom = Random.value;
+          }
         }
 
     // Check enemy type
@@ -267,28 +274,72 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
       {
 
         case GameScript.ItemManager.Items.KNIFE:
+
+          if (getCrownBonuses)
+            if (crownRandom < 0.33f)
+              _itemLeft = GameScript.ItemManager.Items.AXE;
+            else if (crownRandom < 0.66f)
+              _itemLeft = GameScript.ItemManager.Items.FRYING_PAN;
+            else
+              _itemLeft = GameScript.ItemManager.Items.RAPIER;
+
           if (Random.value < 0.5f)
           {
+            _itemRight = _itemLeft;
             _itemLeft = GameScript.ItemManager.Items.NONE;
-            _itemRight = GameScript.ItemManager.Items.KNIFE;
           }
+
           _ragdoll.ChangeColor(Color.green);
           break;
 
         case GameScript.ItemManager.Items.PISTOL:
+
+          if (getCrownBonuses)
+            if (crownRandom < 0.33f)
+              _itemLeft = GameScript.ItemManager.Items.PISTOL_MACHINE;
+            else if (crownRandom < 0.66f)
+              _itemRight = GameScript.ItemManager.Items.FRYING_PAN;
+            else
+              _itemRight = GameScript.ItemManager.Items.PISTOL;
+
           _ragdoll.ChangeColor(Color.magenta);
           break;
 
         case GameScript.ItemManager.Items.PISTOL_SILENCED:
+
+          if (getCrownBonuses)
+          {
+            if (crownRandom < 0.5f)
+              _itemLeft = _itemRight = GameScript.ItemManager.Items.FRYING_PAN;
+            else
+              _itemLeft = GameScript.ItemManager.Items.CROSSBOW;
+
+          }
+          else
+            _itemRight = GameScript.ItemManager.Items.KNIFE;
+
           _ragdoll.ChangeColor(Color.magenta / 3f);
-          _itemRight = GameScript.ItemManager.Items.KNIFE;
           break;
 
         case GameScript.ItemManager.Items.REVOLVER:
+
+          if (getCrownBonuses)
+            if (crownRandom < 0.5f)
+              _itemLeft = _itemRight = GameScript.ItemManager.Items.DMR;
+            else
+            {
+              _itemLeft = GameScript.ItemManager.Items.AK47;
+              _itemRight = GameScript.ItemManager.Items.KNIFE;
+            }
+
           _ragdoll.ChangeColor((Color.red + Color.yellow) / 3f);
           break;
 
         case GameScript.ItemManager.Items.GRENADE_HOLD:
+
+          if (getCrownBonuses)
+            _itemRight = GameScript.ItemManager.Items.FRYING_PAN;
+
           _ragdoll.ChangeColor(Color.red + Color.yellow);
           break;
 
@@ -455,7 +506,7 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
               if (HasMachineGun())
                 _attackTime = Time.time + useItem.UseRate();
               else
-                _attackTime = Time.time + /*0.2f + Random.value */ (_ragdoll.HasSilencedWeapon() || _itemLeft == GameScript.ItemManager.Items.REVOLVER ? 0.25f : 0.55f);
+                _attackTime = Time.time + /*0.2f + Random.value */ (_ragdoll.HasSilencedWeapon() || HasSemiAutomatic() ? 0.25f : 0.55f);
             }
           }
 
@@ -779,12 +830,15 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
                     ChaseTarget();
 
                   // Check melee
-                  if (!_IsZombieReal || dis < 4f)
+                  bool hasFryingPan = _itemLeft == GameScript.ItemManager.Items.FRYING_PAN || _itemRight == GameScript.ItemManager.Items.FRYING_PAN;
+                  if (hasFryingPan && (_ragdoll.HasGun() || _itemLeft == GameScript.ItemManager.Items.GRENADE_HOLD)) { }
+                  else if ((!_IsZombieReal && dis < (hasFryingPan ? 2f : 4f)) || (_IsZombieReal && dis < 4f))
                     DrawBackMelee();
 
                   // Try attacking
                   if (Time.time - _attackTime > 0f && _canAttack)
                   {
+
                     // If has a melee weapon and sees the target, run at them
                     if (!_ragdoll.HasGun() && _time_seen > 0.05f && _targetInLOS && _enemyType != EnemyType.ROBOT && !_IsZombie)
                       _moveSpeed = PlayerScript.RUNSPEED;
@@ -795,7 +849,10 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
                     // Only attack if is alive, the target is alive, and (the target is in front, or has a machine gun, or has a melee weapon)
                     if (!_ragdoll._IsDead && !_ragdollTarget._IsDead && (_targetDirectlyInFront || HasMachineGun() || !_ragdoll.HasGun()))
                     {
-                      var useitem = _leftweaponuse ? _ragdoll._ItemL : (_ragdoll._ItemR != null ? _ragdoll._ItemR : _ragdoll._ItemL);
+                      if (_itemLeft == GameScript.ItemManager.Items.GRENADE_HOLD)
+                        _leftweaponuse = true;
+
+                      var useitem = _leftweaponuse ? (_ragdoll._ItemL != null ? _ragdoll._ItemL : _ragdoll._ItemR) : (_ragdoll._ItemR != null ? _ragdoll._ItemR : _ragdoll._ItemL);
 
                       // Check for reload
                       if (_ragdoll.HasGun() && useitem.NeedsReload())
@@ -807,7 +864,7 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
                       // Attack if close enough or pointed at target
                       else if (
                         _ragdoll.HasGun() ||
-                        (!_ragdoll.HasGun() && dis < (_itemLeft == GameScript.ItemManager.Items.GRENADE_HOLD ? 1f : (_itemLeft == GameScript.ItemManager.Items.BAT ? 1.2f : (_IsZombieReal ? 0.85f : 1.8f))))
+                        (!_ragdoll.HasGun() && dis < (_itemLeft == GameScript.ItemManager.Items.GRENADE_HOLD ? 1f : (_itemLeft == GameScript.ItemManager.Items.BAT ? 1.2f : (_IsZombieReal ? 0.85f : (useitem._type == GameScript.ItemManager.Items.RAPIER ? 2.8f : 1.8f)))))
                         )
                       {
                         UseItem(dis < 1.4f);
@@ -815,7 +872,7 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
                           _attackTime = Time.time + useitem.UseRate();
                         else
                         {
-                          _attackTime = Time.time + /*0.2f + Random.value */ (_ragdoll.HasSilencedWeapon() || _itemLeft == GameScript.ItemManager.Items.REVOLVER ? 0.25f : 0.55f);
+                          _attackTime = Time.time + /*0.2f + Random.value */ (_ragdoll.HasSilencedWeapon() || HasSemiAutomatic() ? 0.25f : 0.55f);
                         }
                       }
                     }
@@ -966,6 +1023,8 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
 
     //
     _leftweaponuse = !_leftweaponuse;
+    if (_itemLeft == GameScript.ItemManager.Items.GRENADE_HOLD)
+      _leftweaponuse = true;
 
     if (_ragdoll._ItemL == null && _ragdoll._ItemR == null) { return; }
 
@@ -2503,6 +2562,14 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
   bool HasMachineGun()
   {
     return _ragdoll.HasAutomatic();
+  }
+  bool HasSemiAutomatic()
+  {
+    return _ragdoll.HasSemiAutomatic();
+  }
+  bool HasChargeGun()
+  {
+    return _ragdoll.HasGun() && _ragdoll.HasUseOnReleaseWeapon();
   }
 
   public static EnemyScript SpawnEnemyAt(SurvivalAttributes survivalAttributes, Vector2 spawnAtPos, bool grappled = false, bool isZombieRealOverride = false)

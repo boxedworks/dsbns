@@ -5647,8 +5647,8 @@ AddExtraSelection(
 
     }
     .AddComponent($"<color={_COLOR_GRAY}>overall stats</color>\n\n");
-    var iter = 0;
-    /*foreach (var stat in Stats.OverallStats._Stats)
+    /*var iter = 0;
+    foreach (var stat in Stats.OverallStats._Stats)
     {
       if (iter == 3)
         mStats.AddComponent("\n=classic_mode\n\n");
@@ -7343,6 +7343,10 @@ system will provide and configure all loadouts.~9
     .AddComponent("exit level\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
       .AddEvent((MenuComponent component) =>
       {
+
+        // Check crown mode
+        if (GameScript.s_IsMissionsGameMode)
+          GameScript.s_CrownPlayer = GameScript.s_CrownEnemy = -1;
 
         // Check for custom level pack
         if (Levels._LevelPack_Playing)

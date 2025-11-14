@@ -982,7 +982,6 @@ public class UtilityScript : ItemScript
 
                 var distance = rag.GetDistanceTo(transform.position);
                 if (distance > 0.4f) return;
-                Debug.Log(distance);
 
                 // Check grappler
                 Transform stickToTransform = c.transform;
