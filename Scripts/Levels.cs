@@ -413,7 +413,7 @@ public class Levels : MonoBehaviour
     _LevelPack_SelectingLevelsFromPack,
     _LevelPack_TestingForUpload;
   public static string _UploadingFile;
-  public static GameScript.ItemManager.Loadout _HardcodedLoadout;
+  public static Loadout _HardcodedLoadout;
 
   // Init level pack folder structure
   public static void LevelPacks_InitFolders()
@@ -521,15 +521,15 @@ public class Levels : MonoBehaviour
   public static void GetHardcodedLoadout(string loadout_info)
   {
     // Load level loadout equipment
-    var equipment = new GameScript.PlayerProfile.Equipment();
+    var equipment = new PlayerProfile.Equipment();
     var level_load = loadout_info;
 
     void UpdateLoadoutUI()
     {
       _HardcodedLoadout._Equipment = equipment;
 
-      if (GameScript.PlayerProfile.s_Profiles != null)
-        foreach (var profile in GameScript.PlayerProfile.s_Profiles)
+      if (PlayerProfile.s_Profiles != null)
+        foreach (var profile in PlayerProfile.s_Profiles)
           profile.UpdateIcons();
     }
 
@@ -559,10 +559,10 @@ public class Levels : MonoBehaviour
     try
     {
 
-      equipment._ItemLeft0 = (GameScript.ItemManager.Items)System.Enum.Parse(typeof(GameScript.ItemManager.Items), left_item0);
-      equipment._ItemRight0 = (GameScript.ItemManager.Items)System.Enum.Parse(typeof(GameScript.ItemManager.Items), right_item0);
-      equipment._ItemLeft1 = (GameScript.ItemManager.Items)System.Enum.Parse(typeof(GameScript.ItemManager.Items), left_item1);
-      equipment._ItemRight1 = (GameScript.ItemManager.Items)System.Enum.Parse(typeof(GameScript.ItemManager.Items), right_item1);
+      equipment._ItemLeft0 = (ItemManager.Items)System.Enum.Parse(typeof(ItemManager.Items), left_item0);
+      equipment._ItemRight0 = (ItemManager.Items)System.Enum.Parse(typeof(ItemManager.Items), right_item0);
+      equipment._ItemLeft1 = (ItemManager.Items)System.Enum.Parse(typeof(ItemManager.Items), left_item1);
+      equipment._ItemRight1 = (ItemManager.Items)System.Enum.Parse(typeof(ItemManager.Items), right_item1);
 
       var utilities_left = new List<UtilityScript.UtilityType>();
       if (left_util.Trim().Length > 0)

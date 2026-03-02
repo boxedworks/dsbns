@@ -345,8 +345,7 @@ public class Menu
             s_TextBuffer += $"{displayText}\n";
             iter++;
           }
-          if (_menu._selectionIndex > -1)
-            _menu._selectedComponent._onFocus?.Invoke(_menu._selectedComponent);
+          _menu._selectedComponent._onFocus?.Invoke(_menu._selectedComponent);
 
           if (s_TextBuffer.Contains("..") || s_Text.text.Contains(".."))
           {
@@ -512,7 +511,15 @@ public class Menu
       // Check for null
       if (_menuComponentsSelectable == null || _menuComponentsSelectable.Count == 0) return null;
       // Check range
-      if (_selectionIndex >= _menuComponentsSelectable.Count) _selectionIndex = _menuComponentsSelectable.Count - 1;
+      if (_selectionIndex >= _menuComponentsSelectable.Count)
+        _selectionIndex = _menuComponentsSelectable.Count - 1;
+      else if (_selectionIndex < 0)
+      {
+        if (_hasDropdown)
+          _selectionIndex = _menuComponentsSelectable.Count - _dropdownCount;
+        else
+          _selectionIndex = 0;
+      }
       return _menuComponentsSelectable[_selectionIndex];
     }
   }
@@ -1734,10 +1741,10 @@ public class Menu
 
         // Set up loadout editing
         if (Levels._HardcodedLoadout == null)
-          Levels._HardcodedLoadout = new GameScript.ItemManager.Loadout()
+          Levels._HardcodedLoadout = new Loadout()
           {
             _Id = -1,
-            _Equipment = new GameScript.PlayerProfile.Equipment()
+            _Equipment = new PlayerProfile.Equipment()
           };
 
         s_CurrentMenu._selectedComponent?._onFocus?.Invoke(s_CurrentMenu._selectedComponent);
@@ -2388,10 +2395,10 @@ public class Menu
 
         // Set up loadout editing
         if (Levels._HardcodedLoadout == null)
-          Levels._HardcodedLoadout = new GameScript.ItemManager.Loadout()
+          Levels._HardcodedLoadout = new Loadout()
           {
             _Id = -1,
-            _Equipment = new GameScript.PlayerProfile.Equipment()
+            _Equipment = new PlayerProfile.Equipment()
           };
         Levels._EditingLoadout = true;
       };
@@ -3032,7 +3039,7 @@ public class Menu
       .AddComponent("max equipment points: 3\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
         .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
         {
-          var points = GameScript.ItemManager.Loadout._POINTS_MAX;
+          var points = Loadout._POINTS_MAX;
           if (component._focused)
             component.SetDisplayText($"</color><color={_COLOR_GRAY}>max equipment points: {points}</color> <-- the higher the number the more things you can equip<color=white>\n\n");
           else
@@ -3094,14 +3101,14 @@ public class Menu
         if (name.StartsWith("ITEM_"))
         {
           name = string.Format("{0,-20}{1,6}", name[5..], "[item]");
-          equip_cost = GameScript.ItemManager.GetItemValue((GameScript.ItemManager.Items)System.Enum.Parse(typeof(GameScript.ItemManager.Items), unlock_s[5..], true));
+          equip_cost = ItemManager.GetItemValue((ItemManager.Items)System.Enum.Parse(typeof(ItemManager.Items), unlock_s[5..], true));
         }
         else if (name.StartsWith("UTILITY_"))
         {
           itemType = 1;
 
           name = string.Format("{0,-17}{1,9}", name[8..], "[utility]");
-          equip_cost = GameScript.ItemManager.GetUtilityValue((UtilityScript.UtilityType)System.Enum.Parse(typeof(UtilityScript.UtilityType), unlock_s[8..], true));
+          equip_cost = ItemManager.GetUtilityValue((UtilityScript.UtilityType)System.Enum.Parse(typeof(UtilityScript.UtilityType), unlock_s[8..], true));
         }
         else if (name.StartsWith("MOD_"))
         {
@@ -3109,7 +3116,7 @@ public class Menu
 
           name = string.Format("{0,-21}{1,5}", name[4..], "[mod]");
           var perk = (Shop.Perk.PerkType)System.Enum.Parse(typeof(Shop.Perk.PerkType), unlock_s[4..], true);
-          equip_cost = GameScript.ItemManager.GetPerkValue(perk);
+          equip_cost = ItemManager.GetPerkValue(perk);
           shop_details = System.Tuple.Create(Shop.Perk._PERK_DESCRIPTIONS[perk], shop_details.Item2);
         }
         else if (name.StartsWith("MAX_EQUIPMENT_POINTS_"))
@@ -3188,7 +3195,7 @@ public class Menu
         OnPrintItem(itemType);
 
         var set_text = true;
-        var max_equip = GameScript.ItemManager.Loadout._POINTS_MAX;
+        var max_equip = Loadout._POINTS_MAX;
         if (display_mode == Shop.DisplayModes.ALL && Shop.Unlocked(unlock))
         {
           var ct = string.Format(format_shop2, name, shop_details.Item1, cost, equip_cost_string, "yellow", "yellow", "yellow");
@@ -3273,7 +3280,7 @@ public class Menu
               }
               var unlock0 = (Shop.Unlocks)System.Enum.Parse(typeof(Shop.Unlocks), unlockText, true);
               var shop_info = Shop._Unlocks_Descriptions[unlock0];
-              //var equip_cost = GameScript.ItemManager.GetItemValue(unlock0);
+              //var equip_cost = ItemManager.GetItemValue(unlock0);
               if (shop_info.Item2 <= Shop._AvailablePoints && !Shop.Unlocked(unlock0))
               {
                 // Unlock item
@@ -3643,7 +3650,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
     {
       s_SaveMenuDir = s_SaveLevelSelected = -1;
 
-      GameScript.SurvivalMode.OnLeaveMode();
+      SurvivalManager.OnLeaveMode();
 
       GameScript.s_GameMode = GameScript.GameModes.MISSIONS;
       Settings.OnGamemodeChanged(Settings.GamemodeChange.CLASSIC);
@@ -4418,28 +4425,28 @@ AddExtraSelection(
       .AddComponent($"<color={_COLOR_GRAY}>==  " + string.Format(loadout_select_format, "", "========", "==========") + "</color>\n\n");
 
       // Determine number of loadouts
-      var num_loadouts = GameScript.ItemManager.Loadout._Loadouts.Length;
+      var num_loadouts = Loadout._Loadouts.Length;
       for (; num_loadouts > 0; num_loadouts--)
       {
-        var loadout = GameScript.ItemManager.Loadout._Loadouts[num_loadouts - 1];
+        var loadout = Loadout._Loadouts[num_loadouts - 1];
         if (!loadout._Equipment.IsEmpty()) break;
       }
       // Correct playerprofiles
       if (num_loadouts == 0) num_loadouts = 1;
-      else if (num_loadouts < GameScript.ItemManager.Loadout._Loadouts.Length) num_loadouts++;
-      foreach (var profile in GameScript.PlayerProfile.s_Profiles)
+      else if (num_loadouts < Loadout._Loadouts.Length) num_loadouts++;
+      foreach (var profile in PlayerProfile.s_Profiles)
         profile.ChangeLoadoutIfEmpty(num_loadouts - 1);
       // Spawn selections
       for (var i = 0; i < Mathf.Clamp(num_loadouts, 1, num_loadouts); i++)
       {
-        var loadout = GameScript.ItemManager.Loadout._Loadouts[i];
+        var loadout = Loadout._Loadouts[i];
 
         // Gather equipment pairs
-        bool isValidItemType(GameScript.ItemManager.Items itemType)
+        bool isValidItemType(ItemManager.Items itemType)
         {
           return
-            itemType != GameScript.ItemManager.Items.NONE &&
-            itemType != GameScript.ItemManager.Items.FIST;
+            itemType != ItemManager.Items.NONE &&
+            itemType != ItemManager.Items.FIST;
         }
 
         var equipment = "";
@@ -4517,10 +4524,10 @@ AddExtraSelection(
         if (equipment.Trim().Length == 0) equipment = "-";
         if (equipment1.Trim().Length == 0) equipment1 = "-";
         var color = "white";
-        if (GameScript.PlayerProfile.s_Profiles != null)
+        if (PlayerProfile.s_Profiles != null)
           for (var u = 0; u < Settings._NumberPlayers; u++)
-            if (u < GameScript.PlayerProfile.s_Profiles.Length &&
-            GameScript.PlayerProfile.s_Profiles[u]._LoadoutIndex == i)
+            if (u < PlayerProfile.s_Profiles.Length &&
+            PlayerProfile.s_Profiles[u]._LoadoutIndex == i)
             {
               color = "yellow";
               break;
@@ -4586,7 +4593,7 @@ AddExtraSelection(
         // Edit loadout when selected
         .AddEvent((MenuComponent component) =>
         {
-          GameScript.ItemManager.Loadout._CurrentLoadoutIndex = component._buttonIndex;
+          Loadout._CurrentLoadoutIndex = component._buttonIndex;
           CommonEvents._SwitchMenu(MenuType.EDIT_LOADOUT);
         });
       }
@@ -4596,7 +4603,7 @@ AddExtraSelection(
       {
 
         // Check for empty loadout for tutorial
-        foreach (var loadout in GameScript.ItemManager.Loadout._Loadouts)
+        foreach (var loadout in Loadout._Loadouts)
           if (!loadout._Equipment.IsEmpty())
           {
             Shop.Unlock(Shop.Unlocks.TUTORIAL_PART1);
@@ -4619,14 +4626,14 @@ AddExtraSelection(
       {
         SpawnMenu_SelectLoadout();
         var allEmpty = true;
-        foreach (var loadout in GameScript.ItemManager.Loadout._Loadouts)
+        foreach (var loadout in Loadout._Loadouts)
           if (!loadout._Equipment.IsEmpty())
           {
             allEmpty = false;
             break;
           }
         if (!allEmpty)
-          foreach (var profile in GameScript.PlayerProfile.s_Profiles)
+          foreach (var profile in PlayerProfile.s_Profiles)
             if (profile._Equipment.IsEmpty())
               profile._LoadoutIndex++;
 
@@ -4635,7 +4642,7 @@ AddExtraSelection(
         {
 
           Menu.SetCurrentSelection(0);
-          Menu.SetCurrentSelection(GameScript.PlayerProfile.s_Profiles[0]._LoadoutIndex);
+          Menu.SetCurrentSelection(PlayerProfile.s_Profiles[0]._LoadoutIndex);
           Menu._CanRender = true;
           Menu.RenderMenu();
         }
@@ -4649,7 +4656,7 @@ AddExtraSelection(
     var loadoutEquip_format = "{0,-25} <color=yellow>{1,-50}</color> {2,-15}";
     var loadout_format2 = "{0,-25} {1,-20}";
     var format_editLoadout = "cannot equip {0}\n\n- you do not have enough <color=yellow>equip_points</color> to equip this\n\n- try unequipping something or buying more MAX_EQUIP_POINTS from the SHOP\n";
-    GameScript.ItemManager.Loadout CurrentLoadout() { return GameScript.ItemManager.Loadout._CurrentLoadout; }
+    Loadout CurrentLoadout() { return Loadout._CurrentLoadout; }
     void SpawnMenu_LoadoutEditor()
     {
       var list_items = Shop.GetItemList();
@@ -4734,17 +4741,17 @@ AddExtraSelection(
           .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
           {
             var item = CurrentLoadout()._Equipment._ItemLeft0;
-            if (item == GameScript.ItemManager.Items.FIST) item = GameScript.ItemManager.Items.NONE;
+            if (item == ItemManager.Items.FIST) item = ItemManager.Items.NONE;
 
             var item_name = item.ToString();
-            var item_cost = GameScript.ItemManager.GetItemValue(item);
-            if (item == GameScript.ItemManager.Items.NONE)
+            var item_cost = ItemManager.GetItemValue(item);
+            if (item == ItemManager.Items.NONE)
               component.SetDisplayText(string.Format(loadout_format, "left hand", $"-", $"-") + "\n");
             else
               component.SetDisplayText(string.Format(loadoutEquip_format, "left hand", $"{item_name}", $"{item_cost}") + "\n", true);
 
             // Check for two handed
-            component._obscured = CurrentLoadout()._Equipment._ItemRight0 == GameScript.ItemManager.Items.KATANA;
+            component._obscured = CurrentLoadout()._Equipment._ItemRight0 == ItemManager.Items.KATANA;
 
             // Set dropdown data
             var selections = new List<string>();
@@ -4755,7 +4762,7 @@ AddExtraSelection(
             foreach (var item0 in list_items)
             {
               var desc = "-";
-              if (item0 != GameScript.ItemManager.Items.NONE)
+              if (item0 != ItemManager.Items.NONE)
               {
                 var unlock = (Shop.Unlocks)System.Enum.Parse(typeof(Shop.Unlocks), $"ITEM_{item0}", true);
                 desc = Shop._Unlocks_Descriptions[unlock].Item1;
@@ -4763,22 +4770,22 @@ AddExtraSelection(
                 // Check filter
                 if (Shop._LoadoutDisplayMode == 0 && !Shop.Unlocked(unlock)) continue;
               }
-              var it_val = GameScript.ItemManager.GetItemValue(item0);
+              var it_val = ItemManager.GetItemValue(item0);
               var use_color = it_val > CurrentLoadout()._available_points + item_cost ? "red" : "white";
               var use_color2 = use_color == "white" ? "white" : _COLOR_GRAY;
-              if (item0 == item && item != GameScript.ItemManager.Items.NONE) use_color = use_color2 = "yellow";
+              if (item0 == item && item != ItemManager.Items.NONE) use_color = use_color2 = "yellow";
               selections.Add(string.Format($"</color><color={use_color2}>{loadout_format}<color=white>", item0, desc, $"</color><color={use_color}>{it_val}</color>"));
               actions.Add((MenuComponent component0) =>
               {
-                var item_selected = (GameScript.ItemManager.Items)System.Enum.Parse(typeof(GameScript.ItemManager.Items), component0.GetDisplayText(false).Trim().Split(' ')[2].Split('>')[2]);
+                var item_selected = (ItemManager.Items)System.Enum.Parse(typeof(ItemManager.Items), component0.GetDisplayText(false).Trim().Split(' ')[2].Split('>')[2]);
                 var item_other = CurrentLoadout()._Equipment._ItemRight0;
                 // Check for two handed
-                if (((item_selected == GameScript.ItemManager.Items.BAT || item_selected == GameScript.ItemManager.Items.KATANA) &&
-                  (item_other != GameScript.ItemManager.Items.NONE)) ||
-                  ((item_other == GameScript.ItemManager.Items.BAT || item_other == GameScript.ItemManager.Items.KATANA) &&
-                  (item_selected != GameScript.ItemManager.Items.NONE))
+                if (((item_selected == ItemManager.Items.BAT || item_selected == ItemManager.Items.KATANA) &&
+                  (item_other != ItemManager.Items.NONE)) ||
+                  ((item_other == ItemManager.Items.BAT || item_other == ItemManager.Items.KATANA) &&
+                  (item_selected != ItemManager.Items.NONE))
                   )
-                  CurrentLoadout()._Equipment._ItemRight0 = GameScript.ItemManager.Items.NONE;
+                  CurrentLoadout()._Equipment._ItemRight0 = ItemManager.Items.NONE;
                 if (CurrentLoadout().CanEquipItem(ActiveRagdoll.Side.LEFT, 0, item_selected))
                 {
                   CurrentLoadout()._Equipment._ItemLeft0 = item_selected;
@@ -4810,11 +4817,11 @@ AddExtraSelection(
                 }
 
                 // Update UI
-                foreach (var profile in GameScript.PlayerProfile.s_Profiles)
+                foreach (var profile in PlayerProfile.s_Profiles)
                   profile.UpdateIcons();
               });
               // Check if item is unlocked
-              if (item0 == GameScript.ItemManager.Items.NONE)
+              if (item0 == ItemManager.Items.NONE)
                 actions_onCreated.Add((MenuComponent component0) => { });
               else
               {
@@ -4832,17 +4839,17 @@ AddExtraSelection(
           .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
           {
             var item = CurrentLoadout()._Equipment._ItemRight0;
-            if (item == GameScript.ItemManager.Items.FIST) item = GameScript.ItemManager.Items.NONE;
+            if (item == ItemManager.Items.FIST) item = ItemManager.Items.NONE;
 
             var item_name = item.ToString();
-            var item_cost = GameScript.ItemManager.GetItemValue(item);
-            if (item == GameScript.ItemManager.Items.NONE)
+            var item_cost = ItemManager.GetItemValue(item);
+            if (item == ItemManager.Items.NONE)
               component.SetDisplayText(string.Format(loadout_format, "right hand", $"-", $"-") + "\n\n");
             else
               component.SetDisplayText(string.Format(loadoutEquip_format, "right hand", $"{item_name}", $"{item_cost}") + "\n\n", true);
 
             // Check for two handed
-            component._obscured = CurrentLoadout()._Equipment._ItemLeft0 == GameScript.ItemManager.Items.KATANA;
+            component._obscured = CurrentLoadout()._Equipment._ItemLeft0 == ItemManager.Items.KATANA;
 
             // Set dropdown data
             var selections = new List<string>();
@@ -4860,7 +4867,7 @@ AddExtraSelection(
             foreach (var item0 in list_items)
             {
               var desc = "-";
-              if (item0 != GameScript.ItemManager.Items.NONE)
+              if (item0 != ItemManager.Items.NONE)
               {
                 var unlock = (Shop.Unlocks)System.Enum.Parse(typeof(Shop.Unlocks), $"ITEM_{item0}", true);
                 desc = Shop._Unlocks_Descriptions[unlock].Item1;
@@ -4868,22 +4875,22 @@ AddExtraSelection(
                 // Check filter
                 if (Shop._LoadoutDisplayMode == 0 && !Shop.Unlocked(unlock)) continue;
               }
-              var it_val = GameScript.ItemManager.GetItemValue(item0);
+              var it_val = ItemManager.GetItemValue(item0);
               var use_color = it_val > CurrentLoadout()._available_points + item_cost ? "red" : "white";
               var use_color2 = use_color == "white" ? "white" : _COLOR_GRAY;
-              if (item0 == item && item != GameScript.ItemManager.Items.NONE) use_color = use_color2 = "yellow";
+              if (item0 == item && item != ItemManager.Items.NONE) use_color = use_color2 = "yellow";
               selections.Add(string.Format($"</color><color={use_color2}>{loadout_format}<color=white>", item0, desc, $"</color><color={use_color}>{it_val}</color>"));
               actions.Add((MenuComponent component0) =>
               {
-                var item_selected = (GameScript.ItemManager.Items)System.Enum.Parse(typeof(GameScript.ItemManager.Items), component0.GetDisplayText(false).Trim().Split(' ')[2].Split('>')[2]);
+                var item_selected = (ItemManager.Items)System.Enum.Parse(typeof(ItemManager.Items), component0.GetDisplayText(false).Trim().Split(' ')[2].Split('>')[2]);
                 var item_other = CurrentLoadout()._Equipment._ItemLeft0;
                 // Check for two handed
-                if (((item_selected == GameScript.ItemManager.Items.BAT || item_selected == GameScript.ItemManager.Items.KATANA) &&
-                  (item_other != GameScript.ItemManager.Items.NONE)) ||
-                  ((item_other == GameScript.ItemManager.Items.BAT || item_other == GameScript.ItemManager.Items.KATANA) &&
-                  (item_selected != GameScript.ItemManager.Items.NONE))
+                if (((item_selected == ItemManager.Items.BAT || item_selected == ItemManager.Items.KATANA) &&
+                  (item_other != ItemManager.Items.NONE)) ||
+                  ((item_other == ItemManager.Items.BAT || item_other == ItemManager.Items.KATANA) &&
+                  (item_selected != ItemManager.Items.NONE))
                   )
-                  CurrentLoadout()._Equipment._ItemLeft0 = GameScript.ItemManager.Items.NONE;
+                  CurrentLoadout()._Equipment._ItemLeft0 = ItemManager.Items.NONE;
                 if (CurrentLoadout().CanEquipItem(ActiveRagdoll.Side.RIGHT, 0, item_selected))
                 {
                   CurrentLoadout()._Equipment._ItemRight0 = item_selected;
@@ -4914,11 +4921,11 @@ AddExtraSelection(
                   });
                 }
                 // Update UI
-                foreach (var profile in GameScript.PlayerProfile.s_Profiles)
+                foreach (var profile in PlayerProfile.s_Profiles)
                   profile.UpdateIcons();
               });
               // Check if item is unlocked
-              if (item0 == GameScript.ItemManager.Items.NONE)
+              if (item0 == ItemManager.Items.NONE)
                 actions_onCreated.Add((MenuComponent component0) => { });
               else
               {
@@ -4940,17 +4947,17 @@ AddExtraSelection(
             .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
             {
               var item = CurrentLoadout()._Equipment._ItemLeft1;
-              if (item == GameScript.ItemManager.Items.FIST) item = GameScript.ItemManager.Items.NONE;
+              if (item == ItemManager.Items.FIST) item = ItemManager.Items.NONE;
 
               var item_name = item.ToString();
-              var item_cost = GameScript.ItemManager.GetItemValue(item);
-              if (item == GameScript.ItemManager.Items.NONE)
+              var item_cost = ItemManager.GetItemValue(item);
+              if (item == ItemManager.Items.NONE)
                 component.SetDisplayText(string.Format(loadout_format, "left hand", $"-", $"-") + "\n");
               else
                 component.SetDisplayText(string.Format(loadoutEquip_format, "left hand", $"{item_name}", $"{item_cost}") + "\n", true);
 
               // Check for two handed
-              component._obscured = CurrentLoadout()._Equipment._ItemRight1 == GameScript.ItemManager.Items.KATANA;
+              component._obscured = CurrentLoadout()._Equipment._ItemRight1 == ItemManager.Items.KATANA;
 
               // Set dropdown data
               var selections = new List<string>();
@@ -4961,7 +4968,7 @@ AddExtraSelection(
               foreach (var item0 in list_items)
               {
                 var desc = "-";
-                if (item0 != GameScript.ItemManager.Items.NONE)
+                if (item0 != ItemManager.Items.NONE)
                 {
                   var unlock = (Shop.Unlocks)System.Enum.Parse(typeof(Shop.Unlocks), $"ITEM_{item0}", true);
                   desc = Shop._Unlocks_Descriptions[unlock].Item1;
@@ -4969,22 +4976,22 @@ AddExtraSelection(
                   // Check filter
                   if (Shop._LoadoutDisplayMode == 0 && !Shop.Unlocked(unlock)) continue;
                 }
-                var it_val = GameScript.ItemManager.GetItemValue(item0);
+                var it_val = ItemManager.GetItemValue(item0);
                 var use_color = it_val > CurrentLoadout()._available_points + item_cost ? "red" : "white";
                 var use_color2 = use_color == "white" ? "white" : _COLOR_GRAY;
-                if (item0 == item && item != GameScript.ItemManager.Items.NONE) use_color = use_color2 = "yellow";
+                if (item0 == item && item != ItemManager.Items.NONE) use_color = use_color2 = "yellow";
                 selections.Add(string.Format($"</color><color={use_color2}>{loadout_format}<color=white>", item0, desc, $"</color><color={use_color}>{it_val}</color>"));
                 actions.Add((MenuComponent component0) =>
                 {
-                  var item_selected = (GameScript.ItemManager.Items)System.Enum.Parse(typeof(GameScript.ItemManager.Items), component0.GetDisplayText(false).Trim().Split(' ')[2].Split('>')[2]);
+                  var item_selected = (ItemManager.Items)System.Enum.Parse(typeof(ItemManager.Items), component0.GetDisplayText(false).Trim().Split(' ')[2].Split('>')[2]);
                   var item_other = CurrentLoadout()._Equipment._ItemRight1;
                   // Check for two handed
-                  if (((item_selected == GameScript.ItemManager.Items.BAT || item_selected == GameScript.ItemManager.Items.KATANA) &&
-                    (item_other != GameScript.ItemManager.Items.NONE)) ||
-                    ((item_other == GameScript.ItemManager.Items.BAT || item_other == GameScript.ItemManager.Items.KATANA) &&
-                    (item_selected != GameScript.ItemManager.Items.NONE))
+                  if (((item_selected == ItemManager.Items.BAT || item_selected == ItemManager.Items.KATANA) &&
+                    (item_other != ItemManager.Items.NONE)) ||
+                    ((item_other == ItemManager.Items.BAT || item_other == ItemManager.Items.KATANA) &&
+                    (item_selected != ItemManager.Items.NONE))
                     )
-                    CurrentLoadout()._Equipment._ItemRight1 = GameScript.ItemManager.Items.NONE;
+                    CurrentLoadout()._Equipment._ItemRight1 = ItemManager.Items.NONE;
                   if (CurrentLoadout().CanEquipItem(ActiveRagdoll.Side.LEFT, 1, item_selected))
                   {
                     CurrentLoadout()._Equipment._ItemLeft1 = item_selected;
@@ -5015,11 +5022,11 @@ AddExtraSelection(
                     });
                   }
                   // Update UI
-                  foreach (var profile in GameScript.PlayerProfile.s_Profiles)
+                  foreach (var profile in PlayerProfile.s_Profiles)
                     profile.UpdateIcons();
                 });
                 // Check if item is unlocked
-                if (item0 == GameScript.ItemManager.Items.NONE)
+                if (item0 == ItemManager.Items.NONE)
                   actions_onCreated.Add((MenuComponent component0) => { });
                 else
                 {
@@ -5037,17 +5044,17 @@ AddExtraSelection(
             .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
             {
               var item = CurrentLoadout()._Equipment._ItemRight1;
-              if (item == GameScript.ItemManager.Items.FIST) item = GameScript.ItemManager.Items.NONE;
+              if (item == ItemManager.Items.FIST) item = ItemManager.Items.NONE;
 
               var item_name = item.ToString();
-              var item_cost = GameScript.ItemManager.GetItemValue(item);
-              if (item == GameScript.ItemManager.Items.NONE)
+              var item_cost = ItemManager.GetItemValue(item);
+              if (item == ItemManager.Items.NONE)
                 component.SetDisplayText(string.Format(loadout_format, "right hand", $"-", $"-") + "\n\n");
               else
                 component.SetDisplayText(string.Format(loadoutEquip_format, "right hand", $"{item_name}", $"{item_cost}") + "\n\n", true);
 
               // Check for two handed
-              component._obscured = CurrentLoadout()._Equipment._ItemLeft1 == GameScript.ItemManager.Items.KATANA;
+              component._obscured = CurrentLoadout()._Equipment._ItemLeft1 == ItemManager.Items.KATANA;
 
               // Set dropdown data
               var selections = new List<string>();
@@ -5058,7 +5065,7 @@ AddExtraSelection(
               foreach (var item0 in list_items)
               {
                 var desc = "-";
-                if (item0 != GameScript.ItemManager.Items.NONE)
+                if (item0 != ItemManager.Items.NONE)
                 {
                   var unlock = (Shop.Unlocks)System.Enum.Parse(typeof(Shop.Unlocks), $"ITEM_{item0}", true);
                   desc = Shop._Unlocks_Descriptions[unlock].Item1;
@@ -5066,23 +5073,23 @@ AddExtraSelection(
                   // Check filter
                   if (Shop._LoadoutDisplayMode == 0 && !Shop.Unlocked(unlock)) continue;
                 }
-                var it_val = GameScript.ItemManager.GetItemValue(item0);
+                var it_val = ItemManager.GetItemValue(item0);
                 var use_color = it_val > CurrentLoadout()._available_points + item_cost ? "red" : "white";
                 var use_color2 = use_color == "white" ? "white" : _COLOR_GRAY;
-                if (item0 == item && item != GameScript.ItemManager.Items.NONE) use_color = use_color2 = "yellow";
+                if (item0 == item && item != ItemManager.Items.NONE) use_color = use_color2 = "yellow";
                 selections.Add(string.Format($"</color><color={use_color2}>{loadout_format}<color=white>", item0, desc, $"</color><color={use_color}>{it_val}</color>"));
                 actions.Add((MenuComponent component0) =>
                 {
-                  var item_selected = (GameScript.ItemManager.Items)System.Enum.Parse(typeof(GameScript.ItemManager.Items), component0.GetDisplayText(false).Trim().Split(' ')[2].Split('>')[2]);
+                  var item_selected = (ItemManager.Items)System.Enum.Parse(typeof(ItemManager.Items), component0.GetDisplayText(false).Trim().Split(' ')[2].Split('>')[2]);
                   var item_other = CurrentLoadout()._Equipment._ItemLeft1;
 
                   // Check for two handed
-                  if (((item_selected == GameScript.ItemManager.Items.BAT || item_selected == GameScript.ItemManager.Items.KATANA) &&
-                    (item_other != GameScript.ItemManager.Items.NONE)) ||
-                    ((item_other == GameScript.ItemManager.Items.BAT || item_other == GameScript.ItemManager.Items.KATANA) &&
-                    (item_selected != GameScript.ItemManager.Items.NONE))
+                  if (((item_selected == ItemManager.Items.BAT || item_selected == ItemManager.Items.KATANA) &&
+                    (item_other != ItemManager.Items.NONE)) ||
+                    ((item_other == ItemManager.Items.BAT || item_other == ItemManager.Items.KATANA) &&
+                    (item_selected != ItemManager.Items.NONE))
                     )
-                    CurrentLoadout()._Equipment._ItemLeft1 = GameScript.ItemManager.Items.NONE;
+                    CurrentLoadout()._Equipment._ItemLeft1 = ItemManager.Items.NONE;
 
                   if (CurrentLoadout().CanEquipItem(ActiveRagdoll.Side.RIGHT, 1, item_selected))
                   {
@@ -5118,12 +5125,12 @@ AddExtraSelection(
                   }
 
                   // Update UI
-                  foreach (var profile in GameScript.PlayerProfile.s_Profiles)
+                  foreach (var profile in PlayerProfile.s_Profiles)
                     profile.UpdateIcons();
                 });
 
                 // Check if item is unlocked
-                if (item0 == GameScript.ItemManager.Items.NONE)
+                if (item0 == ItemManager.Items.NONE)
                   actions_onCreated.Add((MenuComponent component0) => { });
                 else
                 {
@@ -5157,7 +5164,7 @@ AddExtraSelection(
 
               .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
       {
-        var points = GameScript.ItemManager.Loadout._POINTS_MAX;
+        var points = Loadout._POINTS_MAX;
         if (component._focused)
           component.SetDisplayText($"</color><color={_COLOR_GRAY}>max equipment points: {points}</color> <-- the higher the number the more things you can equip<color=white>\n\n");
         else
@@ -5180,7 +5187,7 @@ AddExtraSelection(
               var utility_amount = Shop.GetUtilityCount(utilities[0]) * utilities.Length;
               utility_name = utilities[0].ToString();
               var mod = 1f / Shop.GetUtilityCount(utilities[0]);
-              utility_cost = (int)(GameScript.ItemManager.GetUtilityValue(utilities[0]) * utility_amount * mod);
+              utility_cost = (int)(ItemManager.GetUtilityValue(utilities[0]) * utility_amount * mod);
               component.SetDisplayText(string.Format(loadoutEquip_format, "left utility", $"{utility_name} x{utility_amount}", $"{utility_cost}") + "\n", true);
             }
             // Set dropdown data
@@ -5200,7 +5207,7 @@ AddExtraSelection(
                 // Check filter
                 if (Shop._LoadoutDisplayMode == 0 && !Shop.Unlocked(unlock)) continue;
               }
-              var ut_val = GameScript.ItemManager.GetUtilityValue(utility0);
+              var ut_val = ItemManager.GetUtilityValue(utility0);
               var use_color = ut_val > CurrentLoadout()._available_points + utility_cost ? "red" : "white";
               var use_color2 = use_color == "white" ? "white" : _COLOR_GRAY;
               if (utility0.ToString() == utility_name && utility_name != UtilityScript.UtilityType.NONE.ToString()) use_color = use_color2 = "yellow";
@@ -5251,7 +5258,7 @@ AddExtraSelection(
                   });
                 }
                 // Update UI
-                foreach (var profile in GameScript.PlayerProfile.s_Profiles)
+                foreach (var profile in PlayerProfile.s_Profiles)
                   profile.UpdateIcons();
               });
               // Check if utility is unlocked
@@ -5282,7 +5289,7 @@ AddExtraSelection(
               var utility_amount = Shop.GetUtilityCount(utilities[0]) * utilities.Length;
               utility_name = utilities[0].ToString();
               var mod = 1f / Shop.GetUtilityCount(utilities[0]);
-              utility_cost = (int)(GameScript.ItemManager.GetUtilityValue(utilities[0]) * utility_amount * mod);
+              utility_cost = (int)(ItemManager.GetUtilityValue(utilities[0]) * utility_amount * mod);
               component.SetDisplayText(string.Format(loadoutEquip_format, "right utility", $"{utility_name} x{utility_amount}", $"{utility_cost}") + "\n\n", true);
             }
             // Set dropdown data
@@ -5303,7 +5310,7 @@ AddExtraSelection(
                 // Check filter
                 if (Shop._LoadoutDisplayMode == 0 && !Shop.Unlocked(unlock)) continue;
               }
-              var ut_val = GameScript.ItemManager.GetUtilityValue(utility0);
+              var ut_val = ItemManager.GetUtilityValue(utility0);
               var use_color = ut_val > CurrentLoadout()._available_points + utility_cost ? "red" : "white";
               var use_color2 = use_color == "white" ? "white" : _COLOR_GRAY;
               if (utility0.ToString() == utility_name && utility_name != UtilityScript.UtilityType.NONE.ToString()) use_color = use_color2 = "yellow";
@@ -5353,7 +5360,7 @@ AddExtraSelection(
                   });
                 }
                 // Update UI
-                foreach (var profile in GameScript.PlayerProfile.s_Profiles)
+                foreach (var profile in PlayerProfile.s_Profiles)
                   profile.UpdateIcons();
               });
               // Check if utility is unlocked
@@ -5407,7 +5414,7 @@ AddExtraSelection(
               for (var i = 0; i < 4; i++)
               {
                 var hasperk = i < perks.Count;
-                perkstring += (i == 0 ? "" : "    ") + string.Format(loadoutEquip_format, i == 0 ? "mods" : "", hasperk ? $"{perks[i]}" : "-", hasperk ? "" + GameScript.ItemManager.GetPerkValue(perks[i]) : "-") + "\n";
+                perkstring += (i == 0 ? "" : "    ") + string.Format(loadoutEquip_format, i == 0 ? "mods" : "", hasperk ? $"{perks[i]}" : "-", hasperk ? "" + ItemManager.GetPerkValue(perks[i]) : "-") + "\n";
               }
               perkstring += '\n';
               component.SetDisplayText(perkstring, true);
@@ -5438,20 +5445,20 @@ AddExtraSelection(
                 {
                   case Shop.Perk.PerkType.MARTIAL_ARTIST:
                     var equipment = CurrentLoadout()._Equipment;
-                    if (equipment._ItemLeft0 == GameScript.ItemManager.Items.FIST)
-                      equipment._ItemLeft0 = GameScript.ItemManager.Items.NONE;
-                    if (equipment._ItemLeft1 == GameScript.ItemManager.Items.FIST)
-                      equipment._ItemLeft1 = GameScript.ItemManager.Items.NONE;
-                    if (equipment._ItemRight0 == GameScript.ItemManager.Items.FIST)
-                      equipment._ItemRight0 = GameScript.ItemManager.Items.NONE;
-                    if (equipment._ItemRight1 == GameScript.ItemManager.Items.FIST)
-                      equipment._ItemRight1 = GameScript.ItemManager.Items.NONE;
+                    if (equipment._ItemLeft0 == ItemManager.Items.FIST)
+                      equipment._ItemLeft0 = ItemManager.Items.NONE;
+                    if (equipment._ItemLeft1 == ItemManager.Items.FIST)
+                      equipment._ItemLeft1 = ItemManager.Items.NONE;
+                    if (equipment._ItemRight0 == ItemManager.Items.FIST)
+                      equipment._ItemRight0 = ItemManager.Items.NONE;
+                    if (equipment._ItemRight1 == ItemManager.Items.FIST)
+                      equipment._ItemRight1 = ItemManager.Items.NONE;
                     break;
                 }
               }
 
               //
-              var per_val = GameScript.ItemManager.GetPerkValue(perk0);
+              var per_val = ItemManager.GetPerkValue(perk0);
               var use_color = per_val > CurrentLoadout()._available_points ? "red" : "white";
               var use_color2 = use_color == "white" ? "white" : _COLOR_GRAY;
               if (perks.Contains(perk0) && perk0 != Shop.Perk.PerkType.NONE) use_color = use_color2 = "yellow";
@@ -5459,7 +5466,7 @@ AddExtraSelection(
               actions.Add((MenuComponent component0) =>
               {
                 var perk_selected = (Shop.Perk.PerkType)System.Enum.Parse(typeof(Shop.Perk.PerkType), component0.GetDisplayText(false).Trim().Split(' ')[2].Split('>')[2]);
-                var perk_value = GameScript.ItemManager.GetPerkValue(perk_selected);
+                var perk_value = ItemManager.GetPerkValue(perk_selected);
                 perks = CurrentLoadout()._Equipment._Perks;
 
                 // Check for none selection
@@ -5529,7 +5536,7 @@ AddExtraSelection(
                 }
                 ;
                 // Update UI
-                foreach (var profile in GameScript.PlayerProfile.s_Profiles)
+                foreach (var profile in PlayerProfile.s_Profiles)
                   profile.UpdateIcons();
               });
               // Check if utility is unlocked
@@ -5617,11 +5624,11 @@ AddExtraSelection(
           });
       s_menus[MenuType.EDIT_LOADOUT]._onDropdownRemoved += () =>
       {
-        foreach (var loadout in GameScript.ItemManager.Loadout._Loadouts)
+        foreach (var loadout in Loadout._Loadouts)
           loadout.Save();
 
         // Check empty loadout
-        foreach (var profile in GameScript.PlayerProfile.s_Profiles)
+        foreach (var profile in PlayerProfile.s_Profiles)
           profile.ChangeLoadoutIfEmpty();
       };
 
@@ -5950,7 +5957,7 @@ AddExtraSelection(
           continue;
         }
         var stat = Stats._Stats[i];
-        mPause.AddComponent(string.Format(format_stats, GameScript.PlayerProfile.s_Profiles[i].GetColorName(), $"P{i + 1}/", $"{stat._kills}", $"{stat._deaths}", Settings._NumberPlayers > 1 ? $"{stat._teamkills}" : "", GameScript.s_IsZombieGameMode ? $"{stat._points}" : ""));
+        mPause.AddComponent(string.Format(format_stats, PlayerProfile.s_Profiles[i].GetColorName(), $"P{i + 1}/", $"{stat._kills}", $"{stat._deaths}", Settings._NumberPlayers > 1 ? $"{stat._teamkills}" : "", GameScript.s_IsZombieGameMode ? $"{stat._points}" : ""));
       }
       ;
       // Set the onback function to be resume
@@ -6934,7 +6941,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
           _CanRender = false;
           RenderMenu();
 
-          foreach (var playerprof in GameScript.PlayerProfile.s_Profiles)
+          foreach (var playerprof in PlayerProfile.s_Profiles)
             playerprof.UpdateLoadoutIndex();
         });
 
@@ -6945,7 +6952,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
           _CanRender = false;
           RenderMenu();
 
-          foreach (var playerprof in GameScript.PlayerProfile.s_Profiles)
+          foreach (var playerprof in PlayerProfile.s_Profiles)
             playerprof.UpdateLoadoutIndex();
         });
 
@@ -7059,12 +7066,12 @@ go to the <color=yellow>SHOP</color> to buy something~1
             Shop.Init();
             Settings.Init();
 
-            foreach (var loadout in GameScript.ItemManager.Loadout._Loadouts)
+            foreach (var loadout in Loadout._Loadouts)
             {
               loadout._two_weapon_pairs = false;
               loadout.Load();
             }
-            foreach (var profile in GameScript.PlayerProfile.s_Profiles)
+            foreach (var profile in PlayerProfile.s_Profiles)
             {
               profile._LoadoutIndex = 0;
               profile.UpdateIcons();
@@ -7100,47 +7107,47 @@ go to the <color=yellow>SHOP</color> to buy something~1
     };
 
     // Multiplayer manager
-    void SpawnMenu_MultiplayerManager()
-    {
-      var menu = new Menu(MenuType.MULTIPLAYER_MANAGER)
-      {
-      };
+    // void SpawnMenu_MultiplayerManager()
+    // {
+    //   var menu = new Menu(MenuType.MULTIPLAYER_MANAGER)
+    //   {
+    //   };
 
-      menu.AddComponent($"<color={_COLOR_GRAY}>multiplayer manager</color>\n\n");
+    //   menu.AddComponent($"<color={_COLOR_GRAY}>multiplayer manager</color>\n\n");
 
-      // Display connected players
-      var mm = GameScript.s_CustomNetworkManager;
-      if (!mm._Connected)
-      {
-        menu.AddComponent($"Not connected / hosting [h / j]\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE);
-      }
-      else
-      {
-        menu.AddComponent($"Player 1: YOU\n", MenuComponent.ComponentType.BUTTON_SIMPLE);
-        if (mm._Players.Count > 1)
-          menu.AddComponent($"Player 2: Connected\n", MenuComponent.ComponentType.BUTTON_SIMPLE);
-        else
-          menu.AddComponent($"Player 2: Not connected\n", MenuComponent.ComponentType.BUTTON_SIMPLE);
-        if (mm._Players.Count > 2)
-          menu.AddComponent($"Player 3: Connected\n", MenuComponent.ComponentType.BUTTON_SIMPLE);
-        else
-          menu.AddComponent($"Player 3: Not connected\n", MenuComponent.ComponentType.BUTTON_SIMPLE);
-        if (mm._Players.Count > 3)
-          menu.AddComponent($"Player 4: Connected\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE);
-        else
-          menu.AddComponent($"Player 4: Not connected\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE);
-      }
+    //   // Display connected players
+    //   var mm = GameScript.s_CustomNetworkManager;
+    //   if (!mm._Connected)
+    //   {
+    //     menu.AddComponent($"Not connected / hosting [h / j]\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE);
+    //   }
+    //   else
+    //   {
+    //     menu.AddComponent($"Player 1: YOU\n", MenuComponent.ComponentType.BUTTON_SIMPLE);
+    //     if (mm._Players.Count > 1)
+    //       menu.AddComponent($"Player 2: Connected\n", MenuComponent.ComponentType.BUTTON_SIMPLE);
+    //     else
+    //       menu.AddComponent($"Player 2: Not connected\n", MenuComponent.ComponentType.BUTTON_SIMPLE);
+    //     if (mm._Players.Count > 2)
+    //       menu.AddComponent($"Player 3: Connected\n", MenuComponent.ComponentType.BUTTON_SIMPLE);
+    //     else
+    //       menu.AddComponent($"Player 3: Not connected\n", MenuComponent.ComponentType.BUTTON_SIMPLE);
+    //     if (mm._Players.Count > 3)
+    //       menu.AddComponent($"Player 4: Connected\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE);
+    //     else
+    //       menu.AddComponent($"Player 4: Not connected\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE);
+    //   }
 
-      //
-      menu.AddBackButton(MenuType.OPTIONS);
+    //   //
+    //   menu.AddBackButton(MenuType.OPTIONS);
 
-      //
-      menu._onSwitchTo += () =>
-      {
-        SpawnMenu_MultiplayerManager();
-      };
-    }
-    SpawnMenu_MultiplayerManager();
+    //   //
+    //   menu._onSwitchTo += () =>
+    //   {
+    //     SpawnMenu_MultiplayerManager();
+    //   };
+    // }
+    // SpawnMenu_MultiplayerManager();
 
     // Credits
     var m_cred = new Menu(MenuType.CREDITS)
@@ -7451,8 +7458,8 @@ system will provide and configure all loadouts.~9
           Settings._ForceKeyboard = true;
           if (ControllerManager._NumberGamepads > 0)
           {
-            GameScript.PlayerProfile.s_Profiles[1]._directionalAxis = GameScript.PlayerProfile.s_Profiles[0]._directionalAxis;
-            GameScript.PlayerProfile.s_Profiles[0]._directionalAxis = new float[3];
+            PlayerProfile.s_Profiles[1]._directionalAxis = PlayerProfile.s_Profiles[0]._directionalAxis;
+            PlayerProfile.s_Profiles[0]._directionalAxis = new float[3];
           }
         });
         selections.Add("off - use this if you want to play with controllers, ignoring the keyboard [DEFAULT]");
@@ -7461,8 +7468,8 @@ system will provide and configure all loadouts.~9
           Settings._ForceKeyboard = false;
           if (ControllerManager._NumberGamepads > 0)
           {
-            GameScript.PlayerProfile.s_Profiles[0]._directionalAxis = GameScript.PlayerProfile.s_Profiles[1]._directionalAxis;
-            GameScript.PlayerProfile.s_Profiles[1]._directionalAxis = new float[3];
+            PlayerProfile.s_Profiles[0]._directionalAxis = PlayerProfile.s_Profiles[1]._directionalAxis;
+            PlayerProfile.s_Profiles[1]._directionalAxis = new float[3];
           }
         });
 
@@ -7539,11 +7546,11 @@ system will provide and configure all loadouts.~9
       .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
       {
         // Set display text
-        component.SetDisplayText(string.Format(format_options, "player:", GameScript.PlayerProfile.s_CurrentSettingsProfileID + 1 + ""));
+        component.SetDisplayText(string.Format(format_options, "player:", PlayerProfile.s_CurrentSettingsProfileID + 1 + ""));
         // Set dropdown data
         var selections = new List<string>();
         var actions = new List<System.Action<MenuComponent>>();
-        var selection_match = GameScript.PlayerProfile.s_CurrentSettingsProfileID + 1 + "";
+        var selection_match = PlayerProfile.s_CurrentSettingsProfileID + 1 + "";
         for (int i = 0; i < 4; i++)
         {
           // Add quality level
@@ -7551,7 +7558,7 @@ system will provide and configure all loadouts.~9
           // Add action to update quality
           actions.Add((MenuComponent component0) =>
     {
-      GameScript.PlayerProfile.s_CurrentSettingsProfileID = component0._dropdownIndex;
+      PlayerProfile.s_CurrentSettingsProfileID = component0._dropdownIndex;
     });
         }
         // Update dropdown data
@@ -7564,21 +7571,21 @@ system will provide and configure all loadouts.~9
         var colors = new string[] { "blue", "red", "yellow", "cyan", "white", "black", "orange" };
 
         // Set display text
-        component.SetDisplayText(string.Format(format_options, "color:", colors[GameScript.PlayerProfile.s_CurrentSettingsProfile._playerColor]));
+        component.SetDisplayText(string.Format(format_options, "color:", colors[PlayerProfile.s_CurrentSettingsProfile._playerColor]));
 
         // Set dropdown data
         var selections = new List<string>();
         var actions = new List<System.Action<MenuComponent>>();
-        var selection_match = colors[GameScript.PlayerProfile.s_CurrentSettingsProfile._playerColor];
-        for (var i = 0; i < GameScript.PlayerProfile._Colors.Length; i++)
+        var selection_match = colors[PlayerProfile.s_CurrentSettingsProfile._playerColor];
+        for (var i = 0; i < PlayerProfile._Colors.Length; i++)
         {
           selections.Add($"{colors[i]}");
 
           // Add action to update profile color
           actions.Add((MenuComponent component0) =>
           {
-            GameScript.PlayerProfile.s_CurrentSettingsProfile._playerColor = component0._dropdownIndex;
-            GameScript.PlayerProfile.s_CurrentSettingsProfile.CreateHealthUI(GameScript.PlayerProfile.s_CurrentSettingsProfile._Player == null ? 1 : GameScript.PlayerProfile.s_CurrentSettingsProfile._Player._Ragdoll._health);
+            PlayerProfile.s_CurrentSettingsProfile._playerColor = component0._dropdownIndex;
+            PlayerProfile.s_CurrentSettingsProfile.CreateHealthUI(PlayerProfile.s_CurrentSettingsProfile._Player == null ? 1 : PlayerProfile.s_CurrentSettingsProfile._Player._Ragdoll._health);
           });
         }
         // Update dropdown data
@@ -7589,7 +7596,7 @@ system will provide and configure all loadouts.~9
       .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
       {
         // Set display text
-        var selection = GameScript.PlayerProfile._CurrentSettingsProfile._holdRun ? "press" : "toggle";
+        var selection = PlayerProfile._CurrentSettingsProfile._holdRun ? "press" : "toggle";
         component.SetDisplayText(string.Format(formatter, "run:", selection));
         // Set dropdown data
         var selections = new List<string>();
@@ -7598,12 +7605,12 @@ system will provide and configure all loadouts.~9
         selections.Add("press - press the run button to run");
         actions.Add((MenuComponent component0) =>
         {
-          GameScript.PlayerProfile._CurrentSettingsProfile._holdRun = true;
+          PlayerProfile._CurrentSettingsProfile._holdRun = true;
         });
         selections.Add("toggle - press the run button to toggle running");
         actions.Add((MenuComponent component0) =>
         {
-          GameScript.PlayerProfile._CurrentSettingsProfile._holdRun = false;
+          PlayerProfile._CurrentSettingsProfile._holdRun = false;
         });
         // Update dropdown data
         component.SetDropdownData("run setting\n\n", selections, actions, selection_match);
@@ -7613,7 +7620,7 @@ system will provide and configure all loadouts.~9
       .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
       {
         // Set display text
-        var selection = GameScript.PlayerProfile.s_CurrentSettingsProfile._reloadSidesSameTime ? "both" : "one_at_a_time";
+        var selection = PlayerProfile.s_CurrentSettingsProfile._reloadSidesSameTime ? "both" : "one_at_a_time";
         component.SetDisplayText(string.Format(format_options, "reload setting:", selection));
         // Set dropdown data
         var selections = new List<string>();
@@ -7622,12 +7629,12 @@ system will provide and configure all loadouts.~9
         selections.Add("both          - press the reload button to reload weapons at the same time [DEFAULT]");
         actions.Add((MenuComponent component0) =>
         {
-          GameScript.PlayerProfile.s_CurrentSettingsProfile._reloadSidesSameTime = true;
+          PlayerProfile.s_CurrentSettingsProfile._reloadSidesSameTime = true;
         });
         selections.Add("one_at_a_time - press the reload button to reload weapons one at a time");
         actions.Add((MenuComponent component0) =>
         {
-          GameScript.PlayerProfile.s_CurrentSettingsProfile._reloadSidesSameTime = false;
+          PlayerProfile.s_CurrentSettingsProfile._reloadSidesSameTime = false;
         });
         // Update dropdown data
         component.SetDropdownData("reload setting\n\n", selections, actions, selection_match);
@@ -7637,7 +7644,7 @@ system will provide and configure all loadouts.~9
       .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
       {
         // Set display text
-        var selection = GameScript.PlayerProfile.s_CurrentSettingsProfile._faceMovement ? "on" : "off";
+        var selection = PlayerProfile.s_CurrentSettingsProfile._faceMovement ? "on" : "off";
         component.SetDisplayText(string.Format(format_options, "face walk direction:", selection) + '\n');
         // Set dropdown data
         var selections = new List<string>();
@@ -7646,12 +7653,12 @@ system will provide and configure all loadouts.~9
         selections.Add("on  - face the direction you are moving if not aiming [DEFAULT]");
         actions.Add((MenuComponent component0) =>
         {
-          GameScript.PlayerProfile.s_CurrentSettingsProfile._faceMovement = true;
+          PlayerProfile.s_CurrentSettingsProfile._faceMovement = true;
         });
         selections.Add("off - ignore the direction you are moving, only face your aim direction");
         actions.Add((MenuComponent component0) =>
         {
-          GameScript.PlayerProfile.s_CurrentSettingsProfile._faceMovement = false;
+          PlayerProfile.s_CurrentSettingsProfile._faceMovement = false;
         });
         // Update dropdown data
         component.SetDropdownData("walk direction setting\n\n", selections, actions, selection_match);

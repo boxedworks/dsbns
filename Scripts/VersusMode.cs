@@ -39,7 +39,7 @@ public static class VersusMode
   static bool s_gamePlaying;
   public static bool s_PlayersCanMove;
   static TMPro.TextMeshPro s_announcementText;
-  public static GameScript.ItemManager.Loadout s_PlayerLoadouts;
+  public static Loadout s_PlayerLoadouts;
   static int[] s_playerTeams;
 
   static int[] s_playerScores, s_playerScoresRound;
@@ -63,12 +63,12 @@ public static class VersusMode
   public static void Reset()
   {
     s_playerScores = new int[4];
-    s_PlayerLoadouts = new GameScript.ItemManager.Loadout
+    s_PlayerLoadouts = new Loadout
     {
-      _Equipment = new GameScript.PlayerProfile.Equipment()
+      _Equipment = new PlayerProfile.Equipment()
     };
 
-    foreach (var playerProfile in GameScript.PlayerProfile.s_Profiles)
+    foreach (var playerProfile in PlayerProfile.s_Profiles)
     {
       playerProfile.UpdateIcons();
       playerProfile.UpdateVersusScore();
@@ -229,14 +229,14 @@ public static class VersusMode
                     lastAlive = player;
 
                 // Check game types
-                var playerColor = GameScript.PlayerProfile.s_Profiles[lastAlive._Id].GetColorName(false);
+                var playerColor = PlayerProfile.s_Profiles[lastAlive._Id].GetColorName(false);
 
                 s_playerScores[lastAlive._Id]++;
                 s_playerScoresRound[lastAlive._Id]++;
 
                 OnScore();
 
-                foreach (var playerProfile in GameScript.PlayerProfile.s_Profiles)
+                foreach (var playerProfile in PlayerProfile.s_Profiles)
                   playerProfile.UpdateVersusUI();
 
                 if (IsCheckSame())
@@ -306,7 +306,7 @@ public static class VersusMode
                     OnScore();
                   }
                 }
-                foreach (var playerProfile in GameScript.PlayerProfile.s_Profiles)
+                foreach (var playerProfile in PlayerProfile.s_Profiles)
                   playerProfile.UpdateVersusUI();
 
                 if (IsCheckSame())
@@ -358,7 +358,7 @@ public static class VersusMode
 
                 OnScore();
               }
-              foreach (var playerProfile in GameScript.PlayerProfile.s_Profiles)
+              foreach (var playerProfile in PlayerProfile.s_Profiles)
                 playerProfile.UpdateVersusUI();
 
               if (IsCheckSame())
@@ -383,7 +383,7 @@ public static class VersusMode
                   {
                     var playerScore = s_playerScoresRound[i];
                     var playerScoreTotal = s_playerScores[i];
-                    var playerColor = GameScript.PlayerProfile.s_Profiles[i].GetColorName(false);
+                    var playerColor = PlayerProfile.s_Profiles[i].GetColorName(false);
                     var scorePreText = playerScore < 0 ? '-' : '+';
                     var scoreColor = playerScore < 0 ? "red" : (playerScore == 0 ? "white" : "green");
                     s_announcementText.text += $"\n<color={playerColor}>P{i + 1}</color>: {playerScoreTotal} (<color={scoreColor}>{scorePreText}{playerScore}</color>)";
@@ -411,7 +411,7 @@ public static class VersusMode
                     yield return new WaitForSeconds(1.25f);
 
                     var playerWinner = highestPlayers[0];
-                    var playerColor = GameScript.PlayerProfile.s_Profiles[playerWinner].GetColorName(false);
+                    var playerColor = PlayerProfile.s_Profiles[playerWinner].GetColorName(false);
 
                     s_announcementText.text = $"<color={playerColor}>P{playerWinner + 1}</color> <b>wins</b>!";
                     gameWon = true;
@@ -496,7 +496,7 @@ public static class VersusMode
                   }
                 }
               }
-              foreach (var playerProfile in GameScript.PlayerProfile.s_Profiles)
+              foreach (var playerProfile in PlayerProfile.s_Profiles)
                 playerProfile.UpdateVersusUI();
 
               if (IsCheckSame())
@@ -651,7 +651,7 @@ public static class VersusMode
   }
   public static void UpdateTeammodeUis()
   {
-    foreach (var playerProf in GameScript.PlayerProfile.s_Profiles)
+    foreach (var playerProf in PlayerProfile.s_Profiles)
     {
       var text = playerProf._VersusUI.GetChild(1).GetComponent<TMPro.TextMeshPro>();
       text.color = s_Settings._FreeForAll ? Color.white : GetTeamColorFromPlayerId(playerProf._Id);
@@ -767,53 +767,53 @@ public static class VersusMode
   }
 
   //
-  static GameScript.ItemManager.Items GetRandomMeleeWeapon()
+  static ItemManager.Items GetRandomMeleeWeapon()
   {
     return Random.Range(0, 6) switch
     {
-      1 => GameScript.ItemManager.Items.FRYING_PAN,
-      2 => GameScript.ItemManager.Items.RAPIER,
-      3 => GameScript.ItemManager.Items.AXE,
-      4 => GameScript.ItemManager.Items.FIST,
-      5 => GameScript.ItemManager.Items.STUN_BATON,
+      1 => ItemManager.Items.FRYING_PAN,
+      2 => ItemManager.Items.RAPIER,
+      3 => ItemManager.Items.AXE,
+      4 => ItemManager.Items.FIST,
+      5 => ItemManager.Items.STUN_BATON,
 
-      _ => GameScript.ItemManager.Items.KNIFE,
+      _ => ItemManager.Items.KNIFE,
     };
   }
-  static GameScript.ItemManager.Items GetRandomGun()
+  static ItemManager.Items GetRandomGun()
   {
     return Random.Range(0, 20) switch
     {
-      1 => GameScript.ItemManager.Items.PISTOL_DOUBLE,
-      2 => GameScript.ItemManager.Items.PISTOL_MACHINE,
-      3 => GameScript.ItemManager.Items.PISTOL_CHARGE,
-      4 => GameScript.ItemManager.Items.REVOLVER,
+      1 => ItemManager.Items.PISTOL_DOUBLE,
+      2 => ItemManager.Items.PISTOL_MACHINE,
+      3 => ItemManager.Items.PISTOL_CHARGE,
+      4 => ItemManager.Items.REVOLVER,
 
-      5 => GameScript.ItemManager.Items.RIFLE,
-      6 => GameScript.ItemManager.Items.RIFLE_LEVER,
-      7 => GameScript.ItemManager.Items.RIFLE_CHARGE,
+      5 => ItemManager.Items.RIFLE,
+      6 => ItemManager.Items.RIFLE_LEVER,
+      7 => ItemManager.Items.RIFLE_CHARGE,
 
-      8 => GameScript.ItemManager.Items.UZI,
-      9 => GameScript.ItemManager.Items.AK47,
-      10 => GameScript.ItemManager.Items.SNIPER,
-      11 => GameScript.ItemManager.Items.FLAMETHROWER,
-      12 => GameScript.ItemManager.Items.GRENADE_LAUNCHER,
-      13 => GameScript.ItemManager.Items.CROSSBOW,
-      14 => GameScript.ItemManager.Items.DMR,
-      15 => GameScript.ItemManager.Items.M16,
+      8 => ItemManager.Items.UZI,
+      9 => ItemManager.Items.AK47,
+      10 => ItemManager.Items.SNIPER,
+      11 => ItemManager.Items.FLAMETHROWER,
+      12 => ItemManager.Items.GRENADE_LAUNCHER,
+      13 => ItemManager.Items.CROSSBOW,
+      14 => ItemManager.Items.DMR,
+      15 => ItemManager.Items.M16,
 
-      16 => GameScript.ItemManager.Items.SHOTGUN_BURST,
-      17 => GameScript.ItemManager.Items.SHOTGUN_DOUBLE,
-      18 => GameScript.ItemManager.Items.SHOTGUN_PUMP,
-      19 => GameScript.ItemManager.Items.STICKY_GUN,
+      16 => ItemManager.Items.SHOTGUN_BURST,
+      17 => ItemManager.Items.SHOTGUN_DOUBLE,
+      18 => ItemManager.Items.SHOTGUN_PUMP,
+      19 => ItemManager.Items.STICKY_GUN,
 
-      _ => GameScript.ItemManager.Items.PISTOL_SILENCED,
+      _ => ItemManager.Items.PISTOL_SILENCED,
     };
   }
 
   static UtilityScript.UtilityType GetRandomUtility()
   {
-    return Random.Range(0, 13) switch
+    return Random.Range(0, 14) switch
     {
       1 => UtilityScript.UtilityType.GRENADE_IMPACT,
       2 => UtilityScript.UtilityType.GRENADE_STUN,
@@ -831,6 +831,7 @@ public static class VersusMode
       11 => UtilityScript.UtilityType.TEMP_SHIELD,
 
       12 => UtilityScript.UtilityType.BEAR_TRAP,
+      13 => UtilityScript.UtilityType.MINE,
 
       _ => UtilityScript.UtilityType.GRENADE
     };
@@ -856,11 +857,11 @@ public static class VersusMode
 
     if (Random.Range(0, 15) == 0)
     {
-      s_PlayerLoadouts = new GameScript.ItemManager.Loadout()
+      s_PlayerLoadouts = new Loadout()
       {
-        _Equipment = new GameScript.PlayerProfile.Equipment()
+        _Equipment = new PlayerProfile.Equipment()
         {
-          _ItemLeft0 = GameScript.ItemManager.Items.KATANA,
+          _ItemLeft0 = ItemManager.Items.KATANA,
         }
       };
     }
@@ -872,9 +873,9 @@ public static class VersusMode
         case 1:
         case 2:
         case 3:
-          s_PlayerLoadouts = new GameScript.ItemManager.Loadout()
+          s_PlayerLoadouts = new Loadout()
           {
-            _Equipment = new GameScript.PlayerProfile.Equipment()
+            _Equipment = new PlayerProfile.Equipment()
             {
               _ItemLeft0 = GetRandomMeleeWeapon(),
               _ItemRight0 = Random.Range(0, 4) > 2 ? GetRandomMeleeWeapon() : GetRandomGun(),
@@ -882,9 +883,9 @@ public static class VersusMode
           };
           break;
         case 4:
-          s_PlayerLoadouts = new GameScript.ItemManager.Loadout()
+          s_PlayerLoadouts = new Loadout()
           {
-            _Equipment = new GameScript.PlayerProfile.Equipment()
+            _Equipment = new PlayerProfile.Equipment()
             {
               _ItemLeft0 = GetRandomGun(),
               _ItemRight0 = GetRandomGun()
@@ -892,22 +893,22 @@ public static class VersusMode
           };
           break;
         case 5:
-          s_PlayerLoadouts = new GameScript.ItemManager.Loadout()
+          s_PlayerLoadouts = new Loadout()
           {
-            _Equipment = new GameScript.PlayerProfile.Equipment()
+            _Equipment = new PlayerProfile.Equipment()
             {
-              _ItemLeft0 = GameScript.ItemManager.Items.NONE,
+              _ItemLeft0 = ItemManager.Items.NONE,
               _ItemRight0 = GetRandomGun()
             }
           };
           break;
         case 6:
-          s_PlayerLoadouts = new GameScript.ItemManager.Loadout()
+          s_PlayerLoadouts = new Loadout()
           {
-            _Equipment = new GameScript.PlayerProfile.Equipment()
+            _Equipment = new PlayerProfile.Equipment()
             {
               _ItemLeft0 = GetRandomMeleeWeapon(),
-              _ItemRight0 = GameScript.ItemManager.Items.NONE
+              _ItemRight0 = ItemManager.Items.NONE
             }
           };
           break;
@@ -956,7 +957,7 @@ public static class VersusMode
   //
   public static void ToggleTeammodeSwitchUi(bool toggle)
   {
-    foreach (var playerProf in GameScript.PlayerProfile.s_Profiles)
+    foreach (var playerProf in PlayerProfile.s_Profiles)
     {
       var controlUi = playerProf._VersusUI.GetChild(1).GetChild(0).gameObject;
       controlUi.SetActive(toggle);

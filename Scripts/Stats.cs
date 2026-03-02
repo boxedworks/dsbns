@@ -11,7 +11,7 @@
       get
       {
         if (!GameScript.s_IsZombieGameMode) return -1;
-        return GameScript.SurvivalMode.GetTotalPoints(_id);
+        return SurvivalManager.GetTotalPoints(_id);
       }
     }
 

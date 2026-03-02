@@ -35,6 +35,7 @@ public class UtilityScript : ItemScript
     MIRROR,
 
     BEAR_TRAP,
+    MINE,
   }
 
   public UtilityType _utility_type;
@@ -53,6 +54,7 @@ public class UtilityScript : ItemScript
 
   delegate void CollisionEvent(Collision c);
   CollisionEvent _onCollisionEnter;
+  CollisionEvent _onCollisionStay;
 
   System.Action<Collider> _onTriggerEnter;
 
@@ -155,6 +157,8 @@ public class UtilityScript : ItemScript
 
   public void RegisterUtility(ActiveRagdoll source, bool unregister = true)
   {
+    _isUtility = true;
+
     // Set ammo to 1
     _clip = 2;
 
@@ -214,6 +218,12 @@ public class UtilityScript : ItemScript
         _expirationTimer = 90f;
         _ignoreSourceCollisions = false;
         _spinYAxis = true;
+        break;
+      case UtilityType.MINE:
+        _expirationTimer = 90f;
+        _ignoreSourceCollisions = false;
+        _spinYAxis = true;
+        explosion_radius = 3f;
         break;
 
       case UtilityType.MORTAR_STRIKE:
@@ -788,7 +798,7 @@ public class UtilityScript : ItemScript
                       _ragdoll,
                       new Vector3(transform.position.x, _ragdoll._spine.transform.position.y, transform.position.z) + shootDir * 0.2f + MathC.Get2DVector(_throwPosition - transform.position).normalized * 0.2f,
                       shootDir,
-                      GameScript.ItemManager.Items.NONE,
+                      ItemManager.Items.NONE,
                       0
                     );
                     bullet.SetBulletData(
@@ -796,7 +806,7 @@ public class UtilityScript : ItemScript
                       true,
                       0.25f,
                       false,
-                      GameScript.ItemManager.Items.PISTOL_SILENCED,
+                      ItemManager.Items.PISTOL_SILENCED,
 
                       true
                     );
@@ -962,7 +972,7 @@ public class UtilityScript : ItemScript
             if (SimpleProjectileHandler(_c, c))
               return;
           };
-          _onCollisionEnter += (Collision c) =>
+          _onCollisionStay += (Collision c) =>
           {
 
             // Projectile handler
@@ -1011,7 +1021,7 @@ public class UtilityScript : ItemScript
                   SpawnGiblets = false
                 });
 
-                // Stick to ragdol
+                // Stick to ragdoll
                 transform.parent = c.transform;
                 transform.localPosition = Vector3.zero + Random.onUnitSphere * 0.25f;
                 Destroy(_rb);
@@ -1026,6 +1036,50 @@ public class UtilityScript : ItemScript
 
                 //
                 PlaySound(Audio.UTILITY_ACTION);
+              }
+            }
+          };
+
+          // Throw
+          Throw();
+          Unregister();
+
+          break;
+
+        //
+        case UtilityType.MINE:
+
+          //
+          _onTriggerEnter += (Collider c) =>
+          {
+
+            // Projectile handler
+            if (SimpleProjectileHandler(_c, c))
+              return;
+          };
+          _onCollisionStay += (Collision c) =>
+          {
+
+            // Projectile handler
+            if (SimpleProjectileHandler(_c, c.collider))
+              return;
+
+            // Kill first person walked into
+            if (_flag == 0)
+            {
+              var rag = ActiveRagdoll.GetRagdoll(c.collider.gameObject);
+              if (rag != null)
+              {
+
+                //
+                if (Time.time - _thrownTimer < 0.5f)
+                  if (rag._Id == _ragdoll._Id) return;
+
+                var distance = rag.GetDistanceTo(transform.position);
+                if (distance > 0.4f) return;
+
+                _flag = 1;
+                Explode();
               }
             }
           };
@@ -1245,6 +1299,9 @@ public class UtilityScript : ItemScript
     }
 
     //
+    AnimateUi(PlayerProfile.Animation.AnimationType.Shoot, 0.2f);
+
+    //
     var forward = _ragdoll._Hip.transform.forward;
     if (mode == 1) forward = _ragdoll._Hip.transform.right;
     else if (mode == 2) forward = -_ragdoll._Hip.transform.right;
@@ -1451,6 +1508,11 @@ public class UtilityScript : ItemScript
       PlaySound(Audio.UTILITY_HIT_FLOOR);
     }
   }
+  private void OnCollisionStay(Collision collision)
+  {
+    // Fire action
+    _onCollisionStay?.Invoke(collision);
+  }
   private void OnTriggerEnter(Collider other)
   {
     // Fire action
@@ -1577,6 +1639,7 @@ public class UtilityScript : ItemScript
       case "kunai_explosive":
       case "kunai_sticky":
       case "molotov":
+      case "mine":
         projectileData._PenatrationAmount = 0;
         projectileData._OnDisable += (ProjectileCollisionData p) =>
         {
@@ -1586,6 +1649,7 @@ public class UtilityScript : ItemScript
 
       // Normal
       case "shuriken":
+      case "bear_trap":
       case "tactical_bullet":
         projectileData._PenatrationAmount = 0;
         break;

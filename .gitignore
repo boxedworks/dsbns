@@ -61,6 +61,43 @@ sysinfo.txt
 *.unitypackage
 *.app
 
+*.ttf
+*.tga
+
+*.lighting
+*.shadergraph
+*.rendertexture
+
+*.exe
+
+*.xcf
+
+*.prefab
+*.asset
+*.so
+*.dll
+*.pfx
+*.inputactions
+
+3rdParty/
+PostProcessing/
+
+Audio/
+Resources/
+Scenes/
+InputActions/
+
+*.png
+*.jpg
+*.jpeg
+
+*.mat
+
+*.blend*
+*.fbx
+*.mtl
+*.obj
+
 # Crashlytics generated file
 crashlytics-build.properties
 

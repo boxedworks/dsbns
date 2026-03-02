@@ -9,7 +9,7 @@ public class BulletScript : MonoBehaviour
   ActiveRagdoll _sourceItemRagdoll;
   EnemyScript.Loudness _sourceLoudness;
   float _sourceHitForce;
-  GameScript.ItemManager.Items _sourceType;
+  ItemManager.Items _sourceType;
   bool _sourceDismember;
 
   //
@@ -178,9 +178,9 @@ public class BulletScript : MonoBehaviour
 
           Damage = (int)damage,
           DamageSource = _shootPosition,
-          DamageSourceType = _sourceType == GameScript.ItemManager.Items.FLAMETHROWER ? ActiveRagdoll.DamageSourceType.FIRE : ActiveRagdoll.DamageSourceType.BULLET,
+          DamageSourceType = _sourceType == ItemManager.Items.FLAMETHROWER ? ActiveRagdoll.DamageSourceType.FIRE : ActiveRagdoll.DamageSourceType.BULLET,
 
-          SpawnBlood = _sourceType != GameScript.ItemManager.Items.FLAMETHROWER,
+          SpawnBlood = _sourceType != ItemManager.Items.FLAMETHROWER,
           SpawnGiblets = _penatrationAmount > 1
         }
         ))
@@ -191,7 +191,7 @@ public class BulletScript : MonoBehaviour
         {
 
           // Check smart bullets
-          if ((_sourceDamageRagdoll._PlayerScript?.HasPerk(Shop.Perk.PerkType.SMART_BULLETS) ?? false) && _sourceType != GameScript.ItemManager.Items.FLAMETHROWER)
+          if ((_sourceDamageRagdoll._PlayerScript?.HasPerk(Shop.Perk.PerkType.SMART_BULLETS) ?? false) && _sourceType != ItemManager.Items.FLAMETHROWER)
           {
             RedirectToClosestTarget(r._Hip.gameObject, true);
           }
@@ -239,7 +239,7 @@ public class BulletScript : MonoBehaviour
               {
                 Achievements.UnlockAchievement(Achievements.Achievement.BAT_DEFLECT);
 
-                if (item._type == GameScript.ItemManager.Items.FRYING_PAN && SceneThemes._Theme._name == "Hedge")
+                if (item._type == ItemManager.Items.FRYING_PAN && SceneThemes._Theme._name == "Hedge")
                   Achievements.UnlockAchievement(Achievements.Achievement.FRYING_PAN_RAIN);
               }
 #endif
@@ -286,7 +286,7 @@ public class BulletScript : MonoBehaviour
             Achievements.UnlockAchievement(Achievements.Achievement.BAT_DEFLECT);
 
             ItemScript swingingItem = (r._ItemR?._IsSwinging ?? false) ? r._ItemR : ((r._ItemL?._IsSwinging ?? false) ? r._ItemL : null);
-            if ((swingingItem?._type ?? GameScript.ItemManager.Items.NONE) == GameScript.ItemManager.Items.FRYING_PAN && SceneThemes._Theme._name == "Hedge")
+            if ((swingingItem?._type ?? ItemManager.Items.NONE) == ItemManager.Items.FRYING_PAN && SceneThemes._Theme._name == "Hedge")
               Achievements.UnlockAchievement(Achievements.Achievement.FRYING_PAN_RAIN);
           }
 #endif
@@ -571,7 +571,7 @@ public class BulletScript : MonoBehaviour
   {
     if (
       other._triggered ||
-      (other._sourceType == GameScript.ItemManager.Items.FLAMETHROWER) ||
+      (other._sourceType == ItemManager.Items.FLAMETHROWER) ||
       (!_canDamageSource && !other._canDamageSource && GetRagdollID() == other.GetRagdollID())
     )
       return false;
@@ -584,7 +584,7 @@ public class BulletScript : MonoBehaviour
     bool silenced,
     float hitForce,
     bool dismember,
-    GameScript.ItemManager.Items itemType,
+    ItemManager.Items itemType,
 
     bool canDamageSource = false
   )
@@ -601,11 +601,11 @@ public class BulletScript : MonoBehaviour
     // Special case
     switch (_sourceType)
     {
-      case GameScript.ItemManager.Items.FLAMETHROWER:
+      case ItemManager.Items.FLAMETHROWER:
         _maxDistance = 3.8f;
         break;
 
-      case GameScript.ItemManager.Items.ROCKET_FIST:
+      case ItemManager.Items.ROCKET_FIST:
         _maxDistance = 0.9f;
         break;
 
@@ -615,7 +615,7 @@ public class BulletScript : MonoBehaviour
     }
 
     // Delay the start of playing the system to keep particles from emitting across screen
-    if (itemType != GameScript.ItemManager.Items.FLAMETHROWER && itemType != GameScript.ItemManager.Items.ROCKET_FIST)
+    if (itemType != ItemManager.Items.FLAMETHROWER && itemType != ItemManager.Items.ROCKET_FIST)
     {
       if (_Particles != null)
       {
@@ -682,6 +682,7 @@ public class BulletScript : MonoBehaviour
   {
     _triggered = true;
     _light.enabled = false;
+    _rb.linearVelocity = Vector3.zero;
     if (_Particles == null) return;
     if (forceHide)
     {

@@ -45,7 +45,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
 
   bool _spawnRunCheck;
 
-  public GameScript.ItemManager.Items _itemLeft, _itemRight;
+  public ItemManager.Items _itemLeft, _itemRight;
 
   public static readonly float
   MOVESPEED = 4f,
@@ -66,15 +66,15 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
 
   public List<UtilityScript> _UtilitiesLeft, _UtilitiesRight;
 
-  public GameScript.PlayerProfile _Profile
+  public PlayerProfile _Profile
   {
     get
     {
-      return GameScript.PlayerProfile.s_Profiles[_Id];
+      return PlayerProfile.s_Profiles[_Id];
     }
   }
 
-  public GameScript.PlayerProfile.Equipment _Equipment
+  public PlayerProfile.Equipment _Equipment
   {
     get { return _Profile._Equipment; }
   }
@@ -98,7 +98,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
 
   //
   [System.NonSerialized]
-  public GameScript.PlayerProfile.Equipment _EquipmentStart;
+  public PlayerProfile.Equipment _EquipmentStart;
   [System.NonSerialized]
   public bool _EquipmentChanged;
   public static int s_NumPlayersStart;
@@ -242,18 +242,18 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
 
     CheckSpawnTwin();
 
-    _itemLeft = _isLeftTwin || Shop.IsActuallyTwoHanded(_Profile._ItemLeft) ? _Profile._ItemLeft : GameScript.ItemManager.Items.NONE;
-    _itemRight = _isRightTwin || Shop.IsActuallyTwoHanded(_Profile._ItemRight) ? _Profile._ItemRight : GameScript.ItemManager.Items.NONE;
+    _itemLeft = _isLeftTwin || Shop.IsActuallyTwoHanded(_Profile._ItemLeft) ? _Profile._ItemLeft : ItemManager.Items.NONE;
+    _itemRight = _isRightTwin || Shop.IsActuallyTwoHanded(_Profile._ItemRight) ? _Profile._ItemRight : ItemManager.Items.NONE;
 
     // Equip start items
-    if (_itemLeft != GameScript.ItemManager.Items.NONE)
+    if (_itemLeft != ItemManager.Items.NONE)
       _ragdoll.EquipItem(_itemLeft, ActiveRagdoll.Side.LEFT);
     else
     {
       _ragdoll.AddArmJoint(ActiveRagdoll.Side.LEFT);
       _ragdoll.UnequipItem(ActiveRagdoll.Side.LEFT);
     }
-    if (_itemRight != GameScript.ItemManager.Items.NONE)
+    if (_itemRight != ItemManager.Items.NONE)
       _ragdoll.EquipItem(_itemRight, ActiveRagdoll.Side.RIGHT);
     else if (_ragdoll._ItemL == null || !_ragdoll._ItemL._twoHanded)
     {
@@ -480,7 +480,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
   public void ChangeRingColor(Color c)
   {
     if (_ring == null) return;
-    _ring[0].sharedMaterial.SetColor("_EmissionColor", c);
+    _ring[0].sharedMaterial.SetColor("_EmissionColor", c * 0.3f);
     c.a = 0.85f;
     _ring[0].sharedMaterial.color = c;
   }
@@ -743,7 +743,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
             for (var i = 0; i < 2; i++)
             {
               var item = i == 0 ? _ragdoll._ItemL : _ragdoll._ItemR;
-              if (item == null || item._type == GameScript.ItemManager.Items.NONE) continue;
+              if (item == null || item._type == ItemManager.Items.NONE) continue;
               if (item.IsMelee()) continue;
               if (item.CanReload())
                 item.Reload();
@@ -764,11 +764,11 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
           if (ControllerManager.GetKey(ControllerManager.Key.DELETE))
             AutoPlayer.Erase();
           if (ControllerManager.GetKey(ControllerManager.Key.TWO))
-            GameScript.PlayerProfile._Profiles[1].CycleWeapon(1);
+            PlayerProfile._Profiles[1].CycleWeapon(1);
           if (ControllerManager.GetKey(ControllerManager.Key.THREE))
-            GameScript.PlayerProfile._Profiles[2].CycleWeapon(1);
+            PlayerProfile._Profiles[2].CycleWeapon(1);
           if (ControllerManager.GetKey(ControllerManager.Key.FOUR))
-            GameScript.PlayerProfile._Profiles[3].CycleWeapon(1);
+            PlayerProfile._Profiles[3].CycleWeapon(1);
         }
         if (AutoPlayer._Playing)
           AutoPlayer.ControlPlayer(this, _id);
@@ -838,6 +838,10 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
         SfxManager.Update(0f);
       return;
     }
+
+    // Update playerprof
+    if (_IsOriginal)
+      _Profile.Update();
 
     // Handle camera
     UpdateCamera();
@@ -1233,6 +1237,9 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
     if (AutoPlayer._Playing && _Id != 0)
       return;
 
+    if (_ragdoll._IsStunned)
+      return;
+
     //
     if (_saveLoadoutIndex != _Profile._LoadoutIndex)
       ResetLoadout();
@@ -1288,7 +1295,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
                 var enemy = EnemyScript.SpawnEnemyAt(
                   new EnemyScript.SurvivalAttributes()
                   {
-                    _enemyType = GameScript.SurvivalMode.EnemyType.KNIFE_RUN
+                    _enemyType = SurvivalManager.EnemyType.KNIFE_RUN
                   },
                   new Vector2(PlayerspawnScript._PlayerSpawns[0].transform.position.x + 0.5f * Random.value, PlayerspawnScript._PlayerSpawns[0].transform.position.z + 0.5f * Random.value),
                   false,
@@ -1337,7 +1344,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
 
     //
     var useSword = false;
-    if ((_ragdoll._ItemL?._type ?? GameScript.ItemManager.Items.NONE) == GameScript.ItemManager.Items.KATANA)
+    if ((_ragdoll._ItemL?._type ?? ItemManager.Items.NONE) == ItemManager.Items.KATANA)
     {
       useSword = true;
 
@@ -1411,9 +1418,9 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
         }
       }
 
-      // Throw money
+      // Whistle / throw money
       if (ControllerManager.GetKey(ControllerManager.Key.V))
-        Taunt(1);
+        HandleDpadDirection(1);
 
       // Check versus start
       if (!GameScript.s_IsPartyGameMode || (GameScript.s_IsPartyGameMode && VersusMode.s_PlayersCanMove))
@@ -1504,48 +1511,28 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
       else
         _ragdoll.ArmsDown();
 
-      // Check runkey
-      /*if (_Profile._holdRun)
-      {
-        runKeyDown = (ControllerManager.ShiftHeld());
-      }
-      else*/
-      {
-        runKeyDown = ControllerManager.ShiftHeld();
-      }
+      runKeyDown = ControllerManager.ShiftHeld();
 
       // Check utility
       if (!GameScript.s_IsPartyGameMode || (GameScript.s_IsPartyGameMode && VersusMode.s_PlayersCanMove))
       {
         if (ControllerManager.GetKey(ControllerManager.Key.Q))
         {
-          /*if (_UtilitiesLeft.Count == 0 && _UtilitiesRight.Count > 0)
-            _UtilitiesRight[0].UseDown();
-          else */
           if (_UtilitiesLeft.Count > 0)
             _UtilitiesLeft[0].UseDown();
         }
         else if (ControllerManager.GetKey(ControllerManager.Key.Q, ControllerManager.InputMode.UP))
         {
-          /*if (_UtilitiesLeft.Count == 0 && _UtilitiesRight.Count > 0)
-            _UtilitiesRight[0].UseUp();
-          else */
           if (_UtilitiesLeft.Count > 0)
             _UtilitiesLeft[0].UseUp();
         }
         if (ControllerManager.GetKey(ControllerManager.Key.E))
         {
-          /*if (_UtilitiesRight.Count == 0 && _UtilitiesLeft.Count > 0)
-            _UtilitiesLeft[0].UseDown();
-          else */
           if (_UtilitiesRight.Count > 0)
             _UtilitiesRight[0].UseDown();
         }
         else if (ControllerManager.GetKey(ControllerManager.Key.E, ControllerManager.InputMode.UP))
         {
-          /*if (_UtilitiesRight.Count == 0 && _UtilitiesLeft.Count > 0)
-            _UtilitiesLeft[0].UseUp();
-          else */
           if (_UtilitiesRight.Count > 0)
             _UtilitiesRight[0].UseUp();
         }
@@ -1553,36 +1540,25 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
 
       // Check weapon swap
       if (ControllerManager.GetKey(ControllerManager.Key.TAB))
-        SwapLoadouts();
+        HandleAction(PlayerAction.SwapLoadout);
 
       // Check weapon swap
       if (ControllerManager.GetKey(ControllerManager.Key.G))
-      {
-        _ragdoll.SwapItemHands(_Profile._EquipmentIndex);
-        _Profile.UpdateIcons();
-      }
+        HandleAction(PlayerAction.SwapWeaponHands);
 
       // Check interactable
       if (ControllerManager.GetKey(ControllerManager.Key.F))
-      {
-        if (_currentInteractable != null)
-          _currentInteractable.Interact(this, CustomObstacle.InteractSide.DEFAULT);
-        else if (FlipTable(_ragdoll._Hip.position, transform.forward))
-        {
-#if !DISABLESTEAMWORKS
-          Achievements.UnlockAchievement(Achievements.Achievement.TABLE_FLIP);
-#endif
-        }
-      }
+        HandleAction(PlayerAction.Interact);
+
       // Check reload
       if (ControllerManager.GetKey(ControllerManager.Key.R, _Profile._reloadSidesSameTime ? ControllerManager.InputMode.HOLD : ControllerManager.InputMode.DOWN))
-        Reload();
+        HandleAction(PlayerAction.Reload);
     }
 
     // Controller
     else
     {
-      var gamepadId = _Id - (GameScript.s_CustomNetworkManager._Connected ? GameScript.s_CustomNetworkManager._Self._NetworkBehavior._PlayerId : 0);
+      var gamepadId = _Id;
 
       // Check sticks
       Vector2 leftStick = new Vector2(ControllerManager.GetControllerAxis(gamepadId, ControllerManager.Axis.LSTICK_X),
@@ -1671,12 +1647,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
             if (!_ragdoll._ItemL && !_ragdoll._ItemR)
             {
               if (!_HasTwin)
-                SwapLoadouts();
-            }
-            else if (!_ragdoll._ItemL)
-            {
-              _ragdoll.UseRightDown();
-              saveInput.y = 1f;
+                HandleAction(PlayerAction.SwapLoadout);
             }
             else
             {
@@ -1738,11 +1709,11 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
 
         // Whistle / drop money
         if (gamepad.dpad.down.wasReleasedThisFrame)
-          Taunt(1);
+          HandleDpadDirection(1);
 
         // Swap weapon hands
         else if (gamepad.dpad.up.wasReleasedThisFrame)
-          Taunt(0);
+          HandleDpadDirection(0);
 
         // Buy specific weapon
         var dpadHoldTime = 0.6f;
@@ -1750,7 +1721,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
         {
           if (_dpadPressed[2] != 0f)
           {
-            Taunt(2);
+            HandleDpadDirection(2);
             _dpadPressed[2] = 0f;
           }
         }
@@ -1758,7 +1729,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
         {
           if (_dpadPressed[3] != 0f)
           {
-            Taunt(3);
+            HandleDpadDirection(3);
             _dpadPressed[3] = 0f;
           }
         }
@@ -1789,13 +1760,14 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
         {
 
           // Start grapple
+          var grappleButton = _isRightTwin ? gamepad.rightStickButton : gamepad.leftStickButton;
           if (
             !_ragdoll._IsDead &&
             _ragdoll._CanGrapple &&
-            (_isRightTwin ? gamepad.rightStickButton.wasPressedThisFrame : gamepad.leftStickButton.wasPressedThisFrame)
+            grappleButton.wasPressedThisFrame
           )
           {
-            _ragdoll.Grapple(true);
+            HandleAction(PlayerAction.GrappleGentle);
           }
 
           // End grapple (violently)
@@ -1803,68 +1775,45 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
           {
             if (_isLeftTwin)
               if (_ragdoll._ItemL == null && gamepad.leftTrigger.wasReleasedThisFrame)
-                _ragdoll.Grapple(false);
+                HandleAction(PlayerAction.Grapple);
 
             if (_isRightTwin)
               if (_ragdoll._ItemR == null && gamepad.rightTrigger.wasReleasedThisFrame)
-                _ragdoll.Grapple(false);
+                HandleAction(PlayerAction.Grapple);
           }
+
+          // Start kick
+          // var kickButton = gamepad.leftStickButton;
+          // if (kickButton.wasPressedThisFrame)
+          //   HandleAction(PlayerAction.KickStart);
+
+          // // End kick
+          // if (kickButton.wasReleasedThisFrame)
+          //   HandleAction(PlayerAction.KickEnd);
 
           // Check utilities
           if (gamepad.leftShoulder.wasPressedThisFrame)
-          {
-            /*if (_UtilitiesLeft.Count == 0 && _UtilitiesRight.Count > 0)
-              {}_UtilitiesRight[0].UseDown();
-            else */
-            if (_UtilitiesLeft.Count > 0)
-              _UtilitiesLeft[0].UseDown();
-          }
+            HandleAction(PlayerAction.LeftUtilityDown);
           else if (gamepad.leftShoulder.wasReleasedThisFrame)
-          {
-            /*if (_UtilitiesLeft.Count == 0 && _UtilitiesRight.Count > 0)
-              _UtilitiesRight[0].UseUp();
-            else */
-            if (_UtilitiesLeft.Count > 0)
-              _UtilitiesLeft[0].UseUp();
-          }
+            HandleAction(PlayerAction.LeftUtilityUp);
+
           if (gamepad.rightShoulder.wasPressedThisFrame)
-          {
-            /*if (_UtilitiesRight.Count == 0 && _UtilitiesLeft.Count > 0)
-              _UtilitiesLeft[0].UseDown();
-            else */
-            if (_UtilitiesRight.Count > 0)
-              _UtilitiesRight[0].UseDown();
-          }
+            HandleAction(PlayerAction.RightUtilityDown);
           else if (gamepad.rightShoulder.wasReleasedThisFrame)
-          {
-            /*if (_UtilitiesRight.Count == 0 && _UtilitiesLeft.Count > 0)
-              _UtilitiesLeft[0].UseUp();
-            else */
-            if (_UtilitiesRight.Count > 0)
-              _UtilitiesRight[0].UseUp();
-          }
+            HandleAction(PlayerAction.RightUtilityUp);
         }
 
         // Check weapon swap
         if (gamepad.buttonNorth.wasPressedThisFrame)
-          SwapLoadouts();
+          HandleAction(PlayerAction.SwapLoadout);
 
         // Check interactable
         if (gamepad.buttonEast.wasPressedThisFrame)
-        {
-          if (_currentInteractable != null)
-            _currentInteractable.Interact(this, CustomObstacle.InteractSide.DEFAULT);
-          else if (FlipTable(_ragdoll._Hip.position, transform.forward))
-          {
-#if !DISABLESTEAMWORKS
-            Achievements.UnlockAchievement(Achievements.Achievement.TABLE_FLIP);
-#endif
-          }
-        }
+          HandleAction(PlayerAction.Interact);
 
         // Check reload
         if (_Profile._reloadSidesSameTime ? gamepad.buttonWest.isPressed : gamepad.buttonWest.wasPressedThisFrame)
-          Reload();
+          HandleAction(PlayerAction.Reload);
       }
     }
 
@@ -1955,13 +1904,102 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
 
   }
 
+  //
+  enum PlayerAction
+  {
+    Reload,
+
+    LeftWeaponDown,
+    LeftWeaponUp,
+    RightWeaponDown,
+    RightWeaponUp,
+
+    LeftUtilityDown,
+    LeftUtilityUp,
+    RightUtilityDown,
+    RightUtilityUp,
+
+    SwapLoadout,
+    SwapWeaponHands,
+
+    Grapple,
+    GrappleGentle,
+
+    KickStart,
+    KickEnd,
+
+    Interact,
+  }
+  void HandleAction(PlayerAction action)
+  {
+    switch (action)
+    {
+      case PlayerAction.Reload:
+        Reload();
+        break;
+
+      case PlayerAction.LeftUtilityDown:
+        if (_UtilitiesLeft.Count > 0)
+          _UtilitiesLeft[0].UseDown();
+        break;
+      case PlayerAction.LeftUtilityUp:
+        if (_UtilitiesLeft.Count > 0)
+          _UtilitiesLeft[0].UseUp();
+        break;
+      case PlayerAction.RightUtilityDown:
+        if (_UtilitiesRight.Count > 0)
+          _UtilitiesRight[0].UseDown();
+        break;
+      case PlayerAction.RightUtilityUp:
+        if (_UtilitiesRight.Count > 0)
+          _UtilitiesRight[0].UseUp();
+        break;
+
+      case PlayerAction.SwapLoadout:
+        SwapLoadouts();
+        break;
+      case PlayerAction.SwapWeaponHands:
+        _ragdoll.SwapItemHands(_Profile._EquipmentIndex);
+        _Profile.UpdateIcons();
+        break;
+
+      case PlayerAction.Grapple:
+        _ragdoll.Grapple(false);
+        break;
+      case PlayerAction.GrappleGentle:
+        _ragdoll.Grapple(true);
+        break;
+
+      // case PlayerAction.KickStart:
+      //   _ragdoll.KickStart();
+      //   break;
+      // case PlayerAction.KickEnd:
+      //   _ragdoll.KickEnd();
+      //   break;
+
+      case PlayerAction.Interact:
+        if (_currentInteractable != null)
+        {
+          _currentInteractable.Interact(this, CustomObstacle.InteractSide.DEFAULT);
+        }
+        else if (FlipTable(_ragdoll._Hip.position, transform.forward))
+        {
+#if !DISABLESTEAMWORKS
+          Achievements.UnlockAchievement(Achievements.Achievement.TABLE_FLIP);
+#endif
+        }
+        break;
+    }
+  }
+
+  //
   public void MovePlayer(float deltaTime, float moveSpeed, Vector2 input)
   {
     // Decrease movespead
     if (_ragdoll._IsGrappling) { moveSpeed *= 0.9f; }
 
     // Move player
-    if (_ragdoll.Active() && !_ragdoll._IsStunned && _agent != null)
+    if (_ragdoll.Active() && _agent != null)
     {
       var dis2 = (input.x * moveSpeed * Vector3.right) + (input.y * moveSpeed * Vector3.forward);
       var savepos = _agent.transform.position;
@@ -2231,31 +2269,23 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
   }
 
   float[] _taunt_times;
-  void Taunt(int iter)
+  void HandleDpadDirection(int direction)
   {
     if (Menu.s_InMenus) return;
 
-    switch (iter)
+    switch (direction)
     {
       case 1:
-        if (!GameScript.s_IsZombieGameMode && Time.time - _taunt_times[iter] < 0.75f) return;
+        if (!GameScript.s_IsZombieGameMode && Time.time - _taunt_times[direction] < 0.75f) return;
         break;
     }
-    _taunt_times[iter] = Time.time;
+    _taunt_times[direction] = Time.time;
 
-    switch (iter)
+    switch (direction)
     {
       // Up
       case 0:
-
-        if (_ragdoll?._IsDead ?? true)
-          return;
-
-        if (!_HasTwin)
-        {
-          _ragdoll.SwapItemHands(_Profile._EquipmentIndex);
-          _Profile.UpdateIcons();
-        }
+        HandleAction(PlayerAction.SwapWeaponHands);
         break;
 
       // Down
@@ -2266,65 +2296,11 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
 
         // If survival, throw money
         if (GameScript.s_IsZombieGameMode)
-        {
-          void ThrowMoney()
-          {
-            //if (!GameScript.SurvivalMode.HasPoints(_id, 10)) return;
-            var points = 10;
-            for (; points > 0; points--)
-            {
-              if (GameScript.SurvivalMode.HasPoints(_Id, points))
-                break;
-            }
-            if (points == 0) return;
-
-            GameScript.SurvivalMode.SpendPoints(_Id, points);
-            var money = Instantiate(GameResources._Money);
-            GameScript.SurvivalMode.AddMoney(money);
-            money.name = $"Credits {points}";
-            money.transform.parent = GameScript.s_Singleton.transform;
-            money.transform.position = _ragdoll._Hip.position + _ragdoll._Hip.transform.forward * 0.2f;
-            var collider = money.GetComponent<Collider>();
-            var collider0 = _ragdoll._Hip.GetComponents<Collider>()[1];
-            //_ragdoll.IgnoreCollision(collider);
-            Physics.IgnoreCollision(collider, collider0);
-            collider.enabled = true;
-            var rb = money.GetComponent<Rigidbody>();
-            rb.isKinematic = false;
-            rb.AddForce(_ragdoll._Hip.transform.forward * 100f);
-            _ragdoll.PlaySound("Ragdoll/Throw");
-
-            IEnumerator sizeChange()
-            {
-              yield return new WaitForSeconds(0.2f);
-              if (collider != null && collider0 != null)
-                _ragdoll.PlaySound("Survival/Points_Land_Floor");
-
-              yield return new WaitForSeconds(0.3f);
-              if (collider != null && collider0 != null)
-                Physics.IgnoreCollision(collider, collider0, false);
-            }
-            StartCoroutine(sizeChange());
-          }
-          ThrowMoney();
-        }
+          DropMoney();
 
         // If classic, whistle
         else
-        {
-          _ragdoll.PlaySound("Ragdoll/Whistle", 0.85f, 1.2f);
-
-          EnemyScript.CheckSound(_ragdoll._Hip.position + _ragdoll._Hip.transform.forward * 3f, _ragdoll._Hip.position, EnemyScript.Loudness.SOFT);
-          _ragdoll.DisplayText("!");
-
-          _LastWhistle = Time.time;
-        }
-
-        /*if (_tauntIter >= 0)
-        {
-          _tauntIter = -1;
-          break;
-        }*/
+          Whistle();
         break;
 
       // Left
@@ -2357,6 +2333,61 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
           _currentInteractable.Interact(this, CustomObstacle.InteractSide.RIGHT);
         break;
     }
+  }
+
+  //
+  void DropMoney(int amount = 10)
+  {
+    void ThrowMoney()
+    {
+      //if (!SurvivalManager.HasPoints(_id, 10)) return;
+      var points = amount;
+      for (; points > 0; points--)
+      {
+        if (SurvivalManager.HasPoints(_Id, points))
+          break;
+      }
+      if (points == 0) return;
+
+      SurvivalManager.SpendPoints(_Id, points);
+      var money = Instantiate(GameResources._Money);
+      SurvivalManager.AddMoney(money);
+      money.name = $"Credits {points}";
+      money.transform.parent = GameScript.s_Singleton.transform;
+      money.transform.position = _ragdoll._Hip.position + _ragdoll._Hip.transform.forward * 0.2f;
+      var collider = money.GetComponent<Collider>();
+      var collider0 = _ragdoll._Hip.GetComponents<Collider>()[1];
+      //_ragdoll.IgnoreCollision(collider);
+      Physics.IgnoreCollision(collider, collider0);
+      collider.enabled = true;
+      var rb = money.GetComponent<Rigidbody>();
+      rb.isKinematic = false;
+      rb.AddForce(_ragdoll._Hip.transform.forward * 100f);
+      _ragdoll.PlaySound("Ragdoll/Throw");
+
+      IEnumerator sizeChange()
+      {
+        yield return new WaitForSeconds(0.2f);
+        if (collider != null && collider0 != null)
+          _ragdoll.PlaySound("Survival/Points_Land_Floor");
+
+        yield return new WaitForSeconds(0.3f);
+        if (collider != null && collider0 != null)
+          Physics.IgnoreCollision(collider, collider0, false);
+      }
+      StartCoroutine(sizeChange());
+    }
+    ThrowMoney();
+  }
+
+  void Whistle()
+  {
+    _ragdoll.PlaySound("Ragdoll/Whistle", 0.85f, 1.2f);
+
+    EnemyScript.CheckSound(_ragdoll._Hip.position + _ragdoll._Hip.transform.forward * 3f, _ragdoll._Hip.position, EnemyScript.Loudness.SOFT);
+    _ragdoll.DisplayText("!");
+
+    _LastWhistle = Time.time;
   }
 
   //
@@ -2396,10 +2427,6 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
   public void OnDamageTaken(ActiveRagdoll.RagdollDamageSource ragdollDamageSource)
   {
     _Profile.UpdateHealthUI();
-
-    //
-    if (_HasTwin && _ConnectedTwin._HasTwin && !(_ConnectedTwin._ragdoll?._IsDead ?? true))
-      _ConnectedTwin._Ragdoll?.TakeDamage(ragdollDamageSource);
 
     // Controller rumble
     if (!mouseEnabled && SettingsModule.ControllerRumble)
@@ -2456,7 +2483,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
 
     // Survival
     if (GameScript.s_IsZombieGameMode)
-      GameScript.SurvivalMode.OnPlayerDead(_Id);
+      SurvivalManager.OnPlayerDead(_Id);
 
     // Versus
     if (GameScript.s_IsPartyGameMode)
@@ -2635,7 +2662,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
         if (other.name.StartsWith("Credits "))
         {
           var amount = other.name.Split(' ')[1].ParseIntInvariant();
-          GameScript.SurvivalMode.GivePoints(_Id, amount);
+          SurvivalManager.GivePoints(_Id, amount);
           Destroy(other.gameObject);
           if (Time.time - _LastMoneyPickupNoiseTime > 0.1f)
           {

@@ -187,7 +187,7 @@ public static class Settings
     }
   }
 
-  public static float _VERSION = 1.53f;
+  public static float _VERSION = 1.54f;
 
   // Struct holding info what item pair gets unlocked at what level
   public class WeaponPair
@@ -463,8 +463,8 @@ public static class Settings
           rating = 0,
           extras = null,
           loadoutDesc = "auto-unlocked",
-          items = new GameScript.ItemManager.Items[] {
-            GameScript.ItemManager.Items.KNIFE
+          items = new ItemManager.Items[] {
+            ItemManager.Items.KNIFE
           },
           utilities = null,
           perks = null
@@ -481,8 +481,8 @@ public static class Settings
           rating = 0,
           extras = null,
           loadoutDesc = "auto-unlocked",
-          items = new GameScript.ItemManager.Items[] {
-            GameScript.ItemManager.Items.KNIFE
+          items = new ItemManager.Items[] {
+            ItemManager.Items.KNIFE
           },
           utilities = null,
           perks = null
@@ -499,9 +499,9 @@ public static class Settings
           rating = 0,
           extras = null,
           loadoutDesc = "knife, silenced pistol",
-          items = new GameScript.ItemManager.Items[] {
-            GameScript.ItemManager.Items.KNIFE,
-            GameScript.ItemManager.Items.PISTOL_SILENCED
+          items = new ItemManager.Items[] {
+            ItemManager.Items.KNIFE,
+            ItemManager.Items.PISTOL_SILENCED
             },
           utilities = null,
           perks = null
@@ -518,9 +518,9 @@ public static class Settings
           rating = 2,
           extras = new Shop.Unlocks[] { Shop.Unlocks.EXTRA_HORDE },
           loadoutDesc = "knife, lever-action rifle",
-          items = new GameScript.ItemManager.Items[] {
-            GameScript.ItemManager.Items.KNIFE,
-            GameScript.ItemManager.Items.RIFLE_LEVER
+          items = new ItemManager.Items[] {
+            ItemManager.Items.KNIFE,
+            ItemManager.Items.RIFLE_LEVER
             },
           utilities = null,
           perks = null
@@ -537,8 +537,8 @@ public static class Settings
           rating = 2,
           extras = null,
           loadoutDesc = "sticky gun",
-          items = new GameScript.ItemManager.Items[] {
-            GameScript.ItemManager.Items.STICKY_GUN
+          items = new ItemManager.Items[] {
+            ItemManager.Items.STICKY_GUN
             },
           utilities = null,
           perks = null
@@ -555,9 +555,9 @@ public static class Settings
           rating = 1,
           extras = null,
           loadoutDesc = "axe x2",
-          items = new GameScript.ItemManager.Items[] {
-            GameScript.ItemManager.Items.AXE,
-            GameScript.ItemManager.Items.AXE
+          items = new ItemManager.Items[] {
+            ItemManager.Items.AXE,
+            ItemManager.Items.AXE
             },
           utilities = null,
           perks = null
@@ -574,9 +574,9 @@ public static class Settings
           rating = 0,
           extras = null,
           loadoutDesc = "silenced pistol x2",
-          items = new GameScript.ItemManager.Items[] {
-            GameScript.ItemManager.Items.PISTOL_SILENCED,
-            GameScript.ItemManager.Items.PISTOL_SILENCED
+          items = new ItemManager.Items[] {
+            ItemManager.Items.PISTOL_SILENCED,
+            ItemManager.Items.PISTOL_SILENCED
           },
           utilities = null,
           perks = null
@@ -593,8 +593,8 @@ public static class Settings
           rating = 0,
           extras = null,
           loadoutDesc = "katana, shuriken x4",
-          items = new GameScript.ItemManager.Items[] {
-            GameScript.ItemManager.Items.KATANA,
+          items = new ItemManager.Items[] {
+            ItemManager.Items.KATANA,
             },
           utilities = new UtilityScript.UtilityType[]{
             UtilityScript.UtilityType.SHURIKEN,
@@ -679,7 +679,7 @@ public static class Settings
   public static void OnGamemodeChanged(GamemodeChange gamemode)
   {
     // Update UI
-    foreach (var profile in GameScript.PlayerProfile.s_Profiles)
+    foreach (var profile in PlayerProfile.s_Profiles)
       profile.UpdateIcons();
 
     //
@@ -901,7 +901,7 @@ public static class Settings
 
     // Loadout
     public string loadoutDesc;
-    public GameScript.ItemManager.Items[] items;
+    public ItemManager.Items[] items;
     public UtilityScript.UtilityType[] utilities;
     public Shop.Perk.PerkType[] perks;
   }

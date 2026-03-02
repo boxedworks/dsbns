@@ -391,43 +391,43 @@ public class TileManager
         // Don't save bat enemy if not mission editor
         /*if (Settings._DIFFICULTY > 0)*/
         if (!GameScript.s_EditorTesting)
-          if (e._itemLeft == GameScript.ItemManager.Items.BAT || e._itemRight == GameScript.ItemManager.Items.BAT) continue;
+          if (e._itemLeft == ItemManager.Items.BAT || e._itemRight == ItemManager.Items.BAT) continue;
         // Basic position info
         var pos_save = e.transform.position - offset;
         returnString += "e_" + System.Math.Round(pos_save.x, 1) + "_" + System.Math.Round(pos_save.z, 1) + "_";
         // Item info
-        string check_item(GameScript.ItemManager.Items item)
+        string check_item(ItemManager.Items item)
         {
           switch (item)
           {
-            case GameScript.ItemManager.Items.KNIFE:
+            case ItemManager.Items.KNIFE:
               return "knife";
-            case GameScript.ItemManager.Items.PISTOL:
+            case ItemManager.Items.PISTOL:
               return "pistol";
-            case GameScript.ItemManager.Items.PISTOL_SILENCED:
+            case ItemManager.Items.PISTOL_SILENCED:
               return "pistolsilenced";
-            case GameScript.ItemManager.Items.REVOLVER:
+            case ItemManager.Items.REVOLVER:
               return "revolver";
-            case GameScript.ItemManager.Items.GRENADE_HOLD:
+            case ItemManager.Items.GRENADE_HOLD:
               return "grenade";
-            case GameScript.ItemManager.Items.SHOTGUN_PUMP:
+            case ItemManager.Items.SHOTGUN_PUMP:
               return "shotgun";
-            case GameScript.ItemManager.Items.GRENADE_LAUNCHER:
+            case ItemManager.Items.GRENADE_LAUNCHER:
               return "grenadelauncher";
-            case GameScript.ItemManager.Items.BAT:
+            case ItemManager.Items.BAT:
               return "bat";
           }
           //throw new System.Exception("No weapon set for " + item);
           Debug.LogWarning($"No weapon set for {item} - returning knife");
           return "knife";
         }
-        if (e._itemLeft != GameScript.ItemManager.Items.NONE)
+        if (e._itemLeft != ItemManager.Items.NONE)
         {
           returnString += "li_";
           var addWeapon = check_item(e._itemLeft);
           returnString += addWeapon + "_";
         }
-        if (e._itemRight != GameScript.ItemManager.Items.NONE)
+        if (e._itemRight != ItemManager.Items.NONE)
         {
           returnString += "ri_";
           var addWeapon = check_item(e._itemRight);
@@ -562,9 +562,9 @@ public class TileManager
 
       if (_CurrentLevel_Loadout != null)
       {
-        Levels._HardcodedLoadout = new GameScript.ItemManager.Loadout()
+        Levels._HardcodedLoadout = new Loadout()
         {
-          _Equipment = new GameScript.PlayerProfile.Equipment()
+          _Equipment = new PlayerProfile.Equipment()
         };
         Levels.GetHardcodedLoadout(_CurrentLevel_Loadout);
       }
@@ -992,20 +992,6 @@ public class TileManager
         Object.Destroy(GameObject.Find("Meshes_Tiles_Sides"));
       }
 
-      // Mark level loaded
-      if (GameScript.s_CustomNetworkManager._Connected)
-      {
-        GameScript.s_CustomNetworkManager._Self._NetworkBehavior.CmdMarkMapLoadComplete();
-
-        if (GameScript.s_CustomNetworkManager._IsServer)
-        {
-          while (!GameScript.s_CustomNetworkManager.AllPlayersLoaded())
-          {
-            yield return new WaitForSeconds(0.1f);
-          }
-        }
-      }
-
       // Set level time
       GameScript.s_LevelStartTime = Time.time;
 
@@ -1248,7 +1234,7 @@ public class TileManager
     _Text_LevelTimer.text = _LevelTimer.ToStringTimer();
 
     // Check survival
-    if (GameScript.s_IsZombieGameMode) GameScript.SurvivalMode.Init();
+    if (GameScript.s_IsZombieGameMode) SurvivalManager.Init();
 
     // Check if there is bat enemy to spawn
     if (!GameScript.s_EditorTesting)
@@ -1256,7 +1242,7 @@ public class TileManager
       var hasBat = false;
       if (EnemyScript._Enemies_alive != null)
         foreach (var e in EnemyScript._Enemies_alive)
-          if (e._itemLeft == GameScript.ItemManager.Items.BAT || e._itemRight == GameScript.ItemManager.Items.BAT)
+          if (e._itemLeft == ItemManager.Items.BAT || e._itemRight == ItemManager.Items.BAT)
           {
             hasBat = true;
             break;
@@ -1269,7 +1255,7 @@ public class TileManager
       if (!hasBat && chaser_extra != 2)
       {
         var e = EnemyScript.LoadEnemy(PlayerspawnScript._PlayerSpawns[0].transform.position - PlayerspawnScript._PlayerSpawns[0].transform.forward);
-        e._itemLeft = GameScript.ItemManager.Items.BAT;
+        e._itemLeft = ItemManager.Items.BAT;
         e.Init(null);
         e.EquipStart();
       }
@@ -1360,7 +1346,7 @@ public class TileManager
         var controller = loadedObject.transform.GetChild(0);
         controller.position = new Vector3(object_base._x, controller.position.y, object_base._z);
         var script = controller.GetComponent<EnemyScript>();
-        script._itemLeft = script._itemRight = GameScript.ItemManager.Items.NONE;
+        script._itemLeft = script._itemRight = ItemManager.Items.NONE;
         // Load path info
         Transform path = loadedObject.transform.GetChild(1),
           default_waypoint = path.GetChild(0),
@@ -1406,32 +1392,32 @@ public class TileManager
             // Left / right item
             case "li":
             case "ri":
-              GameScript.ItemManager.Items item;
+              ItemManager.Items item;
               switch (subobject_base._modifier0)
               {
                 case "pistol":
-                  item = GameScript.ItemManager.Items.PISTOL;
+                  item = ItemManager.Items.PISTOL;
                   break;
                 case "pistolsilenced":
-                  item = GameScript.ItemManager.Items.PISTOL_SILENCED;
+                  item = ItemManager.Items.PISTOL_SILENCED;
                   break;
                 case "revolver":
-                  item = GameScript.ItemManager.Items.REVOLVER;
+                  item = ItemManager.Items.REVOLVER;
                   break;
                 case "grenade":
-                  item = GameScript.ItemManager.Items.GRENADE_HOLD;
+                  item = ItemManager.Items.GRENADE_HOLD;
                   break;
                 case "shotgun":
-                  item = GameScript.ItemManager.Items.SHOTGUN_PUMP;
+                  item = ItemManager.Items.SHOTGUN_PUMP;
                   break;
                 case "grenadelauncher":
-                  item = GameScript.ItemManager.Items.GRENADE_LAUNCHER;
+                  item = ItemManager.Items.GRENADE_LAUNCHER;
                   break;
                 case "bat":
-                  item = GameScript.ItemManager.Items.BAT;
+                  item = ItemManager.Items.BAT;
                   break;
                 default:
-                  item = GameScript.ItemManager.Items.KNIFE;
+                  item = ItemManager.Items.KNIFE;
                   break;
               }
               if (object_type.Equals("ri"))
@@ -1951,10 +1937,6 @@ public class TileManager
     if (!CanReloadMap()) return;
     _LastReloadTime = Time.unscaledTime;
 
-    //
-    if (GameScript.s_CustomNetworkManager._Connected && GameScript.s_CustomNetworkManager._IsServer)
-      GameScript.s_CustomNetworkManager.MarkAllLevelsUnloaded();
-
     // Check AutoPlayer
     if (PlayerScript.AutoPlayer._Capturing)
       PlayerScript.AutoPlayer.Capture();
@@ -2099,20 +2081,6 @@ public class TileManager
     // Lerp camera
     IEnumerator LerpCamera()
     {
-
-      // Mark level loaded
-      if (GameScript.s_CustomNetworkManager._Connected)
-      {
-        GameScript.s_CustomNetworkManager._Self._NetworkBehavior.CmdMarkMapLoadComplete();
-
-        if (GameScript.s_CustomNetworkManager._IsServer)
-        {
-          while (!GameScript.s_CustomNetworkManager.AllPlayersLoaded())
-          {
-            yield return new WaitForSeconds(0.1f);
-          }
-        }
-      }
 
       // Set level time
       GameScript.s_LevelStartTime = Time.time;
@@ -3010,32 +2978,32 @@ public class TileManager
         var enemy_type = "";
         switch (s._itemLeft)
         {
-          case GameScript.ItemManager.Items.KNIFE:
+          case ItemManager.Items.KNIFE:
 
             enemy_type = "Knife";
             break;
-          case GameScript.ItemManager.Items.PISTOL:
+          case ItemManager.Items.PISTOL:
 
             enemy_type = "Pistol";
             break;
-          case GameScript.ItemManager.Items.PISTOL_SILENCED:
+          case ItemManager.Items.PISTOL_SILENCED:
 
             enemy_type = "Silenced pistol";
             break;
-          case GameScript.ItemManager.Items.REVOLVER:
+          case ItemManager.Items.REVOLVER:
 
             enemy_type = "Revolvers";
             break;
-          case GameScript.ItemManager.Items.GRENADE_HOLD:
+          case ItemManager.Items.GRENADE_HOLD:
 
             enemy_type = "Grenade";
             break;
-          case GameScript.ItemManager.Items.GRENADE_LAUNCHER:
+          case ItemManager.Items.GRENADE_LAUNCHER:
 
             enemy_type = "Grenade launcher";
             break;
 
-          case GameScript.ItemManager.Items.BAT:
+          case ItemManager.Items.BAT:
 
             enemy_type = "Chase robot";
             break;
@@ -4644,14 +4612,14 @@ public class TileManager
   {
     // Change enemy type
     int currentType = 0;
-    if (script._itemLeft == GameScript.ItemManager.Items.KNIFE) currentType = 1;
-    else if (script._itemLeft == GameScript.ItemManager.Items.PISTOL) currentType = 2;
-    else if (script._itemLeft == GameScript.ItemManager.Items.PISTOL_SILENCED) currentType = 3;
-    else if (script._itemLeft == GameScript.ItemManager.Items.REVOLVER) currentType = 4;
-    else if (script._itemLeft == GameScript.ItemManager.Items.SHOTGUN_PUMP) currentType = 5;
-    else if (script._itemLeft == GameScript.ItemManager.Items.GRENADE_HOLD) currentType = 6;
-    else if (script._itemLeft == GameScript.ItemManager.Items.GRENADE_LAUNCHER) currentType = 7;
-    else if (script._itemLeft == GameScript.ItemManager.Items.BAT) currentType = 8;
+    if (script._itemLeft == ItemManager.Items.KNIFE) currentType = 1;
+    else if (script._itemLeft == ItemManager.Items.PISTOL) currentType = 2;
+    else if (script._itemLeft == ItemManager.Items.PISTOL_SILENCED) currentType = 3;
+    else if (script._itemLeft == ItemManager.Items.REVOLVER) currentType = 4;
+    else if (script._itemLeft == ItemManager.Items.SHOTGUN_PUMP) currentType = 5;
+    else if (script._itemLeft == ItemManager.Items.GRENADE_HOLD) currentType = 6;
+    else if (script._itemLeft == ItemManager.Items.GRENADE_LAUNCHER) currentType = 7;
+    else if (script._itemLeft == ItemManager.Items.BAT) currentType = 8;
     currentType += change;
 
     currentType %= 9;
@@ -4661,44 +4629,44 @@ public class TileManager
     if (currentType == 5) currentType++;
     //if (currentType == 6) currentType++;
 
-    script._itemLeft = script._itemRight = GameScript.ItemManager.Items.NONE;
+    script._itemLeft = script._itemRight = ItemManager.Items.NONE;
     switch (currentType)
     {
       case 0:
-        script._itemLeft = GameScript.ItemManager.Items.NONE;
+        script._itemLeft = ItemManager.Items.NONE;
         changeColor.material.color = Color.white;
         break;
       case 1:
-        script._itemLeft = GameScript.ItemManager.Items.KNIFE;
+        script._itemLeft = ItemManager.Items.KNIFE;
         changeColor.material.color = Color.green;
         break;
       case 2:
-        script._itemLeft = GameScript.ItemManager.Items.PISTOL;
+        script._itemLeft = ItemManager.Items.PISTOL;
         changeColor.material.color = Color.magenta;
         break;
       case 3:
-        script._itemLeft = GameScript.ItemManager.Items.PISTOL_SILENCED;
+        script._itemLeft = ItemManager.Items.PISTOL_SILENCED;
         changeColor.material.color = Color.magenta / 3f;
         break;
       case 4:
-        script._itemLeft = GameScript.ItemManager.Items.REVOLVER;
-        script._itemRight = GameScript.ItemManager.Items.REVOLVER;
+        script._itemLeft = ItemManager.Items.REVOLVER;
+        script._itemRight = ItemManager.Items.REVOLVER;
         changeColor.material.color = (Color.red + Color.yellow) / 3f;
         break;
       case 5:
-        script._itemLeft = GameScript.ItemManager.Items.SHOTGUN_PUMP;
+        script._itemLeft = ItemManager.Items.SHOTGUN_PUMP;
         changeColor.material.color = Color.gray * 1.5f;
         break;
       case 6:
-        script._itemLeft = GameScript.ItemManager.Items.GRENADE_HOLD;
+        script._itemLeft = ItemManager.Items.GRENADE_HOLD;
         changeColor.material.color = Color.red + Color.yellow;
         break;
       case 7:
-        script._itemLeft = GameScript.ItemManager.Items.GRENADE_LAUNCHER;
+        script._itemLeft = ItemManager.Items.GRENADE_LAUNCHER;
         changeColor.material.color = Color.yellow;
         break;
       case 8:
-        script._itemLeft = GameScript.ItemManager.Items.BAT;
+        script._itemLeft = ItemManager.Items.BAT;
         changeColor.material.color = Color.gray * 1.5f;
         break;
     }

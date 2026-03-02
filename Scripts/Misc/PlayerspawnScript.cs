@@ -70,7 +70,7 @@ public class PlayerspawnScript : MonoBehaviour
   {
 
     // Create a new player
-    var player = Instantiate(GameScript.s_CustomNetworkManager._Connected ? GameResources._PlayerNetwork : GameResources._Player);
+    var player = Instantiate(GameResources._Player);
     player.transform.parent = GameObject.Find("Players").transform;
     player.name = "Player";
 

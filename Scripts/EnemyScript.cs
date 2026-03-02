@@ -173,7 +173,7 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
   public Vector3 _lastKnownPos,
     _searchDir;
 
-  public GameScript.ItemManager.Items _itemLeft, _itemRight;
+  public ItemManager.Items _itemLeft, _itemRight;
 
   public enum State
   {
@@ -192,7 +192,7 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
 
   public class SurvivalAttributes
   {
-    public GameScript.SurvivalMode.EnemyType _enemyType;
+    public SurvivalManager.EnemyType _enemyType;
 
     public int _WaitForEnemyHordeSize, _WaitForEnemyHordeSizeStart;
   }
@@ -223,7 +223,7 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
 
     if (!_IsZombie)
     {
-      if (_itemLeft == GameScript.ItemManager.Items.BAT)
+      if (_itemLeft == ItemManager.Items.BAT)
         _waitLookPos = PlayerspawnScript._PlayerSpawns[0].transform.position;
       else if (_path.GetPathLength() > 0)
       {
@@ -273,83 +273,83 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
       switch (_itemLeft)
       {
 
-        case GameScript.ItemManager.Items.KNIFE:
+        case ItemManager.Items.KNIFE:
 
           if (getCrownBonuses)
             if (crownRandom < 0.33f)
-              _itemLeft = GameScript.ItemManager.Items.AXE;
+              _itemLeft = ItemManager.Items.AXE;
             else if (crownRandom < 0.66f)
-              _itemLeft = GameScript.ItemManager.Items.FRYING_PAN;
+              _itemLeft = ItemManager.Items.FRYING_PAN;
             else
-              _itemLeft = GameScript.ItemManager.Items.RAPIER;
+              _itemLeft = ItemManager.Items.RAPIER;
 
           if (Random.value < 0.5f)
           {
             _itemRight = _itemLeft;
-            _itemLeft = GameScript.ItemManager.Items.NONE;
+            _itemLeft = ItemManager.Items.NONE;
           }
 
           _ragdoll.ChangeColor(Color.green);
           break;
 
-        case GameScript.ItemManager.Items.PISTOL:
+        case ItemManager.Items.PISTOL:
 
           if (getCrownBonuses)
             if (crownRandom < 0.33f)
-              _itemLeft = GameScript.ItemManager.Items.PISTOL_MACHINE;
+              _itemLeft = ItemManager.Items.PISTOL_MACHINE;
             else if (crownRandom < 0.66f)
-              _itemRight = GameScript.ItemManager.Items.FRYING_PAN;
+              _itemRight = ItemManager.Items.FRYING_PAN;
             else
-              _itemRight = GameScript.ItemManager.Items.PISTOL;
+              _itemRight = ItemManager.Items.PISTOL;
 
           _ragdoll.ChangeColor(Color.magenta);
           break;
 
-        case GameScript.ItemManager.Items.PISTOL_SILENCED:
+        case ItemManager.Items.PISTOL_SILENCED:
 
           if (getCrownBonuses)
           {
             if (crownRandom < 0.5f)
-              _itemLeft = _itemRight = GameScript.ItemManager.Items.FRYING_PAN;
+              _itemLeft = _itemRight = ItemManager.Items.FRYING_PAN;
             else
-              _itemLeft = GameScript.ItemManager.Items.CROSSBOW;
+              _itemLeft = ItemManager.Items.CROSSBOW;
 
           }
           else
-            _itemRight = GameScript.ItemManager.Items.KNIFE;
+            _itemRight = ItemManager.Items.KNIFE;
 
           _ragdoll.ChangeColor(Color.magenta / 3f);
           break;
 
-        case GameScript.ItemManager.Items.REVOLVER:
+        case ItemManager.Items.REVOLVER:
 
           if (getCrownBonuses)
             if (crownRandom < 0.5f)
-              _itemLeft = _itemRight = GameScript.ItemManager.Items.DMR;
+              _itemLeft = _itemRight = ItemManager.Items.DMR;
             else
             {
-              _itemLeft = GameScript.ItemManager.Items.AK47;
-              _itemRight = GameScript.ItemManager.Items.KNIFE;
+              _itemLeft = ItemManager.Items.AK47;
+              _itemRight = ItemManager.Items.KNIFE;
             }
 
           _ragdoll.ChangeColor((Color.red + Color.yellow) / 3f);
           break;
 
-        case GameScript.ItemManager.Items.GRENADE_HOLD:
+        case ItemManager.Items.GRENADE_HOLD:
 
           if (getCrownBonuses)
-            _itemRight = GameScript.ItemManager.Items.FRYING_PAN;
+            _itemRight = ItemManager.Items.FRYING_PAN;
 
           _ragdoll.ChangeColor(Color.red + Color.yellow);
           break;
 
-        case GameScript.ItemManager.Items.SHOTGUN_PUMP:
+        case ItemManager.Items.SHOTGUN_PUMP:
           _ragdoll.ChangeColor(Color.white);
           _enemyType = EnemyType.ROBOT;
           break;
 
-        case GameScript.ItemManager.Items.BAT:
-          //_itemLeft = GameScript.ItemManager.Items.SHOTGUN_DOUBLE;
+        case ItemManager.Items.BAT:
+          //_itemLeft = ItemManager.Items.SHOTGUN_DOUBLE;
           _ragdoll.ChangeColor(Color.white);
           _enemyType = EnemyType.ROBOT;
           _canAttack = false;
@@ -357,8 +357,8 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
           _Chaser = this;
           break;
 
-        case GameScript.ItemManager.Items.GRENADE_LAUNCHER:
-          _itemLeft = GameScript.ItemManager.Items.GRENADE_LAUNCHER;
+        case ItemManager.Items.GRENADE_LAUNCHER:
+          _itemLeft = ItemManager.Items.GRENADE_LAUNCHER;
           _ragdoll.ChangeColor(Color.yellow);
           break;
       }
@@ -369,7 +369,7 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
 
       //
       if (_IsZombieReal)
-        _itemLeft = _itemRight = GameScript.ItemManager.Items.AXE;
+        _itemLeft = _itemRight = ItemManager.Items.AXE;
 
       // Agent stuff
       _beganPatrolling = true;
@@ -389,7 +389,7 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
       TargetFound(false, false);
 
       // Check armor
-      if (_survivalAttributes._enemyType == GameScript.SurvivalMode.EnemyType.ARMORED)
+      if (_survivalAttributes._enemyType == SurvivalManager.EnemyType.ARMORED)
       {
         _ragdoll.AddArmor();
         _ragdoll._health = 3;
@@ -830,8 +830,8 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
                     ChaseTarget();
 
                   // Check melee
-                  bool hasFryingPan = _itemLeft == GameScript.ItemManager.Items.FRYING_PAN || _itemRight == GameScript.ItemManager.Items.FRYING_PAN;
-                  if (hasFryingPan && (_ragdoll.HasGun() || _itemLeft == GameScript.ItemManager.Items.GRENADE_HOLD)) { }
+                  bool hasFryingPan = _itemLeft == ItemManager.Items.FRYING_PAN || _itemRight == ItemManager.Items.FRYING_PAN;
+                  if (hasFryingPan && (_ragdoll.HasGun() || _itemLeft == ItemManager.Items.GRENADE_HOLD)) { }
                   else if ((!_IsZombieReal && dis < (hasFryingPan ? 2f : 4f)) || (_IsZombieReal && dis < 4f))
                     DrawBackMelee();
 
@@ -849,7 +849,7 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
                     // Only attack if is alive, the target is alive, and (the target is in front, or has a machine gun, or has a melee weapon)
                     if (!_ragdoll._IsDead && !_ragdollTarget._IsDead && (_targetDirectlyInFront || HasMachineGun() || !_ragdoll.HasGun()))
                     {
-                      if (_itemLeft == GameScript.ItemManager.Items.GRENADE_HOLD)
+                      if (_itemLeft == ItemManager.Items.GRENADE_HOLD)
                         _leftweaponuse = true;
 
                       var useitem = _leftweaponuse ? (_ragdoll._ItemL != null ? _ragdoll._ItemL : _ragdoll._ItemR) : (_ragdoll._ItemR != null ? _ragdoll._ItemR : _ragdoll._ItemL);
@@ -864,7 +864,7 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
                       // Attack if close enough or pointed at target
                       else if (
                         _ragdoll.HasGun() ||
-                        (!_ragdoll.HasGun() && dis < (_itemLeft == GameScript.ItemManager.Items.GRENADE_HOLD ? 1f : (_itemLeft == GameScript.ItemManager.Items.BAT ? 1.2f : (_IsZombieReal ? 0.85f : (useitem._type == GameScript.ItemManager.Items.RAPIER ? 2.8f : 1.8f)))))
+                        (!_ragdoll.HasGun() && dis < (_itemLeft == ItemManager.Items.GRENADE_HOLD ? 1f : (_itemLeft == ItemManager.Items.BAT ? 1.2f : (_IsZombieReal ? 0.85f : (useitem._type == ItemManager.Items.RAPIER ? 2.8f : 1.8f)))))
                         )
                       {
                         UseItem(dis < 1.4f);
@@ -1023,7 +1023,7 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
 
     //
     _leftweaponuse = !_leftweaponuse;
-    if (_itemLeft == GameScript.ItemManager.Items.GRENADE_HOLD)
+    if (_itemLeft == ItemManager.Items.GRENADE_HOLD)
       _leftweaponuse = true;
 
     if (_ragdoll._ItemL == null && _ragdoll._ItemR == null) { return; }
@@ -1100,7 +1100,7 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
   //
   void SetAttackTime(bool reset = false)
   {
-    if (_itemLeft == GameScript.ItemManager.Items.GRENADE_HOLD)
+    if (_itemLeft == ItemManager.Items.GRENADE_HOLD)
     {
       _attackTime = Time.time;
       return;
@@ -1118,9 +1118,9 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
     // Check survial
     if (GameScript.s_IsZombieGameMode)
     {
-      if (GameScript.SurvivalMode._Wave_enemies == null) return;
-      if (GameScript.SurvivalMode._Wave_enemies.Count <= 1 ||
-        (GameScript.SurvivalMode._Number_enemies_spawned - _survivalAttributes._WaitForEnemyHordeSizeStart) >= _survivalAttributes._WaitForEnemyHordeSize)
+      if (SurvivalManager._Wave_enemies == null) return;
+      if (SurvivalManager._Wave_enemies.Count <= 1 ||
+        (SurvivalManager._Number_enemies_spawned - _survivalAttributes._WaitForEnemyHordeSizeStart) >= _survivalAttributes._WaitForEnemyHordeSize)
       { }
       else return;
     }
@@ -1214,7 +1214,7 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
         // Check if target is in LOS
         bool found = false;
         Vector3 dirToTarget = -MathC.Get2DVector(_ragdoll._Hip.transform.position - _ragdollTarget._Hip.transform.position).normalized;
-        if (_IsZombie && _survivalAttributes._enemyType != GameScript.SurvivalMode.EnemyType.PISTOL_WALK)
+        if (_IsZombie && _survivalAttributes._enemyType != SurvivalManager.EnemyType.PISTOL_WALK)
         {
           found = true;
         }
@@ -1298,7 +1298,7 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
         }
       }
       // Check for things in LOS
-      if (_IsZombie && _survivalAttributes._enemyType != GameScript.SurvivalMode.EnemyType.PISTOL_WALK) return;
+      if (_IsZombie && _survivalAttributes._enemyType != SurvivalManager.EnemyType.PISTOL_WALK) return;
       {
         bool hit = false;
         h = SpherecastHandler.GetSpherecastHit(1);
@@ -1796,23 +1796,23 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
   public void EquipStart()
   {
     // Equip start items
-    if (_itemLeft != GameScript.ItemManager.Items.NONE)
+    if (_itemLeft != ItemManager.Items.NONE)
     {
-      GameScript.ItemManager.SpawnItem(_itemLeft);
+      ItemManager.SpawnItem(_itemLeft);
       _ragdoll.EquipItem(_itemLeft, ActiveRagdoll.Side.LEFT);
     }
     else
       _ragdoll.AddArmJoint(ActiveRagdoll.Side.LEFT);
-    if (_itemRight != GameScript.ItemManager.Items.NONE)
+    if (_itemRight != ItemManager.Items.NONE)
     {
-      GameScript.ItemManager.SpawnItem(_itemRight);
+      ItemManager.SpawnItem(_itemRight);
       _ragdoll.EquipItem(_itemRight, ActiveRagdoll.Side.RIGHT);
     }
     else
       _ragdoll.AddArmJoint(ActiveRagdoll.Side.RIGHT);
 
     // Special
-    if (_itemLeft == GameScript.ItemManager.Items.PISTOL_SILENCED)
+    if (_itemLeft == ItemManager.Items.PISTOL_SILENCED)
     {
       IEnumerator delay_grappler()
       {
@@ -1824,7 +1824,7 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
     }
 
     // Zombie
-    if (_IsZombieReal && _itemLeft == GameScript.ItemManager.Items.AXE)
+    if (_IsZombieReal && _itemLeft == ItemManager.Items.AXE)
     {
       _ragdoll._ItemL.transform.GetChild(0).GetComponent<Renderer>().enabled = false;
       _ragdoll._ItemR.transform.GetChild(0).GetComponent<Renderer>().enabled = false;
@@ -1857,26 +1857,26 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
         var item_type = _ragdoll._itemL != null ? _ragdoll._itemL._type : _ragdoll._itemR._type;
         switch (item_type)
         {
-          case (GameScript.ItemManager.Items.KNIFE):
+          case (ItemManager.Items.KNIFE):
             Stats.OverallStats._Enemies_Killed_Knife++;
             break;
-          case (GameScript.ItemManager.Items.PISTOL):
+          case (ItemManager.Items.PISTOL):
             Stats.OverallStats._Enemies_Killed_Pistol++;
             break;
-          case (GameScript.ItemManager.Items.PISTOL_SILENCED):
+          case (ItemManager.Items.PISTOL_SILENCED):
             Stats.OverallStats._Enemies_Killed_PistolSilenced++;
             break;
-          case (GameScript.ItemManager.Items.GRENADE_HOLD):
+          case (ItemManager.Items.GRENADE_HOLD):
             Stats.OverallStats._Enemies_Killed_Grenade++;
             break;
-          case (GameScript.ItemManager.Items.REVOLVER):
+          case (ItemManager.Items.REVOLVER):
             Stats.OverallStats._Enemies_Killed_Revolver++;
             break;
         }
       }
       else if (GameScript._GameMode == GameScript.GameModes.SURVIVAL)
       {
-        if (_survivalAttributes._enemyType == GameScript.SurvivalMode.EnemyType.ARMORED)
+        if (_survivalAttributes._enemyType == SurvivalManager.EnemyType.ARMORED)
           Stats.OverallStats._Enemies_Killed_Survival_Armored++;
         else
           Stats.OverallStats._Enemies_Killed_Survival_Basic++;
@@ -1969,7 +1969,7 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
       if (GameScript.s_IsZombieGameMode)
       {
         if (source._IsPlayer)
-          GameScript.SurvivalMode.GivePoints(source._PlayerScript._Id, 5 * GameScript.SurvivalMode._Wave, true);
+          SurvivalManager.GivePoints(source._PlayerScript._Id, 5 * SurvivalManager._Wave, true);
       }
 
       else
@@ -2248,17 +2248,17 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
                 }
 
                 // Make sure loadout not changed
-                bool EquipmentIsEqual(GameScript.PlayerProfile.Equipment e0, GameScript.PlayerProfile.Equipment e1)
+                bool EquipmentIsEqual(PlayerProfile.Equipment e0, PlayerProfile.Equipment e1)
                 {
 
                   // Check items equal
-                  var equipment0_items = new List<GameScript.ItemManager.Items>(){
+                  var equipment0_items = new List<ItemManager.Items>(){
                   e0._ItemLeft0,
                   e0._ItemRight0,
                   e0._ItemLeft1,
                   e0._ItemRight1
                 };
-                  var equipment1_items = new List<GameScript.ItemManager.Items>(){
+                  var equipment1_items = new List<ItemManager.Items>(){
                   e1._ItemLeft0,
                   e1._ItemRight0,
                   e1._ItemLeft1,
@@ -2369,7 +2369,7 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
                     }
 
                     // Check loadout
-                    var equipmentFake = new GameScript.PlayerProfile.Equipment();
+                    var equipmentFake = new PlayerProfile.Equipment();
                     {
                       if (extraInfo.items?.Length > 0)
                         equipmentFake._ItemLeft0 = extraInfo.items[0];
@@ -2499,7 +2499,7 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
 
     // Increment survival score
     if (GameScript.s_IsZombieGameMode && source._IsPlayer)
-      GameScript.SurvivalMode.IncrementScore(source._PlayerScript._Id);
+      SurvivalManager.IncrementScore(source._PlayerScript._Id);
   }
 
   //
@@ -2576,9 +2576,9 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
   {
 
     var weapon = "knife";
-    if (survivalAttributes._enemyType == GameScript.SurvivalMode.EnemyType.GRENADE_JOG)
+    if (survivalAttributes._enemyType == SurvivalManager.EnemyType.GRENADE_JOG)
       weapon = "grenade";
-    else if (survivalAttributes._enemyType == GameScript.SurvivalMode.EnemyType.PISTOL_WALK)
+    else if (survivalAttributes._enemyType == SurvivalManager.EnemyType.PISTOL_WALK)
       weapon = "pistol";
 
     var enemy = TileManager.LoadObject($"e_0_0_li_{weapon}_");

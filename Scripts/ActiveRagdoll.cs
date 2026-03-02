@@ -524,6 +524,7 @@ public class ActiveRagdoll
         if (Time.time - _kickTimer_start >= 1.2f)
         {
           _kicking = false;
+          _kickTimer_start = -1f;
         }
 
         else if (Time.time - _kickTimer >= 0.05f)
@@ -538,23 +539,8 @@ public class ActiveRagdoll
             var ragdoll = GetRagdoll(hit.collider.gameObject);
             if (ragdoll != null)
             {
-              var hitForce = MathC.Get2DVector(
-                -(_Hip.transform.position - ragdoll._Hip.transform.position).normalized * (4000f + (Random.value * 2000f)) * 1f
-              );
-              if (ragdoll.TakeDamage(
-                new RagdollDamageSource()
-                {
-                  Source = this,
-
-                  HitForce = hitForce,
-
-                  Damage = 1,
-                  DamageSource = _Hip.position,
-                  DamageSourceType = DamageSourceType.MELEE,
-
-                  SpawnBlood = true,
-                  SpawnGiblets = true
-                }))
+              var hitForce = 2f;
+              if (ItemScript.MeleeDamageOther(ItemManager.Items.FIST, this, ragdoll, hitForce, false))
               {
                 _kicking = false;
               }
@@ -696,6 +682,26 @@ public class ActiveRagdoll
       _invisibility_timer = 0f;
   }
 
+  // Kick
+  public void KickStart()
+  {
+
+  }
+  void Kick()
+  {
+
+  }
+  public void KickEnd()
+  {
+    // Kick
+    if (!_kicking)// && Time.time - _kickTimer_start >= 2f)
+    {
+      _kicking = true;
+      _kickTimer = Time.time - 1f;
+      _kickTimer_start = Time.time;
+    }
+  }
+
   // Use item(s) in hand(s)
   public void UseLeft()
   {
@@ -764,21 +770,22 @@ public class ActiveRagdoll
     RIGHT
   }
 
-  public void EquipItem(GameScript.ItemManager.Items itemType, Side side, int clipSize = -1, float useTime = -1f, int itemId = -1)
+  public void EquipItem(ItemManager.Items itemType, Side side, int clipSize = -1, float useTime = -1f, int itemId = -1)
   {
-    if (itemType == GameScript.ItemManager.Items.NONE)
+    if (itemType == ItemManager.Items.NONE)
     {
       AddArmJoint(side);
       return;
     }
 
     // Spawn item
-    var item = GameScript.ItemManager.GetItem(itemType);
+    var item = ItemManager.GetItem(itemType);
     if (item == null)
     {
-      GameScript.ItemManager.SpawnItem(itemType);
-      item = GameScript.ItemManager.GetItem(itemType);
+      ItemManager.SpawnItem(itemType);
+      item = ItemManager.GetItem(itemType);
     }
+    if (item == null) return;
     var itemScript = item.GetComponent<ItemScript>();
 
     bool two_hands = itemScript._twoHanded;
@@ -839,14 +846,14 @@ public class ActiveRagdoll
     SwapItems(
       new WeaponSwapData()
       {
-        ItemType = _ItemR?._type ?? GameScript.ItemManager.Items.NONE,
+        ItemType = _ItemR?._type ?? ItemManager.Items.NONE,
         ItemId = _ItemR?._ItemId ?? -1,
         ItemClip = _ItemR?.GetClip() ?? -1,
         ItemUseItem = _ItemR?._useTime ?? -1f
       },
       new WeaponSwapData()
       {
-        ItemType = _ItemL?._type ?? GameScript.ItemManager.Items.NONE,
+        ItemType = _ItemL?._type ?? ItemManager.Items.NONE,
         ItemId = _ItemL?._ItemId ?? -1,
         ItemClip = _ItemL?.GetClip() ?? -1,
         ItemUseItem = _ItemL?._useTime ?? -1f
@@ -941,7 +948,7 @@ public class ActiveRagdoll
   // Change weapons mid-game
   public struct WeaponSwapData
   {
-    public GameScript.ItemManager.Items ItemType;
+    public ItemManager.Items ItemType;
     public int ItemClip, ItemId;
     public float ItemUseItem;
   }
@@ -965,7 +972,7 @@ public class ActiveRagdoll
       UnequipItem(Side.LEFT);
       AddArmJoint(Side.LEFT);
     }
-    else if (itemL_type != GameScript.ItemManager.Items.NONE)
+    else if (itemL_type != ItemManager.Items.NONE)
       EquipItem(itemL_type, Side.LEFT, itemL_clip, itemL_useTime, itemL_id);
     else
     {
@@ -981,7 +988,7 @@ public class ActiveRagdoll
         AddArmJoint(Side.RIGHT);
       }
     }
-    else if (itemR_type != GameScript.ItemManager.Items.NONE)
+    else if (itemR_type != ItemManager.Items.NONE)
       EquipItem(itemR_type, Side.RIGHT, itemR_clip, itemR_useTime, itemR_id);
     else
     {
@@ -1386,9 +1393,9 @@ public class ActiveRagdoll
             }
             else
 
-            // Change color to normal for survival
-            if (_EnemyScript?._survivalAttributes != null)
-              ChangeColor(Color.green, 0.8f);
+              // Change color to normal for survival
+              if (_EnemyScript?._survivalAttributes != null)
+                ChangeColor(Color.green, 0.8f);
           }
           else if (_health > 0)
           {
@@ -1540,14 +1547,6 @@ public class ActiveRagdoll
         ToggleRaycasting(true);
       }
       GameScript.s_Singleton.StartCoroutine(TryGrapple());
-
-      /*/ Kick
-      else if (!_kicking && Time.time - _kickTimer_start >= 2f)
-      {
-        _kickTimer = Time.time - 1f;
-        _kickTimer_start = Time.time;
-        _kicking = true;
-      }*/
     }
 
   }
@@ -1947,6 +1946,10 @@ public class ActiveRagdoll
 
     _HasBeenStunned = true;
     _stunTimer = Time.time + duration;
+
+    // Release grapple
+    if (_IsGrappling)
+      Grapple(true);
   }
 
   Tuple<bool, bool>[] _saveRagdollState;
@@ -2120,7 +2123,7 @@ public class ActiveRagdoll
     var enemy = EnemyScript.SpawnEnemyAt(
       new EnemyScript.SurvivalAttributes()
       {
-        _enemyType = GameScript.SurvivalMode.EnemyType.KNIFE_RUN
+        _enemyType = SurvivalManager.EnemyType.KNIFE_RUN
       },
       new Vector2(spawn_pos.x, spawn_pos.z),
       true
@@ -2173,11 +2176,11 @@ public class ActiveRagdoll
   {
     return (_ItemL?.IsEmpty() ?? false) || (_ItemR?.IsEmpty() ?? false);
   }
-  public bool HasItem(GameScript.ItemManager.Items item)
+  public bool HasItem(ItemManager.Items item)
   {
     return
-      (_ItemL?._type ?? GameScript.ItemManager.Items.NONE) == item ||
-      (_ItemR?._type ?? GameScript.ItemManager.Items.NONE) == item;
+      (_ItemL?._type ?? ItemManager.Items.NONE) == item ||
+      (_ItemR?._type ?? ItemManager.Items.NONE) == item;
   }
   public bool HasActiveBulletDeflector()
   {

@@ -113,12 +113,12 @@ public class Powerup : MonoBehaviour
     switch (_type)
     {
       case PowerupType.SILENCED_PISTOL:
-        r.EquipItem(GameScript.ItemManager.Items.PISTOL_SILENCED, ActiveRagdoll.Side.RIGHT);
+        r.EquipItem(ItemManager.Items.PISTOL_SILENCED, ActiveRagdoll.Side.RIGHT);
         r.PlaySound("Ragdoll/Reload");
         break;
 
       case PowerupType.KNIFE:
-        r.EquipItem(GameScript.ItemManager.Items.KNIFE, ActiveRagdoll.Side.LEFT);
+        r.EquipItem(ItemManager.Items.KNIFE, ActiveRagdoll.Side.LEFT);
         r.PlaySound("Ragdoll/Slice");
         break;
 

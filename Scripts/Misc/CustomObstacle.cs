@@ -6,6 +6,7 @@ public class CustomObstacle : MonoBehaviour
   public enum InteractType
   {
     REMOVEBARRIER,
+
     BUYITEM,
     BUYUTILITY,
     BUYPERK,
@@ -41,8 +42,8 @@ public class CustomObstacle : MonoBehaviour
   }
 
   // Weapons
-  static Dictionary<int, List<System.Tuple<GameScript.ItemManager.Items, int>>> _BUYABLE_ITEM_TIERS;
-  System.Tuple<GameScript.ItemManager.Items, int> _weapon_info;
+  static Dictionary<int, List<System.Tuple<ItemManager.Items, int>>> _BUYABLE_ITEM_TIERS;
+  System.Tuple<ItemManager.Items, int> _weapon_info;
 
   // Perks
   static Dictionary<int, List<System.Tuple<Shop.Perk.PerkType, int>>> _BUYABLE_PERK_TIERS;
@@ -89,42 +90,42 @@ public class CustomObstacle : MonoBehaviour
     // Create pricing lists
     if (_BUYABLE_ITEM_TIERS == null)
     {
-      _BUYABLE_ITEM_TIERS = new Dictionary<int, List<System.Tuple<GameScript.ItemManager.Items, int>>>();
+      _BUYABLE_ITEM_TIERS = new Dictionary<int, List<System.Tuple<ItemManager.Items, int>>>();
 
-      _BUYABLE_ITEM_TIERS.Add(0, new List<System.Tuple<GameScript.ItemManager.Items, int>>());
-      _BUYABLE_ITEM_TIERS[0].Add(System.Tuple.Create(GameScript.ItemManager.Items.KNIFE, 15));
+      _BUYABLE_ITEM_TIERS.Add(0, new List<System.Tuple<ItemManager.Items, int>>());
+      _BUYABLE_ITEM_TIERS[0].Add(System.Tuple.Create(ItemManager.Items.KNIFE, 15));
 
-      _BUYABLE_ITEM_TIERS.Add(1, new List<System.Tuple<GameScript.ItemManager.Items, int>>());
-      _BUYABLE_ITEM_TIERS[1].Add(System.Tuple.Create(GameScript.ItemManager.Items.PISTOL, 25));
+      _BUYABLE_ITEM_TIERS.Add(1, new List<System.Tuple<ItemManager.Items, int>>());
+      _BUYABLE_ITEM_TIERS[1].Add(System.Tuple.Create(ItemManager.Items.PISTOL, 25));
 
-      _BUYABLE_ITEM_TIERS.Add(2, new List<System.Tuple<GameScript.ItemManager.Items, int>>());
-      _BUYABLE_ITEM_TIERS[2].Add(System.Tuple.Create(GameScript.ItemManager.Items.RIFLE, 40));
+      _BUYABLE_ITEM_TIERS.Add(2, new List<System.Tuple<ItemManager.Items, int>>());
+      _BUYABLE_ITEM_TIERS[2].Add(System.Tuple.Create(ItemManager.Items.RIFLE, 40));
 
-      _BUYABLE_ITEM_TIERS.Add(3, new List<System.Tuple<GameScript.ItemManager.Items, int>>());
-      _BUYABLE_ITEM_TIERS[3].Add(System.Tuple.Create(GameScript.ItemManager.Items.PISTOL_DOUBLE, 100));
-      _BUYABLE_ITEM_TIERS[3].Add(System.Tuple.Create(GameScript.ItemManager.Items.SHOTGUN_PUMP, 150));
-      //_BUYABLE_ITEM_TIERS[3].Add(System.Tuple.Create(GameScript.ItemManager.Items.RAPIER, 75));
-      _BUYABLE_ITEM_TIERS[3].Add(System.Tuple.Create(GameScript.ItemManager.Items.CROSSBOW, 85));
-      _BUYABLE_ITEM_TIERS[3].Add(System.Tuple.Create(GameScript.ItemManager.Items.PISTOL_MACHINE, 75));
-      _BUYABLE_ITEM_TIERS[3].Add(System.Tuple.Create(GameScript.ItemManager.Items.PISTOL_CHARGE, 85));
+      _BUYABLE_ITEM_TIERS.Add(3, new List<System.Tuple<ItemManager.Items, int>>());
+      _BUYABLE_ITEM_TIERS[3].Add(System.Tuple.Create(ItemManager.Items.PISTOL_DOUBLE, 100));
+      _BUYABLE_ITEM_TIERS[3].Add(System.Tuple.Create(ItemManager.Items.SHOTGUN_PUMP, 150));
+      //_BUYABLE_ITEM_TIERS[3].Add(System.Tuple.Create(ItemManager.Items.RAPIER, 75));
+      _BUYABLE_ITEM_TIERS[3].Add(System.Tuple.Create(ItemManager.Items.CROSSBOW, 85));
+      _BUYABLE_ITEM_TIERS[3].Add(System.Tuple.Create(ItemManager.Items.PISTOL_MACHINE, 75));
+      _BUYABLE_ITEM_TIERS[3].Add(System.Tuple.Create(ItemManager.Items.PISTOL_CHARGE, 85));
 
-      _BUYABLE_ITEM_TIERS.Add(4, new List<System.Tuple<GameScript.ItemManager.Items, int>>());
-      _BUYABLE_ITEM_TIERS[4].Add(System.Tuple.Create(GameScript.ItemManager.Items.UZI, 160));
-      _BUYABLE_ITEM_TIERS[4].Add(System.Tuple.Create(GameScript.ItemManager.Items.REVOLVER, 250));
-      _BUYABLE_ITEM_TIERS[4].Add(System.Tuple.Create(GameScript.ItemManager.Items.SHOTGUN_DOUBLE, 350));
-      _BUYABLE_ITEM_TIERS[4].Add(System.Tuple.Create(GameScript.ItemManager.Items.DMR, 325));
-      _BUYABLE_ITEM_TIERS[4].Add(System.Tuple.Create(GameScript.ItemManager.Items.RIFLE_CHARGE, 300));
-      _BUYABLE_ITEM_TIERS[4].Add(System.Tuple.Create(GameScript.ItemManager.Items.RIFLE_LEVER, 250));
-      _BUYABLE_ITEM_TIERS[4].Add(System.Tuple.Create(GameScript.ItemManager.Items.STICKY_GUN, 160));
+      _BUYABLE_ITEM_TIERS.Add(4, new List<System.Tuple<ItemManager.Items, int>>());
+      _BUYABLE_ITEM_TIERS[4].Add(System.Tuple.Create(ItemManager.Items.UZI, 160));
+      _BUYABLE_ITEM_TIERS[4].Add(System.Tuple.Create(ItemManager.Items.REVOLVER, 250));
+      _BUYABLE_ITEM_TIERS[4].Add(System.Tuple.Create(ItemManager.Items.SHOTGUN_DOUBLE, 350));
+      _BUYABLE_ITEM_TIERS[4].Add(System.Tuple.Create(ItemManager.Items.DMR, 325));
+      _BUYABLE_ITEM_TIERS[4].Add(System.Tuple.Create(ItemManager.Items.RIFLE_CHARGE, 300));
+      _BUYABLE_ITEM_TIERS[4].Add(System.Tuple.Create(ItemManager.Items.RIFLE_LEVER, 250));
+      _BUYABLE_ITEM_TIERS[4].Add(System.Tuple.Create(ItemManager.Items.STICKY_GUN, 160));
 
-      _BUYABLE_ITEM_TIERS.Add(5, new List<System.Tuple<GameScript.ItemManager.Items, int>>());
-      _BUYABLE_ITEM_TIERS[5].Add(System.Tuple.Create(GameScript.ItemManager.Items.AK47, 500));
-      _BUYABLE_ITEM_TIERS[5].Add(System.Tuple.Create(GameScript.ItemManager.Items.M16, 400));
-      _BUYABLE_ITEM_TIERS[5].Add(System.Tuple.Create(GameScript.ItemManager.Items.SHOTGUN_BURST, 450));
-      _BUYABLE_ITEM_TIERS[5].Add(System.Tuple.Create(GameScript.ItemManager.Items.KATANA, 350));
-      _BUYABLE_ITEM_TIERS[5].Add(System.Tuple.Create(GameScript.ItemManager.Items.AXE, 200));
-      _BUYABLE_ITEM_TIERS[5].Add(System.Tuple.Create(GameScript.ItemManager.Items.FLAMETHROWER, 450));
-      _BUYABLE_ITEM_TIERS[5].Add(System.Tuple.Create(GameScript.ItemManager.Items.SNIPER, 300));
+      _BUYABLE_ITEM_TIERS.Add(5, new List<System.Tuple<ItemManager.Items, int>>());
+      _BUYABLE_ITEM_TIERS[5].Add(System.Tuple.Create(ItemManager.Items.AK47, 500));
+      _BUYABLE_ITEM_TIERS[5].Add(System.Tuple.Create(ItemManager.Items.M16, 400));
+      _BUYABLE_ITEM_TIERS[5].Add(System.Tuple.Create(ItemManager.Items.SHOTGUN_BURST, 450));
+      _BUYABLE_ITEM_TIERS[5].Add(System.Tuple.Create(ItemManager.Items.KATANA, 350));
+      _BUYABLE_ITEM_TIERS[5].Add(System.Tuple.Create(ItemManager.Items.AXE, 200));
+      _BUYABLE_ITEM_TIERS[5].Add(System.Tuple.Create(ItemManager.Items.FLAMETHROWER, 450));
+      _BUYABLE_ITEM_TIERS[5].Add(System.Tuple.Create(ItemManager.Items.SNIPER, 300));
     }
     if (_BUYABLE_PERK_TIERS == null)
     {
@@ -163,6 +164,7 @@ public class CustomObstacle : MonoBehaviour
       _BUYABLE_UTILITY_TIERS[1].Add(System.Tuple.Create(UtilityScript.UtilityType.MORTAR_STRIKE, 45));
       //_BUYABLE_UTILITY_TIERS[1].Add(System.Tuple.Create(UtilityScript.UtilityType.MOLOTOV, 65));
       _BUYABLE_UTILITY_TIERS[1].Add(System.Tuple.Create(UtilityScript.UtilityType.BEAR_TRAP, 30));
+      _BUYABLE_UTILITY_TIERS[1].Add(System.Tuple.Create(UtilityScript.UtilityType.MINE, 60));
     }
 
   }
@@ -376,7 +378,7 @@ public class CustomObstacle : MonoBehaviour
     if (!_text.gameObject.activeSelf) return;
 
     // Purchase
-    if (GameScript.SurvivalMode.HasPoints(p._Id, _pointCost))
+    if (SurvivalManager.HasPoints(p._Id, _pointCost))
     {
       // Check random
       var use_type = _type == InteractType.BUYRANDOM ? _randomType : _type;
@@ -387,7 +389,7 @@ public class CustomObstacle : MonoBehaviour
         gameObject.SetActive(false);
         _CustomInteractables.Remove(this);
         p.RemoveInteractable();
-        GameScript.SurvivalMode.OpenRoom(_index, _index2);
+        SurvivalManager.OpenRoom(_index, _index2);
         // Play sound
         p._Ragdoll.PlaySound("Survival/Buy_Wall");
       }
@@ -413,20 +415,20 @@ public class CustomObstacle : MonoBehaviour
         // Check if replacing a weapon
         if (equip_info.Item3 == "BOTH")
         {
-          if (p._Profile._ItemLeft == GameScript.ItemManager.Items.NONE && p._Profile._ItemRight == GameScript.ItemManager.Items.NONE) { }
-          else if (p._Profile._ItemLeft_Other != GameScript.ItemManager.Items.NONE && p._Profile._ItemRight_Other != GameScript.ItemManager.Items.NONE) { }
-          else if (p._Profile._ItemLeft_Other == GameScript.ItemManager.Items.NONE && p._Profile._ItemRight_Other == GameScript.ItemManager.Items.NONE)
+          if (p._Profile._ItemLeft == ItemManager.Items.NONE && p._Profile._ItemRight == ItemManager.Items.NONE) { }
+          else if (p._Profile._ItemLeft_Other != ItemManager.Items.NONE && p._Profile._ItemRight_Other != ItemManager.Items.NONE) { }
+          else if (p._Profile._ItemLeft_Other == ItemManager.Items.NONE && p._Profile._ItemRight_Other == ItemManager.Items.NONE)
           {
             p._Profile._ItemLeft_Other = p._Profile._ItemLeft;
             p._Profile._ItemRight_Other = p._Profile._ItemRight;
           }
           else
           {
-            GameScript.ItemManager.Items[] items = null;
-            if (p._Profile._ItemLeft_Other == GameScript.ItemManager.Items.NONE && p._Profile._ItemLeft != GameScript.ItemManager.Items.NONE)
-              items = new GameScript.ItemManager.Items[] { p._Profile._ItemLeft, p._Profile._ItemRight };
-            else if (p._Profile._ItemRight_Other == GameScript.ItemManager.Items.NONE && p._Profile._ItemRight != GameScript.ItemManager.Items.NONE)
-              items = new GameScript.ItemManager.Items[] { p._Profile._ItemRight, p._Profile._ItemLeft };
+            ItemManager.Items[] items = null;
+            if (p._Profile._ItemLeft_Other == ItemManager.Items.NONE && p._Profile._ItemLeft != ItemManager.Items.NONE)
+              items = new ItemManager.Items[] { p._Profile._ItemLeft, p._Profile._ItemRight };
+            else if (p._Profile._ItemRight_Other == ItemManager.Items.NONE && p._Profile._ItemRight != ItemManager.Items.NONE)
+              items = new ItemManager.Items[] { p._Profile._ItemRight, p._Profile._ItemLeft };
             if (items != null)
               foreach (var current_item in items)
               {
@@ -435,7 +437,7 @@ public class CustomObstacle : MonoBehaviour
                 var equip_side2 = equip_info2.Item2;
 
                 var current_item2 = equip_side2 == ActiveRagdoll.Side.LEFT ? p._Profile._ItemLeft_Other : p._Profile._ItemRight_Other;
-                if (current_item2 == GameScript.ItemManager.Items.NONE)
+                if (current_item2 == ItemManager.Items.NONE)
                   if (equip_info2.Item1)
                   {
                     if (equip_side2 == ActiveRagdoll.Side.LEFT)
@@ -450,14 +452,14 @@ public class CustomObstacle : MonoBehaviour
         else
         {
           var current_item = equip_side == ActiveRagdoll.Side.LEFT ? p._Profile._ItemLeft : p._Profile._ItemRight;
-          if (current_item != GameScript.ItemManager.Items.NONE)
+          if (current_item != ItemManager.Items.NONE)
           {
             // Try to equip in other slots
             var equip_info2 = CheckEquip(p, current_item, InteractSide.DEFAULT, hasAkimbo, 1);
             var equip_side2 = equip_info2.Item2;
 
             var current_item2 = equip_side2 == ActiveRagdoll.Side.LEFT ? p._Profile._ItemLeft_Other : p._Profile._ItemRight_Other;
-            if (current_item2 == GameScript.ItemManager.Items.NONE)
+            if (current_item2 == ItemManager.Items.NONE)
               if (equip_info2.Item1)
               {
                 if (equip_side2 == ActiveRagdoll.Side.LEFT)
@@ -471,14 +473,14 @@ public class CustomObstacle : MonoBehaviour
         // Equip
         p._Ragdoll.EquipItem(item_type, equip_side);
         if (equip_info.Item3 == "BOTH")
-          p._Profile._ItemRight = GameScript.ItemManager.Items.NONE;
+          p._Profile._ItemRight = ItemManager.Items.NONE;
 
         // Update UI
         if (equip_side == ActiveRagdoll.Side.LEFT)
           p._Profile._ItemLeft = item_type;
         else
           p._Profile._ItemRight = item_type;
-        GameScript.PlayerProfile.s_Profiles[p._Id].UpdateIcons();
+        PlayerProfile.s_Profiles[p._Id].UpdateIcons();
 
         // Play sfx
         p._Ragdoll.PlaySound("Survival/Buy_Weapon");
@@ -625,7 +627,7 @@ public class CustomObstacle : MonoBehaviour
         p.RegisterUtility(equip_side, saveamount);
 
         // Update UI
-        GameScript.PlayerProfile.s_Profiles[p._Id].UpdateIcons();
+        PlayerProfile.s_Profiles[p._Id].UpdateIcons();
 
         // Play sound
         p._Ragdoll.PlaySound("Survival/Buy_Weapon");
@@ -657,7 +659,7 @@ public class CustomObstacle : MonoBehaviour
         Shop.Perk.BuyPerk(p._Id, perk);
 
         // Update UI
-        GameScript.PlayerProfile.s_Profiles[p._Id].UpdateIcons();
+        PlayerProfile.s_Profiles[p._Id].UpdateIcons();
 
         // Play sound
         p._Ragdoll.PlaySound("Survival/Buy_Weapon");
@@ -670,7 +672,7 @@ public class CustomObstacle : MonoBehaviour
       }
 
       // Reduce points
-      GameScript.SurvivalMode.SpendPoints(p._Id, _pointCost);
+      SurvivalManager.SpendPoints(p._Id, _pointCost);
     }
     else
       p._Ragdoll.DisplayText("not enough points..");
@@ -687,7 +689,7 @@ public class CustomObstacle : MonoBehaviour
   }
 
   //
-  System.Tuple<bool, ActiveRagdoll.Side, string> CheckEquip(PlayerScript p, GameScript.ItemManager.Items item_type, InteractSide side, bool akimbo, int equipmentIndex)
+  System.Tuple<bool, ActiveRagdoll.Side, string> CheckEquip(PlayerScript p, ItemManager.Items item_type, InteractSide side, bool akimbo, int equipmentIndex)
   {
     var equip_side = ActiveRagdoll.Side.RIGHT;
     if (side == InteractSide.LEFT) equip_side = ActiveRagdoll.Side.LEFT;
@@ -695,12 +697,12 @@ public class CustomObstacle : MonoBehaviour
     var item_type_l = equipmentIndex == 0 ? p._Profile._ItemLeft : p._Profile._ItemLeft_Other;
     var item_type_r = equipmentIndex == 0 ? p._Profile._ItemRight : p._Profile._ItemRight_Other;
 
-    var has_item_l = item_type_l != GameScript.ItemManager.Items.NONE;
-    var has_item_r = item_type_r != GameScript.ItemManager.Items.NONE;
+    var has_item_l = item_type_l != ItemManager.Items.NONE;
+    var has_item_r = item_type_r != ItemManager.Items.NONE;
 
-    var has_actual_two_handed = (item_type_l != GameScript.ItemManager.Items.NONE && Shop.IsActuallyTwoHanded(item_type_l)) ||
-      (item_type_r != GameScript.ItemManager.Items.NONE && Shop.IsActuallyTwoHanded(item_type_r));
-    var actual_two_handed_side = item_type_l != GameScript.ItemManager.Items.NONE ? ActiveRagdoll.Side.LEFT : ActiveRagdoll.Side.RIGHT;
+    var has_actual_two_handed = (item_type_l != ItemManager.Items.NONE && Shop.IsActuallyTwoHanded(item_type_l)) ||
+      (item_type_r != ItemManager.Items.NONE && Shop.IsActuallyTwoHanded(item_type_r));
+    var actual_two_handed_side = item_type_l != ItemManager.Items.NONE ? ActiveRagdoll.Side.LEFT : ActiveRagdoll.Side.RIGHT;
     var actual_two_handed_type = actual_two_handed_side == ActiveRagdoll.Side.LEFT ? item_type_l : item_type_r;
 
     // Ragdoll text

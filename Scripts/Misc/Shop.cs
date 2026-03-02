@@ -268,6 +268,7 @@ public static class Shop
     MOD_TWIN,
     ITEM_STUN_BATON,
     UTILITY_BEAR_TRAP,
+    UTILITY_MINE,
   }
 
   public static int _Max_Equipment_Points
@@ -283,7 +284,7 @@ public static class Shop
   static Dictionary<string, Unlocks[]> _Unlocks_Vault;
   public static Unlocks[] _Unlocks_Ignore_Shop;
 
-  static List<GameScript.ItemManager.Items> _TwoHanded_Dictionary, _ActualTwoHanded_Dictionary;
+  static List<ItemManager.Items> _TwoHanded_Dictionary, _ActualTwoHanded_Dictionary;
 
   public static void Init()
   {
@@ -324,7 +325,7 @@ public static class Shop
       //_Unlocks_Descriptions.Add(Unlocks.ITEM_ROCKET_FIST, new Tuple<string, int>("charge-shot, melee, slow-reload", 0));
 
       { Unlocks.UTILITY_SHURIKEN, new Tuple<string, int>("throwable, pick-up, small", 3) },
-      { Unlocks.UTILITY_SHURIKEN_BIG, new Tuple<string, int>("throwable, pick-up, large", 20) },
+      { Unlocks.UTILITY_SHURIKEN_BIG, new Tuple<string, int>("throwable, pick-up, large", 15) },
       { Unlocks.UTILITY_KUNAI_EXPLOSIVE, new Tuple<string, int>("throwable, explodes, small", 15) },
       { Unlocks.UTILITY_KUNAI_STICKY, new Tuple<string, int>("throwable, delalyed-explosion, small", 15) },
       { Unlocks.UTILITY_TACTICAL_BULLET, new Tuple<string, int>("throwable, stun", 10) },
@@ -333,6 +334,7 @@ public static class Shop
       { Unlocks.UTILITY_GRENADE_IMPACT, new Tuple<string, int>("throwable, contact-explosive", 15) },
       { Unlocks.UTILITY_GRENADE_STUN, new Tuple<string, int>("throwable, corner-killer", 10) },
       { Unlocks.UTILITY_C4, new Tuple<string, int>("throwable, explosive, remote-controlled", 10) },
+      { Unlocks.UTILITY_MINE, new Tuple<string, int>("throwable, trap", 5) },
       { Unlocks.UTILITY_BEAR_TRAP, new Tuple<string, int>("throwable, trap", 5) },
       //{ Unlocks.UTILITY_MOLOTOV, new Tuple<string, int>("throwable, fire, duration", 10) },
       { Unlocks.UTILITY_MORTAR_STRIKE, new Tuple<string, int>("ranged, explosive, remote-controlled", 15) },
@@ -428,9 +430,9 @@ public static class Shop
     {
       _Unlocks_Vault.Add("classic_0", new Unlocks[] { Unlocks.MOD_MARTIAL_ARTIST, Unlocks.ITEM_AXE, Unlocks.UTILITY_GRENADE, Unlocks.MAX_EQUIPMENT_POINTS_2, Unlocks.LOADOUT_SLOT_X2_0 });
       _Unlocks_Vault.Add("classic_1", new Unlocks[] { Unlocks.MOD_TWIN, Unlocks.MOD_LASER_SIGHTS, Unlocks.MOD_NO_SLOWMO, Unlocks.UTILITY_KUNAI_EXPLOSIVE, Unlocks.ITEM_PISTOL_CHARGE });
-      _Unlocks_Vault.Add("classic_2", new Unlocks[] { Unlocks.MODE_ZOMBIE, Unlocks.ITEM_STUN_BATON, Unlocks.ITEM_RIFLE, Unlocks.ITEM_PISTOL_MACHINE, Unlocks.UTILITY_MIRROR, Unlocks.MAX_EQUIPMENT_POINTS_3, Unlocks.LOADOUT_SLOT_X2_1 });
-      _Unlocks_Vault.Add("classic_3", new Unlocks[] { Unlocks.ITEM_PISTOL_DOUBLE, Unlocks.UTILITY_STOP_WATCH, Unlocks.UTILITY_TEMP_SHIELD, Unlocks.MOD_SPEED_UP });
-      _Unlocks_Vault.Add("classic_4", new Unlocks[] { Unlocks.ITEM_REVOLVER, Unlocks.UTILITY_C4, Unlocks.UTILITY_BEAR_TRAP, Unlocks.UTILITY_GRENADE_STUN, Unlocks.UTILITY_SHURIKEN_BIG });
+      _Unlocks_Vault.Add("classic_2", new Unlocks[] { Unlocks.MODE_ZOMBIE, Unlocks.ITEM_STUN_BATON, Unlocks.ITEM_RIFLE, Unlocks.ITEM_PISTOL_MACHINE, Unlocks.UTILITY_BEAR_TRAP, Unlocks.UTILITY_MIRROR, Unlocks.MAX_EQUIPMENT_POINTS_3, Unlocks.LOADOUT_SLOT_X2_1 });
+      _Unlocks_Vault.Add("classic_3", new Unlocks[] { Unlocks.ITEM_PISTOL_DOUBLE, Unlocks.UTILITY_MINE, Unlocks.UTILITY_STOP_WATCH, Unlocks.UTILITY_TEMP_SHIELD, Unlocks.MOD_SPEED_UP });
+      _Unlocks_Vault.Add("classic_4", new Unlocks[] { Unlocks.ITEM_REVOLVER, Unlocks.UTILITY_C4, Unlocks.UTILITY_GRENADE_STUN, Unlocks.UTILITY_SHURIKEN_BIG });
       _Unlocks_Vault.Add("classic_5", new Unlocks[] { Unlocks.ITEM_RAPIER, Unlocks.ITEM_STICKY_GUN, Unlocks.UTILITY_GRENADE_IMPACT });
       _Unlocks_Vault.Add("classic_6", new Unlocks[] { Unlocks.ITEM_FRYING_PAN, Unlocks.ITEM_CROSSBOW, Unlocks.ITEM_GRENADE_LAUNCHER, Unlocks.UTILITY_TACTICAL_BULLET, Unlocks.MAX_EQUIPMENT_POINTS_4 });
       _Unlocks_Vault.Add("classic_7", new Unlocks[] { Unlocks.MOD_THRUST, Unlocks.UTILITY_KUNAI_STICKY, Unlocks.UTILITY_INVISIBILITY, Unlocks.LOADOUT_SLOT_X2_2 });
@@ -472,39 +474,39 @@ public static class Shop
     };
 
     //
-    _TwoHanded_Dictionary = new List<GameScript.ItemManager.Items>
+    _TwoHanded_Dictionary = new List<ItemManager.Items>
     {
-      GameScript.ItemManager.Items.KATANA,
-      GameScript.ItemManager.Items.BAT,
-      GameScript.ItemManager.Items.DMR,
-      GameScript.ItemManager.Items.RIFLE,
-      GameScript.ItemManager.Items.RIFLE_LEVER,
-      GameScript.ItemManager.Items.CROSSBOW,
-      GameScript.ItemManager.Items.SNIPER,
-      GameScript.ItemManager.Items.AK47,
-      GameScript.ItemManager.Items.M16,
-      GameScript.ItemManager.Items.SHOTGUN_BURST,
-      GameScript.ItemManager.Items.SHOTGUN_PUMP,
-      GameScript.ItemManager.Items.SHOTGUN_DOUBLE,
-      GameScript.ItemManager.Items.GRENADE_LAUNCHER,
-      GameScript.ItemManager.Items.FLAMETHROWER
+      ItemManager.Items.KATANA,
+      ItemManager.Items.BAT,
+      ItemManager.Items.DMR,
+      ItemManager.Items.RIFLE,
+      ItemManager.Items.RIFLE_LEVER,
+      ItemManager.Items.CROSSBOW,
+      ItemManager.Items.SNIPER,
+      ItemManager.Items.AK47,
+      ItemManager.Items.M16,
+      ItemManager.Items.SHOTGUN_BURST,
+      ItemManager.Items.SHOTGUN_PUMP,
+      ItemManager.Items.SHOTGUN_DOUBLE,
+      ItemManager.Items.GRENADE_LAUNCHER,
+      ItemManager.Items.FLAMETHROWER
     };
 
-    _ActualTwoHanded_Dictionary = new List<GameScript.ItemManager.Items>
+    _ActualTwoHanded_Dictionary = new List<ItemManager.Items>
     {
-      GameScript.ItemManager.Items.KATANA,
-      GameScript.ItemManager.Items.BAT
+      ItemManager.Items.KATANA,
+      ItemManager.Items.BAT
     };
   }
 
   // Get a list of items with ItemManager.Items enum
-  public static GameScript.ItemManager.Items[] GetItemList()
+  public static ItemManager.Items[] GetItemList()
   {
-    var list = new List<GameScript.ItemManager.Items>();
-    list.Add(GameScript.ItemManager.Items.NONE);
+    var list = new List<ItemManager.Items>();
+    list.Add(ItemManager.Items.NONE);
     foreach (var entry in _Unlocks_Descriptions)
       if (entry.Key.ToString().StartsWith("ITEM_"))
-        list.Add((GameScript.ItemManager.Items)Enum.Parse(typeof(GameScript.ItemManager.Items), entry.Key.ToString()[5..]));
+        list.Add((ItemManager.Items)Enum.Parse(typeof(ItemManager.Items), entry.Key.ToString()[5..]));
     return list.ToArray();
   }
   // Get a list of utilities with UtilityScript.UtilityType enum
@@ -530,11 +532,11 @@ public static class Shop
     return list.ToArray();
   }
 
-  public static bool IsTwoHanded(GameScript.ItemManager.Items item)
+  public static bool IsTwoHanded(ItemManager.Items item)
   {
     return _TwoHanded_Dictionary.Contains(item);
   }
-  public static bool IsActuallyTwoHanded(GameScript.ItemManager.Items item)
+  public static bool IsActuallyTwoHanded(ItemManager.Items item)
   {
     return _ActualTwoHanded_Dictionary.Contains(item);
   }
@@ -666,7 +668,7 @@ public static class Shop
       case Unlocks.LOADOUT_SLOT_X2_4:
       case Unlocks.LOADOUT_SLOT_X2_5:
         s_ShopLoadoutCount += 2;
-        GameScript.ItemManager.Loadout.Init();
+        Loadout.Init();
         break;
     }
   }
@@ -763,25 +765,25 @@ public static class Shop
 
     public static bool HasPerk(int playerId, PerkType perk)
     {
-      return GameScript.PlayerProfile.s_Profiles[playerId]._Equipment._Perks.Contains(perk);
+      return PlayerProfile.s_Profiles[playerId]._Equipment._Perks.Contains(perk);
     }
 
     public static List<PerkType> GetPerks(int playerId)
     {
-      return GameScript.PlayerProfile.s_Profiles[playerId]._Equipment._Perks;
+      return PlayerProfile.s_Profiles[playerId]._Equipment._Perks;
     }
 
     public static int GetNumPerks(int playerId)
     {
-      return GameScript.PlayerProfile.s_Profiles[playerId]._Equipment._Perks.Count;
+      return PlayerProfile.s_Profiles[playerId]._Equipment._Perks.Count;
     }
 
     public static void BuyPerk(int playerId, PerkType perk)
     {
       if (!GameScript.s_IsZombieGameMode) return;
 
-      GameScript.PlayerProfile.s_Profiles[playerId]._Equipment._Perks.Add(perk);
-      GameScript.PlayerProfile.s_Profiles[playerId].UpdatePerkIcons();
+      PlayerProfile.s_Profiles[playerId]._Equipment._Perks.Add(perk);
+      PlayerProfile.s_Profiles[playerId].UpdatePerkIcons();
 
       switch (perk)
       {

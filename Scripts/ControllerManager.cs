@@ -126,7 +126,7 @@ public static class ControllerManager
     void Input_action.IMenuActions.OnPageLeft(InputAction.CallbackContext context)
     {
       /*if (Menu._CurrentMenu == null) return;
-      GameScript.PlayerProfile.OnControllerMove();
+      PlayerProfile.OnControllerMove();
       if (Menu._CurrentMenu == Menu._Menu_LevelSelect)
         Menu._CurrentMenu._menuActions[Menu._CurrentMenu._menuActions.Length - 3](0);
       else if (Menu._CurrentMenu == Menu._Menu_LevelSelected)
@@ -140,7 +140,7 @@ public static class ControllerManager
     void Input_action.IMenuActions.OnPageRight(InputAction.CallbackContext context)
     {
       /*if (Menu._CurrentMenu == null) return;
-      GameScript.PlayerProfile.OnControllerMove();
+      PlayerProfile.OnControllerMove();
       if (Menu._CurrentMenu == Menu._Menu_LevelSelect)
         Menu._CurrentMenu._menuActions[Menu._CurrentMenu._menuActions.Length - 2](0);
       else if (Menu._CurrentMenu == Menu._Menu_LevelSelected)
@@ -196,7 +196,7 @@ public static class ControllerManager
         var loadoutReset = Menu.s_CurrentMenu._Type == Menu.MenuType.EDIT_LOADOUT;
         if (loadoutReset)
         {
-          var loadoutIndex = GameScript.ItemManager.Loadout._CurrentLoadout._Id;
+          var loadoutIndex = Loadout._CurrentLoadout._Id;
           PlayerScript.CheckSetNewLoadouts(loadoutIndex);
         }
 
@@ -255,15 +255,15 @@ public static class ControllerManager
     }
     return null;
   }
-  static GameScript.PlayerProfile GetPlayerProfile(InputAction.CallbackContext obj)
+  static PlayerProfile GetPlayerProfile(InputAction.CallbackContext obj)
   {
     // Check keyboard
     if (obj.control.device.name.Equals("Keyboard"))
-      return GameScript.PlayerProfile.s_Profiles[0];
+      return PlayerProfile.s_Profiles[0];
 
     // Check controllers
     var controllerIndexOffset = Settings._ForceKeyboard ? 1 : 0;
-    return GameScript.PlayerProfile.s_Profiles[Mathf.Clamp(obj.control.device.deviceId + controllerIndexOffset, 0, 3)];
+    return PlayerProfile.s_Profiles[Mathf.Clamp(obj.control.device.deviceId + controllerIndexOffset, 0, 3)];
   }
 
   class HandlerPlayer : Input_action.IPlayerActions
