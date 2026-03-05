@@ -187,7 +187,7 @@ public static class Settings
     }
   }
 
-  public static float _VERSION = 1.54f;
+  public static float _VERSION = 1.55f;
 
   // Struct holding info what item pair gets unlocked at what level
   public class WeaponPair
@@ -932,6 +932,7 @@ public static class Settings
     public bool ShowTips = true;
     public bool ShowDeathText = true;
     public bool TextSpeedFast = false;
+    public bool HideUI = false;
 
     // Controls
     public bool ControllerRumble = true;

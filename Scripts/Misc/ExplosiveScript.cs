@@ -162,7 +162,7 @@ public class ExplosiveScript : MonoBehaviour
     var spawnPos = transform.position;
     spawnPos.y = 1f;
     smokeParts.transform.position = spawnPos;
-    smokeParts.Emit(10);
+    smokeParts.Emit(_explosionType != ExplosionType.STUN ? 6 : 3);
 
     // Play sound
     if (playSound)

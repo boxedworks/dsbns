@@ -478,11 +478,12 @@ public class ActiveRagdoll
 
       // Check melee movement
       var moveDir = (movePos - posSave).normalized;
+      var martialArts = false;//HasTwohandedWeapon() || (_ItemL != null && _ItemR != null && _ItemL._type == _ItemR._type);
       if (
         _IsPlayer &&
         Time.time - _meleeStartTime < 0.25f &&
         _PlayerScript.GetInput().magnitude > 0.7f &&
-        (moveDir - _Controller.forward).magnitude > 1.4f)
+        (martialArts || (moveDir - _Controller.forward).magnitude > 1.4f))
       {
         _meleeStartTime = -1f;
 
@@ -1092,10 +1093,10 @@ public class ActiveRagdoll
   }
 
   //
-  public void BounceFromPosition(Vector3 position, float force, bool overright = true)
+  public void BounceFromPosition(Vector3 position, float force, bool overwright)
   {
     var bounceForce = (MathC.Get2DVector(_Hip.position) - MathC.Get2DVector(position)).normalized * force;
-    Recoil(bounceForce, 1f, overright);
+    Recoil(bounceForce, 1f, overwright);
   }
 
   //
@@ -1980,11 +1981,11 @@ public class ActiveRagdoll
     }
   }
 
-  public void Recoil(Vector3 dir, float force, bool overright = true)
+  public void Recoil(Vector3 dir, float force, bool overwright)
   {
-    _Grappler?.Recoil(dir, force * 0.75f, overright);
+    _Grappler?.Recoil(dir, force * 0.75f, overwright);
 
-    if (overright)
+    if (overwright)
     {
       _ForceGlobal = MathC.Get2DVector(dir) * force;
       return;
@@ -1999,7 +2000,7 @@ public class ActiveRagdoll
         force *= 2f;
 
     //
-    Recoil(_IsGrappled ? -_Hip.transform.forward : -_Controller.forward, force);
+    Recoil(_IsGrappled ? -_Hip.transform.forward : -_Controller.forward, force, true);
   }
 
   IEnumerator Rise()

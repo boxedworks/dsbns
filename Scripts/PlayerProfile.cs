@@ -327,6 +327,37 @@ public class PlayerProfile
     _playerColor = _playerColor;
     UpdateIcons();
     CreateHealthUI(1);
+
+    // Hide player ui
+    if (SettingsModule.HideUI)
+      Hide();
+    else
+      Show();
+  }
+
+  //
+  void Show()
+  {
+    var localPosition = _ui.localPosition;
+    localPosition.y = 0f;
+    _ui.localPosition = localPosition;
+  }
+  void Hide()
+  {
+    var localPosition = _ui.localPosition;
+    localPosition.y = -2f;
+    _ui.localPosition = localPosition;
+  }
+
+  public static void ShowAll()
+  {
+    foreach (var playerProfile in s_Profiles)
+      playerProfile.Show();
+  }
+  public static void HideAll()
+  {
+    foreach (var playerProfile in s_Profiles)
+      playerProfile.Hide();
   }
 
   // Check empty loadout and switch to a new one if empty

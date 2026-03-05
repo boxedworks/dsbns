@@ -28,6 +28,7 @@ public class BulletScript : MonoBehaviour
 
   Coroutine _hidingCoroutine;
   public bool _Available { get { return _hidingCoroutine == null && _Particles.transform.parent == transform; } }
+  public bool _Enabled { get { return !_triggered; } }
 
   Rigidbody rb;
   public Rigidbody _rb
@@ -249,7 +250,7 @@ public class BulletScript : MonoBehaviour
               PlaySparks(true);
               PlayBulletEffectDropBullets(transform.position, 1);
 
-              item._ragdoll.Recoil(-(_sourceItemRagdoll._Hip.position - item.transform.position).normalized, _rb.linearVelocity.magnitude / 25f);
+              item._ragdoll.Recoil(-(_sourceItemRagdoll._Hip.position - item.transform.position).normalized, _rb.linearVelocity.magnitude / 2f, false);
               OnHideBullet();
               Hide();
             }
@@ -640,6 +641,8 @@ public class BulletScript : MonoBehaviour
     _Particles.transform.localPosition = new Vector3(0f, 0f, 0.5f);
     _saveSmartVelocity = -1f;
 
+    _c.enabled = true;
+
     _explodeOnHide = false;
 
     if (_rb != null)
@@ -681,6 +684,7 @@ public class BulletScript : MonoBehaviour
   public void Hide(bool forceHide = false)
   {
     _triggered = true;
+    _c.enabled = false;
     _light.enabled = false;
     _rb.linearVelocity = Vector3.zero;
     if (_Particles == null) return;
@@ -746,7 +750,7 @@ public class BulletScript : MonoBehaviour
 
     // Recoil char
     if (recoil)
-      _sourceDamageRagdoll.Recoil(-(_sourceItemRagdoll._Hip.position - _sourceDamageRagdoll._Controller.transform.position).normalized, _rb.linearVelocity.magnitude / 30f);
+      _sourceDamageRagdoll.Recoil(-(_sourceItemRagdoll._Hip.position - _sourceDamageRagdoll._Controller.transform.position).normalized, _rb.linearVelocity.magnitude / 25f, false);
 
     // Check special
     if (redirectorItem._ragdoll._IsPlayer && redirectorItem._ragdoll._PlayerScript.HasPerk(Shop.Perk.PerkType.EXPLOSIVE_PARRY))

@@ -1217,7 +1217,7 @@ public class Menu
       .AddEvent((MenuComponent component) => { CommonEvents._SwitchMenu(MenuType.OPTIONS); })
       .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
       {
-        if (Settings._ForceKeyboard || SettingsModule.IgnoreFirstController)
+        if (Settings._ForceKeyboard || SettingsModule.IgnoreFirstController || SettingsModule.HideUI)
         {
           component.SetDisplayText("options*\n");
           component._textColor = "red";
@@ -6145,7 +6145,19 @@ go to the <color=yellow>SHOP</color> to buy something~1
     // Game options
     .AddComponent("game options\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
       .AddEvent((MenuComponent component) => { CommonEvents._SwitchMenu(MenuType.OPTIONS_GAME); })
-
+      .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+      {
+        if (SettingsModule.HideUI)
+        {
+          component.SetDisplayText("game options*\n\n");
+          component._textColor = "red";
+        }
+        else
+        {
+          component.SetDisplayText("game options\n\n");
+          component._textColor = "";
+        }
+      })
     // Multiplayer
     //.AddComponent("online multiplayer options\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
     //  .AddEvent((MenuComponent component) => { CommonEvents._SwitchMenu(MenuType.MULTIPLAYER_MANAGER); })
@@ -6884,6 +6896,47 @@ go to the <color=yellow>SHOP</color> to buy something~1
         });
         // Update dropdown data
         component.SetDropdownData("menu speed\n\n", selections, actions, selection_match);
+      })
+
+    // Display player ui
+    .AddComponent("hide ui\n\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
+      .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+      {
+
+        // Set display text
+        var selection = SettingsModule.HideUI ? "on" : "off";
+        var star = SettingsModule.HideUI ? "*" : "";
+        component.SetDisplayText(string.Format(format_options, $"hide ui{star}:", selection) + "\n");
+        component._textColor = SettingsModule.HideUI ? "red" : "";
+
+        // Set dropdown data
+        var selections = new List<string>();
+        var actions = new List<System.Action<MenuComponent>>();
+        var selection_match = $"{selection} ";
+
+        selections.Add("on  - hide player ui");
+        actions.Add((MenuComponent component0) =>
+        {
+          SettingsModule.HideUI = true;
+          _CanRender = false;
+          RenderMenu();
+
+          PlayerProfile.HideAll();
+        });
+
+
+        selections.Add("off - display player ui [DEFAULT]");
+        actions.Add((MenuComponent component0) =>
+        {
+          SettingsModule.HideUI = false;
+          _CanRender = false;
+          RenderMenu();
+
+          PlayerProfile.ShowAll();
+        });
+
+        // Update dropdown data
+        component.SetDropdownData("hide player ui\n\n", selections, actions, selection_match);
       })
 
     // Show tips
@@ -7705,7 +7758,7 @@ system will provide and configure all loadouts.~9
         // Check if component should be visible; add dropdown placeholder for later
         if (visibility_conditions.Invoke()
 #if UNITY_EDITOR
-        //|| true
+        || true
 #endif
         )
         {

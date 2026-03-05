@@ -217,7 +217,9 @@ public class SceneThemes : MonoBehaviour
       outstring += $"}},\n";
     }
     // Print to console
+#if UNITY_EDITOR
     Debug.Log(outstring);
+#endif
   }
 
   public static string[] _Master_SceneOrder = new string[] {
@@ -277,7 +279,7 @@ new Theme(){
   _furnatureColor = new Color(0.08245816f, 0.1603774f, 0.08245816f, 0f),
   _lightColor = new Color(1f, 1f, 1f, 0f),
   _innerWallColor = new Color(0.08245816f, 0.1603774f, 0.08245816f, 0f),
-  _shadowStrength = 0.5f,
+  _shadowStrength = 0.2f,
   _profile = 5,
   _useFog = false,
   _rain = true
@@ -290,7 +292,7 @@ new Theme(){
   _furnatureColor = new Color(0.3490566f, 0.2058117f, 0.2058117f, 0f),
   _lightColor = new Color(1f, 1f, 1f, 0f),
   _innerWallColor = new Color(0.2264151f, 0.1075575f, 0.1035956f, 0f),
-  _shadowStrength = 0.5f,
+  _shadowStrength = 0.4f,
   _profile = 5,
   _useFog = false,
 },
@@ -314,7 +316,7 @@ new Theme(){
   _furnatureColor = new Color(0.1509434f, 0.01067996f, 0.01067996f, 0f),
   _lightColor = new Color(1f, 1f, 1f, 0f),
   _innerWallColor = new Color(0.09985755f, 0.1132075f, 0.1036718f, 1f),
-  _shadowStrength = 0.5f,
+  _shadowStrength = 0.4f,
   _profile = 5,
   _useFog = false,
 },
@@ -338,7 +340,7 @@ new Theme(){
   _furnatureColor = new Color(0.3301887f, 0.3301887f, 0.3301887f, 1f),
   _lightColor = new Color(1f, 1f, 1f, 0f),
   _innerWallColor = new Color(0.8867924f, 0.8867924f, 0.8867924f, 1f),
-  _shadowStrength = 0.5f,
+  _shadowStrength = 0.4f,
   _profile = 5,
   _useFog = false,
 },
@@ -362,7 +364,7 @@ new Theme(){
   _furnatureColor = new Color(0.2264151f, 0.2264151f, 0.2264151f, 0f),
   _lightColor = new Color(1f, 1f, 1f, 0f),
   _innerWallColor = new Color(0.3962264f, 0.3962264f, 0.3962264f, 1f),
-  _shadowStrength = 0.5f,
+  _shadowStrength = 0.4f,
   _profile = 5,
   _useFog = false,
 },
@@ -374,7 +376,7 @@ new Theme(){
   _furnatureColor = new Color(0.2735849f, 0.1664738f, 0.1664738f, 0f),
   _lightColor = new Color(1f, 1f, 1f, 0f),
   _innerWallColor = new Color(0.235493f, 0.2641509f, 0.2433088f, 1f),
-  _shadowStrength = 0.5f,
+  _shadowStrength = 0.4f,
   _profile = 5,
   _useFog = false,
 },
@@ -386,7 +388,7 @@ new Theme(){
   _furnatureColor = new Color(0.1509434f, 0f, 0f, 0f),
   _lightColor = new Color(1f, 1f, 1f, 0f),
   _innerWallColor = new Color(0.235493f, 0.2641509f, 0.2433088f, 1f),
-  _shadowStrength = 0.5f,
+  _shadowStrength = 0.4f,
   _profile = 5,
   _useFog = true,
 },
@@ -398,7 +400,7 @@ new Theme(){
   _furnatureColor = new Color(0.133366f, 0.2525634f, 0.3490566f, 1f),
   _lightColor = new Color(1f, 1f, 1f, 0f),
   _innerWallColor = new Color(0.1490196f, 0.3764706f, 0.6431373f, 1f),
-  _shadowStrength = 0.5f,
+  _shadowStrength = 0.4f,
   _profile = 5,
   _useFog = false,
 },

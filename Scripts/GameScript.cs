@@ -268,7 +268,7 @@ public class GameScript : MonoBehaviour
     TileManager.EditorMenus.HideMenus();
 
     // Init playerprofile and loadouts
-    PlayerScript.s_Materials_Ring = new Material[4];
+    PlayerScript.s_Materials_Ring = new Material[8];
     var mat = Instantiate(TileManager._Ring.gameObject).transform.GetChild(0).GetComponent<MeshRenderer>().sharedMaterial;
     for (var i = 0; i < PlayerScript.s_Materials_Ring.Length; i++)
       PlayerScript.s_Materials_Ring[i] = new Material(mat);

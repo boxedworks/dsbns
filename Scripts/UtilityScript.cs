@@ -50,6 +50,9 @@ public class UtilityScript : ItemScript
 
   int _flag;
 
+  [System.NonSerialized]
+  public bool _IsCustomProjectile;
+
   ExplosiveScript _explosion;
 
   delegate void CollisionEvent(Collision c);
@@ -216,11 +219,13 @@ public class UtilityScript : ItemScript
 
       case UtilityType.BEAR_TRAP:
         _expirationTimer = 90f;
+        _forceModifier = 0.6f;
         _ignoreSourceCollisions = false;
         _spinYAxis = true;
         break;
       case UtilityType.MINE:
         _expirationTimer = 90f;
+        _forceModifier = 0.6f;
         _ignoreSourceCollisions = false;
         _spinYAxis = true;
         explosion_radius = 3f;
@@ -987,7 +992,7 @@ public class UtilityScript : ItemScript
               {
 
                 //
-                if (Time.time - _thrownTimer < 0.5f)
+                if (Time.time - _thrownTimer < 0.1f)
                   if (rag._Id == _ragdoll._Id) return;
 
                 var distance = rag.GetDistanceTo(transform.position);
@@ -1072,7 +1077,7 @@ public class UtilityScript : ItemScript
               {
 
                 //
-                if (Time.time - _thrownTimer < 0.5f)
+                if (Time.time - _thrownTimer < 0.1f)
                   if (rag._Id == _ragdoll._Id) return;
 
                 var distance = rag.GetDistanceTo(transform.position);
@@ -1299,7 +1304,8 @@ public class UtilityScript : ItemScript
     }
 
     //
-    AnimateUi(PlayerProfile.Animation.AnimationType.Shoot, 0.2f);
+    if (!_IsCustomProjectile)
+      AnimateUi(PlayerProfile.Animation.AnimationType.Shoot, 0.2f);
 
     //
     var forward = _ragdoll._Hip.transform.forward;
@@ -1313,7 +1319,7 @@ public class UtilityScript : ItemScript
     }
 
     var spawnPosition = _spawnLocation != Vector3.zero ? _spawnLocation :
-      _ragdoll._spine.transform.position + forward * 0.5f + new Vector3(0f, _explosion != null ? 0.25f : 0.1f, 0f);
+      _ragdoll._spine.transform.position + forward * 0.6f + new Vector3(0f, _explosion != null ? 0.25f : 0.1f, 0f);
     spawnPosition.y = BulletScript.s_BULLET_HEIGHT;
     _rb.position = _throwPosition = spawnPosition;
 
@@ -1537,6 +1543,7 @@ public class UtilityScript : ItemScript
 
     public int _PenatrationAmount;
     public System.Action<ProjectileCollisionData> _OnDisable;
+    public bool _ShouldDisable;
     public bool _CanDestroyObjects;
     public Vector3 _SpawnPosition;
     public ActiveRagdoll _DamageSource;
@@ -1558,11 +1565,16 @@ public class UtilityScript : ItemScript
     if ((p0._PenatrationAmount == p1._PenatrationAmount) || (p0._PenatrationAmount > 100 && p1._PenatrationAmount > 100))
     {
 
-      p0._OnDisable?.Invoke(p0);
-      p1._OnDisable?.Invoke(p1);
-
-      p0._GameObject.SetActive(false);
-      p1._GameObject.SetActive(false);
+      if (p0._ShouldDisable)
+      {
+        p0._OnDisable?.Invoke(p0);
+        p0._GameObject.SetActive(false);
+      }
+      if (p1._ShouldDisable)
+      {
+        p1._OnDisable?.Invoke(p1);
+        p1._GameObject.SetActive(false);
+      }
 
       if (p0._IsBullet) numBullets++;
       if (p1._IsBullet) numBullets++;
@@ -1604,9 +1616,12 @@ public class UtilityScript : ItemScript
   public static ProjectileCollisionData? GetProjectileCollisionData(Collider c)
   {
 
+    Debug.Log(c.gameObject.name);
+
     var projectileData = new ProjectileCollisionData()
     {
-      _GameObject = c.gameObject
+      _GameObject = c.gameObject,
+      _ShouldDisable = true
     };
     switch (c.name.ToLower())
     {
@@ -1666,6 +1681,11 @@ public class UtilityScript : ItemScript
         projectileData._PenatrationAmount = 99999;
         break;
 
+      case "door_obstacle":
+        projectileData._PenatrationAmount = 99999;
+        projectileData._ShouldDisable = false;
+        return projectileData;
+
       // Not found
       default:
 
@@ -1693,6 +1713,11 @@ public class UtilityScript : ItemScript
   public static bool SimpleProjectileHandler(Collider c0, Collider c1, System.Action<ProjectileCollisionData> onDisable = null)
   {
 
+    var c0Name = c0.name.ToLower();
+    var c1Name = c1.name.ToLower();
+
+    //Debug.Log($"Collision: {c0.gameObject.name} ({c0.gameObject.layer}) hit {c1.gameObject.name} ({c1.gameObject.layer})");
+
     // Projectile handler
     if (c1.gameObject.layer == 3)
     {
@@ -1711,11 +1736,11 @@ public class UtilityScript : ItemScript
         if (pSelf_._IsBullet && pOther_._IsBullet && !pSelf_._BulletScript.CanInteractWithOther(pOther_._BulletScript)) { }
 
         //
-        else if ((c0.name.ToLower() == "mirror" && c1.name.ToLower() != "mirror") || (c1.name.ToLower() == "mirror" && c0.name.ToLower() != "mirror"))
+        else if ((c0Name == "mirror" && c1Name != "mirror") || (c1Name == "mirror" && c0Name != "mirror"))
         {
 
-          var mirror = c0.name.ToLower() == "mirror" ? pSelf_ : pOther_;
-          var bullet = c0.name.ToLower() == "mirror" ? pOther_ : pSelf_;
+          var mirror = c0Name == "mirror" ? pSelf_ : pOther_;
+          var bullet = c0Name == "mirror" ? pOther_ : pSelf_;
           if (bullet._IsBullet)
           {
 
@@ -1738,7 +1763,7 @@ public class UtilityScript : ItemScript
     }
 
     // Books
-    else if (c1.name.ToLower() == "books")
+    else if (c1Name == "books")
     {
 
       var pSelf = GetProjectileCollisionData(c0);
@@ -1759,7 +1784,7 @@ public class UtilityScript : ItemScript
     }
 
     // TV
-    else if (c1.name.ToLower() == "television")
+    else if (c1Name == "television")
     {
 
       var pSelf = GetProjectileCollisionData(c0);
@@ -1776,6 +1801,23 @@ public class UtilityScript : ItemScript
 
           return true;
         }
+      }
+    }
+
+    // Door
+    else if (c1Name == "door_obstacle")
+    {
+
+      var pSelf = GetProjectileCollisionData(c0);
+      var pOther = GetProjectileCollisionData(c1);
+      if (pSelf != null && pOther != null)
+      {
+        var pSelf_ = pSelf.Value;
+        var pOther_ = pOther.Value;
+        pOther_._DamageSource = pSelf_._DamageSource;
+        HandleProjectileCollision(pSelf_, pOther_);
+
+        return true;
       }
     }
 

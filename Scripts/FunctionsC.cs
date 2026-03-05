@@ -491,15 +491,17 @@ public static class FunctionsC
       var explosionDist = MathC.Get2DDistance(posAt, ragdoll._Hip.position);
 
       // Force backward
-      if (explosionDist > explosionRadius)
+      if (!isStunExplosion)
       {
-        ragdoll.BounceFromPosition(posAt, (1f - (explosionDist - explosionRadius) / (explosionRadius * 1.0f)) * 2.5f, false);
-        continue;
-      }
+        if (explosionDist > explosionRadius)
+        {
+          ragdoll.BounceFromPosition(posAt, (1f - (explosionDist - explosionRadius) / (explosionRadius * 1.0f)) * 2f, false);
+          continue;
+        }
 
-      // Check for perk
-      //if (!isStun)
-      if (ragdoll._IsPlayer && ragdoll._Id == explosionSource._Id && ragdoll._PlayerScript.HasPerk(Shop.Perk.PerkType.EXPLOSION_RESISTANCE)) continue;
+        // Check for perk
+        if (ragdoll._IsPlayer && ragdoll._Id == explosionSource._Id && ragdoll._PlayerScript.HasPerk(Shop.Perk.PerkType.EXPLOSION_RESISTANCE)) continue;
+      }
 
       // Check dist
       if (explosionDist < 0.3f) { }

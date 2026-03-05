@@ -270,7 +270,7 @@ public static class ItemManager
       case "KUNAI_EXPLOSIVE":
       case "KUNAI_STICKY":
         transform.localPosition += new Vector3(-0.14f, -0.03f, 0f);
-        transform.localEulerAngles = new Vector3(0f, 90f, 90f);
+        transform.localEulerAngles = new Vector3(90f, 90f, 90f);
         transform.localScale = new Vector3(0.7f, 0.7f, 0.7f);
         break;
       case "STOP_WATCH":
@@ -412,11 +412,11 @@ public static class ItemManager
       case UtilityScript.UtilityType.TACTICAL_BULLET:
       case UtilityScript.UtilityType.MIRROR:
       case UtilityScript.UtilityType.BEAR_TRAP:
-      case UtilityScript.UtilityType.MINE:
         return 1;
       case UtilityScript.UtilityType.GRENADE:
       case UtilityScript.UtilityType.GRENADE_IMPACT:
       case UtilityScript.UtilityType.C4:
+      case UtilityScript.UtilityType.MINE:
       case UtilityScript.UtilityType.MOLOTOV:
       case UtilityScript.UtilityType.KUNAI_EXPLOSIVE:
       case UtilityScript.UtilityType.KUNAI_STICKY:

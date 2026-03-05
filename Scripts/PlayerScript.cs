@@ -5,6 +5,7 @@ using UnityEngine.AI;
 
 using Random = UnityEngine.Random;
 using System.Collections.Generic;
+using UnityEngine.XR;
 
 
 #if !DISABLESTEAMWORKS
@@ -223,9 +224,11 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
     _ring = new MeshRenderer[] { new_ring.transform.GetChild(0).GetComponent<MeshRenderer>(), new_ring.transform.GetChild(1).GetComponent<MeshRenderer>() };
     Resources.UnloadAsset(_ring[0].sharedMaterial);
     Resources.UnloadAsset(_ring[1].sharedMaterial);
-    _ring[0].sharedMaterial = s_Materials_Ring[_Id];
-    _ring[1].sharedMaterial = s_Materials_Ring[_Id];
-    Vector3 localscale = _ring[0].transform.parent.localScale;
+    var ringMaterialOffset = _HasTwin && !_IsOriginalTwin ? 1 : 0;
+    var ringMaterialIndex = _Id * 2 + ringMaterialOffset;
+    _ring[0].sharedMaterial = s_Materials_Ring[ringMaterialIndex];
+    _ring[1].sharedMaterial = s_Materials_Ring[ringMaterialIndex];
+    var localscale = _ring[0].transform.parent.localScale;
     localscale *= 0.8f;
     localscale.y = 2f;
     _ring[0].transform.parent.localScale = localscale;
@@ -925,7 +928,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
                 foreach (var bullet in ItemScript._BulletPool)
                 {
 
-                  if (!bullet.gameObject.activeSelf) continue;
+                  if (!bullet.gameObject.activeSelf || !bullet._Enabled) continue;
 
                   var bulletSourceId = bullet.GetRagdollID();
                   if (
@@ -1517,25 +1520,13 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
       if (!GameScript.s_IsPartyGameMode || (GameScript.s_IsPartyGameMode && VersusMode.s_PlayersCanMove))
       {
         if (ControllerManager.GetKey(ControllerManager.Key.Q))
-        {
-          if (_UtilitiesLeft.Count > 0)
-            _UtilitiesLeft[0].UseDown();
-        }
+          HandleAction(PlayerAction.LeftUtilityDown);
         else if (ControllerManager.GetKey(ControllerManager.Key.Q, ControllerManager.InputMode.UP))
-        {
-          if (_UtilitiesLeft.Count > 0)
-            _UtilitiesLeft[0].UseUp();
-        }
+          HandleAction(PlayerAction.LeftUtilityUp);
         if (ControllerManager.GetKey(ControllerManager.Key.E))
-        {
-          if (_UtilitiesRight.Count > 0)
-            _UtilitiesRight[0].UseDown();
-        }
+          HandleAction(PlayerAction.RightUtilityDown);
         else if (ControllerManager.GetKey(ControllerManager.Key.E, ControllerManager.InputMode.UP))
-        {
-          if (_UtilitiesRight.Count > 0)
-            _UtilitiesRight[0].UseUp();
-        }
+          HandleAction(PlayerAction.RightUtilityUp);
       }
 
       // Check weapon swap
@@ -2226,21 +2217,22 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
   }
   public void ReloadMap()
   {
-    var reset = true;
     if (GameScript.s_IsZombieGameMode && !_ragdoll._IsDead)
-    {
-
       return;
-    }
+
     // If dead, check if all other players dead
+    var reset = true;
     if (_ragdoll._IsDead)
     {
       foreach (var p in s_Players)
+      {
+        if (p._Id == _Id) continue;
         if (!p._ragdoll._IsDead)
         {
           reset = false;
           break;
         }
+      }
     }
     if (reset && !GameScript.s_Singleton._GameEnded)
     {
@@ -2509,27 +2501,8 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
       }
       if (_ring != null) _ring[0].transform.parent.gameObject.SetActive(false);
     }
-    IEnumerator fadeRing2()
-    {
-      float t = 1f;
-      var ring = _ring[0].transform.parent;
-      var startScale = ring.transform.localScale;
-      while (t >= 0f)
-      {
-        t -= 0.02f;
-        ring.localScale = Vector3.Lerp(Vector3.one * 0.01f, startScale, t);
-        yield return new WaitForSeconds(0.05f);
-        if (this == null || _ragdoll == null || _ragdoll._Hip == null) break;
-      }
-      if (_ring != null) _ring[0].transform.parent.gameObject.SetActive(false);
-    }
 
-    if (_IsOriginal)
-      GameScript.s_Singleton.StartCoroutine(fadeRing());
-
-    // Switching loadouts with twin
-    else if (_HasTwin && !_ConnectedTwin._HasTwin)
-      GameScript.s_Singleton.StartCoroutine(fadeRing2());
+    GameScript.s_Singleton.StartCoroutine(fadeRing());
 
     // Slow motion on player death
     var lastplayer = true;
@@ -2539,7 +2512,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
         lastplayer = false;
         break;
       }
-    if (!_IsOriginal) lastplayer = false;
+    if (_HasTwin && _ConnectedTwin._ragdoll != null && !_ConnectedTwin._ragdoll._IsDead) lastplayer = false;
     if (Settings._Slowmo_on_death && lastplayer && !HasPerk(Shop.Perk.PerkType.NO_SLOWMO)) _SlowmoTimer += 2f;
 
     // Check for restart tutorial

@@ -516,8 +516,8 @@ public class ItemScript : MonoBehaviour
                 SetHitOverride();
 
                 // Bounce both ragdolls backward
-                _ragdoll.BounceFromPosition(raycastInfo._ragdoll._IsGrappled ? raycastInfo._ragdoll._Grappler._Hip.position : raycastInfo._ragdoll._Hip.position, 1.5f);
-                raycastInfo._ragdoll.BounceFromPosition(_ragdoll._Hip.position, 1.5f);
+                _ragdoll.BounceFromPosition(raycastInfo._ragdoll._IsGrappled ? raycastInfo._ragdoll._Grappler._Hip.position : raycastInfo._ragdoll._Hip.position, 1.5f, true);
+                raycastInfo._ragdoll.BounceFromPosition(_ragdoll._Hip.position, 1.5f, true);
 
                 // Check stun from baton
                 var hasBaton = _type == ItemType.STUN_BATON;
@@ -578,7 +578,7 @@ public class ItemScript : MonoBehaviour
 
           // Zombie knockback
           if (!_ragdoll._IsPlayer && _ragdoll._EnemyScript._IsZombieReal)
-            raycastInfo._ragdoll.BounceFromPosition(_ragdoll._Hip.position, 0.5f);
+            raycastInfo._ragdoll.BounceFromPosition(_ragdoll._Hip.position, 0.5f, false);
 
           // Play noise
           if (_type == ItemType.FRYING_PAN)
@@ -708,11 +708,11 @@ public class ItemScript : MonoBehaviour
 
         // Spawn utility
         var spawn_pos = _forward.position;
-        var new_position = new Vector3(spawn_pos.x, _ragdoll._spine.transform.position.y, spawn_pos.z);
         var forward = MathC.Get2DVector(transform.forward).normalized;
 
         //
         var utility = _customProjectiles[_customProjectileIter++];
+        utility._IsCustomProjectile = true;
         utility._side = _side;
         utility._ragdoll = _ragdoll;
         utility.SetSpawnLocation(spawn_pos);
@@ -1415,7 +1415,7 @@ public class ItemScript : MonoBehaviour
       if (!targetRagdoll._HasBeenStunned && !targetRagdoll._IsStunned)
       {
         targetRagdoll.Stun();
-        targetRagdoll.BounceFromPosition(sourceRagdoll._Hip.position, 0.5f);
+        targetRagdoll.BounceFromPosition(sourceRagdoll._Hip.position, 0.5f, false);
         return true;
       }
 
