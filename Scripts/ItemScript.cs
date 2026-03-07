@@ -50,6 +50,7 @@ public class ItemScript : MonoBehaviour
   protected bool _disableOnRagdollDeath;
 
   bool _meleeStartSwinging;
+  bool _isChargedFist { get { return _downTimeSave >= 0.5f; } }
 
   public int GetClipSize()
   {
@@ -115,7 +116,7 @@ public class ItemScript : MonoBehaviour
 
   //
   protected int _clip, _bursts, _meleeIter;
-  protected bool _triggerDown, _triggerDown_last, _used, _hitAnthing, _hitAnthingOverride, _hasHitEnemy;
+  protected bool _triggerDown, _triggerDownLast, _used, _hitAnthing, _hitAnthingOverride, _hasHitEnemy;
   public bool _HitAnything { get { return _hitAnthing; } }
 
   bool _triggerDownReal;
@@ -420,8 +421,8 @@ public class ItemScript : MonoBehaviour
           if (HasHitRagdoll(raycastInfo._ragdoll))
             isHit = false;
 
-          // Check ragdoll grappled is targetted by holder
-          if (raycastInfo._ragdoll._Id == (_ragdoll._Grappler?._Id ?? -1))
+          // Check ragdoll grapple-related
+          if (_ragdoll.IsGrappleRelated(raycastInfo._ragdoll))
             isHit = false;
         }
 
@@ -432,10 +433,9 @@ public class ItemScript : MonoBehaviour
           // Check stunned
           if (!_ragdoll.Active() || _ragdoll._IsStunned) return;
 
-          // Check grappler
-          if (raycastInfo._ragdoll._IsGrappling)
+          // Check grapplee
+          raycastInfo._ragdoll.OnGrapplee((grapplee) =>
           {
-
             // Get dir from target to swinger; if hostage is held in front of knife, kill hostage
             var dir = (raycastInfo._ragdoll._Hip.position - _ragdoll._Hip.position).normalized;
             var target_frwd = raycastInfo._ragdoll._Controller.forward;
@@ -443,12 +443,9 @@ public class ItemScript : MonoBehaviour
             if ((dir - target_frwd).magnitude > 1f)
             {
               RegisterHitRagdoll(raycastInfo._ragdoll);
-              raycastInfo._ragdoll = raycastInfo._ragdoll._Grapplee;
+              raycastInfo._ragdoll = grapplee;
             }
-          }
-
-          // Check graplee
-          if (_ragdoll._Grapplee == raycastInfo._ragdoll) return;
+          });
 
           // Check zombie invisible 2nd weapon
           if (_isZombie && _side == ActiveRagdoll.Side.RIGHT) return;
@@ -487,13 +484,16 @@ public class ItemScript : MonoBehaviour
                 if (_isZombie && !deflectData._hitAnthingOverride)
                 {
                   // Die self
-                  deflectData.MeleeDamageOther(_ragdoll._IsGrappling ? _ragdoll._Grapplee : _ragdoll);
+                  if (!_ragdoll._IsGrappling)
+                    deflectData.MeleeDamageOther(_ragdoll, deflectData._dismember);
+                  else
+                    _ragdoll.OnGrapplee((grapplee) => deflectData.MeleeDamageOther(grapplee, deflectData._dismember));
                   return;
                 }
                 else if (deflectData._isZombie && !_hitAnthingOverride)
                 {
                   // Die other
-                  MeleeDamageOther(raycastInfo._ragdoll);
+                  MeleeDamageOther(raycastInfo._ragdoll, _dismember);
                   return;
                 }
 
@@ -501,13 +501,16 @@ public class ItemScript : MonoBehaviour
                 if (_type == ItemType.FIST && deflectData._type != ItemType.FIST)
                 {
                   // Die self
-                  deflectData.MeleeDamageOther(_ragdoll._IsGrappling ? _ragdoll._Grapplee : _ragdoll);
+                  if (!_ragdoll._IsGrappling)
+                    deflectData.MeleeDamageOther(_ragdoll, deflectData._dismember);
+                  else
+                    _ragdoll.OnGrapplee((grapplee) => deflectData.MeleeDamageOther(grapplee, deflectData._dismember));
                   return;
                 }
                 else if (_type != ItemType.FIST && deflectData._type == ItemType.FIST)
                 {
                   // Die other
-                  MeleeDamageOther(raycastInfo._ragdoll);
+                  MeleeDamageOther(raycastInfo._ragdoll, _dismember);
                   return;
                 }
 
@@ -516,7 +519,10 @@ public class ItemScript : MonoBehaviour
                 SetHitOverride();
 
                 // Bounce both ragdolls backward
-                _ragdoll.BounceFromPosition(raycastInfo._ragdoll._IsGrappled ? raycastInfo._ragdoll._Grappler._Hip.position : raycastInfo._ragdoll._Hip.position, 1.5f, true);
+                if (!_ragdoll._IsGrappled)
+                  _ragdoll.BounceFromPosition(raycastInfo._ragdoll._Hip.position, 1.5f, true);
+                else
+                  raycastInfo._ragdoll.OnGrappler((grappler) => grappler.BounceFromPosition(grappler._Hip.position, 1.5f, true));
                 raycastInfo._ragdoll.BounceFromPosition(_ragdoll._Hip.position, 1.5f, true);
 
                 // Check stun from baton
@@ -574,7 +580,7 @@ public class ItemScript : MonoBehaviour
 
           // Damage
           _damageAnything = true;
-          MeleeDamageOther(raycastInfo._ragdoll);
+          MeleeDamageOther(raycastInfo._ragdoll, _dismember);
 
           // Zombie knockback
           if (!_ragdoll._IsPlayer && _ragdoll._EnemyScript._IsZombieReal)
@@ -588,7 +594,10 @@ public class ItemScript : MonoBehaviour
           }
           else
           {
-            PlaySound(raycastInfo._ragdoll._IsEnemy && raycastInfo._ragdoll._EnemyScript.IsChaser() ? Audio.MELEE_HIT_METAL : Audio.MELEE_HIT);
+            var playExtra = false;
+            if (_type == ItemType.FIST && _isChargedFist)
+              playExtra = true;
+            PlaySound(raycastInfo._ragdoll._IsEnemy && raycastInfo._ragdoll._EnemyScript.IsChaser() ? Audio.MELEE_HIT_METAL : (playExtra ? Audio.MELEE_HIT_BULLET : Audio.MELEE_HIT));
             EnemyScript.CheckSound(_ragdoll._Hip.position, EnemyScript.Loudness.SUPERSOFT);
           }
 
@@ -1155,7 +1164,7 @@ public class ItemScript : MonoBehaviour
         }
       }
     }
-    else if (_bufferUse || (!_useOnRelease && _triggerDown) || (_useOnRelease && !_triggerDown && _triggerDown_last))
+    else if (_bufferUse || (!_useOnRelease && _triggerDown) || (_useOnRelease && !_triggerDown && _triggerDownLast))
     {
 
       // If last use time is less than use rate, check fire rate
@@ -1247,7 +1256,7 @@ public class ItemScript : MonoBehaviour
       }
     }
 
-    _triggerDown_last = _triggerDown;
+    _triggerDownLast = _triggerDown;
 
     // Check for melee ui
     if (_swang && _time >= _useTime + UseRate() && !IsChargeWeapon())
@@ -1403,21 +1412,24 @@ public class ItemScript : MonoBehaviour
   }
 
   //
-  public void MeleeDamageOther(ActiveRagdoll targetRagdoll, bool shouldDismember = false)
+  public void MeleeDamageOther(ActiveRagdoll targetRagdoll, bool shouldDismember)
   {
-    MeleeDamageOther(_type, _ragdoll, targetRagdoll, _hit_force, shouldDismember);
+    MeleeDamageOther(_type, _ragdoll, targetRagdoll, _hit_force, shouldDismember, _downTimeSave);
   }
-  public static bool MeleeDamageOther(ItemType meleeItemType, ActiveRagdoll sourceRagdoll, ActiveRagdoll targetRagdoll, float hitForceMultiplier, bool shouldDismember = false)
+  public static bool MeleeDamageOther(ItemType meleeItemType, ActiveRagdoll sourceRagdoll, ActiveRagdoll targetRagdoll, float hitForceMultiplier, bool shouldDismember, float downTime)
   {
 
     // Check fist
     if (meleeItemType == ItemType.FIST)
-      if (!targetRagdoll._HasBeenStunned && !targetRagdoll._IsStunned)
+    {
+      var shouldStun = downTime < 0.5f;
+      if (shouldStun && !targetRagdoll._HasBeenStunned && !targetRagdoll._IsStunned)
       {
         targetRagdoll.Stun();
         targetRagdoll.BounceFromPosition(sourceRagdoll._Hip.position, 0.5f, false);
         return true;
       }
+    }
 
     // Damage
     var hitForce = MathC.Get2DVector(-(sourceRagdoll._Hip.position - targetRagdoll._Hip.position).normalized * (3750f + (Random.value * 1750f)) * hitForceMultiplier);
@@ -1660,7 +1672,7 @@ public class ItemScript : MonoBehaviour
   }
 
   //
-  public virtual void UseDown()
+  public virtual bool UseDown()
   {
     //_ragdoll._playerScript?.ResetLoadout();
     //if (this == null) return;
@@ -1671,7 +1683,7 @@ public class ItemScript : MonoBehaviour
       if (_ragdoll._IsEnemy && _ragdoll._EnemyScript._IsZombieReal)
         ;
       else
-        return;
+        return false;
 
     //
     _triggerDown = true;
@@ -1691,10 +1703,22 @@ public class ItemScript : MonoBehaviour
 
     //
     Update();
+
+    return true;
   }
-  public void UseUp()
+
+  [System.NonSerialized]
+  public bool _ForceIgnoreUseUp;
+
+  public bool UseUp()
   {
-    if (!_triggerDown) return;
+    if (!_triggerDown) return false;
+    if (_ForceIgnoreUseUp)
+    {
+      _ForceIgnoreUseUp = false;
+
+      _triggerDownLast = false;
+    }
 
     //_ragdoll._playerScript?.ResetLoadout();
     //if (this == null) return;
@@ -1709,6 +1733,8 @@ public class ItemScript : MonoBehaviour
 
     if (_useOnRelease)
       ResetV();
+
+    return true;
   }
   // Can you use the item?
   public bool CanUse(bool playEmpty = true)
@@ -1945,8 +1971,7 @@ public class ItemScript : MonoBehaviour
 
   bool MeleeCast(RaycastInfo raycastInfo, int iter)
   {
-    _ragdoll.ToggleRaycasting(false);
-    _ragdoll._Grappler?.ToggleRaycasting(false);
+    _ragdoll.ToggleRaycasting(false, true);
 
     var add = Vector3.zero;
     switch (iter % 3)
@@ -1960,7 +1985,8 @@ public class ItemScript : MonoBehaviour
     }
 
     // Cast ray from startPos to dir (cast a ray from the handle forwards)
-    var forward = _ragdoll._IsGrappled ? _ragdoll._Grappler._Controller.forward : _ragdoll._Controller.forward;
+    var forward = _ragdoll._Controller.forward;
+    _ragdoll.OnGrappler((grappler) => { forward = grappler._Controller.forward; });
     forward.y = 0f;
     var ray = new Ray(
       _ragdoll._Hip.position - _ragdoll._Hip.transform.forward * 0.1f + Vector3.up * 0.4f + add * 0.1f,
@@ -1992,8 +2018,7 @@ public class ItemScript : MonoBehaviour
     }
 
     //
-    _ragdoll.ToggleRaycasting(true);
-    _ragdoll._Grappler?.ToggleRaycasting(true);
+    _ragdoll.ToggleRaycasting(true, true);
 
     //
     return hit;

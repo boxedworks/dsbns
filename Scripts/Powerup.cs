@@ -114,12 +114,12 @@ public class Powerup : MonoBehaviour
     {
       case PowerupType.SILENCED_PISTOL:
         r.EquipItem(ItemManager.Items.PISTOL_SILENCED, ActiveRagdoll.Side.RIGHT);
-        r.PlaySound("Ragdoll/Reload");
+        r.PlaySound("Ragdoll/Reload", 0.9f, 1.1f);
         break;
 
       case PowerupType.KNIFE:
         r.EquipItem(ItemManager.Items.KNIFE, ActiveRagdoll.Side.LEFT);
-        r.PlaySound("Ragdoll/Slice");
+        r.PlaySound("Ragdoll/Slice", 0.9f, 1.1f);
         break;
 
       case PowerupType.END:

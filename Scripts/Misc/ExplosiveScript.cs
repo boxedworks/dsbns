@@ -64,7 +64,7 @@ public class ExplosiveScript : MonoBehaviour
 
   public void Trigger(ActiveRagdoll source, float delay = 0f, bool disableGameobject = true, bool playSound = true)
   {
-    if (_triggered || (disableGameobject && !transform.GetChild(0).gameObject.activeSelf)) return;
+    if (_triggered || _exploded) return;
     _delay = delay;
     _triggered = true;
     _source = source;
@@ -74,7 +74,7 @@ public class ExplosiveScript : MonoBehaviour
 
   public void Explode(ActiveRagdoll source, bool disableGameobject = true, bool playSound = true)
   {
-    if (s_Explosives == null || this == null || (disableGameobject && !transform.GetChild(0).gameObject.activeSelf)) return;
+    if (s_Explosives == null || this == null || _exploded) return;
 
     _onExplode?.Invoke();
 
@@ -135,7 +135,7 @@ public class ExplosiveScript : MonoBehaviour
       {
         if (e == null) continue;
         if (e.name.Equals("Missle") || e.name.Equals("Grenade") || MathC.Get2DDistance(transform.position, e.transform.position) > _radius) continue;
-        e.Trigger(source, 0.25f);
+        e.Trigger(source, 0.2f + Random.Range(0f, 0.3f));
       }
 
       // Check for nearby tables

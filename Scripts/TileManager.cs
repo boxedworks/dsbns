@@ -435,7 +435,7 @@ public class TileManager
         }
 
         // Path information
-        var path = e.transform.parent.GetChild(1).GetComponent<PathScript>();
+        var path = e._path;
         for (var u = 0; u < path.transform.childCount; u++)
         {
           var waypoint = path.transform.GetChild(u);
@@ -4712,8 +4712,10 @@ public class TileManager
     {
       case "Enemy":
         var path = _SelectedObject.GetChild(1);
-        var positions = new List<Vector3>();
-        positions.Add(_SelectedObject.position + new Vector3(0.01f, 0f, 0f));
+        var positions = new List<Vector3>
+        {
+          _SelectedObject.position + new Vector3(0.01f, 0f, 0f)
+        };
         for (var i = 0; i < path.childCount; i++)
         {
           var path_point = path.GetChild(i);

@@ -473,7 +473,7 @@ public static class FunctionsC
 
     // Toggle raycasting for rags
     foreach (var ragdoll in ragdolls)
-      ragdoll.ToggleRaycasting(false);
+      ragdoll.ToggleRaycasting(false, false);
 
     // SFX
     PlayComplexParticleSystemAt(explosionType != ExplosiveScript.ExplosionType.STUN ? ParticleSystemType.EXPLOSION : ParticleSystemType.EXPLOSION_STUN, posAt + new Vector3(0f, 0.2f, 0f));
@@ -509,16 +509,16 @@ public static class FunctionsC
       // Raycast to validate
       else
       {
-        ragdoll.ToggleRaycasting(true, true);
+        ragdoll.ToggleRaycasting(true, false, true);
         var raycastHit = new RaycastHit();
         var dir = -(ragdoll._IsDead ? posOrigin - ragdoll._Hip.position : MathC.Get2DVector(posOrigin - ragdoll._Hip.position)).normalized;
         if (!Physics.SphereCast(new Ray(posOrigin, dir), 0.05f, out raycastHit, explosionRadius + 5f, GameResources._Layermask_Ragdoll))
         {
-          ragdoll.ToggleRaycasting(false, true);
+          ragdoll.ToggleRaycasting(false, false, true);
           continue;
         }
 
-        ragdoll.ToggleRaycasting(false, true);
+        ragdoll.ToggleRaycasting(false, false, true);
         if (!ragdoll.IsSelf(raycastHit.collider.gameObject)) continue;
       }
 
@@ -605,7 +605,7 @@ public static class FunctionsC
 
     // Retoggle raycasting
     foreach (var r in ragdolls)
-      if (!r._IsDead) r.ToggleRaycasting(true);
+      if (!r._IsDead) r.ToggleRaycasting(true, false);
   }
 
   static Dictionary<string, Mesh> _Meshes;

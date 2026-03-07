@@ -98,8 +98,8 @@ public class LaserScript : CustomEntity
               // Particles
               FunctionsC.PlayComplexParticleSystemAt(FunctionsC.ParticleSystemType.SMOKE, j.transform.position);
               // Sound
-              r.PlaySound("Ragdoll/Slice");
-              r.PlaySound("Etc/Sizzle");
+              r.PlaySound("Ragdoll/Slice", 0.9f, 1.1f);
+              r.PlaySound("Etc/Sizzle", 0.9f, 1.1f);
               break;
             // Alert AIs
             case LaserType.ALARM:

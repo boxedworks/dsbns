@@ -273,10 +273,8 @@ public class GameScript : MonoBehaviour
     for (var i = 0; i < PlayerScript.s_Materials_Ring.Length; i++)
       PlayerScript.s_Materials_Ring[i] = new Material(mat);
 
-    new PlayerProfile();
-    new PlayerProfile();
-    new PlayerProfile();
-    new PlayerProfile();
+    for (var i = 0; i < 4; i++)
+      new PlayerProfile();
 
     SceneThemes.ChangeMapTheme("Black and White");
 
@@ -697,12 +695,10 @@ public class GameScript : MonoBehaviour
               _levelEndTimer = 0f;
 
               // Check who got the goal
-              s_CrownPlayer = -1;
               foreach (var p in PlayerScript.s_Players)
               {
                 if (!p._HasExit) { continue; }
                 p._HasExit = false;
-                s_CrownPlayer = p._Profile._Id;
                 break;
 
               }
@@ -996,6 +992,9 @@ public class GameScript : MonoBehaviour
       TileManager._Text_GameOver.gameObject.SetActive(false);
       TileManager._Text_Money.gameObject.SetActive(false);
       TileManager.HideMonies();
+
+      if (SettingsModule.HideUI)
+        PlayerProfile.ShowAll();
     }
     else
     {
@@ -1010,6 +1009,9 @@ public class GameScript : MonoBehaviour
       TileManager._Text_GameOver.gameObject.SetActive(true);
       TileManager._Text_Money.gameObject.SetActive(true);
       TileManager.UnHideMonies();
+
+      if (SettingsModule.HideUI)
+        PlayerProfile.HideAll();
     }
     // Toggle text bubbles
     TextBubbleScript.ToggleBubbles(!s_Paused);
@@ -1037,16 +1039,60 @@ public class GameScript : MonoBehaviour
   // Fired on last enemy killed
   public static void OnLastEnemyKilled()
   {
-    s_Singleton._goalPickupTime = Time.time;
+    if (s_IsMissionsGameMode)
+    {
+      s_Singleton._goalPickupTime = Time.time;
 
-    if (LevelModule.ExtraCrownMode == 0 || PlayerScript.GetNumberAlivePlayers() < 2)
-      ToggleExitLight(true);
+      if (LevelModule.ExtraCrownMode == 0 || PlayerScript.GetNumberAlivePlayers() < 2)
+        ToggleExitLight(true);
 
-    // Check achievements
+      if (LevelModule.ExtraCrownMode != 0 && s_CrownPlayer == -1 && PlayerScript.GetNumberAlivePlayers() == 1)
+        GiveCrownToAlivePlayer();
+
+      // Check achievements
 #if UNITY_STANDALONE
-    if (LevelModule.ExtraTime == 1 && Settings._Extras_CanUse)
-      Achievements.UnlockAchievement(Achievements.Achievement.EXTRA_SUPERH);
+      if (LevelModule.ExtraTime == 1 && Settings._Extras_CanUse)
+        Achievements.UnlockAchievement(Achievements.Achievement.EXTRA_SUPERH);
 #endif
+    }
+  }
+
+  //
+  public static void GiveCrownToAlivePlayer()
+  {
+    foreach (var player in PlayerScript.s_Players)
+    {
+      if (player == null || player._Ragdoll == null || player._Ragdoll._health < 1) continue;
+
+      RemoveCrown();
+
+      s_CrownPlayer = player._Profile._Id;
+      player._Ragdoll.AddCrown(true);
+
+      break;
+    }
+  }
+
+  //
+  public static void RemoveCrown()
+  {
+    if (s_CrownPlayer != -1)
+      foreach (var player in PlayerScript.s_Players)
+      {
+        if (player == null || player._Ragdoll == null || player._Ragdoll._IsDead) continue;
+        if (player._Profile._Id != s_CrownPlayer) continue;
+        player._Ragdoll.RemoveCrown();
+        break;
+      }
+    if (s_CrownEnemy != -1)
+      foreach (var enemy in EnemyScript._Enemies_alive)
+      {
+        if (enemy == null || enemy._Ragdoll == null || enemy._Ragdoll._IsDead) continue;
+        if (enemy._Id != s_CrownEnemy) continue;
+        enemy._Ragdoll.RemoveCrown();
+        break;
+      }
+    s_CrownPlayer = s_CrownEnemy = -1;
   }
 
   //
@@ -1395,7 +1441,7 @@ public class GameScript : MonoBehaviour
 
     //
     if (returnCode)
-      s_CrownPlayer = s_CrownEnemy = -1;
+      s_CrownEnemy = -1;
 
     //
     return returnCode;
@@ -1438,7 +1484,7 @@ public class GameScript : MonoBehaviour
 
     //
     if (returnCode)
-      s_CrownPlayer = s_CrownEnemy = -1;
+      s_CrownEnemy = -1;
 
     //
     return returnCode;

@@ -335,7 +335,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
       if (LevelModule.ExtraCrownMode != 0)
         if (GameScript.s_CrownPlayer == _Profile._Id)
         {
-          _ragdoll.AddCrown();
+          _ragdoll.AddCrown(false);
         }
   }
 
@@ -598,7 +598,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
             var moved = false;
             foreach (var bullet in ItemScript._BulletPool)
             {
-              if (!bullet.gameObject.activeSelf || bullet.GetRagdollID() == _ragdoll._Id) continue;
+              if (!bullet.gameObject.activeSelf || bullet._RagdollID == _ragdoll._Id) continue;
               if (MathC.Get2DDistance(_ragdoll._Hip.position, bullet.transform.position) < minDist)
               {
                 //_SlowmoTimer = Mathf.Clamp(_SlowmoTimer + 1f, 0f, 2f);
@@ -662,7 +662,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
         {
           transform.LookAt(_targetRagdoll._Hip.transform.position);
 
-          _ragdoll.ToggleRaycasting(false);
+          _ragdoll.ToggleRaycasting(false, true);
           var hit = new RaycastHit();
           if (Physics.SphereCast(new Ray(_ragdoll._transform_parts._head.transform.position, _ragdoll._Hip.transform.forward * 100f + Vector3.up * 0.3f), 0.1f, out hit, GameResources._Layermask_Ragdoll))
           {
@@ -753,7 +753,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
             }
           }
 
-          _ragdoll.ToggleRaycasting(true);
+          _ragdoll.ToggleRaycasting(true, true);
         }
       }
       /*/if (Debug.isDebugBuild)
@@ -930,10 +930,10 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
 
                   if (!bullet.gameObject.activeSelf || !bullet._Enabled) continue;
 
-                  var bulletSourceId = bullet.GetRagdollID();
+                  var bulletSourceId = bullet._RagdollID;
                   if (
                     bulletSourceId == p._ragdoll._Id ||
-                    bulletSourceId == (p._ragdoll._Grapplee?._Id ?? -1)
+                    p._ragdoll.IsGrappleRelated(bullet._SourceDamageRagdoll)
                   )
                     continue;
 
@@ -1207,7 +1207,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
       }, true, _PlayerSpawnId);
 
       // FX
-      _ragdoll?.PlaySound("Ragdoll/Pop");
+      _ragdoll?.PlaySound("Ragdoll/Pop", 0.9f, 1.1f);
 
       // Achievement
 #if UNITY_STANDALONE
@@ -1319,11 +1319,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
 
 #if UNITY_EDITOR
     if (ControllerManager.GetKey(ControllerManager.Key.K))
-    {
-      //_ragdoll.AddCrown();
       FunctionsC.MusicManager.PlayNextTrack();
-    }
-
 #endif
 
     var saveInput = Vector2.zero;
@@ -2355,13 +2351,13 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
       var rb = money.GetComponent<Rigidbody>();
       rb.isKinematic = false;
       rb.AddForce(_ragdoll._Hip.transform.forward * 100f);
-      _ragdoll.PlaySound("Ragdoll/Throw");
+      _ragdoll.PlaySound("Ragdoll/Throw", 0.9f, 1.1f);
 
       IEnumerator sizeChange()
       {
         yield return new WaitForSeconds(0.2f);
         if (collider != null && collider0 != null)
-          _ragdoll.PlaySound("Survival/Points_Land_Floor");
+          _ragdoll.PlaySound("Survival/Points_Land_Floor", 0.9f, 1.1f);
 
         yield return new WaitForSeconds(0.3f);
         if (collider != null && collider0 != null)
@@ -2588,26 +2584,30 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
     }
 
     // Check last killed with crown mode
-    if (GetNumberAlivePlayers() == 1 && EnemyScript.AllDead())
-      if (LevelModule.ExtraCrownMode != 0)
-      {
-
-        GameScript.ToggleExitLight(true);
-
-        // Last killed settings
-        if (SettingsModule.LevelEndCondition == Settings.SettingsSaveData.LevelEndConditionType.LAST_ENEMY_KILLED)
+    if (GameScript.s_IsMissionsGameMode)
+      if (GetNumberAlivePlayers() == 1 && EnemyScript.AllDead())
+        if (LevelModule.ExtraCrownMode != 0)
         {
-          IEnumerator waitForComplete()
-          {
-            var levelId = TileManager._s_MapIndex;
-            yield return new WaitForSecondsRealtime(0.5f);
 
-            if (levelId == TileManager._s_MapIndex)
-              GameScript.OnLevelComplete();
+          if (GameScript.s_CrownPlayer == -1)
+            GameScript.GiveCrownToAlivePlayer();
+
+          GameScript.ToggleExitLight(true);
+
+          // Last killed settings
+          if (SettingsModule.LevelEndCondition == Settings.SettingsSaveData.LevelEndConditionType.LAST_ENEMY_KILLED)
+          {
+            IEnumerator waitForComplete()
+            {
+              var levelId = TileManager._s_MapIndex;
+              yield return new WaitForSecondsRealtime(0.5f);
+
+              if (levelId == TileManager._s_MapIndex)
+                GameScript.OnLevelComplete();
+            }
+            StartCoroutine(waitForComplete());
           }
-          StartCoroutine(waitForComplete());
         }
-      }
   }
 
   CustomObstacle _currentInteractable;
@@ -2640,7 +2640,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
           if (Time.time - _LastMoneyPickupNoiseTime > 0.1f)
           {
             _LastMoneyPickupNoiseTime = Time.time;
-            _ragdoll.PlaySound("Survival/Pickup_Points");
+            _ragdoll.PlaySound("Survival/Pickup_Points", 0.9f, 1.1f);
           }
           break;
         }

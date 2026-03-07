@@ -130,10 +130,8 @@ public class BulletScript : MonoBehaviour
     }
   }
 
-  public int GetRagdollID()
-  {
-    return _sourceDamageRagdoll._Id;
-  }
+  public ActiveRagdoll _SourceDamageRagdoll { get { return _sourceDamageRagdoll; } }
+  public int _RagdollID { get { return _sourceDamageRagdoll._Id; } }
 
   int _penatrationAmount;
   float _initialForce;
@@ -216,31 +214,33 @@ public class BulletScript : MonoBehaviour
         return;
       else if (collider.transform.parent.name == "FRYING_PAN")
       {
-        var item = collider.transform.parent.GetComponent<ItemScript>();
-        if (item._ragdoll._Id != _sourceDamageRagdoll._Id)
+        var item_fryingPan = collider.transform.parent.GetComponent<ItemScript>();
+        if (item_fryingPan._ragdoll._Id != _sourceDamageRagdoll._Id)
         {
 
           var logic = true;
-          if (_sourceItemRagdoll._IsGrappled)
-          {
-            if (_sourceDamageRagdoll._Id == _sourceItemRagdoll._Id && item._ragdoll._Id == _sourceDamageRagdoll._Grappler._Id)
-              logic = false;
-          }
+
+          // Don't deflect if bullet hits frying pan from grapler
+          if (
+            _sourceItemRagdoll._IsGrappled &&
+            _sourceItemRagdoll._Id == _sourceDamageRagdoll._Id &&
+            item_fryingPan._ragdoll.IsGrappling(_sourceDamageRagdoll)
+            )
+            logic = false;
+
+          // Deflect if swinging, otherwiss block
           if (logic)
-          {
-            if (item._IsSwinging)
+            if (item_fryingPan._IsSwinging)
             {
-
-              Deflect(item, true);
-
+              Deflect(item_fryingPan, true);
 
 #if UNITY_STANDALONE
               // Check achievements
-              if (item._ragdoll._IsPlayer)
+              if (item_fryingPan._ragdoll._IsPlayer)
               {
                 Achievements.UnlockAchievement(Achievements.Achievement.BAT_DEFLECT);
 
-                if (item._type == ItemManager.Items.FRYING_PAN && SceneThemes._Theme._name == "Hedge")
+                if (item_fryingPan._type == ItemManager.Items.FRYING_PAN && SceneThemes._Theme._name == "Hedge")
                   Achievements.UnlockAchievement(Achievements.Achievement.FRYING_PAN_RAIN);
               }
 #endif
@@ -250,11 +250,10 @@ public class BulletScript : MonoBehaviour
               PlaySparks(true);
               PlayBulletEffectDropBullets(transform.position, 1);
 
-              item._ragdoll.Recoil(-(_sourceItemRagdoll._Hip.position - item.transform.position).normalized, _rb.linearVelocity.magnitude / 2f, false);
+              item_fryingPan._ragdoll.Recoil(-(_sourceItemRagdoll._Hip.position - item_fryingPan.transform.position).normalized, _rb.linearVelocity.magnitude / 2f, false);
               OnHideBullet();
               Hide();
             }
-          }
         }
         return;
       }
@@ -272,7 +271,7 @@ public class BulletScript : MonoBehaviour
 
         if (r._IsDead) return;
         if (r._Id == _lastRagdollId) return;
-        if ((r._Grappler?._Id ?? -1) == GetRagdollID()) return;
+        if (r.IsGrappleRelated(_sourceDamageRagdoll)) return;
         _lastRagdollId = r._Id;
         if (r._Id == _sourceDamageRagdoll._Id && !_canDamageSource) return;
 
@@ -573,7 +572,7 @@ public class BulletScript : MonoBehaviour
     if (
       other._triggered ||
       (other._sourceType == ItemManager.Items.FLAMETHROWER) ||
-      (!_canDamageSource && !other._canDamageSource && GetRagdollID() == other.GetRagdollID())
+      (!_canDamageSource && !other._canDamageSource && _RagdollID == other._RagdollID)
     )
       return false;
 

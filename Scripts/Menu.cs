@@ -6920,8 +6920,6 @@ go to the <color=yellow>SHOP</color> to buy something~1
           SettingsModule.HideUI = true;
           _CanRender = false;
           RenderMenu();
-
-          PlayerProfile.HideAll();
         });
 
 
@@ -6931,12 +6929,10 @@ go to the <color=yellow>SHOP</color> to buy something~1
           SettingsModule.HideUI = false;
           _CanRender = false;
           RenderMenu();
-
-          PlayerProfile.ShowAll();
         });
 
         // Update dropdown data
-        component.SetDropdownData("hide player ui\n\n", selections, actions, selection_match);
+        component.SetDropdownData("hide player ui when in-game\n\n", selections, actions, selection_match);
       })
 
     // Show tips

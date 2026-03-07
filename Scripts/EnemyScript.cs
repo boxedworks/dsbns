@@ -5,6 +5,7 @@ using Unity.Jobs;
 using Unity.Collections;
 
 using System.Linq;
+using System.IO;
 
 public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
 {
@@ -105,7 +106,7 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
     SpherecastHandler.QueueSpherecast(origin, dir, radius);
 
     // Disable self casting collide
-    _ragdoll.ToggleRaycasting(false);
+    _ragdoll.ToggleRaycasting(false, false);
   }
 
   static public List<EnemyScript> _Enemies_alive, _Enemies_dead;
@@ -189,6 +190,7 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
   public bool _IsZombie { get { return _survivalAttributes != null; } }
   public bool _IsZombieReal { get { return _IsZombie && (GameScript.s_IsZombieGameMode || _isZombieRealOverride); } }
   bool _isZombieRealOverride;
+  float _zombieArmTimer;
 
   public class SurvivalAttributes
   {
@@ -215,9 +217,17 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
 
     lastBulletID = -1;
 
-    _path.Init();
-    // Set nearest patrol point
-    _path.GetNearestPatrolPoint(transform.position);
+    var path = transform.parent.GetChild(1).gameObject;
+    if (_IsZombie)
+    {
+      Destroy(path);
+    }
+    else
+    {
+      _path = new PathScript();
+      _path.Init(path.transform);
+      _path.GetNearestPatrolPoint(transform.position);
+    }
 
     _survivalAttributes = survivalAttributes;
 
@@ -259,7 +269,7 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
       if (LevelModule.ExtraCrownMode != 0)
         if (GameScript.s_CrownEnemy == _Id)
         {
-          _ragdoll.AddCrown();
+          _ragdoll.AddCrown(false);
 
           if (LevelModule.ExtraCrownMode == 1)
           {
@@ -473,16 +483,16 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
     if (!_ragdoll._IsDead)
     {
       if (!_IsZombieReal)
-        _ragdoll.ToggleRaycasting(true);
+        _ragdoll.ToggleRaycasting(true, false);
     }
 
     if (!_agent.enabled)
     {
 
       // Check for attacking
-      if (_ragdoll._IsGrappled && _ragdoll._Grappler._IsPlayer)
+      if (_ragdoll._IsGraplerPlayer)
       {
-        DrawBackMelee();
+        DrawBackMelee(true);
 
         if (Time.time - _attackTime > 0f && _canAttack)
         {
@@ -832,8 +842,17 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
                   // Check melee
                   bool hasFryingPan = _itemLeft == ItemManager.Items.FRYING_PAN || _itemRight == ItemManager.Items.FRYING_PAN;
                   if (hasFryingPan && (_ragdoll.HasGun() || _itemLeft == ItemManager.Items.GRENADE_HOLD)) { }
-                  else if ((!_IsZombieReal && dis < (hasFryingPan ? 2f : 4f)) || (_IsZombieReal && dis < 4f))
-                    DrawBackMelee();
+                  else if (!_meleeDrawn && ((!_IsZombieReal && dis < (hasFryingPan ? 2f : 4f)) || (_IsZombieReal && dis < 2.5f)))
+                  {
+                    DrawBackMelee(true);
+
+                    if (_IsZombieReal)
+                      _zombieArmTimer = Time.time + Random.Range(0.4f, 2f);
+                  }
+                  else if (_meleeDrawn && _IsZombieReal && dis >= 2.5f && Time.time - _zombieArmTimer > 0f)
+                  {
+                    DrawBackMelee(false);
+                  }
 
                   // Try attacking
                   if (Time.time - _attackTime > 0f && _canAttack)
@@ -975,19 +994,45 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
   }
 
   //
-  void DrawBackMelee()
+  bool _meleeDrawn;
+  void DrawBackMelee(bool toggle)
   {
-    // Check knife
+    // Check use on release
+    var meleeDrawn = false;
     if (_ragdoll._ItemL?._useOnRelease ?? false)
     {
-      if (!_ragdoll._ItemL._TriggerDown)
-        _ragdoll._ItemL.UseDown();
+      if (toggle)
+      {
+        if (!_ragdoll._ItemL._TriggerDown)
+        {
+          if (_ragdoll._ItemL.UseDown())
+            meleeDrawn = true;
+        }
+      }
+      else if (_ragdoll._ItemL._TriggerDown)
+      {
+        _ragdoll._ItemL._ForceIgnoreUseUp = true;
+        _ragdoll._ItemL.UseUp();
+      }
     }
     if (_ragdoll._ItemR?._useOnRelease ?? false)
     {
-      if (!_ragdoll._ItemR._TriggerDown)
-        _ragdoll._ItemR.UseDown();
+      if (toggle)
+      {
+        if (!_ragdoll._ItemR._TriggerDown)
+        {
+          if (_ragdoll._ItemR.UseDown())
+            meleeDrawn = true;
+        }
+      }
+      else if (_ragdoll._ItemR._TriggerDown)
+      {
+        _ragdoll._ItemR._ForceIgnoreUseUp = true;
+        _ragdoll._ItemR.UseUp();
+      }
     }
+
+    _meleeDrawn = meleeDrawn;
   }
 
   bool _leftweaponuse = true;
@@ -998,7 +1043,7 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
     // Local
     void UseLeft()
     {
-      if (_ragdoll._ItemL.IsMelee() && _ragdoll._Grapplee != null) return;
+      if (_ragdoll._ItemL.IsMelee() && _ragdoll._IsGrappling) return;
       if (_ragdoll._ItemL._useOnRelease)
         _ragdoll._ItemL.UseUp();
       else
@@ -1006,12 +1051,14 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
     }
     void UseRight()
     {
-      if (_ragdoll._ItemR.IsMelee() && _ragdoll._Grapplee != null) return;
+      if (_ragdoll._ItemR.IsMelee() && _ragdoll._IsGrappling) return;
       if (_ragdoll._ItemR._useOnRelease)
         _ragdoll._ItemR.UseUp();
       else
         _ragdoll.UseRight();
     }
+
+    _meleeDrawn = false;
 
     //
     if (_IsZombieReal)
@@ -1886,7 +1933,7 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
 #if UNITY_STANDALONE
 
     // Grapple achievement
-    if (!(source?._IsPlayer ?? true) && source._IsGrappled && (source._Grappler?._IsPlayer ?? false))
+    if (source != null && source._IsGraplerPlayer)
       Achievements.UnlockAchievement(Achievements.Achievement.GRAPPLE_KILL);
 #endif
 
@@ -2070,8 +2117,9 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
 
               // FX
               TileManager._Text_LevelTimer_Best.text += "\n\n";
-              var medal_format = "<color={0}>{1,-5}: {2,-6}</color>\n";
-              var played_wrong = false;
+              var medalFormat = "<color={0}>{1,-5}: {2,-6}</color>\n";
+              var medalFormatStrikeout = "<color={0}><s>{1,-5}: {2,-6}</s></color>\n";
+              var playedWrong = false;
               var points_awarded_counter = points_awarded;
               if (can_save_timers && Shop._AvailablePoints != 999)
                 TileManager._Text_Money.text = $"$${Shop._AvailablePoints}";
@@ -2081,41 +2129,35 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
                 var time_ = string.Format("{0}", time.ToStringTimer()).ParseFloatInvariant();
                 var timeText = string.Format("{0}", time_.ToStringTimer());
 
-                TileManager._Text_LevelTimer_Best.text += string.Format(medal_format, ratings[i].Item2, ratings[i].Item1, time == -1f ? "-" : timeText + (ratingIndex == i ? "*" : ""));
+                if (playedWrong)
+                  medalFormat = medalFormatStrikeout;
+                TileManager._Text_LevelTimer_Best.text += string.Format(medalFormat, ratings[i].Item2, ratings[i].Item1, time == -1f ? "-" : timeText + (ratingIndex == i ? "*" : ""));
 
                 // Show $$
                 if (can_save_timers && Shop._AvailablePoints != 999 && points_awarded_table.Contains(i))
-                {
                   TileManager.MoveMonie(3 - i, points_awarded - points_awarded_counter--, timeText.Length < 6 ? 0 : 1);
-                }
+
+                //
+                if (playedWrong)
+                  continue;
 
                 // FX
-                if (i < ratingIndex)
+                if (i == ratingIndex && i != 0)
                 {
-                  if (!played_wrong)
+                  if (!playedWrong)
                   {
-                    played_wrong = true;
+                    playedWrong = true;
                     SfxManager.PlayAudioSourceSimple(GameResources.s_AudioListener.transform.position, "Etc/Wrong", 0.95f, 1f, SfxManager.AudioClass.NONE, false, false);
                   }
                 }
-                else if (i > ratingIndex)
+                else
                 {
                   var mod = i * 0.15f;
                   SfxManager.PlayAudioSourceSimple(GameResources.s_AudioListener.transform.position, "Etc/Best_rank", 0.95f - mod, 1f - mod, SfxManager.AudioClass.NONE, false, false);
                 }
-                else
-                {
-                  if (ratingIndex == 0)
-                    SfxManager.PlayAudioSourceSimple(GameResources.s_AudioListener.transform.position, "Etc/Best_rank", 0.95f, 1f, SfxManager.AudioClass.NONE, false, false);
-                  else
-                  {
 
-                    var mod = i * 0.15f;
-                    SfxManager.PlayAudioSourceSimple(GameResources.s_AudioListener.transform.position, "Etc/Best_rank", 0.95f - mod, 1f - mod, SfxManager.AudioClass.NONE, false, false);
-                  }
-                }
 
-                if (!played_wrong)
+                if (!playedWrong)
                   yield return new WaitForSecondsRealtime(0.1f);
               }
 

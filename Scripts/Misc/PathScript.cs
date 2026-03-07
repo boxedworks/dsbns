@@ -1,11 +1,14 @@
 ﻿using UnityEngine;
 
-public class PathScript : MonoBehaviour
+public class PathScript
 {
 
-  public string _waitTimes;
-  public string[] _lookTimes;
-  public bool _pingPong;
+  public Transform transform;
+  public GameObject gameObject { get { return transform.gameObject; } }
+
+  public string _WaitTimes;
+  public string[] _LookTimes;
+  bool _pingPong;
 
   float[] _waitTimes_parsed;
   float[][] _lookTimes_parsed;
@@ -13,34 +16,39 @@ public class PathScript : MonoBehaviour
   public int _currentPatrolPoint, _currentLookPoint;
 
   // Use this for initialization
-  public void Init()
+  public void Init(Transform pathTransform)
   {
+    transform = pathTransform;
+
+    _pingPong = true;
+
     // Parse info
-    if (_waitTimes.Trim().Length > 0)
+    if (_WaitTimes != null && _WaitTimes.Trim().Length > 0)
     {
-      string[] waitTimes = _waitTimes.Split(',');
+      var waitTimes = _WaitTimes.Split(',');
       _waitTimes_parsed = new float[waitTimes.Length];
-      for (int i = 0; i < waitTimes.Length; i++)
+      for (var i = 0; i < waitTimes.Length; i++)
       {
         _waitTimes_parsed[i] = waitTimes[i].ParseFloatInvariant();
       }
     }
 
-    if (_lookTimes.Length > 0)
+    if (_LookTimes != null && _LookTimes.Length > 0)
     {
-      _lookTimes_parsed = new float[_lookTimes.Length][];
-      for (int u = 0; u < _lookTimes.Length; u++)
+      _lookTimes_parsed = new float[_LookTimes.Length][];
+      for (int u = 0; u < _LookTimes.Length; u++)
       {
-        string[] lookTimes = _lookTimes[u].Split(',');
+        var lookTimes = _LookTimes[u].Split(',');
         _lookTimes_parsed[u] = new float[lookTimes.Length];
-        for (int i = 0; i < lookTimes.Length; i++)
+        for (var i = 0; i < lookTimes.Length; i++)
         {
           _lookTimes_parsed[u][i] = lookTimes[i].ParseFloatInvariant();
         }
       }
     }
+
     // Hide path markers
-    for (int i = 0; i < transform.childCount; i++)
+    for (var i = 0; i < transform.childCount; i++)
     {
       transform.GetChild(i).gameObject.SetActive(false);
     }
@@ -53,6 +61,8 @@ public class PathScript : MonoBehaviour
   // Patrol point functions
   public Transform GetPatrolPoint()
   {
+    if (transform.childCount == 1)
+      return transform.GetChild(0);
     return transform.GetChild(GetPatrolPointIter());
   }
   public Transform GetNextPatrolPoint()
@@ -74,7 +84,7 @@ public class PathScript : MonoBehaviour
   // Look point functions
   public Transform GetLookPoint(bool increment = true)
   {
-    Transform p = GetPatrolPoint();
+    var p = GetPatrolPoint();
     return p.GetChild((increment ? ++_currentLookPoint : _currentLookPoint) % p.childCount);
   }
   public float GetLookWait()
@@ -87,10 +97,10 @@ public class PathScript : MonoBehaviour
   public Transform GetNearestPatrolPoint(Vector3 currentPos)
   {
     int iter = 0, point = 0;
-    float dis = 1000f;
-    foreach (Transform t in GetChildren())
+    var dis = 1000f;
+    foreach (var t in GetChildren())
     {
-      float cDis = Vector3.Distance(t.position, currentPos);
+      var cDis = Vector3.Distance(t.position, currentPos);
       if (cDis < dis)
       {
         dis = cDis;
@@ -105,8 +115,8 @@ public class PathScript : MonoBehaviour
   Transform[] GetChildren()
   {
     if (transform.childCount == 0) return null;
-    Transform[] children = new Transform[transform.childCount];
-    for (int i = 0; i < transform.childCount; i++)
+    var children = new Transform[transform.childCount];
+    for (var i = 0; i < transform.childCount; i++)
     {
       children[i] = transform.GetChild(i);
     }

@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+[RequireComponent(typeof(Rigidbody))]
+[RequireComponent(typeof(Collider))]
 public class UtilityScript : ItemScript
 {
   //
@@ -86,6 +88,9 @@ public class UtilityScript : ItemScript
   AudioSource _mortarAudioSource;
 
   //
+  GameObject _mesh { get { return transform.GetChild(0).gameObject; } }
+
+  //
   public static void Detonate_UtilitiesById(ItemScript source, UtilityType utilityType, int count = -1)
   {
 
@@ -116,6 +121,7 @@ public class UtilityScript : ItemScript
   new void Start()
   {
     _disableOnRagdollDeath = false;
+    _mesh.SetActive(false);
 
     //
     if (_utility_type == UtilityType.MORTAR_STRIKE)
@@ -274,6 +280,7 @@ public class UtilityScript : ItemScript
     if (explosion_radius != -1f)
     {
       _ring = Instantiate(TileManager._Ring.gameObject).transform.GetChild(0).GetComponent<MeshRenderer>();
+      _ring.enabled = false;
       _ring.transform.parent.gameObject.SetActive(true);
 
       _explosion = gameObject.AddComponent<ExplosiveScript>();
@@ -461,7 +468,7 @@ public class UtilityScript : ItemScript
             if (rag != null)
             {
               if (rag._Id == _ragdoll._Id) return;
-              if (rag._Id == (_ragdoll._Grapplee?._Id ?? -1)) return;
+              if (rag.IsGrappleRelated(_ragdoll)) return;
               if (!rag._IsDead)
               {
                 // Check for same ragdoll
@@ -696,6 +703,7 @@ public class UtilityScript : ItemScript
 
           // Ring
           _ring = Instantiate(TileManager._Ring.gameObject).transform.GetChild(0).GetComponent<MeshRenderer>();
+          _ring.enabled = false;
           _ring.transform.parent.gameObject.SetActive(true);
 
           var localscale = _ring.transform.localScale;
@@ -998,17 +1006,17 @@ public class UtilityScript : ItemScript
                 var distance = rag.GetDistanceTo(transform.position);
                 if (distance > 0.4f) return;
 
-                // Check grappler
+                // Check grapplee
                 Transform stickToTransform = c.transform;
-                if (rag._Grapplee != null)
+                rag.OnGrapplee((grapplee) =>
                 {
-                  var grappleeDistance = rag._Grapplee.GetDistanceTo(transform.position);
+                  var grappleeDistance = grapplee.GetDistanceTo(transform.position);
                   if (grappleeDistance < distance)
                   {
-                    rag = rag._Grapplee;
+                    rag = grapplee;
                     stickToTransform = (rag._leg_lower_l != null ? rag._leg_lower_l : rag._leg_lower_r).transform;
                   }
-                }
+                });
 
                 //
                 _flag = 1;
@@ -1148,6 +1156,13 @@ public class UtilityScript : ItemScript
       //
       if (_thrown)
       {
+        if (Time.time - _thrownTimer > 0.02f && !_mesh.activeSelf)
+        {
+          if (_ring != null && !_exploded)
+            _ring.enabled = true;
+          _mesh.SetActive(true);
+        }
+
         if (_expirationTimer != -1f && Time.time - _thrownTimer > _expirationTimer)
         {
           if (_utility_type == UtilityType.C4)
@@ -1175,12 +1190,20 @@ public class UtilityScript : ItemScript
       if (_ring != null)
       {
         // Show ring for cooked grenade
+        Vector3 ringPos;
         if (_utility_type == UtilityType.GRENADE && extra && !_thrown)
-          _ring.transform.position = _ragdoll._transform_parts._hip.position + _ragdoll._transform_parts._hip.forward * 0.3f;
+          ringPos = _ragdoll._transform_parts._hip.position + _ragdoll._transform_parts._hip.forward * 0.3f;
 
         // Normal ring behavior
         else
-          _ring.transform.position = transform.position;
+        {
+          if (!_mesh.activeSelf && _ragdoll != null)
+            ringPos = _ragdoll._transform_parts._hip.position;
+          else
+            ringPos = transform.position;
+        }
+
+        _ring.transform.position = ringPos;
       }
 
       switch (_utility_type)
@@ -1188,7 +1211,7 @@ public class UtilityScript : ItemScript
 
         // Check for grenade cook
         case UtilityType.GRENADE:
-          if (_downTime != 0f && !_thrown && !_explosion._triggered && !_explosion._exploded)
+          if (_downTime != 0f && !_thrown && !_explosion._triggered && !_explosion._exploded && !extra)
           {
             // Set scale
             if (_ragdoll._IsPlayer && _ragdoll._PlayerScript.HasPerk(Shop.Perk.PerkType.EXPLOSIONS_UP))
@@ -1221,7 +1244,7 @@ public class UtilityScript : ItemScript
                 if (_unregister) _ragdoll._PlayerScript?._Profile.UtilityUse(_side);
               }
 
-              // Disable rung
+              // Disable ring
               _ring.enabled = false;
             };
           }
@@ -1300,7 +1323,7 @@ public class UtilityScript : ItemScript
     // Ignore collisions
     if (_utility_type != UtilityType.C4)
     {
-      _ragdoll._Grapplee?.IgnoreCollision(_c);
+      _ragdoll.IgnoreGrappleCollision(_c);
     }
 
     //
@@ -1349,7 +1372,7 @@ public class UtilityScript : ItemScript
   }
 
   //
-  public override void UseDown()
+  public override bool UseDown()
   {
     base.UseDown();
 
@@ -1364,6 +1387,8 @@ public class UtilityScript : ItemScript
         _mortarAudioSource.loop = true;
       }
     }
+
+    return true;
   }
 
   // Pick up utility off ground / corpse
@@ -1388,7 +1413,7 @@ public class UtilityScript : ItemScript
             player._Profile.UtilityReload(side, 1);
 
             // Play noise
-            player._Ragdoll.PlaySound("Ragdoll/Pickup");
+            player._Ragdoll.PlaySound("Ragdoll/Pickup", 0.9f, 1.1f);
 
             // Disable and hide
             Destroy(gameObject, 2f);
@@ -1404,7 +1429,7 @@ public class UtilityScript : ItemScript
       player._Profile.UtilityReload(side, 1);
 
       // Play noise
-      player._Ragdoll.PlaySound("Ragdoll/Pickup");
+      player._Ragdoll.PlaySound("Ragdoll/Pickup", 0.9f, 1.1f);
 
       // Disable and hide
       Destroy(gameObject, 2f);
@@ -1615,9 +1640,6 @@ public class UtilityScript : ItemScript
 
   public static ProjectileCollisionData? GetProjectileCollisionData(Collider c)
   {
-
-    Debug.Log(c.gameObject.name);
-
     var projectileData = new ProjectileCollisionData()
     {
       _GameObject = c.gameObject,

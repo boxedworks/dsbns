@@ -327,12 +327,6 @@ public class PlayerProfile
     _playerColor = _playerColor;
     UpdateIcons();
     CreateHealthUI(1);
-
-    // Hide player ui
-    if (SettingsModule.HideUI)
-      Hide();
-    else
-      Show();
   }
 
   //

@@ -801,7 +801,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       var enemy_next = EnemyScript._Enemies_alive[_EnemyIndex++ % EnemyScript._Enemies_alive.Count];
       var enemy_ragdoll = enemy_next._Ragdoll;
 
-      enemy_ragdoll.ToggleRaycasting(false);
+      enemy_ragdoll.ToggleRaycasting(false, true);
 
       if (Random.Range(0, 16) == 0f)
         enemy_next.SetRandomStrafe();
@@ -810,7 +810,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       var hit = new RaycastHit();
       if (Physics.SphereCast(new Ray(enemy_ragdoll._Hip.transform.position, MathC.Get2DVector(enemy_ragdoll._Hip.transform.forward) * 100f), 0.5f, out hit, 100f, GameResources._Layermask_Ragdoll))
       {
-        enemy_ragdoll.ToggleRaycasting(true);
+        enemy_ragdoll.ToggleRaycasting(true, true);
         if (hit.distance > 10f) return;
         var ragdoll = ActiveRagdoll.GetRagdoll(hit.collider.gameObject);
         if (ragdoll == null || ragdoll._IsPlayer) return;
@@ -819,7 +819,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         return;
       }
 
-      enemy_ragdoll.ToggleRaycasting(true);
+      enemy_ragdoll.ToggleRaycasting(true, true);
     }
   }
 
