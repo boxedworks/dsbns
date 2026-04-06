@@ -168,13 +168,15 @@ public class ActiveRagdoll
 
     // Defaults
     _Controller = follow;
+#if UNITY_EDITOR
     ragdoll.name = "Ragdoll";
+#endif
     Transform = ragdoll.transform;
     _time_dead = -1f;
 
     // Set materials
     _renderer = Transform.GetChild(0).GetComponent<SkinnedMeshRenderer>();
-    s_Materials_Ragdoll ??= new List<Tuple<Material, Material>>();
+    s_Materials_Ragdoll ??= new();
     if (_Id == s_Materials_Ragdoll.Count)
     {
       var mat0 = new Material(_renderer.sharedMaterials[0]);
@@ -393,14 +395,6 @@ public class ActiveRagdoll
 
       // Only update if enabled
       if (!_CanReceiveInput) return;
-
-      /*/ Check hip
-      if (_Hip.transform.position.y > 0f)
-      {
-        Debug.Log("defective ragdoll");
-        Kill(null, DamageSourceType.MELEE, Vector3.zero);
-        return;
-      }*/
     }
 
     // Move / rotate based on a rigidbody
@@ -1070,11 +1064,9 @@ public class ActiveRagdoll
         GameScript.s_Singleton.StartCoroutine(delayedReload());
       }
     }
-    //else if (_itemL != null && !_itemL._melee && _isPlayer) DisplayText("already reloading L");
     // Right item
     if (_ItemR != null && _ItemR.CanReload() && !_ItemR.IsChargeWeapon())
       _ItemR.Reload();
-    //else if (_itemR != null && !_itemR._melee && _isPlayer) DisplayText("already reloading R");
   }
 
   public void IgnoreCollision(Collider c, bool ignore = true)
@@ -1210,8 +1202,6 @@ public class ActiveRagdoll
           rbData.LastSoundFX = lastSound;
 
           _Rbs[index] = rbData;
-
-          //Debug.Log($"buildup: {rb.name} {mag_old} .. {mag}");
           continue;
         }
 
@@ -1222,8 +1212,6 @@ public class ActiveRagdoll
           rbData.LastSoundFX = Time.time;
 
           _Rbs[index] = rbData;
-
-          //Debug.Log($"sound: {rb.name} {mag_old} .. {mag}");
 
           switch (bodyType)
           {
@@ -2359,7 +2347,8 @@ public class ActiveRagdoll
   {
     // If hip is null, ActiveRagdoll is null. Throw exception
     if (_Hip == null)
-      throw new System.NullReferenceException("Attempting to access a null ActiveRagdoll.");
+      throw new NullReferenceException("Attempting to access a null ActiveRagdoll.");
+
     // Manually return body parts
     GameObject[] returnList = new GameObject[11];
     // Hip

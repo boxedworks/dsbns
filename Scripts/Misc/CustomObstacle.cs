@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
+using Localization;
 using UnityEngine;
+using UnityEngine.SocialPlatforms;
 
 public class CustomObstacle : MonoBehaviour
 {
@@ -404,6 +406,7 @@ public class CustomObstacle : MonoBehaviour
 
         // Check if can equip
         var equip_info = CheckEquip(p, item_type, side, hasAkimbo, 0);
+
         if (!equip_info.Item1)
         {
           var text = equip_info.Item3;
@@ -516,7 +519,7 @@ public class CustomObstacle : MonoBehaviour
                 // Check utility cap
                 if (equipment._UtilitiesLeft.Length == Shop._Utility_Cap[utility_type])
                 {
-                  p._Ragdoll.DisplayText("i have too many..");
+                  p._Ragdoll.DisplayText(LocalizationController.GetString("customObstacle_tooMany"));
                   return;
                 }
                 equip_side = ActiveRagdoll.Side.LEFT;
@@ -524,7 +527,7 @@ public class CustomObstacle : MonoBehaviour
               }
               else
               {
-                p._Ragdoll.DisplayText("i have too many..");
+                p._Ragdoll.DisplayText(LocalizationController.GetString("customObstacle_tooMany"));
                 return;
               }
             }
@@ -547,7 +550,7 @@ public class CustomObstacle : MonoBehaviour
                 // Check utility cap
                 if (equipment._UtilitiesRight.Length == Shop._Utility_Cap[utility_type])
                 {
-                  p._Ragdoll.DisplayText("i have too many..");
+                  p._Ragdoll.DisplayText(LocalizationController.GetString("customObstacle_tooMany"));
                   return;
                 }
                 equip_side = ActiveRagdoll.Side.RIGHT;
@@ -555,7 +558,7 @@ public class CustomObstacle : MonoBehaviour
               }
               else
               {
-                p._Ragdoll.DisplayText("i have too many..");
+                p._Ragdoll.DisplayText(LocalizationController.GetString("customObstacle_tooMany"));
                 return;
               }
             }
@@ -574,7 +577,7 @@ public class CustomObstacle : MonoBehaviour
             // Check utility cap
             if (equipment._UtilitiesLeft.Length == Shop._Utility_Cap[utility_type])
             {
-              p._Ragdoll.DisplayText("i have too many..");
+              p._Ragdoll.DisplayText(LocalizationController.GetString("customObstacle_tooMany"));
               return;
             }
 
@@ -593,7 +596,7 @@ public class CustomObstacle : MonoBehaviour
             // Check utility cap
             if (equipment._UtilitiesRight.Length == Shop._Utility_Cap[utility_type])
             {
-              p._Ragdoll.DisplayText("i have too many..");
+              p._Ragdoll.DisplayText(LocalizationController.GetString("customObstacle_tooMany"));
               return;
             }
 
@@ -643,16 +646,14 @@ public class CustomObstacle : MonoBehaviour
 
         if (Shop.Perk.HasPerk(p._Id, perk))
         {
-          var text_haveAlready = "i have this already";
-          p._Ragdoll.DisplayText(text_haveAlready);
+          p._Ragdoll.DisplayText(LocalizationController.GetString("survival_haveAlready"));
           return;
         }
 
         // Check max perks
         if (Shop.Perk.GetNumPerks(p._Id) > 3)
         {
-          var text_haveAlready = "i already have 4 mods";
-          p._Ragdoll.DisplayText(text_haveAlready);
+          p._Ragdoll.DisplayText(LocalizationController.GetString("customObstacle_4mods"));
           return;
         }
 
@@ -675,7 +676,7 @@ public class CustomObstacle : MonoBehaviour
       SurvivalManager.SpendPoints(p._Id, _pointCost);
     }
     else
-      p._Ragdoll.DisplayText("not enough points..");
+      p._Ragdoll.DisplayText(LocalizationController.GetString("customObstacle_missingPoints"));
   }
 
   float _desiredScale;
@@ -708,8 +709,8 @@ public class CustomObstacle : MonoBehaviour
     // Ragdoll text
     var text = "";
 
-    var text_needAkimbo = "i can't hold both. unless...";
-    var text_haveAlready = "i have this already";
+    var text_needAkimbo = LocalizationController.GetString("survival_needAkimbo");
+    var text_haveAlready = LocalizationController.GetString("survival_haveAlready");
 
     // DEFAULT
     if (side == InteractSide.DEFAULT)

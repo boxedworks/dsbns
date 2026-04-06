@@ -361,8 +361,6 @@ public class BulletScript : MonoBehaviour
     var raycastinfo = new RaycastHit();
     if (targetPosition != Vector3.zero && Physics.SphereCast(new Ray(bulletPos, MathC.Get2DVector(targetPosition - _rb.position).normalized), 0.05f, out raycastinfo, 100f, LayerMask.GetMask("ParticleCollision")) && raycastinfo.distance < target._distance)
     {
-      //Debug.Log($"{raycastinfo.distance} <? {target._distance * 0.95f} [{raycastinfo.collider.name}]");
-
       target = FunctionsC.GetClosestTargetTo(_sourceDamageRagdoll, transform.position, target._ragdoll._Id, false);
       if (target != null && target._ragdoll != null)
         targetPosition = GetLocalPosition(target._ragdoll._Hip.position);
@@ -406,8 +404,6 @@ public class BulletScript : MonoBehaviour
           var dir = (mirrorPosition - _rb.position).normalized;
           if (Physics.SphereCast(new Ray(_rb.position + dir * 0.15f, dir), 0.025f, out raycastinfo, 100f, LayerMask.GetMask("ParticleCollision")))
           {
-            //Debug.DrawLine(_rb.position, raycastinfo.point, raycastinfo.distance < distance ? Color.red : Color.green, 5f);
-            //Debug.Log($"{raycastinfo.distance} <? {distance}");
             if (raycastinfo.distance < distance * 0.95f) continue;
           }
 

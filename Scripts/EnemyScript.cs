@@ -6,6 +6,7 @@ using Unity.Collections;
 
 using System.Linq;
 using System.IO;
+using Localization;
 
 public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
 {
@@ -241,7 +242,6 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
          p = _path.GetPatrolPoint();
         _waitLookPos = MathC.Get2DVector(lp.position) + new Vector3(0f, transform.position.y, 0f);
       }
-      //else Debug.LogError("No path");
 
       transform.LookAt(_waitLookPos);
     }
@@ -1640,7 +1640,7 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
         Run();
         _time_lost = 0f;
         _searchDir = -MathC.Get2DVector(transform.position - _lastKnownPos).normalized * 3f;
-        _ragdoll.DisplayText("?");
+        _ragdoll.DisplayText(LocalizationController.GetString("?"));
         _ragdoll.PlaySound("Enemies/Suspicious", 0.9f, 1.1f);
       }
       else if (_state != State.SUSPICIOUS)
@@ -1695,7 +1695,7 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
       _lastPersuitTimer = Time.time;
       if (!_IsZombie)
       {
-        _ragdoll.DisplayText("!");
+        _ragdoll.DisplayText(LocalizationController.GetString("!"));
         if (_state != State.SUSPICIOUS && !IsChaser())
           _ragdoll.PlaySound("Enemies/Suspicious", 0.9f, 1.1f);
       }
@@ -1703,8 +1703,7 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
     else if (newState == State.SUSPICIOUS)
     {
       _ragdoll.PlaySound("Enemies/Suspicious", 0.9f, 1.1f);
-      _ragdoll.DisplayText("?");
-
+      _ragdoll.DisplayText(LocalizationController.GetString("?"));
     }
 
     _state = newState;
@@ -1726,16 +1725,11 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
   {
     // Check if already patrolling
     if (_patroling)
-    {
-      //Debug.LogError("Trying to patrol when patrolling");
       return;
-    }
+
     // Check if has no path
     else if (_path == null || _path.GetPathLength() == 0)
-    {
-      //.LogError("Beginning to patrol with no path");
       return;
-    }
 
     // Patrol
     _patroling = true;
@@ -2543,58 +2537,6 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
     if (GameScript.s_IsZombieGameMode && source._IsPlayer)
       SurvivalManager.IncrementScore(source._PlayerScript._Id);
   }
-
-  //
-  // Check medal
-  public static string GetFormattedMedalColor(float medalTime)
-  {
-
-    var best_dev_time = TileManager._LevelTime_Dev;
-
-    var medal_diamond = best_dev_time + 0.5f;
-    var medal_times = new float[]{
-      medal_diamond,  // Diamond
-      medal_diamond * 1.1f,  // Gold
-      medal_diamond * 1.5f,   // Silver
-      medal_diamond * 2f,   // Bronze
-    };
-    var medals = new System.Tuple<string, string>[]{
-      System.Tuple.Create("diamond", "lightblue"),
-      System.Tuple.Create("gold", "yellow"),
-      System.Tuple.Create("silver", "grey"),
-      System.Tuple.Create("bronze", "brown"),
-    };
-
-    var index = 0;
-    var medal_index = 0;
-    //TileManager._Text_LevelTimer_Best.text += "\n\n";
-    foreach (var time in medal_times)
-    {
-
-      var time_ = time.ToStringTimer().ParseFloatInvariant();
-      //Debug.Log($"{medal_index} ... {time_}");
-
-      if (medalTime <= time_)
-      {
-        medal_index = index;
-      }
-
-      //TileManager._Text_LevelTimer_Best.text += $"{medals[index].Item1} - {time_}\n";
-
-      index++;
-    }
-
-    // Award medal
-    if (medal_index < medal_times.Length)
-    {
-      //TileManager._Text_LevelTimer.text += $" {medals[medal_index]}";
-      //return $"<color={medals[medal_index].Item2}>{medalTime}</color>";
-      return medals[medal_index].Item2;
-    }
-    //return medalTime + "";
-    return "white";
-  }
-
 
   // Wrapper to see if has weapon
   bool HasWeapon()

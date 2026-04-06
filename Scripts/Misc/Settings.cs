@@ -10,6 +10,9 @@ public static class Settings
   static LevelSaveData LevelModule { get { return s_SaveData.LevelData; } }
 
   //
+  public static float _VERSION = 1.57f;
+
+  //
   static Resolution ScreenResolution;
 
   public static bool _Slowmo_on_death = true,
@@ -186,8 +189,6 @@ public static class Settings
       ;
     }
   }
-
-  public static float _VERSION = 1.56f;
 
   // Struct holding info what item pair gets unlocked at what level
   public class WeaponPair
@@ -934,6 +935,9 @@ public static class Settings
     public bool TextSpeedFast = false;
     public bool HideUI = false;
 
+    // Localization
+    public string Language;
+
     // Controls
     public bool ControllerRumble = true;
     public bool IgnoreFirstController = false;
@@ -1123,6 +1127,7 @@ public static class Settings
     public int ShopDisplayMode = 0;
     public int ShopLoadoutDisplayMode = 0;
     public string ShopUnlockString = "";
+    public bool SwitchLevelsMenuAfterUnlockString = false;
 
     [System.Serializable]
     public struct ShopUnlock

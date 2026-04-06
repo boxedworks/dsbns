@@ -1,7 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
+using Localization;
 using UnityEngine;
-
 using Random = UnityEngine.Random;
 
 public class GameScript : MonoBehaviour
@@ -210,6 +210,9 @@ public class GameScript : MonoBehaviour
 
     //
     s_DebugText = GameObject.Find("DebugText").GetComponent<TextMesh>();
+
+    //
+    new LocalizationController();
 
     //
     GameResources.Init();
@@ -1181,11 +1184,7 @@ public class GameScript : MonoBehaviour
     // Display unlock messages
     if (Shop.s_UnlockString != string.Empty)
     {
-      var nextMenu = Shop.s_UnlockString.Contains("new difficulty unlocked") || Shop.s_UnlockString.Contains("to unlock the optional extra settings") ? Menu.MenuType.LEVELS : Menu.MenuType.NONE;
-#if UNITY_WEBGL
-      if (Shop.s_UnlockString.Contains("you completed the demo"))
-        nextMenu = Menu.MenuType.LEVELS;
-#endif
+      var nextMenu = Shop.s_SetLevelsMenuAfterUnlockString ? Menu.MenuType.LEVELS : Menu.MenuType.NONE;
       TogglePause(nextMenu);
       if (nextMenu != Menu.MenuType.NONE)
         return;
@@ -1317,7 +1316,8 @@ public class GameScript : MonoBehaviour
 #if UNITY_WEBGL
     if (Levels._CurrentLevelIndex >= 32)
     {
-      Shop.s_UnlockString += $"- you completed the demo! <color=magenta>check out the full game on Steam!</color>\n";
+      Shop.s_UnlockString += $"- {LocalizationController.GetString("demo_completed")} <color=magenta>{LocalizationController.GetString("demo_checkOutSteam")}</color>\n";
+      Shop.s_SetLevelsMenuAfterUnlockString = true;
 
       return true;
     }
@@ -1337,17 +1337,6 @@ public class GameScript : MonoBehaviour
       // Check mode-specific unlocks
       if (s_IsMissionsGameMode)
       {
-        // Award shop point
-        //Shop._AvailablePoints++;
-
-        /*/ Check unlocks at end of level packs
-        if ((Levels._CurrentLevelIndex + 1) % 12 == 0)
-        {
-          var iter = ((Levels._CurrentLevelIndex + 1) / 12) - 1;
-          if (Settings._DIFFICULTY == 1) iter += 12;
-          Shop.AddAvailableUnlockVault($"{_GameMode.ToString().ToLower()}_{iter}");
-        }*/
-
         UpdateLevelVault();
 
 #if UNITY_STANDALONE
@@ -1375,7 +1364,8 @@ public class GameScript : MonoBehaviour
         {
           Menu.s_SaveMenuDir = -1;
           Settings._DifficultyUnlocked = 1;
-          Shop.s_UnlockString += $"- new difficulty unlocked: <color=cyan>sneakier</color>\n";
+          Shop.s_UnlockString += $"- {LocalizationController.GetString("difficultyUnlocked")} <color=cyan>{LocalizationController.GetString("sneakier")}</color>\n";
+          Shop.s_SetLevelsMenuAfterUnlockString = true;
           Menu.s_SetNextDifficultyOnMenu = true;
 
           return true;
@@ -1394,7 +1384,8 @@ public class GameScript : MonoBehaviour
 
           Settings._DifficultyUnlocked = 2;
 
-          Shop.s_UnlockString += $"- you have beaten MISSIONS mode!\n- try out ZOMBIE mode or unlock the optional EXTRA settings!";
+          Shop.s_UnlockString += $"- {LocalizationController.GetString("missionsMode_completed")}\n- {LocalizationController.GetString("missionsMode_tryOtherMode")}";
+          Shop.s_SetLevelsMenuAfterUnlockString = true;
           return true;
         }
       }

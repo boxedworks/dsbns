@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Localization;
 using UnityEngine;
 
 public static class Shop
@@ -269,6 +270,14 @@ public static class Shop
     ITEM_STUN_BATON,
     UTILITY_BEAR_TRAP,
     UTILITY_MINE,
+  }
+  public static string GetUnlockStringLocalized(Unlocks unlock)
+  {
+    return LocalizationController.GetString($"unlocks.{unlock}");
+  }
+  public static string GetUnlockDescriptionStringLocalized(Unlocks unlock)
+  {
+    return LocalizationController.GetString($"unlocks.desc.{unlock}");
   }
 
   public static int _Max_Equipment_Points
@@ -579,16 +588,17 @@ public static class Shop
     }
 
     // Check notify player
+    var unlockString = GetUnlockStringLocalized(unlock);
     if (alert)
     {
       if (unlock == Unlocks.MODE_ZOMBIE)
-        s_UnlockString += $"- new mode unlocked: <color=red>{unlock}</color>\n";
+        s_UnlockString += $"- {LocalizationController.GetString("modeUnlocked")} <color=red>{unlockString}</color>\n";
       else if (unlock == Unlocks.MODE_EXTRAS)
-        s_UnlockString += $"- pause menu option unlocked: <color=magenta>EXTRAS</color>\n";
+        s_UnlockString += $"- {LocalizationController.GetString("pauseOptionUnlocked")} <color=magenta>{LocalizationController.GetString("extras")}</color>\n";
       else if (unlock.ToString().StartsWith("EXTRA_"))
-        s_UnlockString += $"- new extra unlocked: <color=magenta>{unlock}</color>\n";
+        s_UnlockString += $"- {LocalizationController.GetString("extras_unlocked")} <color=magenta>{unlockString}</color>\n";
       else
-        s_UnlockString += $"- new unlock added to shop: <color=yellow>{unlock}</color>\n";
+        s_UnlockString += $"- {LocalizationController.GetString("shop_newUnlock")} <color=yellow>{unlockString}</color>\n";
     }
   }
 
@@ -624,11 +634,24 @@ public static class Shop
       LevelModule.ShopUnlockString = value;
     }
   }
+  public static bool s_SetLevelsMenuAfterUnlockString
+  {
+    get { return LevelModule.SwitchLevelsMenuAfterUnlockString; }
+    set
+    {
+      LevelModule.SwitchLevelsMenuAfterUnlockString = value;
+    }
+  }
 
   public static void ShowUnlocks(Menu.MenuType toMenu)
   {
-    Menu.GenericMenu(new string[] { "new unlocks\n\n", $"{s_UnlockString}" }, UnityEngine.Random.value < 0.5f ? "wow\n\n" : "nice\n\n", toMenu);
+    Menu.GenericMenu(
+      new string[] { $"{LocalizationController.GetString("unlocks_newUnlock")}\n\n", $"{s_UnlockString}" },
+      UnityEngine.Random.value < 0.5f ? $"{LocalizationController.GetString("unlocks_wow")}\n\n" : $"{LocalizationController.GetString("unlocks_nice")}\n\n",
+      toMenu
+    );
     s_UnlockString = "";
+    s_SetLevelsMenuAfterUnlockString = false;
   }
 
   // Unlock from available unlocks

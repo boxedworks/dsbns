@@ -6,6 +6,7 @@ using UnityEngine.AI;
 using Random = UnityEngine.Random;
 using System.Collections.Generic;
 using UnityEngine.XR;
+using Localization;
 
 
 #if !DISABLESTEAMWORKS
@@ -2373,7 +2374,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
     _ragdoll.PlaySound("Ragdoll/Whistle", 0.85f, 1.2f);
 
     EnemyScript.CheckSound(_ragdoll._Hip.position + _ragdoll._Hip.transform.forward * 3f, _ragdoll._Hip.position, EnemyScript.Loudness.SOFT);
-    _ragdoll.DisplayText("!");
+    _ragdoll.DisplayText(LocalizationController.GetString("!"));
 
     _LastWhistle = Time.time;
   }
