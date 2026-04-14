@@ -11,7 +11,7 @@ namespace Localization
 
     static LocalizationController _Singleton;
 
-    const string LanguageFilesPath = "Localization/";
+    const string LanguageFilesPath = @"Localization\";
     Language _currentLanguage
     {
       get
@@ -60,7 +60,7 @@ namespace Localization
       }
 
       // Reload menus to update text
-      Menu.Init();
+      //Menu.Init();
 
       // Save new language to settings
       SettingsModule.Language = language.ToString();
@@ -83,7 +83,8 @@ namespace Localization
     // Load CSV file and return
     static string[] LoadLanguageFile(Language language)
     {
-      var textAsset = Resources.Load<TextAsset>($"{LanguageFilesPath}{language}.csv");
+      var filePath = $"{LanguageFilesPath}{language}";
+      var textAsset = Resources.Load<TextAsset>(filePath);
       if (textAsset == null)
       {
         Debug.LogError($"Localization file not found for language: {language}");

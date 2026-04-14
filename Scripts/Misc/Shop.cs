@@ -277,7 +277,8 @@ public static class Shop
   }
   public static string GetUnlockDescriptionStringLocalized(Unlocks unlock)
   {
-    return LocalizationController.GetString($"unlocks.desc.{unlock}");
+    // Parse english desc, sep by comma and localize
+    throw new NotImplementedException();
   }
 
   public static int _Max_Equipment_Points

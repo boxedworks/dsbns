@@ -211,20 +211,23 @@ public class GameScript : MonoBehaviour
     //
     s_DebugText = GameObject.Find("DebugText").GetComponent<TextMesh>();
 
-    //
-    new LocalizationController();
-
-    //
     GameResources.Init();
-    Shop.Init();
-    FunctionsC.Init();
     s_Music = GameObject.Find("Music").GetComponent<AudioSource>();
     FunctionsC.MusicManager.Init();
+
+    //
+    Shop.Init();
 
     //
     Settings.Init();
     Settings.LevelSaveData.Save();
     Settings.SettingsSaveData.Save();
+
+    //
+    new LocalizationController();
+
+    //
+    FunctionsC.Init();
 
     //
     SfxManager.Init();
