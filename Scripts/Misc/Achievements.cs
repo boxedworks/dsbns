@@ -1,13 +1,16 @@
 
 
 using System.Collections.Generic;
+using Assets.Scripts.Game.Items;
+using Assets.Scripts.Settings;
+using Assets.Scripts.Settings.Serialization;
 using Steamworks;
 using UnityEngine;
 
 public static class Achievements
 {
   //
-  static Settings.LevelSaveData LevelModule { get { return Settings.s_SaveData.LevelData; } }
+  static LevelSaveData LevelModule { get { return SettingsHelper.s_SaveData.LevelData; } }
 
   //
   public enum Achievement
@@ -92,11 +95,11 @@ public static class Achievements
     // Extras
     {
       // Unlock one achievement
-      if (Shop.AnyExtrasUnlocked())
+      if (ShopHelper.AnyExtrasUnlocked())
         UnlockAchievement(Achievement.EXTRA_UNLOCK1);
 
       // Unlocked all achievements
-      if (Shop.AllExtrasUnlocked())
+      if (ShopHelper.AllExtrasUnlocked())
         UnlockAchievement(Achievement.EXTRA_UNLOCK_ALL);
     }
 

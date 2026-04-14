@@ -1,3 +1,7 @@
+using Assets.Scripts.Game.Items;
+using Assets.Scripts.Ragdoll;
+using Assets.Scripts.Settings;
+using Assets.Scripts.Settings.Serialization;
 using UnityEngine;
 
 using Items = ItemManager.Items;
@@ -5,8 +9,7 @@ using Items = ItemManager.Items;
 public class Loadout
 {
   //
-  static Settings.SettingsSaveData SettingsModule { get { return Settings.s_SaveData.Settings; } }
-  static Settings.LevelSaveData LevelModule { get { return Settings.s_SaveData.LevelData; } }
+  static LevelSaveData LevelModule { get { return SettingsHelper.s_SaveData.LevelData; } }
 
   //
   public static Loadout[] _Loadouts;
@@ -15,7 +18,7 @@ public class Loadout
 
   public static void Init()
   {
-    _Loadouts = new Loadout[Shop.s_ShopLoadoutCount];
+    _Loadouts = new Loadout[ShopHelper.s_ShopLoadoutCount];
     for (var i = 0; i < _Loadouts.Length; i++)
       _Loadouts[i] = new Loadout(i);
   }
@@ -29,7 +32,7 @@ public class Loadout
         return Levels._LOADOUT_MAX_POINTS;
 
       // Else, return MISSION mode shop points
-      return Shop._Max_Equipment_Points;
+      return ShopHelper._Max_Equipment_Points;
     }
   }
 
@@ -190,7 +193,7 @@ public class Loadout
             _two_weapon_pairs = val.ParseIntInvariant() == 1;
             break;
           case "perk":
-            var perk = (Shop.Perk.PerkType)System.Enum.Parse(typeof(Shop.Perk.PerkType), val, true);
+            var perk = (Perk.PerkType)System.Enum.Parse(typeof(Perk.PerkType), val, true);
             _Equipment._Perks.Add(perk);
             break;
         }

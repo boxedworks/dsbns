@@ -1,5 +1,10 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using Assets.Scripts.Objects;
+using Assets.Scripts.Ragdoll;
+using Assets.Scripts.Settings;
+using Assets.Scripts.UI.Menus;
+using Assets.Scripts.Game.Items;
 using UnityEngine;
 
 public static class FunctionsC
@@ -500,7 +505,7 @@ public static class FunctionsC
         }
 
         // Check for perk
-        if (ragdoll._IsPlayer && ragdoll._Id == explosionSource._Id && ragdoll._PlayerScript.HasPerk(Shop.Perk.PerkType.EXPLOSION_RESISTANCE)) continue;
+        if (ragdoll._IsPlayer && ragdoll._Id == explosionSource._Id && ragdoll._PlayerScript.HasPerk(Perk.PerkType.EXPLOSION_RESISTANCE)) continue;
       }
 
       // Check dist
@@ -813,7 +818,7 @@ public static class FunctionsC
         while (!musicRequest.isDone) yield return new WaitForSecondsRealtime(0.06f);
         s_CurrentTrack = trackIndex;
         s_TrackSource.clip = musicRequest.asset as AudioClip;
-        s_TrackSource.volume = Settings._VolumeMusic / 5f * SfxManager.s_MusicModifier;
+        s_TrackSource.volume = SettingsHelper._VolumeMusic / 5f * SfxManager.s_MusicModifier;
         if (s_CurrentTrack == 1) s_TrackSource.volume *= 0.6f;
         s_TrackSource.Play();
         s_transitioning = false;
@@ -838,7 +843,7 @@ public static class FunctionsC
         {
           t = Mathf.Clamp(t - 0.05f, 0f, 1f);
           yield return new WaitForSecondsRealtime(0.05f);
-          s_TrackSource.volume = t * (Settings._VolumeMusic / 5f) * SfxManager.s_MusicModifier;
+          s_TrackSource.volume = t * (SettingsHelper._VolumeMusic / 5f) * SfxManager.s_MusicModifier;
           if (s_CurrentTrack == 1) s_TrackSource.volume *= 0.6f;
         }
         UnloadCurrentTrack();
@@ -850,7 +855,7 @@ public static class FunctionsC
         // Play new song
         s_CurrentTrack = trackIndex;
         s_TrackSource.clip = musicRequest.asset as AudioClip;
-        s_TrackSource.volume = Settings._VolumeMusic / 5f * SfxManager.s_MusicModifier;
+        s_TrackSource.volume = SettingsHelper._VolumeMusic / 5f * SfxManager.s_MusicModifier;
         if (s_CurrentTrack == 1) s_TrackSource.volume *= 0.6f;
         s_TrackSource.Play();
         s_transitioning = false;
@@ -876,7 +881,7 @@ public static class FunctionsC
           if (s_CurrentTrack < s_TrackOffset)
           {
             // If unlocked difficulty 1, play faster track
-            if (Settings._DifficultyUnlocked > 0)
+            if (SettingsHelper._DifficultyUnlocked > 0)
             {
               if (s_CurrentTrack != 1)
               {
@@ -994,7 +999,7 @@ public static class FunctionsC
 
   public static void OnControllerInput()
   {
-    if (Settings._ForceKeyboard || ControllerManager._NumberGamepads == 0) return;
+    if (SettingsHelper._ForceKeyboard || ControllerManager._NumberGamepads == 0) return;
     Cursor.visible = false;
     Menu._CheckMouse = false;
   }

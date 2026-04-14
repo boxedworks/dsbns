@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using Assets.Scripts.Ragdoll;
 using UnityEngine;
 
 public class ExplosiveScript : MonoBehaviour

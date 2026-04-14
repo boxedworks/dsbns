@@ -1,13 +1,15 @@
 ﻿using System.Collections.Generic;
 
 using System.IO;
-
+using Assets.Scripts.Settings;
+using Assets.Scripts.Settings.Serialization;
+using Assets.Scripts.Game.Items;
 using UnityEngine;
 
 public class Levels : MonoBehaviour
 {
   //
-  static Settings.LevelSaveData LevelModule { get { return Settings.s_SaveData.LevelData; } }
+  static LevelSaveData LevelModule { get { return SettingsHelper.s_SaveData.LevelData; } }
 
   //
   public static List<LevelCollection> _LevelCollections;
@@ -149,16 +151,16 @@ public class Levels : MonoBehaviour
     }
 
     // Loop through level collections
-    var difficulty_save = Settings._DIFFICULTY;
+    var difficulty_save = SettingsHelper._DIFFICULTY;
     for (var difficulty = 0; difficulty < 2; difficulty++)
     {
-      Settings._DIFFICULTY = difficulty;
+      SettingsHelper._DIFFICULTY = difficulty;
 
       // Get directory to loop through
       var level_datas = _CurrentLevelCollection._levelData;
 
       // Init per-difficulty dicts
-      if (Settings._CurrentDifficulty_NotTopRated)
+      if (SettingsHelper._CurrentDifficulty_NotTopRated)
       {
         if (_Levels_All_TopRatings == null)
           _Levels_All_TopRatings = new Dictionary<int, Dictionary<int, bool>>();
@@ -185,7 +187,7 @@ public class Levels : MonoBehaviour
 
         // Save data
         _CurrentLevel_LevelTimesData[difficulty].Add(i, System.Tuple.Create(dev_time, level_time_best));
-        if (Settings._CurrentDifficulty_NotTopRated)
+        if (SettingsHelper._CurrentDifficulty_NotTopRated)
         {
 
           // Check if top rated level
@@ -210,7 +212,7 @@ public class Levels : MonoBehaviour
     }
 
     // Reset difficulty
-    Settings._DIFFICULTY = difficulty_save;
+    SettingsHelper._DIFFICULTY = difficulty_save;
   }
 
   public static bool LevelCompleted(int levelIter)
@@ -275,7 +277,7 @@ public class Levels : MonoBehaviour
   {
     try
     {
-      var time_data = _CurrentLevel_LevelTimesData[Settings._DIFFICULTY][level_index];
+      var time_data = _CurrentLevel_LevelTimesData[SettingsHelper._DIFFICULTY][level_index];
       return GetLevelRating(time_data.Item1, time_data.Item2);
     }
     catch
@@ -285,7 +287,7 @@ public class Levels : MonoBehaviour
         Debug.LogError("Levels times null");
         return null;
       }
-      Debug.LogError($"{level_index} / {_CurrentLevel_LevelTimesData[Settings._DIFFICULTY].Count}");
+      Debug.LogError($"{level_index} / {_CurrentLevel_LevelTimesData[SettingsHelper._DIFFICULTY].Count}");
       return null;
     }
   }
@@ -592,12 +594,12 @@ public class Levels : MonoBehaviour
       }
       equipment._UtilitiesRight = utilities_right.ToArray();
 
-      var perks_list = new List<Shop.Perk.PerkType>();
+      var perks_list = new List<Perk.PerkType>();
       var perks_split = perks.Split(':');
       foreach (var perk in perks_split)
       {
         if (perk.Trim().Length == 0) continue;
-        perks_list.Add((Shop.Perk.PerkType)System.Enum.Parse(typeof(Shop.Perk.PerkType), perk));
+        perks_list.Add((Perk.PerkType)System.Enum.Parse(typeof(Perk.PerkType), perk));
       }
       equipment._Perks = perks_list;
     }

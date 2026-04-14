@@ -1,3 +1,4 @@
+using Assets.Scripts.Ragdoll;
 using UnityEngine;
 
 public class TVScript : MonoBehaviour

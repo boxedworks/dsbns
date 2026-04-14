@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-
+using Assets.Scripts.Settings;
 using UnityEngine;
 
 public class PlayerspawnScript : MonoBehaviour
@@ -83,7 +83,7 @@ public class PlayerspawnScript : MonoBehaviour
     if ((GameScript.s_IsPartyGameMode && !VersusMode.s_Settings._FreeForAll) || (GameScript.s_IsZombieGameMode))
     {
       var numSpawns = _PlayerSpawns.Count;
-      var numPlayers = Settings._NumberPlayers;
+      var numPlayers = SettingsHelper._NumberPlayers;
 
       if (numPlayers > numSpawns)
         spawnPosition += new Vector3(Random.Range(-0.35f, 0.35f), 0f, Random.Range(-0.35f, 0.35f));

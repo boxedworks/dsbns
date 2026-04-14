@@ -1,11 +1,16 @@
 using System.Collections.Generic;
+using Assets.Scripts.Settings;
+using Assets.Scripts.Settings.Serialization;
 using UnityEngine;
 
 // SFX
 // pool sfx sounds, using a limit for certain types and priority sounds for players etc
 public static class SfxManager
 {
+  //
+  static SettingsSaveData SettingsModule { get { return SettingsHelper.s_SaveData.Settings; } }
 
+  //
   static float s_sfxModifier = 0.6f;
   public static float s_MusicModifier = 0.8f;
 
@@ -148,7 +153,7 @@ public static class SfxManager
 #if UNITY_EDITOR
     audioSource.gameObject.name = audioSource.clip.name;
 #endif
-    audioSource.volume *= Settings.s_SaveData.Settings.VolumeSFX / 5f * s_sfxModifier;
+    audioSource.volume *= SettingsModule.VolumeSFX / 5f * s_sfxModifier;
     audioSource.Play();
 
     s_audioClassCounts[audioClass]++;
@@ -219,7 +224,7 @@ public static class SfxManager
       }
 
       // Update volume and pitch
-      audioSource.volume = audioData._volume * (Settings.s_SaveData.Settings.VolumeSFX / 5f) * s_sfxModifier;
+      audioSource.volume = audioData._volume * (SettingsModule.VolumeSFX / 5f) * s_sfxModifier;
       if (audioData._changePitch)
         audioSource.pitch = audioData._pitch * pitch;
     }

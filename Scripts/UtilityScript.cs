@@ -1,5 +1,10 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using Assets.Scripts.Objects;
+using Assets.Scripts.Ragdoll;
+using Assets.Scripts.Settings;
+using Assets.Scripts.Settings.Serialization;
+using Assets.Scripts.Game.Items;
 using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody))]
@@ -7,7 +12,7 @@ using UnityEngine;
 public class UtilityScript : ItemScript
 {
   //
-  static Settings.LevelSaveData LevelModule { get { return Settings.s_SaveData.LevelData; } }
+  static LevelSaveData LevelModule { get { return SettingsHelper.s_SaveData.LevelData; } }
 
   //
   public enum UtilityType
@@ -305,7 +310,7 @@ public class UtilityScript : ItemScript
       // Set explosion size
       if (_explosion != null && _utility_type != UtilityType.GRENADE)
       {
-        if (_ragdoll._IsPlayer && _ragdoll._PlayerScript.HasPerk(Shop.Perk.PerkType.EXPLOSIONS_UP))
+        if (_ragdoll._IsPlayer && _ragdoll._PlayerScript.HasPerk(Perk.PerkType.EXPLOSIONS_UP))
           explosion_radius *= 1.25f;
 
         var localscale = _ring.transform.localScale;
@@ -1143,7 +1148,7 @@ public class UtilityScript : ItemScript
       if (incrementClip && _unregister) _ragdoll._PlayerScript?._Profile.UtilityUse(_side);
 
       // Extra; infinite ammo
-      if (_ragdoll._IsPlayer && Settings._Extras_CanUse && LevelModule.ExtraPlayerAmmo == 3)
+      if (_ragdoll._IsPlayer && SettingsHelper._Extras_CanUse && LevelModule.ExtraPlayerAmmo == 3)
       {
         _clip++;
         _ragdoll._PlayerScript.AddUtility(_utility_type, _side);
@@ -1214,7 +1219,7 @@ public class UtilityScript : ItemScript
           if (_downTime != 0f && !_thrown && !_explosion._triggered && !_explosion._exploded && !extra)
           {
             // Set scale
-            if (_ragdoll._IsPlayer && _ragdoll._PlayerScript.HasPerk(Shop.Perk.PerkType.EXPLOSIONS_UP))
+            if (_ragdoll._IsPlayer && _ragdoll._PlayerScript.HasPerk(Perk.PerkType.EXPLOSIONS_UP))
               explosion_radius *= 1.25f;
 
             var localscale = _ring.transform.localScale;

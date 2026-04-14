@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using Assets.Scripts.Ragdoll;
+using UnityEngine;
 
 public class GrabScript : MonoBehaviour
 {

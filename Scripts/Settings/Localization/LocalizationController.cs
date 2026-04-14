@@ -1,13 +1,14 @@
 
 using System;
 using System.Collections.Generic;
+using Assets.Scripts.Settings.Serialization;
 using UnityEngine;
 
-namespace Localization
+namespace Assets.Scripts.Settings.Localization
 {
   public class LocalizationController
   {
-    static Settings.SettingsSaveData SettingsModule { get { return Settings.s_SaveData.Settings; } }
+    static SettingsSaveData SettingsModule { get { return SettingsHelper.s_SaveData.Settings; } }
 
     static LocalizationController _Singleton;
 
@@ -64,7 +65,7 @@ namespace Localization
 
       // Save new language to settings
       SettingsModule.Language = language.ToString();
-      Settings.SettingsSaveData.Save();
+      SettingsSaveData.Save();
     }
 
     // Get localized string by key

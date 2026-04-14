@@ -1,12 +1,17 @@
 using System.Collections.Generic;
+using Assets.Scripts.Game.Items;
+using Assets.Scripts.Ragdoll;
+using Assets.Scripts.Settings;
+using Assets.Scripts.Settings.Serialization;
+using Assets.Scripts.UI.Menus;
 using UnityEngine;
 
 // Assists with controls
 public class PlayerProfile
 {
   //
-  static Settings.SettingsSaveData SettingsModule { get { return Settings.s_SaveData.Settings; } }
-  static Settings.LevelSaveData LevelModule { get { return Settings.s_SaveData.LevelData; } }
+  static SettingsSaveData SettingsModule { get { return SettingsHelper.s_SaveData.Settings; } }
+  static LevelSaveData LevelModule { get { return SettingsHelper.s_SaveData.LevelData; } }
 
   //
   static int s_currentSettingsID;
@@ -29,7 +34,7 @@ public class PlayerProfile
   public static PlayerProfile[] s_Profiles;
 
   public int _Id;
-  public Settings.SettingsSaveData.PlayerProfile _profileSettings { get { return SettingsModule.PlayerProfiles[_Id]; } }
+  public PlayerProfileData _profileSettings { get { return SettingsModule.PlayerProfiles[_Id]; } }
 
   // The player this profile is attatched to
   public PlayerScript _Player
@@ -135,7 +140,7 @@ public class PlayerProfile
 
   ItemManager.Items GetItem(ItemManager.Items item, ItemManager.Items other)
   {
-    if (item == ItemManager.Items.NONE && !Shop.IsActuallyTwoHanded(other) && _Equipment._Perks.Contains(Shop.Perk.PerkType.MARTIAL_ARTIST))
+    if (item == ItemManager.Items.NONE && !ShopHelper.IsActuallyTwoHanded(other) && _Equipment._Perks.Contains(Perk.PerkType.MARTIAL_ARTIST))
       return ItemManager.Items.FIST;
     return item;
   }
@@ -196,12 +201,12 @@ public class PlayerProfile
       _UtilitiesLeft = new UtilityScript.UtilityType[0];
       _UtilitiesRight = new UtilityScript.UtilityType[0];
 
-      _Perks = new List<Shop.Perk.PerkType>();
+      _Perks = new List<Perk.PerkType>();
     }
     public ItemManager.Items _ItemLeft0, _ItemRight0, _ItemLeft1, _ItemRight1;
 
     public UtilityScript.UtilityType[] _UtilitiesLeft, _UtilitiesRight;
-    public List<Shop.Perk.PerkType> _Perks;
+    public List<Perk.PerkType> _Perks;
 
     public bool HasWeapons0()
     {
@@ -372,8 +377,8 @@ public class PlayerProfile
 
     // Accommodate for _ForceKeyboard; checking for -1 controllerID and controllerID > Gamepad.all.Count
     if (
-      Settings._ForceKeyboard && _Id == 0 ||
-      _Id + (Settings._ForceKeyboard ? -1 : 0) >= ControllerManager._NumberGamepads
+      SettingsHelper._ForceKeyboard && _Id == 0 ||
+      _Id + (SettingsHelper._ForceKeyboard ? -1 : 0) >= ControllerManager._NumberGamepads
       )
     {
       _menuDownTime_down = _menuDownTime_up = 0f;
@@ -507,7 +512,7 @@ public class PlayerProfile
   {
 
     // Accommodate for _ForceKeyboard; checking for -1 controllerID and controllerID > Gamepad.all.Count
-    if (Settings._ForceKeyboard && _Id == 0 || _Id + (Settings._ForceKeyboard ? -1 : 0) >= ControllerManager._NumberGamepads)
+    if (SettingsHelper._ForceKeyboard && _Id == 0 || _Id + (SettingsHelper._ForceKeyboard ? -1 : 0) >= ControllerManager._NumberGamepads)
     {
 
       // Check loadout change
@@ -967,7 +972,7 @@ public class PlayerProfile
       return 0;
 
     //
-    return utils.Length * Shop.GetUtilityCount(utils[0]);
+    return utils.Length * ShopHelper.GetUtilityCount(utils[0]);
   }
 
   //
@@ -1127,7 +1132,7 @@ public class PlayerProfile
       _perk_UI = new MeshRenderer[] { _ui.GetChild(2).GetChild(0).GetComponent<MeshRenderer>(), _ui.GetChild(2).GetChild(1).GetComponent<MeshRenderer>(), _ui.GetChild(2).GetChild(2).GetComponent<MeshRenderer>(), _ui.GetChild(2).GetChild(3).GetComponent<MeshRenderer>() };
 
     // Current perks
-    var perks = Shop.Perk.GetPerks(_Id);
+    var perks = Perk.GetPerks(_Id);
 
     // Check empty
     if (perks.Count == 0)

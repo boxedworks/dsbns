@@ -1,5 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
+using Assets.Scripts.Settings;
+using Assets.Scripts.UI.Menus;
+using Assets.Scripts.Game.Items;
 using UnityEngine;
 
 // Holds functions for versus mode
@@ -143,10 +146,10 @@ public static class VersusMode
   //
   public static int GetNumberTeams()
   {
-    if (s_Settings._FreeForAll && Settings._NumberPlayers > 1) return -1;
+    if (s_Settings._FreeForAll && SettingsHelper._NumberPlayers > 1) return -1;
 
     var teamsCounted = new List<int>();
-    for (var i = 0; i < Settings._NumberPlayers; i++)
+    for (var i = 0; i < SettingsHelper._NumberPlayers; i++)
     {
       var teamId = s_playerTeams[i];
 
@@ -158,7 +161,7 @@ public static class VersusMode
   }
   public static bool HasMultipleTeams()
   {
-    return (s_Settings._FreeForAll && Settings._NumberPlayers > 1) || GetNumberTeams() > 1;
+    return (s_Settings._FreeForAll && SettingsHelper._NumberPlayers > 1) || GetNumberTeams() > 1;
   }
 
   //
@@ -379,7 +382,7 @@ public static class VersusMode
                   yield return new WaitForSeconds(0.75f);
 
                   var highestScore = -1;
-                  for (var i = 0; i < Settings._NumberPlayers; i++)
+                  for (var i = 0; i < SettingsHelper._NumberPlayers; i++)
                   {
                     var playerScore = s_playerScoresRound[i];
                     var playerScoreTotal = s_playerScores[i];
@@ -398,7 +401,7 @@ public static class VersusMode
 
                   // Check highest score
                   var highestPlayers = new List<int>();
-                  for (var i = 0; i < Settings._NumberPlayers; i++)
+                  for (var i = 0; i < SettingsHelper._NumberPlayers; i++)
                   {
                     var playerScore = s_playerScores[i];
                     if (playerScore == highestScore)
@@ -630,7 +633,7 @@ public static class VersusMode
 
     // Split players into teams
     if (!s_Settings._FreeForAll)
-      switch (Settings._NumberPlayers)
+      switch (SettingsHelper._NumberPlayers)
       {
         case 2:
           s_playerTeams = new int[] { 0, 1, 0, 1 };
@@ -707,7 +710,7 @@ public static class VersusMode
   //
   static int GetTeamScore(int teamId, bool roundScoreOnly = false)
   {
-    for (var i = 0; i < Settings._NumberPlayers; i++)
+    for (var i = 0; i < SettingsHelper._NumberPlayers; i++)
     {
       if (s_playerTeams[i] != teamId) continue;
       return roundScoreOnly ? s_playerScoresRound[i] : s_playerScores[i];
@@ -744,7 +747,7 @@ public static class VersusMode
       s_currentLevelIndex = levelIndex;
 
       // Check map size
-      var numPlayers = Settings._NumberPlayers;
+      var numPlayers = SettingsHelper._NumberPlayers;
       var numTeams = GetNumberTeams();
 
       var numberSpawns = 0;
@@ -836,20 +839,20 @@ public static class VersusMode
       _ => UtilityScript.UtilityType.GRENADE
     };
   }
-  static Shop.Perk.PerkType GetRandomPerk()
+  static Perk.PerkType GetRandomPerk()
   {
     return Random.Range(0, 9) switch
     {
-      1 => Shop.Perk.PerkType.MAX_AMMO_UP,
-      2 => Shop.Perk.PerkType.EXPLOSION_RESISTANCE,
-      3 => Shop.Perk.PerkType.SMART_BULLETS,
-      4 => Shop.Perk.PerkType.LASER_SIGHTS,
-      5 => Shop.Perk.PerkType.SPEED_UP,
-      6 => Shop.Perk.PerkType.MARTIAL_ARTIST,
-      7 => Shop.Perk.PerkType.THRUST,
-      8 => Shop.Perk.PerkType.TWIN,
+      1 => Perk.PerkType.MAX_AMMO_UP,
+      2 => Perk.PerkType.EXPLOSION_RESISTANCE,
+      3 => Perk.PerkType.SMART_BULLETS,
+      4 => Perk.PerkType.LASER_SIGHTS,
+      5 => Perk.PerkType.SPEED_UP,
+      6 => Perk.PerkType.MARTIAL_ARTIST,
+      7 => Perk.PerkType.THRUST,
+      8 => Perk.PerkType.TWIN,
 
-      _ => Shop.Perk.PerkType.FASTER_RELOAD
+      _ => Perk.PerkType.FASTER_RELOAD
     };
   }
   static void SetRandomLoadout()
@@ -970,7 +973,7 @@ public static class VersusMode
     var enemyList = new List<PlayerScript>();
     var thisTeamId = GetTeamId(ofPlayerId);
 
-    for (var i = 0; i < Settings._NumberPlayers; i++)
+    for (var i = 0; i < SettingsHelper._NumberPlayers; i++)
     {
 
       if (i >= PlayerScript.s_Players.Count) continue;

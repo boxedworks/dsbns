@@ -1,10 +1,13 @@
-﻿using UnityEngine;
+﻿using Assets.Scripts.Settings;
+using Assets.Scripts.Settings.Serialization;
+using Assets.Scripts.UI.Menus;
+using UnityEngine;
 using UnityEngine.InputSystem;
 
 public static class ControllerManager
 {
   //
-  static Settings.SettingsSaveData SettingsModule { get { return Settings.s_SaveData.Settings; } }
+  static SettingsSaveData SettingsModule { get { return SettingsHelper.s_SaveData.Settings; } }
 
   //
   public static UnityEngine.InputSystem.Utilities.ReadOnlyArray<Gamepad> _Gamepads
@@ -216,9 +219,9 @@ public static class ControllerManager
   public static Gamepad GetPlayerGamepad(int playerID)
   {
     if (_NumberGamepads == 0) return null;
-    if (Settings._ForceKeyboard && playerID == 0) return null;
+    if (SettingsHelper._ForceKeyboard && playerID == 0) return null;
 
-    if (Settings._ForceKeyboard)
+    if (SettingsHelper._ForceKeyboard)
       playerID--;
 
     if (SettingsModule.IgnoreFirstController)
@@ -242,7 +245,7 @@ public static class ControllerManager
     if (PlayerScript.s_Players == null || PlayerScript.s_Players.Count == 0) return null;
 
     // Check keyboard
-    if (obj.control.device.name.Equals("Keyboard") && (_NumberGamepads == 0 || Settings._ForceKeyboard))
+    if (obj.control.device.name.Equals("Keyboard") && (_NumberGamepads == 0 || SettingsHelper._ForceKeyboard))
       return PlayerScript.s_Players[0];
 
     // Check controllers
@@ -262,7 +265,7 @@ public static class ControllerManager
       return PlayerProfile.s_Profiles[0];
 
     // Check controllers
-    var controllerIndexOffset = Settings._ForceKeyboard ? 1 : 0;
+    var controllerIndexOffset = SettingsHelper._ForceKeyboard ? 1 : 0;
     return PlayerProfile.s_Profiles[Mathf.Clamp(obj.control.device.deviceId + controllerIndexOffset, 0, 3)];
   }
 
@@ -691,7 +694,7 @@ public static class ControllerManager
     if (_NumberGamepads == 0) return false;
 
     // If _ForceKeyboard, start at player index 1; player index 0 is the keyboard
-    int offset = Settings._ForceKeyboard ? 1 : 0;
+    int offset = SettingsHelper._ForceKeyboard ? 1 : 0;
     for (int i = offset; i < _NumberGamepads + offset; i++)
     {
       var gamepad = GetPlayerGamepad(i);

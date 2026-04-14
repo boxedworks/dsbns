@@ -1,11 +1,14 @@
 using System.Collections.Generic;
+using Assets.Scripts.Settings;
+using Assets.Scripts.Settings.Serialization;
+using Assets.Scripts.Game.Items;
 using UnityEngine;
 
 public static class ItemManager
 {
   //
-  static Settings.SettingsSaveData SettingsModule { get { return Settings.s_SaveData.Settings; } }
-  static Settings.LevelSaveData LevelModule { get { return Settings.s_SaveData.LevelData; } }
+  static SettingsSaveData SettingsModule { get { return SettingsHelper.s_SaveData.Settings; } }
+  static LevelSaveData LevelModule { get { return SettingsHelper.s_SaveData.LevelData; } }
 
   //
   class Item
@@ -429,34 +432,34 @@ public static class ItemManager
     }
     return 100;
   }
-  public static int GetPerkValue(Shop.Perk.PerkType perk)
+  public static int GetPerkValue(Perk.PerkType perk)
   {
     switch (perk)
     {
-      case Shop.Perk.PerkType.FIRE_RATE_UP:
-      case Shop.Perk.PerkType.AKIMBO:
+      case Perk.PerkType.FIRE_RATE_UP:
+      case Perk.PerkType.AKIMBO:
         break;
-      case Shop.Perk.PerkType.NONE:
-      case Shop.Perk.PerkType.NO_SLOWMO:
+      case Perk.PerkType.NONE:
+      case Perk.PerkType.NO_SLOWMO:
         return 0;
-      case Shop.Perk.PerkType.LASER_SIGHTS:
-      case Shop.Perk.PerkType.MARTIAL_ARTIST:
+      case Perk.PerkType.LASER_SIGHTS:
+      case Perk.PerkType.MARTIAL_ARTIST:
         return 1;
-      case Shop.Perk.PerkType.THRUST:
-      case Shop.Perk.PerkType.SPEED_UP:
-      case Shop.Perk.PerkType.TWIN:
+      case Perk.PerkType.THRUST:
+      case Perk.PerkType.SPEED_UP:
+      case Perk.PerkType.TWIN:
         return 2;
-      case Shop.Perk.PerkType.EXPLOSIONS_UP:
-      case Shop.Perk.PerkType.GRAPPLE_MASTER:
-      case Shop.Perk.PerkType.EXPLOSION_RESISTANCE:
-      case Shop.Perk.PerkType.MAX_AMMO_UP:
-      case Shop.Perk.PerkType.EXPLOSIVE_PARRY:
+      case Perk.PerkType.EXPLOSIONS_UP:
+      case Perk.PerkType.GRAPPLE_MASTER:
+      case Perk.PerkType.EXPLOSION_RESISTANCE:
+      case Perk.PerkType.MAX_AMMO_UP:
+      case Perk.PerkType.EXPLOSIVE_PARRY:
         return 3;
-      case Shop.Perk.PerkType.PENETRATION_UP:
-      case Shop.Perk.PerkType.ARMOR_UP:
-      case Shop.Perk.PerkType.FASTER_RELOAD:
+      case Perk.PerkType.PENETRATION_UP:
+      case Perk.PerkType.ARMOR_UP:
+      case Perk.PerkType.FASTER_RELOAD:
         return 4;
-      case Shop.Perk.PerkType.SMART_BULLETS:
+      case Perk.PerkType.SMART_BULLETS:
         return 6;
     }
     return 100;

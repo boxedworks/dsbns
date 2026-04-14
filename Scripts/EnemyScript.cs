@@ -5,14 +5,19 @@ using Unity.Jobs;
 using Unity.Collections;
 
 using System.Linq;
-using System.IO;
-using Localization;
+using Assets.Scripts.Settings;
+using Assets.Scripts.Settings.Localization;
+using Assets.Scripts.Settings.Serialization;
+using Assets.Scripts.Ragdoll;
+using Assets.Scripts.UI.Menus;
+using Assets.Scripts.Objects;
+using Assets.Scripts.Game.Items;
 
 public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
 {
   //
-  static Settings.SettingsSaveData SettingsModule { get { return Settings.s_SaveData.Settings; } }
-  static Settings.LevelSaveData LevelModule { get { return Settings.s_SaveData.LevelData; } }
+  static SettingsSaveData SettingsModule { get { return SettingsHelper.s_SaveData.Settings; } }
+  static LevelSaveData LevelModule { get { return SettingsHelper.s_SaveData.LevelData; } }
 
   //
   static class SpherecastHandler
@@ -159,7 +164,7 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
 
   static EnemyScript _Chaser;
 
-  public DoorScript2 _linkedDoor;
+  public DoorScript _linkedDoor;
 
   public float _moveSpeed, _moveSpeed_lerped,
    _waitTimer,
@@ -543,7 +548,7 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
           if (Time.time - GameScript.s_LevelStartTime > 0.5f)
           {
             var info = FunctionsC.GetFarthestPlayerFrom(transform.position);
-            if (info != null && info._distance > 3f + (Settings._NumberPlayers > 1 ? (1.5f * Mathf.Clamp(Settings._NumberPlayers, 0, 2) - 1) : 0f))
+            if (info != null && info._distance > 3f + (SettingsHelper._NumberPlayers > 1 ? (1.5f * Mathf.Clamp(SettingsHelper._NumberPlayers, 0, 2) - 1) : 0f))
             {
               _canAttack = true;
               _canMove = true;
@@ -1429,7 +1434,7 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
     {
       var e = rag._Controller.GetComponent<EnemyScript>();
       // Delayed absorb
-      if (Settings._DIFFICULTY > 0)
+      if (SettingsHelper._DIFFICULTY > 0)
       {
         /*if (_delayedAbsorb == null && (e._state != State.NEUTRAL || e.GetRagdoll()._dead))
           _delayedAbsorb = StartCoroutine(DelayedAbsorb(e, 0.4f + Random.value * 0.9f, h));
@@ -1968,10 +1973,10 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
     {
 
       // Take snapshot of extras
-      PlayerScript.s_ExtrasSnapshot = Settings.GetExtrasSnapshot();
+      PlayerScript.s_ExtrasSnapshot = SettingsHelper.GetExtrasSnapshot();
 
       // Save player num
-      PlayerScript.s_NumPlayersStart = Settings._NumberPlayers;
+      PlayerScript.s_NumPlayersStart = SettingsHelper._NumberPlayers;
 
       // Register equip
       if (PlayerScript.s_Players != null)
@@ -1980,7 +1985,7 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
     }
 
     // Sneaky difficulty
-    if (Settings._DIFFICULTY == 0)
+    if (SettingsHelper._DIFFICULTY == 0)
     {
       if (_Enemies_alive.Count == 0)
         last_killed = true;
@@ -2003,7 +2008,7 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
       GameScript.OnLastEnemyKilled();
 
       // Check for slowmo setting
-      if (Settings._Slowmo_on_lastkill)
+      if (SettingsHelper._Slowmo_on_lastkill)
         PlayerScript._SlowmoTimer += 1.3f;
 
       // Check mode
@@ -2027,11 +2032,11 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
           {
             GameScript.MarkLevelCompleted();
 
-            Settings.LevelSaveData.Save();
+            LevelSaveData.Save();
           }
 
           // Check timers
-          var can_save_timers = !Settings._Extras_UsingAnyImportant;
+          var can_save_timers = !SettingsHelper._Extras_UsingAnyImportant;
           var level_time = TileManager._LevelTimer.ToStringTimer().ParseFloatInvariant();
           var level_time_best = LevelModule.GetLevelBestTime();
 
@@ -2115,8 +2120,8 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
               var medalFormatStrikeout = "<color={0}><s>{1,-5}: {2,-6}</s></color>\n";
               var playedWrong = false;
               var points_awarded_counter = points_awarded;
-              if (can_save_timers && Shop._AvailablePoints != 999)
-                TileManager._Text_Money.text = $"$${Shop._AvailablePoints}";
+              if (can_save_timers && ShopHelper._AvailablePoints != 999)
+                TileManager._Text_Money.text = $"$${ShopHelper._AvailablePoints}";
               for (var i = medal_times.Length - 1; i >= 0; i--)
               {
                 var time = medal_times[i];
@@ -2128,7 +2133,7 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
                 TileManager._Text_LevelTimer_Best.text += string.Format(medalFormat, ratings[i].Item2, ratings[i].Item1, time == -1f ? "-" : timeText + (ratingIndex == i ? "*" : ""));
 
                 // Show $$
-                if (can_save_timers && Shop._AvailablePoints != 999 && points_awarded_table.Contains(i))
+                if (can_save_timers && ShopHelper._AvailablePoints != 999 && points_awarded_table.Contains(i))
                   TileManager.MoveMonie(3 - i, points_awarded - points_awarded_counter--, timeText.Length < 6 ? 0 : 1);
 
                 //
@@ -2220,14 +2225,14 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
                   {
                     if (can_save_timers)
                     {
-                      Shop._AvailablePoints += points_awarded;
+                      ShopHelper._AvailablePoints += points_awarded;
                       saveDat = true;
                       //Debug.Log($"Awarded {points_awarded} points");
 
                       // Check all levels in difficulty completed
-                      if (Settings._CurrentDifficulty_NotTopRated)
+                      if (SettingsHelper._CurrentDifficulty_NotTopRated)
                       {
-                        var levelratings_difficulty = Levels._Levels_All_TopRatings[Settings._DIFFICULTY];
+                        var levelratings_difficulty = Levels._Levels_All_TopRatings[SettingsHelper._DIFFICULTY];
                         levelratings_difficulty[Levels._CurrentLevelIndex] = ratingIndex == 0;
 
                         var all_top_rated = true;
@@ -2240,10 +2245,10 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
                             break;
                           }
                         }
-                        //Debug.Log($"All top rated: {all_top_rated}: {Settings._DIFFICULTY}");
+                        //Debug.Log($"All top rated: {all_top_rated}: {SettingsHelper._DIFFICULTY}");
                         if (all_top_rated)
                         {
-                          if (Settings._DIFFICULTY == 0)
+                          if (SettingsHelper._DIFFICULTY == 0)
                             LevelModule.IsTopRatedClassic0 = true;
                           else
                             LevelModule.IsTopRatedClassic1 = true;
@@ -2262,21 +2267,21 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
                 var prereqsSatisfied = true;
 
                 // Check extras menu
-                if (!Shop.Unlocked(Shop.Unlocks.MODE_EXTRAS))
+                if (!ShopHelper.Unlocked(ShopHelper.Unlocks.MODE_EXTRAS))
                 {
                   //Debug.LogWarning($"No extras; extras menu not unlocked");
                   prereqsSatisfied = false;
                 }
 
                 // Make sure player count not changed
-                if (PlayerScript.s_NumPlayersStart != 1 || Settings._NumberPlayers != 1)
+                if (PlayerScript.s_NumPlayersStart != 1 || SettingsHelper._NumberPlayers != 1)
                 {
                   //Debug.LogWarning($"No extras; player count: {PlayerScript.s_NumPlayersStart} - {PlayerScript.s_Players.Count}");
                   prereqsSatisfied = false;
                 }
 
                 // Make sure extras not changed
-                var extrasSnapshot = Settings.GetExtrasSnapshot();
+                var extrasSnapshot = SettingsHelper.GetExtrasSnapshot();
                 if (!extrasSnapshot.SequenceEqual(PlayerScript.s_ExtrasSnapshot))
                 {
                   //Debug.LogWarning("No extras; extras changed");
@@ -2315,7 +2320,7 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
                   {
                     return false;
                   }
-                  var perkList = new List<Shop.Perk.PerkType>(e1._Perks);
+                  var perkList = new List<Perk.PerkType>(e1._Perks);
                   foreach (var perk0 in e0._Perks)
                   {
                     if (perkList.Contains(perk0))
@@ -2363,7 +2368,7 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
                 }
 
                 if (prereqsSatisfied)
-                  foreach (var extraMeta in Settings.s_Extra_UnlockCriterea)
+                  foreach (var extraMeta in SettingsHelper.s_Extra_UnlockCriterea)
                   {
 
                     var extraUnlock = extraMeta.Key;
@@ -2373,7 +2378,7 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
                     var level = extraInfo.level;
                     var diff = extraInfo.difficulty;
 
-                    if (Levels._CurrentLevelIndex + 1 != level || Settings._DIFFICULTY != diff)
+                    if (Levels._CurrentLevelIndex + 1 != level || SettingsHelper._DIFFICULTY != diff)
                     {
                       continue;
                     }
@@ -2383,14 +2388,14 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
                     {
 
                       // Horde
-                      if (extraInfo.extras.Contains(Shop.Unlocks.EXTRA_HORDE))
+                      if (extraInfo.extras.Contains(ShopHelper.Unlocks.EXTRA_HORDE))
                       {
                         if (LevelModule.ExtraHorde == 0)
                           continue;
                       }
 
                       // Time
-                      if (extraInfo.extras.Contains(Shop.Unlocks.EXTRA_TIME))
+                      if (extraInfo.extras.Contains(ShopHelper.Unlocks.EXTRA_TIME))
                       {
                         if (LevelModule.ExtraTime == 0)
                           continue;
@@ -2419,7 +2424,7 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
                       equipmentFake._UtilitiesLeft = extraInfo.utilities == null ? new UtilityScript.UtilityType[0] : extraInfo.utilities;
 
                       if (extraInfo.perks != null)
-                        equipmentFake._Perks = new List<Shop.Perk.PerkType>(extraInfo.perks);
+                        equipmentFake._Perks = new List<Perk.PerkType>(extraInfo.perks);
                     }
 
                     if (!EquipmentIsEqual(equipmentStart, equipmentFake))
@@ -2429,8 +2434,8 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
 
                     // Award extra in shop
                     //Debug.Log($"Unlocked {extraUnlock}");
-                    Shop.AddAvailableUnlock(extraUnlock, true);
-                    Shop.Unlock(extraUnlock);
+                    ShopHelper.AddAvailableUnlock(extraUnlock, true);
+                    ShopHelper.Unlock(extraUnlock);
                     saveDat = true;
 
                     // Achievements
@@ -2440,7 +2445,7 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
                     Achievements.UnlockAchievement(Achievements.Achievement.EXTRA_UNLOCK1);
 
                     // Unlocked all achievements
-                    if (Shop.AllExtrasUnlocked())
+                    if (ShopHelper.AllExtrasUnlocked())
                       Achievements.UnlockAchievement(Achievements.Achievement.EXTRA_UNLOCK_ALL);
 #endif
                   }
@@ -2465,7 +2470,7 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
             }
 
             // Last killed settings
-            if (last_killed && SettingsModule.LevelEndCondition == Settings.SettingsSaveData.LevelEndConditionType.LAST_ENEMY_KILLED)
+            if (last_killed && SettingsModule.LevelEndCondition == SettingsSaveData.LevelEndConditionType.LAST_ENEMY_KILLED)
             {
               if ((LevelModule.ExtraHorde == 1 && !PlayerScript.HasExit()) || (LevelModule.ExtraCrownMode != 0 && PlayerScript.GetNumberAlivePlayers() > 1))
               { }
@@ -2477,7 +2482,7 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
             }
 
             if (saveDat)
-              Settings.LevelSaveData.Save();
+              LevelSaveData.Save();
 
           }
           StartCoroutine(AwardPlayer());

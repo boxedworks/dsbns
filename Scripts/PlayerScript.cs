@@ -5,8 +5,15 @@ using UnityEngine.AI;
 
 using Random = UnityEngine.Random;
 using System.Collections.Generic;
-using UnityEngine.XR;
-using Localization;
+using Assets.Scripts.Settings.Localization;
+using Assets.Scripts.Settings;
+using Assets.Scripts.Settings.Serialization;
+using Assets.Scripts.Ragdoll;
+using Assets.Scripts.UI.Menus;
+using Assets.Scripts.Objects;
+using Assets.Scripts.Objects.CustomEntities;
+using Assets.Scripts.Game.Items;
+using Assets.Scripts.Game.Items;
 
 
 #if !DISABLESTEAMWORKS
@@ -23,8 +30,8 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
 
   // Singleton
   public static List<PlayerScript> s_Players;
-  static Settings.SettingsSaveData SettingsModule { get { return Settings.s_SaveData.Settings; } }
-  static Settings.LevelSaveData LevelModule { get { return Settings.s_SaveData.LevelData; } }
+  static SettingsSaveData SettingsModule { get { return SettingsHelper.s_SaveData.Settings; } }
+  static LevelSaveData LevelModule { get { return SettingsHelper.s_SaveData.LevelData; } }
 
   //
   public static bool _All_Dead;
@@ -160,7 +167,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
 
     // Check armor for editor maps
     if (!GameScript.s_IsZombieGameMode)
-      if (_Equipment._Perks != null && _Equipment._Perks.Contains(Shop.Perk.PerkType.ARMOR_UP))
+      if (_Equipment._Perks != null && _Equipment._Perks.Contains(Perk.PerkType.ARMOR_UP))
       {
         _ragdoll.AddArmor();
         _ragdoll._health = 3;
@@ -185,7 +192,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
     {
 
       // Give unique _PlayerID and decide input based upon _PlayerID
-      _Id = _PLAYERID++ % Settings._NumberPlayers;
+      _Id = _PLAYERID++ % SettingsHelper._NumberPlayers;
 
       // Check all players to make sure no duplicate _PlayerID
       var loops = 0;
@@ -202,7 +209,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
           // If has same _PlayerID, increment id and set do not break while loop
           if (p._Id == _Id)
           {
-            _Id = _PLAYERID++ % Settings._NumberPlayers;
+            _Id = _PLAYERID++ % SettingsHelper._NumberPlayers;
             breakLoop = false;
             break;
           }
@@ -246,8 +253,8 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
 
     CheckSpawnTwin();
 
-    _itemLeft = _isLeftTwin || Shop.IsActuallyTwoHanded(_Profile._ItemLeft) ? _Profile._ItemLeft : ItemManager.Items.NONE;
-    _itemRight = _isRightTwin || Shop.IsActuallyTwoHanded(_Profile._ItemRight) ? _Profile._ItemRight : ItemManager.Items.NONE;
+    _itemLeft = _isLeftTwin || ShopHelper.IsActuallyTwoHanded(_Profile._ItemLeft) ? _Profile._ItemLeft : ItemManager.Items.NONE;
+    _itemRight = _isRightTwin || ShopHelper.IsActuallyTwoHanded(_Profile._ItemRight) ? _Profile._ItemRight : ItemManager.Items.NONE;
 
     // Equip start items
     if (_itemLeft != ItemManager.Items.NONE)
@@ -367,7 +374,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
   public void RegisterUtility(ActiveRagdoll.Side side, int amount = -1)
   {
     // Check extra
-    if (Settings._Extras_CanUse)
+    if (SettingsHelper._Extras_CanUse)
     {
       if (_ragdoll?._IsPlayer ?? false)
         switch (LevelModule.ExtraPlayerAmmo)
@@ -388,7 +395,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
       _UtilitiesLeft = new List<UtilityScript>();
       foreach (var utility in _Equipment._UtilitiesLeft)
       {
-        for (var i = Shop.GetUtilityCount(utility); i > 0 && max-- > 0; i--)
+        for (var i = ShopHelper.GetUtilityCount(utility); i > 0 && max-- > 0; i--)
           AddUtility(utility, side);
       }
     }
@@ -397,7 +404,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
       _UtilitiesRight = new List<UtilityScript>();
       foreach (var utility in _Equipment._UtilitiesRight)
       {
-        var count = Shop.GetUtilityCount(utility);
+        var count = ShopHelper.GetUtilityCount(utility);
         for (; count > 0 && max-- > 0; count--)
           AddUtility(utility, side);
       }
@@ -871,7 +878,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
         {
 
           // Update time via player speed
-          var time_move = LevelModule.ExtraTime == 1 && Settings._Extras_CanUse;
+          var time_move = LevelModule.ExtraTime == 1 && SettingsHelper._Extras_CanUse;
           if (time_move)
           {
             if (_spawnTimer <= 0f)
@@ -907,7 +914,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
               foreach (var p in s_Players)
               {
                 if (p._ragdoll._IsDead) continue;
-                if (p.HasPerk(Shop.Perk.PerkType.NO_SLOWMO))
+                if (p.HasPerk(Perk.PerkType.NO_SLOWMO))
                 {
                   has_perk = true;
                   break;
@@ -925,7 +932,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
               foreach (var p in s_Players)
               {
                 // Check if player dead
-                if (p._ragdoll._IsDead || HasPerk(Shop.Perk.PerkType.NO_SLOWMO)) continue;
+                if (p._ragdoll._IsDead || HasPerk(Perk.PerkType.NO_SLOWMO)) continue;
                 foreach (var bullet in ItemScript._BulletPool)
                 {
 
@@ -1002,7 +1009,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
 
     if (_IsPlayer1 && GameScript.s_Singleton._UseCamera)
     {
-      var camera_height = SettingsModule.CameraZoom == Settings.SettingsSaveData.CameraZoomType.NORMAL ? 14f : SettingsModule.CameraZoom == Settings.SettingsSaveData.CameraZoomType.CLOSE ? 10f : 18f;
+      var camera_height = SettingsModule.CameraZoom == SettingsSaveData.CameraZoomType.NORMAL ? 14f : SettingsModule.CameraZoom == SettingsSaveData.CameraZoomType.CLOSE ? 10f : 18f;
       if (SettingsModule.UseOrthographicCamera)
       {
         camera_height = 14f;
@@ -1023,31 +1030,31 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
         {
           _centerCamera = true;
 
-          SettingsModule.CameraZoom = Settings.SettingsSaveData.CameraZoomType.NORMAL;
-          Settings.SetPostProcessing();
-          SettingsModule.CameraZoom = Settings.SettingsSaveData.CameraZoomType.AUTO;
+          SettingsModule.CameraZoom = SettingsSaveData.CameraZoomType.NORMAL;
+          SettingsHelper.SetPostProcessing();
+          SettingsModule.CameraZoom = SettingsSaveData.CameraZoomType.AUTO;
         }
 
         else if (_centerCamera)
         {
 
           var zoom = SettingsModule.CameraZoom;
-          if (zoom == Settings.SettingsSaveData.CameraZoomType.CLOSE)
+          if (zoom == SettingsSaveData.CameraZoomType.CLOSE)
           {
             if (map_x > 7 || map_y > 4)
               _centerCamera = false;
           }
-          else if (zoom == Settings.SettingsSaveData.CameraZoomType.NORMAL)
+          else if (zoom == SettingsSaveData.CameraZoomType.NORMAL)
           {
             if (map_x > 10 || map_y > 6)
               _centerCamera = false;
           }
-          else if (zoom == Settings.SettingsSaveData.CameraZoomType.FAR)
+          else if (zoom == SettingsSaveData.CameraZoomType.FAR)
           {
             if (map_x > 14 || map_y > 8)
               _centerCamera = false;
           }
-          else if (zoom == Settings.SettingsSaveData.CameraZoomType.AUTO)
+          else if (zoom == SettingsSaveData.CameraZoomType.AUTO)
           {
             var zoom_ = -1;
             if (map_x <= 7 && map_y <= 4)
@@ -1064,15 +1071,15 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
             }
             if (zoom_ > -1)
             {
-              SettingsModule.CameraZoom = (Settings.SettingsSaveData.CameraZoomType)zoom_;
-              Settings.SetPostProcessing();
-              SettingsModule.CameraZoom = Settings.SettingsSaveData.CameraZoomType.AUTO;
+              SettingsModule.CameraZoom = (SettingsSaveData.CameraZoomType)zoom_;
+              SettingsHelper.SetPostProcessing();
+              SettingsModule.CameraZoom = SettingsSaveData.CameraZoomType.AUTO;
             }
             else
             {
-              SettingsModule.CameraZoom = Settings.SettingsSaveData.CameraZoomType.NORMAL;
-              Settings.SetPostProcessing();
-              SettingsModule.CameraZoom = Settings.SettingsSaveData.CameraZoomType.AUTO;
+              SettingsModule.CameraZoom = SettingsSaveData.CameraZoomType.NORMAL;
+              SettingsHelper.SetPostProcessing();
+              SettingsModule.CameraZoom = SettingsSaveData.CameraZoomType.AUTO;
 
               _centerCamera = false;
             }
@@ -1120,7 +1127,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
         sharedPos.y = transform.position.y + camera_height;
         sharedForward /= Mathf.Clamp(counter, 1, counter);
 
-        if (SettingsModule.CameraZoom == Settings.SettingsSaveData.CameraZoomType.FAR)
+        if (SettingsModule.CameraZoom == SettingsSaveData.CameraZoomType.FAR)
           sharedForward = Vector3.zero;
         else if (SettingsModule.CameraZoom == 0)
           sharedForward /= 1.4f;
@@ -1178,9 +1185,9 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
 
   bool _cycle_objects;
 
-  public bool HasPerk(Shop.Perk.PerkType perk)
+  public bool HasPerk(Perk.PerkType perk)
   {
-    return Shop.Perk.HasPerk(_Id, perk);
+    return Perk.HasPerk(_Id, perk);
   }
 
   Vector2 _lastInputTriggers;
@@ -1193,7 +1200,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
   void CheckSpawnTwin()
   {
     // Check twin mod
-    if (HasPerk(Shop.Perk.PerkType.TWIN) && _ConnectedTwin == null)
+    if (HasPerk(Perk.PerkType.TWIN) && _ConnectedTwin == null)
     {
       _IsOriginalTwin = true;
 
@@ -1253,7 +1260,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
       if (
         _IsPlayer1 &&
         LevelModule.ExtraHorde == 1 &&
-        Settings._Extras_CanUse &&
+        SettingsHelper._Extras_CanUse &&
         (Powerup._Powerups?.Count ?? 0) > 0 &&
         EnemyScript._Enemies_alive.Count < EnemyScript._MAX_RAGDOLLS_ALIVE
       )
@@ -1325,7 +1332,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
 
     var saveInput = Vector2.zero;
 
-    if ((_Id == 0 && Settings._ForceKeyboard) || ControllerManager._NumberGamepads == 0)
+    if ((_Id == 0 && SettingsHelper._ForceKeyboard) || ControllerManager._NumberGamepads == 0)
       mouseEnabled = true;
     else if (ControllerManager._NumberGamepads > 0)
       mouseEnabled = false;
@@ -1856,7 +1863,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
       if (_runToggle || _ragdoll._forceRun)*/
       movespeed *= RUNSPEED *
         // Speed perk
-        (HasPerk(Shop.Perk.PerkType.SPEED_UP) ? 1.15f : 1f);
+        (HasPerk(Perk.PerkType.SPEED_UP) ? 1.15f : 1f);
     }
 
     // Move player
@@ -2130,7 +2137,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
   public void SwapLoadouts()
   {
     if (!_ragdoll.CanSwapWeapons()) return;
-    if (!_Profile._Loadout._two_weapon_pairs && !HasPerk(Shop.Perk.PerkType.MARTIAL_ARTIST)) return;
+    if (!_Profile._Loadout._two_weapon_pairs && !HasPerk(Perk.PerkType.MARTIAL_ARTIST)) return;
 
     var clip_l = -1;
     var clip_r = -1;
@@ -2510,7 +2517,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
         break;
       }
     if (_HasTwin && _ConnectedTwin._ragdoll != null && !_ConnectedTwin._ragdoll._IsDead) lastplayer = false;
-    if (Settings._Slowmo_on_death && lastplayer && !HasPerk(Shop.Perk.PerkType.NO_SLOWMO)) _SlowmoTimer += 2f;
+    if (SettingsHelper._Slowmo_on_death && lastplayer && !HasPerk(Perk.PerkType.NO_SLOWMO)) _SlowmoTimer += 2f;
 
     // Check for restart tutorial
     if (lastplayer && !GameScript.s_IsPartyGameMode)
@@ -2596,7 +2603,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
           GameScript.ToggleExitLight(true);
 
           // Last killed settings
-          if (SettingsModule.LevelEndCondition == Settings.SettingsSaveData.LevelEndConditionType.LAST_ENEMY_KILLED)
+          if (SettingsModule.LevelEndCondition == SettingsSaveData.LevelEndConditionType.LAST_ENEMY_KILLED)
           {
             IEnumerator waitForComplete()
             {
@@ -2987,17 +2994,17 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
 
       if (_Data.Count > 1)
       {
-        Settings._NumberPlayers = 2;
+        SettingsHelper._NumberPlayers = 2;
         PlayerspawnScript._PlayerSpawns[0].SpawnPlayer();
       }
       if (_Data.Count > 2)
       {
-        Settings._NumberPlayers = 3;
+        SettingsHelper._NumberPlayers = 3;
         PlayerspawnScript._PlayerSpawns[0].SpawnPlayer();
       }
       if (_Data.Count > 3)
       {
-        Settings._NumberPlayers = 4;
+        SettingsHelper._NumberPlayers = 4;
         PlayerspawnScript._PlayerSpawns[0].SpawnPlayer();
       }
 

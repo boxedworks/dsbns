@@ -1,6 +1,10 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
-
+using Assets.Scripts.Objects;
+using Assets.Scripts.Ragdoll;
+using Assets.Scripts.Settings;
+using Assets.Scripts.Settings.Serialization;
+using Assets.Scripts.Game.Items;
 using UnityEngine;
 
 using ItemType = ItemManager.Items;
@@ -8,8 +12,8 @@ using ItemType = ItemManager.Items;
 public class ItemScript : MonoBehaviour
 {
   //
-  static Settings.LevelSaveData LevelModule { get { return Settings.s_SaveData.LevelData; } }
-  static Settings.SettingsSaveData SettingsModule { get { return Settings.s_SaveData.Settings; } }
+  static LevelSaveData LevelModule { get { return SettingsHelper.s_SaveData.LevelData; } }
+  static SettingsSaveData SettingsModule { get { return SettingsHelper.s_SaveData.Settings; } }
 
   [System.NonSerialized]
   public int _Id;
@@ -59,11 +63,11 @@ public class ItemScript : MonoBehaviour
     var clip_size = _clipSize;
 
     // Check perk
-    if (_ragdoll != null && _ragdoll._IsPlayer && _ragdoll._PlayerScript.HasPerk(Shop.Perk.PerkType.MAX_AMMO_UP))
+    if (_ragdoll != null && _ragdoll._IsPlayer && _ragdoll._PlayerScript.HasPerk(Perk.PerkType.MAX_AMMO_UP))
       clip_size = Mathf.CeilToInt(_clipSize * 1.5f);
 
     // Check extra
-    if (Settings._Extras_CanUse)
+    if (SettingsHelper._Extras_CanUse)
     {
       if (_ragdoll?._IsPlayer ?? false)
         switch (LevelModule.ExtraPlayerAmmo)
@@ -81,7 +85,7 @@ public class ItemScript : MonoBehaviour
   }
   public float UseRate()
   {
-    if (!_isMelee && _ragdoll != null && _ragdoll._IsPlayer && Shop.Perk.HasPerk(_ragdoll._PlayerScript._Id, Shop.Perk.PerkType.FIRE_RATE_UP))
+    if (!_isMelee && _ragdoll != null && _ragdoll._IsPlayer && Perk.HasPerk(_ragdoll._PlayerScript._Id, Perk.PerkType.FIRE_RATE_UP))
       return _useRate * 0.5f;
     return _useRate;
   }
@@ -139,7 +143,7 @@ public class ItemScript : MonoBehaviour
   // Check for perk
   public int GetPenatrationAmount()
   {
-    if (_ragdoll._IsPlayer && Shop.Perk.HasPerk(_ragdoll._PlayerScript._Id, Shop.Perk.PerkType.PENETRATION_UP))
+    if (_ragdoll._IsPlayer && Perk.HasPerk(_ragdoll._PlayerScript._Id, Perk.PerkType.PENETRATION_UP))
       return _penatrationAmount + 1;
     return _penatrationAmount;
   }
@@ -762,7 +766,7 @@ public class ItemScript : MonoBehaviour
     _clip--;
 
     // Extra; infinite ammo
-    if (_ragdoll._IsPlayer && Settings._Extras_CanUse && LevelModule.ExtraPlayerAmmo == 3)
+    if (_ragdoll._IsPlayer && SettingsHelper._Extras_CanUse && LevelModule.ExtraPlayerAmmo == 3)
     {
       _clip++;
     }
@@ -1480,7 +1484,7 @@ public class ItemScript : MonoBehaviour
     _side = side;
 
     // Check for laser sight
-    if (!_isMelee && _ragdoll._IsPlayer && _ragdoll._PlayerScript.HasPerk(Shop.Perk.PerkType.LASER_SIGHTS))
+    if (!_isMelee && _ragdoll._IsPlayer && _ragdoll._PlayerScript.HasPerk(Perk.PerkType.LASER_SIGHTS))
       AddLaserSight();
 
     // Set clip and use time if applicable
@@ -1771,7 +1775,7 @@ public class ItemScript : MonoBehaviour
 
     // Check perk
     var reload_speed_mod = 1f;
-    if (_ragdoll._IsPlayer && _ragdoll._PlayerScript.HasPerk(Shop.Perk.PerkType.FASTER_RELOAD))
+    if (_ragdoll._IsPlayer && _ragdoll._PlayerScript.HasPerk(Perk.PerkType.FASTER_RELOAD))
       reload_speed_mod = 1.4f;
 
     // Play noise and set clip

@@ -1,14 +1,22 @@
 using System.Collections;
 using System.Collections.Generic;
-using Localization;
+using Assets.Scripts.Game.Items;
+using Assets.Scripts.Objects;
+using Assets.Scripts.Objects.CustomEntities;
+using Assets.Scripts.Ragdoll;
+using Assets.Scripts.Settings;
+using Assets.Scripts.Settings.Localization;
+using Assets.Scripts.Settings.Serialization;
+using Assets.Scripts.UI;
+using Assets.Scripts.UI.Menus;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
 public class GameScript : MonoBehaviour
 {
   //
-  static Settings.SettingsSaveData SettingsModule { get { return Settings.s_SaveData.Settings; } }
-  static Settings.LevelSaveData LevelModule { get { return Settings.s_SaveData.LevelData; } }
+  static SettingsSaveData SettingsModule { get { return SettingsHelper.s_SaveData.Settings; } }
+  static LevelSaveData LevelModule { get { return SettingsHelper.s_SaveData.LevelData; } }
 
   // True if steam, false if EOS
   public static bool s_UsingSteam
@@ -68,7 +76,7 @@ public class GameScript : MonoBehaviour
     {
       SettingsModule.Fullscreen = Screen.fullScreen;
     }
-    Settings.SettingsSaveData.Save();
+    SettingsSaveData.Save();
 
     //if (!Application.isEditor) System.Diagnostics.Process.GetCurrentProcess().Kill();
     Application.Quit();
@@ -216,12 +224,12 @@ public class GameScript : MonoBehaviour
     FunctionsC.MusicManager.Init();
 
     //
-    Shop.Init();
+    ShopHelper.Init();
 
     //
-    Settings.Init();
-    Settings.LevelSaveData.Save();
-    Settings.SettingsSaveData.Save();
+    SettingsHelper.Init();
+    LevelSaveData.Save();
+    SettingsSaveData.Save();
 
     //
     new LocalizationController();
@@ -292,7 +300,7 @@ public class GameScript : MonoBehaviour
     SurvivalManager.InitLight();
 
     // Play menu music
-    FunctionsC.MusicManager.PlayTrack(Settings._DifficultyUnlocked == 0 && !Levels._UnlockAllLevels ? 0 : 1);
+    FunctionsC.MusicManager.PlayTrack(SettingsHelper._DifficultyUnlocked == 0 && !Levels._UnlockAllLevels ? 0 : 1);
 
     //foreach(var gamepad in ControllerManager._Gamepads){
     //  Debug.Log(gamepad.name);
@@ -330,7 +338,7 @@ public class GameScript : MonoBehaviour
       spawnList[i] = i;
     rnd.Shuffle(spawnList);
 
-    var numPlayers = Settings._NumberPlayers;
+    var numPlayers = SettingsHelper._NumberPlayers;
     var numTeams = VersusMode.GetNumberTeams();
 
     if ((s_IsPartyGameMode && !VersusMode.s_Settings._FreeForAll ? numTeams : numPlayers) <= numSpawns || !s_IsPartyGameMode || (s_IsPartyGameMode && VersusMode.s_Settings._FreeForAll))
@@ -369,8 +377,8 @@ public class GameScript : MonoBehaviour
       }
 
       var playerSpawnIndex = 0;
-      if (s_PlayerIter < Settings._NumberPlayers)
-        for (; s_PlayerIter < Settings._NumberPlayers; s_PlayerIter++)
+      if (s_PlayerIter < SettingsHelper._NumberPlayers)
+        for (; s_PlayerIter < SettingsHelper._NumberPlayers; s_PlayerIter++)
           PlayerspawnScript._PlayerSpawns[spawnLocation[playerSpawnIndex++]].SpawnPlayer();
     }
 
@@ -386,8 +394,8 @@ public class GameScript : MonoBehaviour
         for (var i = 0; i < spawnOrder.Length; i++)
           spawnOrder[i] = spawnList[i];
 
-      if (s_PlayerIter < Settings._NumberPlayers)
-        for (; s_PlayerIter < Settings._NumberPlayers; s_PlayerIter++)
+      if (s_PlayerIter < SettingsHelper._NumberPlayers)
+        for (; s_PlayerIter < SettingsHelper._NumberPlayers; s_PlayerIter++)
           PlayerspawnScript._PlayerSpawns[spawnList[VersusMode.GetTeamId(s_PlayerIter) % spawnList.Length]].SpawnPlayer();
     }
   }
@@ -425,9 +433,9 @@ public class GameScript : MonoBehaviour
           {
             pos = goal.transform.position + new Vector3(1.5f + Easings.CircularEaseOut(mod), 0f) + (SettingsModule.UseOrthographicCamera ? new Vector3(0f, 0f, SettingsModule.CameraZoom switch
             {
-              Settings.SettingsSaveData.CameraZoomType.AUTO => 0.8f,
-              Settings.SettingsSaveData.CameraZoomType.CLOSE => 0.8f,
-              Settings.SettingsSaveData.CameraZoomType.NORMAL => -0.2f,
+              SettingsSaveData.CameraZoomType.AUTO => 0.8f,
+              SettingsSaveData.CameraZoomType.CLOSE => 0.8f,
+              SettingsSaveData.CameraZoomType.NORMAL => -0.2f,
               _ => -1.2f
             }) : Vector3.zero);
             pos.y = ypos;
@@ -439,9 +447,9 @@ public class GameScript : MonoBehaviour
           {
             pos = PlayerspawnScript._PlayerSpawns[0].transform.position + new Vector3(1.5f + Easings.CircularEaseOut(mod), 0f) + (SettingsModule.UseOrthographicCamera ? new Vector3(0f, 0f, SettingsModule.CameraZoom switch
             {
-              Settings.SettingsSaveData.CameraZoomType.AUTO => -0.8f,
-              Settings.SettingsSaveData.CameraZoomType.CLOSE => -0.8f,
-              Settings.SettingsSaveData.CameraZoomType.NORMAL => 0.2f,
+              SettingsSaveData.CameraZoomType.AUTO => -0.8f,
+              SettingsSaveData.CameraZoomType.CLOSE => -0.8f,
+              SettingsSaveData.CameraZoomType.NORMAL => 0.2f,
               _ => 1.2f
             }) : Vector3.zero);
             pos.y = ypos;
@@ -456,7 +464,7 @@ public class GameScript : MonoBehaviour
       TutorialInformation._TutorialArrow.position = new Vector3(-100f, 0f, 0f);
     }
     // Load tutorial info for level
-    if (Levels._CurrentLevelCollectionIndex == 0 && Levels._CurrentLevelIndex == 0 && Settings._DIFFICULTY == 0)
+    if (Levels._CurrentLevelCollectionIndex == 0 && Levels._CurrentLevelIndex == 0 && SettingsHelper._DIFFICULTY == 0)
     {
       if (_tutorialCo != null)
       {
@@ -587,23 +595,23 @@ public class GameScript : MonoBehaviour
     if (Time.unscaledTime - _lastInputCheck > 0.25f)
     {
       _lastInputCheck = Time.unscaledTime;
-      Settings._NumberPlayers = ControllerManager._NumberGamepads + (Settings._ForceKeyboard ? 1 : 0);
-      if (Settings._NumberPlayers == 0)
-        Settings._NumberPlayers = 1;
-      var numcontrollers_save = Settings._NumberControllers;
-      Settings._NumberControllers = ControllerManager._NumberGamepads + (Settings._ForceKeyboard ? 1 : 0);
-      if (Settings._NumberControllers == 0 && Menu._Confirmed_SwitchToKeyboard)
-        Settings._NumberControllers = 1;
+      SettingsHelper._NumberPlayers = ControllerManager._NumberGamepads + (SettingsHelper._ForceKeyboard ? 1 : 0);
+      if (SettingsHelper._NumberPlayers == 0)
+        SettingsHelper._NumberPlayers = 1;
+      var numcontrollers_save = SettingsHelper._NumberControllers;
+      SettingsHelper._NumberControllers = ControllerManager._NumberGamepads + (SettingsHelper._ForceKeyboard ? 1 : 0);
+      if (SettingsHelper._NumberControllers == 0 && Menu._Confirmed_SwitchToKeyboard)
+        SettingsHelper._NumberControllers = 1;
 
-      if (Settings._NumberControllers != numcontrollers_save)
+      if (SettingsHelper._NumberControllers != numcontrollers_save)
       {
         var ui = GameResources._UI_Player;
         for (var i = 1; i < 4; i++)
-          ui.GetChild(i).gameObject.SetActive(i < Settings._NumberPlayers);
+          ui.GetChild(i).gameObject.SetActive(i < SettingsHelper._NumberPlayers);
 
         // Pause if a controller was unplugged and playing
-        if (!Menu.s_InMenus && (!s_EditorTesting) && Settings._NumberControllers != PlayerScript.s_Players.Count)
-          Menu.OnControllersChanged(Settings._NumberControllers - numcontrollers_save, numcontrollers_save);
+        if (!Menu.s_InMenus && (!s_EditorTesting) && SettingsHelper._NumberControllers != PlayerScript.s_Players.Count)
+          Menu.OnControllersChanged(SettingsHelper._NumberControllers - numcontrollers_save, numcontrollers_save);
 
         // Check if menu
         if (Menu.s_InMenus && Menu.s_CurrentMenu._Type == Menu.MenuType.VERSUS)
@@ -684,7 +692,7 @@ public class GameScript : MonoBehaviour
         {
           // Check endgame
           var timeToEnd = 2.2f;
-          if (_inLevelEnd && !_GameEnded && (SettingsModule.LevelCompletionBehavior != Settings.SettingsSaveData.LevelCompletionBehaviorType.NOTHING))
+          if (_inLevelEnd && !_GameEnded && (SettingsModule.LevelCompletionBehavior != SettingsSaveData.LevelCompletionBehaviorType.NOTHING))
           {
             _levelEndTimer += Time.deltaTime;
 
@@ -770,10 +778,10 @@ public class GameScript : MonoBehaviour
 
                   // Reset local time
                   LevelModule.SetLevelBestTime(-1f);
-                  Settings.LevelSaveData.Save();
+                  LevelSaveData.Save();
 
                   Debug.Log("Reset best level time");
-                  if (Settings._DIFFICULTY == 0)
+                  if (SettingsHelper._DIFFICULTY == 0)
                     LevelModule.IsTopRatedClassic0 = false;
                   else
                     LevelModule.IsTopRatedClassic1 = false;
@@ -798,9 +806,9 @@ public class GameScript : MonoBehaviour
 
                 // Editor logic
 #if UNITY_EDITOR
-                if (SettingsModule.LevelCompletionBehavior == Settings.SettingsSaveData.LevelCompletionBehaviorType.RANDOM_LEVEL)
+                if (SettingsModule.LevelCompletionBehavior == SettingsSaveData.LevelCompletionBehaviorType.RANDOM_LEVEL)
                   LoadRandomLevel();
-                else if (SettingsModule.LevelCompletionBehavior == Settings.SettingsSaveData.LevelCompletionBehaviorType.RANDOM_LEVEL_ALL)
+                else if (SettingsModule.LevelCompletionBehavior == SettingsSaveData.LevelCompletionBehaviorType.RANDOM_LEVEL_ALL)
                   LoadRandomLevel(true);
                 else
                 {
@@ -873,9 +881,9 @@ public class GameScript : MonoBehaviour
         if (ControllerManager.GetKey(ControllerManager.Key.F4))
         {
           SettingsModule.UseOrthographicCamera = !SettingsModule.UseOrthographicCamera;
-          if (SettingsModule.CameraZoom == Settings.SettingsSaveData.CameraZoomType.AUTO)
-            SettingsModule.CameraZoom = Settings.SettingsSaveData.CameraZoomType.NORMAL;
-          Settings.SetPostProcessing();
+          if (SettingsModule.CameraZoom == SettingsSaveData.CameraZoomType.AUTO)
+            SettingsModule.CameraZoom = SettingsSaveData.CameraZoomType.NORMAL;
+          SettingsHelper.SetPostProcessing();
           PlayerScript.ResetCamera();
         }
 
@@ -891,7 +899,7 @@ public class GameScript : MonoBehaviour
       // Check if checking for controllers
       if (Menu.s_CurrentMenu._Type == Menu.MenuType.CONTROLLERS_CHANGED)
       {
-        var numplayers = ControllerManager._NumberGamepads + (Settings._ForceKeyboard ? 1 : 0);
+        var numplayers = ControllerManager._NumberGamepads + (SettingsHelper._ForceKeyboard ? 1 : 0);
         if (numplayers >= Menu._Save_NumPlayers)
         {
           Menu.OnControllersChangedFix();
@@ -1007,7 +1015,7 @@ public class GameScript : MonoBehaviour
       Time.timeScale = 1f;
       // Check player amount change
       if (s_IsMissionsGameMode)
-        if (PlayerScript.s_Players != null && Settings._NumberPlayers != PlayerScript.s_Players.Count) TileManager.ReloadMap();
+        if (PlayerScript.s_Players != null && SettingsHelper._NumberPlayers != PlayerScript.s_Players.Count) TileManager.ReloadMap();
       TileManager._Text_LevelNum.gameObject.SetActive(true);
       TileManager._Text_LevelTimer.gameObject.SetActive(true);
       if (s_IsMissionsGameMode && !Levels._LevelPack_Playing && !s_EditorTesting)
@@ -1033,13 +1041,13 @@ public class GameScript : MonoBehaviour
     var numDirs0 = Levels._LevelCollections[0]._levelData.Length / dirsPerLevel;
     for (var i = 0; i < numDirs0; i++)
       if (LevelModule.LevelData[0].Data[(i * dirsPerLevel) + (dirsPerLevel - 1)].Completed)
-        Shop.AddAvailableUnlockVault($"classic_{i}");
+        ShopHelper.AddAvailableUnlockVault($"classic_{i}");
 
     // Check difficulty 1
     var numDirs1 = Levels._LevelCollections[1]._levelData.Length / dirsPerLevel;
     for (var i = 0; i < numDirs1; i++)
       if (LevelModule.LevelData[1].Data[(i * dirsPerLevel) + (dirsPerLevel - 1)].Completed)
-        Shop.AddAvailableUnlockVault($"classic_{numDirs0 + i}");
+        ShopHelper.AddAvailableUnlockVault($"classic_{numDirs0 + i}");
   }
 
   // Fired on last enemy killed
@@ -1057,7 +1065,7 @@ public class GameScript : MonoBehaviour
 
       // Check achievements
 #if UNITY_STANDALONE
-      if (LevelModule.ExtraTime == 1 && Settings._Extras_CanUse)
+      if (LevelModule.ExtraTime == 1 && SettingsHelper._Extras_CanUse)
         Achievements.UnlockAchievement(Achievements.Achievement.EXTRA_SUPERH);
 #endif
     }
@@ -1116,9 +1124,9 @@ public class GameScript : MonoBehaviour
       {
 
         // Next level
-        case Settings.SettingsSaveData.LevelCompletionBehaviorType.NEXT_LEVEL:
-        case Settings.SettingsSaveData.LevelCompletionBehaviorType.RANDOM_LEVEL:
-        case Settings.SettingsSaveData.LevelCompletionBehaviorType.RANDOM_LEVEL_ALL:
+        case SettingsSaveData.LevelCompletionBehaviorType.NEXT_LEVEL:
+        case SettingsSaveData.LevelCompletionBehaviorType.RANDOM_LEVEL:
+        case SettingsSaveData.LevelCompletionBehaviorType.RANDOM_LEVEL_ALL:
 
           // Check last level
           if (Levels._CurrentLevelIndex + 1 == Levels._CurrentLevelCollection._levelData.Length)
@@ -1127,7 +1135,7 @@ public class GameScript : MonoBehaviour
 
             TogglePause(Menu.MenuType.EDITOR_PACKS);
             Menu.SwitchMenu(Menu.MenuType.EDITOR_PACKS);
-            Menu.s_CurrentMenu._selectionIndex = Levels._LevelPacks_Play_SaveIndex;
+            Menu.s_CurrentMenu._SelectionIndex = Levels._LevelPacks_Play_SaveIndex;
             Menu._CanRender = false;
             Menu.RenderMenu();
             _LastPause = Time.unscaledTime - 0.2f;
@@ -1143,13 +1151,13 @@ public class GameScript : MonoBehaviour
           break;
 
         // Restart level
-        case Settings.SettingsSaveData.LevelCompletionBehaviorType.RELOAD_LEVEL:
+        case SettingsSaveData.LevelCompletionBehaviorType.RELOAD_LEVEL:
 
           TileManager.ReloadMap();
           break;
 
         // Previous level
-        case Settings.SettingsSaveData.LevelCompletionBehaviorType.PREVIOUS_LEVEL:
+        case SettingsSaveData.LevelCompletionBehaviorType.PREVIOUS_LEVEL:
 
           // Check last level
           if (Levels._CurrentLevelIndex == 0)
@@ -1158,7 +1166,7 @@ public class GameScript : MonoBehaviour
 
             TogglePause(Menu.MenuType.EDITOR_PACKS);
             Menu.SwitchMenu(Menu.MenuType.EDITOR_PACKS);
-            Menu.s_CurrentMenu._selectionIndex = Levels._LevelPacks_Play_SaveIndex;
+            Menu.s_CurrentMenu._SelectionIndex = Levels._LevelPacks_Play_SaveIndex;
             Menu._CanRender = false;
             Menu.RenderMenu();
             _LastPause = Time.unscaledTime - 0.2f;
@@ -1185,9 +1193,9 @@ public class GameScript : MonoBehaviour
     }
 
     // Display unlock messages
-    if (Shop.s_UnlockString != string.Empty)
+    if (ShopHelper.s_UnlockString != string.Empty)
     {
-      var nextMenu = Shop.s_SetLevelsMenuAfterUnlockString ? Menu.MenuType.LEVELS : Menu.MenuType.NONE;
+      var nextMenu = ShopHelper.s_SetLevelsMenuAfterUnlockString ? Menu.MenuType.LEVELS : Menu.MenuType.NONE;
       TogglePause(nextMenu);
       if (nextMenu != Menu.MenuType.NONE)
         return;
@@ -1198,7 +1206,7 @@ public class GameScript : MonoBehaviour
     {
 
       // Next level
-      case Settings.SettingsSaveData.LevelCompletionBehaviorType.NEXT_LEVEL:
+      case SettingsSaveData.LevelCompletionBehaviorType.NEXT_LEVEL:
         if (Levels._CurrentLevelIndex + 1 == Levels._CurrentLevelCollection._levelData.Length)
         {
           TogglePause();
@@ -1210,12 +1218,12 @@ public class GameScript : MonoBehaviour
         return;
 
       // Reload level
-      case Settings.SettingsSaveData.LevelCompletionBehaviorType.RELOAD_LEVEL:
+      case SettingsSaveData.LevelCompletionBehaviorType.RELOAD_LEVEL:
         TileManager.ReloadMap();
         break;
 
       // Previous level
-      case Settings.SettingsSaveData.LevelCompletionBehaviorType.PREVIOUS_LEVEL:
+      case SettingsSaveData.LevelCompletionBehaviorType.PREVIOUS_LEVEL:
         if (Levels._CurrentLevelIndex == 0)
         {
           TogglePause();
@@ -1227,12 +1235,12 @@ public class GameScript : MonoBehaviour
         break;
 
       // Random level
-      case Settings.SettingsSaveData.LevelCompletionBehaviorType.RANDOM_LEVEL:
+      case SettingsSaveData.LevelCompletionBehaviorType.RANDOM_LEVEL:
 
         LoadRandomLevel(false);
         break;
 
-      case Settings.SettingsSaveData.LevelCompletionBehaviorType.RANDOM_LEVEL_ALL:
+      case SettingsSaveData.LevelCompletionBehaviorType.RANDOM_LEVEL_ALL:
 
         LoadRandomLevel(true);
         break;
@@ -1245,12 +1253,12 @@ public class GameScript : MonoBehaviour
 
 #if UNITY_EDITOR
     /*if (anyDifficulty)
-      Settings._DIFFICULTY = Levels._CurrentLevelCollectionIndex = Random.Range(0, 2);
+      SettingsHelper._DIFFICULTY = Levels._CurrentLevelCollectionIndex = Random.Range(0, 2);
     NextLevel(Random.Range(0, Levels._CurrentLevelCollection._levelData.Length));
     return;*/
 #endif
 
-    if (anyDifficulty && Settings._DifficultyUnlocked > 0)
+    if (anyDifficulty && SettingsHelper._DifficultyUnlocked > 0)
     {
       var highestLevelCompleted = 0;
       var levels1 = LevelModule.LevelData[1].Data;
@@ -1267,19 +1275,19 @@ public class GameScript : MonoBehaviour
       var randomLevel = Random.Range(0, 131 + highestLevelCompleted + 1);
       if (randomLevel > 131)
       {
-        Settings._DIFFICULTY = 1;
+        SettingsHelper._DIFFICULTY = 1;
         randomLevel -= 131;
 
       }
       else
-        Settings._DIFFICULTY = 0;
-      NextLevel(Mathf.Clamp(randomLevel, 0, Settings._LevelsCompleted_Current.Count));
+        SettingsHelper._DIFFICULTY = 0;
+      NextLevel(Mathf.Clamp(randomLevel, 0, SettingsHelper._LevelsCompleted_Current.Count));
     }
 
     else
     {
       var highestLevelCompleted = 0;
-      var levels = Settings._LevelsCompleted_Current;
+      var levels = SettingsHelper._LevelsCompleted_Current;
       for (var i = levels.Count - 1; i >= 0; i--)
       {
         var levelData = levels[i];
@@ -1344,7 +1352,7 @@ public class GameScript : MonoBehaviour
 
 #if UNITY_STANDALONE
         // Check for achievements
-        if (Levels._CurrentLevelIndex == 0 && Settings._DIFFICULTY == 0)
+        if (Levels._CurrentLevelIndex == 0 && SettingsHelper._DIFFICULTY == 0)
         {
           Achievements.UnlockAchievement(Achievements.Achievement.LEVEL_0_COMPLETED);
         }
@@ -1355,7 +1363,7 @@ public class GameScript : MonoBehaviour
     // Check last level completed
     if (Levels._CurrentLevelIndex + 1 == Levels._CurrentLevelCollection._levelData.Length)
     {
-      if (Settings._DIFFICULTY == 0)
+      if (SettingsHelper._DIFFICULTY == 0)
       {
 
         // Achievement
@@ -1363,18 +1371,18 @@ public class GameScript : MonoBehaviour
         Achievements.UnlockAchievement(Achievements.Achievement.DIFFICULTY_1);
 #endif
 
-        if (Settings._DifficultyUnlocked <= 0)
+        if (SettingsHelper._DifficultyUnlocked <= 0)
         {
           Menu.s_SaveMenuDir = -1;
-          Settings._DifficultyUnlocked = 1;
-          Shop.s_UnlockString += $"- {LocalizationController.GetString("difficultyUnlocked")} <color=cyan>{LocalizationController.GetString("sneakier")}</color>\n";
-          Shop.s_SetLevelsMenuAfterUnlockString = true;
+          SettingsHelper._DifficultyUnlocked = 1;
+          ShopHelper.s_UnlockString += $"- {LocalizationController.GetString("difficultyUnlocked")} <color=cyan>{LocalizationController.GetString("sneakier")}</color>\n";
+          ShopHelper.s_SetLevelsMenuAfterUnlockString = true;
           Menu.s_SetNextDifficultyOnMenu = true;
 
           return true;
         }
       }
-      else if (Settings._DIFFICULTY == 1)
+      else if (SettingsHelper._DIFFICULTY == 1)
       {
 
         // Achievement
@@ -1382,13 +1390,13 @@ public class GameScript : MonoBehaviour
         Achievements.UnlockAchievement(Achievements.Achievement.DIFFICULTY_2);
 #endif
 
-        if (Settings._DifficultyUnlocked <= 1)
+        if (SettingsHelper._DifficultyUnlocked <= 1)
         {
 
-          Settings._DifficultyUnlocked = 2;
+          SettingsHelper._DifficultyUnlocked = 2;
 
-          Shop.s_UnlockString += $"- {LocalizationController.GetString("missionsMode_completed")}\n- {LocalizationController.GetString("missionsMode_tryOtherMode")}";
-          Shop.s_SetLevelsMenuAfterUnlockString = true;
+          ShopHelper.s_UnlockString += $"- {LocalizationController.GetString("missionsMode_completed")}\n- {LocalizationController.GetString("missionsMode_tryOtherMode")}";
+          ShopHelper.s_SetLevelsMenuAfterUnlockString = true;
           return true;
         }
       }
@@ -1413,13 +1421,13 @@ public class GameScript : MonoBehaviour
     var returnCode = false;
 
     //
-    if (SettingsModule.LevelCompletionBehavior == Settings.SettingsSaveData.LevelCompletionBehaviorType.RANDOM_LEVEL)
+    if (SettingsModule.LevelCompletionBehavior == SettingsSaveData.LevelCompletionBehaviorType.RANDOM_LEVEL)
     {
       LoadRandomLevel();
       returnCode = true;
     }
 
-    else if (SettingsModule.LevelCompletionBehavior == Settings.SettingsSaveData.LevelCompletionBehaviorType.RANDOM_LEVEL_ALL)
+    else if (SettingsModule.LevelCompletionBehavior == SettingsSaveData.LevelCompletionBehaviorType.RANDOM_LEVEL_ALL)
     {
       LoadRandomLevel(true);
       returnCode = true;
@@ -1456,13 +1464,13 @@ public class GameScript : MonoBehaviour
     var returnCode = false;
 
     //
-    if (SettingsModule.LevelCompletionBehavior == Settings.SettingsSaveData.LevelCompletionBehaviorType.RANDOM_LEVEL)
+    if (SettingsModule.LevelCompletionBehavior == SettingsSaveData.LevelCompletionBehaviorType.RANDOM_LEVEL)
     {
       LoadRandomLevel();
       returnCode = true;
     }
 
-    else if (SettingsModule.LevelCompletionBehavior == Settings.SettingsSaveData.LevelCompletionBehaviorType.RANDOM_LEVEL_ALL)
+    else if (SettingsModule.LevelCompletionBehavior == SettingsSaveData.LevelCompletionBehaviorType.RANDOM_LEVEL_ALL)
     {
       LoadRandomLevel(true);
       returnCode = true;

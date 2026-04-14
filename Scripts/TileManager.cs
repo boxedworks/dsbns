@@ -1,5 +1,12 @@
 using System.Collections;
 using System.Collections.Generic;
+using Assets.Scripts.Game.Items;
+using Assets.Scripts.Objects;
+using Assets.Scripts.Objects.CustomEntities;
+using Assets.Scripts.Ragdoll;
+using Assets.Scripts.Settings;
+using Assets.Scripts.Settings.Serialization;
+using Assets.Scripts.UI.Menus;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -8,8 +15,8 @@ using Key = ControllerManager.Key;
 public class TileManager
 {
   //
-  static Settings.SettingsSaveData SettingsModule { get { return Settings.s_SaveData.Settings; } }
-  static Settings.LevelSaveData LevelModule { get { return Settings.s_SaveData.LevelData; } }
+  static SettingsSaveData SettingsModule { get { return SettingsHelper.s_SaveData.Settings; } }
+  static LevelSaveData LevelModule { get { return SettingsHelper.s_SaveData.LevelData; } }
 
   //
   public static int _s_MapIndex;
@@ -389,7 +396,7 @@ public class TileManager
       {
         var e = enemies.GetChild(i).GetChild(0).GetComponent<EnemyScript>();
         // Don't save bat enemy if not mission editor
-        /*if (Settings._DIFFICULTY > 0)*/
+        /*if (SettingsHelper._DIFFICULTY > 0)*/
         if (!GameScript.s_EditorTesting)
           if (e._itemLeft == ItemManager.Items.BAT || e._itemRight == ItemManager.Items.BAT) continue;
         // Basic position info
@@ -539,7 +546,7 @@ public class TileManager
 
     // Show unlocks
     _LoadingMap = false;
-    if (!Menu.s_InMenus && Shop.s_UnlockString != string.Empty)
+    if (!Menu.s_InMenus && ShopHelper.s_UnlockString != string.Empty)
       GameScript.TogglePause(Menu.MenuType.NONE);
 
     while (GameScript.s_Paused)
@@ -655,7 +662,7 @@ public class TileManager
         SceneThemes.ChangeMapTheme(SceneThemes._Instance._ThemeOrder[2]);
       else
       {
-        if (Levels._CurrentLevelIndex < 12 && Levels._CurrentLevelIndex > (Settings._DIFFICULTY == 1 ? 8 : 7))
+        if (Levels._CurrentLevelIndex < 12 && Levels._CurrentLevelIndex > (SettingsHelper._DIFFICULTY == 1 ? 8 : 7))
           SceneThemes.ChangeMapTheme(SceneThemes._Instance._ThemeOrder[1]);
         else
           SceneThemes.ChangeMapTheme(SceneThemes._Instance._ThemeOrder[Levels._CurrentLevelIndex / 12 % 12]);
@@ -752,7 +759,7 @@ public class TileManager
         _LevelTime_Dev = _Dev_Time_Save;
         _Dev_Time_Save = -1f;
       }
-      else if (!Settings._LevelEditorEnabled)
+      else if (!SettingsHelper._LevelEditorEnabled)
       {
         if (best_time != null)
         {
@@ -1249,8 +1256,8 @@ public class TileManager
           }
 
       // If difficulty is 0, never check for bat person
-      var chaser_extra = Settings._Extras_CanUse ? LevelModule.ExtraRemoveChaser : 0;
-      if (Settings._DIFFICULTY == 0 && chaser_extra != 1)
+      var chaser_extra = SettingsHelper._Extras_CanUse ? LevelModule.ExtraRemoveChaser : 0;
+      if (SettingsHelper._DIFFICULTY == 0 && chaser_extra != 1)
         hasBat = true;
       if (!hasBat && chaser_extra != 2)
       {
@@ -1264,7 +1271,7 @@ public class TileManager
     // Display level #
     if (GameScript.s_IsMissionsGameMode && !GameScript.s_EditorTesting)
     {
-      var hardmodeadd = Settings._DIFFICULTY == 1 ? "*" : "";
+      var hardmodeadd = SettingsHelper._DIFFICULTY == 1 ? "*" : "";
       _Text_LevelNum.text = $"{Levels._CurrentLevelIndex + 1}{hardmodeadd}";
       if (Menu.s_InMenus)
       {
@@ -1312,7 +1319,7 @@ public class TileManager
 
         if (!enemy_original)
         {
-          var multiplierSetting = Settings._Extras_CanUse ? LevelModule.ExtraEnemyMultiplier : 0;
+          var multiplierSetting = SettingsHelper._Extras_CanUse ? LevelModule.ExtraEnemyMultiplier : 0;
 
           // None
           if (multiplierSetting == 2)
@@ -1426,7 +1433,7 @@ public class TileManager
               break;
             // Move mode; if difficulty 2; always can move
             case "canmove":
-              if (Settings._DIFFICULTY > 1)
+              if (SettingsHelper._DIFFICULTY > 1)
                 script._canMove = true;
               else
                 script._canMove = subobject_base._modifier0.Equals("true") ? true : false;
@@ -1497,7 +1504,7 @@ public class TileManager
 
               var door_new = LoadObject(loadstring);
               object_data_iter++;
-              var door_script = door_new.GetComponent<DoorScript2>();
+              var door_script = door_new.GetComponent<DoorScript>();
               door_script.RegisterButton(ref ui_script);
               break;
           }
@@ -1518,7 +1525,7 @@ public class TileManager
               var door_new = LoadObject(string.Format("{0}_{1}_{2}_rot_{3}_open_{4}", object_data_split[object_data_iter++], object_data_split[object_data_iter++], object_data_split[object_data_iter++], object_data_split[++object_data_iter], object_data_split[++object_data_iter + 1]));
               object_data_iter++;
               object_data_iter++;
-              var door_script = door_new.GetComponent<DoorScript2>();
+              var door_script = door_new.GetComponent<DoorScript>();
               door_script.RegisterButton(ref button_script);
               door_script.transform.GetChild(0).GetChild(1).GetComponent<BoxCollider>().enabled = GameScript.s_EditorEnabled;
               break;
@@ -1527,7 +1534,7 @@ public class TileManager
       // Check for doors
       case "door":
         loadedObject = object_base.LoadResource("Door", container_objects, _LEO_Door._movementSettings._localPos);
-        var door_script0 = loadedObject.GetComponent<DoorScript2>();
+        var door_script0 = loadedObject.GetComponent<DoorScript>();
         door_script0.enabled = false;
         door_script0.enabled = true;
         door_script0.transform.GetChild(0).GetChild(1).GetComponent<BoxCollider>().enabled = GameScript.s_EditorEnabled;
@@ -2639,14 +2646,14 @@ public class TileManager
     //Time.timeScale = 1f;
 
     // Camera zoom
-    if (SettingsModule.CameraZoom == Settings.SettingsSaveData.CameraZoomType.AUTO)
+    if (SettingsModule.CameraZoom == SettingsSaveData.CameraZoomType.AUTO)
     {
-      SettingsModule.CameraZoom = Settings.SettingsSaveData.CameraZoomType.NORMAL;
-      Settings.SetPostProcessing(true);
-      SettingsModule.CameraZoom = Settings.SettingsSaveData.CameraZoomType.AUTO;
+      SettingsModule.CameraZoom = SettingsSaveData.CameraZoomType.NORMAL;
+      SettingsHelper.SetPostProcessing(true);
+      SettingsModule.CameraZoom = SettingsSaveData.CameraZoomType.AUTO;
     }
     else
-      Settings.SetPostProcessing(true);
+      SettingsHelper.SetPostProcessing(true);
 
     // Check backrooms
     if (GameScript.s_Backrooms)
@@ -2677,7 +2684,7 @@ public class TileManager
     {
       LoadMap(mapData);
     }
-    Settings.SetPostProcessing();
+    SettingsHelper.SetPostProcessing();
 
     // Disable display ring
     _Pointer.gameObject.SetActive(false);
@@ -2816,7 +2823,7 @@ public class TileManager
             if (entity == null) continue;
 
             // Check for doors
-            var ds = entity.gameObject.GetComponent<DoorScript2>();
+            var ds = entity.gameObject.GetComponent<DoorScript>();
             if (ds != null)
             {
               var pos_use_local = ds.transform.position - offset;
@@ -2913,7 +2920,7 @@ public class TileManager
           // Check for selection
           if (ControllerManager.GetMouseInput(0, ControllerManager.InputMode.DOWN))
           {
-            var d = h.collider.transform.parent.parent.GetComponent<DoorScript2>();
+            var d = h.collider.transform.parent.parent.GetComponent<DoorScript>();
             if (d != null)
             {
 
@@ -3174,7 +3181,7 @@ public class TileManager
           {
             if (entity == null) continue;
             // Check for doors
-            var ds = entity.gameObject.GetComponent<DoorScript2>();
+            var ds = entity.gameObject.GetComponent<DoorScript>();
             if (ds != null)
             {
               Vector3 pos_use2 = ds.transform.position - offset;
@@ -3206,9 +3213,9 @@ public class TileManager
         // Check toggle
         if (ControllerManager.GetKey(Key.T))
         {
-          DoorScript2 script = null;
-          if (_SelectedObject.name.Equals("Door")) script = _SelectedObject.GetComponent<DoorScript2>();
-          if (_SelectedObject.name.Equals("Door_Obstacle") || _SelectedObject.name.Equals("Door_Under")) script = _SelectedObject.parent.parent.GetComponent<DoorScript2>();
+          DoorScript script = null;
+          if (_SelectedObject.name.Equals("Door")) script = _SelectedObject.GetComponent<DoorScript>();
+          if (_SelectedObject.name.Equals("Door_Obstacle") || _SelectedObject.name.Equals("Door_Under")) script = _SelectedObject.parent.parent.GetComponent<DoorScript>();
           script.Toggle();
         }
       },
@@ -3222,7 +3229,7 @@ public class TileManager
         _onCopy = (GameObject g) =>
         {
           // Link new door to old
-          g.GetComponent<DoorScript2>().LinkToDoor(_SelectedObject.GetComponent<DoorScript2>());
+          g.GetComponent<DoorScript>().LinkToDoor(_SelectedObject.GetComponent<DoorScript>());
         }
       },
       new LevelEditorObject.AddSettings()
@@ -3960,7 +3967,7 @@ public class TileManager
         var cui = selection.GetComponent<CustomEntityUI>();
         foreach (var activate in cui._activate)
           if (activate != null && activate.gameObject.name == "Door")
-            ((DoorScript2)activate)._Button = null;
+            ((DoorScript)activate)._Button = null;
         cui._activate = new CustomEntity[0];
       }
       // Link CustomEntityUI with CustomEntity
@@ -3990,7 +3997,7 @@ public class TileManager
 
             if (ce.name == "Door")
             {
-              ((DoorScript2)ce)._Button = custom_entity_ui;
+              ((DoorScript)ce)._Button = custom_entity_ui;
             }
           }
           _IsLinking = false;
@@ -4033,7 +4040,7 @@ public class TileManager
       var returnString = "";
       returnString += _SaveFunction_Pos(leo, pos_use) + "_" +
         _SaveFunction_Rot(g);
-      var doorScript = g.GetComponent<DoorScript2>();
+      var doorScript = g.GetComponent<DoorScript>();
       if (doorScript != null)
       {
         if (doorScript._HasButton) return null;
@@ -5185,7 +5192,7 @@ public class TileManager
       if (
         !Menu.s_InMenus ||
         (
-          ((Menu.s_CurrentMenu._Type != Menu.MenuType.LEVELS) || (Menu.s_CurrentMenu._Type == Menu.MenuType.LEVELS && Menu.s_CurrentMenu._dropdownCount == 0)) &&
+          ((Menu.s_CurrentMenu._Type != Menu.MenuType.LEVELS) || (Menu.s_CurrentMenu._Type == Menu.MenuType.LEVELS && Menu.s_CurrentMenu._DropdownCount == 0)) &&
           Menu.s_CurrentMenu._Type != Menu.MenuType.EDITOR_LEVELS && Menu.s_CurrentMenu._Type != Menu.MenuType.EDITOR_PACKS_EDIT
         )
         )

@@ -1,12 +1,19 @@
 using System.Collections.Generic;
+using Assets.Scripts.Objects;
+using Assets.Scripts.Objects.CustomEntities;
+using Assets.Scripts.Ragdoll;
+using Assets.Scripts.Settings;
+using Assets.Scripts.Settings.Serialization;
+using Assets.Scripts.UI.Menus;
+using Assets.Scripts.Game.Items;
 using UnityEngine;
 
 //
 public static class SurvivalManager
 {
   //
-  static Settings.SettingsSaveData SettingsModule { get { return Settings.s_SaveData.Settings; } }
-  static Settings.LevelSaveData LevelModule { get { return Settings.s_SaveData.LevelData; } }
+  static SettingsSaveData SettingsModule { get { return SettingsHelper.s_SaveData.Settings; } }
+  static LevelSaveData LevelModule { get { return SettingsHelper.s_SaveData.LevelData; } }
 
   //
   public static bool _WavePlaying;
@@ -177,7 +184,7 @@ public static class SurvivalManager
     if (PlayerScript.s_Players != null)
     {
       PlayerScript alive_player = null;
-      for (var i = 0; i < Settings._NumberPlayers; i++)
+      for (var i = 0; i < SettingsHelper._NumberPlayers; i++)
       {
         //if (i >= PlayerScript._Players.Count) continue;
         var p = PlayerScript.s_Players[i];
@@ -525,7 +532,7 @@ public static class SurvivalManager
     if (_Wave > highestWave)
     {
       LevelModule.SetHighestSurvivalWave(_Wave);
-      Settings.LevelSaveData.Save();
+      LevelSaveData.Save();
     }
 
     // Check survival achievements
@@ -550,7 +557,7 @@ $@"<color={Menu._COLOR_GRAY}>new survival map unlocked</color>
 you survived 10 waves and have unlocked a <color=yellow>new survival map</color>!
 "
         }, "nice", Menu.MenuType.NONE, null, true, null,
-          (Menu.MenuComponent c) =>
+          (MenuComponent c) =>
           {
             GameScript.TogglePause();
             Menu.HideMenus();
@@ -595,7 +602,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     if (PlayerScript.s_Players != null)
     {
       PlayerScript alive_player = null;
-      for (var i = 0; i < Settings._NumberPlayers; i++)
+      for (var i = 0; i < SettingsHelper._NumberPlayers; i++)
       {
         //if (i >= PlayerScript._Players.Count) continue;
         var p = PlayerScript.s_Players[i];
@@ -652,7 +659,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
   {
     // Heal; check for armor perk
     //var healed = false;
-    if (Shop.Perk.HasPerk(p._Id, Shop.Perk.PerkType.ARMOR_UP))
+    if (Perk.HasPerk(p._Id, Perk.PerkType.ARMOR_UP))
     {
       if (p._Ragdoll._health != 5)
       {
@@ -925,7 +932,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     // Update score text
     var text = "";
     if (!GameScript.s_Paused && !Menu.s_InMenus)
-      for (var i = 0; i < Settings._NumberPlayers; i++)
+      for (var i = 0; i < SettingsHelper._NumberPlayers; i++)
         text += $"<color={PlayerProfile.s_Profiles[i].GetColorName(false)}>p{i + 1}:</color> {_PlayerScores[i]}\n";
     _Text_Scores.text = text;
 
@@ -1076,8 +1083,8 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     // Clamp
     waitForSize = Mathf.Clamp(waitForSize, 0, EnemyScript._MAX_RAGDOLLS_ALIVE - 2);
 
-    if (Settings._NumberPlayers > 1)
-      number = Mathf.Clamp(Mathf.RoundToInt(number * (1f + Settings._NumberPlayers * 0.4f)), 0, EnemyScript._MAX_RAGDOLLS_ALIVE - 1);
+    if (SettingsHelper._NumberPlayers > 1)
+      number = Mathf.Clamp(Mathf.RoundToInt(number * (1f + SettingsHelper._NumberPlayers * 0.4f)), 0, EnemyScript._MAX_RAGDOLLS_ALIVE - 1);
     for (var i = 1; i < number; i++)
     {
       _Wave_enemies.Enqueue(new EnemyScript.SurvivalAttributes()
