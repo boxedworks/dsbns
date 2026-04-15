@@ -13,11 +13,6 @@ using Assets.Scripts.UI.Menus;
 using Assets.Scripts.Objects;
 using Assets.Scripts.Objects.CustomEntities;
 using Assets.Scripts.Game.Items;
-using Assets.Scripts.Game.Items;
-
-
-#if !DISABLESTEAMWORKS
-#endif
 
 public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
 {
@@ -204,7 +199,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
           if (p == null) continue;
 
           // If self, skip
-          if (p.transform.GetInstanceID() == transform.GetInstanceID() || p._ragdoll._IsDead) continue;
+          if (p.transform.GetEntityId() == transform.GetEntityId() || p._ragdoll._IsDead) continue;
 
           // If has same _PlayerID, increment id and set do not break while loop
           if (p._Id == _Id)
@@ -300,7 +295,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
     _Profile.OnPlayerSpawn();
     _Profile.UpdateHealthUI();
 
-    ControllerManager.GetPlayerGamepad(_Id)?.SetMotorSpeeds(0f, 0f);
+    Rumble(ControllerManager.GetPlayerGamepad(_Id), 0f, 0f, 0f);
 
     // Handle rain VFX
     if (_IsPlayer1)
@@ -1157,7 +1152,10 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
       {
         //_camPos.z -= 1.9f;
       }
+
+#if !UNITY_VR
       GameResources._Camera_Main.transform.position = _camPos;
+#endif
 
       // Set audio listener y
       var audioListenerPos = GameResources.s_AudioListener.transform.position;
@@ -2123,15 +2121,6 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
       transform.LookAt(transform.position + (new Vector3(GameResources._Camera_Main.transform.right.x, 0f, GameResources._Camera_Main.transform.right.z).normalized * input2.x + new Vector3(GameResources._Camera_Main.transform.forward.x, 0f, GameResources._Camera_Main.transform.forward.z).normalized * input2.y).normalized * 5f);
   }
 
-  public void ToggleLaser()
-  {
-    /*if (_ragdoll._dead) return;
-    if (_ragdoll._itemL != null && _ragdoll._itemL._type == ItemScript.ItemType.GUN)
-      _ragdoll._itemL.ToggleLaser();
-    if (_ragdoll._itemR != null && _ragdoll._itemR._type == ItemScript.ItemType.GUN)
-      _ragdoll._itemR.ToggleLaser();*/
-  }
-
   float[] _loadout_info;
   int[] _item_info;
   public void SwapLoadouts()
@@ -2430,9 +2419,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
       var gamepad = ControllerManager.GetPlayerGamepad(_Id);
       if (gamepad != null)
       {
-        if (_rumbleCoroutine != null)
-          StopCoroutine(_rumbleCoroutine);
-        _rumbleCoroutine = StartCoroutine(rumbleCo(gamepad, 0.25f, 0.2f, 0.2f));
+        Rumble(gamepad, 0.25f, 0.2f, 0.2f);
       }
     }
   }
@@ -2440,10 +2427,25 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
   Coroutine _rumbleCoroutine;
   IEnumerator rumbleCo(Gamepad gamepad, float time, float intensityLeft, float intensityRight)
   {
-    gamepad.SetMotorSpeeds(intensityLeft, intensityRight);
+    SetMotorSpeeds(gamepad, intensityLeft, intensityRight);
     yield return new WaitForSecondsRealtime(time);
-    gamepad.SetMotorSpeeds(0f, 0f);
+    SetMotorSpeeds(gamepad, 0f, 0f);
   }
+  void Rumble(Gamepad gamepad, float time, float intensityLeft, float intensityRight)
+  {
+    if (gamepad == null) return;
+    if (_rumbleCoroutine != null)
+      StopCoroutine(_rumbleCoroutine);
+    if (intensityLeft == 0f && intensityRight == 0f)
+      SetMotorSpeeds(gamepad, 0f, 0f);
+    else
+      _rumbleCoroutine = StartCoroutine(rumbleCo(gamepad, time, intensityLeft, intensityRight));
+  }
+  void SetMotorSpeeds(Gamepad gamepad, float left, float right)
+  {
+    gamepad.SetMotorSpeeds(left, right);
+  }
+
 
   public void OnToggle(ActiveRagdoll source, ActiveRagdoll.DamageSourceType damageSourceType)
   {
@@ -2456,9 +2458,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
       var gamepad = ControllerManager.GetPlayerGamepad(_Id);
       if (gamepad != null)
       {
-        if (_rumbleCoroutine != null)
-          StopCoroutine(_rumbleCoroutine);
-        _rumbleCoroutine = StartCoroutine(rumbleCo(gamepad, 0.18f, 0.5f, 0.5f));
+        Rumble(gamepad, 0.18f, 0.5f, 0.5f);
       }
     }
 

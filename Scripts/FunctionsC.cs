@@ -12,16 +12,15 @@ public static class FunctionsC
   static Dictionary<string, Dictionary<string, AudioSource>> s_soundLibrary;
   public static ParticleSystem[] s_ParticlesAll;
   //static List<ParticleSystem> _BloodParticles;
-  public static Transform s_Sounds;
+  public static Transform s_Sounds { get { return GameResources.s_Sounds; } }
 
   public static BookManager s_BookManager;
   public static void Init()
   {
-    s_soundLibrary = new Dictionary<string, Dictionary<string, AudioSource>>();
-    s_ParticlesAll = Object.FindObjectsByType<ParticleSystem>(FindObjectsSortMode.None);
+    s_soundLibrary = new();
+    s_ParticlesAll = Object.FindObjectsByType<ParticleSystem>();
 
     // Populate audio library
-    s_Sounds = Camera.main.transform.parent.GetChild(2);
     for (var i = 0; i < s_Sounds.childCount; i++)
     {
       var root = s_Sounds.GetChild(i);

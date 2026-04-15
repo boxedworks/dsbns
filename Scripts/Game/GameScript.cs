@@ -10,6 +10,8 @@ using Assets.Scripts.Settings.Serialization;
 using Assets.Scripts.UI;
 using Assets.Scripts.UI.Menus;
 using UnityEngine;
+using UnityEngine.InputSystem;
+using UnityEngine.XR;
 using Random = UnityEngine.Random;
 
 public class GameScript : MonoBehaviour
@@ -215,6 +217,12 @@ public class GameScript : MonoBehaviour
   void Start()
   {
     s_Singleton = this;
+
+#if !UNITY_VR
+    Application.runInBackground = false;
+#else
+    Debug.Log("Running in VR mode");
+#endif
 
     //
     s_DebugText = GameObject.Find("DebugText").GetComponent<TextMesh>();
@@ -905,6 +913,16 @@ public class GameScript : MonoBehaviour
           Menu.OnControllersChangedFix();
         }
       }
+
+      // Check vr
+#if UNITY_VR
+      var ui = GameResources._UI_Player.parent;
+      ui.parent = GameScript.s_Singleton.transform;
+      ui.localScale = new Vector3(0.8f, 0.8f, 0.8f);
+
+      ui.SetPositionAndRotation(GameResources._XrRight.position, GameResources._XrRight.rotation);
+      ui.Rotate(new Vector3(90f, 0f, 0f), Space.Self);
+#endif
     }
   }
 

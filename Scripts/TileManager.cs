@@ -256,8 +256,8 @@ public class TileManager
         for (; h2 < _Height; h2++)
         {
           GameObject tile = _Map.GetChild(2 + h2 + w2 * _Height).gameObject;
-          if (tile.GetInstanceID() == _Tile.gameObject.GetInstanceID()) continue;
-          Tile t = new Tile(tile);
+          if (tile.GetEntityId() == _Tile.gameObject.GetEntityId()) continue;
+          var t = new Tile(tile);
           _Tiles.Add(t);
           tile.GetComponent<Collider>().enabled = true;
         }
@@ -273,7 +273,7 @@ public class TileManager
     {
       for (; h < _Height; h++)
       {
-        Tile t = SpawnTile(w, h);
+        var t = SpawnTile(w, h);
         _Tiles.Add(t);
       }
       h = 0;
@@ -938,11 +938,22 @@ public class TileManager
       _Floor.localScale = new Vector3(_Width * 0.5f, 1f, _Height * 0.5f);
 
       // Set camera pos to playerspawn
-      var campos = GameResources._Camera_Main.transform.position;
       var playerspawnpos = PlayerspawnScript._PlayerSpawns[0].transform.position;
+#if !UNITY_VR
+      var campos = GameResources._Camera_Main.transform.position;
       campos.x = playerspawnpos.x;
       campos.z = playerspawnpos.z + 3.6f;
       GameResources._Camera_Main.transform.position = campos;
+#else
+      var xorigin = GameResources._Camera_Main.transform.parent;
+      var campos = xorigin.position;
+      campos.x = playerspawnpos.x;
+      campos.z = playerspawnpos.z + 3.6f;
+      xorigin.position = campos;
+
+      //var scale = 30f;
+      //xorigin.localScale = new Vector3(scale, scale, scale);
+#endif
 
       // Check special objects before build
       var objectsToDisable = new List<GameObject>();
@@ -5150,8 +5161,7 @@ public class TileManager
       child.localPosition += new Vector3(-height / 2f * 2.5f - (2.5f * 0.5f), -width / 2f * 2.5f, 0f);
 
     // Rotate / scale map
-    container.Rotate(new Vector3(1f, 0f, 1f) * -90f);
-    float mod = 12f / (width + widthBorder);
+    var mod = 12f / (width + widthBorder);
     container.localScale = new Vector3(0.17f * mod, 0.17f * mod, 0.01f);
 
     // Set position
@@ -5178,6 +5188,7 @@ public class TileManager
     else
       container.localPosition = new Vector3(8.88f, -3.78f, 0f);
 
+    container.localRotation = Quaternion.Euler(180f, 0f, 270f);
     GameScript._lp0 = container;
 
     // Wait for spawn and check if should delete

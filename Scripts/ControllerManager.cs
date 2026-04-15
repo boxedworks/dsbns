@@ -21,6 +21,9 @@ public static class ControllerManager
   {
     get
     {
+#if UNITY_VR
+      return 1;
+#endif
       if (SettingsModule.IgnoreFirstController && _Gamepads.Count > 0)
         return _Gamepads.Count - 1;
       return _Gamepads.Count;
@@ -125,33 +128,6 @@ public static class ControllerManager
     void Input_action.IMenuActions.OnRight(InputAction.CallbackContext context)
     {
 
-    }
-    void Input_action.IMenuActions.OnPageLeft(InputAction.CallbackContext context)
-    {
-      /*if (Menu._CurrentMenu == null) return;
-      PlayerProfile.OnControllerMove();
-      if (Menu._CurrentMenu == Menu._Menu_LevelSelect)
-        Menu._CurrentMenu._menuActions[Menu._CurrentMenu._menuActions.Length - 3](0);
-      else if (Menu._CurrentMenu == Menu._Menu_LevelSelected)
-        GameScript.MoveLevelSelectedMenu(-1);*/
-      /*if (!Menu2._InMenus) return;
-      PlayerScript p = GetPlayer(context);
-      if (p != null)
-        p._profile._loadoutIter--;
-        */
-    }
-    void Input_action.IMenuActions.OnPageRight(InputAction.CallbackContext context)
-    {
-      /*if (Menu._CurrentMenu == null) return;
-      PlayerProfile.OnControllerMove();
-      if (Menu._CurrentMenu == Menu._Menu_LevelSelect)
-        Menu._CurrentMenu._menuActions[Menu._CurrentMenu._menuActions.Length - 2](0);
-      else if (Menu._CurrentMenu == Menu._Menu_LevelSelected)
-        GameScript.MoveLevelSelectedMenu(1);*/
-      /*if (!Menu2._InMenus) return;
-      PlayerScript p = GetPlayer(context);
-      if (p != null)
-        p._profile._loadoutIter++;*/
     }
     void Input_action.IMenuActions.OnPause(InputAction.CallbackContext context)
     {
@@ -295,24 +271,6 @@ public static class ControllerManager
         p.ReloadMap();
       }
     }
-    void Input_action.IPlayerActions.OnCycleWeaponLeft(InputAction.CallbackContext context)
-    {
-
-    }
-    void Input_action.IPlayerActions.OnCycleWeaponRight(InputAction.CallbackContext context)
-    {
-
-    }
-    void Input_action.IPlayerActions.OnLaserSight(InputAction.CallbackContext context)
-    {
-      if (context.phase != InputActionPhase.Started) return;
-      if (Menu.s_InMenus) return;
-      PlayerScript p = GetPlayer(context);
-      if (p == null) return;
-      p.ToggleLaser();
-    }
-    void Input_action.IPlayerActions.OnWeaponLeft(InputAction.CallbackContext context) { }
-    void Input_action.IPlayerActions.OnWeaponRight(InputAction.CallbackContext context) { }
   }
 
   public static float GetControllerAxis(int playerID, Axis axis)

@@ -546,7 +546,7 @@ namespace Assets.Scripts.UI.Menus
         var after_lines = "";
         while (afterNewLineCount-- > 0) after_lines += "\n";
         s_menus[type].AddComponent(lines)
-          .AddComponent(ShopHelper.Tips.GetTip(GameScript.s_GameMode) + after_lines)
+          .AddComponent(ShopHelper.TipHelper.GetTip(GameScript.s_GameMode) + after_lines)
           .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
           {
             component._visible = SettingsModule.ShowTips;
@@ -560,7 +560,7 @@ namespace Assets.Scripts.UI.Menus
           if (!SettingsModule.ShowTips) return;
           var last_c = s_menus[type]._MenuComponents.Where(component => component.GetDisplayText(false).Contains("*tip")).Single();
           var afterNewLineCount = System.Text.RegularExpressions.Regex.Matches(last_c.GetDisplayText(false), "\n").Count;
-          var tip = ShopHelper.Tips.GetTip(GameScript.s_GameMode);
+          var tip = ShopHelper.TipHelper.GetTip(GameScript.s_GameMode);
 
           // Check if tip has buttons to display
           if (tip.Contains("&"))
@@ -1277,7 +1277,7 @@ namespace Assets.Scripts.UI.Menus
             s_CurrentMenu._SelectionIndex = Levels._LevelPacks_Play_SaveIndex;
             _CanRender = false;
             RenderMenu();
-            Menu.SendInput(Input.SPACE);
+            SendInput(Input.SPACE);
           }
           else
             CommonEvents._SwitchMenu(MenuType.EDITOR_MAIN);
@@ -2063,7 +2063,7 @@ namespace Assets.Scripts.UI.Menus
                         CommonEvents._SwitchMenu(MenuType.EDITOR_PACKS_EDIT);
                         _CanRender = false;
                         RenderMenu();
-                        Menu.SendInput(Input.SPACE);
+                        SendInput(Input.SPACE);
                         s_CurrentMenu._SelectionIndex = save_index + 1;
                         s_CurrentMenu._SelectedComponent._onFocus?.Invoke(s_CurrentMenu._SelectedComponent);
                         _CanRender = false;
@@ -2515,8 +2515,8 @@ namespace Assets.Scripts.UI.Menus
               s_CurrentMenu._SelectionIndex = Levels._LevelPackMenu_SaveIndex;
               _CanRender = false;
               RenderMenu();
-              Menu.SendInput(Input.SPACE);
-              Menu.SendInput(Input.DOWN);
+              SendInput(Input.SPACE);
+              SendInput(Input.DOWN);
             })
             .AddEvent(EventType.ON_FOCUS, (MenuComponent c) =>
             {
@@ -3914,7 +3914,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
         m._OnDropdownRemoved += () =>
         {
           if (s_Text.transform.childCount == 1)
-            GameObject.Destroy(s_Text.transform.GetChild(0).gameObject);
+            Object.Destroy(s_Text.transform.GetChild(0).gameObject);
         };
 
         m._OnSwitchTo += () =>
@@ -4190,10 +4190,10 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
           if (s_PreviousMenuType != MenuType.EDIT_LOADOUT)
           {
 
-            Menu.SetCurrentSelection(0);
-            Menu.SetCurrentSelection(PlayerProfile.s_Profiles[0]._LoadoutIndex);
-            Menu._CanRender = true;
-            Menu.RenderMenu();
+            SetCurrentSelection(0);
+            SetCurrentSelection(PlayerProfile.s_Profiles[0]._LoadoutIndex);
+            _CanRender = true;
+            RenderMenu();
           }
           s_PreviousMenuType = MenuType.SELECT_LOADOUT;
         };
@@ -6150,7 +6150,12 @@ go to the <color=yellow>SHOP</color> to buy something~1
             });
           }
 
-          component.SetDropdownData("depth of field\n*adds a blur effect\n\n", selections, actions, selection_match);
+          var vrText = "";
+#if UNITY_VR
+          vrText = "\ndisabled in VR";
+#endif
+          var dofText = $"depth of field\n*adds a blur effect{vrText}\n\n";
+          component.SetDropdownData(dofText, selections, actions, selection_match);
         })
 
       // Back button

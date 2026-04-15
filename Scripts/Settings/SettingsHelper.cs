@@ -3,6 +3,7 @@ using Assets.Scripts.Game.Items;
 using Assets.Scripts.Settings.Extras;
 using Assets.Scripts.Settings.Serialization;
 using UnityEngine;
+using UnityEngine.Rendering.Universal;
 
 namespace Assets.Scripts.Settings
 {
@@ -731,8 +732,7 @@ namespace Assets.Scripts.Settings
       GameScript.UpdateAmbientLight();
 
       // Bloom
-      UnityEngine.Rendering.Universal.Bloom bloom = null;
-      if (profile_.TryGet(out bloom))
+      if (profile_.TryGet(out Bloom bloom))
       {
         bloom.intensity.value = SettingsModule.BloomAmount switch
         {
@@ -744,12 +744,14 @@ namespace Assets.Scripts.Settings
       }
 
       // DOF
-      UnityEngine.Rendering.Universal.DepthOfField dof = null;
-      if (profile_.TryGet(out dof))
+      if (profile_.TryGet(out DepthOfField dof))
       {
+#if UNITY_VR
+        dof.mode.value = DepthOfFieldMode.Off;
+#else
         if (SettingsModule.DepthOfFieldAmount > 0 && !forceOffDOF)
         {
-          dof.mode.value = UnityEngine.Rendering.Universal.DepthOfFieldMode.Bokeh;
+          dof.mode.value = DepthOfFieldMode.Bokeh;
 
           var apertureMod = SettingsModule.DepthOfFieldAmount == 1 ? 1.6f : 1.2f;
 
@@ -786,14 +788,15 @@ namespace Assets.Scripts.Settings
 
         else
         {
-          dof.mode.value = UnityEngine.Rendering.Universal.DepthOfFieldMode.Off;
+          dof.mode.value = DepthOfFieldMode.Off;
         }
+#endif
       }
     }
 
     public static Resolution GetSafeMaxResolution()
     {
-      var max = Screen.resolutions[Screen.resolutions.Length - 1];
+      var max = Screen.resolutions[^1];
       if (max.width > 1920)
         for (var i = Screen.resolutions.Length - 1; i >= 0; i--)
         {

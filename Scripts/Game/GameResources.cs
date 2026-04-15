@@ -45,7 +45,10 @@ public static class GameResources
 
   public static bool _Loaded;
 
-  public static Transform _Container_Objects, _UI_Player, s_Backrooms;
+  public static Transform _Container_Objects, _UI_Player, s_Backrooms, s_Sounds,
+
+  _XrLeft, _XrRight;
+
   public static Camera _Camera_Main, _Camera_Menu, _Camera_IgnorePP;
   public static AudioListener s_AudioListener;
   public static MeshRenderer _CameraFader;
@@ -129,12 +132,14 @@ public static class GameResources
     _Camera_Menu = GameObject.Find("Menu Camera").GetComponent<Camera>();
     _Camera_IgnorePP = GameObject.Find("NoPPCamera").GetComponent<Camera>();
 
+    s_Sounds = GameObject.Find("Sounds").transform;
+
     s_AudioListener = _Camera_Main.transform.GetChild(1).GetComponent<AudioListener>();
 
     _CameraFader = GameObject.Find("Fader").GetComponent<MeshRenderer>();
 
     _Container_Objects = GameObject.Find("Objects").transform;
-    _UI_Player = _Camera_Main.transform.GetChild(0).GetChild(1);
+    _UI_Player = GameObject.Find("UI").transform.GetChild(1);
 
     _Armor = Resources.Load("Armor") as GameObject;
     _Crown = Resources.Load("Crown") as GameObject;
@@ -148,6 +153,9 @@ public static class GameResources
 
     s_Backrooms = GameObject.Find("Backrooms").transform;
     s_Backrooms.gameObject.SetActive(false);
+
+    _XrLeft = GameObject.Find("Controller (left)").transform;
+    _XrRight = GameObject.Find("Controller (right)").transform;
 
     //
     //if (GameScript._s_Singleton.ReplacementShader != null)
