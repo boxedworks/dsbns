@@ -6151,9 +6151,8 @@ go to the <color=yellow>SHOP</color> to buy something~1
           }
 
           var vrText = "";
-#if UNITY_VR
-          vrText = "\ndisabled in VR";
-#endif
+          if (GameScript.s_IsVr)
+            vrText = "\n*disabled in VR";
           var dofText = $"depth of field\n*adds a blur effect{vrText}\n\n";
           component.SetDropdownData(dofText, selections, actions, selection_match);
         })
@@ -6179,7 +6178,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
         {
 
           // Set display text
-          var type_text = SettingsModule.UseOrthographicCamera ? "2D" : "3D";
+          var type_text = SettingsHelper._UseOrthographicCamera ? "2D" : "3D";
           component.SetDisplayText(string.Format(format_options, "camera type:", $"{type_text}"));
 
           // Set dropdown data
@@ -6197,7 +6196,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
                 SettingsModule.CameraZoom = SettingsSaveData.CameraZoomType.NORMAL;
               }
 
-              SettingsModule.UseOrthographicCamera = is_ortho;
+              SettingsHelper._UseOrthographicCamera = is_ortho;
 
               SettingsHelper.SetPostProcessing();
               PlayerScript.ResetCamera();
@@ -6231,9 +6230,9 @@ go to the <color=yellow>SHOP</color> to buy something~1
             {
               actions.Add((MenuComponent component0) =>
               {
-                if (!SettingsModule.UseOrthographicCamera)
+                if (!SettingsHelper._UseOrthographicCamera)
                 {
-                  SettingsModule.UseOrthographicCamera = true;
+                  SettingsHelper._UseOrthographicCamera = true;
                 }
 
                 SettingsModule.CameraZoom = (SettingsSaveData.CameraZoomType)component0._dropdownIndex;
@@ -6255,7 +6254,10 @@ go to the <color=yellow>SHOP</color> to buy something~1
           }
 
           // Update dropdown data
-          component.SetDropdownData("camera zoom\n\n", selections, actions, selection_match);
+          var vrText = "";
+          if (GameScript.s_IsVr)
+            vrText = "\n*disabled in VR";
+          component.SetDropdownData($"camera zoom{vrText}\n\n", selections, actions, selection_match);
         })
 
       // Blood toggle

@@ -939,21 +939,25 @@ public class TileManager
 
       // Set camera pos to playerspawn
       var playerspawnpos = PlayerspawnScript._PlayerSpawns[0].transform.position;
-#if !UNITY_VR
-      var campos = GameResources._Camera_Main.transform.position;
-      campos.x = playerspawnpos.x;
-      campos.z = playerspawnpos.z + 3.6f;
-      GameResources._Camera_Main.transform.position = campos;
-#else
-      var xorigin = GameResources._Camera_Main.transform.parent;
-      var campos = xorigin.position;
-      campos.x = playerspawnpos.x;
-      campos.z = playerspawnpos.z + 3.6f;
-      xorigin.position = campos;
+      if (!GameScript.s_IsVr)
+      {
+        var campos = GameResources._Camera_Main.transform.position;
+        campos.x = playerspawnpos.x;
+        campos.z = playerspawnpos.z + 3.6f;
+        GameResources._Camera_Main.transform.position = campos;
+      }
+      else
+      {
+        var xorigin = GameResources._Camera_Main.transform.parent;
+        var campos = xorigin.position;
+        campos.x = playerspawnpos.x;
+        campos.y = -10f;
+        campos.z = playerspawnpos.z + 3.6f;
+        xorigin.position = campos;
 
-      //var scale = 30f;
-      //xorigin.localScale = new Vector3(scale, scale, scale);
-#endif
+        //var scale = 30f;
+        //xorigin.localScale = new Vector3(scale, scale, scale);
+      }
 
       // Check special objects before build
       var objectsToDisable = new List<GameObject>();

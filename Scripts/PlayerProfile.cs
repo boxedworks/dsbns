@@ -546,19 +546,22 @@ public class PlayerProfile
 
     // Check axis selections
     var gamepad = ControllerManager.GetPlayerGamepad(_Id);
-    if (gamepad.dpad.left.wasPressedThisFrame)
+    if (gamepad != null)
     {
-      if (Menu.s_CurrentMenu._Type == Menu.MenuType.VERSUS)
-        VersusMode.IncrementPlayerTeam(_Id, -1);
-      else
-        _LoadoutIndex--;
-    }
-    if (gamepad.dpad.right.wasPressedThisFrame)
-    {
-      if (Menu.s_CurrentMenu._Type == Menu.MenuType.VERSUS)
-        VersusMode.IncrementPlayerTeam(_Id, 1);
-      else
-        _LoadoutIndex++;
+      if (gamepad.dpad.left.wasPressedThisFrame)
+      {
+        if (Menu.s_CurrentMenu._Type == Menu.MenuType.VERSUS)
+          VersusMode.IncrementPlayerTeam(_Id, -1);
+        else
+          _LoadoutIndex--;
+      }
+      if (gamepad.dpad.right.wasPressedThisFrame)
+      {
+        if (Menu.s_CurrentMenu._Type == Menu.MenuType.VERSUS)
+          VersusMode.IncrementPlayerTeam(_Id, 1);
+        else
+          _LoadoutIndex++;
+      }
     }
   }
 

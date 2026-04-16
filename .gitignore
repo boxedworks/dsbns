@@ -86,6 +86,7 @@ Audio/
 Resources/
 Scenes/
 InputActions/
+SteamVR*/
 
 *.png
 *.jpg

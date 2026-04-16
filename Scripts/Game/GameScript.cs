@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using Assets.Scripts.Game.Items;
@@ -9,9 +10,9 @@ using Assets.Scripts.Settings.Localization;
 using Assets.Scripts.Settings.Serialization;
 using Assets.Scripts.UI;
 using Assets.Scripts.UI.Menus;
+using Assets.Scripts.XR;
 using UnityEngine;
-using UnityEngine.InputSystem;
-using UnityEngine.XR;
+using Valve.VR;
 using Random = UnityEngine.Random;
 
 public class GameScript : MonoBehaviour
@@ -69,6 +70,8 @@ public class GameScript : MonoBehaviour
     }
   }
 
+  public static bool s_IsVr;
+
   public static int s_GameId;
 
   public void OnApplicationQuit()
@@ -79,6 +82,12 @@ public class GameScript : MonoBehaviour
       SettingsModule.Fullscreen = Screen.fullScreen;
     }
     SettingsSaveData.Save();
+
+    // Check XR
+    if (s_IsVr)
+    {
+      ManualXRControl.StopXR();
+    }
 
     //if (!Application.isEditor) System.Diagnostics.Process.GetCurrentProcess().Kill();
     Application.Quit();
@@ -218,16 +227,55 @@ public class GameScript : MonoBehaviour
   {
     s_Singleton = this;
 
-#if !UNITY_VR
-    Application.runInBackground = false;
-#else
-    Debug.Log("Running in VR mode");
-#endif
+    GameResources.Init();
+
+    var args = Environment.GetCommandLineArgs();
+    s_IsVr = true;//Array.Exists(args, element => element.Equals("-vr", StringComparison.OrdinalIgnoreCase));
+
+    if (!s_IsVr)
+    {
+      Application.runInBackground = false;
+
+      // Disable XR objects
+      GameResources._XrLeft.gameObject.SetActive(false);
+      GameResources._XrRight.gameObject.SetActive(false);
+    }
+    else
+    {
+      Debug.Log("Starting XR Mode");
+
+      StartCoroutine(ManualXRControl.StartXRCoroutine(() =>
+      {
+        // Adjust UI for VR mode
+        var ui = GameResources._UI_Player.parent;
+        ui.parent = s_Singleton.transform;
+        ui.localScale = new Vector3(0.8f, 0.8f, 0.8f);
+
+        GameResources._Camera_Main.transform.parent.localScale = new Vector3(30f, 30f, 30f);
+
+        // Enable vr scripts
+        GameResources._Camera_Main.transform.parent.GetComponent<SteamVR_PlayArea>().enabled = true;
+        GameResources._Camera_Main.GetComponent<SteamVR_CameraHelper>().enabled = true;
+        GameResources._XrLeft.GetComponent<SteamVR_Behaviour_Pose>().enabled = true;
+        GameResources._XrLeft.GetChild(0).GetComponent<SteamVR_RenderModel>().enabled = true;
+        GameResources._XrRight.GetComponent<SteamVR_Behaviour_Pose>().enabled = true;
+        GameResources._XrRight.GetChild(0).GetComponent<SteamVR_RenderModel>().enabled = true;
+
+        //
+        SteamVR_Actions.Player.Activate();
+        SteamVR_Actions.Menu.Activate();
+
+        //
+        ManualXRControl.Recenter();
+
+        //
+        Debug.Log("XR Mode started successfully.");
+      }));
+    }
 
     //
     s_DebugText = GameObject.Find("DebugText").GetComponent<TextMesh>();
 
-    GameResources.Init();
     s_Music = GameObject.Find("Music").GetComponent<AudioSource>();
     FunctionsC.MusicManager.Init();
 
@@ -915,14 +963,13 @@ public class GameScript : MonoBehaviour
       }
 
       // Check vr
-#if UNITY_VR
-      var ui = GameResources._UI_Player.parent;
-      ui.parent = GameScript.s_Singleton.transform;
-      ui.localScale = new Vector3(0.8f, 0.8f, 0.8f);
+      if (s_IsVr)
+      {
+        var ui = GameResources._UI_Player.parent;
 
-      ui.SetPositionAndRotation(GameResources._XrRight.position, GameResources._XrRight.rotation);
-      ui.Rotate(new Vector3(90f, 0f, 0f), Space.Self);
-#endif
+        ui.SetPositionAndRotation(GameResources._XrRight.position, GameResources._XrRight.rotation);
+        ui.Rotate(new Vector3(90f, 0f, 0f), Space.Self);
+      }
     }
   }
 
@@ -1013,11 +1060,13 @@ public class GameScript : MonoBehaviour
     }
     _LastPause = Time.unscaledTime;
     s_Paused = !s_Paused;
+
+    // Paused
     if (s_Paused)
     {
       Time.timeScale = 0f;
       Menu.OnPause(afterUnlockMenu);
-      System.GC.Collect();
+      GC.Collect();
       TileManager._Text_LevelNum.gameObject.SetActive(false);
       TileManager._Text_LevelTimer.gameObject.SetActive(false);
       TileManager._Text_LevelTimer_Best.gameObject.SetActive(false);
@@ -1028,6 +1077,8 @@ public class GameScript : MonoBehaviour
       if (SettingsModule.HideUI)
         PlayerProfile.ShowAll();
     }
+
+    // Unpaused
     else
     {
       Time.timeScale = 1f;

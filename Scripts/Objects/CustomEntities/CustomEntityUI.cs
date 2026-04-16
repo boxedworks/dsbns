@@ -73,7 +73,7 @@ namespace Assets.Scripts.Objects.CustomEntities
     {
       foreach (var en in _activate)
       {
-        if (entity.GetInstanceID() == en.GetInstanceID())
+        if (entity.GetEntityId() == en.GetEntityId())
         {
           Debug.Log("Attempting to add duplicate to array");
           return;

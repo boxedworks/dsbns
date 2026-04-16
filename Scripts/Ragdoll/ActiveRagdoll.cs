@@ -100,7 +100,7 @@ namespace Assets.Scripts.Ragdoll
     {
       public Transform _hip, _spine, _arm_upper_l, _arm_upper_r, _arm_lower_l, _arm_lower_r, _head;
 
-      Dictionary<int, SaveInfo> _saveInfo;
+      Dictionary<EntityId, SaveInfo> _saveInfo;
       public class SaveInfo
       {
         public Vector3 _pos, _rot;
@@ -121,11 +121,11 @@ namespace Assets.Scripts.Ragdoll
         _arm_lower_r = ragdoll._parts[9].transform;
         _head = ragdoll._parts[10].transform;
 
-        _saveInfo = new Dictionary<int, SaveInfo>();
+        _saveInfo = new();
 
         void AddSaveInfo(Transform part)
         {
-          _saveInfo.Add(part.GetInstanceID(), new SaveInfo(part));
+          _saveInfo.Add(part.GetEntityId(), new SaveInfo(part));
 
         }
         AddSaveInfo(_spine);
@@ -137,7 +137,7 @@ namespace Assets.Scripts.Ragdoll
 
       public void SetDefault(Transform t)
       {
-        var info = _saveInfo[t.GetInstanceID()];
+        var info = _saveInfo[t.GetEntityId()];
         t.localPosition = info._pos;
         t.localEulerAngles = info._rot;
       }

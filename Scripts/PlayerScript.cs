@@ -13,6 +13,7 @@ using Assets.Scripts.UI.Menus;
 using Assets.Scripts.Objects;
 using Assets.Scripts.Objects.CustomEntities;
 using Assets.Scripts.Game.Items;
+using Valve.VR;
 
 public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
 {
@@ -1153,9 +1154,10 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
         //_camPos.z -= 1.9f;
       }
 
-#if !UNITY_VR
-      GameResources._Camera_Main.transform.position = _camPos;
-#endif
+      if (!GameScript.s_IsVr)
+      {
+        GameResources._Camera_Main.transform.position = _camPos;
+      }
 
       // Set audio listener y
       var audioListenerPos = GameResources.s_AudioListener.transform.position;
@@ -1328,8 +1330,6 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
       FunctionsC.MusicManager.PlayNextTrack();
 #endif
 
-    var saveInput = Vector2.zero;
-
     if ((_Id == 0 && SettingsHelper._ForceKeyboard) || ControllerManager._NumberGamepads == 0)
       mouseEnabled = true;
     else if (ControllerManager._NumberGamepads > 0)
@@ -1363,8 +1363,73 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
     if (Time.timeScale < 0.8f)
       unscaled_dt = unscaled_dt * Time.timeScale * 2f;
 
-    // Check arrow keys
-    if (mouseEnabled)
+    // Check xr
+    if (GameScript.s_IsVr)
+    {
+
+      // Check reload
+      var reloadAction = SteamVR_Actions.Player.Reload;
+      if (_Profile._reloadSidesSameTime ? reloadAction.state : reloadAction.stateDown)
+        HandleAction(PlayerAction.Reload);
+
+      // Check spread arms
+      var spreadArmsAction = SteamVR_Actions.Player.SpreadArms;
+      if (!_ragdoll._IsDead && spreadArmsAction.state)
+        ExtendArms();
+      else
+        _ragdoll.ArmsDown();
+
+      // Swap weapon hands
+      var swapHandsAction = SteamVR_Actions.Player.SwapItemHands;
+      if (swapHandsAction.stateDown)
+        HandleAction(PlayerAction.SwapWeaponHands);
+
+      // Swap item pairs
+      var swapItemPairAction = SteamVR_Actions.Player.SwapItemPair;
+      if (swapItemPairAction.stateDown)
+        HandleAction(PlayerAction.SwapLoadout);
+
+      // Items
+      var itemLeftAction = SteamVR_Actions.Player.LeftItem;
+      if (itemLeftAction.stateDown)
+        HandleAction(PlayerAction.LeftWeaponDown);
+      else if (itemLeftAction.stateUp)
+        HandleAction(PlayerAction.LeftWeaponUp);
+
+      var itemRightAction = SteamVR_Actions.Player.RightItem;
+      if (itemRightAction.stateDown)
+        HandleAction(PlayerAction.RightWeaponDown);
+      else if (itemRightAction.stateUp)
+        HandleAction(PlayerAction.RightWeaponUp);
+
+      // Utilities
+      var utilityLeftAction = SteamVR_Actions.Player.LeftUtility;
+      if (utilityLeftAction.stateDown)
+        HandleAction(PlayerAction.LeftUtilityDown);
+      else if (utilityLeftAction.stateUp)
+        HandleAction(PlayerAction.LeftUtilityUp);
+
+      var utilityRightAction = SteamVR_Actions.Player.RightUtility;
+      if (utilityRightAction.stateDown)
+        HandleAction(PlayerAction.RightUtilityDown);
+      else if (utilityRightAction.stateUp)
+        HandleAction(PlayerAction.RightUtilityUp);
+
+      // Gather move direction
+      var moveAction = SteamVR_Actions.Player.Move;
+      var moveDir = moveAction.GetAxis(SteamVR_Input_Sources.Any);
+      x = moveDir.x;
+      y = moveDir.y;
+
+      // Gather look direction
+      var lookAction = SteamVR_Actions.Player.Look;
+      var lookDir = lookAction.GetAxis(SteamVR_Input_Sources.Any);
+      x2 = lookDir.x;
+      y2 = lookDir.y;
+    }
+
+    // Check m&k controls
+    else if (mouseEnabled)
     {
 
       if (_HasTwin)
@@ -1439,23 +1504,19 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
             if (!_ragdoll._ItemL)
             {
               _ragdoll.UseRightDown();
-              saveInput.y = 1f;
             }
             else
             {
               _ragdoll.UseLeftDown();
-              saveInput.x = 1f;
             }
           if (ControllerManager.GetMouseInput(0, ControllerManager.InputMode.UP))
             if (!_ragdoll._ItemL)
             {
               _ragdoll.UseRightUp();
-              saveInput.y = -1f;
             }
             else
             {
               _ragdoll.UseLeftUp();
-              saveInput.x = -1f;
             }
         }
 
@@ -1466,23 +1527,19 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
             if (!_ragdoll._ItemR)
             {
               _ragdoll.UseLeftDown();
-              saveInput.x = 1f;
             }
             else
             {
               _ragdoll.UseRightDown();
-              saveInput.y = 1f;
             }
           if (ControllerManager.GetMouseInput(1, ControllerManager.InputMode.UP))
             if (!_ragdoll._ItemR)
             {
               _ragdoll.UseLeftUp();
-              saveInput.x = -1f;
             }
             else
             {
               _ragdoll.UseRightUp();
-              saveInput.y = -1f;
             }
         }
 
@@ -1637,55 +1694,15 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
 
           //
           if (input.x >= 1f - bias && _lastInputTriggers.x < 1f - bias)
-            if (!_ragdoll._ItemL && !_ragdoll._ItemR)
-            {
-              if (!_HasTwin)
-                HandleAction(PlayerAction.SwapLoadout);
-            }
-            else
-            {
-              _ragdoll.UseLeftDown();
-              saveInput.x = 1f;
-            }
+            HandleAction(PlayerAction.LeftWeaponDown);
           else if (input.x <= min && _lastInputTriggers.x > min)
-            if (!_ragdoll._ItemL)
-            {
-              _ragdoll.UseRightUp();
-              saveInput.y = -1f;
-            }
-            else
-            {
-              _ragdoll.UseLeftUp();
-              saveInput.x = -1f;
-            }
+            HandleAction(PlayerAction.LeftWeaponUp);
 
           if (input.y >= 1f - bias && _lastInputTriggers.y < 1f - bias)
-            if (!_ragdoll._ItemL && !_ragdoll._ItemR)
-            {
-              if (!_HasTwin)
-                SwapLoadouts();
-            }
-            else if (!_ragdoll._ItemR)
-            {
-              _ragdoll.UseLeftDown();
-              saveInput.x = 1f;
-            }
-            else
-            {
-              _ragdoll.UseRightDown();
-              saveInput.y = 1f;
-            }
+            HandleAction(PlayerAction.RightWeaponDown);
           else if (input.y <= min && _lastInputTriggers.y > min)
-            if (!_ragdoll._ItemR)
-            {
-              _ragdoll.UseLeftUp();
-              saveInput.x = -1f;
-            }
-            else
-            {
-              _ragdoll.UseRightUp();
-              saveInput.y = -1f;
-            }
+            HandleAction(PlayerAction.RightWeaponUp);
+
           _lastInputTriggers = input;
         }
 
@@ -1820,49 +1837,25 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
       x = y = x2 = y2 = 0f;
     }
     var xy = new Vector2(x, y);
+    var xy2 = new Vector2(x2, y2);
 
-    /// Run
-    {
-      /*/ Check run option; option is not toggle run
-      if (_Profile._holdRun)
-      {
-        // If moving and run key is down and not running, run
-        if (runKeyDown)
-        {
-          if (!_runToggle && (Mathf.Abs(x) == 1f || Mathf.Abs(y) == 1f))
-            _runToggle = true;
-        }
-        // If run key is not down and is not moving, stop running
-        else if (_runToggle && xy.magnitude < 0.5f)
-          _runToggle = false;
-      }
+    //     // Normalize input using camera forward
+    // #if UNITY_VR
+    //     var saveMag = xy.magnitude;
+    //     var cameraTransformed = GameResources._Camera_Main.transform.TransformDirection(new Vector3(xy.x, 0f, xy.y));
+    //     xy = new Vector2(cameraTransformed.x, cameraTransformed.z);
+    //     xy = xy.normalized * saveMag;
+    // #endif
 
-      // Check toggle run
-      else
-        if (runKeyDown)
-        _runToggle = !_runToggle;
+    //     var saveMag2 = xy2.magnitude;
+    //     var cameraTransformed2 = GameResources._Camera_Main.transform.TransformDirection(new Vector3(xy2.x, 0f, xy2.y));
+    //     xy2 = new Vector2(cameraTransformed2.x, cameraTransformed2.z);
+    //     xy2 = xy2.normalized * saveMag2;
 
-      // Check initial spawn run
-      if (!_spawnRunCheck)
-      {
-        if (xy.magnitude > 0.75f)
-        {
-          _runToggle = true;
-          _spawnRunCheck = true;
-        }
-
-        else if (Time.time - GameScript._LevelStartTime > 0.4f)
-        {
-          _spawnRunCheck = true;
-        }
-      }
-
-      // Apply run speed
-      if (_runToggle || _ragdoll._forceRun)*/
-      movespeed *= RUNSPEED *
-        // Speed perk
-        (HasPerk(Perk.PerkType.SPEED_UP) ? 1.15f : 1f);
-    }
+    // Movespeed
+    movespeed *= RUNSPEED *
+      // Speed perk
+      (HasPerk(Perk.PerkType.SPEED_UP) ? 1.15f : 1f);
 
     // Move player
     if (!_ragdoll._IsGrappled)
@@ -1873,27 +1866,27 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
 
       // Rotate player
       if (!mouseEnabled)
-        RotatePlayer(new Vector2(x2, y2), xy);
+        RotatePlayer(xy2, xy);
     }
 
     // Check for player capture
-    if (AutoPlayer._Capturing)
-    {
-      var actions = new List<KeyValuePair<string, float>>();
-      if (saveInput.x != 0f)
-        actions.Add(new KeyValuePair<string, float>("left", saveInput.x));
-      if (saveInput.y != 0f)
-        actions.Add(new KeyValuePair<string, float>("right", saveInput.y));
+    // if (AutoPlayer._Capturing)
+    // {
+    //   var actions = new List<KeyValuePair<string, float>>();
+    //   if (saveInput.x != 0f)
+    //     actions.Add(new KeyValuePair<string, float>("left", saveInput.x));
+    //   if (saveInput.y != 0f)
+    //     actions.Add(new KeyValuePair<string, float>("right", saveInput.y));
 
-      var data = new PlayerData()
-      {
-        _position = transform.position,
-        _forward = transform.forward,
-        _actions = actions.ToArray()
-      };
+    //   var data = new PlayerData()
+    //   {
+    //     _position = transform.position,
+    //     _forward = transform.forward,
+    //     _actions = actions.ToArray()
+    //   };
 
-      AutoPlayer.UpdateCapture(data);
-    }
+    //   AutoPlayer.UpdateCapture(data);
+    // }
 
   }
 
@@ -1925,10 +1918,47 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
   }
   void HandleAction(PlayerAction action)
   {
+    //Debug.Log(action);
     switch (action)
     {
       case PlayerAction.Reload:
         Reload();
+        break;
+
+      case PlayerAction.LeftWeaponDown:
+        if (!_ragdoll._ItemL && !_ragdoll._ItemR)
+        {
+          if (!_HasTwin)
+            HandleAction(PlayerAction.SwapLoadout);
+        }
+        else if (!_ragdoll._ItemL)
+          _ragdoll.UseRightDown();
+        else
+          _ragdoll.UseLeftDown();
+        break;
+      case PlayerAction.RightWeaponDown:
+        if (!_ragdoll._ItemL && !_ragdoll._ItemR)
+        {
+          if (!_HasTwin)
+            HandleAction(PlayerAction.SwapLoadout);
+        }
+        else if (!_ragdoll._ItemR)
+          _ragdoll.UseLeftDown();
+        else
+          _ragdoll.UseRightDown();
+        break;
+
+      case PlayerAction.LeftWeaponUp:
+        if (!_ragdoll._ItemL)
+          _ragdoll.UseRightUp();
+        else
+          _ragdoll.UseLeftUp();
+        break;
+      case PlayerAction.RightWeaponUp:
+        if (!_ragdoll._ItemR)
+          _ragdoll.UseLeftUp();
+        else
+          _ragdoll.UseRightUp();
         break;
 
       case PlayerAction.LeftUtilityDown:
@@ -2116,9 +2146,9 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
   {
     if (_isauto) return;
     if (Mathf.Abs(input.x) > 0.1f || Mathf.Abs(input.y) > 0.1f)
-      transform.LookAt(transform.position + (new Vector3(GameResources._Camera_Main.transform.right.x, 0f, GameResources._Camera_Main.transform.right.z).normalized * input.x + new Vector3(GameResources._Camera_Main.transform.forward.x, 0f, GameResources._Camera_Main.transform.forward.z).normalized * input.y).normalized * 5f);
+      transform.LookAt(transform.position + (new Vector3(input.x, 0f, input.y).normalized * 5f));
     else if (_Profile._faceMovement)
-      transform.LookAt(transform.position + (new Vector3(GameResources._Camera_Main.transform.right.x, 0f, GameResources._Camera_Main.transform.right.z).normalized * input2.x + new Vector3(GameResources._Camera_Main.transform.forward.x, 0f, GameResources._Camera_Main.transform.forward.z).normalized * input2.y).normalized * 5f);
+      transform.LookAt(transform.position + (new Vector3(input2.x, 0f, input2.y).normalized * 5f));
   }
 
   float[] _loadout_info;
@@ -2677,7 +2707,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
       GameScript._inLevelEnd = false;*/
 
     // Check interactable
-    if (other.gameObject.GetInstanceID() == _currentInteractable?.gameObject.GetInstanceID())
+    if (other.gameObject.GetEntityId() == _currentInteractable?.gameObject.GetEntityId())
     {
       _currentInteractable = null;
     }

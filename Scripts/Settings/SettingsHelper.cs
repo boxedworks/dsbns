@@ -38,6 +38,8 @@ namespace Assets.Scripts.Settings
       }
       get
       {
+        if (GameScript.s_IsVr)
+          return false;
         return SettingsModule.ForceKeyboard;
       }
     }
@@ -73,6 +75,18 @@ namespace Assets.Scripts.Settings
         return ScreenResolution;
       }
     }
+
+    public static bool _UseOrthographicCamera
+    {
+      set { SettingsModule.UseOrthographicCamera = value; }
+      get
+      {
+        if (!GameScript.s_IsVr)
+          return false;
+        return SettingsModule.UseOrthographicCamera;
+      }
+    }
+
 
     public static bool _CurrentDifficulty_NotTopRated { get { return (_DIFFICULTY == 0 && !LevelModule.IsTopRatedClassic0) || (_DIFFICULTY == 1 && !LevelModule.IsTopRatedClassic1); } }
 
@@ -270,7 +284,7 @@ namespace Assets.Scripts.Settings
           SettingsModule.UseVsync = PlayerPrefs.GetInt("vsync_setting", 0) == 1;
           SettingsModule.UseDefaultTargetFramerate = PlayerPrefs.GetInt("default_targetFramerate", 1) == 1;
           SettingsModule.UseOrthographicCamera = PlayerPrefs.GetInt("CameraType_ortho", 1) == 1;
-          SettingsModule.CameraZoom = (SettingsSaveData.CameraZoomType)PlayerPrefs.GetInt("CameraZoom", SettingsModule.UseOrthographicCamera ? 3 : 1);
+          SettingsModule.CameraZoom = (SettingsSaveData.CameraZoomType)PlayerPrefs.GetInt("CameraZoom", _UseOrthographicCamera ? 3 : 1);
 
           SettingsModule.VolumeMusic = PlayerPrefs.GetInt("VolumeMusic", 3);
           SettingsModule.VolumeSFX = PlayerPrefs.GetInt("VolumeSFX", 3);
@@ -712,7 +726,7 @@ namespace Assets.Scripts.Settings
     {
 
       // Camera settings
-      if (SettingsModule.UseOrthographicCamera)
+      if (_UseOrthographicCamera)
       {
         GameResources._Camera_Main.orthographic = GameResources._Camera_IgnorePP.orthographic = true;
         GameResources._Camera_Main.orthographicSize = GameResources._Camera_IgnorePP.orthographicSize =
@@ -746,51 +760,52 @@ namespace Assets.Scripts.Settings
       // DOF
       if (profile_.TryGet(out DepthOfField dof))
       {
-#if UNITY_VR
-        dof.mode.value = DepthOfFieldMode.Off;
-#else
-        if (SettingsModule.DepthOfFieldAmount > 0 && !forceOffDOF)
-        {
-          dof.mode.value = DepthOfFieldMode.Bokeh;
-
-          var apertureMod = SettingsModule.DepthOfFieldAmount == 1 ? 1.6f : 1.2f;
-
-          if (SettingsModule.UseOrthographicCamera)
-          {
-            dof.focusDistance.value = 5.65f;
-            dof.aperture.value = apertureMod;
-            dof.focalLength.value = 235f;
-          }
-          else
-          {
-            switch (SettingsModule.CameraZoom)
-            {
-              case SettingsSaveData.CameraZoomType.CLOSE:
-                dof.focusDistance.value = 10.2f;
-                dof.aperture.value = 1f * apertureMod;
-                dof.focalLength.value = 235f;
-                break;
-
-              case SettingsSaveData.CameraZoomType.FAR:
-                dof.focusDistance.value = 18.2f;
-                dof.aperture.value = 0.8f * apertureMod;
-                dof.focalLength.value = 300f;
-                break;
-
-              default:
-                dof.focusDistance.value = 14.3f;
-                dof.aperture.value = 0.9f * apertureMod;
-                dof.focalLength.value = 275f;
-                break;
-            }
-          }
-        }
-
+        if (GameScript.s_IsVr)
+          dof.mode.value = DepthOfFieldMode.Off;
         else
         {
-          dof.mode.value = DepthOfFieldMode.Off;
+          if (SettingsModule.DepthOfFieldAmount > 0 && !forceOffDOF)
+          {
+            dof.mode.value = DepthOfFieldMode.Bokeh;
+
+            var apertureMod = SettingsModule.DepthOfFieldAmount == 1 ? 1.6f : 1.2f;
+
+            if (_UseOrthographicCamera)
+            {
+              dof.focusDistance.value = 5.65f;
+              dof.aperture.value = apertureMod;
+              dof.focalLength.value = 235f;
+            }
+            else
+            {
+              switch (SettingsModule.CameraZoom)
+              {
+                case SettingsSaveData.CameraZoomType.CLOSE:
+                  dof.focusDistance.value = 10.2f;
+                  dof.aperture.value = 1f * apertureMod;
+                  dof.focalLength.value = 235f;
+                  break;
+
+                case SettingsSaveData.CameraZoomType.FAR:
+                  dof.focusDistance.value = 18.2f;
+                  dof.aperture.value = 0.8f * apertureMod;
+                  dof.focalLength.value = 300f;
+                  break;
+
+                default:
+                  dof.focusDistance.value = 14.3f;
+                  dof.aperture.value = 0.9f * apertureMod;
+                  dof.focalLength.value = 275f;
+                  break;
+              }
+            }
+          }
+
+          else
+          {
+            dof.mode.value = DepthOfFieldMode.Off;
+          }
         }
-#endif
       }
     }
 

@@ -1292,6 +1292,8 @@ public class ItemScript : MonoBehaviour
     int bulletIter = 0
   )
   {
+    Debug.Log($"Spawning bullet of type {itemType} with penetration {penatrationAmount} at position {spawnPos} towards direction {shootDirNormalized}");
+
     BulletScript newBullet;
     var tryAmount = _BulletPool.Length;
     do
@@ -1342,10 +1344,12 @@ public class ItemScript : MonoBehaviour
       if (!randomSpread && bulletIter == 0 && projectilesPerShot % 2 == 1) mod = 0f;
       addforce = Quaternion.AngleAxis(90f, Vector3.up) * shootDirNormalized * bulletSpread * (randomSpread ? Random.value : 1f) * mod;
     }
-    var bulletForce = MathC.Get2DVector(shootDirNormalized + addforce) * 2100f * speedMod;
+    var bulletForce = 2100f * speedMod * MathC.Get2DVector(shootDirNormalized + addforce);
 
     rb.transform.LookAt(rb.position + bulletForce);
     rb.AddForce(bulletForce);
+
+    Debug.Log($"Spawned bullet of type {itemType} with force {bulletForce.magnitude} at position {spawnPos} .. rbmag: {rb.linearVelocity.magnitude}");
 
     newBullet.OnShot(penatrationAmount, bulletForce.magnitude, spawnPos);
 

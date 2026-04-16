@@ -3,6 +3,7 @@ using Assets.Scripts.Settings.Serialization;
 using Assets.Scripts.UI.Menus;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using Valve.VR;
 
 public static class ControllerManager
 {
@@ -21,9 +22,9 @@ public static class ControllerManager
   {
     get
     {
-#if UNITY_VR
-      return 1;
-#endif
+      if (GameScript.s_IsVr)
+        return 1;
+
       if (SettingsModule.IgnoreFirstController && _Gamepads.Count > 0)
         return _Gamepads.Count - 1;
       return _Gamepads.Count;
@@ -72,6 +73,148 @@ public static class ControllerManager
       Menu2.OnLoadoutHold();
       HandlerPlayer._reloadtimer = -1f;
     }*/
+
+    // Check XR
+    if (GameScript.s_IsVr)
+    {
+
+      var menuSelectState = SteamVR_Actions.Menu.Select.stateDown;
+      if (menuSelectState)
+        MenuSelect();
+
+      var menuBackState = SteamVR_Actions.Menu.Back.stateDown;
+      if (menuBackState)
+        MenuBack();
+
+      var menuUpState = SteamVR_Actions.Menu.Up.stateDown;
+      if (menuUpState)
+        MenuUp();
+
+      var menuDownState = SteamVR_Actions.Menu.Down.stateDown;
+      if (menuDownState)
+        MenuDown();
+
+      var menuPauseState = SteamVR_Actions.Menu.Pause.stateDown;
+      if (menuPauseState)
+        TogglePause();
+
+      var reloadState = SteamVR_Actions.Menu.ReloadMap.stateDown;
+      if (reloadState)
+        ReloadMap();
+    }
+  }
+
+  //
+  public static void MenuSelect()
+  {
+    if (!Menu.s_InMenus) return;
+    Menu.SendInput(Menu.Input.SPACE);
+    FunctionsC.OnControllerInput();
+  }
+  public static void MenuBack()
+  {
+    if (!Menu.s_InMenus) return;
+    Menu.SendInput(Menu.Input.BACK);
+    FunctionsC.OnControllerInput();
+  }
+  public static void MenuUp()
+  {
+    if (!Menu.s_InMenus) return;
+    Menu.SendInput(Menu.Input.UP);
+    FunctionsC.OnControllerInput();
+  }
+  public static void MenuDown()
+  {
+    if (!Menu.s_InMenus) return;
+    Menu.SendInput(Menu.Input.DOWN);
+    FunctionsC.OnControllerInput();
+  }
+
+  public static void TogglePause()
+  {
+    // mission editor
+    if (GameScript.s_EditorTesting)
+    {
+
+      /*GameScript._EditorTesting = false;
+
+      // If editing, save map
+      if (GameScript._EditorEnabled)
+      {
+        GameScript._EditorEnabled = false;
+        TileManager.SaveFileOverwrite(TileManager.SaveMap());
+        TileManager.EditorDisabled(null);
+      }*/
+
+      // Exit to menus
+      if (Menu.s_InMenus && Menu.s_InPause)
+      {
+        Menu.s_InMenus = false;
+        Menu.s_Menu.gameObject.SetActive(false);
+        Menu.s_InPause = false;
+        GameScript.TogglePause();
+
+        // Check editing menus
+        if (GameScript.s_EditorEnabled) TileManager.EditorMenus._Menu_Editor.gameObject.SetActive(true);
+        else TileManager.EditorMenus._Menu_EditorTesting.gameObject.SetActive(true);
+      }
+      else if (!Menu.s_InMenus)
+      {
+        GameScript.TogglePause();
+        TileManager.EditorMenus.HideMenus();
+      }
+
+      return;
+    }
+
+    if (GameScript.s_EditorEnabled) return;
+    if (Menu.s_InMenus && Menu.s_InPause)
+    {
+      // Check loadout reset
+      var loadoutReset = Menu.s_CurrentMenu._Type == Menu.MenuType.EDIT_LOADOUT;
+      if (loadoutReset)
+      {
+        var loadoutIndex = Loadout._CurrentLoadout._Id;
+        PlayerScript.CheckSetNewLoadouts(loadoutIndex);
+      }
+
+      //
+      Menu.s_InMenus = false;
+      Menu.s_Menu.gameObject.SetActive(false);
+      Menu.s_InPause = false;
+      GameScript.TogglePause();
+    }
+    else if (!Menu.s_InMenus)
+      GameScript.TogglePause();
+  }
+
+  static void ReloadMap(InputAction.CallbackContext context)
+  {
+    if (GameScript.s_IsPartyGameMode) return;
+    if (!Menu.s_InMenus)
+    {
+      var p = GetPlayer(context);
+      if (p == null)
+      {
+        TileManager.ReloadMap();
+        return;
+      }
+      p.ReloadMap();
+    }
+  }
+  static void ReloadMap()
+  {
+    if (GameScript.s_IsPartyGameMode) return;
+    if (!Menu.s_InMenus)
+    {
+      var p = (PlayerScript.s_Players?.Count ?? 0) > 0 ? PlayerScript.s_Players[0] : null;
+      if (p == null)
+      {
+        TileManager.ReloadMap();
+        return;
+      }
+      p.ReloadMap();
+    }
   }
 
   class HandlerMenu : Input_action.IMenuActions
@@ -79,17 +222,13 @@ public static class ControllerManager
     void Input_action.IMenuActions.OnSelect(InputAction.CallbackContext context)
     {
       if (context.phase != InputActionPhase.Started) return;
-      if (!Menu.s_InMenus) return;
-      Menu.SendInput(Menu.Input.SPACE);
-      FunctionsC.OnControllerInput();
+      MenuSelect();
     }
 
     void Input_action.IMenuActions.OnBack(InputAction.CallbackContext context)
     {
       if (context.phase != InputActionPhase.Started) return;
-      if (!Menu.s_InMenus) return;
-      Menu.SendInput(Menu.Input.BACK);
-      FunctionsC.OnControllerInput();
+      MenuBack();
     }
     void Input_action.IMenuActions.OnUp(InputAction.CallbackContext context)
     {
@@ -133,68 +272,13 @@ public static class ControllerManager
     {
       if (context.phase != InputActionPhase.Started) return;
 
-      // mission editor
-      if (GameScript.s_EditorTesting)
-      {
-
-        /*GameScript._EditorTesting = false;
-
-        // If editing, save map
-        if (GameScript._EditorEnabled)
-        {
-          GameScript._EditorEnabled = false;
-          TileManager.SaveFileOverwrite(TileManager.SaveMap());
-          TileManager.EditorDisabled(null);
-        }*/
-
-        // Exit to menus
-        if (Menu.s_InMenus && Menu.s_InPause)
-        {
-          Menu.s_InMenus = false;
-          Menu.s_Menu.gameObject.SetActive(false);
-          Menu.s_InPause = false;
-          GameScript.TogglePause();
-
-          // Check editing menus
-          if (GameScript.s_EditorEnabled) TileManager.EditorMenus._Menu_Editor.gameObject.SetActive(true);
-          else TileManager.EditorMenus._Menu_EditorTesting.gameObject.SetActive(true);
-        }
-        else if (!Menu.s_InMenus)
-        {
-          GameScript.TogglePause();
-          TileManager.EditorMenus.HideMenus();
-        }
-
-        return;
-      }
-
-      if (GameScript.s_EditorEnabled) return;
-      if (Menu.s_InMenus && Menu.s_InPause)
-      {
-        // Check loadout reset
-        var loadoutReset = Menu.s_CurrentMenu._Type == Menu.MenuType.EDIT_LOADOUT;
-        if (loadoutReset)
-        {
-          var loadoutIndex = Loadout._CurrentLoadout._Id;
-          PlayerScript.CheckSetNewLoadouts(loadoutIndex);
-        }
-
-        //
-        Menu.s_InMenus = false;
-        Menu.s_Menu.gameObject.SetActive(false);
-        Menu.s_InPause = false;
-        GameScript.TogglePause();
-
-
-      }
-      else if (!Menu.s_InMenus)
-        GameScript.TogglePause();
+      TogglePause();
     }
   }
 
   public static Gamepad GetPlayerGamepad(int playerID)
   {
-    if (_NumberGamepads == 0) return null;
+    if (_NumberGamepads == 0 || _Gamepads.Count == 0) return null;
     if (SettingsHelper._ForceKeyboard && playerID == 0) return null;
 
     if (SettingsHelper._ForceKeyboard)
@@ -259,17 +343,7 @@ public static class ControllerManager
     void Input_action.IPlayerActions.OnReloadMap(InputAction.CallbackContext context)
     {
       if (context.phase != InputActionPhase.Started) return;
-      if (GameScript.s_IsPartyGameMode) return;
-      if (!Menu.s_InMenus)
-      {
-        var p = GetPlayer(context);
-        if (p == null)
-        {
-          TileManager.ReloadMap();
-          return;
-        }
-        p.ReloadMap();
-      }
+      ReloadMap(context);
     }
   }
 
@@ -656,9 +730,10 @@ public static class ControllerManager
     for (int i = offset; i < _NumberGamepads + offset; i++)
     {
       var gamepad = GetPlayerGamepad(i);
-      if (gamepad.buttonNorth.isPressed || gamepad.buttonSouth.isPressed || gamepad.buttonWest.isPressed ||
-        gamepad.buttonEast.isPressed || gamepad.startButton.isPressed || gamepad.selectButton.isPressed)
-        return true;
+      if (gamepad != null)
+        if (gamepad.buttonNorth.isPressed || gamepad.buttonSouth.isPressed || gamepad.buttonWest.isPressed ||
+          gamepad.buttonEast.isPressed || gamepad.startButton.isPressed || gamepad.selectButton.isPressed)
+          return true;
     }
     return false;
   }
