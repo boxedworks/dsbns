@@ -137,9 +137,11 @@ public class Levels : MonoBehaviour
   {
 
     // Init new dictionaries
-    _CurrentLevel_LevelTimesData = new Dictionary<int, Dictionary<int, System.Tuple<float, float>>>();
-    _CurrentLevel_LevelTimesData.Add(0, new Dictionary<int, System.Tuple<float, float>>());
-    _CurrentLevel_LevelTimesData.Add(1, new Dictionary<int, System.Tuple<float, float>>());
+    _CurrentLevel_LevelTimesData = new()
+    {
+      { 0, new() },
+      { 1, new() }
+    };
 
     if (_Ranks_Lowest == null)
     {

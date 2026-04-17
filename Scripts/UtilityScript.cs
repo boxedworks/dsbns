@@ -7,8 +7,6 @@ using Assets.Scripts.Settings.Serialization;
 using Assets.Scripts.Game.Items;
 using UnityEngine;
 
-[RequireComponent(typeof(Rigidbody))]
-[RequireComponent(typeof(Collider))]
 public class UtilityScript : ItemScript
 {
   //
@@ -336,14 +334,14 @@ public class UtilityScript : ItemScript
         case UtilityType.GRENADE:
 
           //
-          _onTriggerEnter += (Collider c) =>
+          _onTriggerEnter += c =>
           {
 
             // Projectile handler
             if (SimpleProjectileHandler(_c, c))
               return;
           };
-          _onCollisionEnter += (Collision c) =>
+          _onCollisionEnter += c =>
           {
 
             // Projectile handler
@@ -387,7 +385,7 @@ public class UtilityScript : ItemScript
         case UtilityType.SHURIKEN:
 
           //
-          _onTriggerEnter += (Collider c) =>
+          _onTriggerEnter += c =>
           {
 
             // Projectile handler
@@ -396,7 +394,7 @@ public class UtilityScript : ItemScript
           };
 
           // Add kill on impact event
-          _onCollisionEnter += (Collision c) =>
+          _onCollisionEnter += c =>
           {
 
             // Projectile handler
@@ -455,14 +453,14 @@ public class UtilityScript : ItemScript
         case UtilityType.SHURIKEN_BIG:
 
           //
-          _onCollisionEnter += (Collision c) =>
+          _onCollisionEnter += c =>
           {
 
             // Projectile handler
             if (SimpleProjectileHandler(_c, c.collider))
               return;
           };
-          _onTriggerEnter += (Collider c) =>
+          _onTriggerEnter += c =>
           {
             // Projectile handler
             if (SimpleProjectileHandler(_c, c))
@@ -526,14 +524,14 @@ public class UtilityScript : ItemScript
         case UtilityType.KUNAI_EXPLOSIVE:
 
           //
-          _onTriggerEnter += (Collider c) =>
+          _onTriggerEnter += c =>
           {
 
             // Projectile handler
             if (SimpleProjectileHandler(_c, c))
               return;
           };
-          _onCollisionEnter += (Collision c) =>
+          _onCollisionEnter += c =>
           {
 
             // Projectile handler
@@ -555,14 +553,14 @@ public class UtilityScript : ItemScript
 
 
           //
-          _onTriggerEnter += (Collider c) =>
+          _onTriggerEnter += c =>
           {
 
             // Projectile handler
             if (SimpleProjectileHandler(_c, c))
               return;
           };
-          _onCollisionEnter += (Collision c) =>
+          _onCollisionEnter += c =>
           {
 
             // Projectile handler
@@ -609,14 +607,14 @@ public class UtilityScript : ItemScript
         case UtilityType.STICKY_GUN_BULLET:
 
           //
-          _onTriggerEnter += (Collider c) =>
+          _onTriggerEnter += c =>
           {
 
             // Projectile handler
             if (SimpleProjectileHandler(_c, c))
               return;
           };
-          _onCollisionEnter += (Collision c) =>
+          _onCollisionEnter += c =>
           {
 
             // Projectile handler
@@ -658,14 +656,14 @@ public class UtilityScript : ItemScript
         case UtilityType.GRENADE_STUN:
 
           //
-          _onTriggerEnter += (Collider c) =>
+          _onTriggerEnter += c =>
           {
 
             // Projectile handler
             if (SimpleProjectileHandler(_c, c))
               return;
           };
-          _onCollisionEnter += (Collision c) =>
+          _onCollisionEnter += c =>
           {
             // Projectile handler
             if (SimpleProjectileHandler(_c, c.collider))
@@ -685,14 +683,14 @@ public class UtilityScript : ItemScript
         case UtilityType.MOLOTOV:
 
           //
-          _onTriggerEnter += (Collider c) =>
+          _onTriggerEnter += c =>
           {
 
             // Projectile handler
             if (SimpleProjectileHandler(_c, c))
               return;
           };
-          _onCollisionEnter += (Collision c) =>
+          _onCollisionEnter += c =>
           {
             // Projectile handler
             if (SimpleProjectileHandler(_c, c.collider))
@@ -731,20 +729,20 @@ public class UtilityScript : ItemScript
             EnemyScript.CheckSound(transform.position, EnemyScript.Loudness.SOFT);
             PlaySound(3);
           }
-          System.Action<ProjectileCollisionData> onDisable = (ProjectileCollisionData p) =>
+          System.Action<ProjectileCollisionData> onDisable = p =>
           {
             TactBulletFX();
           };
 
           //
-          _onTriggerEnter += (Collider c) =>
+          _onTriggerEnter += c =>
           {
 
             // Projectile handler
             if (SimpleProjectileHandler(_c, c, onDisable))
               return;
           };
-          _onCollisionEnter += (Collision c) =>
+          _onCollisionEnter += c =>
           {
 
             // Projectile handler
@@ -857,7 +855,7 @@ public class UtilityScript : ItemScript
         case UtilityType.MIRROR:
 
           //
-          _onTriggerEnter += (Collider c) =>
+          _onTriggerEnter += c =>
           {
 
             // Projectile handler
@@ -866,7 +864,7 @@ public class UtilityScript : ItemScript
           };
 
           // Add kill on impact event
-          _onCollisionEnter += (Collision c) =>
+          _onCollisionEnter += c =>
           {
 
             // Projectile handler
@@ -929,14 +927,14 @@ public class UtilityScript : ItemScript
             _stuck = false;
 
             //
-            _onTriggerEnter += (Collider c) =>
+            _onTriggerEnter += c =>
             {
 
               // Projectile handler
               if (SimpleProjectileHandler(_c, c))
                 return;
             };
-            _onCollisionEnter += (Collision c) =>
+            _onCollisionEnter += c =>
             {
 
               // Projectile handler
@@ -983,14 +981,14 @@ public class UtilityScript : ItemScript
         case UtilityType.BEAR_TRAP:
 
           //
-          _onTriggerEnter += (Collider c) =>
+          _onTriggerEnter += c =>
           {
 
             // Projectile handler
             if (SimpleProjectileHandler(_c, c))
               return;
           };
-          _onCollisionStay += (Collision c) =>
+          _onCollisionStay += c =>
           {
 
             // Projectile handler
@@ -1068,14 +1066,14 @@ public class UtilityScript : ItemScript
         case UtilityType.MINE:
 
           //
-          _onTriggerEnter += (Collider c) =>
+          _onTriggerEnter += c =>
           {
 
             // Projectile handler
             if (SimpleProjectileHandler(_c, c))
               return;
           };
-          _onCollisionStay += (Collision c) =>
+          _onCollisionStay += c =>
           {
 
             // Projectile handler
@@ -1358,16 +1356,16 @@ public class UtilityScript : ItemScript
 
     // Add force
     _rb.AddForce(
-      MathC.Get2DVector(forward * 250f * (_throwSpeed + Mathf.Clamp(_downTimeSave, 0f, 4f)) +
+      MathC.Get2DVector(((_throwSpeed + Mathf.Clamp(_downTimeSave, 0f, 4f)) * 250f * forward +
       Vector3.up * 55f +
-      _ragdoll._Hip.linearVelocity * 1.3f) * _forceModifier);
+      _ragdoll._Hip.linearVelocity * 1.3f) * _forceModifier) * 0.012f, ForceMode.Impulse);
 
     // Rotate
     if (_spin)
     {
       if (_spinYAxis)
         _rb.maxAngularVelocity = 45f + 5f * Random.value;
-      _rb.AddTorque(_spinYAxis ? Vector3.up * 1000f : _ragdoll._Hip.transform.right * 300f);
+      _rb.AddTorque(_spinYAxis ? Vector3.up * 50f : _ragdoll._Hip.transform.right * 50f, ForceMode.Impulse);
     }
 
     else
@@ -1664,7 +1662,7 @@ public class UtilityScript : ItemScript
         projectileData._SpawnPosition = bulletScript.GetShootPosition();
         projectileData._DamageSource = bulletScript.GetDamageSource();
 
-        projectileData._OnDisable += (ProjectileCollisionData p) =>
+        projectileData._OnDisable += p =>
         {
           p._BulletScript.Hide();
           p._BulletScript.OnHideBullet();
@@ -1683,7 +1681,7 @@ public class UtilityScript : ItemScript
       case "molotov":
       case "mine":
         projectileData._PenatrationAmount = 0;
-        projectileData._OnDisable += (ProjectileCollisionData p) =>
+        projectileData._OnDisable += p =>
         {
           p._GameObject.GetComponent<UtilityScript>().Explode();
         };

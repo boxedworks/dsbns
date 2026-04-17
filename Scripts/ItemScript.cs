@@ -747,7 +747,7 @@ public class ItemScript : MonoBehaviour
     muzzleParts.Emit(6);*/
 
     // Add force to spine
-    var torqueForce = -Vector3.right.normalized * 20000f * _hit_force;
+    var torqueForce = _hit_force * 20000f * -Vector3.right.normalized;
     _ragdoll._spine.GetComponent<Rigidbody>().AddRelativeTorque(torqueForce);
     _ragdoll._head.GetComponent<Rigidbody>().AddRelativeTorque(torqueForce);
 
@@ -1292,7 +1292,7 @@ public class ItemScript : MonoBehaviour
     int bulletIter = 0
   )
   {
-    Debug.Log($"Spawning bullet of type {itemType} with penetration {penatrationAmount} at position {spawnPos} towards direction {shootDirNormalized}");
+    //Debug.Log($"Spawning bullet of type {itemType} with penetration {penatrationAmount} at position {spawnPos} towards direction {shootDirNormalized}");
 
     BulletScript newBullet;
     var tryAmount = _BulletPool.Length;
@@ -1334,7 +1334,7 @@ public class ItemScript : MonoBehaviour
     var rb = newBullet._rb;
     rb.linearVelocity = Vector3.zero;
     rb.position = spawnPos;
-    var speedMod = 0.5f * (itemType == ItemType.FLAMETHROWER ? 1f : (penatrationAmount > 0 ? 1.35f : 1f)) + (bulletIter == 0 ? 0f : (Random.value * 0.15f) - 0.075f);
+    var speedMod = 0.5f * (itemType == ItemType.FLAMETHROWER ? 1f : (penatrationAmount > 0 ? 1.4f : 1f)) + (bulletIter == 0 ? 0f : (Random.value * 0.15f) - 0.075f);
     speedMod *= bulletSpeedMod;
     var addforce = Vector3.zero;
     if (projectilesPerShot > 1)
@@ -1344,12 +1344,12 @@ public class ItemScript : MonoBehaviour
       if (!randomSpread && bulletIter == 0 && projectilesPerShot % 2 == 1) mod = 0f;
       addforce = Quaternion.AngleAxis(90f, Vector3.up) * shootDirNormalized * bulletSpread * (randomSpread ? Random.value : 1f) * mod;
     }
-    var bulletForce = 2100f * speedMod * MathC.Get2DVector(shootDirNormalized + addforce);
+    var bulletForce = 30f * speedMod * MathC.Get2DVector(shootDirNormalized + addforce);
 
     rb.transform.LookAt(rb.position + bulletForce);
-    rb.AddForce(bulletForce);
+    rb.AddForce(bulletForce, ForceMode.Impulse);
 
-    Debug.Log($"Spawned bullet of type {itemType} with force {bulletForce.magnitude} at position {spawnPos} .. rbmag: {rb.linearVelocity.magnitude}");
+    //Debug.Log($"Spawned bullet of type {itemType} with force {bulletForce} ({bulletForce.magnitude}) at position {spawnPos} .. rbmag: {rb.linearVelocity.magnitude}");
 
     newBullet.OnShot(penatrationAmount, bulletForce.magnitude, spawnPos);
 
@@ -1440,7 +1440,7 @@ public class ItemScript : MonoBehaviour
     }
 
     // Damage
-    var hitForce = MathC.Get2DVector(-(sourceRagdoll._Hip.position - targetRagdoll._Hip.position).normalized * (3750f + (Random.value * 1750f)) * hitForceMultiplier);
+    var hitForce = MathC.Get2DVector((80f + (Random.value * 30f)) * hitForceMultiplier * -(sourceRagdoll._Hip.position - targetRagdoll._Hip.position).normalized);
     if (targetRagdoll.TakeDamage(
        new ActiveRagdoll.RagdollDamageSource()
        {
@@ -1806,7 +1806,7 @@ public class ItemScript : MonoBehaviour
         _reloading = false;
         if (!IsChargeWeapon()) _ragdoll._PlayerScript?._Profile.ItemReload(_side, _reloadOneAtTime ? clipDiff : 0);
       },
-      (ProgressBar.instance instance) =>
+      instance =>
       {
         if (_ragdoll._IsDead)
           instance._enabled = false;

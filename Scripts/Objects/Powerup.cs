@@ -243,7 +243,7 @@ namespace Assets.Scripts.Objects
 
     void Rotate()
     {
-      _rb.AddTorque(new Vector3(-1f + Random.value * 2f, -1f + Random.value * 2f, -1f + Random.value * 2f) * 600f);
+      _rb.AddTorque(new Vector3(-1f + Random.value * 2f, -1f + Random.value * 2f, -1f + Random.value * 2f) * 100f, ForceMode.Impulse);
     }
 
     public static void OnEditorEnable()

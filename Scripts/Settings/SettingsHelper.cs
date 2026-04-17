@@ -81,7 +81,7 @@ namespace Assets.Scripts.Settings
       set { SettingsModule.UseOrthographicCamera = value; }
       get
       {
-        if (!GameScript.s_IsVr)
+        if (GameScript.s_IsVr)
           return false;
         return SettingsModule.UseOrthographicCamera;
       }
@@ -753,7 +753,7 @@ namespace Assets.Scripts.Settings
           0 => 0f,
           1 => 1f,
           2 => 1.5f,
-          3 => 10f
+          _ => 10f
         };
       }
 

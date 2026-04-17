@@ -1216,7 +1216,7 @@ namespace Assets.Scripts.Ragdoll
           }
 
           //
-          if (Time.time - lastSound > 0.25f && mag_old > mag && mag_old > 0.5f)
+          if (Time.time - lastSound > 0.15f && mag_old > mag && mag_old > 0.5f)
           {
             rbData.MagnitudeOld = mag;
             rbData.LastSoundFX = Time.time;
@@ -1263,7 +1263,7 @@ namespace Assets.Scripts.Ragdoll
           var dir = MathC.Get2DVector(bodyData.Rigidbody.position - position);
           var dist = dir.magnitude;
           if (dist > radius * 1.5f) continue;
-          bodyData.Rigidbody.AddForce(dir.normalized * 3000f);
+          bodyData.Rigidbody.AddForce(dir.normalized * 30f, ForceMode.Impulse);
         }
       }
 
@@ -1493,8 +1493,8 @@ namespace Assets.Scripts.Ragdoll
               SpawnBlood = false,
               SpawnGiblets = false
             });
-          _grapplee._Hip.AddForce(_Controller.forward * (1000f + Random.value * 250f));
-          _grapplee._Hip.AddTorque(new Vector3(Random.value < 0.5f ? -1f : 1f, 0f, 0f) * 10000000f);
+          _grapplee._Hip.AddForce(_Controller.forward * (20f + Random.value * 5f), ForceMode.Impulse);
+          _grapplee._Hip.AddTorque(new Vector3(0f, Random.value < 0.5f ? -1f : 1f, 0f) * 100f, ForceMode.Impulse);
 
           PlaySound("Ragdoll/Neck_snap", 0.85f, 1.2f);
         }
@@ -1909,7 +1909,7 @@ namespace Assets.Scripts.Ragdoll
       else
       {
         Ragdoll(true);
-        _Hip.AddForce(hitForce);
+        _Hip.AddForce(hitForce, ForceMode.Impulse);
         _Controller.GetComponent<UnityEngine.AI.NavMeshAgent>().enabled = false;
         if (changeColor) ChangeColor(_IsPlayer ? Color.black * 0.5f : Color.black, 0.8f);
       }
@@ -2126,8 +2126,8 @@ namespace Assets.Scripts.Ragdoll
 
       rb.interpolation = RigidbodyInterpolation.Interpolate;
       rb.isKinematic = false;
-      rb.AddForce(hitForce * 0.8f);
-      rb.AddTorque(new Vector3(1f, 0f, 0f) * 500f);
+      rb.AddForce(hitForce * 0.8f, ForceMode.Impulse);
+      rb.AddTorque(new Vector3(1f, 0f, 0f) * 50f, ForceMode.Impulse);
 
       _head.transform.localScale = new Vector3(1f, 1f, 1f);
 
@@ -2404,8 +2404,10 @@ namespace Assets.Scripts.Ragdoll
       // Check if already dismembered
       if (joint == null) return false;
 
-      // Dismember
       var t = joint.transform;
+      if (t.parent == _Hip.transform.parent) return false;
+
+      // Dismember
       joint.gameObject.layer = 2;
       UnityEngine.Object.Destroy(joint);
       t.parent = _Hip.transform.parent;
@@ -2424,7 +2426,7 @@ namespace Assets.Scripts.Ragdoll
       {
         var rb = t.GetComponent<Rigidbody>();
         AddPartListener(rb);
-        rb.AddForce(force * 0.25f);
+        rb.AddForce(force * (t.name == "Head" ? 0.1f : 0.2f), ForceMode.Impulse);
       }
       return true;
     }
@@ -2442,32 +2444,17 @@ namespace Assets.Scripts.Ragdoll
 
     public HingeJoint GetRandomJoint()
     {
-      switch (Random.Range(0, 10))
+      return Random.Range(0, 6) switch
       {
-        case 0:
-          return _spine;
-        case 1:
-          return _arm_upper_l;
-        case 2:
-          return _head;
-        case 3:
-          return _arm_upper_r;
-        case 4:
-          return _arm_lower_l;
-        case 5:
-          return _arm_lower_r;
-        case 6:
-          return _leg_upper_l;
-        case 7:
-          return _leg_upper_r;
-        case 8:
-          return _leg_lower_l;
-        case 9:
-          return _leg_lower_r;
+        0 => _spine,
+        1 => _head,
+        2 => _arm_upper_l,
+        3 => _arm_upper_r,
+        4 => _leg_upper_l,
+        5 => _leg_upper_r,
 
-        default:
-          return null;
-      }
+        _ => null,
+      };
     }
 
     public float GetDistanceTo(Vector3 position)

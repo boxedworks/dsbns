@@ -230,7 +230,7 @@ public class GameScript : MonoBehaviour
     GameResources.Init();
 
     var args = Environment.GetCommandLineArgs();
-    s_IsVr = true;//Array.Exists(args, element => element.Equals("-vr", StringComparison.OrdinalIgnoreCase));
+    s_IsVr = false;//true;//Array.Exists(args, element => element.Equals("-vr", StringComparison.OrdinalIgnoreCase));
 
     if (!s_IsVr)
     {
@@ -252,6 +252,7 @@ public class GameScript : MonoBehaviour
         ui.localScale = new Vector3(0.8f, 0.8f, 0.8f);
 
         GameResources._Camera_Main.transform.parent.localScale = new Vector3(30f, 30f, 30f);
+        GameResources._Camera_Main.nearClipPlane = 0.01f;
 
         // Enable vr scripts
         GameResources._Camera_Main.transform.parent.GetComponent<SteamVR_PlayArea>().enabled = true;
@@ -487,7 +488,7 @@ public class GameScript : MonoBehaviour
         if (Time.time - s_LevelStartTime > 5f)
           if (!goal._activated && !goal._activated2)
           {
-            pos = goal.transform.position + new Vector3(1.5f + Easings.CircularEaseOut(mod), 0f) + (SettingsModule.UseOrthographicCamera ? new Vector3(0f, 0f, SettingsModule.CameraZoom switch
+            pos = goal.transform.position + new Vector3(1.5f + Easings.CircularEaseOut(mod), 0f) + (SettingsHelper._UseOrthographicCamera ? new Vector3(0f, 0f, SettingsModule.CameraZoom switch
             {
               SettingsSaveData.CameraZoomType.AUTO => 0.8f,
               SettingsSaveData.CameraZoomType.CLOSE => 0.8f,
@@ -501,7 +502,7 @@ public class GameScript : MonoBehaviour
           }
           else if (!goal._activated2)
           {
-            pos = PlayerspawnScript._PlayerSpawns[0].transform.position + new Vector3(1.5f + Easings.CircularEaseOut(mod), 0f) + (SettingsModule.UseOrthographicCamera ? new Vector3(0f, 0f, SettingsModule.CameraZoom switch
+            pos = PlayerspawnScript._PlayerSpawns[0].transform.position + new Vector3(1.5f + Easings.CircularEaseOut(mod), 0f) + (SettingsHelper._UseOrthographicCamera ? new Vector3(0f, 0f, SettingsModule.CameraZoom switch
             {
               SettingsSaveData.CameraZoomType.AUTO => -0.8f,
               SettingsSaveData.CameraZoomType.CLOSE => -0.8f,
@@ -936,7 +937,7 @@ public class GameScript : MonoBehaviour
         // Check camera change
         if (ControllerManager.GetKey(ControllerManager.Key.F4))
         {
-          SettingsModule.UseOrthographicCamera = !SettingsModule.UseOrthographicCamera;
+          SettingsHelper._UseOrthographicCamera = !SettingsHelper._UseOrthographicCamera;
           if (SettingsModule.CameraZoom == SettingsSaveData.CameraZoomType.AUTO)
             SettingsModule.CameraZoom = SettingsSaveData.CameraZoomType.NORMAL;
           SettingsHelper.SetPostProcessing();

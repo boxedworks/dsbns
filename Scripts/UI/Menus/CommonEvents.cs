@@ -6,7 +6,7 @@ namespace Assets.Scripts.UI.Menus
   public static class CommonEvents
   {
     // Switch to a menu
-    public static System.Action<Menu.MenuType> _SwitchMenu = (Menu.MenuType type) =>
+    public static System.Action<Menu.MenuType> _SwitchMenu = type =>
     {
       // Save last menu
       Menu.s_PreviousMenuType = Menu.s_CurrentMenuType;
@@ -45,7 +45,7 @@ namespace Assets.Scripts.UI.Menus
     };
 
     //
-    public static System.Action<MenuComponent> _OnRender_XSelector = (MenuComponent component) =>
+    public static System.Action<MenuComponent> _OnRender_XSelector = component =>
     {
       // Set hint text when focused
       component._selectorType = MenuComponent.SelectorType.X;
@@ -61,7 +61,7 @@ namespace Assets.Scripts.UI.Menus
     };
 
     //
-    public static System.Action<MenuComponent> _RemoveDropdownSelections = (MenuComponent component) =>
+    public static System.Action<MenuComponent> _RemoveDropdownSelections = component =>
     {
       Menu menu = component._menu;
 
@@ -96,7 +96,7 @@ namespace Assets.Scripts.UI.Menus
     }
     ,
 
-      _DropdownSelect = (MenuComponent component) =>
+      _DropdownSelect = component =>
       {
         if (component == null || component._menu == null || component._menu._MenuComponentsSelectable == null) return;
 

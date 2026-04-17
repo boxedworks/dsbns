@@ -537,8 +537,8 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
     if (
       _IsPlayer1 && !_level_ratings_shown && !TileManager._Level_Complete && !GameScript.s_Paused &&
       (
-        (!_TimerStarted && Time.time - GameScript.s_LevelStartTime > 3f) ||
-        (_All_Dead && Time.unscaledTime - _ragdoll._time_dead > 3f)
+        (!_TimerStarted && Time.time - GameScript.s_LevelStartTime > 0.75f) ||
+        (_All_Dead && Time.unscaledTime - _ragdoll._time_dead > 0.75f)
       )
     )
     {
@@ -1006,7 +1006,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
     if (_IsPlayer1 && GameScript.s_Singleton._UseCamera)
     {
       var camera_height = SettingsModule.CameraZoom == SettingsSaveData.CameraZoomType.NORMAL ? 14f : SettingsModule.CameraZoom == SettingsSaveData.CameraZoomType.CLOSE ? 10f : 18f;
-      if (SettingsModule.UseOrthographicCamera)
+      if (SettingsHelper._UseOrthographicCamera)
       {
         camera_height = 14f;
       }
@@ -1016,7 +1016,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
       {
         _setCamera = true;
 
-        _centerCamera = SettingsModule.UseOrthographicCamera;
+        _centerCamera = SettingsHelper._UseOrthographicCamera;
         var map_x = TileManager._Map_Size_X;
         var map_y = TileManager._Map_Size_Y;
         //Debug.Log($"{map_x} {map_y}");
@@ -1149,7 +1149,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
       }
 
       _camPos.y = camera_height;
-      if (SettingsModule.UseOrthographicCamera)
+      if (SettingsHelper._UseOrthographicCamera)
       {
         //_camPos.z -= 1.9f;
       }
@@ -2377,7 +2377,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
       collider.enabled = true;
       var rb = money.GetComponent<Rigidbody>();
       rb.isKinematic = false;
-      rb.AddForce(_ragdoll._Hip.transform.forward * 100f);
+      rb.AddForce(_ragdoll._Hip.transform.forward * 10f, ForceMode.Impulse);
       _ragdoll.PlaySound("Ragdoll/Throw", 0.9f, 1.1f);
 
       IEnumerator sizeChange()

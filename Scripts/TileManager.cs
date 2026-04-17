@@ -2794,7 +2794,7 @@ public class TileManager
   static LevelEditorObject
     _LEO_Tile = new LevelEditorObject("Tile", LevelEditorObject._UpdateSelectFunction_Tile,
       null, null, null, null, null, null,
-      (GameObject g) =>
+      g =>
       {
         ClearText();
         _text.Add("Select tiles (Left mouse)");
@@ -2804,7 +2804,7 @@ public class TileManager
       }),
 
     _LEO_Goal = new LevelEditorObject("Goal",
-      (GameObject g) =>
+      g =>
       {
         LevelEditorObject._UpdateFunction_Object(g);
         if (_SelectedObject != null)
@@ -2815,7 +2815,7 @@ public class TileManager
         _target = LevelEditorObject.TransformTarget.PARENT,
         _localPos = 0f
       }, null, null, null, null,
-      (LevelEditorObject leo, GameObject g, Vector3 offset, Vector3 pos_use) =>
+      (leo, g, offset, pos_use) =>
       {
         var returnString = "";
         // Check for powerup
@@ -2861,7 +2861,7 @@ public class TileManager
         }
         return null;
       },
-      (GameObject g) =>
+      g =>
       {
         if (g == null) return;
         ClearText();
@@ -2870,99 +2870,99 @@ public class TileManager
         UpdateText();
       }),
 
-    _LEO_Enemy = new LevelEditorObject("Enemy", (GameObject g) =>
+    _LEO_Enemy = new LevelEditorObject("Enemy", g =>
+    {
+      // Normal select / deselect
+      LevelEditorObject._UpdateFunction_Object(g);
+      if (_SelectedObject == null) return;
+      var script_enemy = (LevelEditorObject.GetCurrentObject()._name.Equals("Enemy") ? _SelectedObject.GetChild(0) : _SelectedObject.parent).GetComponent<EnemyScript>();
+
+      // Check for change type
+      if (ControllerManager.GetKey(Key.T))
+        ChangeEnemyType(script_enemy, script_enemy.transform.GetChild(0).GetComponent<MeshRenderer>(), 1);
+
+      // Change movement mode
+      if (ControllerManager.GetKey(Key.M))
+        script_enemy._canMove = !script_enemy._canMove;
+
+      // Change hearing mode
+      if (ControllerManager.GetKey(Key.H))
+        script_enemy._reactToSound = !script_enemy._reactToSound;
+
+      // Create new waypoint
+      if (ControllerManager.GetKey(Key.W))
       {
-        // Normal select / deselect
-        LevelEditorObject._UpdateFunction_Object(g);
-        if (_SelectedObject == null) return;
-        var script_enemy = (LevelEditorObject.GetCurrentObject()._name.Equals("Enemy") ? _SelectedObject.GetChild(0) : _SelectedObject.parent).GetComponent<EnemyScript>();
+        _Ring.position = new Vector3(0f, -100f, 0f);
+        LevelEditorObject.Select(_SelectedObject.GetChild(1).GetChild(0).gameObject);
+        LevelEditor_Copy(LevelEditorObject.GetCurrentObject()._copySettings);
+      }
 
-        // Check for change type
-        if (ControllerManager.GetKey(Key.T))
-          ChangeEnemyType(script_enemy, script_enemy.transform.GetChild(0).GetComponent<MeshRenderer>(), 1);
+      // Move spawn point
+      if (ControllerManager.GetKey(Key.V))
+      {
+        LevelEditorObject.Select(_SelectedObject.GetChild(0).GetChild(0).gameObject);
+        LevelEditorObject.SetIterOnName(_SelectedObject.name);
+        _Ring.position = _SelectedObject.position;
+        _CurrentMode = EditorMode.MOVE;
+      }
 
-        // Change movement mode
-        if (ControllerManager.GetKey(Key.M))
-          script_enemy._canMove = !script_enemy._canMove;
+      // Link EnemyScript with DoorScript
+      if (ControllerManager.GetKey(Key.L))
+      {
+        _IsLinking = !_IsLinking;
 
-        // Change hearing mode
-        if (ControllerManager.GetKey(Key.H))
-          script_enemy._reactToSound = !script_enemy._reactToSound;
+        _CurrentMode = EditorMode.NONE;
+      }
+      if (ControllerManager.GetKey(Key.U))
+      {
+        _IsLinking = false;
 
-        // Create new waypoint
-        if (ControllerManager.GetKey(Key.W))
+        if (script_enemy._linkedDoor != null)
         {
-          _Ring.position = new Vector3(0f, -100f, 0f);
-          LevelEditorObject.Select(_SelectedObject.GetChild(1).GetChild(0).gameObject);
-          LevelEditor_Copy(LevelEditorObject.GetCurrentObject()._copySettings);
+          script_enemy._linkedDoor.UnregisterEnemy(script_enemy);
         }
+      }
 
-        // Move spawn point
-        if (ControllerManager.GetKey(Key.V))
+      if (_IsLinking)
+      {
+        // Get mouse pos
+        RaycastHit h;
+        Physics.SphereCast(GameResources._Camera_Main.ScreenPointToRay(ControllerManager.GetMousePosition()), 0.25f, out h, 100f, GameResources._Layermask_Ragdoll);
+        Vector3 mousePos = h.point;
+        mousePos.y = -1f;
+        _LineRenderers[1].positionCount = 2;
+        _LineRenderers[1].SetPositions(new Vector3[] { script_enemy.transform.position, mousePos });
+        // Check for selection
+        if (ControllerManager.GetMouseInput(0, ControllerManager.InputMode.DOWN))
         {
-          LevelEditorObject.Select(_SelectedObject.GetChild(0).GetChild(0).gameObject);
-          LevelEditorObject.SetIterOnName(_SelectedObject.name);
-          _Ring.position = _SelectedObject.position;
-          _CurrentMode = EditorMode.MOVE;
-        }
-
-        // Link EnemyScript with DoorScript
-        if (ControllerManager.GetKey(Key.L))
-        {
-          _IsLinking = !_IsLinking;
-
-          _CurrentMode = EditorMode.NONE;
-        }
-        if (ControllerManager.GetKey(Key.U))
-        {
-          _IsLinking = false;
-
-          if (script_enemy._linkedDoor != null)
+          var d = h.collider.transform.parent.parent.GetComponent<DoorScript>();
+          if (d != null)
           {
-            script_enemy._linkedDoor.UnregisterEnemy(script_enemy);
-          }
-        }
 
-        if (_IsLinking)
-        {
-          // Get mouse pos
-          RaycastHit h;
-          Physics.SphereCast(GameResources._Camera_Main.ScreenPointToRay(ControllerManager.GetMousePosition()), 0.25f, out h, 100f, GameResources._Layermask_Ragdoll);
-          Vector3 mousePos = h.point;
-          mousePos.y = -1f;
-          _LineRenderers[1].positionCount = 2;
-          _LineRenderers[1].SetPositions(new Vector3[] { script_enemy.transform.position, mousePos });
-          // Check for selection
-          if (ControllerManager.GetMouseInput(0, ControllerManager.InputMode.DOWN))
-          {
-            var d = h.collider.transform.parent.parent.GetComponent<DoorScript>();
-            if (d != null)
+            if (script_enemy._linkedDoor != null)
             {
-
-              if (script_enemy._linkedDoor != null)
-              {
-                script_enemy._linkedDoor.UnregisterEnemy(script_enemy);
-              }
-
-              d.RegisterEnemyEditor(script_enemy);
-              script_enemy._linkedDoor = d;
+              script_enemy._linkedDoor.UnregisterEnemy(script_enemy);
             }
-            _IsLinking = false;
-          }
-        }
 
-        // Display line renderer
+            d.RegisterEnemyEditor(script_enemy);
+            script_enemy._linkedDoor = d;
+          }
+          _IsLinking = false;
+        }
+      }
+
+      // Display line renderer
+      else
+      {
+        if (script_enemy._linkedDoor == null)
+          _LineRenderers[1].positionCount = 0;
         else
         {
-          if (script_enemy._linkedDoor == null)
-            _LineRenderers[1].positionCount = 0;
-          else
-          {
-            _LineRenderers[1].positionCount = 2;
-            _LineRenderers[1].SetPositions(new Vector3[] { script_enemy.transform.position, script_enemy._linkedDoor.transform.position });
-          }
+          _LineRenderers[1].positionCount = 2;
+          _LineRenderers[1].SetPositions(new Vector3[] { script_enemy.transform.position, script_enemy._linkedDoor.transform.position });
         }
-      },
+      }
+    },
       new LevelEditorObject.MovementSettings()
       {
         _localPos = -1.32f
@@ -2975,7 +2975,7 @@ public class TileManager
       new LevelEditorObject.AddSettings()
       {
         _data = "e_0_0_li_knife",
-        _onAdd = (GameObject g) =>
+        _onAdd = g =>
         {
           // Set enemy color and give visual for editor
           Transform controller = g.transform.GetChild(0),
@@ -2985,7 +2985,7 @@ public class TileManager
       },
       new LevelEditorObject.DeleteSettings(),
       null,
-      (GameObject g) =>
+      g =>
       {
         if (g == null || _SelectedObject == null) return;
         EnemyScript s = (LevelEditorObject.GetCurrentObject()._name.Equals("Enemy") ? _SelectedObject.GetChild(0) : _SelectedObject.parent).GetComponent<EnemyScript>();
@@ -3052,7 +3052,7 @@ public class TileManager
       new LevelEditorObject.CopySettings()
       {
         _target = LevelEditorObject.TransformTarget.PARENT_PARENT,
-        _onCopy = (GameObject copy) =>
+        _onCopy = copy =>
         {
           LevelEditorObject.SetIterOnName(copy.name);
         }
@@ -3070,7 +3070,7 @@ public class TileManager
       _LEO_Enemy._textDisplayFunction),
 
     _LEO_EnemyWaypoint = new LevelEditorObject("Waypoint",
-      (GameObject g) =>
+      g =>
       {
         LevelEditorObject._UpdateFunction_Object(g);
         /*/ Teleport controller to position
@@ -3093,7 +3093,7 @@ public class TileManager
       null,
       new LevelEditorObject.DeleteSettings(),
       null,
-      (GameObject g) =>
+      g =>
       {
         ClearText();
         _text.Add("Teleport enemy controller to mouse (L)");
@@ -3126,7 +3126,7 @@ public class TileManager
         _data = "expbarrel_0_0"
       },
       new LevelEditorObject.DeleteSettings(),
-      (LevelEditorObject leo, GameObject g, Vector3 offset, Vector3 pos_use) =>
+      (leo, g, offset, pos_use) =>
       {
         var returnString = "";
 
@@ -3166,12 +3166,12 @@ public class TileManager
       _hide = true
     },
 
-    _LEO_Button = new LevelEditorObject("Button", (GameObject g) =>
-      {
-        LevelEditorObject._UpdateFunction_Object(g);
-        if (_SelectedObject != null)
-          LevelEditorObject._UpdateFunction_CustomEntityUI(_SelectedObject.gameObject);
-      },
+    _LEO_Button = new LevelEditorObject("Button", g =>
+    {
+      LevelEditorObject._UpdateFunction_Object(g);
+      if (_SelectedObject != null)
+        LevelEditorObject._UpdateFunction_CustomEntityUI(_SelectedObject.gameObject);
+    },
       new LevelEditorObject.MovementSettings()
       {
         _localPos = -1.2f
@@ -3183,7 +3183,7 @@ public class TileManager
         _data = "button_0_0"
       },
       new LevelEditorObject.DeleteSettings(),
-      (LevelEditorObject leo, GameObject g, Vector3 offset, Vector3 pos_use) =>
+      (leo, g, offset, pos_use) =>
       {
         string returnString = "";
         // Check for buttons
@@ -3213,7 +3213,7 @@ public class TileManager
         }
         return null;
       },
-      (GameObject g) =>
+      g =>
       {
         ClearText();
         _text.Add(string.Format("Link to door (L)"));
@@ -3222,7 +3222,7 @@ public class TileManager
       }),
 
     _LEO_Door = new LevelEditorObject("Door",
-      (GameObject g) =>
+      g =>
       {
         LevelEditorObject._UpdateFunction_Object(g);
         // Check toggle
@@ -3241,7 +3241,7 @@ public class TileManager
       new LevelEditorObject.RotationSettings(),
       new LevelEditorObject.CopySettings()
       {
-        _onCopy = (GameObject g) =>
+        _onCopy = g =>
         {
           // Link new door to old
           g.GetComponent<DoorScript>().LinkToDoor(_SelectedObject.GetComponent<DoorScript>());
@@ -3253,7 +3253,7 @@ public class TileManager
       },
       new LevelEditorObject.DeleteSettings(),
       LevelEditorObject._SaveFunction_Door,
-      (GameObject g) =>
+      g =>
       {
         if (g == null) return;
         ClearText();
@@ -3314,7 +3314,7 @@ public class TileManager
     },
 
     _LEO_Laser = new LevelEditorObject("Laser",
-      (GameObject g) =>
+      g =>
       {
         LevelEditorObject._UpdateFunction_Object(g);
         if (_SelectedObject == null) return;
@@ -3347,7 +3347,7 @@ public class TileManager
         _data = "laser_0_0"
       },
       new LevelEditorObject.DeleteSettings(),
-      (LevelEditorObject leo, GameObject g, Vector3 offset, Vector3 pos_use) =>
+      (leo, g, offset, pos_use) =>
       {
         var returnString = "";
         // Check for lasers
@@ -3365,7 +3365,7 @@ public class TileManager
         }
         return null;
       },
-      (GameObject g) =>
+      g =>
       {
         if (_SelectedObject == null) return;
         Transform target = null;
@@ -3407,7 +3407,7 @@ public class TileManager
     },
 
     _LEO_Playerspawn = new LevelEditorObject("PlayerSpawn",
-      (GameObject g) =>
+      g =>
       {
         LevelEditorObject._UpdateFunction_Object(g);
       },
@@ -3941,7 +3941,7 @@ public class TileManager
     }
 
     // OnMove delegate Functions to use; lambdas
-    public static UpdateFunction _UpdateSelectFunction_Tile = (GameObject selection) =>
+    public static UpdateFunction _UpdateSelectFunction_Tile = selection =>
     {
       // Select
       if (ControllerManager.GetMouseInput(0, ControllerManager.InputMode.HOLD))
@@ -3958,7 +3958,7 @@ public class TileManager
         GameScript.s_Singleton.StartCoroutine(Tile.LerpPositions(_Selected_Tiles.ToArray(), 0f, false));
     }
     ,
-    _UpdateFunction_Object = (GameObject selection) =>
+    _UpdateFunction_Object = selection =>
     {
       // Select
       //if (ControllerManager.GetMouseInput(0, ControllerManager.InputMode.DOWN) && selection.name.Equals(GetCurrentObject()._name))
@@ -3973,7 +3973,7 @@ public class TileManager
       }
     }
     ,
-    _UpdateFunction_CustomEntityUI = (GameObject selection) =>
+    _UpdateFunction_CustomEntityUI = selection =>
     {
       if (_SelectedObject == null) return;
       // Remove connections
@@ -4028,7 +4028,7 @@ public class TileManager
     {
       return "rot_" + g.transform.localRotation.eulerAngles.y;
     }
-    public static SaveFunction _SaveFunction_PosRot = (LevelEditorObject leo, GameObject g, Vector3 offset, Vector3 pos_use) =>
+    public static SaveFunction _SaveFunction_PosRot = (leo, g, offset, pos_use) =>
     {
       if (!g.name.Equals(leo._name)) return null;
       string returnString = "";
@@ -4036,7 +4036,7 @@ public class TileManager
       returnString += _SaveFunction_Rot(g) + " ";
       return returnString;
     };
-    public static SaveFunction _SaveFunction_PosRotCustom = (LevelEditorObject leo, GameObject g, Vector3 offset, Vector3 pos_use) =>
+    public static SaveFunction _SaveFunction_PosRotCustom = (leo, g, offset, pos_use) =>
     {
       if (!g.name.Equals(leo._name)) return null;
       var returnString = "";
@@ -4049,7 +4049,7 @@ public class TileManager
       return returnString;
     };
 
-    public static SaveFunction _SaveFunction_Door = (LevelEditorObject leo, GameObject g, Vector3 offset, Vector3 pos_use) =>
+    public static SaveFunction _SaveFunction_Door = (leo, g, offset, pos_use) =>
     {
       if (!g.name.Equals(leo._name)) return null;
       var returnString = "";

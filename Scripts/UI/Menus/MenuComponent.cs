@@ -108,7 +108,7 @@ namespace Assets.Scripts.UI.Menus
       _dropdownIndex = -1;
 
       // Add prior component listener
-      _onUnfocus += (MenuComponent component) =>
+      _onUnfocus += component =>
       {
         _menu._MenuComponent_lastFocused = component;
       };
@@ -118,29 +118,31 @@ namespace Assets.Scripts.UI.Menus
       {
         text = $"{GetEmptySelector()} {text}";
 
-        _onSelected += (MenuComponent component) =>
+        _onSelected += component =>
         {
           _menu._MenuComponent_lastSelected = component;
         };
       }
 
       // Add scroll feature
-      _onFocus += (MenuComponent component) =>
+      _onFocus += component =>
       {
         _focused = true;
         if (_menu._MenuComponent_lastFocused == null) return;
-        if (Menu.s_MaxHeight > Menu.s_StartMaxHeight && component._height <= Menu.s_MaxHeight - Menu.s_StartMaxHeight + 5)
+
+        var scrollThreshold = 2;
+        if (Menu.s_MaxHeight > Menu.s_StartMaxHeight && component._height <= Menu.s_MaxHeight - Menu.s_StartMaxHeight + scrollThreshold)
           Menu.s_MaxHeight = Mathf.Clamp(Menu.s_MaxHeight - Mathf.Clamp(_menu._MenuComponent_lastFocused._height - component._height, 0, 1000), Menu.s_StartMaxHeight, _menu._MaxHeight);
-        else if (component._height >= Menu.s_MaxHeight - 5)
+        else if (component._height >= Menu.s_MaxHeight - scrollThreshold)
           Menu.s_MaxHeight = Mathf.Clamp(Menu.s_MaxHeight - Mathf.Clamp(_menu._MenuComponent_lastFocused._height - component._height, -1000, 0), Menu.s_StartMaxHeight, _menu._MaxHeight);
       };
-      _onUnfocus += (MenuComponent component) =>
+      _onUnfocus += component =>
       {
         _focused = false;
       };
 
       // Set dropdown events
-      _onSelected += (MenuComponent component) =>
+      _onSelected += component =>
       {
         if (_menu == null || _menu._MenuComponentsSelectable == null)
           return;
@@ -150,7 +152,7 @@ namespace Assets.Scripts.UI.Menus
       };
       if (componentType == ComponentType.BUTTON_DROPDOWN)
       {
-        _onSelected += (MenuComponent component) =>
+        _onSelected += component =>
         {
           if (_dropdownSelections == null) return;
           _menu._DropdownCount = _dropdownSelections.Length;
@@ -175,23 +177,23 @@ namespace Assets.Scripts.UI.Menus
               // Register selection action
               .AddEvent(_dropdownActions[iter])
               // Set text
-              .AddEvent((MenuComponent component0) =>
+              .AddEvent(component0 =>
               {
                 if (component0._obscured) return;
                 CommonEvents._DropdownSelect(component0);
               })
               // Before selection renders, update text
-              .AddEvent(Menu.EventType.ON_RENDER, (MenuComponent component0) =>
+              .AddEvent(Menu.EventType.ON_RENDER, component0 =>
               {
                 component0.SetDisplayText($"{_dropdownSelections[component0._dropdownIndex]}\n");
               })
               // Add focus event
-              .AddEvent(Menu.EventType.ON_FOCUS, (MenuComponent component0) =>
+              .AddEvent(Menu.EventType.ON_FOCUS, component0 =>
               {
                 if (_dropdownOnFocus == null || component0._dropdownIndex > _dropdownOnFocus.Length - 1) return;
                 _dropdownOnFocus[component0._dropdownIndex]?.Invoke(component0);
               })
-              .AddEvent(Menu.EventType.ON_UNFOCUS, (MenuComponent component0) =>
+              .AddEvent(Menu.EventType.ON_UNFOCUS, component0 =>
               {
                 if (_dropdownOnUnfocus == null || component0._dropdownIndex > _dropdownOnFocus.Length - 1) return;
                 _dropdownOnUnfocus[component0._dropdownIndex]?.Invoke(component0);
@@ -316,7 +318,7 @@ namespace Assets.Scripts.UI.Menus
       {
         actions_onCreated = new List<System.Action<MenuComponent>>();
         for (int i = 0; i < actions_selected.Count; i++)
-          actions_onCreated.Add((MenuComponent component) => { });
+          actions_onCreated.Add(component => { });
       }
       var match_found = false;
       foreach (var selection in selections)
@@ -329,7 +331,7 @@ namespace Assets.Scripts.UI.Menus
           match_found = true;
           color = "white";
         }
-        actions_onCreated[iter] += (MenuComponent component) =>
+        actions_onCreated[iter] += component =>
         {
           component._textColor = color;
         };
@@ -338,12 +340,12 @@ namespace Assets.Scripts.UI.Menus
       }
       // Add a back button
       selections_final[iter] = "back";
-      actions_selected.Add((MenuComponent component0) =>
+      actions_selected.Add(component0 =>
       {
         component0._menu._SelectionIndex = _buttonIndex;
         CommonEvents._RemoveDropdownSelections(component0);
       });
-      actions_onCreated.Add((MenuComponent component) =>
+      actions_onCreated.Add(component =>
       {
         component._textColor = Menu._COLOR_GRAY;
       });

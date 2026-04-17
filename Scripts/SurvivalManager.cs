@@ -557,7 +557,7 @@ $@"<color={Menu._COLOR_GRAY}>new survival map unlocked</color>
 you survived 10 waves and have unlocked a <color=yellow>new survival map</color>!
 "
         }, "nice", Menu.MenuType.NONE, null, true, null,
-          (MenuComponent c) =>
+          c =>
           {
             GameScript.TogglePause();
             Menu.HideMenus();
@@ -882,8 +882,8 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
           rb.useGravity = false;
           rb.linearDamping = 0.1f;
           rb.mass = 0.5f;
-          rb.AddForce(new Vector3(0f, 1f, 0f) * (350f + Random.value * 200f));
-          rb.AddTorque(new Vector3(1f - (Random.value * 2f), 1f - (Random.value * 2f), 1f - (Random.value * 2f)) * (250f + Random.value * 200f));
+          rb.AddForce(new Vector3(0f, 1f, 0f) * (2f + Random.value * 1f), ForceMode.Impulse);
+          rb.AddTorque(new Vector3(1f - (Random.value * 2f), 1f - (Random.value * 2f), 1f - (Random.value * 2f)) * (3f + Random.value * 1f), ForceMode.Impulse);
           Object.Destroy(rb.gameObject, 10f);
         }
     }

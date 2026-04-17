@@ -560,12 +560,12 @@ public static class FunctionsC
         {
           // Explosion force type
           var explosionForce = Vector3.zero;
-          if (explosionType == ExplosiveScript.ExplosionType.UPWARD) explosionForce = new Vector3(0f, 3000f, 0f);
+          if (explosionType == ExplosiveScript.ExplosionType.UPWARD) explosionForce = new Vector3(0f, 50f, 0f);
           else if (explosionType == ExplosiveScript.ExplosionType.AWAY)
           {
             var dirAway = -(posAt - ragdoll._Hip.position).normalized;
             dirAway.y = 0.2f;
-            explosionForce = dirAway * 3000f;
+            explosionForce = dirAway * 40f;
           }
 
           //
@@ -598,7 +598,6 @@ public static class FunctionsC
             else
             {
               ragdoll.DismemberRandomTimes(explosionForce, Random.Range(1, 5));
-              ragdoll._Hip.AddForce(explosionForce);
             }
           }
         }

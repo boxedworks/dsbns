@@ -109,6 +109,8 @@ namespace Assets.Scripts.Objects
       if (_sourceItemRagdoll == null || _triggered)
         return;
 
+      //Debug.Log($"Bullet speed: {_rb.linearVelocity.magnitude}");
+
       // Check for timeout
       if (Time.time - _startTime > 3f)
       {
@@ -161,7 +163,7 @@ namespace Assets.Scripts.Objects
       bool TakeDamage(ActiveRagdoll r)
       {
         var hitForce = MathC.Get2DVector(
-          -(_shootPosition - collider.transform.position).normalized * (4000f + (Random.value * 2000f)) * (_deflected ? Mathf.Clamp(_sourceHitForce * 1.5f, 0.5f, 2f) : _sourceHitForce)
+          (_deflected ? Mathf.Clamp(_sourceHitForce * 1.5f, 0.5f, 2f) : _sourceHitForce) * (85f + (Random.value * 10f)) * -(_shootPosition - collider.transform.position).normalized
         );
         var pen = _penatrationAmount + 1;
         var health = r._health;

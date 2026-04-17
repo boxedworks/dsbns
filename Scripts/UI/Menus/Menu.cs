@@ -460,7 +460,7 @@ namespace Assets.Scripts.UI.Menus
     public Menu AddBackButton(MenuType menuType, string text = "")
     {
       return AddComponent(text == "" ? "back\n" : text, MenuComponent.ComponentType.BUTTON_SIMPLE)
-        .AddEvent((MenuComponent component) =>
+        .AddEvent(component =>
         {
           component._menu._SelectedComponent._focused = false;
           component._menu._SelectionIndex = 0;
@@ -488,7 +488,7 @@ namespace Assets.Scripts.UI.Menus
       // Add back button
       menu.AddComponent("\n");
       menu.AddComponent(backPrompt, MenuComponent.ComponentType.BUTTON_SIMPLE)
-        .AddEvent((MenuComponent component) =>
+        .AddEvent(component =>
         {
           CommonEvents._SwitchMenu(toMenu);
         });
@@ -547,7 +547,7 @@ namespace Assets.Scripts.UI.Menus
         while (afterNewLineCount-- > 0) after_lines += "\n";
         s_menus[type].AddComponent(lines)
           .AddComponent(ShopHelper.TipHelper.GetTip(GameScript.s_GameMode) + after_lines)
-          .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+          .AddEvent(EventType.ON_RENDER, component =>
           {
             component._visible = SettingsModule.ShowTips;
           });
@@ -736,7 +736,7 @@ namespace Assets.Scripts.UI.Menus
 
       // Show game modes menu
       main_menu.AddComponent("start\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-        .AddEvent((MenuComponent component) =>
+        .AddEvent(component =>
         {
           CommonEvents._SwitchMenu(MenuType.MODE_SELECTION);
 
@@ -753,7 +753,7 @@ namespace Assets.Scripts.UI.Menus
       if (GameScript.s_UsingSteam)
       {
         main_menu.AddComponent("mission editor\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-          .AddEvent((MenuComponent component) =>
+          .AddEvent(component =>
           {
             CommonEvents._SwitchMenu(MenuType.EDITOR_MAIN);
 
@@ -763,8 +763,8 @@ namespace Assets.Scripts.UI.Menus
 #endif
       // Show options menu
       main_menu.AddComponent("options\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-        .AddEvent((MenuComponent component) => { CommonEvents._SwitchMenu(MenuType.OPTIONS); })
-        .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+        .AddEvent(component => { CommonEvents._SwitchMenu(MenuType.OPTIONS); })
+        .AddEvent(EventType.ON_RENDER, component =>
         {
           if (SettingsHelper._ForceKeyboard || SettingsModule.IgnoreFirstController || SettingsModule.HideUI)
           {
@@ -781,7 +781,7 @@ namespace Assets.Scripts.UI.Menus
 #if UNITY_STANDALONE
       // Show social menu
       main_menu.AddComponent("social\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-        .AddEvent((MenuComponent component) =>
+        .AddEvent(component =>
         {
           SwitchMenu(MenuType.SOCIAL);
         });
@@ -795,18 +795,18 @@ namespace Assets.Scripts.UI.Menus
 
       // Display credits
       main_menu.AddComponent("credits\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-        .AddEvent((MenuComponent c) =>
+        .AddEvent(c =>
         {
           SwitchMenu(MenuType.CREDITS);
         })
       // Exit application
       .AddComponent("exit\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-        .AddEvent((MenuComponent component) =>
+        .AddEvent(component =>
         {
           CommonEvents._SwitchMenu(MenuType.EXIT_GAME_CONFIRM);
         })
         .AddEvent(EventType.ON_RENDER, CommonEvents._OnRender_XSelector)
-        .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+        .AddEvent(EventType.ON_RENDER, component =>
         {
 #if UNITY_WEBGL
         component._obscured = true;
@@ -828,15 +828,15 @@ namespace Assets.Scripts.UI.Menus
       .AddComponent($"<color={_COLOR_GRAY}>mission editor</color>\n\n")
       // Local levels
       .AddComponent("local levels\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-        .AddEvent((MenuComponent component) => { CommonEvents._SwitchMenu(MenuType.EDITOR_LEVELS); })
+        .AddEvent(component => { CommonEvents._SwitchMenu(MenuType.EDITOR_LEVELS); })
       // Loaded levels
       //.AddComponent("loaded levels\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
       //  .AddEvent((MenuComponent component) => { CommonEvents._SwitchMenu(MenuType.EDITOR_MAIN); })
       // Level packs
       .AddComponent("level packs\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-        .AddEvent((MenuComponent component) => { CommonEvents._SwitchMenu(MenuType.EDITOR_PACKS); })
+        .AddEvent(component => { CommonEvents._SwitchMenu(MenuType.EDITOR_PACKS); })
       .AddComponent("quick guide\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-        .AddEvent((MenuComponent component) => { CommonEvents._SwitchMenu(MenuType.HOWTOPLAY_EDITOR); })
+        .AddEvent(component => { CommonEvents._SwitchMenu(MenuType.HOWTOPLAY_EDITOR); })
       .AddBackButton(MenuType.MAIN);
       // Tip
       //ModifyMenu_TipComponents(MenuType.EDITOR_MAIN, 16, 1);
@@ -878,7 +878,7 @@ namespace Assets.Scripts.UI.Menus
         {
           menu
           .AddComponent("new level\n\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
-            .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+            .AddEvent(EventType.ON_RENDER, component =>
             {
 
               // Open submenu with options
@@ -888,7 +888,7 @@ namespace Assets.Scripts.UI.Menus
 
               // New blank level
               selections.Add("new blank level");
-              actions.Add((MenuComponent component0) =>
+              actions.Add(component0 =>
               {
 
                 // Create new entry in levels
@@ -909,7 +909,7 @@ namespace Assets.Scripts.UI.Menus
 
               // New level from clipboard
               selections.Add("new level from clipboard data");
-              actions.Add((MenuComponent component0) =>
+              actions.Add(component0 =>
               {
 
                 // Validate map data
@@ -947,7 +947,7 @@ namespace Assets.Scripts.UI.Menus
             extra = "\n";
 
           menu.AddComponent($"{level_name}\n{extra}", MenuComponent.ComponentType.BUTTON_DROPDOWN)
-            .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+            .AddEvent(EventType.ON_RENDER, component =>
             {
 
               // Open submenu with options
@@ -957,7 +957,7 @@ namespace Assets.Scripts.UI.Menus
 
               // Play
               selections.Add("start");
-              actions.Add((MenuComponent component0) =>
+              actions.Add(component0 =>
               {
 
                 if (!Levels._LevelPack_SelectingLevelsFromPack)
@@ -1006,7 +1006,7 @@ namespace Assets.Scripts.UI.Menus
               if (!Levels._LevelPack_SelectingLevelsFromPack)
               {
                 selections.Add("edit");
-                actions.Add((MenuComponent component0) =>
+                actions.Add(component0 =>
                 {
                   GameScript.s_EditorTesting = true;
                   Levels._LevelEdit_SaveIndex = s_CurrentMenu._DropdownParentIndex;
@@ -1038,7 +1038,7 @@ namespace Assets.Scripts.UI.Menus
 
                 // Rename level
                 selections.Add("rename");
-                actions.Add((MenuComponent component0) =>
+                actions.Add(component0 =>
                 {
 
                   var rename_dialogue = TileManager.EditorMenus.ShowRenameMenuMenu();
@@ -1100,7 +1100,7 @@ namespace Assets.Scripts.UI.Menus
 
                 // Duplicate level
                 selections.Add("duplicate");
-                actions.Add((MenuComponent component0) =>
+                actions.Add(component0 =>
                 {
                   Levels.LevelEditor_NewMap("not matter");
 
@@ -1124,7 +1124,7 @@ namespace Assets.Scripts.UI.Menus
 
                 // Delete level
                 selections.Add("delete - press 4 times");
-                actions.Add((MenuComponent component0) =>
+                actions.Add(component0 =>
                 {
                   Levels._Delete_Iter--;
                   if (Levels._Delete_Iter == 0)
@@ -1170,7 +1170,7 @@ namespace Assets.Scripts.UI.Menus
 
                 // Copy level data to clipboard
                 selections.Add("copy level data to clipboard");
-                actions.Add((MenuComponent component0) =>
+                actions.Add(component0 =>
                 {
                   ClipboardHelper.clipBoard = $"{level_data}";
 
@@ -1188,7 +1188,7 @@ namespace Assets.Scripts.UI.Menus
 
                 // Download level pack to local storage
                 selections.Add("download to local levels");
-                actions.Add((MenuComponent component0) =>
+                actions.Add(component0 =>
                 {
 
                   var level_data = Levels._LevelPack_Current._levelData[s_CurrentMenu._DropdownParentIndex];
@@ -1226,7 +1226,7 @@ namespace Assets.Scripts.UI.Menus
               component.SetDropdownData(prompt, selections, actions, "start");
 
             })
-            .AddEvent(EventType.ON_SELECTED, (MenuComponent component) =>
+            .AddEvent(EventType.ON_SELECTED, component =>
             {
               Levels._Delete_Iter = 4;
 
@@ -1242,7 +1242,7 @@ namespace Assets.Scripts.UI.Menus
             })
 
             // Add / remove map preview
-            .AddEvent(EventType.ON_FOCUS, (MenuComponent component) =>
+            .AddEvent(EventType.ON_FOCUS, component =>
             {
               if (!s_CurrentMenu._HasDropdown)
               {
@@ -1254,7 +1254,7 @@ namespace Assets.Scripts.UI.Menus
                 Levels.GetHardcodedLoadout(level_meta[2]);
               }
             })
-            .AddEvent(EventType.ON_UNFOCUS, (MenuComponent component) =>
+            .AddEvent(EventType.ON_UNFOCUS, component =>
             {
               if (GameScript._lp0 != null && !s_CurrentMenu._HasDropdown)
                 Object.Destroy(GameScript._lp0.gameObject);
@@ -1322,7 +1322,7 @@ namespace Assets.Scripts.UI.Menus
 
           // Create a new level pack
           .AddComponent("new level pack\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-            .AddEvent(EventType.ON_SELECTED, (MenuComponent component) =>
+            .AddEvent(EventType.ON_SELECTED, component =>
             {
               Levels.LevelPacks_NewLocal();
 
@@ -1345,7 +1345,7 @@ namespace Assets.Scripts.UI.Menus
 
             menu_levelpacks
             .AddComponent($"{levelpack_name}\n{extraline}", MenuComponent.ComponentType.BUTTON_DROPDOWN)
-            .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+            .AddEvent(EventType.ON_RENDER, component =>
             {
 
               // Open submenu with options
@@ -1373,7 +1373,7 @@ namespace Assets.Scripts.UI.Menus
 
               // Play level pack
               selections.Add("start");
-              actions.Add((MenuComponent component0) =>
+              actions.Add(component0 =>
               {
 
                 if (localfunc_setcurrentpack())
@@ -1388,7 +1388,7 @@ namespace Assets.Scripts.UI.Menus
 
               // Edit level pack
               selections.Add("edit");
-              actions.Add((MenuComponent component0) =>
+              actions.Add(component0 =>
               {
 
                 if (localfunc_setcurrentpack())
@@ -1400,7 +1400,7 @@ namespace Assets.Scripts.UI.Menus
 
               // Rename level pack
               selections.Add("rename");
-              actions.Add((MenuComponent component0) =>
+              actions.Add(component0 =>
               {
 
                 if (localfunc_setcurrentpack())
@@ -1465,7 +1465,7 @@ namespace Assets.Scripts.UI.Menus
 
               // Duplicate level pack
               selections.Add("duplicate");
-              actions.Add((MenuComponent component0) =>
+              actions.Add(component0 =>
               {
 
                 if (localfunc_setcurrentpack())
@@ -1487,7 +1487,7 @@ namespace Assets.Scripts.UI.Menus
 
               // Delete level pack
               selections.Add("delete - press 4 times");
-              actions.Add((MenuComponent component0) =>
+              actions.Add(component0 =>
               {
 
                 if (localfunc_setcurrentpack())
@@ -1519,12 +1519,12 @@ namespace Assets.Scripts.UI.Menus
               if (Levels._LevelPack_Current != null && Levels._LevelPack_Current._levelData.Length == 0)
               {
                 selections.Add("upload to workshop - cannot upload empty level pack\n");
-                actions.Add((MenuComponent component0) => { });
+                actions.Add(component0 => { });
               }
               else
               {
                 selections.Add("upload to workshop\n");
-                actions.Add((MenuComponent component0) =>
+                actions.Add(component0 =>
                 {
 
                   if (localfunc_setcurrentpack())
@@ -1546,7 +1546,7 @@ namespace Assets.Scripts.UI.Menus
               component.SetDropdownData(prompt, selections, actions, "start");
 
             })
-            .AddEvent(EventType.ON_SELECTED, (MenuComponent component) =>
+            .AddEvent(EventType.ON_SELECTED, component =>
             {
               Levels._Delete_Iter = 4;
             });
@@ -1583,7 +1583,7 @@ namespace Assets.Scripts.UI.Menus
         if (Levels._LevelPack_UploadingToWorkshop)
           menu_levelpacks
           .AddComponent($"upload as new workshop item\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-            .AddEvent((MenuComponent component) =>
+            .AddEvent(component =>
             {
 
               // Gather workshop info
@@ -1661,7 +1661,7 @@ namespace Assets.Scripts.UI.Menus
             // Dropdown options for published items
             menu_levelpacks
             .AddComponent($"{item_p.Value.m_rgchTitle}\n{lastline}", MenuComponent.ComponentType.BUTTON_DROPDOWN)
-              .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+              .AddEvent(EventType.ON_RENDER, component =>
               {
 
                 // Open submenu with options
@@ -1675,7 +1675,7 @@ namespace Assets.Scripts.UI.Menus
                   prompt = $"<color={_COLOR_GRAY}>=== level pack: </color>{item_p.Value.m_rgchTitle}\n<color={_COLOR_GRAY}>=== overwrite level pack?</color>\n\n";
 
                   selections.Add("overwrite");
-                  actions.Add((MenuComponent component0) =>
+                  actions.Add(component0 =>
                   {
 
                     // Make sure file exists / copy
@@ -1721,14 +1721,14 @@ namespace Assets.Scripts.UI.Menus
                   {
                     first_selection = "not subscribed to content\n";
                     selections.Add("not subscribed to content\n");
-                    actions.Add((MenuComponent component0) =>
+                    actions.Add(component0 =>
                     {
                     });
                   }
                   else
                   {
                     selections.Add("start\n");
-                    actions.Add((MenuComponent component0) =>
+                    actions.Add(component0 =>
                     {
 
                       // Gather install location from Steam
@@ -1794,7 +1794,7 @@ namespace Assets.Scripts.UI.Menus
 
               menu_levelpacks
               .AddComponent($"{item_p.Value.m_rgchTitle}\n{lastline}", MenuComponent.ComponentType.BUTTON_DROPDOWN)
-                .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+                .AddEvent(EventType.ON_RENDER, component =>
                 {
 
                   // Open submenu with options
@@ -1808,14 +1808,14 @@ namespace Assets.Scripts.UI.Menus
                   {
                     first_selection = "subscribed content not installed\n";
                     selections.Add("subscribed content not installed\n");
-                    actions.Add((MenuComponent component0) =>
+                    actions.Add(component0 =>
                     {
                     });
                   }
                   else
                   {
                     selections.Add("start\n");
-                    actions.Add((MenuComponent component0) =>
+                    actions.Add(component0 =>
                     {
 
                       // Gather install location from Steam
@@ -1855,7 +1855,7 @@ namespace Assets.Scripts.UI.Menus
 
           menu_levelpacks
           .AddComponent("open steam workshop\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-            .AddEvent((MenuComponent component) =>
+            .AddEvent(component =>
             {
 
               // Open to workshop files
@@ -1869,7 +1869,7 @@ namespace Assets.Scripts.UI.Menus
               }
             })
           .AddComponent("reload local / workshop content\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-            .AddEvent((MenuComponent component) =>
+            .AddEvent(component =>
             {
 
               // Load workshop items
@@ -1904,7 +1904,7 @@ namespace Assets.Scripts.UI.Menus
         {
 
           menu_levelpacks.AddBackButton(MenuType.EDITOR_PACKS)
-          .AddEvent((MenuComponent component) =>
+          .AddEvent(component =>
           {
             Levels._LevelPack_UploadingToWorkshop = false;
             CommonEvents._SwitchMenu(MenuType.EDITOR_PACKS);
@@ -1982,7 +1982,7 @@ namespace Assets.Scripts.UI.Menus
             menu_editpacks.AddComponent($"add level to pack - MAX LEVELS PER PACK REACHED\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE);
           else
             menu_editpacks.AddComponent($"add level to pack\n\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
-              .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+              .AddEvent(EventType.ON_RENDER, component =>
               {
 
                 // Open submenu with options
@@ -2000,9 +2000,9 @@ namespace Assets.Scripts.UI.Menus
                   firstselection = "no levels to add - switch to level creator";
 
                   selections.Add($"{firstselection}");
-                  actions.Add((MenuComponent component0) => { CommonEvents._SwitchMenu(MenuType.EDITOR_LEVELS); });
-                  actions_onfocus.Add((MenuComponent component0) => { });
-                  actions_onblur.Add((MenuComponent component0) => { });
+                  actions.Add(component0 => { CommonEvents._SwitchMenu(MenuType.EDITOR_LEVELS); });
+                  actions_onfocus.Add(component0 => { });
+                  actions_onblur.Add(component0 => { });
                 }
 
                 else
@@ -2023,13 +2023,13 @@ namespace Assets.Scripts.UI.Menus
                       if (i == 0) firstselection = "corrupted level data";
 
                       selections.Add($"corrupted level data{lastline}");
-                      actions.Add((MenuComponent component0) => { });
-                      actions_onfocus.Add((MenuComponent component0) =>
+                      actions.Add(component0 => { });
+                      actions_onfocus.Add(component0 =>
                       {
                         if (GameScript._lp0 != null && s_CurrentMenu._DropdownCount == 0)
                           Object.Destroy(GameScript._lp0.gameObject);
                       });
-                      actions_onblur.Add((MenuComponent component0) => { });
+                      actions_onblur.Add(component0 => { });
                       continue;
                     }
 
@@ -2038,7 +2038,7 @@ namespace Assets.Scripts.UI.Menus
 
                     // Append level to level pack
                     selections.Add($"{level_name}{lastline}");
-                    actions.Add((MenuComponent component0) =>
+                    actions.Add(component0 =>
                     {
 
                       var save_selection = s_CurrentMenu._SelectionIndex;
@@ -2082,11 +2082,11 @@ namespace Assets.Scripts.UI.Menus
                     });
 
                     // Focus / blur remove level preview
-                    actions_onfocus.Add((MenuComponent component0) =>
+                    actions_onfocus.Add(component0 =>
                     {
                       GameScript._lp0 = TileManager.GetMapPreview(level_data).transform;
                     });
-                    actions_onblur.Add((MenuComponent component0) =>
+                    actions_onblur.Add(component0 =>
                     {
                       if (GameScript._lp0 != null && s_CurrentMenu._DropdownCount == 0)
                         Object.Destroy(GameScript._lp0.gameObject);
@@ -2129,7 +2129,7 @@ namespace Assets.Scripts.UI.Menus
 
               menu_editpacks
               .AddComponent($"{level_name}\n{lineend}", MenuComponent.ComponentType.BUTTON_SIMPLE)
-                .AddEvent((MenuComponent component) =>
+                .AddEvent(component =>
                 {
 
                   // Load map preview
@@ -2170,7 +2170,7 @@ namespace Assets.Scripts.UI.Menus
                 })
 
                 // Add / remove level preview
-                .AddEvent(EventType.ON_FOCUS, (MenuComponent component) =>
+                .AddEvent(EventType.ON_FOCUS, component =>
                 {
 
                   // Load map preview
@@ -2185,7 +2185,7 @@ namespace Assets.Scripts.UI.Menus
                     Levels.GetHardcodedLoadout(level_meta[2]);
                   }
                 })
-                .AddEvent(EventType.ON_UNFOCUS, (MenuComponent component) =>
+                .AddEvent(EventType.ON_UNFOCUS, component =>
                 {
 
                   // Unload map preview
@@ -2226,7 +2226,7 @@ namespace Assets.Scripts.UI.Menus
             if (Levels._IsReorderingLevel)
               menu_editpacks
               .AddComponent($"{level_name}\n{lineend}", MenuComponent.ComponentType.BUTTON_SIMPLE)
-                .AddEvent(EventType.ON_SELECTED, (MenuComponent component) =>
+                .AddEvent(EventType.ON_SELECTED, component =>
                 {
 
                   Levels._IsReorderingLevel = false;
@@ -2268,7 +2268,7 @@ namespace Assets.Scripts.UI.Menus
             else
               menu_editpacks
               .AddComponent($"{level_name}\n{lineend}", MenuComponent.ComponentType.BUTTON_DROPDOWN)
-                .AddEvent((MenuComponent component) =>
+                .AddEvent(component =>
                 {
                   // Load map preview
                   if (s_CurrentMenu._HasDropdown)
@@ -2282,7 +2282,7 @@ namespace Assets.Scripts.UI.Menus
                     Levels.GetHardcodedLoadout(level_meta[2]);
                   }
                 })
-                .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+                .AddEvent(EventType.ON_RENDER, component =>
                 {
 
                   // Open submenu with options
@@ -2292,7 +2292,7 @@ namespace Assets.Scripts.UI.Menus
 
                   // Remove from level list
                   selections.Add("remove");
-                  actions.Add((MenuComponent component0) =>
+                  actions.Add(component0 =>
                   {
 
                     var saveindex = s_CurrentMenu._DropdownParentIndex - 1;
@@ -2325,7 +2325,7 @@ namespace Assets.Scripts.UI.Menus
 
                   // Replace with map
                   selections.Add("overwrite");
-                  actions.Add((MenuComponent component0) =>
+                  actions.Add(component0 =>
                   {
 
                     Levels._IsOverwritingLevel = true;
@@ -2353,7 +2353,7 @@ namespace Assets.Scripts.UI.Menus
                   }
 
                   selections.Add($"set theme - {level_theme}");
-                  actions.Add((MenuComponent component0) =>
+                  actions.Add(component0 =>
                   {
 
                     if (level_meta[3] == null)
@@ -2378,7 +2378,7 @@ namespace Assets.Scripts.UI.Menus
 
                   // Reorder
                   selections.Add("reorder - insert before");
-                  actions.Add((MenuComponent component0) =>
+                  actions.Add(component0 =>
                   {
 
                     Levels._IsReorderingLevel = true;
@@ -2394,7 +2394,7 @@ namespace Assets.Scripts.UI.Menus
 
                   // Set hard loadout
                   selections.Add("set loadout - " + (CurrentLoadout()._Equipment.IsEmpty() ? "not set, using MISSIONS mode loadouts" : "set, using hard-set loadout"));
-                  actions.Add((MenuComponent component0) =>
+                  actions.Add(component0 =>
                   {
 
                     // Start editing loadout
@@ -2409,7 +2409,7 @@ namespace Assets.Scripts.UI.Menus
 
                   // Download level pack to local storage
                   selections.Add("download to local levels");
-                  actions.Add((MenuComponent component0) =>
+                  actions.Add(component0 =>
                   {
 
                     var level_data = Levels._LevelPack_Current._levelData[s_CurrentMenu._DropdownParentIndex - 1];
@@ -2445,7 +2445,7 @@ namespace Assets.Scripts.UI.Menus
                 })
 
                 // Add / remove level preview
-                .AddEvent(EventType.ON_FOCUS, (MenuComponent component) =>
+                .AddEvent(EventType.ON_FOCUS, component =>
                 {
 
                   // Load map preview
@@ -2460,7 +2460,7 @@ namespace Assets.Scripts.UI.Menus
                     Levels.GetHardcodedLoadout(level_meta[2]);
                   }
                 })
-                .AddEvent(EventType.ON_UNFOCUS, (MenuComponent component) =>
+                .AddEvent(EventType.ON_UNFOCUS, component =>
                 {
 
                   // Unload map preview
@@ -2480,7 +2480,7 @@ namespace Assets.Scripts.UI.Menus
         if (Levels._IsReorderingLevel || Levels._IsOverwritingLevel)
           menu_editpacks
           .AddBackButton(MenuType.EDITOR_PACKS_EDIT)
-            .AddEvent(EventType.ON_SELECTED, (MenuComponent component) =>
+            .AddEvent(EventType.ON_SELECTED, component =>
             {
               if (GameScript._lp0 != null)
                 Object.Destroy(GameScript._lp0.gameObject);
@@ -2499,7 +2499,7 @@ namespace Assets.Scripts.UI.Menus
                 SendInput(Input.UP);
               }
             })
-            .AddEvent(EventType.ON_FOCUS, (MenuComponent c) =>
+            .AddEvent(EventType.ON_FOCUS, c =>
             {
               if (GameScript._lp0 != null)
                 Object.Destroy(GameScript._lp0.gameObject);
@@ -2507,7 +2507,7 @@ namespace Assets.Scripts.UI.Menus
         else
           menu_editpacks
           .AddBackButton(MenuType.EDITOR_PACKS)
-            .AddEvent(EventType.ON_SELECTED, (MenuComponent component) =>
+            .AddEvent(EventType.ON_SELECTED, component =>
             {
               if (GameScript._lp0 != null)
                 Object.Destroy(GameScript._lp0.gameObject);
@@ -2518,7 +2518,7 @@ namespace Assets.Scripts.UI.Menus
               SendInput(Input.SPACE);
               SendInput(Input.DOWN);
             })
-            .AddEvent(EventType.ON_FOCUS, (MenuComponent c) =>
+            .AddEvent(EventType.ON_FOCUS, c =>
             {
               if (GameScript._lp0 != null)
                 Object.Destroy(GameScript._lp0.gameObject);
@@ -2533,23 +2533,23 @@ namespace Assets.Scripts.UI.Menus
 
       // Open discord channel
       .AddComponent("youtube\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-        .AddEvent((MenuComponent component0) => { Application.OpenURL("https://www.youtube.com/channel/UCmK-_yhO3IyzOb1ILcwGAKg"); })
+        .AddEvent(component0 => { Application.OpenURL("https://www.youtube.com/channel/UCmK-_yhO3IyzOb1ILcwGAKg"); })
 
       // Open discord channel
       .AddComponent("discord\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-        .AddEvent((MenuComponent component0) => { Application.OpenURL("https://discord.gg/gTa8dmc"); })
+        .AddEvent(component0 => { Application.OpenURL("https://discord.gg/gTa8dmc"); })
 
       // Open reddit page
       .AddComponent("reddit\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-        .AddEvent((MenuComponent component0) => { Application.OpenURL("https://reddit.com/r/boxedworksGames/"); })
+        .AddEvent(component0 => { Application.OpenURL("https://reddit.com/r/boxedworksGames/"); })
 
       // Open twitter page
       .AddComponent("twitter\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-        .AddEvent((MenuComponent component0) => { Application.OpenURL("https://www.twitter.com/boxedworks"); })
+        .AddEvent(component0 => { Application.OpenURL("https://www.twitter.com/boxedworks"); })
 
       // Open music source
       .AddComponent("music\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-        .AddEvent((MenuComponent component0) => { Application.OpenURL("https://incompetech.com/music/royalty-free/?genre=Jazz"); })
+        .AddEvent(component0 => { Application.OpenURL("https://incompetech.com/music/royalty-free/?genre=Jazz"); })
 
       .AddBackButton(MenuType.MAIN);
 
@@ -2572,7 +2572,7 @@ namespace Assets.Scripts.UI.Menus
 
         // Show available $$
         .AddComponent("available ($$): 10\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-          .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+          .AddEvent(EventType.ON_RENDER, component =>
           {
             if (component._focused)
               component.SetDisplayText($"</color><color={_COLOR_GRAY}>available ($$): {ShopHelper._AvailablePoints}</color>      <-- get ($$) by getting MISSIONS ranks<color=white>\n");
@@ -2586,7 +2586,7 @@ namespace Assets.Scripts.UI.Menus
 
         // Show available equipment points
         .AddComponent("max equipment points: 3\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-          .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+          .AddEvent(EventType.ON_RENDER, component =>
           {
             var points = Loadout._POINTS_MAX;
             if (component._focused)
@@ -2599,7 +2599,7 @@ namespace Assets.Scripts.UI.Menus
         // Show shop filter
         if (ShopHelper.Unlocked(ShopHelper.Unlocks.TUTORIAL_PART1))
           m.AddComponent("filter: available\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-            .AddEvent((MenuComponent component) =>
+            .AddEvent(component =>
             {
               ShopHelper._DisplayMode++;
 
@@ -2608,7 +2608,7 @@ namespace Assets.Scripts.UI.Menus
               _CanRender = false;
               RenderMenu();
             })
-            .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+            .AddEvent(EventType.ON_RENDER, component =>
             {
               var mode = (ShopHelper.DisplayModes)ShopHelper._DisplayMode;
               var color = mode == ShopHelper.DisplayModes.PURCHASED ? "yellow" : _COLOR_GRAY;
@@ -2807,7 +2807,7 @@ namespace Assets.Scripts.UI.Menus
               ct = $"{cts0[0]}<color={_COLOR_GRAY}>[{cts1[0]}]</color>{cts1[1]}";
             }
             m.AddComponent($"{ct}\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-              .AddEvent((MenuComponent component) =>
+              .AddEvent(component =>
               {
                 var displayText = component.GetDisplayText(false);
                 var unlockText = displayText.Split('>')[2].Split('<')[0].Trim();//.Split(' ')[0].Trim();
@@ -2862,7 +2862,7 @@ namespace Assets.Scripts.UI.Menus
           }
           if (set_text)
           {
-            m.AddEvent((MenuComponent component) =>
+            m.AddEvent(component =>
             {
               // Save selection
               var save_selection = s_CurrentMenu._SelectionIndex;
@@ -2877,7 +2877,7 @@ namespace Assets.Scripts.UI.Menus
               MenuType.SHOP,
               null,
               true,
-              (MenuComponent component1) =>
+              component1 =>
               {
                 s_menus[MenuType.SHOP]._SelectionIndex = save_selection;
                 RenderMenu();
@@ -2887,7 +2887,7 @@ namespace Assets.Scripts.UI.Menus
         }
         // Back button
         m.AddComponent("\n")
-        .AddBackButton((MenuComponent component) =>
+        .AddBackButton(component =>
         {
           CommonEvents._SwitchMenu(s_PreviousMenuType == MenuType.GENERIC_MENU || s_InPause ? MenuType.PAUSE : MenuType.GAMETYPE_MISSION);
           if (s_InPause)
@@ -2915,7 +2915,7 @@ namespace Assets.Scripts.UI.Menus
       }
       .AddComponent($"<color={_COLOR_GRAY}>briefing/color>\n\n")
       .AddComponent("controls\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-        .AddEvent((MenuComponent component) => { CommonEvents._SwitchMenu(MenuType.CONTROLS); })
+        .AddEvent(component => { CommonEvents._SwitchMenu(MenuType.CONTROLS); })
       .AddBackButton(MenuType.MAIN);
 
       // Controls menu
@@ -2939,74 +2939,74 @@ namespace Assets.Scripts.UI.Menus
       }
       .AddComponent($"=== {string.Format(format_controls, "controls", "controller", "keyboard / mouse")}\n\n")
       .AddComponent($"{string.Format(format_controls, "move:", "", "w/a/s/d")} \n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-        .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+        .AddEvent(EventType.ON_RENDER, component =>
         {
           if (component._collider.transform.childCount == 0)
             SpawnControlUI(component, FunctionsC.Control.L_STICK);
         })
       .AddComponent($"{string.Format(format_controls, "aim:", "", "mouse")} \n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-        .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+        .AddEvent(EventType.ON_RENDER, component =>
         {
           if (component._collider.transform.childCount == 0)
             SpawnControlUI(component, FunctionsC.Control.R_STICK);
         })
       .AddComponent($"{string.Format(format_controls, "left weapon:", "", "left mouse btn")} \n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-        .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+        .AddEvent(EventType.ON_RENDER, component =>
         {
           if (component._collider.transform.childCount == 0)
             SpawnControlUI(component, FunctionsC.Control.L_TRIGGER);
         })
       .AddComponent($"{string.Format(format_controls, "right weapon:", "", "right mouse btn")} \n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-        .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+        .AddEvent(EventType.ON_RENDER, component =>
         {
           if (component._collider.transform.childCount == 0)
             SpawnControlUI(component, FunctionsC.Control.R_TRIGGER);
         })
       .AddComponent($"{string.Format(format_controls, "left utility:", "", "q")} \n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-        .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+        .AddEvent(EventType.ON_RENDER, component =>
         {
           if (component._collider.transform.childCount == 0)
             SpawnControlUI(component, FunctionsC.Control.L_BUMPER);
         })
       .AddComponent($"{string.Format(format_controls, "right utility:", "", "e")} \n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-        .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+        .AddEvent(EventType.ON_RENDER, component =>
         {
           if (component._collider.transform.childCount == 0)
             SpawnControlUI(component, FunctionsC.Control.R_BUMPER);
         })
       .AddComponent($"{string.Format(format_controls, "reload weapon(s):", "", "r")} \n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-        .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+        .AddEvent(EventType.ON_RENDER, component =>
         {
           if (component._collider.transform.childCount == 0)
             SpawnControlUI(component, FunctionsC.Control.X);
         })
       .AddComponent($"{string.Format(format_controls, "swap weapon pair:", "", "tab")} \n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-        .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+        .AddEvent(EventType.ON_RENDER, component =>
         {
           if (component._collider.transform.childCount == 0)
             SpawnControlUI(component, FunctionsC.Control.Y);
         })
       .AddComponent($"{string.Format(format_controls, "grapple:", "", "middle mouse btn")} \n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-        .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+        .AddEvent(EventType.ON_RENDER, component =>
         {
           if (component._collider.transform.childCount == 0)
             SpawnControlUI(component, FunctionsC.Control.R_STICK);
         })
       .AddComponent($"{string.Format(format_controls, "spread arms:", "", "space")} \n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-        .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+        .AddEvent(EventType.ON_RENDER, component =>
         {
           if (component._collider.transform.childCount == 0)
             SpawnControlUI(component, FunctionsC.Control.A);
         })
       .AddComponent($"{string.Format(format_controls, "swap weapons' hand:", "", "g")} \n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-        .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+        .AddEvent(EventType.ON_RENDER, component =>
         {
           if (component._collider.transform.childCount == 0)
             SpawnControlUI(component, FunctionsC.Control.DPAD_UP);
         })
 
       .AddComponent($"{string.Format(format_controls, "pause:", "", "escape")} \n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-        .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+        .AddEvent(EventType.ON_RENDER, component =>
         {
           if (component._collider.transform.childCount == 0)
           {
@@ -3020,13 +3020,13 @@ namespace Assets.Scripts.UI.Menus
 
       .AddComponent($"\n<color={_COLOR_GRAY}>only in menus</color>\n")
       .AddComponent($"{string.Format(format_controls, "cycle color:", "", "1")} \n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-        .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+        .AddEvent(EventType.ON_RENDER, component =>
         {
           if (component._collider.transform.childCount == 0)
             SpawnControlUI(component, FunctionsC.Control.L_BUMPER);
         })
       .AddComponent($"{string.Format(format_controls, "cycle color:", "", "3")} \n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-        .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+        .AddEvent(EventType.ON_RENDER, component =>
         {
           if (component._collider.transform.childCount == 0)
             SpawnControlUI(component, FunctionsC.Control.R_BUMPER);
@@ -3034,20 +3034,20 @@ namespace Assets.Scripts.UI.Menus
 
       .AddComponent($"\n<color={_COLOR_GRAY}>mode - </color><color=yellow>MISSIONS</color>\n")
       .AddComponent($"{string.Format(format_controls, "cycle loadout left:", "", "z")} \n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-        .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+        .AddEvent(EventType.ON_RENDER, component =>
         {
           if (component._collider.transform.childCount == 0)
             SpawnControlUI(component, FunctionsC.Control.DPAD_LEFT);
         })
       .AddComponent($"{string.Format(format_controls, "cycle loadout right:", "", "c")} \n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-        .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+        .AddEvent(EventType.ON_RENDER, component =>
         {
           if (component._collider.transform.childCount == 0)
             SpawnControlUI(component, FunctionsC.Control.DPAD_RIGHT);
         })
 
       .AddComponent($"{string.Format(format_controls, "restart mission:", "", "left control/backspace")} \n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-        .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+        .AddEvent(EventType.ON_RENDER, component =>
         {
           if (component._collider.transform.childCount == 0)
           {
@@ -3058,26 +3058,26 @@ namespace Assets.Scripts.UI.Menus
         })
 
       .AddComponent($"{string.Format(format_controls, "next mission:", " hold", "page up")} \n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-        .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+        .AddEvent(EventType.ON_RENDER, component =>
         {
           if (component._collider.transform.childCount == 0)
             SpawnControlUI(component, FunctionsC.Control.DPAD_RIGHT);
         })
       .AddComponent($"{string.Format(format_controls, "previous mission:", " hold", "page down")} \n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-        .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+        .AddEvent(EventType.ON_RENDER, component =>
         {
           if (component._collider.transform.childCount == 0)
             SpawnControlUI(component, FunctionsC.Control.DPAD_LEFT);
         })
 
       .AddComponent($"{string.Format(format_controls, "flip table:", "", "f")} \n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-        .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+        .AddEvent(EventType.ON_RENDER, component =>
         {
           if (component._collider.transform.childCount == 0)
             SpawnControlUI(component, FunctionsC.Control.B);
         })
       .AddComponent($"{string.Format(format_controls, "whistle:", "", "v")} \n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-        .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+        .AddEvent(EventType.ON_RENDER, component =>
         {
           if (component._collider.transform.childCount == 0)
             SpawnControlUI(component, FunctionsC.Control.DPAD_DOWN);
@@ -3085,27 +3085,27 @@ namespace Assets.Scripts.UI.Menus
 
       .AddComponent($"\n<color={_COLOR_GRAY}>mode - </color><color=yellow>ZOMBIE</color>\n")
       .AddComponent($"{string.Format(format_controls, "purchase (auto):", "", "f")} \n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-        .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+        .AddEvent(EventType.ON_RENDER, component =>
         {
           if (component._collider.transform.childCount == 0)
             SpawnControlUI(component, FunctionsC.Control.B);
         })
       .AddComponent("\n")
       .AddComponent($"{string.Format(format_controls, "purchase (left):", "", "z")} \n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-        .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+        .AddEvent(EventType.ON_RENDER, component =>
         {
           if (component._collider.transform.childCount == 0)
             SpawnControlUI(component, FunctionsC.Control.DPAD_LEFT);
         })
       .AddComponent($"{string.Format(format_controls, "purchase (right):", "", "c")} \n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-        .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+        .AddEvent(EventType.ON_RENDER, component =>
         {
           if (component._collider.transform.childCount == 0)
             SpawnControlUI(component, FunctionsC.Control.DPAD_RIGHT);
         })
       .AddComponent("\n")
       .AddComponent($"{string.Format(format_controls, "drop credits:", "", "v")} \n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-        .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+        .AddEvent(EventType.ON_RENDER, component =>
         {
           if (component._collider.transform.childCount == 0)
             SpawnControlUI(component, FunctionsC.Control.DPAD_DOWN);
@@ -3133,7 +3133,7 @@ namespace Assets.Scripts.UI.Menus
       }
       .AddComponent($"<color={_COLOR_GRAY}>mode selection</color>\n\n")
       .AddComponent(string.Format(format_mode, "missions", "clean site and retrieve DATA"), MenuComponent.ComponentType.BUTTON_SIMPLE)
-        .AddEvent((MenuComponent component) =>
+        .AddEvent(component =>
         {
           GameScript.s_GameMode = GameScript.GameModes.MISSIONS;
           Levels._CurrentLevelCollectionIndex = SettingsHelper._DIFFICULTY;
@@ -3164,7 +3164,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
 
       // Switch to survival mode menu
       .AddComponent(string.Format(format_mode, "zombie", "endure waves of the undead\n"), MenuComponent.ComponentType.BUTTON_SIMPLE)
-        .AddEvent((MenuComponent component) =>
+        .AddEvent(component =>
         {
           Levels._CurrentLevelCollectionIndex = 2;
           GameScript.s_GameMode = GameScript.GameModes.ZOMBIE;
@@ -3172,7 +3172,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
 
           SettingsHelper.OnGamemodeChanged(SettingsHelper.GamemodeChange.SURVIVAL);
         })
-        .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+        .AddEvent(EventType.ON_RENDER, component =>
         {
 #if UNITY_EDITOR
           return;
@@ -3182,7 +3182,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
 
       // Switch to versus mode menu
       .AddComponent(string.Format(format_mode, "party", "versus\n"), MenuComponent.ComponentType.BUTTON_SIMPLE)
-        .AddEvent((MenuComponent component) =>
+        .AddEvent(component =>
         {
           Levels._CurrentLevelCollectionIndex = 4;
           GameScript.s_GameMode = GameScript.GameModes.PARTY;
@@ -3219,158 +3219,158 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
 
         // Mode
         .AddComponent("rules: endurance\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
-         .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
-          {
-            // Set display text
-            var selection_match = VersusMode.GetModeName();
-            component.SetDisplayText(string.Format(format_versus, "mode", selection_match));
+         .AddEvent(EventType.ON_RENDER, component =>
+         {
+           // Set display text
+           var selection_match = VersusMode.GetModeName();
+           component.SetDisplayText(string.Format(format_versus, "mode", selection_match));
 
-            // Set dropdown data
-            var selections = new List<string>();
-            var actions = new List<System.Action<MenuComponent>>();
-            foreach (var selection in new int[] { 0, 1 })
-            {
-              var selectionCurrent = VersusMode.GetModeName(selection);
-              var modeCurrent = (VersusMode.VersusSettings.ModeType)selection;
+           // Set dropdown data
+           var selections = new List<string>();
+           var actions = new List<System.Action<MenuComponent>>();
+           foreach (var selection in new int[] { 0, 1 })
+           {
+             var selectionCurrent = VersusMode.GetModeName(selection);
+             var modeCurrent = (VersusMode.VersusSettings.ModeType)selection;
 
-              var modeDescription = modeCurrent switch
-              {
-                VersusMode.VersusSettings.ModeType.LAST_MAN_STANDING => "- be the last one standing to win",
-                VersusMode.VersusSettings.ModeType.KILLS_FOR_POINTS => "    - every kill gives you a point",
-                _ => ""
-              };
+             var modeDescription = modeCurrent switch
+             {
+               VersusMode.VersusSettings.ModeType.LAST_MAN_STANDING => "- be the last one standing to win",
+               VersusMode.VersusSettings.ModeType.KILLS_FOR_POINTS => "    - every kill gives you a point",
+               _ => ""
+             };
 
-              selections.Add($"{selectionCurrent} {modeDescription}");
-              actions.Add((MenuComponent component0) =>
-              {
-                VersusMode.s_Settings._Mode = modeCurrent;
-                _CanRender = false;
-                RenderMenu();
-              });
-            }
+             selections.Add($"{selectionCurrent} {modeDescription}");
+             actions.Add(component0 =>
+             {
+               VersusMode.s_Settings._Mode = modeCurrent;
+               _CanRender = false;
+               RenderMenu();
+             });
+           }
 
-            component.SetDropdownData("mode\n*select different rules\n\n", selections, actions, selection_match);
-          })
+           component.SetDropdownData("mode\n*select different rules\n\n", selections, actions, selection_match);
+         })
 
         // Team setting
         .AddComponent("grouping: free-for-all\n\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
-         .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
-          {
-            // Set display text
-            var selection_match = VersusMode.s_Settings._FreeForAll ? "free-for-all" : "teams";
-            component.SetDisplayText(string.Format(format_versus, "grouping", selection_match) + '\n');
+         .AddEvent(EventType.ON_RENDER, component =>
+         {
+           // Set display text
+           var selection_match = VersusMode.s_Settings._FreeForAll ? "free-for-all" : "teams";
+           component.SetDisplayText(string.Format(format_versus, "grouping", selection_match) + '\n');
 
-            // Set dropdown data
-            var selections = new List<string>();
-            var actions = new List<System.Action<MenuComponent>>();
-            selections.Add($"free-for-all - everyone for themselves");
-            actions.Add((MenuComponent component0) =>
-            {
-              VersusMode.s_Settings._FreeForAll = true;
-              VersusMode.OnTeammmodeChanged();
+           // Set dropdown data
+           var selections = new List<string>();
+           var actions = new List<System.Action<MenuComponent>>();
+           selections.Add($"free-for-all - everyone for themselves");
+           actions.Add(component0 =>
+           {
+             VersusMode.s_Settings._FreeForAll = true;
+             VersusMode.OnTeammmodeChanged();
 
-              _CanRender = false;
-              RenderMenu();
-            });
-            selections.Add($"teams        - work together");
-            actions.Add((MenuComponent component0) =>
-            {
-              VersusMode.s_Settings._FreeForAll = false;
-              VersusMode.OnTeammmodeChanged();
+             _CanRender = false;
+             RenderMenu();
+           });
+           selections.Add($"teams        - work together");
+           actions.Add(component0 =>
+           {
+             VersusMode.s_Settings._FreeForAll = false;
+             VersusMode.OnTeammmodeChanged();
 
-              _CanRender = false;
-              RenderMenu();
-            });
+             _CanRender = false;
+             RenderMenu();
+           });
 
-            component.SetDropdownData("grouping\n*change team rules\n\n", selections, actions, selection_match);
-          })
+           component.SetDropdownData("grouping\n*change team rules\n\n", selections, actions, selection_match);
+         })
 
         // Score to win setting
         .AddComponent("score to win: 5\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
-         .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
-          {
-            // Set display text
-            var selection_match = $"{VersusMode.s_Settings._ScoreToWin}";
-            component.SetDisplayText(string.Format(format_versus, "score to win", selection_match));
+         .AddEvent(EventType.ON_RENDER, component =>
+         {
+           // Set display text
+           var selection_match = $"{VersusMode.s_Settings._ScoreToWin}";
+           component.SetDisplayText(string.Format(format_versus, "score to win", selection_match));
 
-            // Set dropdown data
-            var selections = new List<string>();
-            var actions = new List<System.Action<MenuComponent>>();
-            foreach (var selection in new int[] { 1, 3, 5, 7, 10, 15, 20 })
-            {
-              var selectionCurrent = selection;
+           // Set dropdown data
+           var selections = new List<string>();
+           var actions = new List<System.Action<MenuComponent>>();
+           foreach (var selection in new int[] { 1, 3, 5, 7, 10, 15, 20 })
+           {
+             var selectionCurrent = selection;
 
-              selections.Add($"{selectionCurrent}");
-              actions.Add((MenuComponent component0) =>
-              {
-                VersusMode.s_Settings._ScoreToWin = selectionCurrent;
-                _CanRender = false;
-                RenderMenu();
-              });
-            }
+             selections.Add($"{selectionCurrent}");
+             actions.Add(component0 =>
+             {
+               VersusMode.s_Settings._ScoreToWin = selectionCurrent;
+               _CanRender = false;
+               RenderMenu();
+             });
+           }
 
-            component.SetDropdownData("score to win\n*sets what score to reach for the game to end\n\n", selections, actions, selection_match);
-          })
+           component.SetDropdownData("score to win\n*sets what score to reach for the game to end\n\n", selections, actions, selection_match);
+         })
 
         // Health
         .AddComponent("start health: 1\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
-         .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
-          {
-            // Set display text
-            var selection_match = $"{VersusMode.s_Settings._PlayerHealth}";
-            component.SetDisplayText(string.Format(format_versus, "start health", selection_match));
+         .AddEvent(EventType.ON_RENDER, component =>
+         {
+           // Set display text
+           var selection_match = $"{VersusMode.s_Settings._PlayerHealth}";
+           component.SetDisplayText(string.Format(format_versus, "start health", selection_match));
 
-            // Set dropdown data
-            var selections = new List<string>();
-            var actions = new List<System.Action<MenuComponent>>();
-            foreach (var selection in new int[] { 1, 2, 3 })
-            {
-              var selectionCurrent = selection;
+           // Set dropdown data
+           var selections = new List<string>();
+           var actions = new List<System.Action<MenuComponent>>();
+           foreach (var selection in new int[] { 1, 2, 3 })
+           {
+             var selectionCurrent = selection;
 
-              selections.Add($"{selectionCurrent}");
-              actions.Add((MenuComponent component0) =>
-              {
-                VersusMode.s_Settings._PlayerHealth = selectionCurrent;
-                _CanRender = false;
-                RenderMenu();
-              });
-            }
+             selections.Add($"{selectionCurrent}");
+             actions.Add(component0 =>
+             {
+               VersusMode.s_Settings._PlayerHealth = selectionCurrent;
+               _CanRender = false;
+               RenderMenu();
+             });
+           }
 
-            component.SetDropdownData("start health\n*sets the players' starting health\n\n", selections, actions, selection_match);
-          })
+           component.SetDropdownData("start health\n*sets the players' starting health\n\n", selections, actions, selection_match);
+         })
 
         // Slowmo setting
         .AddComponent("slow-motion: on\n\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
-         .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
-          {
-            // Set display text
-            var selection_match = VersusMode.s_Settings._UseSlowmo ? "on" : "off";
-            component.SetDisplayText(string.Format(format_versus, "slow-motion", selection_match) + "\n");
+         .AddEvent(EventType.ON_RENDER, component =>
+         {
+           // Set display text
+           var selection_match = VersusMode.s_Settings._UseSlowmo ? "on" : "off";
+           component.SetDisplayText(string.Format(format_versus, "slow-motion", selection_match) + "\n");
 
-            // Set dropdown data
-            var selections = new List<string>();
-            var actions = new List<System.Action<MenuComponent>>();
-            selections.Add($"on");
-            actions.Add((MenuComponent component0) =>
-            {
-              VersusMode.s_Settings._UseSlowmo = true;
-              _CanRender = false;
-              RenderMenu();
-            });
-            selections.Add($"off");
-            actions.Add((MenuComponent component0) =>
-            {
-              VersusMode.s_Settings._UseSlowmo = false;
-              _CanRender = false;
-              RenderMenu();
-            });
+           // Set dropdown data
+           var selections = new List<string>();
+           var actions = new List<System.Action<MenuComponent>>();
+           selections.Add($"on");
+           actions.Add(component0 =>
+           {
+             VersusMode.s_Settings._UseSlowmo = true;
+             _CanRender = false;
+             RenderMenu();
+           });
+           selections.Add($"off");
+           actions.Add(component0 =>
+           {
+             VersusMode.s_Settings._UseSlowmo = false;
+             _CanRender = false;
+             RenderMenu();
+           });
 
-            component.SetDropdownData("slow-motion\n*turns the slow-mo effect on or off\n\n", selections, actions, selection_match);
-          })
+           component.SetDropdownData("slow-motion\n*turns the slow-mo effect on or off\n\n", selections, actions, selection_match);
+         })
 
         // Start button
         .AddComponent("start\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-          .AddEvent((MenuComponent component) =>
+          .AddEvent(component =>
           {
             if (!VersusMode.HasMultipleTeams()) return;
 
@@ -3382,7 +3382,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
             if (FunctionsC.MusicManager.s_CurrentTrack <= 2)
               FunctionsC.MusicManager.TransitionTo(FunctionsC.MusicManager.GetNextTrackIter());
           })
-          .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+          .AddEvent(EventType.ON_RENDER, component =>
           {
             var obscured = !VersusMode.HasMultipleTeams();
 
@@ -3415,7 +3415,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
 
         // Tutorial
         .AddComponent("briefing\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-          .AddEvent((MenuComponent component) => { CommonEvents._SwitchMenu(MenuType.HOWTOPLAY_PARTY); })
+          .AddEvent(component => { CommonEvents._SwitchMenu(MenuType.HOWTOPLAY_PARTY); })
 
         // Back button
         .AddBackButton(MenuType.MODE_SELECTION);
@@ -3502,12 +3502,12 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
               string.Format(format_subdirs, $"\\dir{i}", $"{wave}    ", "") + '\n';
           s_menus[MenuType.LEVELS].AddComponent(display_text,
             MenuComponent.ComponentType.BUTTON_DROPDOWN)
-            .AddEvent(EventType.ON_UNFOCUS, (MenuComponent component) =>
+            .AddEvent(EventType.ON_UNFOCUS, component =>
             {
               s_SaveLevelSelected = -1;
             })
             // Save selected dir
-            .AddEventFront((MenuComponent component) =>
+            .AddEventFront(component =>
             {
               s_SaveMenuDir = component._buttonIndex;
 
@@ -3515,7 +3515,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
               //  GameScript._lp0 = TileManager.GetMapPreview(Levels._CurrentLevelCollection._leveldata[component._buttonIndex], 0).transform;
             })
             // Update dropdown selections
-            .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+            .AddEvent(EventType.ON_RENDER, component =>
             {
 
               // Obscur dir if first level not unlocked
@@ -3584,7 +3584,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
                   // Check if unlocked
                   if (level_unlocked)
                   {
-                    actions.Add((MenuComponent component0) =>
+                    actions.Add(component0 =>
                     {
                       // Save selected level iter
                       s_SaveLevelSelected = component0._dropdownIndex;
@@ -3606,7 +3606,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
                     });
 
                     // Add focus event
-                    actions_onFocus.Add((MenuComponent component0) =>
+                    actions_onFocus.Add(component0 =>
                     {
                       if (component0._menu._MenuComponent_lastFocused._buttonIndex > component0._menu._MenuComponentsSelectable.Count - 1 - component0._menu._DropdownCount)
                         component0._menu._MenuComponent_lastFocused._textColor = _COLOR_GRAY;
@@ -3616,26 +3616,26 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
                       var levelIter = component0.GetDisplayText().Split(' ')[2].Trim()[1..].ParseIntInvariant() - 1;
                       GameScript._lp0 = TileManager.GetMapPreview(Levels._CurrentLevelCollection._levelData[levelIter]).transform;
                     });
-                    actions_onCreated.Add((MenuComponent component0) => { });
+                    actions_onCreated.Add(component0 => { });
                   }
 
                   // Disable component
                   else
                   {
-                    actions.Add((MenuComponent component0) => { });
-                    actions_onCreated.Add((MenuComponent component0) =>
+                    actions.Add(component0 => { });
+                    actions_onCreated.Add(component0 =>
                     {
                       component0._obscured = true;
                     });
                     // Add focus event
-                    actions_onFocus.Add((MenuComponent component0) =>
+                    actions_onFocus.Add(component0 =>
                     {
                       if (component0._menu._MenuComponent_lastFocused._buttonIndex > component0._menu._MenuComponentsSelectable.Count - 1 - component0._menu._DropdownCount)
                         component0._menu._MenuComponent_lastFocused._textColor = _COLOR_GRAY;
                     });
                   }
                   // Turn grey on unfocus
-                  actions_onUnfocus.Add((MenuComponent component0) =>
+                  actions_onUnfocus.Add(component0 =>
                   {
                     component0._textColor = _COLOR_GRAY;
                   });
@@ -3695,7 +3695,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
                 var selections = new List<string>();
                 var actions = new List<System.Action<MenuComponent>>();
                 selections.Add("yes");
-                actions.Add((MenuComponent component0) =>
+                actions.Add(component0 =>
                 {
                   GameScript.NextLevel(s_SaveMenuDir);
                   CommonEvents._RemoveDropdownSelections(component0);
@@ -3720,7 +3720,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
                 var selections = new List<string>();
                 var actions = new List<System.Action<MenuComponent>>();
                 selections.Add("select");
-                actions.Add((MenuComponent component0) =>
+                actions.Add(component0 =>
                 {
                   GameScript.NextLevel(s_SaveMenuDir);
                   CommonEvents._RemoveDropdownSelections(component0);
@@ -3742,7 +3742,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
 
             // Difficulty setting
             .AddComponent("difficulty\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
-              .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+              .AddEvent(EventType.ON_RENDER, component =>
               {
                 var selection = SettingsHelper._DIFFICULTY == 0 ? "sneaky" : "sneakier";
                 var color = selection == "sneaky" ? _COLOR_GRAY : "cyan";
@@ -3774,7 +3774,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
 
                 var format_ds = "{0,-9}{1,-4} - {2,-30}";
                 selections.Add(string.Format(format_ds, $"sneaky", ratings_lowest[0], "base difficulty"));
-                actions.Add((MenuComponent component0) =>
+                actions.Add(component0 =>
                 {
                   if (SettingsHelper._DIFFICULTY != 0)
                   {
@@ -3782,7 +3782,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
                     LevelSaveData.Save();
                   }
                 });
-                actions_onCreated.Add((MenuComponent component0) => { });
+                actions_onCreated.Add(component0 => { });
                 var difficultyUnlocked = SettingsHelper._DifficultyUnlocked > 0;
 #if UNITY_EDITOR
                 //difficultyUnlocked = true;
@@ -3791,7 +3791,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
                 selections.Add(string.Format(format_ds, $"sneakier", ratings_lowest[1], "more enemies, harder levels, pressure"));
                 if (difficultyUnlocked)
                 {
-                  actions.Add((MenuComponent component0) =>
+                  actions.Add(component0 =>
                   {
                     if (SettingsHelper._DIFFICULTY != 1)
                     {
@@ -3799,12 +3799,12 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
                       LevelSaveData.Save();
                     }
                   });
-                  actions_onCreated.Add((MenuComponent component0) => { });
+                  actions_onCreated.Add(component0 => { });
                 }
                 else
                 {
-                  actions.Add((MenuComponent component0) => { });
-                  actions_onCreated.Add((MenuComponent component0) => { component0._obscured = true; });
+                  actions.Add(component0 => { });
+                  actions_onCreated.Add(component0 => { component0._obscured = true; });
                 }
 
                 // Set dropdown data
@@ -3813,7 +3813,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
 
               // Crown mode setting
               .AddComponent("crown\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
-                .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+                .AddEvent(EventType.ON_RENDER, component =>
                 {
 
                   /*/ Crown mode
@@ -3874,28 +3874,28 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
                   var actions_onCreated = new List<System.Action<MenuComponent>>();
 
                   selections.Add("off");
-                  actions.Add((MenuComponent component0) =>
+                  actions.Add(component0 =>
                   {
                     LevelModule.ExtraCrownMode = 0;
                     LevelSaveData.Save();
                   });
-                  actions_onCreated.Add((MenuComponent component0) => { });
+                  actions_onCreated.Add(component0 => { });
 
                   selections.Add("on");
-                  actions.Add((MenuComponent component0) =>
+                  actions.Add(component0 =>
                   {
                     LevelModule.ExtraCrownMode = 1;
                     LevelSaveData.Save();
                   });
-                  actions_onCreated.Add((MenuComponent component0) => { });
+                  actions_onCreated.Add(component0 => { });
 
                   selections.Add("on - no enemy bonuses");
-                  actions.Add((MenuComponent component0) =>
+                  actions.Add(component0 =>
                   {
                     LevelModule.ExtraCrownMode = 2;
                     LevelSaveData.Save();
                   });
-                  actions_onCreated.Add((MenuComponent component0) => { });
+                  actions_onCreated.Add(component0 => { });
 
                   // Set dropdown data
                   component.SetDropdownData("crown mode\n\nyou must be the last one standing to win...\na crown shows the victor! enemies wearing the crown gain bonuses\n\n", selections, actions, selection, actions_onCreated);
@@ -3903,7 +3903,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
         }
         m.AddComponent("\n");
         // Back button
-        m.AddBackButton((MenuComponent component) =>
+        m.AddBackButton(component =>
         {
           s_SaveMenuDir = -1;
           s_SaveLevelSelected = -1;
@@ -4140,7 +4140,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
           s_menus[MenuType.SELECT_LOADOUT].AddComponent(displayText, MenuComponent.ComponentType.BUTTON_SIMPLE)
 
           // Edit loadout when selected
-          .AddEvent((MenuComponent component) =>
+          .AddEvent(component =>
           {
             Loadout._CurrentLoadoutIndex = component._buttonIndex;
             CommonEvents._SwitchMenu(MenuType.EDIT_LOADOUT);
@@ -4148,7 +4148,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
         }
 
         // Back button
-        s_menus[MenuType.SELECT_LOADOUT].AddBackButton((MenuComponent component) =>
+        s_menus[MenuType.SELECT_LOADOUT].AddBackButton(component =>
         {
 
           // Check for empty loadout for tutorial
@@ -4229,7 +4229,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
 
         };
         m.AddComponent($"<color={_COLOR_GRAY}>edit loadout</color>\n\n")
-          .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+          .AddEvent(EventType.ON_RENDER, component =>
           {
             component.SetDisplayText($"<color={_COLOR_GRAY}>edit loadout {CurrentLoadout()._Id + 1}</color>\n\n");
           })
@@ -4250,7 +4250,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
               component.SetDisplayText($"filter: {mode}\n");
             })*/
           m.AddComponent(string.Format(loadout_format2, "loadout type:", $"one pair") + "\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-            .AddEvent((MenuComponent component) =>
+            .AddEvent(component =>
             {
               var loadout = CurrentLoadout();
               loadout._two_weapon_pairs = !loadout._two_weapon_pairs;
@@ -4263,7 +4263,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
               _CanRender = false;
               RenderMenu();
             })
-            .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+            .AddEvent(EventType.ON_RENDER, component =>
             {
               var type = CurrentLoadout()._two_weapon_pairs ? "two pairs" : "one pair";
               component.SetDisplayText(string.Format(loadout_format2, "loadout type:", $"{type}") + "\n");
@@ -4272,7 +4272,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
 
         // Show equipment points
         m.AddComponent(string.Format(loadout_format2, "equipment points:", "0") + "\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-          .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+          .AddEvent(EventType.ON_RENDER, component =>
           {
             var available_points = CurrentLoadout()._available_points;
             var available_points_string = available_points == 0 ? $"</color><color=red>{available_points}</color><color=white>" : $"</color><color=yellow>{available_points}</color><color=white>";
@@ -4287,7 +4287,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
         if (has_item)
         {
           m.AddComponent("left hand\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
-            .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+            .AddEvent(EventType.ON_RENDER, component =>
             {
               var item = CurrentLoadout()._Equipment._ItemLeft0;
               if (item == ItemManager.Items.FIST) item = ItemManager.Items.NONE;
@@ -4324,7 +4324,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
                 var use_color2 = use_color == "white" ? "white" : _COLOR_GRAY;
                 if (item0 == item && item != ItemManager.Items.NONE) use_color = use_color2 = "yellow";
                 selections.Add(string.Format($"</color><color={use_color2}>{loadout_format}<color=white>", item0, desc, $"</color><color={use_color}>{it_val}</color>"));
-                actions.Add((MenuComponent component0) =>
+                actions.Add(component0 =>
                 {
                   var item_selected = (ItemManager.Items)System.Enum.Parse(typeof(ItemManager.Items), component0.GetDisplayText(false).Trim().Split(' ')[2].Split('>')[2]);
                   var item_other = CurrentLoadout()._Equipment._ItemRight0;
@@ -4355,7 +4355,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
                     MenuType.EDIT_LOADOUT,
                     null,
                     true,
-                    (MenuComponent component1) =>
+                    component1 =>
                     {
                       s_menus[MenuType.EDIT_LOADOUT]._SelectionIndex = save_selection;
                       SendInput(Input.SPACE);
@@ -4371,21 +4371,21 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
                 });
                 // Check if item is unlocked
                 if (item0 == ItemManager.Items.NONE)
-                  actions_onCreated.Add((MenuComponent component0) => { });
+                  actions_onCreated.Add(component0 => { });
                 else
                 {
                   var unlocked = ShopHelper.Unlocked((ShopHelper.Unlocks)System.Enum.Parse(typeof(ShopHelper.Unlocks), $"ITEM_{item0}", true));
                   if (unlocked)
-                    actions_onCreated.Add((MenuComponent component0) => { });
+                    actions_onCreated.Add(component0 => { });
                   else
-                    actions_onCreated.Add((MenuComponent component0) => { component0._obscured = true; });
+                    actions_onCreated.Add(component0 => { component0._obscured = true; });
                 }
               }
               // Update dropdown data
               component.SetDropdownData("=== " + string.Format(loadout_format, "item", "tags", "point value") + "\n\n", selections, actions, selection_match, actions_onCreated);
             })
           .AddComponent("right hand\n\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
-            .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+            .AddEvent(EventType.ON_RENDER, component =>
             {
               var item = CurrentLoadout()._Equipment._ItemRight0;
               if (item == ItemManager.Items.FIST) item = ItemManager.Items.NONE;
@@ -4429,7 +4429,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
                 var use_color2 = use_color == "white" ? "white" : _COLOR_GRAY;
                 if (item0 == item && item != ItemManager.Items.NONE) use_color = use_color2 = "yellow";
                 selections.Add(string.Format($"</color><color={use_color2}>{loadout_format}<color=white>", item0, desc, $"</color><color={use_color}>{it_val}</color>"));
-                actions.Add((MenuComponent component0) =>
+                actions.Add(component0 =>
                 {
                   var item_selected = (ItemManager.Items)System.Enum.Parse(typeof(ItemManager.Items), component0.GetDisplayText(false).Trim().Split(' ')[2].Split('>')[2]);
                   var item_other = CurrentLoadout()._Equipment._ItemLeft0;
@@ -4460,7 +4460,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
                     MenuType.EDIT_LOADOUT,
                     null,
                     true,
-                    (MenuComponent component1) =>
+                    component1 =>
                     {
                       s_menus[MenuType.EDIT_LOADOUT]._SelectionIndex = save_selection;
                       SendInput(Input.SPACE);
@@ -4475,14 +4475,14 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
                 });
                 // Check if item is unlocked
                 if (item0 == ItemManager.Items.NONE)
-                  actions_onCreated.Add((MenuComponent component0) => { });
+                  actions_onCreated.Add(component0 => { });
                 else
                 {
                   var unlocked = ShopHelper.Unlocked((ShopHelper.Unlocks)System.Enum.Parse(typeof(ShopHelper.Unlocks), $"ITEM_{item0}", true));
                   if (unlocked)
-                    actions_onCreated.Add((MenuComponent component0) => { });
+                    actions_onCreated.Add(component0 => { });
                   else
-                    actions_onCreated.Add((MenuComponent component0) => { component0._obscured = true; });
+                    actions_onCreated.Add(component0 => { component0._obscured = true; });
                 }
               }
 
@@ -4493,7 +4493,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
           if (CurrentLoadout() != null && CurrentLoadout()._two_weapon_pairs)
           {
             m.AddComponent("left hand\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
-              .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+              .AddEvent(EventType.ON_RENDER, component =>
               {
                 var item = CurrentLoadout()._Equipment._ItemLeft1;
                 if (item == ItemManager.Items.FIST) item = ItemManager.Items.NONE;
@@ -4530,7 +4530,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
                   var use_color2 = use_color == "white" ? "white" : _COLOR_GRAY;
                   if (item0 == item && item != ItemManager.Items.NONE) use_color = use_color2 = "yellow";
                   selections.Add(string.Format($"</color><color={use_color2}>{loadout_format}<color=white>", item0, desc, $"</color><color={use_color}>{it_val}</color>"));
-                  actions.Add((MenuComponent component0) =>
+                  actions.Add(component0 =>
                   {
                     var item_selected = (ItemManager.Items)System.Enum.Parse(typeof(ItemManager.Items), component0.GetDisplayText(false).Trim().Split(' ')[2].Split('>')[2]);
                     var item_other = CurrentLoadout()._Equipment._ItemRight1;
@@ -4561,7 +4561,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
                       MenuType.EDIT_LOADOUT,
                       null,
                       true,
-                      (MenuComponent component1) =>
+                      component1 =>
                       {
                         s_menus[MenuType.EDIT_LOADOUT]._SelectionIndex = save_selection;
                         SendInput(Input.SPACE);
@@ -4576,21 +4576,21 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
                   });
                   // Check if item is unlocked
                   if (item0 == ItemManager.Items.NONE)
-                    actions_onCreated.Add((MenuComponent component0) => { });
+                    actions_onCreated.Add(component0 => { });
                   else
                   {
                     var unlocked = ShopHelper.Unlocked((ShopHelper.Unlocks)System.Enum.Parse(typeof(ShopHelper.Unlocks), $"ITEM_{item0}", true));
                     if (unlocked)
-                      actions_onCreated.Add((MenuComponent component0) => { });
+                      actions_onCreated.Add(component0 => { });
                     else
-                      actions_onCreated.Add((MenuComponent component0) => { component0._obscured = true; });
+                      actions_onCreated.Add(component0 => { component0._obscured = true; });
                   }
                 }
                 // Update dropdown data
                 component.SetDropdownData("=== " + string.Format(loadout_format, "item", "tags", "point value") + "\n\n", selections, actions, selection_match, actions_onCreated);
               })
             .AddComponent("right hand\n\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
-              .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+              .AddEvent(EventType.ON_RENDER, component =>
               {
                 var item = CurrentLoadout()._Equipment._ItemRight1;
                 if (item == ItemManager.Items.FIST) item = ItemManager.Items.NONE;
@@ -4627,7 +4627,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
                   var use_color2 = use_color == "white" ? "white" : _COLOR_GRAY;
                   if (item0 == item && item != ItemManager.Items.NONE) use_color = use_color2 = "yellow";
                   selections.Add(string.Format($"</color><color={use_color2}>{loadout_format}<color=white>", item0, desc, $"</color><color={use_color}>{it_val}</color>"));
-                  actions.Add((MenuComponent component0) =>
+                  actions.Add(component0 =>
                   {
                     var item_selected = (ItemManager.Items)System.Enum.Parse(typeof(ItemManager.Items), component0.GetDisplayText(false).Trim().Split(' ')[2].Split('>')[2]);
                     var item_other = CurrentLoadout()._Equipment._ItemLeft1;
@@ -4663,7 +4663,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
                         MenuType.EDIT_LOADOUT,
                         null,
                         true,
-                        (MenuComponent component1) =>
+                        component1 =>
                         {
                           s_menus[MenuType.EDIT_LOADOUT]._SelectionIndex = save_selection;
                           SendInput(Input.SPACE);
@@ -4680,14 +4680,14 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
 
                   // Check if item is unlocked
                   if (item0 == ItemManager.Items.NONE)
-                    actions_onCreated.Add((MenuComponent component0) => { });
+                    actions_onCreated.Add(component0 => { });
                   else
                   {
                     var unlocked = ShopHelper.Unlocked((ShopHelper.Unlocks)System.Enum.Parse(typeof(ShopHelper.Unlocks), $"ITEM_{item0}", true));
                     if (unlocked)
-                      actions_onCreated.Add((MenuComponent component0) => { });
+                      actions_onCreated.Add(component0 => { });
                     else
-                      actions_onCreated.Add((MenuComponent component0) => { component0._obscured = true; });
+                      actions_onCreated.Add(component0 => { component0._obscured = true; });
                   }
                 }
 
@@ -4724,7 +4724,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
         if (has_utility)
         {
           m.AddComponent("left utility\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
-            .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+            .AddEvent(EventType.ON_RENDER, component =>
             {
               var utilities = CurrentLoadout()._Equipment._UtilitiesLeft;
               var utility_name = "";
@@ -4761,7 +4761,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
                 var use_color2 = use_color == "white" ? "white" : _COLOR_GRAY;
                 if (utility0.ToString() == utility_name && utility_name != UtilityScript.UtilityType.NONE.ToString()) use_color = use_color2 = "yellow";
                 selections.Add(string.Format($"</color><color={use_color2}>{loadout_format}<color=white>", utility0, desc, $"</color><color={use_color}>{ut_val}</color>"));
-                actions.Add((MenuComponent component0) =>
+                actions.Add(component0 =>
                 {
                   var utility_selected = (UtilityScript.UtilityType)System.Enum.Parse(typeof(UtilityScript.UtilityType), component0.GetDisplayText(false).Trim().Split(' ')[2].Split('>')[2]);
 
@@ -4797,7 +4797,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
                     MenuType.EDIT_LOADOUT,
                     null,
                     true,
-                    (MenuComponent component1) =>
+                    component1 =>
                     {
                       s_menus[MenuType.EDIT_LOADOUT]._SelectionIndex = save_selection;
                       SendInput(Input.SPACE);
@@ -4812,21 +4812,21 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
                 });
                 // Check if utility is unlocked
                 if (utility0 == UtilityScript.UtilityType.NONE)
-                  actions_onCreated.Add((MenuComponent component0) => { });
+                  actions_onCreated.Add(component0 => { });
                 else
                 {
                   var unlocked = ShopHelper.Unlocked((ShopHelper.Unlocks)System.Enum.Parse(typeof(ShopHelper.Unlocks), $"UTILITY_{utility0}", true));
                   if (unlocked)
-                    actions_onCreated.Add((MenuComponent component0) => { });
+                    actions_onCreated.Add(component0 => { });
                   else
-                    actions_onCreated.Add((MenuComponent component0) => { component0._obscured = true; });
+                    actions_onCreated.Add(component0 => { component0._obscured = true; });
                 }
               }
               // Update dropdown data
               component.SetDropdownData("=== " + string.Format(loadout_format, "item", "tags", "point value") + "\n\n", selections, actions, selection_match, actions_onCreated);
             })
           .AddComponent("right utility\n\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
-            .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+            .AddEvent(EventType.ON_RENDER, component =>
             {
               var utilities = CurrentLoadout()._Equipment._UtilitiesRight;
               var utility_name = "";
@@ -4864,7 +4864,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
                 var use_color2 = use_color == "white" ? "white" : _COLOR_GRAY;
                 if (utility0.ToString() == utility_name && utility_name != UtilityScript.UtilityType.NONE.ToString()) use_color = use_color2 = "yellow";
                 selections.Add(string.Format($"</color><color={use_color2}>{loadout_format}<color=white>", utility0, desc, $"</color><color={use_color}>{ut_val}</color>"));
-                actions.Add((MenuComponent component0) =>
+                actions.Add(component0 =>
                 {
                   var utility_selected = (UtilityScript.UtilityType)System.Enum.Parse(typeof(UtilityScript.UtilityType), component0.GetDisplayText(false).Trim().Split(' ')[2].Split('>')[2]);
                   if (utility_selected == UtilityScript.UtilityType.NONE)
@@ -4899,7 +4899,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
                     MenuType.EDIT_LOADOUT,
                     null,
                     true,
-                    (MenuComponent component1) =>
+                    component1 =>
                     {
                       s_menus[MenuType.EDIT_LOADOUT]._SelectionIndex = save_selection;
                       SendInput(Input.SPACE);
@@ -4914,14 +4914,14 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
                 });
                 // Check if utility is unlocked
                 if (utility0 == UtilityScript.UtilityType.NONE)
-                  actions_onCreated.Add((MenuComponent component0) => { });
+                  actions_onCreated.Add(component0 => { });
                 else
                 {
                   var unlocked = ShopHelper.Unlocked((ShopHelper.Unlocks)System.Enum.Parse(typeof(ShopHelper.Unlocks), $"UTILITY_{utility0}", true));
                   if (unlocked)
-                    actions_onCreated.Add((MenuComponent component0) => { });
+                    actions_onCreated.Add(component0 => { });
                   else
-                    actions_onCreated.Add((MenuComponent component0) => { component0._obscured = true; });
+                    actions_onCreated.Add(component0 => { component0._obscured = true; });
                 }
               }
               // Update dropdown data
@@ -4947,7 +4947,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
         if (has_perk)
         {
           m.AddComponent("mods\n\n\n\n\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
-            .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+            .AddEvent(EventType.ON_RENDER, component =>
             {
               var perks = CurrentLoadout()._Equipment._Perks;
               var perk_name = "";
@@ -5012,7 +5012,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
                 var use_color2 = use_color == "white" ? "white" : _COLOR_GRAY;
                 if (perks.Contains(perk0) && perk0 != Perk.PerkType.NONE) use_color = use_color2 = "yellow";
                 selections.Add(string.Format($"</color><color={use_color2}>{loadout_format}<color=white>", perk0, desc, $"</color><color={use_color}>{per_val}</color>"));
-                actions.Add((MenuComponent component0) =>
+                actions.Add(component0 =>
                 {
                   var perk_selected = (Perk.PerkType)System.Enum.Parse(typeof(Perk.PerkType), component0.GetDisplayText(false).Trim().Split(' ')[2].Split('>')[2]);
                   var perk_value = ItemManager.GetPerkValue(perk_selected);
@@ -5048,7 +5048,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
                     MenuType.EDIT_LOADOUT,
                     null,
                     true,
-                    (MenuComponent component1) =>
+                    component1 =>
                     {
                       s_menus[MenuType.EDIT_LOADOUT]._SelectionIndex = save_selection;
                       SendInput(Input.SPACE);
@@ -5074,7 +5074,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
                     MenuType.EDIT_LOADOUT,
                     null,
                     true,
-                    (MenuComponent component1) =>
+                    component1 =>
                     {
                       s_menus[MenuType.EDIT_LOADOUT]._SelectionIndex = save_selection;
                       SendInput(Input.SPACE);
@@ -5090,14 +5090,14 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
                 });
                 // Check if utility is unlocked
                 if (perk0 == Perk.PerkType.NONE)
-                  actions_onCreated.Add((MenuComponent component0) => { });
+                  actions_onCreated.Add(component0 => { });
                 else
                 {
                   var unlocked = ShopHelper.Unlocked((ShopHelper.Unlocks)System.Enum.Parse(typeof(ShopHelper.Unlocks), $"MOD_{perk0}", true));
                   if (unlocked)
-                    actions_onCreated.Add((MenuComponent component0) => { });
+                    actions_onCreated.Add(component0 => { });
                   else
-                    actions_onCreated.Add((MenuComponent component0) => { component0._obscured = true; });
+                    actions_onCreated.Add(component0 => { component0._obscured = true; });
                 }
               }
               // Update dropdown data
@@ -5107,7 +5107,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
 
         if (Levels._EditingLoadout)
           m.AddBackButton(MenuType.EDITOR_PACKS_EDIT)
-            .AddEvent((MenuComponent component) =>
+            .AddEvent(component =>
             {
               var leveliter = Levels._LoadoutEdit_SaveIndex;
               var leveldata = Levels._LevelPack_Current._levelData[leveliter];
@@ -5162,7 +5162,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
             });
         else
           m.AddBackButton(MenuType.SELECT_LOADOUT)
-            .AddEvent((MenuComponent component) =>
+            .AddEvent(component =>
             {
               for (var i = 0; i < CurrentLoadout()._Id; i++)
                 SendInput(Input.DOWN);
@@ -5221,18 +5221,18 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
       }*/
       mStats.AddComponent("\n")
       .AddComponent("reset\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
-        .AddEventFront((MenuComponent component) =>
+        .AddEventFront(component =>
         {
           SettingsHelper._DeleteStatsIter = 4;
         })
-        .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+        .AddEvent(EventType.ON_RENDER, component =>
         {
 
           // Set dropdown data
           var selections = new List<string>();
           var actions = new List<System.Action<MenuComponent>>();
           selections.Add($"yes - press {SettingsHelper._DeleteStatsIter + 1} more times");
-          actions.Add((MenuComponent component0) =>
+          actions.Add(component0 =>
           {
             if (SettingsHelper._DeleteStatsIter-- <= 0)
             {
@@ -5260,7 +5260,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
         mPause.AddComponent($"<color={_COLOR_GRAY}>pause</color>\n\n")
         // Unpause and hide menu
         .AddComponent("resume\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-          .AddEvent((MenuComponent component) =>
+          .AddEvent(component =>
           {
             //Debug.Log("resume pressed");
             GameScript.TogglePause();
@@ -5278,7 +5278,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
         {
           // Switch to loadouts menu
           mPause.AddComponent("edit loadouts\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-            .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+            .AddEvent(EventType.ON_RENDER, component =>
             {
 
               component._selectorType = MenuComponent.SelectorType.QUESTION;
@@ -5295,15 +5295,15 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
         {
           // Switch to store
           mPause.AddComponent("shop\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-            .AddEvent((MenuComponent component) => { CommonEvents._SwitchMenu(MenuType.SHOP); })
+            .AddEvent(component => { CommonEvents._SwitchMenu(MenuType.SHOP); })
           // Switch to loadouts menu
           .AddComponent("edit loadouts\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-            .AddEvent((MenuComponent component) =>
+            .AddEvent(component =>
             {
               if (component._selectorType == MenuComponent.SelectorType.NORMAL)
                 CommonEvents._SwitchMenu(MenuType.SELECT_LOADOUT);
             })
-            .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+            .AddEvent(EventType.ON_RENDER, component =>
             {
               var obscured = false;
               if (PlayerScript.s_Players != null)
@@ -5335,7 +5335,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
         if ((!GameScript.s_EditorTesting || (GameScript.s_EditorTesting && !GameScript.s_EditorEnabled)) && !GameScript.s_IsPartyGameMode)
           // Restart the map
           mPause.AddComponent("restart\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-            .AddEvent((MenuComponent component) =>
+            .AddEvent(component =>
             {
               GameScript.TogglePause();
               s_InPause = false;
@@ -5348,7 +5348,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
         {
           // Restart the level pack
           mPause.AddComponent("restart level pack\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-            .AddEvent((MenuComponent component) =>
+            .AddEvent(component =>
             {
               GameScript.TogglePause();
               s_InPause = false;
@@ -5361,11 +5361,11 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
         // Switch to options menu
         var extrachar = GameScript.s_IsZombieGameMode ? "\n" : "";
         mPause.AddComponent("options\n" + extrachar, MenuComponent.ComponentType.BUTTON_SIMPLE)
-          .AddEvent((MenuComponent component) =>
+          .AddEvent(component =>
           {
             CommonEvents._SwitchMenu(MenuType.OPTIONS);
           })
-          .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+          .AddEvent(EventType.ON_RENDER, component =>
           {
             if (SettingsHelper._ForceKeyboard || SettingsModule.IgnoreFirstController)
             {
@@ -5384,18 +5384,18 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
           mPause.AddComponent("extras*\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE);
           if (ShopHelper.Unlocked(ShopHelper.Unlocks.MODE_EXTRAS))
           {
-            mPause.AddEvent((MenuComponent component) =>
+            mPause.AddEvent(component =>
             {
               CommonEvents._SwitchMenu(MenuType.EXTRAS);
             })
-            .AddEvent(EventType.ON_RENDER, (MenuComponent c) =>
+            .AddEvent(EventType.ON_RENDER, c =>
             {
               c._textColor = SettingsHelper._Extras_UsingAny ? "magenta" : "yellow";
             });
           }
           else
           {
-            mPause.AddEvent(EventType.ON_RENDER, (MenuComponent c) =>
+            mPause.AddEvent(EventType.ON_RENDER, c =>
             {
               c._obscured = true;
             });
@@ -5408,7 +5408,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
           // Switch to level select
           mPause
             .AddComponent("exit to mission pack select\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-              .AddEvent((MenuComponent component) =>
+              .AddEvent(component =>
               {
                 // Exit to level select
                 s_saveIndex = 5;
@@ -5417,7 +5417,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
               .AddEvent(EventType.ON_RENDER, CommonEvents._OnRender_XSelector)
             // Switch to main menu
             .AddComponent("exit to main menu\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-              .AddEvent((MenuComponent component) =>
+              .AddEvent(component =>
               {
 
                 // Exit to main menu
@@ -5432,7 +5432,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
           // Switch to level select
           mPause
             .AddComponent("save and exit to mission editor select\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-              .AddEvent((MenuComponent component) =>
+              .AddEvent(component =>
               {
                 // Exit to level select
                 s_saveIndex = 5;
@@ -5441,7 +5441,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
               .AddEvent(EventType.ON_RENDER, CommonEvents._OnRender_XSelector)
             // Switch to main menu
             .AddComponent("save and exit to main menu\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-              .AddEvent((MenuComponent component) =>
+              .AddEvent(component =>
               {
 
                 // Exit to main menu
@@ -5456,7 +5456,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
           // Switch to versus mode menu
           mPause
             .AddComponent("exit to PARTY mode menu\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-              .AddEvent((MenuComponent component) =>
+              .AddEvent(component =>
               {
                 s_saveIndex = 2;
                 CommonEvents._SwitchMenu(MenuType.MODE_EXIT_CONFIRM);
@@ -5465,7 +5465,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
 
             // Switch to main menu
             .AddComponent("exit to main menu\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-              .AddEvent((MenuComponent component) =>
+              .AddEvent(component =>
               {
                 s_saveIndex = 3;
                 CommonEvents._SwitchMenu(MenuType.MODE_EXIT_CONFIRM);
@@ -5478,7 +5478,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
           // Switch to level select
           mPause
             .AddComponent("exit to level select\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-              .AddEvent((MenuComponent component) =>
+              .AddEvent(component =>
               {
                 s_saveIndex = 6;
                 CommonEvents._SwitchMenu(MenuType.MODE_EXIT_CONFIRM);
@@ -5486,7 +5486,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
               .AddEvent(EventType.ON_RENDER, CommonEvents._OnRender_XSelector)
             // Switch to main menu
             .AddComponent("exit to main menu\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-              .AddEvent((MenuComponent component) =>
+              .AddEvent(component =>
               {
                 s_saveIndex = 7;
                 CommonEvents._SwitchMenu(MenuType.MODE_EXIT_CONFIRM);
@@ -5540,7 +5540,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
       .AddComponent($"mode: <color={_COLOR_GRAY}>MISSIONS</color>\n\n")
       // Select level
       .AddComponent("select mission\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-        .AddEvent((MenuComponent component) =>
+        .AddEvent(component =>
         {
           if (component._textColor == "")
           {
@@ -5578,13 +5578,13 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
       );
           }
         })
-        .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+        .AddEvent(EventType.ON_RENDER, component =>
         {
           component._textColor = ShopHelper.Unlocked(ShopHelper.Unlocks.TUTORIAL_PART1) ? "" : _COLOR_GRAY;
         })
       // Edit loadout
       .AddComponent("edit loadouts\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-        .AddEvent((MenuComponent component) =>
+        .AddEvent(component =>
         {
           if (component._textColor != _COLOR_GRAY)
             CommonEvents._SwitchMenu(MenuType.SELECT_LOADOUT);
@@ -5603,43 +5603,43 @@ go to the <color=yellow>SHOP</color> to buy something~1
               true
               );
         })
-        .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+        .AddEvent(EventType.ON_RENDER, component =>
         {
           component._textColor = ShopHelper.Unlocked(ShopHelper.Unlocks.TUTORIAL_PART0) ? (ShopHelper.Unlocked(ShopHelper.Unlocks.TUTORIAL_PART1) ? "" : "yellow") : _COLOR_GRAY;
         })
       // Visit shop
       .AddComponent("shop\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-        .AddEvent((MenuComponent component) => { CommonEvents._SwitchMenu(MenuType.SHOP); })
-        .AddEvent(EventType.ON_RENDER, (MenuComponent c) =>
+        .AddEvent(component => { CommonEvents._SwitchMenu(MenuType.SHOP); })
+        .AddEvent(EventType.ON_RENDER, c =>
         {
           c._textColor = ShopHelper.Unlocked(ShopHelper.Unlocks.TUTORIAL_PART0) ? "white" : "yellow";
         })
 
       // Extras
       .AddComponent("extras*\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE);
-      menu_classic.AddEvent((MenuComponent component) =>
+      menu_classic.AddEvent(component =>
       {
         if (ShopHelper.Unlocked(ShopHelper.Unlocks.MODE_EXTRAS))
           CommonEvents._SwitchMenu(MenuType.EXTRAS);
       })
-      .AddEvent(EventType.ON_RENDER, (MenuComponent c) =>
+      .AddEvent(EventType.ON_RENDER, c =>
       {
         c._textColor = SettingsHelper._Extras_UsingAny ? "magenta" : "yellow";
       });
-      menu_classic.AddEvent(EventType.ON_RENDER, (MenuComponent c) =>
+      menu_classic.AddEvent(EventType.ON_RENDER, c =>
       {
         c._obscured = !ShopHelper.Unlocked(ShopHelper.Unlocks.MODE_EXTRAS);
       });
 
       // Tutorial
       menu_classic.AddComponent("briefing\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-        .AddEvent((MenuComponent component) => { CommonEvents._SwitchMenu(MenuType.HOWTOPLAY_MISSION); })
-        .AddEvent(EventType.ON_RENDER, (MenuComponent c) =>
+        .AddEvent(component => { CommonEvents._SwitchMenu(MenuType.HOWTOPLAY_MISSION); })
+        .AddEvent(EventType.ON_RENDER, c =>
         {
           c._textColor = ShopHelper.Unlocked(ShopHelper.Unlocks.TUTORIAL_PART1) ? "white" : "yellow";
         })
       // Back
-      .AddBackButton((MenuComponent component) =>
+      .AddBackButton(component =>
       {
         SwitchMenu(MenuType.MODE_SELECTION);
         //GameResources._UI_Player.gameObject.SetActive(false);
@@ -5666,11 +5666,11 @@ go to the <color=yellow>SHOP</color> to buy something~1
 
       // Select level
       .AddComponent("select level\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-        .AddEvent((MenuComponent component) => { CommonEvents._SwitchMenu(MenuType.LEVELS); })
+        .AddEvent(component => { CommonEvents._SwitchMenu(MenuType.LEVELS); })
 
       // Tutorial
       .AddComponent("briefing\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-        .AddEvent((MenuComponent component) => { CommonEvents._SwitchMenu(MenuType.HOWTOPLAY_ZOMBIE); })
+        .AddEvent(component => { CommonEvents._SwitchMenu(MenuType.HOWTOPLAY_ZOMBIE); })
 
       // Back
       .AddBackButton(MenuType.MODE_SELECTION);
@@ -5689,12 +5689,12 @@ go to the <color=yellow>SHOP</color> to buy something~1
 
       // Settings
       .AddComponent("graphics / audio settings\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-        .AddEvent((MenuComponent component) => { CommonEvents._SwitchMenu(MenuType.OPTIONS_SETTINGS); })
+        .AddEvent(component => { CommonEvents._SwitchMenu(MenuType.OPTIONS_SETTINGS); })
 
       // Game options
       .AddComponent("game options\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-        .AddEvent((MenuComponent component) => { CommonEvents._SwitchMenu(MenuType.OPTIONS_GAME); })
-        .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+        .AddEvent(component => { CommonEvents._SwitchMenu(MenuType.OPTIONS_GAME); })
+        .AddEvent(EventType.ON_RENDER, component =>
         {
           if (SettingsModule.HideUI)
           {
@@ -5713,10 +5713,10 @@ go to the <color=yellow>SHOP</color> to buy something~1
 
       // Control options
       .AddComponent("controls\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-        .AddEvent((MenuComponent component) => { CommonEvents._SwitchMenu(MenuType.CONTROLS); })
+        .AddEvent(component => { CommonEvents._SwitchMenu(MenuType.CONTROLS); })
       .AddComponent("control options\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-        .AddEvent((MenuComponent component) => { CommonEvents._SwitchMenu(MenuType.OPTIONS_CONTROLS); })
-        .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+        .AddEvent(component => { CommonEvents._SwitchMenu(MenuType.OPTIONS_CONTROLS); })
+        .AddEvent(EventType.ON_RENDER, component =>
         {
           if (SettingsHelper._ForceKeyboard || SettingsModule.IgnoreFirstController)
           {
@@ -5732,7 +5732,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
       //.AddComponent("overall stats - broke\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE, _COLOR_GRAY)
       // .AddEvent((MenuComponent component) => { /*CommonEvents._SwitchMenu(MenuType.STATS); */})
       // Back button; switch menu per pause setting
-      .AddBackButton((MenuComponent component) =>
+      .AddBackButton(component =>
       {
         component._menu._SelectedComponent._focused = false;
         component._menu._SelectionIndex = 0;
@@ -5759,7 +5759,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
       // Music volume dropdown
       menu_optionsSettings
       .AddComponent("music volume\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
-        .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+        .AddEvent(EventType.ON_RENDER, component =>
         {
           // Set display text
           component.SetDisplayText(string.Format(format_options, "music volume:", $"{SettingsHelper._VolumeMusic}/5"));
@@ -5772,7 +5772,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
             // Add volume level
             selections.Add(i.ToString());
             // Add action to update music volume
-            actions.Add((MenuComponent component0) =>
+            actions.Add(component0 =>
             {
               SettingsHelper._VolumeMusic = component0._dropdownIndex;
             });
@@ -5782,7 +5782,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
         })
       // SFX volume dropdown
       .AddComponent("sfx volume\n\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
-        .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+        .AddEvent(EventType.ON_RENDER, component =>
         {
           // Set display text
           component.SetDisplayText(string.Format(format_options, "sfx volume:", $"{SettingsModule.VolumeSFX}/5") + "\n");
@@ -5795,7 +5795,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
             // Add volume level
             selections.Add(i.ToString());
             // Add action to update sfx volume
-            actions.Add((MenuComponent component0) =>
+            actions.Add(component0 =>
             {
               SettingsModule.VolumeSFX = component0._dropdownIndex;
             });
@@ -5811,7 +5811,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
         // Window mode toggle
         menu_optionsSettings
         .AddComponent("window type:\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
-          .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+          .AddEvent(EventType.ON_RENDER, component =>
           {
             // Set display text
             string selection = SettingsHelper._Fullscreen ? "fullscreen" : "windowed";
@@ -5822,14 +5822,14 @@ go to the <color=yellow>SHOP</color> to buy something~1
             var actions = new List<System.Action<MenuComponent>>();
             var selection_match = selection;
             selections.Add("windowed");
-            actions.Add((MenuComponent component0) =>
+            actions.Add(component0 =>
             {
 
               // Change to windowed mode
               SettingsHelper._Fullscreen = false;
             });
             selections.Add("fullscreen");
-            actions.Add((MenuComponent component0) =>
+            actions.Add(component0 =>
             {
 
               // Make sure resolution is supported
@@ -5860,78 +5860,78 @@ go to the <color=yellow>SHOP</color> to buy something~1
 
         // Resolution dropdown
         .AddComponent("resolution:\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
-          .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+          .AddEvent(EventType.ON_RENDER, component =>
+          {
+            // Set display text to current resolution
+            component.SetDisplayText(string.Format(format_options, "resolution:", "" + SettingsHelper._ScreenResolution.ToString().Split('@')[0].Trim()));
+
+            // Check if resolution exits; IE monitor may have been changed
+            var res_found = false;
+            for (var i = 0; i < Screen.resolutions.Length; i++)
             {
-              // Set display text to current resolution
-              component.SetDisplayText(string.Format(format_options, "resolution:", "" + SettingsHelper._ScreenResolution.ToString().Split('@')[0].Trim()));
-
-              // Check if resolution exits; IE monitor may have been changed
-              var res_found = false;
-              for (var i = 0; i < Screen.resolutions.Length; i++)
+              var local_res = Screen.resolutions[i];
+              if (local_res.width == SettingsHelper._ScreenResolution.width && local_res.height == SettingsHelper._ScreenResolution.height && local_res.refreshRate == SettingsHelper._ScreenResolution.refreshRate)
               {
-                var local_res = Screen.resolutions[i];
-                if (local_res.width == SettingsHelper._ScreenResolution.width && local_res.height == SettingsHelper._ScreenResolution.height && local_res.refreshRate == SettingsHelper._ScreenResolution.refreshRate)
-                {
-                  res_found = true;
-                  break;
-                }
+                res_found = true;
+                break;
               }
+            }
 
-              var selection_match = SettingsHelper._ScreenResolution.ToString().Split('@')[0].Trim();
-              if (!res_found)
+            var selection_match = SettingsHelper._ScreenResolution.ToString().Split('@')[0].Trim();
+            if (!res_found)
+            {
+              var max = SettingsHelper.GetSafeMaxResolution();
+              selection_match = $"{max.width} x {max.height}";
+            }
+
+            // Set the dropdown selections to available resolutions
+            var selections = new List<string>();
+            var actions = new List<System.Action<MenuComponent>>();
+
+            foreach (var res in Screen.resolutions)
+            {
+              var res_split = res.ToString().Split('@')[0].Trim();
+              if (selections.Contains(res_split)) continue;
+              // Add resolution as selection
+              selections.Add(res_split);
+              // Action to change resolution
+              actions.Add(component0 =>
               {
-                var max = SettingsHelper.GetSafeMaxResolution();
-                selection_match = $"{max.width} x {max.height}";
-              }
+                var resolutionText = component0.GetDisplayText()[4..].Trim();
+                if (System.Text.RegularExpressions.Regex.Match(resolutionText, "<color=").Success)
+                  resolutionText = resolutionText.Split('>')[1].Split('<')[0];
+                var refresh_rate = SettingsHelper._ScreenResolution.refreshRate;
 
-              // Set the dropdown selections to available resolutions
-              var selections = new List<string>();
-              var actions = new List<System.Action<MenuComponent>>();
+                // Check if current refresh rate is available for this resolution
+                var found_refresh = false;
+                foreach (var res_ in Screen.resolutions)
+                  if (res_.refreshRate == refresh_rate && resolutionText == $"{res_.width} x {res_.height}")
+                    found_refresh = true;
 
-              foreach (var res in Screen.resolutions)
-              {
-                var res_split = res.ToString().Split('@')[0].Trim();
-                if (selections.Contains(res_split)) continue;
-                // Add resolution as selection
-                selections.Add(res_split);
-                // Action to change resolution
-                actions.Add((MenuComponent component0) =>
-                {
-                  var resolutionText = component0.GetDisplayText()[4..].Trim();
-                  if (System.Text.RegularExpressions.Regex.Match(resolutionText, "<color=").Success)
-                    resolutionText = resolutionText.Split('>')[1].Split('<')[0];
-                  var refresh_rate = SettingsHelper._ScreenResolution.refreshRate;
-
-                  // Check if current refresh rate is available for this resolution
-                  var found_refresh = false;
-                  foreach (var res_ in Screen.resolutions)
-                    if (res_.refreshRate == refresh_rate && resolutionText == $"{res_.width} x {res_.height}")
-                      found_refresh = true;
-
-                  // Gather highest refresh
-                  if (!found_refresh)
-                    for (var i = Screen.resolutions.Length - 1; i >= 0; i--)
+                // Gather highest refresh
+                if (!found_refresh)
+                  for (var i = Screen.resolutions.Length - 1; i >= 0; i--)
+                  {
+                    var res_ = Screen.resolutions[i];
+                    //if (res_.refreshRate == 29 || res_.refreshRate == 30 || res_.refreshRate == 59 || res_.refreshRate == 60 || res_.refreshRate == 120 || res_.refreshRate == 144)
+                    if (resolutionText == $"{res_.width} x {res_.height}")
                     {
-                      var res_ = Screen.resolutions[i];
-                      //if (res_.refreshRate == 29 || res_.refreshRate == 30 || res_.refreshRate == 59 || res_.refreshRate == 60 || res_.refreshRate == 120 || res_.refreshRate == 144)
-                      if (resolutionText == $"{res_.width} x {res_.height}")
-                      {
-                        refresh_rate = res_.refreshRate;
-                        break;
-                      }
+                      refresh_rate = res_.refreshRate;
+                      break;
                     }
+                  }
 
-                  Debug.LogError($"{resolutionText} @ {refresh_rate}Hz");
-                  SettingsHelper.SetResolution($"{resolutionText} @ {refresh_rate}Hz");
-                });
-              }
-              // Update dropdown data
-              component.SetDropdownData("resolution\n\n", selections, actions, selection_match);
-            })
+                Debug.LogError($"{resolutionText} @ {refresh_rate}Hz");
+                SettingsHelper.SetResolution($"{resolutionText} @ {refresh_rate}Hz");
+              });
+            }
+            // Update dropdown data
+            component.SetDropdownData("resolution\n\n", selections, actions, selection_match);
+          })
 
         // Hertz
         .AddComponent("refresh rate:\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
-          .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+          .AddEvent(EventType.ON_RENDER, component =>
           {
             // Set display text to current resolution
             var selection_match = Application.targetFrameRate == -1 ? "max" : SettingsHelper._ScreenResolution.ToString().Split('@')[1].Trim();
@@ -5949,21 +5949,21 @@ go to the <color=yellow>SHOP</color> to buy something~1
                 // Add resolution as selection
                 selections.Add(res_split);
                 // Action to change resolution
-                actions.Add((MenuComponent component0) =>
-          {
-            var refreshText = component0.GetDisplayText()[4..].Trim();
-            if (System.Text.RegularExpressions.Regex.Match(refreshText, "<color=").Success)
-              refreshText = refreshText.Split('>')[1].Split('<')[0];
-            var resolutionText = component0._menu._MenuComponentsSelectable[component._buttonIndex - 1].GetDisplayText(false).Split(':')[1].Trim();
-            SettingsModule.UseDefaultTargetFramerate = false;
-            Application.targetFrameRate = refreshText.Split('H')[0].ParseIntInvariant();
-            SettingsHelper.SetResolution(resolutionText + " @ " + refreshText);
-          });
+                actions.Add(component0 =>
+                {
+                  var refreshText = component0.GetDisplayText()[4..].Trim();
+                  if (System.Text.RegularExpressions.Regex.Match(refreshText, "<color=").Success)
+                    refreshText = refreshText.Split('>')[1].Split('<')[0];
+                  var resolutionText = component0._menu._MenuComponentsSelectable[component._buttonIndex - 1].GetDisplayText(false).Split(':')[1].Trim();
+                  SettingsModule.UseDefaultTargetFramerate = false;
+                  Application.targetFrameRate = refreshText.Split('H')[0].ParseIntInvariant();
+                  SettingsHelper.SetResolution(resolutionText + " @ " + refreshText);
+                });
               }
             }
             // Add 'max' framerate
             selections.Add("max");
-            actions.Add((MenuComponent component0) =>
+            actions.Add(component0 =>
             {
               Application.targetFrameRate = -1;
               SettingsModule.UseDefaultTargetFramerate = true;
@@ -5974,7 +5974,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
 
         // Quality dropdown
         .AddComponent("quality level\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
-          .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+          .AddEvent(EventType.ON_RENDER, component =>
           {
             // Set display text
             component.SetDisplayText(string.Format(format_options, "quality level:", SettingsHelper._QualityLevel + ""));
@@ -5989,7 +5989,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
               selections.Add(i.ToString());
 
               // Add action to update quality
-              actions.Add((MenuComponent component0) =>
+              actions.Add(component0 =>
               {
                 SettingsHelper._QualityLevel = component0._dropdownIndex;
               });
@@ -6002,14 +6002,14 @@ go to the <color=yellow>SHOP</color> to buy something~1
         .AddComponent("vsync\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
 
           // Set display text
-          .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+          .AddEvent(EventType.ON_RENDER, component =>
           {
             var selection = SettingsModule.UseVsync ? "on" : "off";
             component.SetDisplayText(string.Format(format_options, "vsync:", selection) + "\n");
           })
 
           // Toggle
-          .AddEvent((MenuComponent component) =>
+          .AddEvent(component =>
           {
             SettingsHelper._VSync = !SettingsHelper._VSync;
             _CanRender = false;
@@ -6022,7 +6022,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
 
       // Brightness
       .AddComponent("brightness\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
-        .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+        .AddEvent(EventType.ON_RENDER, component =>
         {
           // Set display text
           var selection_match = SettingsModule.Brightness switch
@@ -6058,7 +6058,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
               8 => "8",
               _ => "9",
             });
-            actions.Add((MenuComponent component0) =>
+            actions.Add(component0 =>
             {
               SettingsModule.Brightness = component0._dropdownIndex;
 
@@ -6075,7 +6075,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
 
       // Bloom
       .AddComponent("bloom\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
-        .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+        .AddEvent(EventType.ON_RENDER, component =>
         {
           // Set display text
           var selection_match = SettingsModule.BloomAmount switch
@@ -6099,7 +6099,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
               2 => "low",
               _ => "off"
             });
-            actions.Add((MenuComponent component0) =>
+            actions.Add(component0 =>
             {
               SettingsModule.BloomAmount = 3 - component0._dropdownIndex;
 
@@ -6116,7 +6116,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
 
       // DOF
       .AddComponent("depth of field\n\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
-        .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+        .AddEvent(EventType.ON_RENDER, component =>
         {
           // Set display text
           var selection_match = SettingsModule.DepthOfFieldAmount switch
@@ -6138,7 +6138,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
               1 => "low",
               _ => "off",
             });
-            actions.Add((MenuComponent component0) =>
+            actions.Add(component0 =>
             {
               SettingsModule.DepthOfFieldAmount = 2 - component0._dropdownIndex;
 
@@ -6174,7 +6174,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
 
       // Camera type
       .AddComponent("camera type\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
-        .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+        .AddEvent(EventType.ON_RENDER, component =>
         {
 
           // Set display text
@@ -6188,7 +6188,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
           for (var i = 0; i < 2; i++)
           {
             selections.Add(i == 0 ? "3D" : "2D");
-            actions.Add((MenuComponent component0) =>
+            actions.Add(component0 =>
             {
               var is_ortho = component0._dropdownIndex == 1;
               if (SettingsModule.CameraZoom == SettingsSaveData.CameraZoomType.AUTO && is_ortho)
@@ -6208,7 +6208,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
         })
       // Camera zoom dropdown
       .AddComponent("camera zoom\n\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
-        .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+        .AddEvent(EventType.ON_RENDER, component =>
         {
 
           // Set display text
@@ -6228,7 +6228,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
             //
             if (i == 3)
             {
-              actions.Add((MenuComponent component0) =>
+              actions.Add(component0 =>
               {
                 if (!SettingsHelper._UseOrthographicCamera)
                 {
@@ -6244,7 +6244,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
 
             //
             else
-              actions.Add((MenuComponent component0) =>
+              actions.Add(component0 =>
               {
                 SettingsModule.CameraZoom = (SettingsSaveData.CameraZoomType)component0._dropdownIndex;
 
@@ -6262,7 +6262,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
 
       // Blood toggle
       .AddComponent("blood\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-        .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+        .AddEvent(EventType.ON_RENDER, component =>
         {
 
           // Set display text
@@ -6271,7 +6271,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
         })
 
         // Toggle blood
-        .AddEvent((MenuComponent component) =>
+        .AddEvent(component =>
         {
           SettingsModule.UseBlood = !SettingsModule.UseBlood;
           _CanRender = false;
@@ -6317,7 +6317,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
 
       // Death text toggle
       .AddComponent("death text\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
-        .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+        .AddEvent(EventType.ON_RENDER, component =>
         {
 
           // Set display text
@@ -6329,14 +6329,14 @@ go to the <color=yellow>SHOP</color> to buy something~1
           var actions = new List<System.Action<MenuComponent>>();
           var selection_match = $"{selection}";
           selections.Add("on [DEFAULT]");
-          actions.Add((MenuComponent component0) =>
+          actions.Add(component0 =>
           {
             SettingsModule.ShowDeathText = true;
             _CanRender = false;
             RenderMenu();
           });
           selections.Add("off");
-          actions.Add((MenuComponent component0) =>
+          actions.Add(component0 =>
           {
             SettingsModule.ShowDeathText = false;
             _CanRender = false;
@@ -6349,7 +6349,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
 
       // Level end behavior
       .AddComponent("mission completion\n\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
-        .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+        .AddEvent(EventType.ON_RENDER, component =>
         {
           // Set display text
           var selection = "next mission";
@@ -6378,42 +6378,42 @@ go to the <color=yellow>SHOP</color> to buy something~1
           var actions = new List<System.Action<MenuComponent>>();
 
           selections.Add("next mission     - load the next mission [DEFAULT]");
-          actions.Add((MenuComponent component0) =>
+          actions.Add(component0 =>
           {
             SettingsModule.LevelCompletionBehavior = SettingsSaveData.LevelCompletionBehaviorType.NEXT_LEVEL;
             _CanRender = false;
             RenderMenu();
           });
           selections.Add("reload mission   - replay the same mission");
-          actions.Add((MenuComponent component0) =>
+          actions.Add(component0 =>
           {
             SettingsModule.LevelCompletionBehavior = SettingsSaveData.LevelCompletionBehaviorType.RELOAD_LEVEL;
             _CanRender = false;
             RenderMenu();
           });
           selections.Add("nothing        - nothing is loaded or happens");
-          actions.Add((MenuComponent component0) =>
+          actions.Add(component0 =>
           {
             SettingsModule.LevelCompletionBehavior = SettingsSaveData.LevelCompletionBehaviorType.NOTHING;
             _CanRender = false;
             RenderMenu();
           });
           selections.Add("previous mission - load the previous mission");
-          actions.Add((MenuComponent component0) =>
+          actions.Add(component0 =>
           {
             SettingsModule.LevelCompletionBehavior = SettingsSaveData.LevelCompletionBehaviorType.PREVIOUS_LEVEL;
             _CanRender = false;
             RenderMenu();
           });
           selections.Add("random mission (current difficulty) - load any unlocked mission");
-          actions.Add((MenuComponent component0) =>
+          actions.Add(component0 =>
           {
             SettingsModule.LevelCompletionBehavior = SettingsSaveData.LevelCompletionBehaviorType.RANDOM_LEVEL;
             _CanRender = false;
             RenderMenu();
           });
           selections.Add("random mission (any difficulty)     - load any unlocked mission");
-          actions.Add((MenuComponent component0) =>
+          actions.Add(component0 =>
           {
             SettingsModule.LevelCompletionBehavior = SettingsSaveData.LevelCompletionBehaviorType.RANDOM_LEVEL_ALL;
             _CanRender = false;
@@ -6426,7 +6426,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
 
       // Fast text
       .AddComponent("menu speed\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
-        .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+        .AddEvent(EventType.ON_RENDER, component =>
         {
           // Set display text
           var selection = !SettingsModule.TextSpeedFast ? "typed" : "instant";
@@ -6437,14 +6437,14 @@ go to the <color=yellow>SHOP</color> to buy something~1
           var actions = new List<System.Action<MenuComponent>>();
           var selection_match = $"{selection} ";
           selections.Add("typed   - menus are typed out like using a keyboard [DEFAULT]");
-          actions.Add((MenuComponent component0) =>
+          actions.Add(component0 =>
           {
             SettingsModule.TextSpeedFast = false;
             _CanRender = false;
             RenderMenu();
           });
           selections.Add("instant - menus are displayed instantly");
-          actions.Add((MenuComponent component0) =>
+          actions.Add(component0 =>
           {
             SettingsModule.TextSpeedFast = true;
             _CanRender = false;
@@ -6456,7 +6456,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
 
       // Display player ui
       .AddComponent("hide ui\n\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
-        .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+        .AddEvent(EventType.ON_RENDER, component =>
         {
 
           // Set display text
@@ -6471,7 +6471,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
           var selection_match = $"{selection} ";
 
           selections.Add("on  - hide player ui");
-          actions.Add((MenuComponent component0) =>
+          actions.Add(component0 =>
           {
             SettingsModule.HideUI = true;
             _CanRender = false;
@@ -6480,7 +6480,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
 
 
           selections.Add("off - display player ui [DEFAULT]");
-          actions.Add((MenuComponent component0) =>
+          actions.Add(component0 =>
           {
             SettingsModule.HideUI = false;
             _CanRender = false;
@@ -6493,7 +6493,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
 
       // Show tips
       .AddComponent("show tips\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
-        .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+        .AddEvent(EventType.ON_RENDER, component =>
         {
 
           // Set display text
@@ -6506,7 +6506,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
           var selection_match = $"{selection} ";
 
           selections.Add("on  - show game tips in some of the menus [DEFAULT]");
-          actions.Add((MenuComponent component0) =>
+          actions.Add(component0 =>
           {
             SettingsModule.ShowTips = true;
             _CanRender = false;
@@ -6514,7 +6514,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
           });
 
           selections.Add("off - do not display tips in menus");
-          actions.Add((MenuComponent component0) =>
+          actions.Add(component0 =>
           {
             SettingsModule.ShowTips = false;
             _CanRender = false;
@@ -6527,7 +6527,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
 
       // Display loadout index
       .AddComponent("show loadout number\n\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
-        .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+        .AddEvent(EventType.ON_RENDER, component =>
         {
 
           // Set display text
@@ -6540,7 +6540,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
           var selection_match = $"{selection} ";
 
           selections.Add("on  - display player loadout number [DEFAULT]");
-          actions.Add((MenuComponent component0) =>
+          actions.Add(component0 =>
           {
             SettingsModule.ShowLoadoutIndexes = true;
             _CanRender = false;
@@ -6551,7 +6551,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
           });
 
           selections.Add("off - do not display player loadout number");
-          actions.Add((MenuComponent component0) =>
+          actions.Add(component0 =>
           {
             SettingsModule.ShowLoadoutIndexes = false;
             _CanRender = false;
@@ -6567,7 +6567,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
 
       // Toggle smoke
       .AddComponent("smoke\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
-        .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+        .AddEvent(EventType.ON_RENDER, component =>
         {
           // Set display text
           var display_toggle = SettingsModule.UseSmokeFx ? "on" : "off";
@@ -6584,14 +6584,14 @@ go to the <color=yellow>SHOP</color> to buy something~1
             {
               case 0:
                 selections.Add("on [DEFAULT]");
-                actions.Add((MenuComponent component0) =>
+                actions.Add(component0 =>
                 {
                   SettingsModule.UseSmokeFx = true;
                 });
                 break;
               case 1:
                 selections.Add("off");
-                actions.Add((MenuComponent component0) =>
+                actions.Add(component0 =>
                 {
                   SettingsModule.UseSmokeFx = false;
                 });
@@ -6604,7 +6604,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
 
       // Toggle lightning
       .AddComponent("lightning\n\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
-        .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+        .AddEvent(EventType.ON_RENDER, component =>
         {
           // Set display text
           var display_toggle = SettingsModule.UseLightning ? "on" : "off";
@@ -6621,7 +6621,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
               case 0:
                 selections.Add("on [DEFAULT]");
                 // Add action to update sfx volume
-                actions.Add((MenuComponent component0) =>
+                actions.Add(component0 =>
                 {
                   SettingsModule.UseLightning = true;
                 });
@@ -6629,7 +6629,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
               case 1:
                 selections.Add("off");
                 // Add action to update sfx volume
-                actions.Add((MenuComponent component0) =>
+                actions.Add(component0 =>
                 {
                   SettingsModule.UseLightning = false;
                 });
@@ -6642,17 +6642,17 @@ go to the <color=yellow>SHOP</color> to buy something~1
 
       // Delete all save data menu
       .AddComponent("delete save data\n\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
-        .AddEventFront((MenuComponent component) =>
+        .AddEventFront(component =>
         {
           SettingsHelper._DeleteSaveDataIter = 4;
         })
-        .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+        .AddEvent(EventType.ON_RENDER, component =>
         {
           // Set dropdown data
           var selections = new List<string>();
           var actions = new List<System.Action<MenuComponent>>();
           selections.Add($"yes - press {SettingsHelper._DeleteSaveDataIter + 1} more times");
-          actions.Add((MenuComponent component0) =>
+          actions.Add(component0 =>
           {
             if (SettingsHelper._DeleteSaveDataIter-- <= 0)
             {
@@ -6831,7 +6831,7 @@ information~1.~1.~1. <color=yellow>quick deploy guide</color>:~9
 * <color=yellow>select</color> a mission to play in the <color={_COLOR_GRAY}>LEVEL SELECT</color> menu~9
 
 ")
-      .AddBackButton((MenuComponent c) =>
+      .AddBackButton(c =>
       {
         SwitchMenu(MenuType.GAMETYPE_MISSION);
 
@@ -6930,7 +6930,7 @@ system will provide and configure all loadouts.~9
       .AddComponent("are you sure you want to exit the game?\n\n")
       // Exit to level selection or main menu
       .AddComponent("exit\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-        .AddEvent((MenuComponent component) =>
+        .AddEvent(component =>
         {
 #if UNITY_EDITOR
           UnityEditor.EditorApplication.isPlaying = false;
@@ -6940,7 +6940,7 @@ system will provide and configure all loadouts.~9
         })
         .AddEvent(EventType.ON_RENDER, CommonEvents._OnRender_XSelector)
       .AddBackButton(MenuType.PAUSE, "back")
-        .AddEvent((MenuComponent c) =>
+        .AddEvent(c =>
         {
           CommonEvents._SwitchMenu(MenuType.MAIN);
         });
@@ -6953,7 +6953,7 @@ system will provide and configure all loadouts.~9
       .AddComponent("are you sure you want to exit this level?\n\n")
       // Exit to level selection or main menu
       .AddComponent("exit level\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-        .AddEvent((MenuComponent component) =>
+        .AddEvent(component =>
         {
 
           // Check crown mode
@@ -7027,7 +7027,7 @@ system will provide and configure all loadouts.~9
           .AddEvent(EventType.ON_RENDER, CommonEvents._OnRender_XSelector)
 
         .AddBackButton(MenuType.PAUSE, "back")
-          .AddEvent((MenuComponent c) =>
+          .AddEvent(c =>
           {
             s_CurrentMenu._SelectionIndex = s_saveIndex;
             s_CurrentMenu._SelectedComponent._onFocus?.Invoke(s_CurrentMenu._SelectedComponent);
@@ -7044,7 +7044,7 @@ system will provide and configure all loadouts.~9
 
       // Force keyboard toggle
       .AddComponent("force keyboard\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
-        .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+        .AddEvent(EventType.ON_RENDER, component =>
         {
 
           // Set display text
@@ -7058,7 +7058,7 @@ system will provide and configure all loadouts.~9
           var selections = new List<string>();
           var actions = new List<System.Action<MenuComponent>>();
           selections.Add("on  - use this if you want to play with controllers and the keyboard");
-          actions.Add((MenuComponent component0) =>
+          actions.Add(component0 =>
           {
             SettingsHelper._ForceKeyboard = true;
             if (ControllerManager._NumberGamepads > 0)
@@ -7068,7 +7068,7 @@ system will provide and configure all loadouts.~9
             }
           });
           selections.Add("off - use this if you want to play with controllers, ignoring the keyboard [DEFAULT]");
-          actions.Add((MenuComponent component0) =>
+          actions.Add(component0 =>
           {
             SettingsHelper._ForceKeyboard = false;
             if (ControllerManager._NumberGamepads > 0)
@@ -7084,7 +7084,7 @@ system will provide and configure all loadouts.~9
 
       // Force keyboard toggle
       .AddComponent("ignore first controller\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
-        .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+        .AddEvent(EventType.ON_RENDER, component =>
         {
 
           // Set display text
@@ -7098,12 +7098,12 @@ system will provide and configure all loadouts.~9
           var selections = new List<string>();
           var actions = new List<System.Action<MenuComponent>>();
           selections.Add("on  - disable detection of the first plugged-in controller");
-          actions.Add((MenuComponent component0) =>
+          actions.Add(component0 =>
           {
             SettingsModule.IgnoreFirstController = true;
           });
           selections.Add("off - use controllers normally [DEFAULT]");
-          actions.Add((MenuComponent component0) =>
+          actions.Add(component0 =>
           {
             SettingsModule.IgnoreFirstController = false;
           });
@@ -7114,7 +7114,7 @@ system will provide and configure all loadouts.~9
 
       // Controller rumble
       .AddComponent("controller vibration\n\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
-        .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+        .AddEvent(EventType.ON_RENDER, component =>
         {
 
           // Set display text
@@ -7126,12 +7126,12 @@ system will provide and configure all loadouts.~9
           var actions = new List<System.Action<MenuComponent>>();
           var selection_match = $"{selection} ";
           selections.Add("on  - controllers will vibrate when you die [DEFAULT]");
-          actions.Add((MenuComponent component0) =>
+          actions.Add(component0 =>
           {
             SettingsModule.ControllerRumble = true;
           });
           selections.Add("off - controllers will never vibrate");
-          actions.Add((MenuComponent component0) =>
+          actions.Add(component0 =>
           {
             SettingsModule.ControllerRumble = false;
           });
@@ -7141,14 +7141,14 @@ system will provide and configure all loadouts.~9
         })
 
       .AddComponent("=======\n\n", MenuComponent.ComponentType.DISPLAY)
-        .AddEvent(EventType.ON_CREATED, (MenuComponent component) =>
+        .AddEvent(EventType.ON_CREATED, component =>
         {
           component._textColor = _COLOR_GRAY;
         })
 
       // Player index
       .AddComponent("player\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
-        .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+        .AddEvent(EventType.ON_RENDER, component =>
         {
           // Set display text
           component.SetDisplayText(string.Format(format_options, "player:", PlayerProfile.s_CurrentSettingsProfileID + 1 + ""));
@@ -7161,10 +7161,10 @@ system will provide and configure all loadouts.~9
             // Add quality level
             selections.Add($"player {(i + 1).ToString()}");
             // Add action to update quality
-            actions.Add((MenuComponent component0) =>
-      {
-        PlayerProfile.s_CurrentSettingsProfileID = component0._dropdownIndex;
-      });
+            actions.Add(component0 =>
+            {
+              PlayerProfile.s_CurrentSettingsProfileID = component0._dropdownIndex;
+            });
           }
           // Update dropdown data
           component.SetDropdownData("player selector - choose which players' controls to edit\n\n", selections, actions, selection_match);
@@ -7222,7 +7222,7 @@ system will provide and configure all loadouts.~9
         })*/
       // Reload both weapons at same time
       .AddComponent("reload setting\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
-        .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+        .AddEvent(EventType.ON_RENDER, component =>
         {
           // Set display text
           var selection = PlayerProfile.s_CurrentSettingsProfile._reloadSidesSameTime ? "both" : "one_at_a_time";
@@ -7232,12 +7232,12 @@ system will provide and configure all loadouts.~9
           var actions = new List<System.Action<MenuComponent>>();
           var selection_match = $"{selection} ";
           selections.Add("both          - press the reload button to reload weapons at the same time [DEFAULT]");
-          actions.Add((MenuComponent component0) =>
+          actions.Add(component0 =>
           {
             PlayerProfile.s_CurrentSettingsProfile._reloadSidesSameTime = true;
           });
           selections.Add("one_at_a_time - press the reload button to reload weapons one at a time");
-          actions.Add((MenuComponent component0) =>
+          actions.Add(component0 =>
           {
             PlayerProfile.s_CurrentSettingsProfile._reloadSidesSameTime = false;
           });
@@ -7246,7 +7246,7 @@ system will provide and configure all loadouts.~9
         })
       // Walk direction
       .AddComponent("face walk direction\n\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
-        .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+        .AddEvent(EventType.ON_RENDER, component =>
         {
           // Set display text
           var selection = PlayerProfile.s_CurrentSettingsProfile._faceMovement ? "on" : "off";
@@ -7256,12 +7256,12 @@ system will provide and configure all loadouts.~9
           var actions = new List<System.Action<MenuComponent>>();
           var selection_match = $"{selection} ";
           selections.Add("on  - face the direction you are moving if not aiming [DEFAULT]");
-          actions.Add((MenuComponent component0) =>
+          actions.Add(component0 =>
           {
             PlayerProfile.s_CurrentSettingsProfile._faceMovement = true;
           });
           selections.Add("off - ignore the direction you are moving, only face your aim direction");
-          actions.Add((MenuComponent component0) =>
+          actions.Add(component0 =>
           {
             PlayerProfile.s_CurrentSettingsProfile._faceMovement = false;
           });
@@ -7315,7 +7315,7 @@ system will provide and configure all loadouts.~9
           )
           {
             menu_extras.AddComponent($"placeholder{line_end}", MenuComponent.ComponentType.BUTTON_DROPDOWN)
-              .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
+              .AddEvent(EventType.ON_RENDER, component =>
               {
                 var selection = prompt_value_logic.Invoke();
 
@@ -7330,7 +7330,7 @@ system will provide and configure all loadouts.~9
                 {
                   if (index == 0 && component_data._selectionPrompt == selection) { defaultSelection = true; }
                   selections.Add(string.Format(format_extras, $"{component_data._selectionPrompt}", $"{component_data._selectionDescription}" + (index++ == 0 ? " [DEFAULT]" : "")));
-                  actions.Add((MenuComponent component0) =>
+                  actions.Add(component0 =>
                   {
                     component_data.on_selected.Invoke(component0);
                   });
@@ -7372,7 +7372,7 @@ system will provide and configure all loadouts.~9
           }
 
           // Set hint info and reload component
-          menu_extras.AddEvent(EventType.ON_FOCUS, (MenuComponent c) =>
+          menu_extras.AddEvent(EventType.ON_FOCUS, c =>
           {
             exInfo = SettingsHelper.s_Extra_UnlockCriterea[extra];
             useExInfo = true;
@@ -7434,13 +7434,13 @@ system will provide and configure all loadouts.~9
               return "N/A";
             },
             new DropdownSelectionComponent[] {
-        new DropdownSelectionComponent("on", "in sneakier difficulty, a person with a bat will chase you", (MenuComponent component) => {
+        new DropdownSelectionComponent("on", "in sneakier difficulty, a person with a bat will chase you", component => {
           LevelModule.ExtraRemoveChaser = 0;
         }),
-        new DropdownSelectionComponent("on - always", "a person with a bat will chase you in any difficulty", (MenuComponent component) => {
+        new DropdownSelectionComponent("on - always", "a person with a bat will chase you in any difficulty", component => {
           LevelModule.ExtraRemoveChaser = 1;
         }),
-        new DropdownSelectionComponent("off", "...that guy won't exist", (MenuComponent component) => {
+        new DropdownSelectionComponent("off", "...that guy won't exist", component => {
           LevelModule.ExtraRemoveChaser = 2;
         }),
             },
@@ -7455,19 +7455,19 @@ system will provide and configure all loadouts.~9
             "gravity",
             () => { return LevelModule.ExtraGravity == 1 ? "inverted" : LevelModule.ExtraGravity == 2 ? "north" : LevelModule.ExtraGravity == 3 ? "none" : "normal"; },
             new DropdownSelectionComponent[] {
-          new DropdownSelectionComponent("normal", "normal gravity", (MenuComponent component) => {
+          new DropdownSelectionComponent("normal", "normal gravity", component => {
             LevelModule.ExtraGravity = 0;
             Physics.gravity = new Vector3(0f, -9.81f, 0f);
           }),
-          new DropdownSelectionComponent("inverted", "gravity go up!", (MenuComponent component) => {
+          new DropdownSelectionComponent("inverted", "gravity go up!", component => {
             LevelModule.ExtraGravity = 1;
             Physics.gravity = new Vector3(0f, 9.81f, 0f);
           }),
-          new DropdownSelectionComponent("north", "gravity go... up?", (MenuComponent component) => {
+          new DropdownSelectionComponent("north", "gravity go... up?", component => {
             LevelModule.ExtraGravity = 2;
             Physics.gravity = new Vector3(0f, 0f, 9.81f);
           }),
-          new DropdownSelectionComponent("none", "no gravity...", (MenuComponent component) => {
+          new DropdownSelectionComponent("none", "no gravity...", component => {
             LevelModule.ExtraGravity = 3;
             Physics.gravity = Vector3.zero;
           }),
@@ -7497,16 +7497,16 @@ system will provide and configure all loadouts.~9
               return "N/A";
             },
             new DropdownSelectionComponent[] {
-          new DropdownSelectionComponent("1x", "", (MenuComponent component) => {
+          new DropdownSelectionComponent("1x", "", component => {
             LevelModule.ExtraPlayerAmmo = 0;
           }),
-          new DropdownSelectionComponent("2x", "", (MenuComponent component) => {
+          new DropdownSelectionComponent("2x", "", component => {
             LevelModule.ExtraPlayerAmmo = 1;
           }),
-          new DropdownSelectionComponent("0.5x", "", (MenuComponent component) => {
+          new DropdownSelectionComponent("0.5x", "", component => {
             LevelModule.ExtraPlayerAmmo = 2;
           }),
-          new DropdownSelectionComponent("infinite", "", (MenuComponent component) => {
+          new DropdownSelectionComponent("infinite", "", component => {
             LevelModule.ExtraPlayerAmmo = 3;
           }),
             },
@@ -7523,10 +7523,10 @@ system will provide and configure all loadouts.~9
             "time",
             () => { return LevelModule.ExtraTime == 1 ? "movement" : "normal"; },
             new DropdownSelectionComponent[] {
-        new DropdownSelectionComponent("normal", "time is normal", (MenuComponent component) => {
+        new DropdownSelectionComponent("normal", "time is normal", component => {
             LevelModule.ExtraTime = 0;
         }),
-        new DropdownSelectionComponent("movement", "time only moves when you move", (MenuComponent component) => {
+        new DropdownSelectionComponent("movement", "time only moves when you move", component => {
             LevelModule.ExtraTime = 1;
         }),
             },
@@ -7541,10 +7541,10 @@ system will provide and configure all loadouts.~9
             "horde",
             () => { return LevelModule.ExtraHorde == 1 ? "on" : "off"; },
             new DropdownSelectionComponent[] {
-        new DropdownSelectionComponent("off", "no horde", (MenuComponent component) => {
+        new DropdownSelectionComponent("off", "no horde", component => {
             LevelModule.ExtraHorde = 0;
         }),
-        new DropdownSelectionComponent("on", "a horde spawns until you pick up the cube", (MenuComponent component) => {
+        new DropdownSelectionComponent("on", "a horde spawns until you pick up the cube", component => {
             LevelModule.ExtraHorde = 1;
         }),
             },
@@ -7571,13 +7571,13 @@ system will provide and configure all loadouts.~9
               return "N/A";
             },
             new DropdownSelectionComponent[] {
-        new DropdownSelectionComponent("1x", "normal amount of enemies", (MenuComponent component) => {
+        new DropdownSelectionComponent("1x", "normal amount of enemies", component => {
           LevelModule.ExtraEnemyMultiplier = 0;
         }),
         /*new DropdownSelectionComponent("2x", "double the amount of enemies...", (MenuComponent component) => {
           LevelModule.ExtraEnemyMultiplier = 1;
         }),*/
-        new DropdownSelectionComponent("0x", "no enemies", (MenuComponent component) => {
+        new DropdownSelectionComponent("0x", "no enemies", component => {
           LevelModule.ExtraEnemyMultiplier = 2;
         }),
             },
@@ -7602,10 +7602,10 @@ system will provide and configure all loadouts.~9
               return "N/A";
             },
             new DropdownSelectionComponent[] {
-        new DropdownSelectionComponent("normal", "blood", (MenuComponent component) => {
+        new DropdownSelectionComponent("normal", "blood", component => {
           LevelModule.ExtraBloodType = 0;
         }),
-        new DropdownSelectionComponent("confetti", "party time", (MenuComponent component) => {
+        new DropdownSelectionComponent("confetti", "party time", component => {
           LevelModule.ExtraBloodType = 1;
         }),
             },
@@ -7634,20 +7634,16 @@ system will provide and configure all loadouts.~9
               return "N/A";
             },
             new DropdownSelectionComponent[] {
-            new DropdownSelectionComponent("off", "", (MenuComponent component) =>
-          {
+            new DropdownSelectionComponent("off", "", component => {
                 LevelModule.ExtraBodyExplode = 0;
               }),
-            new DropdownSelectionComponent("all", "", (MenuComponent component) =>
-          {
+            new DropdownSelectionComponent("all", "", component => {
                 LevelModule.ExtraBodyExplode = 1;
               }),
-            new DropdownSelectionComponent("enemies", "", (MenuComponent component) =>
-          {
+            new DropdownSelectionComponent("enemies", "", component => {
                 LevelModule.ExtraBodyExplode = 2;
               }),
-            new DropdownSelectionComponent("players", "", (MenuComponent component) =>
-          {
+            new DropdownSelectionComponent("players", "", component => {
                 LevelModule.ExtraBodyExplode = 3;
               }),
             },
@@ -7662,11 +7658,11 @@ system will provide and configure all loadouts.~9
 
         // Extra infos
         menu_extras.AddComponent("about\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-          .AddEvent(EventType.ON_RENDER, (MenuComponent c) =>
+          .AddEvent(EventType.ON_RENDER, c =>
           {
             c._selectorType = MenuComponent.SelectorType.QUESTION;
           })
-          .AddEvent(EventType.ON_SELECTED, (MenuComponent c) =>
+          .AddEvent(EventType.ON_SELECTED, c =>
           {
             GenericMenu(new string[]{
   @$"<color={_COLOR_GRAY}>============
@@ -7681,14 +7677,14 @@ about extras</color>
 -you <color={_COLOR_GRAY}>cannot get level rankings or $$</color> if you have any extras enabled (besides
  extras with ` next to them)
  "
-      }, "neat", MenuType.EXTRAS, null, true, null, (MenuComponent m) =>
+      }, "neat", MenuType.EXTRAS, null, true, null, m =>
       {
         s_menus[MenuType.EXTRAS]._SelectionIndex = s_menus[MenuType.EXTRAS]._MenuComponentsSelectable.Count - 3;
         _CanRender = true;
         RenderMenu();
       });
           })
-          .AddEvent(EventType.ON_FOCUS, (MenuComponent c) =>
+          .AddEvent(EventType.ON_FOCUS, c =>
           {
             useExInfo = false;
             menu_extras._MenuComponent_last._onFocus?.Invoke(menu_extras._MenuComponent_last);
@@ -7696,24 +7692,24 @@ about extras</color>
 
         // Turn off all extras
         menu_extras.AddComponent("clear\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-          .AddEvent(EventType.ON_RENDER, (MenuComponent c) =>
+          .AddEvent(EventType.ON_RENDER, c =>
           {
             c._selectorType = MenuComponent.SelectorType.X;
           })
-          .AddEvent(EventType.ON_SELECTED, (MenuComponent c) =>
+          .AddEvent(EventType.ON_SELECTED, c =>
           {
             SettingsHelper.SetExtrasOff();
             _CanRender = false;
             RenderMenu();
           })
-          .AddEvent(EventType.ON_FOCUS, (MenuComponent c) =>
+          .AddEvent(EventType.ON_FOCUS, c =>
           {
             useExInfo = false;
             menu_extras._MenuComponent_last._onFocus?.Invoke(menu_extras._MenuComponent_last);
           });
 
         // Back button
-        menu_extras.AddBackButton((MenuComponent component) =>
+        menu_extras.AddBackButton(component =>
         {
           if (s_InPause)
           {
@@ -7726,7 +7722,7 @@ about extras</color>
             SwitchMenu(MenuType.GAMETYPE_MISSION);
           }
         })
-        .AddEvent(EventType.ON_FOCUS, (MenuComponent c) =>
+        .AddEvent(EventType.ON_FOCUS, c =>
         {
           useExInfo = false;
           menu_extras._MenuComponent_last._onFocus?.Invoke(menu_extras._MenuComponent_last);
@@ -7734,7 +7730,7 @@ about extras</color>
 
         // Extra hint info
         menu_extras.AddComponent("\n\n\n\n\n")
-          .AddEvent(EventType.ON_FOCUS, (MenuComponent c) =>
+          .AddEvent(EventType.ON_FOCUS, c =>
           {
             if (!useExInfo)
             {
@@ -7810,7 +7806,7 @@ about extras</color>
       .AddComponent("plug in the missing controller(s) to resume or press ok to restart the level with less people\n\n\n")
       .AddComponent("...\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
       .AddComponent("ok", MenuComponent.ComponentType.BUTTON_SIMPLE)
-        .AddEvent((MenuComponent component) =>
+        .AddEvent(component =>
         {
           if (ControllerManager._NumberGamepads == 0)
             _Confirmed_SwitchToKeyboard = true;
@@ -7855,7 +7851,7 @@ about extras</color>
     // Update all menus
     public static void UpdateMenus()
     {
-      // Check hide mouse
+      // Check unhide mouse
       if (!_CheckMouse)
       {
         _CheckMouse = (ControllerManager.GetMousePosition() - _LastMousePosition).magnitude > 10f;
@@ -7886,7 +7882,7 @@ about extras</color>
               {
                 if (!component._collider) continue;
 
-                if (component._collider.GetInstanceID() == h.collider.GetInstanceID() &&
+                if (component._collider.GetEntityId() == h.collider.GetEntityId() &&
                   s_CurrentMenu._SelectionIndex != component._buttonIndex)
                 {
                   // Trigger focus and unfocus component events
@@ -7974,6 +7970,7 @@ about extras</color>
           s_Text.text += text;
 
         if (onRender) s_CurrentMenu._OnRendered?.Invoke();
+
         // Check for typing noise
         if (text.Trim() != "")
           if (s_playTime <= 0f)
@@ -8298,14 +8295,14 @@ about extras</color>
           if (hasShopItem)
             menu
             .AddComponent("shop\n", MenuComponent.ComponentType.BUTTON_SIMPLE, "yellow")
-              .AddEvent((MenuComponent c) =>
+              .AddEvent(c =>
               {
                 CommonEvents._SwitchMenu(MenuType.SHOP);
               });
           if (hasExtra)
             menu
             .AddComponent("extras\n", MenuComponent.ComponentType.BUTTON_SIMPLE, "magenta")
-              .AddEvent((MenuComponent c) =>
+              .AddEvent(c =>
               {
                 CommonEvents._SwitchMenu(MenuType.EXTRAS);
                 s_InPause = true;

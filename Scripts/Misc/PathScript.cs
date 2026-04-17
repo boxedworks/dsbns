@@ -20,7 +20,7 @@ public class PathScript
   {
     transform = pathTransform;
 
-    _pingPong = true;
+    //_pingPong = true;
 
     // Parse info
     if (_WaitTimes != null && _WaitTimes.Trim().Length > 0)
