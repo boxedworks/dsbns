@@ -12,6 +12,7 @@ using Assets.Scripts.Ragdoll;
 using Assets.Scripts.UI.Menus;
 using Assets.Scripts.Objects;
 using Assets.Scripts.Game.Items;
+using Assets.Scripts.Ragdoll.Equippables;
 
 public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
 {

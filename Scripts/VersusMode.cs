@@ -4,6 +4,7 @@ using Assets.Scripts.Settings;
 using Assets.Scripts.UI.Menus;
 using Assets.Scripts.Game.Items;
 using UnityEngine;
+using Assets.Scripts.Ragdoll.Equippables;
 
 // Holds functions for versus mode
 public static class VersusMode

@@ -1,10 +1,12 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Assets.Scripts.FX;
 using Assets.Scripts.Game.Items;
 using Assets.Scripts.Objects;
 using Assets.Scripts.Objects.CustomEntities;
 using Assets.Scripts.Ragdoll;
+using Assets.Scripts.Ragdoll.Equippables;
 using Assets.Scripts.Settings;
 using Assets.Scripts.Settings.Localization;
 using Assets.Scripts.Settings.Serialization;

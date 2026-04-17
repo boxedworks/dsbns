@@ -11,6 +11,8 @@ using Assets.Scripts.UI;
 using Assets.Scripts.Objects;
 using Assets.Scripts.Objects.CustomEntities;
 using Assets.Scripts.Game.Items;
+using Assets.Scripts.FX;
+using Assets.Scripts.Ragdoll.Equippables;
 
 namespace Assets.Scripts.Ragdoll
 {

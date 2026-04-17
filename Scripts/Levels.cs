@@ -5,6 +5,7 @@ using Assets.Scripts.Settings;
 using Assets.Scripts.Settings.Serialization;
 using Assets.Scripts.Game.Items;
 using UnityEngine;
+using Assets.Scripts.Ragdoll.Equippables;
 
 public class Levels : MonoBehaviour
 {

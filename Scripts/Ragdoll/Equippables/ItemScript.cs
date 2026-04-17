@@ -1,0 +1,1953 @@
+﻿using System.Collections;
+using System.Collections.Generic;
+using Assets.Scripts.Objects;
+using Assets.Scripts.Settings;
+using Assets.Scripts.Settings.Serialization;
+using Assets.Scripts.Game.Items;
+using UnityEngine;
+
+using ItemType = ItemManager.Items;
+using Assets.Scripts.Ragdoll.Animation;
+
+namespace Assets.Scripts.Ragdoll.Equippables
+{
+
+  public class ItemScript : MonoBehaviour
+  {
+    //
+    static LevelSaveData LevelModule { get { return SettingsHelper.s_SaveData.LevelData; } }
+    static SettingsSaveData SettingsModule { get { return SettingsHelper.s_SaveData.Settings; } }
+
+    [System.NonSerialized]
+    public int _Id;
+    static int s_id;
+
+    protected bool _isUtility;
+
+    // Information about weapon holder
+    public ActiveRagdoll _ragdoll;
+    protected ActiveRagdoll.Side _side;
+    public void SetSide(ActiveRagdoll.Side side)
+    {
+      _side = side;
+    }
+
+    AudioSource _sfx0, _sfx1;
+
+    public int _clipSize, _minimumClipToFire, _projectilesPerShot, _burstPerShot, _penatrationAmount;
+    public bool _reloading, _isMelee, _twoHanded, _runWhileUse, _reloadOneAtTime, _silenced, _throwable, _dismember, _useOnRelease, _randomSpread, _chargeHold;
+    public float _useTime, _reloadTime, _useRate, _downTime, _burstRate, _hit_force, _bullet_spread, _shoot_force, _shoot_forward_force;
+    protected float _downTimeSave;
+    public FireMode _fireMode;
+
+    float _upTime;
+
+    public UtilityScript.UtilityType _customProjetile;
+    public UtilityScript[] _customProjectiles;
+    int _customProjectileIter;
+    float _customProjectileVelocityMod;
+
+    public bool _IsBulletDeflector { get { return _type == ItemType.FRYING_PAN || _type == ItemType.KATANA; } }
+
+    // Custom components
+    ParticleSystem[] _customParticles;
+    Light[] _customLights;
+
+    //
+    protected bool _disableOnRagdollDeath;
+
+    bool _meleeStartSwinging;
+    bool _isChargedFist { get { return _downTimeSave >= 0.5f; } }
+
+    public int GetClipSize()
+    {
+      if (_isMelee && !IsChargeWeapon()) return 1;
+
+      var clip_size = _clipSize;
+
+      // Check perk
+      if (_ragdoll != null && _ragdoll._IsPlayer && _ragdoll._PlayerScript.HasPerk(Perk.PerkType.MAX_AMMO_UP))
+        clip_size = Mathf.CeilToInt(_clipSize * 1.5f);
+
+      // Check extra
+      if (SettingsHelper._Extras_CanUse)
+      {
+        if (_ragdoll?._IsPlayer ?? false)
+          switch (LevelModule.ExtraPlayerAmmo)
+          {
+            case 1:
+              clip_size = Mathf.CeilToInt(_clipSize * 2f);
+              break;
+            case 2:
+              clip_size = Mathf.CeilToInt(_clipSize * 0.5f);
+              break;
+          }
+      }
+
+      return clip_size;
+    }
+    public float UseRate()
+    {
+      if (!_isMelee && _ragdoll != null && _ragdoll._IsPlayer && Perk.HasPerk(_ragdoll._PlayerScript._Id, Perk.PerkType.FIRE_RATE_UP))
+        return _useRate * 0.5f;
+      return _useRate;
+    }
+
+    bool _isZombie { get { return !_ragdoll._IsPlayer && _ragdoll._EnemyScript._IsZombieReal; } }
+    bool _canMeleePenatrate { get { return _twoHanded || (_type == ItemType.AXE && !_isZombie) || _type == ItemType.ROCKET_FIST /*|| _type == ItemType.FIST*/; } }
+
+    float _time { get { return /*_ragdoll._isPlayer_twoHanded ? Time.unscaledTime : */Time.time; } }
+
+    //
+    bool _isSwinging;
+    float _swingTime;
+    public bool _IsSwinging
+    {
+      get
+      {
+        return _isSwinging;
+      }
+      set
+      {
+        _isSwinging = value;
+        if (value == true)
+          _swingTime = Time.time;
+      }
+    }
+    public bool IsSwingingSurvival()
+    {
+      return _isSwinging || (Time.time - _swingTime < 0.26f);
+    }
+
+    bool _swang;
+
+    //
+    protected int _clip, _bursts, _meleeIter;
+    protected bool _triggerDown, _triggerDownLast, _used, _hitAnthing, _hitAnthingOverride, _hasHitEnemy;
+    public bool _HitAnything { get { return _hitAnthing; } }
+
+    bool _triggerDownReal;
+
+    bool _damageAnything;
+
+    public bool _TriggerDown { get { return _triggerDown; } }
+
+    public void DeflectedBullet()
+    {
+      if (_IsSwinging) { _hitAnthing = true; }
+    }
+
+    public bool Used() { return _used; }
+
+    protected System.Action _onUse, _onUpdate;
+
+    public Transform _handle, _forward;
+
+    // Check for perk
+    public int GetPenatrationAmount()
+    {
+      if (_ragdoll._IsPlayer && Perk.HasPerk(_ragdoll._PlayerScript._Id, Perk.PerkType.PENETRATION_UP))
+        return _penatrationAmount + 1;
+      return _penatrationAmount;
+    }
+
+    Transform _arm_lower { get { return transform.parent.parent; } }
+    Transform _arm_upper { get { return _arm_lower.parent; } }
+    Vector3 _save_rot_lower, _save_rot_upper,
+      _original_rot_lower, _original_rot_upper;
+
+    Vector3 _swordLerp0, _swordLerpDesired0, _swordLerp1, _swordLerpDesired1;
+
+    // Audio
+    public AudioClip[] _sfx_clip;
+    public float[] _sfx_volume;
+
+    public ItemType _type;
+
+    protected List<int> _hitRagdolls;
+    public bool HasHitRagdoll(ActiveRagdoll ragdoll)
+    {
+      if (_hitRagdolls == null) return false;
+      return _hitRagdolls.Contains(ragdoll._Id);
+    }
+    public void RegisterHitRagdoll(ActiveRagdoll ragdoll)
+    {
+      _hitRagdolls ??= new();
+      _hitRagdolls.Add(ragdoll._Id);
+    }
+
+    public enum Audio
+    {
+      GUN_SHOOT,
+      GUN_RELOAD,
+      GUN_EMPTY,
+      GUN_EXTRA,
+      MELEE_SWING,
+      MELEE_HIT,
+      MELEE_HIT_METAL,
+      MELEE_HIT_BULLET,
+      MELEE_EXTRA,
+      UTILITY_THROW,
+      UTILITY_HIT_FLOOR,
+      UTILITY_ACTION,
+      UTILITY_EXTRA
+    }
+
+    [System.NonSerialized]
+    public Coroutine[] _Anims;
+
+    // Play SFX via enum
+    protected int GetAudioSource(Audio audio)
+    {
+
+      var iter = 0;
+      switch (audio)
+      {
+        case Audio.GUN_SHOOT:
+          if (_type == ItemType.FLAMETHROWER)
+          {
+            iter = -1;
+          }
+          else if (_type == ItemType.PISTOL_CHARGE || _type == ItemType.RIFLE_CHARGE)
+          {
+            if (_downTimeSave >= 1.25f)
+              iter = 6;
+            else if (_downTimeSave >= 0.5f)
+              iter = 5;
+          }
+          break;
+        case Audio.GUN_RELOAD:
+          if (_type == ItemType.FLAMETHROWER && _clip % 15 == 14)
+          {
+            iter = 5;
+            break;
+          }
+          iter = 1;
+          break;
+        case Audio.GUN_EMPTY:
+          iter = 2;
+          break;
+        case Audio.GUN_EXTRA:
+          iter = 3;
+          break;
+        case Audio.MELEE_SWING:
+          break;
+        case Audio.MELEE_HIT:
+          iter = 1;
+          break;
+        case Audio.MELEE_HIT_METAL:
+          iter = 2;
+          break;
+        case Audio.MELEE_HIT_BULLET:
+          iter = 3;
+          break;
+        case Audio.MELEE_EXTRA:
+          iter = 4;
+          break;
+        case Audio.UTILITY_THROW:
+          break;
+        case Audio.UTILITY_HIT_FLOOR:
+          iter = 1;
+          break;
+        case Audio.UTILITY_ACTION:
+          iter = 2;
+          break;
+        case Audio.UTILITY_EXTRA:
+          iter = 3;
+          break;
+      }
+
+      if (iter >= _sfx_clip.Length) return -1;
+
+      return iter;
+    }
+    // Play SFX via enum
+    protected void PlaySound(Audio audioType, float pitchMin = 0.9f, float pitchMax = 1.1f, bool priorty = false)
+    {
+      var sfx = PlaySound(GetAudioSource(audioType), pitchMin, pitchMax, priorty);
+      if (audioType == Audio.MELEE_SWING || audioType == Audio.GUN_RELOAD)
+      {
+        _sfx_hold = sfx;
+      }
+    }
+    protected AudioSource PlaySound(int source_index, float pitchMin = 0.9f, float pitchMax = 1.1f, bool priority = false)
+    {
+      if (source_index == -1) return null;
+      return transform.PlayAudioSourceSimple(_sfx_clip[source_index], SfxManager.AudioClass.NONE, _sfx_volume[source_index], Random.Range(pitchMin, pitchMax), priority);
+    }
+
+    //
+    public void SetHitOverride()
+    {
+      if (!_ragdoll._IsPlayer) return;
+      _hitAnthingOverride = true;
+    }
+
+    //
+    GameObject _laserSight;
+    public void AddLaserSight()
+    {
+      if (_isMelee) return;
+
+      // Make sure doesn't have laser sight
+      if (_laserSight) return;
+
+      // Spawn lasersight
+      _laserSight = Instantiate(GameResources._LaserBeam);
+      _laserSight.name = "laser";
+      _laserSight.layer = 12;
+      Destroy(_laserSight.GetComponent<Collider>());
+      var renderer = _laserSight.GetComponent<Renderer>();
+    }
+
+    public enum FireMode
+    {
+      SEMI,
+      AUTOMATIC,
+      BURST
+    }
+
+    static GameObject _Bullet;
+    public static BulletScript[] _BulletPool;
+    static int _BulletPool_Iter;
+
+    private void OnDestroy()
+    {
+
+      // Mod
+      if (_laserSight) Destroy(_laserSight);
+
+      // Sfx
+      if (_sfx0 != null)
+      {
+        _sfx0.loop = false;
+        _sfx0.Stop();
+        _sfx0 = null;
+      }
+      if (_sfx1 != null)
+      {
+        _sfx1.loop = false;
+        _sfx1.Stop();
+        _sfx1 = null;
+      }
+    }
+
+    static int s_itemID;
+    public int _ItemId; // Unique id per item / weapon
+    public void Start()
+    {
+      _Id = s_id++;
+
+      _disableOnRagdollDeath = true;
+
+      if (_twoHanded)
+        _Anims = new Coroutine[6];
+
+      // Spawn bullet pool
+      if (_Bullet == null)
+      {
+        _Bullet = Instantiate(GameResources._Bullet);
+        _Bullet.SetActive(false);
+      }
+      if (_BulletPool == null)
+      {
+        _BulletPool = new BulletScript[30];
+        var bullets = new GameObject
+        {
+          name = "Bullets"
+        };
+        var rbs = new List<Collider>();
+        for (var i = 0; i < _BulletPool.Length; i++)
+        {
+          var bullet = Instantiate(GameResources._Bullet);
+          bullet.name = "Bullet";
+          bullet.SetActive(false);
+          bullet.transform.parent = bullets.transform;
+          bullet.layer = 3;
+          _BulletPool[i] = bullet.GetComponent<BulletScript>();
+          rbs.Add(bullet.GetComponent<Collider>());
+        }
+      }
+
+      // Check special types
+      switch (_type)
+      {
+        case ItemType.FLAMETHROWER:
+          _customParticles = new ParticleSystem[] { transform.GetChild(4).gameObject.GetComponent<ParticleSystem>() };
+          _customLights = new Light[] { transform.GetChild(5).gameObject.GetComponent<Light>() };
+          break;
+        case ItemType.PISTOL_CHARGE:
+        case ItemType.RIFLE_CHARGE:
+          _customParticles = new ParticleSystem[] {
+          transform.GetChild(3).gameObject.GetComponent<ParticleSystem>(),
+        };
+          break;
+      }
+
+      // Set onuse
+      _onUse = () =>
+      {
+        if (_throwable)
+        {
+          IEnumerator DelayedExplode()
+          {
+            yield return new WaitForSeconds(0.2f);
+            if (!_ragdoll._IsDead && !_ragdoll._IsStunned)
+              transform.GetChild(0).GetComponent<ExplosiveScript>().Trigger(_ragdoll, 0f);
+          }
+          StartCoroutine(DelayedExplode());
+          return;
+        }
+
+        // Check invisible
+        if (_ragdoll._invisible)
+          _ragdoll.SetInvisible(false);
+
+        //
+        switch (_type)
+        {
+          case ItemType.PISTOL_CHARGE:
+          case ItemType.RIFLE_CHARGE:
+            _customParticles[0].Stop();
+            break;
+        }
+
+        // Melee
+        if (_isMelee)
+        {
+
+          var raycastInfo = new RaycastInfo();
+          var isHit = MeleeCast(raycastInfo, _meleeIter++);
+
+          // Sanitize
+          if (isHit)
+          {
+
+            // Check ragdoll already checked
+            if (HasHitRagdoll(raycastInfo._ragdoll))
+              isHit = false;
+
+            // Check ragdoll grapple-related
+            if (_ragdoll.IsGrappleRelated(raycastInfo._ragdoll))
+              isHit = false;
+          }
+
+          if (isHit)
+          {
+            //bool hitEnemy = !raycastInfo._ragdoll._isPlayer;
+
+            // Check stunned
+            if (!_ragdoll.Active() || _ragdoll._IsStunned) return;
+
+            // Check grapplee
+            raycastInfo._ragdoll.OnGrapplee((grapplee) =>
+            {
+              // Get dir from target to swinger; if hostage is held in front of knife, kill hostage
+              var dir = (raycastInfo._ragdoll._Hip.position - _ragdoll._Hip.position).normalized;
+              var target_frwd = raycastInfo._ragdoll._Controller.forward;
+
+              if ((dir - target_frwd).magnitude > 1f)
+              {
+                RegisterHitRagdoll(raycastInfo._ragdoll);
+                raycastInfo._ragdoll = grapplee;
+              }
+            });
+
+            // Check zombie invisible 2nd weapon
+            if (_isZombie && _side == ActiveRagdoll.Side.RIGHT) return;
+
+            // If is enemy, and isn't two handed, don't kill friendlies
+            if (!_ragdoll._IsPlayer && !_canMeleePenatrate && !raycastInfo._ragdoll._IsPlayer && !raycastInfo._ragdoll._IsGrappled && !_ragdoll._IsGrappled) return;
+
+            // If is player v player, is two handed, and hit enemy before, dont hit
+            if (_ragdoll._IsPlayer && raycastInfo._ragdoll._IsPlayer && _canMeleePenatrate && _hasHitEnemy) return;
+
+            // If both are swinging, bounce back both and ignore
+            var otherSwinging = _isZombie && raycastInfo._ragdoll._IsPlayer ? raycastInfo._ragdoll._IsSwingingSurvival : raycastInfo._ragdoll._IsSwinging;
+            if (_ragdoll._IsSwinging && otherSwinging)
+            {
+
+              // Chaser
+              if ((_ragdoll._EnemyScript?.IsChaser() ?? false) || (raycastInfo._ragdoll._EnemyScript?.IsChaser() ?? false))
+              {
+              }
+
+              // Zombie
+              else if (raycastInfo._ragdoll._IsEnemy && raycastInfo._ragdoll._EnemyScript._IsZombieReal)
+              {
+              }
+
+              // Normal
+              else
+              {
+
+                var deflectData = raycastInfo._ragdoll.TryDeflectMelee(_ragdoll);
+                //Debug.Log($"dd? {deflectData != null}");
+                if (deflectData != null)
+                {
+
+                  // Check zombie
+                  if (_isZombie && !deflectData._hitAnthingOverride)
+                  {
+                    // Die self
+                    if (!_ragdoll._IsGrappling)
+                      deflectData.MeleeDamageOther(_ragdoll, deflectData._dismember);
+                    else
+                      _ragdoll.OnGrapplee((grapplee) => deflectData.MeleeDamageOther(grapplee, deflectData._dismember));
+                    return;
+                  }
+                  else if (deflectData._isZombie && !_hitAnthingOverride)
+                  {
+                    // Die other
+                    MeleeDamageOther(raycastInfo._ragdoll, _dismember);
+                    return;
+                  }
+
+                  // Check incompatible types
+                  if (_type == ItemType.FIST && deflectData._type != ItemType.FIST)
+                  {
+                    // Die self
+                    if (!_ragdoll._IsGrappling)
+                      deflectData.MeleeDamageOther(_ragdoll, deflectData._dismember);
+                    else
+                      _ragdoll.OnGrapplee((grapplee) => deflectData.MeleeDamageOther(grapplee, deflectData._dismember));
+                    return;
+                  }
+                  else if (_type != ItemType.FIST && deflectData._type == ItemType.FIST)
+                  {
+                    // Die other
+                    MeleeDamageOther(raycastInfo._ragdoll, _dismember);
+                    return;
+                  }
+
+                  //
+                  RegisterHitRagdoll(raycastInfo._ragdoll);
+                  SetHitOverride();
+
+                  // Bounce both ragdolls backward
+                  if (!_ragdoll._IsGrappled)
+                    _ragdoll.BounceFromPosition(raycastInfo._ragdoll._Hip.position, 1.5f, true);
+                  else
+                    raycastInfo._ragdoll.OnGrappler((grappler) => grappler.BounceFromPosition(grappler._Hip.position, 1.5f, true));
+                  raycastInfo._ragdoll.BounceFromPosition(_ragdoll._Hip.position, 1.5f, true);
+
+                  // Check stun from baton
+                  var hasBaton = _type == ItemType.STUN_BATON;
+                  var otherHasBaton = deflectData._type == ItemType.STUN_BATON;
+                  if (hasBaton)
+                  {
+                    raycastInfo._ragdoll.Stun();
+                    PlaySound(3);
+                  }
+                  if (otherHasBaton)
+                  {
+                    _ragdoll.Stun();
+                    var stunBaton = raycastInfo._ragdoll._ItemL == null || raycastInfo._ragdoll._ItemL._type != ItemType.STUN_BATON ? raycastInfo._ragdoll._ItemR : raycastInfo._ragdoll._ItemL;
+                    stunBaton.PlaySound(3);
+                  }
+                  if (otherHasBaton || hasBaton)
+                  {
+                    var parts = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.ELECTRIC_SPARK)[0];
+                    parts.transform.position = (_ragdoll._Hip.position + raycastInfo._ragdoll._Hip.position) / 2f;
+                    parts.Play();
+                  }
+
+                  // Fx
+                  {
+                    SfxManager.PlayAudioSourceSimple(_ragdoll._Hip.position, "Ragdoll/MeleeClash", 0.85f, 1.15f, SfxManager.AudioClass.NONE, true);
+
+                    var parts = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.BULLET_COLLIDE)[0];
+                    parts.transform.position = (_ragdoll._Hip.position + raycastInfo._ragdoll._Hip.position) / 2f;
+                    parts.Play();
+                  }
+
+                  return;
+                }
+              }
+            }
+
+            /*/ If is enemy and not chaser and target is player, and player is swinging, dont hit
+            if (!_ragdoll._isPlayer && !_ragdoll._EnemyScript.IsChaser() && raycastInfo._ragdoll._isPlayer && raycastInfo._ragdoll._swinging)
+            {
+              //FunctionsC.PlaySound(ref raycastInfo._ragdoll._audioPlayer_steps, "Ragdoll/Deflect");
+              return;
+            }*/
+
+            //if (_twoHanded)
+            _hitAnthing = true;
+
+            if (!_hasHitEnemy && !raycastInfo._ragdoll._IsPlayer) _hasHitEnemy = true;
+
+            //
+            if (_damageAnything) return;
+
+            // Record ragdoll id to stop multiple hits
+            _hitRagdolls.Add(raycastInfo._ragdoll._Id);
+
+            // Damage
+            _damageAnything = true;
+            MeleeDamageOther(raycastInfo._ragdoll, _dismember);
+
+            // Zombie knockback
+            if (!_ragdoll._IsPlayer && _ragdoll._EnemyScript._IsZombieReal)
+              raycastInfo._ragdoll.BounceFromPosition(_ragdoll._Hip.position, 0.5f, false);
+
+            // Play noise
+            if (_type == ItemType.FRYING_PAN)
+            {
+              PlaySound(Audio.MELEE_HIT, 0.78f, 1.1f);
+              EnemyScript.CheckSound(_ragdoll._Hip.position, EnemyScript.Loudness.SOFT);
+            }
+            else
+            {
+              var playExtra = false;
+              if (_type == ItemType.FIST && _isChargedFist)
+                playExtra = true;
+              PlaySound(raycastInfo._ragdoll._IsEnemy && raycastInfo._ragdoll._EnemyScript.IsChaser() ? Audio.MELEE_HIT_METAL : (playExtra ? Audio.MELEE_HIT_BULLET : Audio.MELEE_HIT));
+              EnemyScript.CheckSound(_ragdoll._Hip.position, EnemyScript.Loudness.SUPERSOFT);
+            }
+
+            // If not two handed, stop checking
+            if (_canMeleePenatrate)
+              _damageAnything = false;
+          }
+          return;
+        }
+
+        //
+        Shoot();
+      };
+    }
+
+    void Shoot()
+    {
+      //
+      var penatrationAmount = GetPenatrationAmount();
+      var smokeParts = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.GUN_SMOKE)[0];
+
+      AnimateUi(penatrationAmount > 1 ? PlayerProfile.Animation.AnimationType.ShootLarge : PlayerProfile.Animation.AnimationType.Shoot, 0.2f);
+
+      for (var i = 0; i < _projectilesPerShot; i++)
+      {
+
+        var use_penatrationAmount = penatrationAmount;
+
+        // Normal bullet
+        if (_customProjetile == UtilityScript.UtilityType.NONE)
+        {
+
+          // Special
+          switch (_type)
+          {
+            case ItemType.PISTOL_CHARGE:
+              if (_downTimeSave >= 1.25f)
+              {
+                use_penatrationAmount = 2;
+                _hit_force = 0.6f;
+                _shoot_force = 0.6f;
+              }
+              else if (_downTimeSave >= 0.5f)
+              {
+                use_penatrationAmount = 1;
+                _hit_force = 0.3f;
+                _shoot_force = 0.25f;
+              }
+              else
+              {
+                _hit_force = 0f;
+                _shoot_force = 0.05f;
+              }
+              break;
+
+            case ItemType.RIFLE_CHARGE:
+              if (_downTimeSave >= 1.25f)
+              {
+                use_penatrationAmount = 1;
+                _hit_force = 0.3f;
+                _shoot_force = 0.35f;
+              }
+              else if (_downTimeSave >= 0.5f)
+              {
+                use_penatrationAmount = 3;
+                _hit_force = 0.8f;
+                _shoot_force = 1f;
+              }
+              else
+              {
+                use_penatrationAmount = 1;
+                _hit_force = 0.3f;
+                _shoot_force = 0.35f;
+
+                _burstPerShot = 0;
+                _burstRate = 0f;
+                _fireMode = FireMode.SEMI;
+              }
+              break;
+          }
+
+          // Spawn bullet
+          var spawn_pos = _forward.position;
+          if (_type == ItemType.ROCKET_FIST)
+            spawn_pos = _ragdoll._Hip.position;
+          spawn_pos.y = _ragdoll._spine.transform.position.y;
+
+          var bullet = SpawnBulletTowards(
+            _ragdoll,
+            spawn_pos,
+            transform.forward,
+            _type,
+            use_penatrationAmount,
+
+            _randomSpread,
+            _bullet_spread,
+            _projectilesPerShot,
+            i
+          );
+          bullet.SetSourceItem(this);
+
+          //
+          if (SettingsModule.UseSmokeFx)
+            if (_type != ItemType.FLAMETHROWER && _type != ItemType.CROSSBOW && _type != ItemType.STICKY_GUN)
+            {
+              smokeParts.transform.position = spawn_pos + new Vector3(0f, 0.5f, 0f);
+              smokeParts.Emit(Mathf.Clamp(use_penatrationAmount, 1, 6));
+            }
+        }
+
+        // Custom projectile
+        else
+        {
+          // Spawn projectiles.
+          if (_customProjectileIter >= _customProjectiles.Length || _customProjectiles[_customProjectileIter] == null)
+            ReloadCustom();
+
+          // Spawn utility
+          var spawn_pos = _forward.position;
+          var forward = MathC.Get2DVector(transform.forward).normalized;
+
+          //
+          var utility = _customProjectiles[_customProjectileIter++];
+          utility._IsCustomProjectile = true;
+          utility._side = _side;
+          utility._ragdoll = _ragdoll;
+          utility.SetSpawnLocation(spawn_pos);
+          utility.SetSpawnDirection(forward);
+          utility.UseDown();
+          utility.UseUp();
+
+          // Set custom velocity
+          _customProjectileVelocityMod = 1f;
+          if (_type == ItemType.GRENADE_LAUNCHER) _customProjectileVelocityMod = 2f;
+          utility.SetForceModifier(_customProjectileVelocityMod);
+        }
+      }
+
+      /*/
+      var muzzleParts = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.MUZZLE_FIRE)[0];
+      muzzleParts.transform.position = _forward.position + _forward.forward * 0.45f;
+      muzzleParts.transform.rotation = _forward.rotation;
+      muzzleParts.Emit(6);*/
+
+      // Add force to spine
+      var torqueForce = _hit_force * 20000f * -Vector3.right.normalized;
+      _ragdoll._spine.GetComponent<Rigidbody>().AddRelativeTorque(torqueForce);
+      _ragdoll._head.GetComponent<Rigidbody>().AddRelativeTorque(torqueForce);
+
+      // Recoil player
+      _ragdoll.RecoilSimple(_shoot_force);
+
+      // Recoil arm
+      if (_type != ItemType.FLAMETHROWER && _type != ItemType.ROCKET_FIST)
+      {
+        float totalTime = 0.3f,
+          halfTime = totalTime * 0.4f;
+        AnimateTransformAdditive(_arm_lower, _save_rot_lower, Mathf.Clamp(50f * _hit_force, 20f, 50f), 0f, 0f, totalTime, halfTime);
+      }
+
+      // Deincrement ammo
+      _clip--;
+
+      // Extra; infinite ammo
+      if (_ragdoll._IsPlayer && SettingsHelper._Extras_CanUse && LevelModule.ExtraPlayerAmmo == 3)
+      {
+        _clip++;
+      }
+
+      _ragdoll._PlayerScript?._Profile.ItemUse(_side);
+
+      if (_clip == 0) OnClipEmpty();
+    }
+
+    void OnClipEmpty()
+    {
+      if (_type == ItemType.DMR)
+        PlaySound(Audio.GUN_EXTRA);
+    }
+
+    float _meleeReleaseTimer, _meleeReleaseTimerOverfill, _meleeLerper;
+    bool _meleeReleaseTrigger, _meleeComplexResetTrigger;
+    //ParticleSystem _gunSmoke;
+    public void Update()
+    {
+      _onUpdate?.Invoke();
+
+      if (_ragdoll == null) return;
+
+      /*/ Check gun smoke off
+      if (_type == ItemType.REVOLVER)
+      {
+
+        if (_gunSmoke != null && _gunSmoke.isPlaying && Time.time - _useTime > 5f)
+          transform.GetChild(3).GetComponent<ParticleSystem>().Stop();
+      }*/
+
+      // Try empty animation
+      if (!_isUtility && IsGun() && _clip == 0)
+      {
+        TryAnimateUi(PlayerProfile.Animation.AnimationType.OutOfAmmo, 0f);
+      }
+
+      // Custom swing melee
+      if (_isMelee && _useOnRelease)
+      {
+
+        if (_triggerDown && !_meleeReleaseTrigger && _meleeReleaseTimer <= 0f)
+          _meleeReleaseTrigger = true;
+
+        //
+        var swinging = false;
+        var swingingRelease = false;
+        if (_meleeReleaseTimerOverfill > 0f || _meleeComplexResetTrigger)
+        {
+          _meleeLerper += (1f - _meleeLerper) * Time.deltaTime * 20f;
+          if (_meleeLerper > 0.95f)
+          {
+            _meleeReleaseTimerOverfill = 0f;
+            _meleeComplexResetTrigger = false;
+          }
+        }
+        else if (_meleeReleaseTimer > 0f)
+        {
+          //_meleeReleaseTimer -= Time.deltaTime;
+          _meleeLerper += (0f - _meleeLerper) * Time.deltaTime * 17f;
+          if (_meleeLerper < 0.05f)
+          {
+            _meleeReleaseTimer = 0f;
+
+            if (_type == ItemType.KATANA)
+              _meleeComplexResetTrigger = true;
+          }
+
+          swinging = true;
+        }
+        else if (_meleeReleaseTrigger)
+        {
+          var slowGetup = !CanUse();
+          var meleeLerperSave = _meleeLerper;
+          _meleeLerper += (Mathf.Clamp(1f, 0f, slowGetup ? 0.5f : 1f) - _meleeLerper) * Time.deltaTime * (slowGetup ? 1.5f : 6f);
+
+          if (_meleeLerper >= 0.8f && meleeLerperSave < 0.8f)
+            PlaySound(Audio.MELEE_EXTRA);
+        }
+        else
+        {
+          _meleeLerper += (0f - _meleeLerper) * Time.deltaTime * 2f;
+        }
+
+        //
+        var sideMod = _side == ActiveRagdoll.Side.LEFT ? 1f : -1f;
+        switch (_type)
+        {
+          case ItemType.KNIFE:
+          case ItemType.RAPIER:
+          case ItemType.FIST:
+            SetRotationLocal(_arm_upper, Vector3.Lerp(_save_rot_upper, _save_rot_upper + new Vector3(-60f, -130f * sideMod, -20f * sideMod), _meleeLerper));
+            SetRotationLocal(_arm_lower, Vector3.Lerp(_save_rot_lower, _save_rot_lower + new Vector3(110f, 0f, 0f), _meleeLerper));
+            break;
+
+          case ItemType.FRYING_PAN:
+          case ItemType.AXE:
+          case ItemType.STUN_BATON:
+            SetRotationLocal(_arm_upper, Vector3.Lerp(_save_rot_upper, _save_rot_upper + new Vector3(0f, 70f * sideMod, 0f), _meleeLerper));
+            SetRotationLocal(_arm_lower, Vector3.Lerp(_save_rot_lower, _save_rot_lower + new Vector3(55f, 0f, 0f), _meleeLerper));
+            break;
+
+          case ItemType.KATANA:
+
+            _swordLerpDesired0 = swinging || _meleeComplexResetTrigger ? new Vector3(70f, 250f, 0f) : new Vector3(0f, 0f, 0f);
+            _swordLerpDesired1 = swinging || _meleeComplexResetTrigger ? new Vector3(40f, 0f, 0f) : new Vector3(0f, 0f, 0f);
+
+            _swordLerp0 += (_swordLerpDesired0 - _swordLerp0) * Time.deltaTime * 50f;
+            _swordLerp1 += (_swordLerpDesired1 - _swordLerp1) * Time.deltaTime * 50f;
+
+            SetRotationLocal(
+              _arm_upper,
+              Vector3.Lerp(
+                _save_rot_upper + _swordLerp0,
+                _save_rot_upper + (swingingRelease ? new Vector3(70f, 250f, 0f) : new Vector3(-20f, -10f, 0f)),
+                _meleeLerper
+            ));
+            SetRotationLocal(
+              _arm_lower,
+              Vector3.Lerp(
+                _save_rot_lower,
+                _save_rot_upper + _swordLerp1,
+                _meleeLerper
+            ));
+            break;
+        }
+
+        // Check melee dodge
+        if (!_meleeStartSwinging && _downTime != 0f && CanUse())
+        {
+          _meleeStartSwinging = true;
+
+          _ragdoll.OnMeleeStart();
+        }
+      }
+
+      // Custom type before death check
+      if (_type == ItemType.FLAMETHROWER)
+      {
+        var flames = _customParticles[0];
+        var light = _customLights[0];
+
+        // Light
+        var min_range = _clip == 20 ? 1f : _clip > 9 ? 0.5f : 0f;
+        if (flames.isEmitting)
+          light.range += (9f - light.range) * Time.deltaTime * 7f;
+        else if (light.range != min_range)
+        {
+          if (light.range < min_range + 0.1f) light.range = min_range;
+          else light.range += (min_range - light.range) * Time.deltaTime * 5f;
+        }
+
+        if (_sfx0 != null)
+        {
+          _sfx0.transform.position = transform.position;
+        }
+        if (_sfx1 != null)
+        {
+          _sfx1.transform.position = transform.position;
+        }
+      }
+
+      // Check for dead
+      if (_ragdoll._IsDead)
+      {
+        OnDestroy();
+        if (_disableOnRagdollDeath) this.enabled = false;
+        return;
+      }
+#if UNITY_EDITOR
+      /*if (_ragdoll == null) return;
+      if (IsGun())
+        Debug.DrawRay(transform.position, MathC.Get2DVector(transform.forward) * 100f, Color.red);
+      Debug.DrawRay(_ragdoll._Hip.position, _ragdoll._Hip.transform.forward * 100f, Color.cyan);*/
+#endif
+
+      // Update laser sight
+      if (_laserSight)
+      {
+        if (_reloading)
+          _laserSight.SetActive(false);
+        else
+        {
+          _laserSight.SetActive(true);
+
+          var dist = 0f;
+          var forward = MathC.Get2DVector(transform.forward).normalized;
+          var start = _forward.position + forward * -0.4f;
+
+          RaycastHit hit = new RaycastHit();
+          if (Physics.Raycast(new Ray(start, forward), out hit))
+          {
+            dist = hit.distance;
+            //Debug.Log(hit.collider.name);
+          }
+
+          if (dist <= 0.5f) dist = 0f;
+
+          start = _forward.position + forward * 0.1f;
+          dist -= 0.5f;
+
+          _laserSight.transform.position = start + (forward * (dist / 2f));
+          _laserSight.transform.localScale = new Vector3(0.03f, 0.03f, dist);
+          _laserSight.transform.LookAt(start + forward * dist * 1.2f);
+          _laserSight.transform.position += new Vector3(0f, -0.2f, 0f);
+        }
+      }
+
+      // Increment down timer
+      var downTimeLast = _downTime;
+      if (_triggerDown && CanUse(false)) _downTime += Time.deltaTime;
+      else _upTime += Time.deltaTime;
+
+      // Check special cases
+      if (_type == ItemType.FLAMETHROWER)
+      {
+        var flames = _customParticles[0];
+        var light = _customLights[0];
+
+        // Particles
+        if (flames.isPlaying && (!_used || _reloading || _clip == 0))
+          flames.Stop(true);
+        else if (!flames.isEmitting && _used && !_reloading && _clip > 0)
+          flames.Play(true);
+
+        // Sfx
+        if (flames.isEmitting)
+        {
+
+          if (_sfx0 == null)
+          {
+            _sfx0 = PlaySound(4, 1f, 1f);
+            _sfx0.loop = true;
+          }
+
+        }
+        else if (_sfx0 != null)
+        {
+          _sfx0.loop = false;
+          _sfx0.Stop();
+          _sfx0 = null;
+        }
+
+        if (_clip < 10 && !flames.isEmitting && _sfx1 != null)
+        {
+          _sfx1.loop = false;
+          _sfx1.Stop();
+          _sfx1 = null;
+        }
+        else if ((_clip >= 10) && _sfx1 == null)
+        {
+          _sfx1 = PlaySound(3, 1f, 1f);
+          _sfx1.loop = true;
+        }
+      }
+
+      // Charge pistol
+      //if (!_used && CanUse(false))
+      if (_type == ItemType.PISTOL_CHARGE || _type == ItemType.RIFLE_CHARGE)
+      {
+
+        if (downTimeLast < 0.02f && _downTime >= 0.02f)
+        {
+          PlaySound(3, 0.8f, 0.8f);
+
+          _burstPerShot = 0;
+          _burstRate = 0f;
+          _fireMode = FireMode.SEMI;
+        }
+        else if (downTimeLast < 0.5f && _downTime >= 0.5f)
+        {
+          PlaySound(4, 1f, 1f);
+
+          var emission = _customParticles[0].emission;
+          emission.rateOverTime = 5;
+          _customParticles[0].Play();
+
+          _burstPerShot = 0;
+          _burstRate = 0f;
+          _fireMode = FireMode.SEMI;
+        }
+        else if (downTimeLast < 1.25f && _downTime >= 1.25f)
+        {
+          PlaySound(4, 1.2f, 1.2f);
+
+          var emission = _customParticles[0].emission;
+          emission.rateOverTime = 25;
+
+          if (_type == ItemType.RIFLE_CHARGE)
+          {
+            _burstPerShot = _clip;
+            _burstRate = 0.13f;
+            _fireMode = FireMode.BURST;
+
+            /*if (_clip < _burstPerShot)
+            {
+              _ragdoll._PlayerScript?._Profile.ItemReload(_side, _burstPerShot - _clip);
+              _clip = _burstPerShot;
+            }*/
+
+            //
+            UseUp();
+          }
+
+        }
+
+      }
+
+      // Check charge weapons
+      if (IsChargeWeapon())
+      {
+        if (_triggerDown && CanReload())
+          Reload();
+      }
+
+      void Local_Use(bool playSound = true)
+      {
+
+        // Check grapple release
+        if (_isMelee)
+        {
+          if (_ragdoll._IsGrappling)
+          {
+            var snap_neck = false;
+            if (_side == ActiveRagdoll.Side.RIGHT)
+            {
+              if (!(_ragdoll._ItemL?.IsMelee() ?? false))
+              {
+                snap_neck = true;
+              }
+            }
+            else if (_side == ActiveRagdoll.Side.LEFT)
+            {
+              snap_neck = true;
+            }
+
+            if (snap_neck)
+            {
+              _ragdoll.Grapple(false);
+
+#if UNITY_STANDALONE
+              // Grapple achievement
+              if (_ragdoll._IsPlayer)
+                Achievements.UnlockAchievement(Achievements.Achievement.GRAPPLE_NECK);
+#endif
+
+              /*_swinging = false;
+              _bursts = 0;
+              _used = false;
+              _triggerDown = false;
+              _useTime = _time;*/
+              return;
+            }
+          }
+        }
+
+        //
+        _onUse?.Invoke();
+        _useTime = _time;
+
+        if (_isMelee)
+        {
+          // Update UI
+          _swang = true;
+          _ragdoll._PlayerScript?._Profile.ItemUse(_side);
+
+          AnimateUi(PlayerProfile.Animation.AnimationType.MeleeSlice, UseRate());
+        }
+
+        // Play sound
+        //if(_customProjetile != UtilityScript.UtilityType.NONE) playSound = false;
+        if (playSound)
+        {
+          PlaySound(Audio.GUN_SHOOT);
+          if (IsGun())
+          {
+            EnemyScript.CheckSound(_ragdoll._Hip.position, _silenced ? EnemyScript.Loudness.SUPERSOFT : EnemyScript.Loudness.NORMAL);
+          }
+          else
+          {
+            EnemyScript.CheckSound(_ragdoll._Hip.position, EnemyScript.Loudness.SUPERSOFT);
+          }
+        }
+      }
+
+      // Check use conditions
+      if (_fireMode == FireMode.BURST && _used)
+      {
+        if (CanUse() && (_time >= _useTime + _burstRate) && _bursts < _burstPerShot)
+        {
+          if (!_ragdoll._IsPlayer && _downTime > 0.2f || _ragdoll._IsPlayer)
+          {
+            Local_Use(_isMelee && _bursts > 0 ? false : true);
+            if ((_clip == 0 && !_isMelee) || _bursts++ >= _burstPerShot - 1)
+            {
+              StopUse();
+            }
+          }
+        }
+      }
+      else if (_bufferUse || (!_useOnRelease && _triggerDown) || (_useOnRelease && !_triggerDown && _triggerDownLast))
+      {
+
+        // If last use time is less than use rate, check fire rate
+        if (CanUse())
+        {
+          _bufferUse = false;
+
+          if (_fireMode == FireMode.BURST)
+          {
+
+            if (IsChargeWeapon() && _clip < _minimumClipToFire)
+            {
+              _clip = 0;
+              _ragdoll._PlayerScript?._Profile.ItemSetClip(_side, _clip);
+              PlayEmpty();
+            }
+            else
+            {
+              if (IsChargeWeapon()) _burstPerShot = _clip;
+              _used = true;
+              _ragdoll.RecoilSimple(_shoot_forward_force * _clip);
+            }
+
+            // Melee animation
+            if (_isMelee)
+            {
+              if (_hitRagdolls == null)
+                _hitRagdolls = new();
+              else
+                _hitRagdolls.Clear();
+
+              _meleeReleaseTimer = 1f;
+              if (_meleeLerper < 0.75f)
+              {
+                _meleeReleaseTimerOverfill = 1f;
+              }
+
+              switch (_type)
+              {
+                case ItemType.BAT:
+                  //case ItemType.SWORD:
+                  var totalTime = UseRate();
+                  var halfTime = totalTime * 0.2f;
+                  EasyAnimate(AnimationData._Sword, totalTime, halfTime);
+                  break;
+              }
+            }
+          }
+          else
+          {
+            if (_fireMode == FireMode.SEMI) { _triggerDown = false; }
+            Local_Use();
+          }
+          if (_isMelee)
+          {
+
+            switch (_type)
+            {
+              case ItemType.KATANA:
+              case ItemType.BAT:
+              case ItemType.RAPIER:
+                _ragdoll.RecoilSimple(_downTimeSave > 1f ? -1.85f : -1.35f);
+                break;
+              case ItemType.KNIFE:
+              case ItemType.AXE:
+              case ItemType.FRYING_PAN:
+              case ItemType.STUN_BATON:
+                _ragdoll.RecoilSimple(-0.65f);
+                break;
+              case ItemType.FIST:
+                _ragdoll.RecoilSimple(_downTimeSave > 0.5f ? -1.4f : -1f);
+                break;
+            }
+
+            _IsSwinging = true;
+          }
+        }
+
+        // Check buffer use
+        else
+        {
+          if (_isMelee && _ragdoll._IsPlayer)
+          {
+            if (Time.time - _useTime <= 0.5f)
+              _bufferUse = true;
+            else
+              Debug.Log($"mis-use time: {Time.time - _useTime}");
+          }
+        }
+      }
+
+      _triggerDownLast = _triggerDown;
+
+      // Check for melee ui
+      if (_swang && _time >= _useTime + UseRate() && !IsChargeWeapon())
+      {
+        _swang = false;
+        _ragdoll._PlayerScript?._Profile.ItemReload(_side, 0);
+      }
+    }
+    bool _bufferUse;
+
+    //
+    public void OnGrappled()
+    {
+      StopUse();
+      _useTime = -1f;
+    }
+
+    //
+    public static BulletScript SpawnBulletTowards(
+      ActiveRagdoll source,
+      Vector3 spawnPos,
+      Vector3 shootDirNormalized,
+      ItemType itemType,
+      int penatrationAmount,
+
+      bool randomSpread = false,
+      float bulletSpread = 0f,
+      int projectilesPerShot = 1,
+      int bulletIter = 0
+    )
+    {
+      //Debug.Log($"Spawning bullet of type {itemType} with penetration {penatrationAmount} at position {spawnPos} towards direction {shootDirNormalized}");
+
+      BulletScript newBullet;
+      var tryAmount = _BulletPool.Length;
+      do
+        newBullet = _BulletPool[_BulletPool_Iter++ % _BulletPool.Length];
+      while (!newBullet._Available && tryAmount-- > 0);
+
+      // Size
+      var use_size = Mathf.Clamp(0.9f + penatrationAmount * 0.2f, 0.9f, 2.5f);
+      if (itemType == ItemType.FLAMETHROWER) use_size = 2.1f;
+      else if (itemType == ItemType.ROCKET_FIST) use_size = 4.5f;
+
+      //
+      newBullet.SetSize(use_size);
+      newBullet.Reset(source, spawnPos);
+
+      // Laser
+      var bulletSpeedMod = 1f;
+      if (itemType == ItemType.PISTOL_CHARGE || itemType == ItemType.RIFLE_CHARGE)
+      {
+        newBullet.SetColor(new Color(1f, 0.5f, 0.5f), Color.red);
+        newBullet.SetLifetime(0.04f);
+        newBullet.SetNoise(0.1f, 0.1f);
+        bulletSpeedMod = 1.25f;
+      }
+
+      // Normal bullet
+      else
+      {
+        newBullet.SetColor(new Color(1f, 0.9f, 0f), new Color(1f, 0.07f, 0f));
+        newBullet.SetLifetime(0.05f);
+        newBullet.SetNoise(0.25f, 0.5f);
+      }
+
+      newBullet.transform.position = spawnPos;
+      newBullet.gameObject.SetActive(true);
+
+      // Physics
+      var rb = newBullet._rb;
+      rb.linearVelocity = Vector3.zero;
+      rb.position = spawnPos;
+      var speedMod = 0.5f * (itemType == ItemType.FLAMETHROWER ? 1f : (penatrationAmount > 0 ? 1.4f : 1f)) + (bulletIter == 0 ? 0f : (Random.value * 0.15f) - 0.075f);
+      speedMod *= bulletSpeedMod;
+      var addforce = Vector3.zero;
+      if (projectilesPerShot > 1)
+      {
+        var mod = 1f;
+        if (bulletIter % 2 == 1) mod = -1f;
+        if (!randomSpread && bulletIter == 0 && projectilesPerShot % 2 == 1) mod = 0f;
+        addforce = Quaternion.AngleAxis(90f, Vector3.up) * shootDirNormalized * bulletSpread * (randomSpread ? Random.value : 1f) * mod;
+      }
+      var bulletForce = 30f * speedMod * MathC.Get2DVector(shootDirNormalized + addforce);
+
+      rb.transform.LookAt(rb.position + bulletForce);
+      rb.AddForce(bulletForce, ForceMode.Impulse);
+
+      //Debug.Log($"Spawned bullet of type {itemType} with force {bulletForce} ({bulletForce.magnitude}) at position {spawnPos} .. rbmag: {rb.linearVelocity.magnitude}");
+
+      newBullet.OnShot(penatrationAmount, bulletForce.magnitude, spawnPos);
+
+      // Bullet casing
+      if (
+        itemType != ItemType.CROSSBOW &&
+        itemType != ItemType.FLAMETHROWER &&
+        itemType != ItemType.ROCKET_FIST &&
+        (projectilesPerShot <= 2 || bulletIter == 0)
+      )
+      {
+        var bullet_casing = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.BULLET_CASING)[0];
+        var bulletRot = bullet_casing.transform.rotation;
+        bulletRot.eulerAngles = new Vector3(bulletRot.eulerAngles.x, Random.value * 360f, bulletRot.eulerAngles.z);
+        bullet_casing.transform.rotation = bulletRot;
+        var emitParams = new ParticleSystem.EmitParams
+        {
+          position = spawnPos + Vector3.up * 0.5f,
+          rotation3D = bulletRot.eulerAngles
+        };
+        bullet_casing.Emit(emitParams, 1);
+        SfxManager.PlayAudioSourceSimple(spawnPos, "Ragdoll/Bullet_Casing", 0.8f, 1.2f, SfxManager.AudioClass.BULLET_SFX);
+
+        // Gun embers
+        var ps_gunsmoke = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.GUN_FIRE)[0];
+        //Debug.Log(ps_gunsmoke.Length);
+        //foreach (var psGunFire in ps_gunsmoke)
+        {
+          ps_gunsmoke.transform.position = spawnPos + shootDirNormalized * (0.3f + (
+            itemType == ItemType.DMR ||
+            itemType == ItemType.AK47 ||
+            itemType == ItemType.M16 ||
+            itemType == ItemType.RIFLE ||
+            itemType == ItemType.RIFLE_LEVER ||
+            itemType == ItemType.ROCKET_LAUNCHER ||
+            itemType == ItemType.SHOTGUN_BURST ||
+            itemType == ItemType.GRENADE_LAUNCHER ||
+            itemType == ItemType.SHOTGUN_PUMP
+            ? 0.35f : 0f));
+          ps_gunsmoke.transform.LookAt(ps_gunsmoke.transform.position + shootDirNormalized);
+          //var mainmodule = p_gunsmoke.main;
+          //mainmodule.emitterVelocity = source._head?.GetComponent<Rigidbody>()?.velocity ?? Vector3.zero;
+          ps_gunsmoke.Play();
+        }
+      }
+
+      //
+      return newBullet;
+    }
+
+    //
+    void StopUse()
+    {
+      _bursts = 0;
+      _used = false;
+      if (!IsChargeWeapon() && !_useOnRelease) _triggerDown = false;
+
+      // If melee, stop swinging
+      if (_isMelee)
+      {
+        _IsSwinging = false;
+        _meleeStartSwinging = false;
+
+        // If hit anything and two handed, allow to use immediatly
+        if ((_hitAnthing && _IsBulletDeflector) || _hitAnthingOverride)
+          _useTime = -1f;
+      }
+    }
+
+    //
+    public void MeleeDamageOther(ActiveRagdoll targetRagdoll, bool shouldDismember)
+    {
+      MeleeDamageOther(_type, _ragdoll, targetRagdoll, _hit_force, shouldDismember, _downTimeSave);
+    }
+    public static bool MeleeDamageOther(ItemType meleeItemType, ActiveRagdoll sourceRagdoll, ActiveRagdoll targetRagdoll, float hitForceMultiplier, bool shouldDismember, float downTime)
+    {
+
+      // Check fist
+      if (meleeItemType == ItemType.FIST)
+      {
+        var shouldStun = downTime < 0.5f;
+        if (shouldStun && !targetRagdoll._HasBeenStunned && !targetRagdoll._IsStunned)
+        {
+          targetRagdoll.Stun();
+          targetRagdoll.BounceFromPosition(sourceRagdoll._Hip.position, 0.5f, false);
+          return true;
+        }
+      }
+
+      // Damage
+      var hitForce = MathC.Get2DVector((80f + (Random.value * 30f)) * hitForceMultiplier * -(sourceRagdoll._Hip.position - targetRagdoll._Hip.position).normalized);
+      if (targetRagdoll.TakeDamage(
+         new ActiveRagdoll.RagdollDamageSource()
+         {
+           Source = sourceRagdoll,
+
+           HitForce = hitForce,
+
+           Damage = 1,
+           DamageSource = sourceRagdoll._Hip.position,
+           DamageSourceType = ActiveRagdoll.DamageSourceType.MELEE,
+
+           SpawnBlood = true,
+           SpawnGiblets = shouldDismember
+         }))
+      {
+
+        // Dismember
+        if (targetRagdoll._IsDead && shouldDismember)
+          targetRagdoll.DismemberRandomTimes(hitForce, 3);
+
+        return true;
+      }
+
+      return false;
+    }
+
+    //
+    public bool IsChargeWeapon()
+    {
+      return _useOnRelease && _chargeHold;
+    }
+
+    void EasyAnimate(AnimationData data, float totalTime, float halfTime)
+    {
+      AnimationPoseData.Animate(this, data._Start, data._End, transform.GetChild(0), totalTime, halfTime);
+
+    }
+
+    // Equip this item to ragdoll on side, utilizing cached item data if passed (weapon pair swapping)
+    public void OnEquip(ActiveRagdoll ragdoll, ActiveRagdoll.Side side, int clipSize = -1, float useTime = -1f, int itemId = -1)
+    {
+      _ItemId = s_itemID++;
+
+      _ragdoll = ragdoll;
+      _side = side;
+
+      // Check for laser sight
+      if (!_isMelee && _ragdoll._IsPlayer && _ragdoll._PlayerScript.HasPerk(Perk.PerkType.LASER_SIGHTS))
+        AddLaserSight();
+
+      // Set clip and use time if applicable
+      SetClip(clipSize);
+      _useTime = useTime;
+
+      // Gather custom utilities
+      if (itemId != -1)
+      {
+        if (_type == ItemType.STICKY_GUN)
+          UtilityScript.ParentUtilitiesById(itemId, _ItemId, UtilityScript.UtilityType.STICKY_GUN_BULLET);
+      }
+
+      /*/ Gather bullets
+      if(!_melee){
+        foreach(var bullet in _BulletPool){
+          if(!bullet.gameObject.activeSelf)continue;
+          if(bullet.)
+        }
+      }*/
+
+      // Save arm rots
+      _original_rot_lower = _arm_lower.localEulerAngles;
+      _original_rot_upper = _arm_upper.localEulerAngles;
+
+      // Set arm pos per weapon
+      if (_type == ItemType.KATANA || _type == ItemType.BAT)
+      {
+        AnimationData.Init();
+        AnimationData._Bat._Start.Set(_ragdoll, transform.GetChild(0));
+      }
+      // Check everything else
+      else
+      {
+        // Upper arm
+        SetRotationLocal(_arm_upper, new Vector3(
+          29f,
+          _side == ActiveRagdoll.Side.LEFT ? -50f : -21f,
+          (_side == ActiveRagdoll.Side.LEFT ? 1f : -1f) * 73f
+        ));
+
+        // Lower arm
+        SetRotationLocal(_arm_lower, new Vector3(
+          0f,
+          0f,
+          (_side == ActiveRagdoll.Side.LEFT ? 1f : -1f) * 7f
+        ));
+      }
+
+      // Save new rotation
+      _save_rot_lower = _arm_lower.localEulerAngles;
+      _save_rot_upper = _arm_upper.localEulerAngles;
+
+      // Scale
+      transform.localScale = new Vector3(1f, 1f, 1f);
+
+      // Set rotation
+      var dir = _ragdoll._Hip.transform.forward;
+      dir.y = 0f;
+      transform.forward = dir;
+      //transform.Rotate(new Vector3(0f, 1f, 0f) * (side == ActiveRagdoll.Side.LEFT ? -2f : 2.25f));
+      // Set position
+      Vector3 dist = transform.parent.position - _handle.position;
+      transform.position += dist;
+
+      // Check zombie
+      if (_isZombie)
+      {
+        _burstPerShot = 3;
+      }
+    }
+
+    public void OnUnequip()
+    {
+      _arm_lower.localEulerAngles = _original_rot_lower;
+      _arm_upper.localEulerAngles = _original_rot_upper;
+    }
+
+    public static void SetRotationLocal(Transform t, Vector3 euler)
+    {
+      t.localEulerAngles = euler;
+    }
+
+    void ResetV()
+    {
+      _meleeIter = 0;
+      _hitAnthing = false;
+      _hitAnthingOverride = false;
+      _hasHitEnemy = false;
+      _damageAnything = false;
+    }
+
+    //
+    public virtual bool UseDown()
+    {
+      //_ragdoll._playerScript?.ResetLoadout();
+      //if (this == null) return;
+
+      // Check other item
+      var item_other = _side == ActiveRagdoll.Side.LEFT ? _ragdoll._ItemR : _ragdoll._ItemL;
+      if (_isMelee && item_other != null && item_other._isMelee && item_other._triggerDown)
+        if (_ragdoll._IsEnemy && _ragdoll._EnemyScript._IsZombieReal)
+          ;
+        else
+          return false;
+
+      //
+      _triggerDown = true;
+      _triggerDownReal = true;
+
+      _upTime = 0f;
+      _downTime = 0.01f;
+
+      if (!_useOnRelease)
+        ResetV();
+
+      // Check timer
+      if (!PlayerScript._TimerStarted && (_ragdoll?._IsPlayer ?? false))
+      {
+        PlayerScript.StartLevelTimer();
+      }
+
+      //
+      Update();
+
+      return true;
+    }
+
+    [System.NonSerialized]
+    public bool _ForceIgnoreUseUp;
+
+    public bool UseUp()
+    {
+      if (!_triggerDown) return false;
+      if (_ForceIgnoreUseUp)
+      {
+        _ForceIgnoreUseUp = false;
+
+        _triggerDownLast = false;
+      }
+
+      //_ragdoll._playerScript?.ResetLoadout();
+      //if (this == null) return;
+
+      _triggerDown = false;
+      _triggerDownReal = false;
+
+      _upTime = 0.01f;
+      _downTimeSave = _downTime;
+      _downTime = 0f;
+      _meleeReleaseTrigger = false;
+
+      if (_useOnRelease)
+        ResetV();
+
+      return true;
+    }
+    // Can you use the item?
+    public bool CanUse(bool playEmpty = true)
+    {
+      if (_isMelee)
+        return (_time >= _useTime + UseRate()) || (_bursts > 0 && _fireMode == FireMode.BURST && _time >= _useTime + _burstRate);
+
+      // Check clip
+      if (_clip > 0)
+        return ((_time >= _useTime + UseRate()) || (_fireMode == FireMode.BURST && _bursts > 0 && _time >= _useTime + _burstRate)) && (!_used || _fireMode == FireMode.BURST) && (!_reloading || IsChargeWeapon());
+      if (playEmpty)
+        PlayEmpty();
+      return false;
+    }
+
+    void PlayEmpty()
+    {
+      PlaySound(Audio.GUN_EMPTY);
+      EnemyScript.CheckSound(_ragdoll._Hip.position, EnemyScript.Loudness.SUPERSOFT);
+      _triggerDown = false;
+    }
+
+    public void PlayBulletHit()
+    {
+      PlaySound(Audio.MELEE_HIT_BULLET, 0.8f, 1.2f);
+      EnemyScript.CheckSound(_ragdoll._Hip.position, EnemyScript.Loudness.SOFT);
+    }
+
+    // Reload function
+    public void Reload()
+    {
+      // If melee, do nothing
+      if (_isMelee && !IsChargeWeapon()) return;
+
+      // Check perk
+      var reload_speed_mod = 1f;
+      if (_ragdoll._IsPlayer && _ragdoll._PlayerScript.HasPerk(Perk.PerkType.FASTER_RELOAD))
+        reload_speed_mod = 1.4f;
+
+      // Play noise and set clip
+      PlaySound(Audio.GUN_RELOAD, reload_speed_mod - 0.1f, reload_speed_mod + 0.1f);
+      if (_ragdoll._IsPlayer) EnemyScript.CheckSound(_ragdoll._Hip.position, EnemyScript.Loudness.SUPERSOFT);
+      var clipSave = _clip;
+      _clip = Mathf.Clamp(
+        _reloadOneAtTime ? _clip + 1 : GetClipSize(),
+        0,
+        GetClipSize()
+      );
+      var clipDiff = _clip - clipSave;
+
+      // Check special
+      if (_type == ItemType.STICKY_GUN)
+        UtilityScript.Detonate_UtilitiesById(this, UtilityScript.UtilityType.STICKY_GUN_BULLET, _triggerDownReal ? 1 : -1);
+
+      // Show progress bar
+      var reloadTime = _reloadTime / reload_speed_mod;
+      _reloading = true;
+      ProgressBar.GetProgressBar(transform, reloadTime,
+        () =>
+        {
+          _reloading = false;
+          if (!IsChargeWeapon()) _ragdoll._PlayerScript?._Profile.ItemReload(_side, _reloadOneAtTime ? clipDiff : 0);
+        },
+        instance =>
+        {
+          if (_ragdoll._IsDead)
+            instance._enabled = false;
+
+          /*/ Drop magazine
+          if (_last_magazineDropId != instance._id && instance._timer / instance._timer_start < 0.6f)
+          {
+            _last_magazineDropId = instance._id;
+
+            var magazine = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.MAGAZINE)[0];
+            var q = magazine.transform.rotation;
+            q.eulerAngles = new Vector3(q.eulerAngles.x, Random.value * 360f, q.eulerAngles.z);
+            magazine.transform.rotation = q;
+            var p = new ParticleSystem.EmitParams();
+            p.position = transform.position + Vector3.up * 0.5f;
+            p.rotation3D = q.eulerAngles;
+            magazine.Emit(p, 1);
+          }*/
+        });
+
+      AnimateUi(PlayerProfile.Animation.AnimationType.Reload, reloadTime);
+
+      // Charge weapon
+      if (IsChargeWeapon()) _ragdoll._PlayerScript?._Profile.ItemReload(_side, _reloadOneAtTime ? 1 : 0);
+
+      // Reload animation
+      float totalTime = reloadTime,
+        halfTime = totalTime * 0.5f,
+        side_mod = _side == ActiveRagdoll.Side.LEFT ? -1f : 1f;
+      if (_reloadTime > 1f)
+      {
+        AnimateTransformAdditive(_arm_lower, _save_rot_lower, -60f, 0f, 20f * -side_mod, totalTime * 0.7f, halfTime * 0.7f,
+          () =>
+          {
+            AnimateTransformAdditive(_arm_lower, _save_rot_lower, 30f, 0f, 10f * -side_mod, totalTime * 0.3f, halfTime * 0.3f);
+          });
+      }
+      else
+        AnimateTransformAdditive(_arm_lower, _save_rot_lower, -60f, 0f, 20f * -side_mod, totalTime, halfTime);
+
+      // Reload custom projectiles
+      ReloadCustom();
+    }
+    // Can the item reload?
+    public bool CanReload()
+    {
+      if (_isMelee && !IsChargeWeapon()) return false;
+      if (!_isMelee && _useOnRelease && !IsChargeWeapon() && _triggerDownReal) return false;
+      return _clip < GetClipSize() && ((_time >= _useTime + (UseRate() * 0.6f)) || (_bursts > 0 && _fireMode == FireMode.BURST && _time >= _useTime + _burstRate * 0.3f)) && !_used && !_reloading;
+    }
+    public bool NeedsReload()
+    {
+      if (IsChargeWeapon()) return false;
+      return !_isMelee && _clip == 0;
+    }
+    public void SetClip(int clip = -1)
+    {
+      if (_isMelee || _chargeHold) return;
+      _clip = clip == -1 ? GetClipSize() : clip;
+    }
+
+    // Reload custom projectiles
+    public void ReloadCustom()
+    {
+      if (_customProjetile != UtilityScript.UtilityType.NONE)
+      {
+
+        // Delete old
+        if (_customProjectiles != null)
+          for (var i = _customProjectiles.Length - 1; i >= 0; i--)
+          {
+            var projectile = _customProjectiles[i];
+            if (projectile == null || (projectile.Thrown() && projectile.Explosive())) continue;
+            Destroy(projectile.gameObject);
+          }
+
+        // Spawn in new
+        _customProjectiles = new UtilityScript[_clipSize * _projectilesPerShot];
+        for (var i = 0; i < _customProjectiles.Length; i++)
+        {
+          _customProjectiles[i] = UtilityScript.GetUtility(_customProjetile);
+          _customProjectiles[i].RegisterUtility(_ragdoll, false);
+          _customProjectiles[i].RegisterCustomProjectile(this);
+        }
+        _customProjectileIter = 0;
+      }
+    }
+
+    public bool IsGun()
+    {
+      return !_isMelee && !_throwable;
+    }
+
+    public bool IsMelee()
+    {
+      return _isMelee;
+    }
+    public bool IsEmpty()
+    {
+      return _type == ItemType.NONE;
+    }
+
+    public bool IsThrowable()
+    {
+      return _throwable;
+    }
+
+    // Fired on user death
+    AudioSource _sfx_hold;
+    public void OnToggle()
+    {
+
+      // Stop sfx if playing
+      if (_sfx_hold?.isPlaying ?? false)
+        _sfx_hold.Stop();
+
+      // Stop custom components
+      if (_customParticles != null)
+        foreach (var particle in _customParticles)
+          particle.Stop();
+      if (_customLights != null)
+        foreach (var light in _customLights)
+          light.enabled = false;
+
+      // Hide colliders
+      if (_type == ItemType.FRYING_PAN)
+      {
+        transform.GetChild(0).GetComponent<BoxCollider>().enabled = false;
+      }
+    }
+
+    public int GetClip()
+    {
+      if (_isMelee) return 1;
+      return _clip;
+    }
+
+    bool MeleeCast(RaycastInfo raycastInfo, int iter)
+    {
+      _ragdoll.ToggleRaycasting(false, true);
+
+      var add = Vector3.zero;
+      switch (iter % 3)
+      {
+        case 1:
+          add = _ragdoll._Hip.transform.right;
+          break;
+        case 2:
+          add = -_ragdoll._Hip.transform.right;
+          break;
+      }
+
+      // Cast ray from startPos to dir (cast a ray from the handle forwards)
+      var forward = _ragdoll._Controller.forward;
+      _ragdoll.OnGrappler((grappler) => { forward = grappler._Controller.forward; });
+      forward.y = 0f;
+      var ray = new Ray(
+        _ragdoll._Hip.position - _ragdoll._Hip.transform.forward * 0.1f + Vector3.up * 0.4f + add * 0.1f,
+        forward + -add * (_twoHanded ? 1f : 0.2f)
+      );
+      var hit = false;
+      var canMeleePenatrate = _canMeleePenatrate && (_ragdoll._EnemyScript?._IsZombieReal ?? true);
+      var maxDistance = (!_ragdoll._IsPlayer && _ragdoll._EnemyScript._IsZombieReal) ? 0.5f : 0.7f * (canMeleePenatrate ? 1.3f : 1f);
+      if (_type == ItemType.RAPIER)
+        maxDistance *= 2.35f;
+      else if (_type == ItemType.FIST)
+        maxDistance *= 0.85f;
+      if (Physics.SphereCast(ray, Mathf.Clamp(_ragdoll._IsEnemy && (_ragdoll._EnemyScript.IsChaser() || _ragdoll._EnemyScript._IsZombieReal) ? 0.4f : 0.23f, 0.05f, maxDistance), out raycastInfo._raycastHit, maxDistance, GameResources._Layermask_Ragdoll))
+      {
+        //Debug.Log(raycastInfo._raycastHit.collider.gameObject.name);
+        //Debug.DrawLine(ray.origin, raycastInfo._raycastHit.point, Color.red, 5f);
+
+        if (raycastInfo._raycastHit.collider.gameObject.name == "Books")
+        {
+          FunctionsC.BookManager.ExplodeBooks(raycastInfo._raycastHit.collider, _ragdoll._Hip.position);
+        }
+        else
+        {
+          raycastInfo._ragdoll = ActiveRagdoll.GetRagdoll(raycastInfo._raycastHit.collider.gameObject);
+          if (raycastInfo._ragdoll != null && !raycastInfo._ragdoll._IsDead)
+            hit = true;
+        }
+        raycastInfo._hitPoint = raycastInfo._raycastHit.point;
+      }
+
+      //
+      _ragdoll.ToggleRaycasting(true, true);
+
+      //
+      return hit;
+    }
+
+    //
+    public virtual void AnimateUi(PlayerProfile.Animation.AnimationType animationType, float duration)
+    {
+      if (_ragdoll._IsPlayer && _ragdoll._PlayerScript != null)
+        _ragdoll._PlayerScript._Profile.PlayAnimation(animationType, duration, !_isUtility, _side);
+    }
+    public virtual void TryAnimateUi(PlayerProfile.Animation.AnimationType animationType, float duration)
+    {
+      if (_ragdoll._IsPlayer && _ragdoll._PlayerScript != null)
+        _ragdoll._PlayerScript._Profile.TryPlayAnimation(animationType, duration, !_isUtility, _side);
+    }
+
+    // Animation for swinging / reloading
+    Coroutine AnimateTransform(Transform t, Vector3 startEulerRot, Vector3 desiredEulerRot, float totalTime, System.Action onEnd = null)
+    {
+      IEnumerator AnimateCo()
+      {
+        var timer = 0f;
+        while (timer < totalTime)
+        {
+          yield return null;
+          timer += Time.deltaTime;
+          SetRotationLocal(t, Vector3.Lerp(startEulerRot, desiredEulerRot, timer / totalTime));
+        }
+
+        // Return to original rot
+        SetRotationLocal(t, desiredEulerRot);
+
+        // Fire action
+        onEnd?.Invoke();
+      }
+      return StartCoroutine(AnimateCo());
+    }
+    public Coroutine AnimateTransformSimple(Transform t, Vector3 startEulerRot, Vector3 desiredEulerRot, float totalTime, float halfwayTime, System.Action onEnd = null)
+    {
+      return AnimateTransform(t, startEulerRot, desiredEulerRot, halfwayTime, () =>
+      {
+        AnimateTransform(t, desiredEulerRot, startEulerRot, totalTime - halfwayTime, onEnd);
+      });
+    }
+    Coroutine AnimateTransformAdditive(Transform t, Vector3 startEulerRot, float x, float y, float z, float totalTime, float halfwayTime, System.Action onEnd = null)
+    {
+      var desiredRotEuler = startEulerRot + new Vector3(x, y, z);
+      return AnimateTransformSimple(t, startEulerRot, desiredRotEuler, totalTime, totalTime / 5f, onEnd);
+    }
+  }
+
+}

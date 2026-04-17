@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 
-namespace Assets.Scripts.UI
+namespace Assets.Scripts.Ragdoll
 {
 
   public class TextBubbleScript : MonoBehaviour

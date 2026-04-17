@@ -1,5 +1,6 @@
 
 using Assets.Scripts.Game.Items;
+using Assets.Scripts.Ragdoll.Equippables;
 
 namespace Assets.Scripts.Settings.Extras
 {

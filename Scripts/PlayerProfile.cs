@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Assets.Scripts.Game.Items;
 using Assets.Scripts.Ragdoll;
+using Assets.Scripts.Ragdoll.Equippables;
 using Assets.Scripts.Settings;
 using Assets.Scripts.Settings.Serialization;
 using Assets.Scripts.UI.Menus;

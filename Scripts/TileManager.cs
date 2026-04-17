@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Assets.Scripts.FX;
 using Assets.Scripts.Game.Items;
 using Assets.Scripts.Objects;
 using Assets.Scripts.Objects.CustomEntities;
@@ -1958,12 +1959,6 @@ public class TileManager
     // Check button spam
     if (!CanReloadMap()) return;
     _LastReloadTime = Time.unscaledTime;
-
-    // Check AutoPlayer
-    if (PlayerScript.AutoPlayer._Capturing)
-      PlayerScript.AutoPlayer.Capture();
-    if (PlayerScript.AutoPlayer._Playing)
-      PlayerScript.AutoPlayer.Playback();
 
     // Check if map reloading
     if (_LoadingMap) return;
@@ -5334,7 +5329,7 @@ public class TileManager
     public static Tile GetTile(GameObject g)
     {
       foreach (Tile t in _Tiles)
-        if (t._tile.GetInstanceID() == g.GetInstanceID()) return t;
+        if (t._tile.GetEntityId() == g.GetEntityId()) return t;
       return null;
     }
 

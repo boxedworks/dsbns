@@ -14,6 +14,8 @@ using Assets.Scripts.Objects;
 using Assets.Scripts.Objects.CustomEntities;
 using Assets.Scripts.Game.Items;
 using Valve.VR;
+using Assets.Scripts.FX;
+using Assets.Scripts.Ragdoll.Equippables;
 
 public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
 {
@@ -1244,10 +1246,6 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
     // Check if application is focused
     if (!Application.isFocused) return;
 
-    //
-    if (AutoPlayer._Playing && _Id != 0)
-      return;
-
     if (_ragdoll._IsStunned)
       return;
 
@@ -2228,14 +2226,6 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
 
   public void Reload()
   {
-    if (AutoPlayer._Capturing)
-      AutoPlayer.UpdateCapture(new PlayerData()
-      {
-        _position = transform.position,
-        _forward = transform.forward,
-        _actions = new KeyValuePair<string, float>[] { new KeyValuePair<string, float>("reload", 0f) }
-      });
-
     _ragdoll.Reload();
   }
   public void ReloadMap()
@@ -2950,138 +2940,6 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
     }
 
     return false;
-  }
-
-  public static class AutoPlayer
-  {
-    public class CapturedData
-    {
-      public PlayerData[] _playerData;
-      public float[] _TimeScales;
-    }
-
-    public static List<CapturedData> _Data;
-
-    static List<PlayerData> _CapturedDataList;
-    static List<float> _TimeScalesList;
-
-    public static void Erase()
-    {
-      _Data = new List<CapturedData>();
-    }
-
-    static float _Time;
-
-    public static bool _Capturing;
-    // Start / stop capturing
-    public static void Capture()
-    {
-      _Capturing = !_Capturing;
-      // Stopped; handle captured data
-      if (!_Capturing)
-      {
-
-        var data = new CapturedData()
-        {
-          _playerData = _CapturedDataList.ToArray(),
-          _TimeScales = _TimeScalesList.ToArray()
-        };
-        if (_Data == null) _Data = new List<CapturedData>();
-        _Data.Add(data);
-
-        var localtest = _CapturedDataList.ToArray();
-        var localtest2 = _TimeScalesList.ToArray();
-        Debug.LogError("Stopped capture");
-        return;
-      }
-      // Started; begin capturing
-      _Time = Time.time;
-      _CapturedDataList = new List<PlayerData>();
-      _TimeScalesList = new List<float>();
-      Debug.LogError("Started capture");
-    }
-
-    // Capture player data
-    public static void UpdateCapture(PlayerData data)
-    {
-      _CapturedDataList.Add(data);
-      _TimeScalesList.Add(Time.time - GameScript.s_LevelStartTime);
-    }
-
-    public static bool _Playing;
-    static int _PlaybackIndex;
-    public static void Playback()
-    {
-      /*_Playing = !_Playing;
-      if (!_Playing) // Stopped playback
-      {
-        Debug.LogError("Stopped playback");
-        return;
-      }
-      // Started playback
-      _Time = Time.time;
-      _PlaybackIndex = 0;
-
-      if (_Data.Count > 1)
-      {
-        SettingsHelper._NumberPlayers = 2;
-        PlayerspawnScript._PlayerSpawns[0].SpawnPlayer();
-      }
-      if (_Data.Count > 2)
-      {
-        SettingsHelper._NumberPlayers = 3;
-        PlayerspawnScript._PlayerSpawns[0].SpawnPlayer();
-      }
-      if (_Data.Count > 3)
-      {
-        SettingsHelper._NumberPlayers = 4;
-        PlayerspawnScript._PlayerSpawns[0].SpawnPlayer();
-      }
-
-      Debug.LogError("Started playback");*/
-    }
-
-    public static void ControlPlayer(PlayerScript p, int data_iter = 0)
-    {
-      int index = _PlaybackIndex;
-      if (data_iter == 0) _PlaybackIndex++;
-      CapturedData capturedData = _Data[data_iter];
-      if (index >= capturedData._playerData.Length)
-        return;
-      // Apply to player
-      PlayerData data = capturedData._playerData[index];
-      p.transform.position = data._position;
-      p.transform.forward = data._forward;
-      // Actions
-      if (data._actions != null)
-        foreach (var action in data._actions)
-          switch (action.Key)
-          {
-            // Use left item
-            case "left":
-              if (action.Value == 1f)
-                p._ragdoll.UseLeftDown();
-              else if (action.Value == -1f)
-                p._ragdoll.UseLeftUp();
-              break;
-            // Use right item
-            case "right":
-              if (action.Value == 1f)
-                p._ragdoll.UseRightDown();
-              else if (action.Value == -1f)
-                p._ragdoll.UseRightUp();
-              break;
-            // Reload
-            case "reload":
-              p._ragdoll.Reload();
-              break;
-          }
-    }
-  }
-  public class PlayerData
-  {
-    public Vector3 _position, _forward;
-    public KeyValuePair<string, float>[] _actions;
   }
 
   //

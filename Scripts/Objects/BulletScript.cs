@@ -2,6 +2,8 @@
 using Assets.Scripts.Ragdoll;
 using Assets.Scripts.Game.Items;
 using UnityEngine;
+using Assets.Scripts.FX;
+using Assets.Scripts.Ragdoll.Equippables;
 
 namespace Assets.Scripts.Objects
 {

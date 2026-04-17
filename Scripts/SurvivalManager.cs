@@ -7,6 +7,7 @@ using Assets.Scripts.Settings.Serialization;
 using Assets.Scripts.UI.Menus;
 using Assets.Scripts.Game.Items;
 using UnityEngine;
+using Assets.Scripts.Ragdoll.Equippables;
 
 //
 public static class SurvivalManager

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Assets.Scripts.Game.Items;
+using Assets.Scripts.Ragdoll.Equippables;
 using Assets.Scripts.Settings.Extras;
 using Assets.Scripts.Settings.Serialization;
 using UnityEngine;
