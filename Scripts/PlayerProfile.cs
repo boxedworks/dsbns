@@ -345,7 +345,7 @@ public class PlayerProfile
   void Hide()
   {
     var localPosition = _ui.localPosition;
-    localPosition.y = -2f;
+    localPosition.y = -200f;
     _ui.localPosition = localPosition;
   }
 

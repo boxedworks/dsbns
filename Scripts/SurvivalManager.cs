@@ -17,7 +17,7 @@ public static class SurvivalManager
   static LevelSaveData LevelModule { get { return SettingsHelper.s_SaveData.LevelData; } }
 
   //
-  public static bool _WavePlaying;
+  static bool s_wavePlaying;
   public static int _Wave;
 
   public static float _Time_wave_intermission,
@@ -25,12 +25,12 @@ public static class SurvivalManager
 
   public static int _Number_enemies_spawned;
 
-  public static Vector3 _AllSpawn;
+  static Vector3 s_allSpawn;
 
   public static Loadout[] s_PlayerLoadouts;
   static int[] _PlayerScores, _PlayerScores_Total;
 
-  static public List<System.Tuple<GameObject, float>> _Money;
+  static List<System.Tuple<GameObject, float>> s_money;
 
   public static TMPro.TextMeshPro _Text_Scores, _Text_Wave;
 
@@ -55,7 +55,7 @@ public static class SurvivalManager
     ARMORED
   }
 
-  public static List<int> _EnabledSpawners;
+  static List<int> s_enabledSpawners;
 
   public static void InitLight()
   {
@@ -73,7 +73,7 @@ public static class SurvivalManager
 
   public static void Init()
   {
-    _WavePlaying = false;
+    s_wavePlaying = false;
     _Wave = 0;
 
     _Time_wave_intermission = 3f;
@@ -98,7 +98,7 @@ public static class SurvivalManager
       OnPlayerDead(i);
     }
 
-    _EnabledSpawners = new List<int>();
+    s_enabledSpawners = new List<int>();
     _PlayerScores = new int[4];
     _PlayerScores_Total = new int[4];
 
@@ -136,10 +136,8 @@ public static class SurvivalManager
 
   public static void AddMoney(GameObject g)
   {
-    if (_Money == null)
-      _Money = new List<System.Tuple<GameObject, float>>();
-
-    _Money.Add(System.Tuple.Create(g, Time.time));
+    s_money ??= new();
+    s_money.Add(System.Tuple.Create(g, Time.time));
   }
 
   // Revert player loadout to starting loadout
@@ -166,15 +164,15 @@ public static class SurvivalManager
     _Text_Scores?.gameObject.SetActive(false);
     _Text_Wave?.gameObject.SetActive(false);
 
-    if (_Money != null)
+    if (s_money != null)
     {
-      foreach (var pair in _Money)
+      foreach (var moneyPair in s_money)
       {
-        var g = pair.Item1;
-        if (g != null)
-          Object.Destroy(g);
+        var money = moneyPair.Item1;
+        if (money != null)
+          Object.Destroy(money);
       }
-      _Money = null;
+      s_money = null;
     }
   }
 
@@ -228,7 +226,7 @@ public static class SurvivalManager
     _Wave++;
     _Text_Wave.text = $"{_Wave}";
 
-    _AllSpawn = Vector3.zero;
+    s_allSpawn = Vector3.zero;
 
     SfxManager.PlayAudioSourceSimple(GameResources._Camera_Main.transform.position, "Survival/Wave_Start");
 
@@ -474,7 +472,7 @@ public static class SurvivalManager
           max_zombies -= 60;
           if (max_zombies <= 0) break;
           QueueEnemyType(EnemyType.KNIFE_JOG, 10, 15);
-          if (Random.value < 0.2f) if (_AllSpawn != Vector3.zero)
+          if (Random.value < 0.2f) if (s_allSpawn != Vector3.zero)
             QueueEnemyType(EnemyType.SET_ALLSPAWN);
           else
             QueueEnemyType(EnemyType.REMOVE_ALLSPAWN);
@@ -517,7 +515,7 @@ public static class SurvivalManager
     }
 
     //
-    _WavePlaying = true;
+    s_wavePlaying = true;
 
     _Timer_wave_start = Time.time;
   }
@@ -526,7 +524,7 @@ public static class SurvivalManager
   {
     _Time_wave_intermission = 4f;
 
-    _WavePlaying = false;
+    s_wavePlaying = false;
 
     // Get / save highest wave
     var highestWave = LevelModule.GetHighestSurvivalWave();
@@ -689,13 +687,13 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
 
   public static void SetAllSpawn()
   {
-    var room_id = _EnabledSpawners[Random.Range(0, _EnabledSpawners.Count)];
+    var room_id = s_enabledSpawners[Random.Range(0, s_enabledSpawners.Count)];
     var spawner_list = CustomObstacle._CustomSpawners[room_id];
-    _AllSpawn = spawner_list[Random.Range(0, spawner_list.Count)].transform.position;
+    s_allSpawn = spawner_list[Random.Range(0, spawner_list.Count)].transform.position;
   }
   public static void RemoveAllSpawn()
   {
-    _AllSpawn = Vector3.zero;
+    s_allSpawn = Vector3.zero;
   }
 
   static List<Vector3> _Spawn_Points;
@@ -726,11 +724,11 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         _Spawn_Points = new List<Vector3>();
       else
         _Spawn_Points.Clear();
-      if (_AllSpawn != Vector3.zero && Random.value <= 0.9f)
-        _Spawn_Points.Add(_AllSpawn);
+      if (s_allSpawn != Vector3.zero && Random.value <= 0.9f)
+        _Spawn_Points.Add(s_allSpawn);
       else
       {
-        foreach (var i in _EnabledSpawners)
+        foreach (var i in s_enabledSpawners)
           if (CustomObstacle._CustomSpawners.ContainsKey(i))
             foreach (var spawn in CustomObstacle._CustomSpawners[i])
               _Spawn_Points.Add(spawn.transform.position);
@@ -741,7 +739,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     /// Check for closest spawns
     {
       // Init array
-      if (_ClosestSpawns == null) _ClosestSpawns = new Dictionary<Vector3, float>();
+      _ClosestSpawns ??= new();
 
       // Gather player and spawn
       var player = PlayerScript.s_Players[_ClosestSpawns_PlayerIter++ % PlayerScript.s_Players.Count];
@@ -750,7 +748,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       if (player._Ragdoll != null && !player._Ragdoll._IsDead)
       {
         // Calculate distance
-        UnityEngine.AI.NavMeshQueryFilter filter = new UnityEngine.AI.NavMeshQueryFilter();
+        UnityEngine.AI.NavMeshQueryFilter filter = new();
         var path = new UnityEngine.AI.NavMeshPath();
         filter.areaMask = 1;
         filter.agentTypeID = TileManager._navMeshSurface2.agentTypeID;
@@ -764,9 +762,11 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         // Else, check if already in dict
         if (_ClosestSpawns.ContainsKey(spawn))
           _ClosestSpawns[spawn] = dist;
+
         // Check if dict empty
         else if (_ClosestSpawns.Count < Mathf.Clamp(Mathf.RoundToInt(PlayerScript.s_Players.Count * 1.4f), 2, 5))
           _ClosestSpawns.Add(spawn, dist);
+
         // Else, compare
         else
         {
@@ -784,15 +784,15 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       }
     }
 
-    /// Check for old money
+    /// Despawn for old money
     {
-      if (_Money != null && _Money.Count > 0)
+      if (s_money != null && s_money.Count > 0)
       {
-        var index = _Money_Iter++ % _Money.Count;
-        var pair = _Money[index];
+        var index = _Money_Iter++ % s_money.Count;
+        var pair = s_money[index];
         if (Time.time - pair.Item2 > 45f)
         {
-          _Money.RemoveAt(index);
+          s_money.RemoveAt(index);
           Object.Destroy(pair.Item1);
         }
       }
@@ -835,8 +835,8 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
   public static void OpenRoom(int index, int index2)
   {
     // Enable spawners
-    if (!_EnabledSpawners.Contains(index))
-      _EnabledSpawners.Add(index);
+    if (!s_enabledSpawners.Contains(index))
+      s_enabledSpawners.Add(index);
 
     // Enable candle
     if (CustomObstacle._CustomCandles != null)
@@ -945,12 +945,12 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
     CustomObstacle.HandleAll();
 
     // Check if wave in progress
-    if (_WavePlaying)
+    if (s_wavePlaying)
     {
       // Check for all players dead
       if (PlayerScript._All_Dead)
       {
-        _WavePlaying = false;
+        s_wavePlaying = false;
 
         // Save highest wave
         //Debug.Log($"{Levels._CurrentLevelIndex} : {_Wave - 1}");

@@ -14,7 +14,7 @@ using Assets.Scripts.Objects;
 using Assets.Scripts.Game.Items;
 using Assets.Scripts.Ragdoll.Equippables;
 
-public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
+public class EnemyScript : PlayerScript.IHasRagdoll
 {
   //
   static SettingsSaveData SettingsModule { get { return SettingsHelper.s_SaveData.Settings; } }
@@ -117,11 +117,17 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
   }
 
   static public List<EnemyScript> _Enemies_alive, _Enemies_dead;
+  public static Dictionary<EntityId, EnemyScript> s_Enemies;
   public static int _ID;
   public static int _MAX_RAGDOLLS_DEAD = 15, _MAX_RAGDOLLS_ALIVE = 40;
 
   public int _Id;
+  public bool _Enabled;
 
+  // Ragdoll
+  GameObject gameObject { get { return _Controller != null ? _Controller.gameObject : null; } }
+  public Transform transform { get { return _Controller; } }
+  public Transform _Controller;
   ActiveRagdoll _ragdoll;
   public ActiveRagdoll _Ragdoll { get { return _ragdoll; } set { _ragdoll = value; } }
 
@@ -129,7 +135,7 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
 
   float _lastPosSetTime;
 
-  public PathScript _path;
+  public PathScript _PathScript;
 
   bool _beganPatrolling;
 
@@ -208,8 +214,17 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
   public SurvivalAttributes _survivalAttributes;
 
   // Use this for initialization
+  public EnemyScript(Transform controller)
+  {
+    _Controller = controller;
+
+    s_Enemies ??= new();
+    s_Enemies.Add(_Controller.GetEntityId(), this);
+  }
+
   public void Init(SurvivalAttributes survivalAttributes, bool grappled = false)
   {
+    _survivalAttributes = survivalAttributes;
 
     // Set unique ID
     if (_Id != 0) return;
@@ -227,25 +242,23 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
     var path = transform.parent.GetChild(1).gameObject;
     if (_IsZombie)
     {
-      Destroy(path);
+      Object.Destroy(path);
     }
     else
     {
-      _path = new PathScript();
-      _path.Init(path.transform);
-      _path.GetNearestPatrolPoint(transform.position);
+      _PathScript = new();
+      _PathScript.Init(path.transform);
+      _PathScript.GetNearestPatrolPoint(transform.position);
     }
-
-    _survivalAttributes = survivalAttributes;
 
     if (!_IsZombie)
     {
       if (_itemLeft == ItemManager.Items.BAT)
         _waitLookPos = PlayerspawnScript._PlayerSpawns[0].transform.position;
-      else if (_path.GetPathLength() > 0)
+      else if (_PathScript.GetPathLength() > 0)
       {
-        Transform lp = _path.GetLookPoint(false),
-         p = _path.GetPatrolPoint();
+        Transform lp = _PathScript.GetLookPoint(false),
+         p = _PathScript.GetPatrolPoint();
         _waitLookPos = MathC.Get2DVector(lp.position) + new Vector3(0f, transform.position.y, 0f);
       }
 
@@ -253,20 +266,20 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
     }
 
     // Get NavAgent
-    _agent = GetComponent<UnityEngine.AI.NavMeshAgent>();
+    _agent = _Controller.GetComponent<UnityEngine.AI.NavMeshAgent>();
     if (_IsZombie && GameScript.s_IsZombieGameMode)
       _agent.agentTypeID = TileManager._navMeshSurface2.agentTypeID;
     else
       _agent.agentTypeID = TileManager._navMeshSurface.agentTypeID;
 
     // Setup ragdoll
-    var ragdollObj = Instantiate(
+    var ragdollObj = Object.Instantiate(
       GameResources._Ragdoll,
       transform.position,
       Quaternion.LookRotation(new Vector3(_waitLookPos.x, transform.position.y, _waitLookPos.z) - transform.position) * Quaternion.Euler(0f, 90f, 0f),
       transform.parent
     );
-    _ragdoll = new ActiveRagdoll(ragdollObj, transform);
+    _ragdoll = new ActiveRagdoll(ragdollObj, transform, null, this);
 
     // Check crown
     bool getCrownBonuses = false;
@@ -386,11 +399,14 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
       //
       if (_IsZombieReal)
         _itemLeft = _itemRight = ItemManager.Items.AXE;
+      else
+        _moveSpeed = PlayerScript.RUNSPEED;
 
       // Agent stuff
       _beganPatrolling = true;
       _ragdoll.SetActive(true);
       _patroling = false;
+      _canMove = true;
 
       // Set target to nearest player
       var distanceData = FunctionsC.GetClosestTargetTo(_ragdoll, transform.position);
@@ -413,7 +429,11 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
     }
 
     // Start cycle
+    _Enabled = true;
     Walk();
+
+    //
+    EquipStart();
   }
 
   public static void UpdateEnemies()
@@ -460,7 +480,9 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
   // Update is called once per frame
   void Handle()
   {
+    if (!_Enabled) return;
     if (_ragdoll == null || !_ragdoll._CanReceiveInput) return;
+
     if (!_beganPatrolling)
     {
       _ragdoll.SetActive(true);
@@ -595,7 +617,7 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
               }
             }
           }
-          else if (Time.time - _lookAroundT > _path.GetLookWait())
+          else if (Time.time - _lookAroundT > _PathScript.GetLookWait())
           {
             _lookAroundT = Time.time;
             // Look in a direction
@@ -605,6 +627,7 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
           lookAtPos = _waitLookPos;
           LookAt(lookAtPos);
         }
+
         // Check states
         else
         {
@@ -630,7 +653,7 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
               }
               // Check for move back to path
               if (_state == State.NEUTRAL)
-                if (_path.GetPathLength() > 1)
+                if (_PathScript.GetPathLength() > 1)
                   SetNextPatrolPoint();
                 else
                   SetCurrentPatrolPoint();
@@ -645,23 +668,23 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
               // Update patrol
               if (_patroling && !IsChaser())
               {
-                var dis = MathC.Get2DDistance(transform.position, _path.GetPatrolPoint().position);
+                var dis = MathC.Get2DDistance(transform.position, _PathScript.GetPatrolPoint().position);
                 _atd = dis;
                 if (dis < 0.1f)
                 {
-                  if (_path.GetPathLength() > 1)
+                  if (_PathScript.GetPathLength() > 1)
                   {
 
                     // Look at direction
-                    Transform lp = _path.GetLookPoint(),
-                     p = _path.GetPatrolPoint();
+                    Transform lp = _PathScript.GetLookPoint(),
+                     p = _PathScript.GetPatrolPoint();
                     _waitLookPos = MathC.Get2DVector(transform.position + (lp.position - p.position).normalized) + new Vector3(0f, transform.position.y, 0f);
 
                   }
-                  _agent.Move(_path.GetPatrolPoint().position - transform.position);
+                  _agent.Move(_PathScript.GetPatrolPoint().position - transform.position);
 
                   // Wait until next movement
-                  Wait(_path.GetPatrolWait(), _path.GetPathLength() > 1);
+                  Wait(_PathScript.GetPatrolWait(), _PathScript.GetPathLength() > 1);
                 }
               }
               else
@@ -1133,7 +1156,7 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
     }
   }
 
-  public void OnGrapplerRemoved()
+  public void OnGrapplerRemoved(ActiveRagdoll fromRagdoll)
   {
     _survivalAttributes = null;
 
@@ -1145,6 +1168,7 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
 
     SetRandomStrafe();
     _ragdoll._rotSpeed = PlayerScript.ROTATIONSPEED * (0.8f + Random.value * 0.3f);
+    ChangeState(State.PURSUIT);
     TargetFound(true, false);
 
     SetAttackTime(true);
@@ -1201,13 +1225,9 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
   // Go through "Enemies" Transform children and init
   public static void HardInitAll()
   {
-    var enemies = GameScript.s_Singleton.transform.GetChild(0);
-    for (var i = 0; i < enemies.childCount; i++)
-    {
-      var e = enemies.GetChild(i).GetChild(0).GetComponent<EnemyScript>();
-      e.Init(null);
-      e.EquipStart();
-    }
+    if (s_Enemies != null)
+      foreach (var enemyPair in s_Enemies)
+        enemyPair.Value.Init(null);
   }
 
   public static int NumberAlive()
@@ -1303,11 +1323,13 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
               _time_seen = 0f;
               SetRagdollTarget(null);
               _targetFound = false;
-              _patroling = true;
               _waitAmount = 2f + Random.value * 3f;
               _waitTimer = Time.time;
               setstate = true;
               _setstate = State.NEUTRAL;
+
+              if (!_IsZombie)
+                _patroling = true;
             }
           }
           else
@@ -1381,18 +1403,18 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
   public void Turn()
   {
     if (Time.time - GameScript.s_LevelStartTime < 1f) return;
-    Transform lp = _path.GetLookPoint(),
-      p = _path.GetPatrolPoint();
+    Transform lp = _PathScript.GetLookPoint(),
+      p = _PathScript.GetPatrolPoint();
     _waitLookPos = MathC.Get2DVector(transform.position + (lp.position - p.position).normalized) + new Vector3(0f, transform.position.y, 0f);
   }
 
-  bool CheckRay(RaycastHit h, bool frontMagnitudeCheck = false)
+  bool CheckRay(RaycastHit hit, bool frontMagnitudeCheck = false)
   {
-    if (h.distance > 20f) return false;
-    if (h.collider.name.Equals("Tile")) return false;
+    if (hit.distance > 20f) return false;
+    if (hit.collider.name.Equals("Tile")) return false;
 
     // Check if found player
-    var ragdoll = IsTarget(h.collider.gameObject);
+    var ragdoll = IsTarget(hit.collider.gameObject);
     if (ragdoll != null)
     {
 
@@ -1429,27 +1451,18 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
       }
       else return false;
     }
+
     // Check if found another enemy
-    var rag = ActiveRagdoll.GetRagdoll(h.collider.gameObject);
+    var rag = ActiveRagdoll.GetRagdoll(hit.collider.gameObject);
     if (rag != null && !rag.IsSelf(_ragdoll._Hip.gameObject) && !rag._IsPlayer)
     {
-      var e = rag._Controller.GetComponent<EnemyScript>();
-      // Delayed absorb
-      if (SettingsHelper._DIFFICULTY > 0)
-      {
-        /*if (_delayedAbsorb == null && (e._state != State.NEUTRAL || e.GetRagdoll()._dead))
-          _delayedAbsorb = StartCoroutine(DelayedAbsorb(e, 0.4f + Random.value * 0.9f, h));
-        else if (_delayedAbsorb != null)
-        {
-          StopCoroutine(_delayedAbsorb);
-          StartCoroutine(DelayedAbsorb(e, 0.4f + Random.value * 0.9f, h));
-        }*/
-      }
+      var e = rag._EnemyScript;
+
       // Move around enemy
-      if (_state != State.NEUTRAL && h.distance < 10f && _canMove && !e._ragdoll._IsDead)
+      if (_state != State.NEUTRAL && hit.distance < 10f && _canMove && !e._ragdoll._IsDead)
       {
         //rag._enemyScript.AbsorbInfo(this);
-        if (h.distance < 2f && !rag._IsDead)
+        if (hit.distance < 2f && !rag._IsDead)
           _agent.Move((_strafeRight ? transform.right : -transform.right) * 0.6f * Time.deltaTime * _moveSpeed_lerped);
       }
     }
@@ -1459,7 +1472,7 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
   #region Patrol Functions
   void SetCurrentPatrolPoint()
   {
-    var p = _path.GetPatrolPoint().position;
+    var p = _PathScript.GetPatrolPoint().position;
     if (MathC.Get2DDistance(p, transform.position) == 0f) return;
     //if (_survivalAttributes != null)
     //  Debug.Log(_agent.enabled);
@@ -1467,7 +1480,7 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
   }
   void SetNextPatrolPoint()
   {
-    Vector3 newPos = _path.GetNextPatrolPoint().position;
+    Vector3 newPos = _PathScript.GetNextPatrolPoint().position;
     _agent.SetDestination(newPos);
   }
 
@@ -1625,7 +1638,7 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
   IEnumerator SuspiciousCo(Vector3 source, Loudness loudness, float wait)
   {
     yield return new WaitForSeconds(wait);
-    if (!_agent.enabled || _ragdoll._IsDead) { }
+    if (!(_agent?.enabled ?? false) || _ragdoll._IsDead) { }
     else
     {
       _waitAmount = 0f;
@@ -1715,6 +1728,16 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
     _state = newState;
   }
 
+  Coroutine StartCoroutine(IEnumerator routine)
+  {
+    return GameScript.s_Singleton.StartCoroutine(routine);
+  }
+  void StopCoroutine(Coroutine routine)
+  {
+    GameScript.s_Singleton.StopCoroutine(routine);
+  }
+
+
   public ActiveRagdoll IsTarget(GameObject obj)
   {
     if (PlayerScript.s_Players == null) return null;
@@ -1726,7 +1749,7 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
     return null;
   }
 
-  // Called when first starts patroling at begining of scene to check path
+  // Called when first starts patroling at beginning of scene to check path
   void BeginPatrol()
   {
     // Check if already patrolling
@@ -1734,7 +1757,7 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
       return;
 
     // Check if has no path
-    else if (_path == null || _path.GetPathLength() == 0)
+    else if (_PathScript == null || _PathScript.GetPathLength() == 0)
       return;
 
     // Patrol
@@ -1742,21 +1765,10 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
     SetCurrentPatrolPoint();
 
     // Look at new pos
-    var p = _path.GetLookPoint(false);
+    var p = _PathScript.GetLookPoint(false);
     _waitLookPos = MathC.Get2DVector(p.position) + new Vector3(0f, transform.position.y, 0f);
   }
   #endregion
-
-  public static EnemyScript LoadEnemy(Vector3 position)
-  {
-    GameObject new_gameobject = Instantiate(GameResources._Enemy);
-    new_gameobject.transform.parent = GameResources.s_Game.transform.GetChild(0);
-    new_gameobject.transform.localScale = new Vector3(0.1f, 0.1f, 1f);
-    new_gameobject.transform.position = position;
-    new_gameobject.transform.localPosition = new Vector3(new_gameobject.transform.localPosition.x, -1.32f, new_gameobject.transform.localPosition.z);
-    new_gameobject.name = "Enemy";
-    return new_gameobject.transform.GetChild(0).GetComponent<EnemyScript>();
-  }
 
   /*public EnemyScript _absorbee;
   public List<EnemyScript> _bodies;
@@ -1840,7 +1852,7 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
     }
   }*/
 
-  public void EquipStart()
+  void EquipStart()
   {
     // Equip start items
     if (_itemLeft != ItemManager.Items.NONE)
@@ -1947,22 +1959,23 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
 
     // Swap containers
     _Enemies_alive.Remove(this);
-    if (_Enemies_dead == null) _Enemies_dead = new List<EnemyScript>();
+    _Enemies_dead ??= new List<EnemyScript>();
     _Enemies_dead.Add(this);
     if (_Enemies_dead.Count > _MAX_RAGDOLLS_DEAD)
     {
-      var e = _Enemies_dead[0];
-      ActiveRagdoll.s_Ragdolls.Remove(e._ragdoll);
-      _Enemies_dead.Remove(e);
-      Destroy(e.transform.parent.gameObject);
+      var enemy = _Enemies_dead[0];
+      ActiveRagdoll.s_Ragdolls.Remove(enemy._ragdoll);
+      _Enemies_dead.Remove(enemy);
+      s_Enemies.Remove(enemy._Controller.GetEntityId());
+      enemy.Destroy();
     }
 
     // Check to see if #bodies is too much
     if (_Enemies_dead.Count > 8)
-      foreach (EnemyScript e in _Enemies_dead)
-        if (e._ragdoll._IsDead && !e._ragdoll._IsDisabled)
+      foreach (var enemy in _Enemies_dead)
+        if (enemy._ragdoll._IsDead && !enemy._ragdoll._IsDisabled)
         {
-          e._ragdoll.Disable();
+          enemy._ragdoll.Disable();
           break;
         }
 
@@ -2293,19 +2306,22 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
                 bool EquipmentIsEqual(PlayerProfile.Equipment e0, PlayerProfile.Equipment e1)
                 {
 
+                  if (e0 == null || e1 == null)
+                    return false;
+
                   // Check items equal
                   var equipment0_items = new List<ItemManager.Items>(){
-                  e0._ItemLeft0,
-                  e0._ItemRight0,
-                  e0._ItemLeft1,
-                  e0._ItemRight1
-                };
+                    e0._ItemLeft0,
+                    e0._ItemRight0,
+                    e0._ItemLeft1,
+                    e0._ItemRight1
+                  };
                   var equipment1_items = new List<ItemManager.Items>(){
-                  e1._ItemLeft0,
-                  e1._ItemRight0,
-                  e1._ItemLeft1,
-                  e1._ItemRight1
-                };
+                    e1._ItemLeft0,
+                    e1._ItemRight0,
+                    e1._ItemLeft1,
+                    e1._ItemRight1
+                  };
                   foreach (var item in equipment0_items)
                   {
                     if (equipment1_items.Contains(item))
@@ -2571,16 +2587,15 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
     else if (survivalAttributes._enemyType == SurvivalManager.EnemyType.PISTOL_WALK)
       weapon = "pistol";
 
-    var enemy = TileManager.LoadObject($"e_0_0_li_{weapon}_");
-    var e = enemy.transform.GetChild(0).GetComponent<EnemyScript>();
-    e.transform.position = new Vector3(spawnAtPos.x, enemy.transform.position.y, spawnAtPos.y);
+    var enemy = TileManager.LoadObject($"e_0_0_li_{weapon}_canmove_true_canhear_true");
+    var enemyScript = s_Enemies[enemy.transform.GetChild(0).GetEntityId()];
+    enemyScript.transform.position = new Vector3(spawnAtPos.x, enemy.transform.position.y, spawnAtPos.y);
     if (PlayerScript.s_Players != null && PlayerScript.s_Players.Count > 0 && PlayerScript.s_Players[0] != null)
-      e.LookAt(PlayerScript.s_Players[0].transform.position);
-    e._isZombieRealOverride = isZombieRealOverride;
-    e.Init(survivalAttributes, grappled);
-    e.EquipStart();
+      enemyScript.LookAt(PlayerScript.s_Players[0].transform.position);
+    enemyScript._isZombieRealOverride = isZombieRealOverride;
+    enemyScript.Init(survivalAttributes, grappled);
 
-    return e;
+    return enemyScript;
   }
 
   #region Sound Functions
@@ -2718,11 +2733,28 @@ public class EnemyScript : MonoBehaviour, PlayerScript.IHasRagdoll
   }
   #endregion
 
+  public void Destroy()
+  {
+    _Ragdoll = null;
+    if (transform != null)
+    {
+      transform.parent.parent = GameScript.s_Singleton.transform;
+      Object.Destroy(transform.parent.gameObject);
+    }
+  }
+
   public static void Reset()
   {
+    if (s_Enemies != null)
+    {
+      foreach (var enemy in s_Enemies)
+        enemy.Value.Destroy();
+      s_Enemies = null;
+    }
+
     _ID = 0;
-    _Enemies_alive = new List<EnemyScript>();
-    _Enemies_dead = new List<EnemyScript>();
+    _Enemies_alive = new();
+    _Enemies_dead = new();
     _Targets = null;
   }
 }

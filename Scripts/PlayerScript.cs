@@ -17,7 +17,7 @@ using Valve.VR;
 using Assets.Scripts.FX;
 using Assets.Scripts.Ragdoll.Equippables;
 
-public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
+public class PlayerScript : PlayerScript.IHasRagdoll
 {
 
 
@@ -38,6 +38,9 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
   public int _Id;
 
   // Ragdoll
+  GameObject gameObject { get { return _Controller != null ? _Controller.gameObject : null; } }
+  public Transform transform { get { return _Controller; } }
+  public Transform _Controller;
   ActiveRagdoll _ragdoll;
   public ActiveRagdoll _Ragdoll { get { return _ragdoll; } set { _ragdoll = value; } }
 
@@ -104,9 +107,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
   }
 
   //
-  [System.NonSerialized]
   public PlayerProfile.Equipment _EquipmentStart;
-  [System.NonSerialized]
   public bool _EquipmentChanged;
   public static int s_NumPlayersStart;
   public static int[] s_ExtrasSnapshot;
@@ -115,7 +116,6 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
   MeshRenderer[] _ring;
   public static Material[] s_Materials_Ring;
 
-  bool _isauto;
   static float s_autoUseRate;
   static ActiveRagdoll.Side s_autoSide;
 
@@ -124,15 +124,13 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
 
   public static int s_PlayerCountSave;
 
-  [System.NonSerialized]
   public int _PlayerSpawnId;
   PlayerspawnScript _playerSpawn { get { return PlayerspawnScript._PlayerSpawns[_PlayerSpawnId]; } }
 
   //
-  [System.NonSerialized]
   public PlayerScript _ConnectedTwin;
   ActiveRagdoll.Side _connectedTwinSide;
-  [System.NonSerialized]
+
   public bool _IsOriginalTwin;
   public bool _IsPlayer1 { get { return _Id == 0 && _IsOriginal; } }
   public bool _IsOriginal { get { return !_HasTwin || _IsOriginalTwin; } }
@@ -141,8 +139,11 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
   bool _isRightTwin { get { return !_HasTwin || _connectedTwinSide == ActiveRagdoll.Side.RIGHT; } }
 
   // Use this for initialization
-  void Start()
+  public PlayerScript(Transform controller, int playerSpawnId)
   {
+    _Controller = controller;
+    _PlayerSpawnId = playerSpawnId;
+
     _All_Dead = false;
 
     _SlowmoTimer = 0f;
@@ -150,14 +151,14 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
     _spawnRunCheck = LevelModule.ExtraTime == 0;
 
     // Setup ragdoll
-    var ragdollObj = Instantiate(
+    var ragdollObj = Object.Instantiate(
       GameResources._Ragdoll,
-      transform.position,
-      transform.rotation * Quaternion.Euler(0f, 90f, 0f),
-      transform.parent
+       transform.position,
+       transform.rotation * Quaternion.Euler(0f, 90f, 0f),
+       transform.parent
     );
     var health = GameScript.s_IsPartyGameMode ? VersusMode.s_Settings._PlayerHealth : (GameScript.s_IsZombieGameMode ? 3 : 1);
-    _ragdoll = new ActiveRagdoll(ragdollObj, transform)
+    _ragdoll = new ActiveRagdoll(ragdollObj, transform, this, null)
     {
       _IsPlayer = true,
       _health = health
@@ -226,7 +227,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
     _ragdoll.ChangeColor(_Profile.GetColor());
 
     // Create ring
-    var new_ring = Instantiate(TileManager._Ring.gameObject);
+    var new_ring = Object.Instantiate(TileManager._Ring.gameObject);
     _ring = new MeshRenderer[] { new_ring.transform.GetChild(0).GetComponent<MeshRenderer>(), new_ring.transform.GetChild(1).GetComponent<MeshRenderer>() };
     Resources.UnloadAsset(_ring[0].sharedMaterial);
     Resources.UnloadAsset(_ring[1].sharedMaterial);
@@ -306,7 +307,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
 
       // Clean up old light if exists
       if (GameScript.s_Singleton._Thunder_Light != null)
-        DestroyImmediate(GameScript.s_Singleton._Thunder_Light.gameObject);
+        Object.DestroyImmediate(GameScript.s_Singleton._Thunder_Light.gameObject);
 
       // Handle creating rain SFX
       if (SceneThemes._Theme._rain)
@@ -476,11 +477,11 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
   public static void Reset()
   {
     if (s_Players != null)
-      foreach (var p in s_Players)
-      {
-        p._HasExit = false;
-        if (p != null && p.gameObject != null) Destroy(p.gameObject);
-      }
+    {
+      foreach (var player in s_Players)
+        player.Destroy();
+      s_Players = null;
+    }
 
     GameScript.s_InLevelEndPlayer = null;
     s_Players = null;
@@ -503,17 +504,14 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
       TileManager._Text_LevelTimer_Best.text = TileManager._Text_LevelTimer_Best.text.Split("\n")[0];
   }
 
-  float _lastDistance;
-  ActiveRagdoll _targetRagdoll;
-  int _targetIter;
-
   public static bool _TimerStarted;
   bool _level_ratings_shown;
 
   // Update is called once per frame
-  float _rearrangeTime;
-  void Update()
+  public void Update()
   {
+
+    //if (s_Players == null) return;
 
     // Timer
     if (!_TimerStarted && _IsPlayer1 && _spawnTimer <= 0f)
@@ -575,215 +573,6 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
       }
     }
 
-#if DEBUG
-    if (ControllerManager.GetKey(ControllerManager.Key.DELETE))
-    {
-      _isauto = !_isauto;
-    }
-    if (_isauto && !_ragdoll._IsDead && !GameScript.s_Paused)
-    {
-      _rearrangeTime -= Time.deltaTime * (_agent.pathStatus != NavMeshPathStatus.PathComplete ? 10f : 1f);
-      if (_rearrangeTime <= 0f && !s_Players[0]._ragdoll._IsDead)
-      {
-        var pos = s_Players[0]._ragdoll._Hip.position;
-        var dis = MathC.Get2DDistance(pos, transform.position);
-        var maxD = 5f;
-
-        if (dis < 2f)
-        {
-          pos = _ragdoll._Hip.position;
-          maxD = 6f;
-        }
-        if (GameScript.s_IsMissionsGameMode)
-        {
-
-          if (!HasExit())
-          {
-
-            var minDist = 5f;
-            var moved = false;
-            foreach (var bullet in ItemScript._BulletPool)
-            {
-              if (!bullet.gameObject.activeSelf || bullet._RagdollID == _ragdoll._Id) continue;
-              if (MathC.Get2DDistance(_ragdoll._Hip.position, bullet.transform.position) < minDist)
-              {
-                //_SlowmoTimer = Mathf.Clamp(_SlowmoTimer + 1f, 0f, 2f);
-                var dir = Quaternion.AngleAxis(-90, Vector3.up) * bullet._rb.linearVelocity;
-                _agent.SetDestination(_ragdoll.Transform.position + dir * 10f);
-                moved = true;
-                break;
-              }
-            }
-
-            if (!moved)
-              _agent.SetDestination(Powerup._Powerups[0].transform.position);
-          }
-          else
-          {
-            _agent.SetDestination(_playerSpawn.transform.position);
-          }
-
-          _rearrangeTime = 0.2f;
-
-        }
-        else
-        {
-          _agent.SetDestination(pos + new Vector3(-maxD + Random.value * maxD * 2f, 0f, -maxD + Random.value * maxD * 2f));
-          _rearrangeTime = 1.5f + Random.value * 4f;
-        }
-      }
-      if (_agent.pathStatus == NavMeshPathStatus.PathComplete)
-      {
-        var dis2 = MathC.Get2DVector(_agent.steeringTarget - transform.position);
-        if (dis2.magnitude > 1f)
-          dis2 = dis2.normalized;
-        MovePlayer(Time.unscaledDeltaTime, MOVESPEED * 0.6f, new Vector2(dis2.x, dis2.z));
-      }
-
-      if (EnemyScript._Enemies_alive != null && EnemyScript._Enemies_alive.Count > 0)
-      {
-        if (_targetRagdoll == null || _targetRagdoll._IsDead) _lastDistance = 10000f;
-
-        for (var i = 0; i < 10; i++)
-        {
-          var next_enemy = EnemyScript._Enemies_alive[_targetIter++ % EnemyScript._Enemies_alive.Count];
-          var next_ragdoll = next_enemy._Ragdoll;
-
-          if (next_ragdoll != null && (_targetRagdoll == null || next_ragdoll._Id != _targetRagdoll._Id))
-          {
-            var path = new UnityEngine.AI.NavMeshPath();
-            if (NavMesh.CalculatePath(transform.position, next_enemy.transform.position, TileManager._navMeshSurface2.agentTypeID, path))
-            {
-              var dist = FunctionsC.GetPathLength(path.corners);
-              if (dist < _lastDistance)
-              {
-                _targetRagdoll = next_enemy._Ragdoll;
-                _lastDistance = dist;
-              }
-            }
-          }
-        }
-
-        if (_targetRagdoll != null)
-        {
-          transform.LookAt(_targetRagdoll._Hip.transform.position);
-
-          _ragdoll.ToggleRaycasting(false, true);
-          var hit = new RaycastHit();
-          if (Physics.SphereCast(new Ray(_ragdoll._transform_parts._head.transform.position, _ragdoll._Hip.transform.forward * 100f + Vector3.up * 0.3f), 0.1f, out hit, GameResources._Layermask_Ragdoll))
-          {
-            if (_targetRagdoll.IsSelf(hit.collider.gameObject))
-            {
-              var dist = 15f;
-              var switch_sides = false;
-
-              for (var i = 0; i < 2; i++)
-              {
-                if (switch_sides)
-                  s_autoSide = s_autoSide == ActiveRagdoll.Side.LEFT ? ActiveRagdoll.Side.RIGHT : ActiveRagdoll.Side.LEFT;
-                switch_sides = false;
-
-                if (Time.time - s_autoUseRate < 0) break;
-
-                var item = s_autoSide == ActiveRagdoll.Side.LEFT ? _ragdoll._ItemL : _ragdoll._ItemR;
-
-                if (!item)
-                {
-                  switch_sides = true;
-                  continue;
-                }
-
-                if (item)
-                {
-                  // Melee
-                  if (item._isMelee)
-                  {
-                    dist = 0.7f;
-                    switch_sides = true;
-                  }
-
-                  if (item._reloading)
-                  {
-                    switch_sides = true;
-                    continue;
-                  }
-
-                  // Check use distance
-                  if (hit.distance < dist)
-                  {
-                    // Use item
-                    if (s_autoSide == ActiveRagdoll.Side.LEFT)
-                      _ragdoll.UseLeft();
-                    else
-                      _ragdoll.UseRight();
-
-                    // Set use rate
-                    if (item._isMelee)
-                      s_autoUseRate = Time.time + item.UseRate();
-                    else if (item._fireMode == ItemScript.FireMode.AUTOMATIC)
-                    {
-                      if (item.NeedsReload())
-                        switch_sides = true;
-                    }
-                    else if (item._fireMode == ItemScript.FireMode.BURST || item._fireMode == ItemScript.FireMode.SEMI)
-                    {
-                      switch_sides = true;
-                      s_autoUseRate = Time.time + 0.2f;
-                    }
-
-                    // Check reload
-                    if (item.NeedsReload())
-                      item.Reload();
-
-                    if (switch_sides)
-                      s_autoSide = s_autoSide == ActiveRagdoll.Side.LEFT ? ActiveRagdoll.Side.RIGHT : ActiveRagdoll.Side.LEFT;
-                    switch_sides = false;
-
-                    break;
-                  }
-                }
-
-              }
-            }
-          }
-          // Try to reload
-          else
-          {
-            for (var i = 0; i < 2; i++)
-            {
-              var item = i == 0 ? _ragdoll._ItemL : _ragdoll._ItemR;
-              if (item == null || item._type == ItemManager.Items.NONE) continue;
-              if (item.IsMelee()) continue;
-              if (item.CanReload())
-                item.Reload();
-            }
-          }
-
-          _ragdoll.ToggleRaycasting(true, true);
-        }
-      }
-      /*/if (Debug.isDebugBuild)
-      {
-        if (_isOriginal)
-        {
-          if (ControllerManager.GetKey(ControllerManager.Key.C))
-            AutoPlayer.Capture();
-          if (ControllerManager.GetKey(ControllerManager.Key.G))
-            AutoPlayer.Playback();
-          if (ControllerManager.GetKey(ControllerManager.Key.DELETE))
-            AutoPlayer.Erase();
-          if (ControllerManager.GetKey(ControllerManager.Key.TWO))
-            PlayerProfile._Profiles[1].CycleWeapon(1);
-          if (ControllerManager.GetKey(ControllerManager.Key.THREE))
-            PlayerProfile._Profiles[2].CycleWeapon(1);
-          if (ControllerManager.GetKey(ControllerManager.Key.FOUR))
-            PlayerProfile._Profiles[3].CycleWeapon(1);
-        }
-        if (AutoPlayer._Playing)
-          AutoPlayer.ControlPlayer(this, _id);
-      }*/
-    }
-#endif
     // Try to spawn ragdoll
     if (!_ragdoll.IsActive() && Time.time - GameScript.s_LevelStartTime > 0.2f)
     {
@@ -793,8 +582,6 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
 
     float unscaled_dt = Time.unscaledDeltaTime;
     _SlowmoTimer = Mathf.Clamp(_SlowmoTimer - unscaled_dt, 0f, 2f);
-
-    if (s_Players == null || this == null) return;
 
     // Move ring with hip
     if (!_ragdoll._IsDead)
@@ -856,8 +643,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
     UpdateCamera();
 
     // Handle input
-    if (!_isauto)
-      HandleInput();
+    HandleInput();
 
     if (TileManager._LoadingMap || GameScript.s_Singleton._GameEnded || GameScript.s_Paused)
     {
@@ -1113,7 +899,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
             sharedPos += new Vector3(p._ragdoll._Hip.position.x, 0f, p._ragdoll._Hip.position.z);
             sharedForward += MathC.Get2DVector(p._ragdoll._Hip.transform.forward).normalized * forwardMagnitude;
             if (lastPlayer == null) lastPlayer = p;
-            var distance = Vector3.Distance(p.transform.position, lastPlayer.transform.position);
+            var distance = Vector3.Distance(p.gameObject.transform.position, lastPlayer.gameObject.transform.position);
             //if (distance > biggestDist) biggestDist = distance;
             lastPlayer = this;
             counter++;
@@ -1233,7 +1019,8 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
         // Remove old twin
         ActiveRagdoll.s_Ragdolls.Remove(p._ragdoll);
         s_Players.RemoveAt(i);
-        Destroy(p.transform.parent.gameObject);
+        p.Destroy();
+        p._ragdoll.Destroy();
 
         break;
       }
@@ -1878,8 +1665,8 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
 
     //   var data = new PlayerData()
     //   {
-    //     _position = transform.position,
-    //     _forward = transform.forward,
+    //     _position =  transform.position,
+    //     _forward =  transform.forward,
     //     _actions = actions.ToArray()
     //   };
 
@@ -2128,11 +1915,11 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
       if (_UtilitiesLeft != null)
         for (int i = _UtilitiesLeft.Count - 1; i >= 0; i--)
           if (_UtilitiesLeft[i] != null)
-            Destroy(_UtilitiesLeft[i].gameObject);
+            Object.Destroy(_UtilitiesLeft[i].gameObject);
       if (_UtilitiesRight != null)
         for (int i = _UtilitiesRight.Count - 1; i >= 0; i--)
           if (_UtilitiesRight[i] != null)
-            Destroy(_UtilitiesRight[i].gameObject);
+            Object.Destroy(_UtilitiesRight[i].gameObject);
 
       RegisterUtilities();
       _Profile.UpdateIcons();
@@ -2142,7 +1929,6 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
 
   void RotatePlayer(Vector2 input, Vector2 input2)
   {
-    if (_isauto) return;
     if (Mathf.Abs(input.x) > 0.1f || Mathf.Abs(input.y) > 0.1f)
       transform.LookAt(transform.position + (new Vector3(input.x, 0f, input.y).normalized * 5f));
     else if (_Profile._faceMovement)
@@ -2341,33 +2127,29 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
   }
 
   //
-  void DropMoney(int amount = 10)
+  void DropMoney(int amount = 15)
   {
     void ThrowMoney()
     {
-      //if (!SurvivalManager.HasPoints(_id, 10)) return;
-      var points = amount;
-      for (; points > 0; points--)
-      {
-        if (SurvivalManager.HasPoints(_Id, points))
-          break;
-      }
-      if (points == 0) return;
+      if (!SurvivalManager.HasPoints(_Id, 10)) return;
+      SurvivalManager.SpendPoints(_Id, amount);
 
-      SurvivalManager.SpendPoints(_Id, points);
-      var money = Instantiate(GameResources._Money);
+      var money = Object.Instantiate(GameResources._Money);
       SurvivalManager.AddMoney(money);
-      money.name = $"Credits {points}";
+      money.name = $"Credits {amount}";
       money.transform.parent = GameScript.s_Singleton.transform;
       money.transform.position = _ragdoll._Hip.position + _ragdoll._Hip.transform.forward * 0.2f;
+
       var collider = money.GetComponent<Collider>();
       var collider0 = _ragdoll._Hip.GetComponents<Collider>()[1];
       //_ragdoll.IgnoreCollision(collider);
       Physics.IgnoreCollision(collider, collider0);
       collider.enabled = true;
+
       var rb = money.GetComponent<Rigidbody>();
       rb.isKinematic = false;
-      rb.AddForce(_ragdoll._Hip.transform.forward * 10f, ForceMode.Impulse);
+      rb.AddForce(_ragdoll._Hip.transform.forward * 2f, ForceMode.Impulse);
+
       _ragdoll.PlaySound("Ragdoll/Throw", 0.9f, 1.1f);
 
       IEnumerator sizeChange()
@@ -2383,6 +2165,15 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
       StartCoroutine(sizeChange());
     }
     ThrowMoney();
+  }
+
+  Coroutine StartCoroutine(IEnumerator routine)
+  {
+    return GameScript.s_Singleton.StartCoroutine(routine);
+  }
+  void StopCoroutine(Coroutine routine)
+  {
+    GameScript.s_Singleton.StopCoroutine(routine);
   }
 
   void Whistle()
@@ -2523,7 +2314,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
         yield return new WaitForSeconds(0.05f);
         if (this == null || _ragdoll == null || _ragdoll._Hip == null) break;
       }
-      if (_ring != null) _ring[0].transform.parent.gameObject.SetActive(false);
+      _ring?[0].transform.parent.gameObject.SetActive(false);
     }
 
     GameScript.s_Singleton.StartCoroutine(fadeRing());
@@ -2664,7 +2455,7 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
         {
           var amount = other.name.Split(' ')[1].ParseIntInvariant();
           SurvivalManager.GivePoints(_Id, amount);
-          Destroy(other.gameObject);
+          Object.Destroy(other.gameObject);
           if (Time.time - _LastMoneyPickupNoiseTime > 0.1f)
           {
             _LastMoneyPickupNoiseTime = Time.time;
@@ -2704,21 +2495,26 @@ public class PlayerScript : MonoBehaviour, PlayerScript.IHasRagdoll
   }
 
   // Destroy dependancies
-  private void OnDestroy()
+  private void Destroy()
   {
+    _HasExit = false;
+    _Ragdoll = null;
+    if (transform != null)
+      Object.Destroy(transform.parent.gameObject);
+
     // Despawn utilities
     if (_UtilitiesLeft != null)
       for (var i = _UtilitiesLeft.Count - 1; i >= 0; i--)
         if (_UtilitiesLeft[i] != null)
-          Destroy(_UtilitiesLeft[i].gameObject);
+          Object.Destroy(_UtilitiesLeft[i].gameObject);
     if (_UtilitiesRight != null)
       for (var i = _UtilitiesRight.Count - 1; i >= 0; i--)
         if (_UtilitiesRight[i] != null)
-          Destroy(_UtilitiesRight[i].gameObject);
+          Object.Destroy(_UtilitiesRight[i].gameObject);
 
     // Despawn ring
     if (_ring == null || _ring[0] == null || _ring[0].transform.parent == null) return;
-    Destroy(_ring[0].transform.parent.gameObject);
+    Object.Destroy(_ring[0].transform.parent.gameObject);
     _ring = null;
   }
 

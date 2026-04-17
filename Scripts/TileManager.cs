@@ -1,5 +1,7 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using Assets.Scripts.FX;
 using Assets.Scripts.Game.Items;
 using Assets.Scripts.Objects;
@@ -28,7 +30,7 @@ public class TileManager
   static float _Tile_spacing = 2.5f;
   static Vector2 _offset;
 
-  static List<PlayerScript> Players { get { return PlayerScript.s_Players; } }
+  static List<PlayerScript> _Players { get { return PlayerScript.s_Players; } }
 
   public static Transform _Map, _Tile;
   public static Transform _Floor { get { return _Map.transform.GetChild(0); } }
@@ -222,7 +224,7 @@ public class TileManager
         _Text_Monies[3].transform.localPosition,
 
         // End position
-        new Vector3(8.14f, -15.58f, _Text_Monies[0].transform.localPosition.z)
+        new(8.14f, -15.58f, _Text_Monies[0].transform.localPosition.z)
       };
     }
 
@@ -288,7 +290,7 @@ public class TileManager
     if (_Tiles != null)
     {
       for (var i = _Map.childCount - 1; i > 2; i--)
-        Object.DestroyImmediate(_Map.GetChild(i).gameObject);
+        UnityEngine.Object.DestroyImmediate(_Map.GetChild(i).gameObject);
       _Tiles = null;
     }
     if (_Tile != null)
@@ -327,21 +329,21 @@ public class TileManager
 
   static void RemoveGameObjects()
   {
-    GameScript.ResetObjects();
+    ExplosiveScript.Reset();
+    ActiveRagdoll.SoftReset();
     CustomObstacle.Reset();
-    var game = GameObject.Find("Game").GetComponent<GameScript>();
+
+    var game = GameScript.s_Singleton;
     Transform enemies = game.transform.GetChild(0),
       objects = GameResources._Container_Objects,
       navmesh_mods = _Map.GetChild(1),
       items = game.transform.GetChild(1);
-    for (int i = enemies.childCount - 1; i >= 0; i--)
-      Object.Destroy(enemies.GetChild(i).gameObject);
-    for (int i = objects.childCount - 1; i >= 0; i--)
-      Object.Destroy(objects.GetChild(i).gameObject);
-    for (int i = navmesh_mods.childCount - 1; i >= 0; i--)
-      Object.Destroy(navmesh_mods.GetChild(i).gameObject);
-    for (int i = items.childCount - 1; i >= 0; i--)
-      Object.Destroy(items.GetChild(i).gameObject);
+    for (var i = objects.childCount - 1; i >= 0; i--)
+      UnityEngine.Object.Destroy(objects.GetChild(i).gameObject);
+    for (var i = navmesh_mods.childCount - 1; i >= 0; i--)
+      UnityEngine.Object.Destroy(navmesh_mods.GetChild(i).gameObject);
+    for (var i = items.childCount - 1; i >= 0; i--)
+      UnityEngine.Object.Destroy(items.GetChild(i).gameObject);
   }
 
   public static string SaveMap(bool saveToClipboard = true)
@@ -392,76 +394,79 @@ public class TileManager
     // Add enemy information
     if (!GameScript.s_IsZombieGameMode)
     {
-      var enemies = GameObject.Find("Game").transform.GetChild(0);
-      for (int i = 0; i < enemies.childCount; i++)
-      {
-        var e = enemies.GetChild(i).GetChild(0).GetComponent<EnemyScript>();
-        // Don't save bat enemy if not mission editor
-        /*if (SettingsHelper._DIFFICULTY > 0)*/
-        if (!GameScript.s_EditorTesting)
-          if (e._itemLeft == ItemManager.Items.BAT || e._itemRight == ItemManager.Items.BAT) continue;
-        // Basic position info
-        var pos_save = e.transform.position - offset;
-        returnString += "e_" + System.Math.Round(pos_save.x, 1) + "_" + System.Math.Round(pos_save.z, 1) + "_";
-        // Item info
-        string check_item(ItemManager.Items item)
+      if (EnemyScript.s_Enemies != null)
+        foreach (var enemyPair in EnemyScript.s_Enemies)
         {
-          switch (item)
-          {
-            case ItemManager.Items.KNIFE:
-              return "knife";
-            case ItemManager.Items.PISTOL:
-              return "pistol";
-            case ItemManager.Items.PISTOL_SILENCED:
-              return "pistolsilenced";
-            case ItemManager.Items.REVOLVER:
-              return "revolver";
-            case ItemManager.Items.GRENADE_HOLD:
-              return "grenade";
-            case ItemManager.Items.SHOTGUN_PUMP:
-              return "shotgun";
-            case ItemManager.Items.GRENADE_LAUNCHER:
-              return "grenadelauncher";
-            case ItemManager.Items.BAT:
-              return "bat";
-          }
-          //throw new System.Exception("No weapon set for " + item);
-          Debug.LogWarning($"No weapon set for {item} - returning knife");
-          return "knife";
-        }
-        if (e._itemLeft != ItemManager.Items.NONE)
-        {
-          returnString += "li_";
-          var addWeapon = check_item(e._itemLeft);
-          returnString += addWeapon + "_";
-        }
-        if (e._itemRight != ItemManager.Items.NONE)
-        {
-          returnString += "ri_";
-          var addWeapon = check_item(e._itemRight);
-          returnString += addWeapon + "_";
-        }
+          var enemy = enemyPair.Value;
 
-        // Path information
-        var path = e._path;
-        for (var u = 0; u < path.transform.childCount; u++)
-        {
-          var waypoint = path.transform.GetChild(u);
-          var pos_use = waypoint.position - offset;
-          returnString += "w_" + System.Math.Round(pos_use.x, 1) + "_" + System.Math.Round(pos_use.z, 1) + "_";
-          for (int x = 0; x < waypoint.childCount; x++)
-          {
-            var lookPos = waypoint.GetChild(x);
-            pos_use = lookPos.position - offset;
-            returnString += "l_" + System.Math.Round(pos_use.x, 1) + "_" + System.Math.Round(pos_use.z, 1) + "_";
-          }
-        }
+          // Don't save bat enemy if not mission editor
+          /*if (SettingsHelper._DIFFICULTY > 0)*/
+          if (!GameScript.s_EditorTesting)
+            if (enemy._itemLeft == ItemManager.Items.BAT || enemy._itemRight == ItemManager.Items.BAT) continue;
 
-        // Move information
-        returnString += "canmove_" + (e._canMove ? "true" : "false") + "_";
-        returnString += "canhear_" + (e._reactToSound ? "true" : "false") + "_";
-        returnString += " ";
-      }
+          // Basic position info
+          var pos_save = enemy.transform.position - offset;
+          returnString += "e_" + System.Math.Round(pos_save.x, 1) + "_" + System.Math.Round(pos_save.z, 1) + "_";
+
+          // Item info
+          static string check_item(ItemManager.Items item)
+          {
+            switch (item)
+            {
+              case ItemManager.Items.KNIFE:
+                return "knife";
+              case ItemManager.Items.PISTOL:
+                return "pistol";
+              case ItemManager.Items.PISTOL_SILENCED:
+                return "pistolsilenced";
+              case ItemManager.Items.REVOLVER:
+                return "revolver";
+              case ItemManager.Items.GRENADE_HOLD:
+                return "grenade";
+              case ItemManager.Items.SHOTGUN_PUMP:
+                return "shotgun";
+              case ItemManager.Items.GRENADE_LAUNCHER:
+                return "grenadelauncher";
+              case ItemManager.Items.BAT:
+                return "bat";
+            }
+            //throw new System.Exception("No weapon set for " + item);
+            Debug.LogWarning($"No weapon set for {item} - returning knife");
+            return "knife";
+          }
+          if (enemy._itemLeft != ItemManager.Items.NONE)
+          {
+            returnString += "li_";
+            var addWeapon = check_item(enemy._itemLeft);
+            returnString += addWeapon + "_";
+          }
+          if (enemy._itemRight != ItemManager.Items.NONE)
+          {
+            returnString += "ri_";
+            var addWeapon = check_item(enemy._itemRight);
+            returnString += addWeapon + "_";
+          }
+
+          // Path information
+          var path = enemy.transform.parent.GetChild(1);
+          for (var u = 0; u < path.childCount; u++)
+          {
+            var waypoint = path.GetChild(u);
+            var pos_use = waypoint.position - offset;
+            returnString += "w_" + System.Math.Round(pos_use.x, 1) + "_" + System.Math.Round(pos_use.z, 1) + "_";
+            for (int x = 0; x < waypoint.childCount; x++)
+            {
+              var lookPos = waypoint.GetChild(x);
+              pos_use = lookPos.position - offset;
+              returnString += "l_" + System.Math.Round(pos_use.x, 1) + "_" + System.Math.Round(pos_use.z, 1) + "_";
+            }
+          }
+
+          // Move information
+          returnString += "canmove_" + (enemy._canMove ? "true" : "false") + "_";
+          returnString += "canhear_" + (enemy._reactToSound ? "true" : "false") + "_";
+          returnString += " ";
+        }
     }
 
     // Add object information
@@ -614,6 +619,7 @@ public class TileManager
       // Remove stuff
       ActiveRagdoll.Reset();
       EnemyScript.Reset();
+      PlayerScript.Reset();
       Powerup.Reset();
       FunctionsC.AoeHandler.Reset();
       CandleScript.Reset();
@@ -710,7 +716,7 @@ public class TileManager
           break;
       }
 
-      Vector2 offset = new Vector2(0, 0),
+      Vector2 offset = new(0, 0),
         difference = Vector2.zero;
       if (spawnpoint_data != null)
       {
@@ -719,16 +725,11 @@ public class TileManager
         var splitData = spawnpoint_data.Split('_');
         var spawnpos_tilepos = TransformPositionOntoTiles(splitData[1].ParseFloatInvariant(), splitData[2].ParseFloatInvariant());
 
-        // Check for null players
-        if (Players != null)
-          for (var i = Players.Count - 1; i >= 0; i--)
-            if (Players[i] == null) Players.Remove(Players[i]);
-
         // Find the local end position of the new map
         var usePos = Vector3.zero;
-        if (Players != null && Players.Count > 0)
+        if (_Players != null && _Players.Count > 0)
         {
-          foreach (var p in Players)
+          foreach (var p in _Players)
           {
             if (p._Ragdoll._IsDead) continue;
             usePos = p.transform.position;
@@ -776,16 +777,16 @@ public class TileManager
 
 
       // Clean up old meshes
-      var names = new string[] { "Meshes_Tiles_Up", "Meshes_Tiles_Down", "Meshes_Tiles_Sides" };
-      foreach (var name in names)
+      var meshNames = new string[] { "Meshes_Tiles_Up", "Meshes_Tiles_Down", "Meshes_Tiles_Sides" };
+      foreach (var meshName in meshNames)
       {
-        GameObject old = GameObject.Find(name);
-        if (old != null) Object.Destroy(old);
+        var oldMesh = GameObject.Find(meshName);
+        if (oldMesh != null) UnityEngine.Object.Destroy(oldMesh);
       }
 
       // Get List of tiles to toggle
-      List<Tile> tiles_down = new List<Tile>(),
-        tiles_up = new List<Tile>();
+      List<Tile> tiles_down = new(),
+        tiles_up = new();
       data_iter = 2;
       _offset = new Vector2(1, 1);
 
@@ -794,21 +795,22 @@ public class TileManager
       _Materials_Tiles.Item2.color = SceneThemes._Theme._tileColorDown;
 
       // Holds offsets for checking i a 3x3 around a tile
-      Vector2Int[] tile_offsets = new Vector2Int[]
+      var tile_offsets = new Vector2Int[]
       {
-      new Vector2Int(0, 1),
-      new Vector2Int(0, -1),
-      new Vector2Int(-1, 0),
-      new Vector2Int(1, 0),
-      new Vector2Int(1, 1),
-      new Vector2Int(-1, -1),
-      new Vector2Int(-1, 1),
-      new Vector2Int(1, -1),
+        new(0, 1),
+        new(0, -1),
+        new(-1, 0),
+        new(1, 0),
+        new(1, 1),
+        new(-1, -1),
+        new(-1, 1),
+        new(1, -1),
       };
 
       // Holds positions for down and up
-      Vector3 pos_up = new Vector3(0f, Tile._StartY + Tile._AddY, 0f),
-       pos_down = new Vector3(0f, Tile._StartY, 0f);
+      Vector3 pos_up = new(0f, Tile._StartY + Tile._AddY, 0f),
+       pos_down = new(0f, Tile._StartY, 0f);
+
       // Check if
       var waititer = 0;
       for (var w = 0; w < _Width; w++)
@@ -841,6 +843,7 @@ public class TileManager
       }
       while (SceneThemes._ChangingTheme) yield return new WaitForSeconds(0.1f);
       yield return new WaitForSeconds(0.1f);
+
       // Set inner walls and tile visibility
       foreach (var tile in tiles_up)
       {
@@ -914,18 +917,6 @@ public class TileManager
 
             var candleScript = candle.GetComponent<CandleScript>();
             candleScript._NormalizedEnable = 0f;
-          }
-        }
-
-      // Make sure ragdolls are not null
-      if (ActiveRagdoll.s_Ragdolls != null)
-        for (var i = ActiveRagdoll.s_Ragdolls.Count - 1; i >= 0; i--)
-        {
-          var r = ActiveRagdoll.s_Ragdolls[i];
-          if (r == null || r._Hip == null)
-          {
-            if (r._Controller != null) Object.Destroy(r._Controller);
-            ActiveRagdoll.s_Ragdolls.Remove(r);
           }
         }
 
@@ -1010,9 +1001,9 @@ public class TileManager
         backrooms.gameObject.SetActive(true);
         backrooms.position = new Vector3(-42.49f, -2.3f, -53.95f);
 
-        Object.Destroy(GameObject.Find("Meshes_Tiles_Up"));
-        Object.Destroy(GameObject.Find("Meshes_Tiles_Down"));
-        Object.Destroy(GameObject.Find("Meshes_Tiles_Sides"));
+        UnityEngine.Object.Destroy(GameObject.Find("Meshes_Tiles_Up"));
+        UnityEngine.Object.Destroy(GameObject.Find("Meshes_Tiles_Down"));
+        UnityEngine.Object.Destroy(GameObject.Find("Meshes_Tiles_Sides"));
       }
 
       // Set level time
@@ -1038,8 +1029,8 @@ public class TileManager
       }
 
       // Refill player ammo
-      if (Players != null)
-        foreach (var p in Players) p._Ragdoll.RefillAmmo();
+      if (_Players != null)
+        foreach (var p in _Players) p._Ragdoll.RefillAmmo();
 
       OnMapLoad();
 
@@ -1198,7 +1189,7 @@ public class TileManager
       // Clean up
       var delete_self = !pair.Item2;
       for (var i = list.Count - 1; i >= 0; i--)
-        Object.Destroy(delete_self ? list[i] : list[i].transform.parent.gameObject);
+        UnityEngine.Object.Destroy(delete_self ? list[i] : list[i].transform.parent.gameObject);
     }
     // Handle tiles
     if (combine_tiles)
@@ -1208,13 +1199,13 @@ public class TileManager
       foreach (var name in names)
       {
         var old = GameObject.Find(name);
-        if (old != null) Object.Destroy(old);
+        if (old != null) UnityEngine.Object.Destroy(old);
       }
       // Gather tiles
       var map = GameObject.Find("Map").transform;
-      List<GameObject> tiles_up = new List<GameObject>(),
-        tiles_down = new List<GameObject>(),
-        tile_sides = new List<GameObject>();
+      List<GameObject> tiles_up = new(),
+        tiles_down = new(),
+        tile_sides = new();
       for (var i = 2; i < map.childCount; i++)
       {
         var tile = map.GetChild(i);
@@ -1277,10 +1268,19 @@ public class TileManager
         hasBat = true;
       if (!hasBat && chaser_extra != 2)
       {
-        var e = EnemyScript.LoadEnemy(PlayerspawnScript._PlayerSpawns[0].transform.position - PlayerspawnScript._PlayerSpawns[0].transform.forward);
-        e._itemLeft = ItemManager.Items.BAT;
-        e.Init(null);
-        e.EquipStart();
+        GameObject new_gameobject = UnityEngine.Object.Instantiate(GameResources._Enemy);
+        new_gameobject.transform.parent = GameResources.s_Game.transform.GetChild(0);
+        new_gameobject.transform.localScale = new Vector3(0.1f, 0.1f, 1f);
+        new_gameobject.transform.position = PlayerspawnScript._PlayerSpawns[0].transform.position - PlayerspawnScript._PlayerSpawns[0].transform.forward;
+        new_gameobject.transform.localPosition = new Vector3(new_gameobject.transform.localPosition.x, -1.32f, new_gameobject.transform.localPosition.z);
+        new_gameobject.name = "Enemy";
+
+
+        var enemy = new EnemyScript(new_gameobject.transform.GetChild(0))
+        {
+          _itemLeft = ItemManager.Items.BAT
+        };
+        enemy.Init(null);
       }
     }
 
@@ -1298,14 +1298,11 @@ public class TileManager
         ResetMonies();
       }
     }
-
-    // Jobs
-    ActiveRagdoll.Jobs_Init();
   }
 
   public static Vector2 TransformPositionOntoTiles(float x, float z)
   {
-    Vector3 endpoint_pos = new Vector3(x, 0f, z),
+    Vector3 endpoint_pos = new(x, 0f, z),
       distance = endpoint_pos - _Tile.position;
     float width = _Tile.lossyScale.x;
     return new Vector2((int)Mathf.Floor(distance.x / _Tile_spacing + width / 1.5f), (int)Mathf.Floor(distance.z / _Tile_spacing + width / 1.5f));
@@ -1317,6 +1314,7 @@ public class TileManager
     if (object_data.Trim().Equals("")) return null;
     var object_data_split = object_data.Split('_');
     var object_data_iter = 0;
+
     // Get universal object data
     if (object_data_split.Length < 3) return null;
     var object_base = new ObjectData(object_data_split[object_data_iter++], object_data_split[object_data_iter++], object_data_split[object_data_iter++]);
@@ -1355,7 +1353,7 @@ public class TileManager
             object_data_split[1] = "";
             object_data_split[2] = "";
 
-            var new_enemy = $"e_{posx + Random.Range(-0.5f, 0.5f)}_{posy + Random.Range(-0.5f, 0.5f)}_{string.Join('_', object_data_split)}";
+            var new_enemy = $"e_{posx + UnityEngine.Random.Range(-0.5f, 0.5f)}_{posy + UnityEngine.Random.Range(-0.5f, 0.5f)}_{string.Join('_', object_data_split)}";
 
             object_data_split[0] = "e";
             object_data_split[1] = $"{posx}";
@@ -1368,8 +1366,9 @@ public class TileManager
         loadedObject = object_base.LoadResource("Enemy", container_enemies, new Vector3(0.1f, 0.1f, 1f), -1.32f);
         var controller = loadedObject.transform.GetChild(0);
         controller.position = new Vector3(object_base._x, controller.position.y, object_base._z);
-        var script = controller.GetComponent<EnemyScript>();
-        script._itemLeft = script._itemRight = ItemManager.Items.NONE;
+        var enemy = new EnemyScript(controller);
+        enemy._itemLeft = enemy._itemRight = ItemManager.Items.NONE;
+
         // Load path info
         Transform path = loadedObject.transform.GetChild(1),
           default_waypoint = path.GetChild(0),
@@ -1390,7 +1389,7 @@ public class TileManager
           {
             // Waypoint
             case "w":
-              current_waypoint = Object.Instantiate(default_waypoint.gameObject).transform;
+              current_waypoint = UnityEngine.Object.Instantiate(default_waypoint.gameObject).transform;
               current_waypoint.name = "Waypoint";
               current_waypoint.parent = default_waypoint.parent;
               current_waypoint.localScale = new Vector3(0.3f, 0.3f, 0.2f);
@@ -1402,7 +1401,7 @@ public class TileManager
               break;
             // Lookpoint
             case "l":
-              Transform lookpoint = Object.Instantiate(default_lookpoint.gameObject).transform;
+              Transform lookpoint = UnityEngine.Object.Instantiate(default_lookpoint.gameObject).transform;
               lookpoint.name = "Lookpoint";
               lookpoint.parent = current_waypoint;
               lookpoint.localScale = new Vector3(0.5f, 0.5f, 0.5f);
@@ -1412,6 +1411,7 @@ public class TileManager
               lookpoint.position = new Vector3(subobject_base._x, lookpoint.position.y, subobject_base._z);
               lookpoint.localPosition = new Vector3(lookpoint.localPosition.x, lookpoint.localPosition.y, 0f);
               break;
+
             // Left / right item
             case "li":
             case "ri":
@@ -1444,20 +1444,23 @@ public class TileManager
                   break;
               }
               if (object_type.Equals("ri"))
-                script._itemRight = item;
-              else script._itemLeft = item;
+                enemy._itemRight = item;
+              else enemy._itemLeft = item;
               break;
+
             // Move mode; if difficulty 2; always can move
             case "canmove":
               if (SettingsHelper._DIFFICULTY > 1)
-                script._canMove = true;
+                enemy._canMove = true;
               else
-                script._canMove = subobject_base._modifier0.Equals("true") ? true : false;
+                enemy._canMove = subobject_base._modifier0.Equals("true");
               break;
+
             // Hear mode
             case "canhear":
-              script._reactToSound = subobject_base._modifier0.Equals("true") ? true : false;
+              enemy._reactToSound = subobject_base._modifier0.Equals("true");
               break;
+
             // Default
             default:
               Debug.Log("Unhandled data " + subobject_base._type + " : " + subobject_base._modifier0);
@@ -1471,8 +1474,8 @@ public class TileManager
         }
         else
         {
-          Object.DestroyImmediate(default_waypoint.gameObject);
-          Object.DestroyImmediate(default_lookpoint.gameObject);
+          UnityEngine.Object.DestroyImmediate(default_waypoint.gameObject);
+          UnityEngine.Object.DestroyImmediate(default_lookpoint.gameObject);
         }
         break;
       // Load powerup
@@ -1590,7 +1593,7 @@ public class TileManager
                 {
                   throw new System.IndexOutOfRangeException($"Trying to link door with enemy ID {idP} out of {enemies.childCount}");
                 }
-                var e = enemies.GetChild(idP).GetChild(0).GetComponent<EnemyScript>();
+                var e = EnemyScript.s_Enemies[enemies.GetChild(idP).GetChild(0).GetEntityId()];
                 door_script0.RegisterEnemyEditor(e);
                 door_script0.RegisterEnemyGame(e);
               }
@@ -1686,7 +1689,7 @@ public class TileManager
           var inner_mesh = GameObject.Find("Tile_" + SceneThemes._Theme._tile).transform.GetChild(0).GetChild(0);
           for (var i = 0; i < 2; i++)
           {
-            var inner0 = Object.Instantiate(inner_mesh.gameObject);
+            var inner0 = UnityEngine.Object.Instantiate(inner_mesh.gameObject);
             inner0.transform.parent = inner_container;
             inner0.transform.localScale = inner_mesh.localScale;
             inner0.transform.localPosition = new Vector3(0f, inner_mesh.localPosition.y, (inner_mesh.localPosition.z - 0.35f) * (i == 0 ? -1f : 1f));
@@ -1782,7 +1785,7 @@ public class TileManager
   /// Create a dictionary for more efficient parsing of object data
   static Dictionary<string, string> GetProperties(ref string[] object_data_split, ref int object_data_iter)
   {
-    Dictionary<string, string> properties = new Dictionary<string, string>();
+    Dictionary<string, string> properties = new();
     for (; object_data_iter < object_data_split.Length;)
     {
       if (object_data_split[object_data_iter].Trim().Length == 0)
@@ -1937,7 +1940,7 @@ public class TileManager
           resource = Resources.Load(resourceName) as GameObject;
           break;
       }
-      var new_gameobject = Object.Instantiate(resource);
+      var new_gameobject = UnityEngine.Object.Instantiate(resource);
       new_gameobject.transform.parent = parent;
       new_gameobject.name = resourceName;
 
@@ -1974,12 +1977,6 @@ public class TileManager
 
     // Reload assets
     GameScript.ToggleExit(false);
-    for (var i = ActiveRagdoll.s_Ragdolls.Count - 1; i > -1; i--)
-    {
-      var rag = ActiveRagdoll.s_Ragdolls[i];
-      if (rag._Controller == null) continue;
-      Object.DestroyImmediate(rag._Controller.parent.gameObject);
-    }
     ActiveRagdoll.Reset();
     EnemyScript.Reset();
     PlayerScript.Reset();
@@ -2011,7 +2008,7 @@ public class TileManager
         e.Reset2();
         continue;
       }
-      Object.Destroy(child);
+      UnityEngine.Object.Destroy(child);
     }
 
     var mapObjects = _Map.GetChild(1);
@@ -2024,7 +2021,7 @@ public class TileManager
         candles.Add(mapObject);
         continue;
       }
-      Object.Destroy(mapObject);
+      UnityEngine.Object.Destroy(mapObject);
     }
 
     // Reload certain objects
@@ -2034,7 +2031,7 @@ public class TileManager
       var loaded = false;
       foreach (var reloadObjectType in reloadObjectTypes)
       {
-        if (levelObjectData.Length <= reloadObjectType.Length || !levelObjectData[..reloadObjectType.Length].Equals(reloadObjectType)) continue;
+        if (!levelObjectData.StartsWith(reloadObjectType)) continue;
         LoadObject(levelObjectData);
         loaded = true;
         break;
@@ -2049,7 +2046,7 @@ public class TileManager
         {
           continue;
         }
-        if (levelObjectData.Length <= s.Length || !levelObjectData[..s.Length].Equals(s)) continue;
+        if (!levelObjectData.StartsWith(s)) continue;
 
         var loadedObject = LoadObject(levelObjectData);
         OnObjectLoad(loadedObject);
@@ -2149,7 +2146,7 @@ public class TileManager
 
   static Tile SpawnTile(int width, int height)
   {
-    var tile = Object.Instantiate(_Tile.gameObject).transform;
+    var tile = UnityEngine.Object.Instantiate(_Tile.gameObject).transform;
     tile.gameObject.name = "Tile";
     tile.parent = _Map;
     tile.localPosition = new Vector3(width * _Tile_spacing, _Tile.localPosition.y, height * _Tile_spacing);
@@ -2487,25 +2484,25 @@ public class TileManager
       _TextMesh = GameObject.Find("Editor_text").GetComponent<TextMesh>();
       _TextMesh.gameObject.SetActive(false);
     }
-    _text = new List<string>();
+    _text = new();
     _TextMesh.GetComponent<MeshRenderer>().enabled = true;
     SetText("Object: Tile");
 
     while (_LoadingMap) yield return new WaitForSecondsRealtime(0.05f);
 
-    // Remove player
-    foreach (PlayerScript p in Players)
-      Object.Destroy(p.transform.parent.gameObject);
+    // Remove player, enemies, and ragdolls
     PlayerScript.Reset();
+    EnemyScript.Reset();
+    ActiveRagdoll.Reset();
 
     // Reload map objects
     Transform objects = GameResources._Container_Objects,
       navmesh_mods = _Map.GetChild(1);
     for (var i = objects.childCount - 1; i >= 0; i--)
-      Object.Destroy(objects.GetChild(i).gameObject);
+      UnityEngine.Object.Destroy(objects.GetChild(i).gameObject);
     for (var i = navmesh_mods.childCount - 1; i >= 0; i--)
-      Object.Destroy(navmesh_mods.GetChild(i).gameObject);
-    var notloadObjects = new string[] { "e_", "playerspawn_" };
+      UnityEngine.Object.Destroy(navmesh_mods.GetChild(i).gameObject);
+    var notloadObjects = new string[] { "playerspawn_" };
     foreach (var data in s_levelObjectData)
     {
       var found = false;
@@ -2538,51 +2535,19 @@ public class TileManager
     // Remove enemies and show paths
     if (!GameScript.s_IsZombieGameMode)
     {
-      if (EnemyScript._Enemies_alive != null)
-        foreach (var e in EnemyScript._Enemies_alive)
+      if (EnemyScript.s_Enemies != null)
+        foreach (var enemyData in EnemyScript.s_Enemies)
         {
-          if (e._IsZombie)
-          {
-            Object.Destroy(e.transform.parent.gameObject);
-            continue;
-          }
-          e.enabled = false;
-          var controller = e.transform.parent.GetChild(0);
-          controller.position = e._startPosition;
+          var enemy = enemyData.Value;
+          enemy._Enabled = false;
+          var controller = enemy._Controller;
           var controller_visual = GiveEnemyVisual(ref controller);
-          ChangeEnemyType(e, controller_visual.GetComponent<MeshRenderer>());
+          ChangeEnemyType(enemy, controller_visual.GetComponent<MeshRenderer>());
           controller.GetComponent<NavMeshAgent>().enabled = false;
-          Object.Destroy(e._Ragdoll.Transform.gameObject);
-        }
-      if (EnemyScript._Enemies_dead != null)
-        foreach (var e in EnemyScript._Enemies_dead)
-        {
-          if (e._IsZombie)
-          {
-            Object.Destroy(e.transform.parent.gameObject);
-            continue;
-          }
-          e.enabled = false;
-          var controller = e.transform.parent.GetChild(0);
-          controller.position = e._startPosition;
-          var controller_visual = GiveEnemyVisual(ref controller);
-          ChangeEnemyType(e, controller_visual.GetComponent<MeshRenderer>());
-          controller.GetComponent<NavMeshAgent>().enabled = false;
-          Object.Destroy(e._Ragdoll.Transform.gameObject);
+          if (enemy._Ragdoll != null)
+            UnityEngine.Object.Destroy(enemy._Ragdoll.Transform.gameObject);
         }
     }
-    // If survival, don't save enemy positions
-    else
-    {
-      if (EnemyScript._Enemies_alive != null)
-        foreach (var e in EnemyScript._Enemies_alive)
-          Object.Destroy(e.transform.parent.gameObject);
-      if (EnemyScript._Enemies_dead != null)
-        foreach (var e in EnemyScript._Enemies_dead)
-          Object.Destroy(e.transform.parent.gameObject);
-    }
-    // Clear ragdolls
-    ActiveRagdoll.Reset();
 
     // Show player spawn
     foreach (var s in PlayerspawnScript._PlayerSpawns)
@@ -2592,7 +2557,7 @@ public class TileManager
     if (_Pointer == null)
     {
       _Pointer = GameObject.CreatePrimitive(PrimitiveType.Sphere).transform;
-      Object.Destroy(_Pointer.GetComponent<Collider>());
+      UnityEngine.Object.Destroy(_Pointer.GetComponent<Collider>());
       _Pointer.gameObject.name = "Pointer";
       _Pointer.parent = GameScript.s_Singleton.transform;
       _Pointer.gameObject.layer = 2;
@@ -2617,7 +2582,7 @@ public class TileManager
       _LineRenderers = new LineRenderer[4];
       for (int i = 0; i < _LineRenderers.Length; i++)
       {
-        GameObject lr = new GameObject("lr" + i);
+        GameObject lr = new("lr" + i);
         _LineRenderers[i] = lr.AddComponent<LineRenderer>();
         _LineRenderers[i].alignment = LineAlignment.TransformZ;
         _LineRenderers[i].startWidth = 0.2f;
@@ -2634,11 +2599,11 @@ public class TileManager
 
     // Remove combined meshes and enable tile renderers
     var meshes = GameObject.Find("Meshes_Tiles_Up");
-    if (meshes) Object.Destroy(meshes);
+    if (meshes) UnityEngine.Object.Destroy(meshes);
     meshes = GameObject.Find("Meshes_Tiles_Down");
-    if (meshes) Object.Destroy(meshes);
+    if (meshes) UnityEngine.Object.Destroy(meshes);
     meshes = GameObject.Find("Meshes_Tiles_Sides");
-    if (meshes) Object.Destroy(meshes);
+    if (meshes) UnityEngine.Object.Destroy(meshes);
     foreach (var t in _Tiles)
     {
       if (t == null) continue;
@@ -2787,7 +2752,7 @@ public class TileManager
 
   #region LEOs
   static LevelEditorObject
-    _LEO_Tile = new LevelEditorObject("Tile", LevelEditorObject._UpdateSelectFunction_Tile,
+    _LEO_Tile = new("Tile", LevelEditorObject._UpdateSelectFunction_Tile,
       null, null, null, null, null, null,
       g =>
       {
@@ -2798,7 +2763,7 @@ public class TileManager
         UpdateText();
       }),
 
-    _LEO_Goal = new LevelEditorObject("Goal",
+    _LEO_Goal = new("Goal",
       g =>
       {
         LevelEditorObject._UpdateFunction_Object(g);
@@ -2865,12 +2830,12 @@ public class TileManager
         UpdateText();
       }),
 
-    _LEO_Enemy = new LevelEditorObject("Enemy", g =>
+    _LEO_Enemy = new("Enemy", g =>
     {
       // Normal select / deselect
       LevelEditorObject._UpdateFunction_Object(g);
       if (_SelectedObject == null) return;
-      var script_enemy = (LevelEditorObject.GetCurrentObject()._name.Equals("Enemy") ? _SelectedObject.GetChild(0) : _SelectedObject.parent).GetComponent<EnemyScript>();
+      var script_enemy = EnemyScript.s_Enemies[LevelEditorObject.GetCurrentObject()._name.Equals("Enemy") ? _SelectedObject.GetChild(0).GetEntityId() : _SelectedObject.parent.GetEntityId()];
 
       // Check for change type
       if (ControllerManager.GetKey(Key.T))
@@ -2969,21 +2934,30 @@ public class TileManager
       new LevelEditorObject.CopySettings(),
       new LevelEditorObject.AddSettings()
       {
-        _data = "e_0_0_li_knife",
+        _data = "e_0_0_li_knife_canmove_true_canhear_true",
         _onAdd = g =>
         {
           // Set enemy color and give visual for editor
           Transform controller = g.transform.GetChild(0),
             visual = GiveEnemyVisual(ref controller).transform;
-          ChangeEnemyType(controller.GetComponent<EnemyScript>(), visual.GetComponent<MeshRenderer>());
+          ChangeEnemyType(EnemyScript.s_Enemies[controller.GetEntityId()], visual.GetComponent<MeshRenderer>());
         }
       },
-      new LevelEditorObject.DeleteSettings(),
+      new LevelEditorObject.DeleteSettings()
+      {
+        _onDelete = g =>
+        {
+          var enemyController = g.transform.GetChild(0);
+          var enemy = EnemyScript.s_Enemies[enemyController.GetEntityId()];
+          EnemyScript.s_Enemies.Remove(enemyController.GetEntityId());
+          enemy.Destroy();
+        }
+      },
       null,
       g =>
       {
         if (g == null || _SelectedObject == null) return;
-        EnemyScript s = (LevelEditorObject.GetCurrentObject()._name.Equals("Enemy") ? _SelectedObject.GetChild(0) : _SelectedObject.parent).GetComponent<EnemyScript>();
+        EnemyScript s = EnemyScript.s_Enemies[LevelEditorObject.GetCurrentObject()._name.Equals("Enemy") ? _SelectedObject.GetChild(0).GetEntityId() : _SelectedObject.parent.GetEntityId()];
         if (s == null) return;
         ClearText();
         _text.Add(string.Format("Type (T): {0}", s._itemLeft));
@@ -3037,7 +3011,7 @@ public class TileManager
       _hide = true
     },
 
-    _LEO_EnemyVisual = new LevelEditorObject("Enemy_visual",
+    _LEO_EnemyVisual = new("Enemy_visual",
       _LEO_Enemy._update,
       new LevelEditorObject.MovementSettings()
       {
@@ -3054,17 +3028,18 @@ public class TileManager
       },
       new LevelEditorObject.AddSettings()
       {
-        _data = "e_0_0_li_knife",
+        _data = "e_0_0_li_knife_canmove_true_canhear_true",
         _onAdd = _LEO_Enemy._addSettings._onAdd
       },
       new LevelEditorObject.DeleteSettings()
       {
-        _target = LevelEditorObject.TransformTarget.PARENT_PARENT
+        _target = LevelEditorObject.TransformTarget.PARENT_PARENT,
+        _onDelete = _LEO_Enemy._deleteSettings._onDelete
       },
       null,
       _LEO_Enemy._textDisplayFunction),
 
-    _LEO_EnemyWaypoint = new LevelEditorObject("Waypoint",
+    _LEO_EnemyWaypoint = new("Waypoint",
       g =>
       {
         LevelEditorObject._UpdateFunction_Object(g);
@@ -3095,7 +3070,7 @@ public class TileManager
         UpdateText();
       }),
 
-    _LEO_EnemyLookpoint = new LevelEditorObject("Lookpoint", LevelEditorObject._UpdateFunction_Object, new LevelEditorObject.MovementSettings()
+    _LEO_EnemyLookpoint = new("Lookpoint", LevelEditorObject._UpdateFunction_Object, new LevelEditorObject.MovementSettings()
     {
       _axis = LevelEditorObject.Axis.Z
     },
@@ -3109,7 +3084,7 @@ public class TileManager
       null,
       null),
 
-    _LEO_ExplosiveBarrel = new LevelEditorObject("ExplosiveBarrel", LevelEditorObject._UpdateFunction_Object,
+    _LEO_ExplosiveBarrel = new("ExplosiveBarrel", LevelEditorObject._UpdateFunction_Object,
       new LevelEditorObject.MovementSettings()
       {
         _localPos = -0.9f
@@ -3136,7 +3111,7 @@ public class TileManager
       },
       null),
 
-    _LEO_ExplosiveBarrelMesh = new LevelEditorObject("ExplosiveBarrel_Mesh", LevelEditorObject._UpdateFunction_Object,
+    _LEO_ExplosiveBarrelMesh = new("ExplosiveBarrel_Mesh", LevelEditorObject._UpdateFunction_Object,
       new LevelEditorObject.MovementSettings()
       {
         _target = LevelEditorObject.TransformTarget.PARENT,
@@ -3161,7 +3136,7 @@ public class TileManager
       _hide = true
     },
 
-    _LEO_Button = new LevelEditorObject("Button", g =>
+    _LEO_Button = new("Button", g =>
     {
       LevelEditorObject._UpdateFunction_Object(g);
       if (_SelectedObject != null)
@@ -3216,7 +3191,7 @@ public class TileManager
         UpdateText();
       }),
 
-    _LEO_Door = new LevelEditorObject("Door",
+    _LEO_Door = new("Door",
       g =>
       {
         LevelEditorObject._UpdateFunction_Object(g);
@@ -3256,7 +3231,7 @@ public class TileManager
         UpdateText();
       }),
 
-    _LEO_DoorDoor = new LevelEditorObject("Door_Obstacle", _LEO_Door._update,
+    _LEO_DoorDoor = new("Door_Obstacle", _LEO_Door._update,
       new LevelEditorObject.MovementSettings()
       {
         _target = LevelEditorObject.TransformTarget.PARENT_PARENT,
@@ -3282,7 +3257,7 @@ public class TileManager
       _hide = true
     },
 
-    _LEO_DoorBottom = new LevelEditorObject("Door_Under", _LEO_Door._update,
+    _LEO_DoorBottom = new("Door_Under", _LEO_Door._update,
       new LevelEditorObject.MovementSettings()
       {
         _target = LevelEditorObject.TransformTarget.PARENT_PARENT,
@@ -3308,7 +3283,7 @@ public class TileManager
       _hide = true
     },
 
-    _LEO_Laser = new LevelEditorObject("Laser",
+    _LEO_Laser = new("Laser",
       g =>
       {
         LevelEditorObject._UpdateFunction_Object(g);
@@ -3374,7 +3349,7 @@ public class TileManager
         UpdateText();
       }),
 
-    _LEO_LaserMachine = new LevelEditorObject("Machine", _LEO_Laser._update,
+    _LEO_LaserMachine = new("Machine", _LEO_Laser._update,
       new LevelEditorObject.MovementSettings()
       {
         _target = LevelEditorObject.TransformTarget.PARENT
@@ -3401,7 +3376,7 @@ public class TileManager
       _hide = true
     },
 
-    _LEO_Playerspawn = new LevelEditorObject("PlayerSpawn",
+    _LEO_Playerspawn = new("PlayerSpawn",
       g =>
       {
         LevelEditorObject._UpdateFunction_Object(g);
@@ -3421,7 +3396,7 @@ public class TileManager
       null
     ),
 
-    _LEO_Table = new LevelEditorObject("Table", LevelEditorObject._UpdateFunction_Object,
+    _LEO_Table = new("Table", LevelEditorObject._UpdateFunction_Object,
       new LevelEditorObject.MovementSettings()
       {
         _localPos = -0.6f
@@ -3436,7 +3411,7 @@ public class TileManager
       LevelEditorObject._SaveFunction_PosRot,
       null),
 
-    _LEO_TableSmall = new LevelEditorObject("TableSmall", LevelEditorObject._UpdateFunction_Object,
+    _LEO_TableSmall = new("TableSmall", LevelEditorObject._UpdateFunction_Object,
       new LevelEditorObject.MovementSettings()
       {
         _localPos = -1f
@@ -3451,7 +3426,7 @@ public class TileManager
       LevelEditorObject._SaveFunction_PosRot,
       null),
 
-    _LEO_Chair = new LevelEditorObject("Chair", LevelEditorObject._UpdateFunction_Object,
+    _LEO_Chair = new("Chair", LevelEditorObject._UpdateFunction_Object,
       new LevelEditorObject.MovementSettings()
       {
         _localPos = -0.96f
@@ -3466,7 +3441,7 @@ public class TileManager
       LevelEditorObject._SaveFunction_PosRot,
       null),
 
-    _LEO_BookcaseClosed = new LevelEditorObject("BookcaseClosed", LevelEditorObject._UpdateFunction_Object,
+    _LEO_BookcaseClosed = new("BookcaseClosed", LevelEditorObject._UpdateFunction_Object,
       new LevelEditorObject.MovementSettings()
       {
         _localPos = -1.34f
@@ -3481,7 +3456,7 @@ public class TileManager
       LevelEditorObject._SaveFunction_PosRot,
       null),
 
-    _LEO_RugRectangle = new LevelEditorObject("RugRectangle", LevelEditorObject._UpdateFunction_Object,
+    _LEO_RugRectangle = new("RugRectangle", LevelEditorObject._UpdateFunction_Object,
       new LevelEditorObject.MovementSettings()
       {
         _localPos = -1.2f
@@ -3496,7 +3471,7 @@ public class TileManager
       LevelEditorObject._SaveFunction_PosRotCustom,
       null),
 
-    _LEO_BookcaseOpen = new LevelEditorObject("BookcaseOpen", LevelEditorObject._UpdateFunction_Object,
+    _LEO_BookcaseOpen = new("BookcaseOpen", LevelEditorObject._UpdateFunction_Object,
       new LevelEditorObject.MovementSettings()
       {
         _localPos = 0f
@@ -3511,7 +3486,7 @@ public class TileManager
       LevelEditorObject._SaveFunction_PosRotCustom,
       null),
 
-    _LEO_BookcaseBig = new LevelEditorObject("BookcaseBig", LevelEditorObject._UpdateFunction_Object,
+    _LEO_BookcaseBig = new("BookcaseBig", LevelEditorObject._UpdateFunction_Object,
       new LevelEditorObject.MovementSettings()
       {
         _localPos = -1.32f
@@ -3526,7 +3501,7 @@ public class TileManager
       LevelEditorObject._SaveFunction_PosRot,
       null),
 
-    _LEO_Barrel = new LevelEditorObject("Barrel", LevelEditorObject._UpdateFunction_Object,
+    _LEO_Barrel = new("Barrel", LevelEditorObject._UpdateFunction_Object,
       new LevelEditorObject.MovementSettings()
       {
         _localPos = -1.35f
@@ -3541,7 +3516,7 @@ public class TileManager
       LevelEditorObject._SaveFunction_PosRot,
       null),
 
-    _LEO_Column = new LevelEditorObject("Column", LevelEditorObject._UpdateFunction_Object,
+    _LEO_Column = new("Column", LevelEditorObject._UpdateFunction_Object,
       new LevelEditorObject.MovementSettings()
       {
         _localPos = -1.37f
@@ -3556,7 +3531,7 @@ public class TileManager
       LevelEditorObject._SaveFunction_PosRot,
       null),
 
-    _LEO_ColumnBroken = new LevelEditorObject("ColumnBroken", LevelEditorObject._UpdateFunction_Object,
+    _LEO_ColumnBroken = new("ColumnBroken", LevelEditorObject._UpdateFunction_Object,
       new LevelEditorObject.MovementSettings()
       {
         _localPos = -1.35f
@@ -3571,7 +3546,7 @@ public class TileManager
       LevelEditorObject._SaveFunction_PosRot,
       null),
 
-    _LEO_Rock0 = new LevelEditorObject("Rock0", LevelEditorObject._UpdateFunction_Object,
+    _LEO_Rock0 = new("Rock0", LevelEditorObject._UpdateFunction_Object,
       new LevelEditorObject.MovementSettings()
       {
         _localPos = -1.19f
@@ -3586,7 +3561,7 @@ public class TileManager
       LevelEditorObject._SaveFunction_PosRot,
       null),
 
-    _LEO_Rock1 = new LevelEditorObject("Rock1", LevelEditorObject._UpdateFunction_Object,
+    _LEO_Rock1 = new("Rock1", LevelEditorObject._UpdateFunction_Object,
       new LevelEditorObject.MovementSettings()
       {
         _localPos = -1.3f
@@ -3601,7 +3576,7 @@ public class TileManager
       LevelEditorObject._SaveFunction_PosRot,
       null),
 
-    _LEO_CandelBig = new LevelEditorObject("CandelBig", LevelEditorObject._UpdateFunction_Object,
+    _LEO_CandelBig = new("CandelBig", LevelEditorObject._UpdateFunction_Object,
       new LevelEditorObject.MovementSettings()
       {
         _localPos = -1.1f
@@ -3616,7 +3591,7 @@ public class TileManager
       LevelEditorObject._SaveFunction_PosRotCustom,
       null),
 
-    _LEO_CandelTable = new LevelEditorObject("CandelTable", LevelEditorObject._UpdateFunction_Object,
+    _LEO_CandelTable = new("CandelTable", LevelEditorObject._UpdateFunction_Object,
       new LevelEditorObject.MovementSettings()
       {
         _localPos = -0.491f
@@ -3631,7 +3606,7 @@ public class TileManager
       LevelEditorObject._SaveFunction_PosRotCustom,
       null),
 
-    _LEO_CandelBarrel = new LevelEditorObject("CandelBarrel", LevelEditorObject._UpdateFunction_Object,
+    _LEO_CandelBarrel = new("CandelBarrel", LevelEditorObject._UpdateFunction_Object,
       new LevelEditorObject.MovementSettings()
       {
         _localPos = -0.5f
@@ -3646,7 +3621,7 @@ public class TileManager
       LevelEditorObject._SaveFunction_PosRotCustom,
       null),
 
-    _LEO_TV = new LevelEditorObject("Television", LevelEditorObject._UpdateFunction_Object,
+    _LEO_TV = new("Television", LevelEditorObject._UpdateFunction_Object,
       new LevelEditorObject.MovementSettings()
       {
         _localPos = -0.1f
@@ -3662,7 +3637,7 @@ public class TileManager
       null
     ),
 
-    _LEO_Books = new LevelEditorObject("Books", LevelEditorObject._UpdateFunction_Object,
+    _LEO_Books = new("Books", LevelEditorObject._UpdateFunction_Object,
       new LevelEditorObject.MovementSettings()
       {
         _localPos = -0.5f
@@ -3678,7 +3653,7 @@ public class TileManager
       null
     ),
 
-    _LEO_Placeable_Middle = new LevelEditorObject("Placeable", LevelEditorObject._UpdateFunction_Object,
+    _LEO_Placeable_Middle = new("Placeable", LevelEditorObject._UpdateFunction_Object,
       new LevelEditorObject.MovementSettings()
       {
         _localPos = -0.5f
@@ -3694,7 +3669,7 @@ public class TileManager
       null
     ),
 
-    _LEO_NavMeshBarrier = new LevelEditorObject("NavMeshBarrier", LevelEditorObject._UpdateFunction_Object,
+    _LEO_NavMeshBarrier = new("NavMeshBarrier", LevelEditorObject._UpdateFunction_Object,
       new LevelEditorObject.MovementSettings()
       {
         _localPos = -1.34f
@@ -3709,7 +3684,7 @@ public class TileManager
       LevelEditorObject._SaveFunction_PosRot,
       null),
 
-    _LEO_Interactable = new LevelEditorObject("Interactable", LevelEditorObject._UpdateFunction_Object,
+    _LEO_Interactable = new("Interactable", LevelEditorObject._UpdateFunction_Object,
       new LevelEditorObject.MovementSettings()
       {
         _localPos = -0.5f
@@ -3724,7 +3699,7 @@ public class TileManager
       LevelEditorObject._SaveFunction_PosRotCustom,
       null),
 
-    _LEO_FakeTile = new LevelEditorObject("FakeTile", LevelEditorObject._UpdateFunction_Object,
+    _LEO_FakeTile = new("FakeTile", LevelEditorObject._UpdateFunction_Object,
       new LevelEditorObject.MovementSettings()
       {
         _localPos = 1.601f
@@ -3739,7 +3714,7 @@ public class TileManager
       LevelEditorObject._SaveFunction_PosRot,
       null),
 
-     _LEO_TileWall = new LevelEditorObject("TileWall", LevelEditorObject._UpdateFunction_Object,
+     _LEO_TileWall = new("TileWall", LevelEditorObject._UpdateFunction_Object,
       new LevelEditorObject.MovementSettings()
       {
         _localPos = -3.3f
@@ -3755,7 +3730,7 @@ public class TileManager
       null),
 
 
-    _LEO_Arch = new LevelEditorObject("Arch", LevelEditorObject._UpdateFunction_Object,
+    _LEO_Arch = new("Arch", LevelEditorObject._UpdateFunction_Object,
       new LevelEditorObject.MovementSettings()
       {
         _localPos = -1.35f
@@ -3842,6 +3817,7 @@ public class TileManager
     public class DeleteSettings
     {
       public TransformTarget _target;
+      public Action<GameObject> _onDelete;
     }
     public class AddSettings
     {
@@ -4183,7 +4159,7 @@ public class TileManager
     {
       GameScript.s_EditorEnabled = false;
       //if (_EditorEnabled) StartCoroutine(TileManager.EditorEnabled());
-      string mapdata = SaveMap();
+      var mapdata = SaveMap();
       EditorDisabled(mapdata);
       SaveFileOverwrite(mapdata);
 
@@ -4391,7 +4367,7 @@ public class TileManager
             if (co == null)
               _SelectedObject.gameObject.AddComponent<CustomObstacle>();
             else
-              Object.DestroyImmediate(_SelectedObject.gameObject.GetComponent<CustomObstacle>());
+              UnityEngine.Object.DestroyImmediate(_SelectedObject.gameObject.GetComponent<CustomObstacle>());
             //ClearText();
             //UpdateText();
           }
@@ -4467,8 +4443,9 @@ public class TileManager
         {
 
           // Remove from alive
-          var enemyScript = delete_target.GetChild(0).GetComponent<EnemyScript>();
+          var enemyScript = EnemyScript.s_Enemies[delete_target.GetChild(0).GetEntityId()];
           EnemyScript._Enemies_alive.Remove(enemyScript);
+          //EnemyScript.s_Enemies.Remove(enemyScript.transform.GetEntityId());
 
           // Check if linked to any doors
           enemyScript?._linkedDoor?.UnregisterEnemy(enemyScript);
@@ -4480,6 +4457,13 @@ public class TileManager
             canDelete = false;
         }
 
+        else if (LevelEditorObject.GetCurrentObject()._name == _LEO_EnemyLookpoint._name || LevelEditorObject.GetCurrentObject()._name == _LEO_EnemyWaypoint._name)
+        {
+          // Make sure not last lookpoint/waypoint
+          var waypoint = delete_target.parent;
+          canDelete = waypoint.childCount > 1;
+        }
+
         // Delete LEO
         if (canDelete)
         {
@@ -4489,7 +4473,10 @@ public class TileManager
             PlayerspawnScript._PlayerSpawns.Remove(playerspawnScript);
           }
 
-          Object.Destroy(delete_target.gameObject);
+          if (deleteSettings._onDelete != null)
+            deleteSettings._onDelete(delete_target.gameObject);
+          else
+            UnityEngine.Object.Destroy(delete_target.gameObject);
           _CurrentMode = EditorMode.NONE;
           _SelectedObject = null;
           _Ring.position = new Vector3(0f, -100f, 0f);
@@ -4591,7 +4578,7 @@ public class TileManager
     var copy_target = LevelEditorObject.GetTransformTarget(copySettings._target);
 
     // Copy the item
-    var copy = Object.Instantiate(copy_target.gameObject).transform;
+    var copy = UnityEngine.Object.Instantiate(copy_target.gameObject).transform;
 
     // Initialize local variables
     copy.name = copy_target.name;
@@ -4957,7 +4944,7 @@ public class TileManager
       if (type.Trim().Length == 0 || type == "bdt")
         continue;
 
-      Vector3 position = new Vector3(split[2].ParseFloatInvariant(), split[1].ParseFloatInvariant(), 0f),
+      Vector3 position = new(split[2].ParseFloatInvariant(), split[1].ParseFloatInvariant(), 0f),
         scale = new Vector3(2.5f, 2.5f, 0.1f) / 3f;
       Transform object_new = null;
       switch (type)
@@ -5153,9 +5140,6 @@ public class TileManager
       if (pos.x < leastPosition.x) leastPosition.x = pos.x;
       if (pos.y < leastPosition.y) leastPosition.y = pos.y;
     }
-    //leastPosition.x += ((height + heightBorder)) * 2.5f - (2.5f / 2f);
-    //GameObject.Destroy(background.gameObject);
-    //GameObject.Destroy(container_objects.gameObject);
     foreach (var child in objects)
       child.localPosition += new Vector3(-height / 2f * 2.5f - (2.5f * 0.5f), -width / 2f * 2.5f, 0f);
 
@@ -5167,7 +5151,7 @@ public class TileManager
     container.parent = Menu.s_Text.transform;
     if (GameScript._lp0 != null && GameScript._lp0.gameObject != null)
     {
-      Object.Destroy(GameScript._lp0.gameObject);
+      UnityEngine.Object.Destroy(GameScript._lp0.gameObject);
       GameScript._lp0 = null;
     }
 
@@ -5208,7 +5192,7 @@ public class TileManager
         )
       {
         if (GameScript._lp0 != null)
-          Object.Destroy(GameScript._lp0.gameObject);
+          UnityEngine.Object.Destroy(GameScript._lp0.gameObject);
         getout = true;
       }
       if (getout) break;
@@ -5261,7 +5245,7 @@ public class TileManager
     {
       _Moving = true;
       // Seperate tiles into arrays based on if it's moving up or down; Also turn off BoxColliders so the NavMesh can be generated faster
-      List<Tile> tiles_up = new List<Tile>(), tiles_down = new List<Tile>();
+      List<Tile> tiles_up = new(), tiles_down = new();
       foreach (Tile t in tiles)
       {
         t._tile.transform.parent = _Map;
@@ -5273,8 +5257,8 @@ public class TileManager
         tiles_up.Add(t);
       }
       // Get positions for down and up
-      Vector3 pos_up = new Vector3(0f, _StartY + _AddY, 0f),
-       pos_down = new Vector3(0f, _StartY, 0f);
+      Vector3 pos_up = new(0f, _StartY + _AddY, 0f),
+       pos_down = new(0f, _StartY, 0f);
 
       if (!GameScript.s_EditorEnabled)
       {

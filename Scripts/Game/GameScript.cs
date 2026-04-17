@@ -10,7 +10,6 @@ using Assets.Scripts.Ragdoll.Equippables;
 using Assets.Scripts.Settings;
 using Assets.Scripts.Settings.Localization;
 using Assets.Scripts.Settings.Serialization;
-using Assets.Scripts.UI;
 using Assets.Scripts.UI.Menus;
 using Assets.Scripts.XR;
 using UnityEngine;
@@ -600,6 +599,11 @@ public class GameScript : MonoBehaviour
     // Update controllers
     ControllerManager.Update();
 
+    // Update players
+    if (PlayerScript.s_Players != null)
+      foreach (var player in PlayerScript.s_Players)
+        player?.Update();
+
     // Update enemies
     EnemyScript.UpdateEnemies();
 
@@ -798,6 +802,7 @@ public class GameScript : MonoBehaviour
               {
                 string mapdata = TileManager.SaveMap();
                 TileManager.EditorDisabled(mapdata);
+
                 // Save map to map file and reload map selections
                 TileManager.SaveFileOverwrite(mapdata);
               }
@@ -1035,14 +1040,6 @@ public class GameScript : MonoBehaviour
     }
     if (!toggle) s_CameraLight.enabled = false;
     _movecam = null;
-  }
-
-  public static void ResetObjects()
-  {
-    EnemyScript.Reset();
-    ExplosiveScript.Reset();
-    Powerup.Reset();
-    ActiveRagdoll.SoftReset();
   }
 
   public static float _LastPause;

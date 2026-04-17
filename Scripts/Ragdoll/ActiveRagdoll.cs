@@ -7,7 +7,6 @@ using System;
 using Random = UnityEngine.Random;
 using Assets.Scripts.Settings;
 using Assets.Scripts.Settings.Serialization;
-using Assets.Scripts.UI;
 using Assets.Scripts.Objects;
 using Assets.Scripts.Objects.CustomEntities;
 using Assets.Scripts.Game.Items;
@@ -169,17 +168,17 @@ namespace Assets.Scripts.Ragdoll
       */
     }
 
-    public ActiveRagdoll(GameObject ragdoll, Transform follow)
+    public ActiveRagdoll(GameObject ragdoll, Transform controller, PlayerScript playerScript, EnemyScript enemyScript)
     {
       // Assign unique ID
       _Id = s_ID++;
 
       // Add to static _Ragdolls list
-      if (s_Ragdolls == null) s_Ragdolls = new List<ActiveRagdoll>();
+      s_Ragdolls ??= new();
       s_Ragdolls.Add(this);
 
       // Defaults
-      _Controller = follow;
+      _Controller = controller;
 #if UNITY_EDITOR
       ragdoll.name = "Ragdoll";
 #endif
@@ -203,8 +202,8 @@ namespace Assets.Scripts.Ragdoll
       _renderer.sharedMaterials = new Material[] { s_Materials_Ragdoll[_Id].Item1, s_Materials_Ragdoll[_Id].Item2 };
 
       // Register enemy / player script
-      _EnemyScript = follow.GetComponent<EnemyScript>();
-      _PlayerScript = follow.GetComponent<PlayerScript>();
+      _EnemyScript = enemyScript;
+      _PlayerScript = playerScript;
 
       // Set default health
       _health = 1;
@@ -693,7 +692,7 @@ namespace Assets.Scripts.Ragdoll
           yield return new WaitForSecondsRealtime(0.05f);
         }
       }
-      _EnemyScript.StartCoroutine(delayDisable());
+      GameScript.s_Singleton.StartCoroutine(delayDisable());
     }
 
     // Invisibility
@@ -1645,7 +1644,7 @@ namespace Assets.Scripts.Ragdoll
         {
           var graplee = _grapplee;
           Grapple(true);
-          graplee?._EnemyScript?.OnGrapplerRemoved();
+          graplee?._EnemyScript?.OnGrapplerRemoved(this);
         }
     }
 
@@ -2128,7 +2127,7 @@ namespace Assets.Scripts.Ragdoll
 
       rb.interpolation = RigidbodyInterpolation.Interpolate;
       rb.isKinematic = false;
-      rb.AddForce(hitForce * 0.8f, ForceMode.Impulse);
+      rb.AddForce(hitForce.normalized * 4f, ForceMode.Impulse);
       rb.AddTorque(new Vector3(1f, 0f, 0f) * 50f, ForceMode.Impulse);
 
       _head.transform.localScale = new Vector3(1f, 1f, 1f);
@@ -2260,55 +2259,8 @@ namespace Assets.Scripts.Ragdoll
       }
     }
 
-    /*[BurstCompile]
-    struct GetRagdollJob : IJob
-    {
-      public int _id;
-      [ReadOnly]
-      public NativeArray<int> _ids;
-      public NativeArray<int> _index;
-
-      public void Execute()
-      {
-        for (; _index[0] < _ids.Length;)
-        {
-          if (_id == _ids[_index[0]])
-            return;
-          _index[0]++;
-        }
-        _index[0] = -1;
-      }
-    }*/
-
-    public static void Jobs_Init()
-    {
-      /*_GetRagdollJob = new GetRagdollJob();
-      _GetRagdollJob._ids = new NativeArray<int>(_Parts.ToArray(), Allocator.Persistent);
-      _GetRagdollJob._index = new NativeArray<int>(1, Allocator.Persistent);*/
-    }
-    public static void Jobs_Clean()
-    {
-      /*_GetRagdollJob._ids.Dispose();
-      _GetRagdollJob._index.Dispose();*/
-    }
-
-    //static GetRagdollJob _GetRagdollJob;
     public static ActiveRagdoll GetRagdoll(GameObject o)
     {
-      /*/ Return if null parameters
-      if (_Ragdolls == null || o == null) return null;
-      // Set up job parameters
-      _GetRagdollJob._id = o.GetInstanceID();
-      _GetRagdollJob._index[0] = 0;
-      // Schedule and complete the job
-      JobHandle handle = _GetRagdollJob.Schedule();
-      handle.Complete();
-      // Read output
-      int index = _GetRagdollJob._index[0];
-      // Use output
-      if (index == -1)
-        return null;
-      return _Ragdolls[index / 11];*/
       foreach (var r in s_Ragdolls)
         if (r.IsSelf(o)) return r;
       return null;
@@ -2469,12 +2421,28 @@ namespace Assets.Scripts.Ragdoll
       SfxManager.PlayAudioSourceSimple(_Controller.position, soundPath, min, max, audioClass, changePitch);
     }
 
+    public void Destroy()
+    {
+      _PlayerScript = null;
+      _EnemyScript = null;
+      if (_Controller != null)
+        UnityEngine.Object.Destroy(_Controller.parent.gameObject);
+    }
+
     public static void Reset()
     {
+      if (s_Ragdolls != null)
+      {
+        for (var i = s_Ragdolls.Count - 1; i > -1; i--)
+        {
+          var ragdoll = s_Ragdolls[i];
+          ragdoll.Destroy();
+        }
+        s_Ragdolls = null;
+      }
       s_ID = 0;
-      s_Ragdolls = null;
+
       Rigidbody_Handler.Reset();
-      Jobs_Clean();
       SfxManager.Reset();
       UtilityScript.Reset();
     }
@@ -2485,16 +2453,15 @@ namespace Assets.Scripts.Ragdoll
       // Remove current ragdolls if dead
       for (var i = s_Ragdolls.Count - 1; i > 0; i--)
       {
-        var r = s_Ragdolls[i];
-        if (r._IsDead && r._IsPlayer)
+        var ragdoll = s_Ragdolls[i];
+        if (ragdoll._IsDead && ragdoll._IsPlayer)
         {
-          s_Ragdolls.Remove(r);
-          PlayerScript.s_Players.Remove(r._PlayerScript);
-          if (r._Controller == null)
-            continue;
-          UnityEngine.Object.Destroy(r._Controller.parent.gameObject);
+          s_Ragdolls.Remove(ragdoll);
+          PlayerScript.s_Players.Remove(ragdoll._PlayerScript);
+          ragdoll.Destroy();
         }
       }
+
       // Add players' ragdolls
       s_Ragdolls.Clear();
       foreach (var p in PlayerScript.s_Players)

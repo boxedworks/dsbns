@@ -1,7 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using Assets.Scripts.Objects;
-using Assets.Scripts.Ragdoll;
 using Assets.Scripts.Settings;
 using Assets.Scripts.Settings.Serialization;
 using Assets.Scripts.Game.Items;
@@ -1203,7 +1202,7 @@ namespace Assets.Scripts.Ragdoll.Equippables
           // Normal ring behavior
           else
           {
-            if (!_mesh.activeSelf && _ragdoll != null)
+            if (!_mesh.activeSelf && _ragdoll != null && _ragdoll._transform_parts._hip != null)
               ringPos = _ragdoll._transform_parts._hip.position;
             else
               ringPos = transform.position;

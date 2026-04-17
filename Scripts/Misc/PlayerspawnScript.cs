@@ -74,8 +74,7 @@ public class PlayerspawnScript : MonoBehaviour
     player.transform.parent = GameObject.Find("Players").transform;
     player.name = "Player";
 
-    var playerScript = player.transform.GetChild(0).GetComponent<PlayerScript>();
-    playerScript._PlayerSpawnId = spawnId;
+    var playerScript = new PlayerScript(player.transform.GetChild(0), spawnId);
 
     // Spawn them based on the this transform
     var spawnPosition = atPosition;
