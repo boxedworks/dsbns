@@ -45,7 +45,7 @@ public static class GameResources
 
   public static bool _Loaded;
 
-  public static Transform _Container_Objects, _UI_Player, s_Backrooms, s_Sounds,
+  public static Transform _Container_Objects, _UI, _UI_Player, _Menu, _UI_Survival, _UI_Classic, s_Backrooms, s_Sounds,
 
   _XrLeft, _XrRight;
 
@@ -139,7 +139,12 @@ public static class GameResources
     _CameraFader = GameObject.Find("Fader").GetComponent<MeshRenderer>();
 
     _Container_Objects = GameObject.Find("Objects").transform;
-    _UI_Player = GameObject.Find("UI").transform.GetChild(1);
+
+    _UI = _Camera_Main.transform.GetChild(0);
+    _UI_Player = _UI.GetChild(1);
+    _Menu = _UI.GetChild(2);
+    _UI_Survival = _UI.GetChild(3);
+    _UI_Classic = _UI.GetChild(4);
 
     _Armor = Resources.Load("Armor") as GameObject;
     _Crown = Resources.Load("Crown") as GameObject;

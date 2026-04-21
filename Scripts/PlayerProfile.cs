@@ -6,6 +6,7 @@ using Assets.Scripts.Settings;
 using Assets.Scripts.Settings.Serialization;
 using Assets.Scripts.UI.Menus;
 using UnityEngine;
+using Valve.VR;
 
 // Assists with controls
 public class PlayerProfile
@@ -545,25 +546,40 @@ public class PlayerProfile
     if (!Menu.s_InMenus)
       return;
 
-    // Check axis selections
-    var gamepad = ControllerManager.GetPlayerGamepad(_Id);
-    if (gamepad != null)
+    // Check vr controller
+    if (GameScript.s_IsVr)
     {
-      if (gamepad.dpad.left.wasPressedThisFrame)
+      var swapLoadoutLeftAction = SteamVR_Actions.Menu.SwapLoadoutLeft;
+      if (swapLoadoutLeftAction.stateDown)
+        _LoadoutIndex--;
+      var swapLoadoutRightAction = SteamVR_Actions.Menu.SwapLoadoutRight;
+      if (swapLoadoutRightAction.stateDown)
+        _LoadoutIndex++;
+    }
+
+    // Check gamepad axis selections
+    else
+    {
+      var gamepad = ControllerManager.GetPlayerGamepad(_Id);
+      if (gamepad != null)
       {
-        if (Menu.s_CurrentMenu._Type == Menu.MenuType.VERSUS)
-          VersusMode.IncrementPlayerTeam(_Id, -1);
-        else
-          _LoadoutIndex--;
-      }
-      if (gamepad.dpad.right.wasPressedThisFrame)
-      {
-        if (Menu.s_CurrentMenu._Type == Menu.MenuType.VERSUS)
-          VersusMode.IncrementPlayerTeam(_Id, 1);
-        else
-          _LoadoutIndex++;
+        if (gamepad.dpad.left.wasPressedThisFrame)
+        {
+          if (Menu.s_CurrentMenu._Type == Menu.MenuType.VERSUS)
+            VersusMode.IncrementPlayerTeam(_Id, -1);
+          else
+            _LoadoutIndex--;
+        }
+        if (gamepad.dpad.right.wasPressedThisFrame)
+        {
+          if (Menu.s_CurrentMenu._Type == Menu.MenuType.VERSUS)
+            VersusMode.IncrementPlayerTeam(_Id, 1);
+          else
+            _LoadoutIndex++;
+        }
       }
     }
+
   }
 
   void Up()

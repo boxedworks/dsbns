@@ -205,7 +205,11 @@ namespace Assets.Scripts.UI.Menus
 
             // Fire on created event
             if (_dropdownOnCreated != null && iter < _dropdownOnCreated.Length)
+            {
               _dropdownOnCreated[iter]?.Invoke(_menu._MenuComponent_last);
+
+              _menu._DropdownSpawnTime = Time.time;
+            }
 
             // Set selection index to first dropdown selection
             if (_menu._MenuComponent_last._textColor == "white")

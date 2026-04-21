@@ -233,6 +233,14 @@ public class GameScript : MonoBehaviour
     var args = Environment.GetCommandLineArgs();
     s_IsVr = false;//true;//Array.Exists(args, element => element.Equals("-vr", StringComparison.OrdinalIgnoreCase));
 
+    // Move player ui into hands
+    var handLeft = GameResources._XrLeft;
+    var handRight = GameResources._XrRight;
+
+    var playerUi = GameResources._UI_Player;
+
+    //var
+
     if (!s_IsVr)
     {
       Application.runInBackground = false;
@@ -248,24 +256,29 @@ public class GameScript : MonoBehaviour
       StartCoroutine(ManualXRControl.StartXRCoroutine(() =>
       {
         // Adjust UI for VR mode
-        var ui = GameResources._UI_Player.parent;
-        ui.parent = s_Singleton.transform;
-        ui.localScale = new Vector3(0.8f, 0.8f, 0.8f);
+        var menu = GameResources._Menu;
+        menu.parent = s_Singleton.transform;
+        menu.localScale = new Vector3(0.8f, 0.8f, 0.8f);
 
-        GameResources._Camera_Main.transform.parent.localScale = new Vector3(30f, 30f, 30f);
-        GameResources._Camera_Main.nearClipPlane = 0.01f;
+        var camera = GameResources._Camera_Main;
+        camera.transform.parent.localScale = new Vector3(30f, 30f, 30f);
+        camera.nearClipPlane = 0.01f;
+
+        // Move ammo / time to left hand
+
 
         // Enable vr scripts
-        GameResources._Camera_Main.transform.parent.GetComponent<SteamVR_PlayArea>().enabled = true;
-        GameResources._Camera_Main.GetComponent<SteamVR_CameraHelper>().enabled = true;
-        GameResources._XrLeft.GetComponent<SteamVR_Behaviour_Pose>().enabled = true;
-        GameResources._XrLeft.GetChild(0).GetComponent<SteamVR_RenderModel>().enabled = true;
-        GameResources._XrRight.GetComponent<SteamVR_Behaviour_Pose>().enabled = true;
-        GameResources._XrRight.GetChild(0).GetComponent<SteamVR_RenderModel>().enabled = true;
+        camera.transform.parent.GetComponent<SteamVR_PlayArea>().enabled = true;
+        camera.GetComponent<SteamVR_CameraHelper>().enabled = true;
+        handLeft.GetComponent<SteamVR_Behaviour_Pose>().enabled = true;
+        handLeft.GetChild(0).GetComponent<SteamVR_RenderModel>().enabled = true;
+        handRight.GetComponent<SteamVR_Behaviour_Pose>().enabled = true;
+        handRight.GetChild(0).GetComponent<SteamVR_RenderModel>().enabled = true;
 
         //
         SteamVR_Actions.Player.Activate();
         SteamVR_Actions.Menu.Activate();
+        SteamVR_Actions.Zombie.Activate();
 
         //
         ManualXRControl.Recenter();

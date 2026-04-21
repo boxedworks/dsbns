@@ -4460,8 +4460,8 @@ public class TileManager
         else if (LevelEditorObject.GetCurrentObject()._name == _LEO_EnemyLookpoint._name || LevelEditorObject.GetCurrentObject()._name == _LEO_EnemyWaypoint._name)
         {
           // Make sure not last lookpoint/waypoint
-          var waypoint = delete_target.parent;
-          canDelete = waypoint.childCount > 1;
+          var parent = delete_target.parent;
+          canDelete = parent.childCount > 1;
         }
 
         // Delete LEO

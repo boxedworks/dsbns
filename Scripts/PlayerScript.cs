@@ -747,7 +747,8 @@ public class PlayerScript : PlayerScript.IHasRagdoll
             {
               if (player._ragdoll != null && !player._ragdoll._IsDead)
               {
-                onealive = true; break;
+                onealive = true;
+                break;
               }
             }
             if (!onealive && !GameScript.s_IsPartyGameMode) desiredTimeScale = 0f;
@@ -1200,6 +1201,35 @@ public class PlayerScript : PlayerScript.IHasRagdoll
       else if (utilityRightAction.stateUp)
         HandleAction(PlayerAction.RightUtilityUp);
 
+      // Swap loadouts
+      var swapLoadoutLeftAction = SteamVR_Actions.Menu.SwapLoadoutLeft;
+      if (swapLoadoutLeftAction.stateDown)
+        HandleAction(PlayerAction.SwapLoadoutLeft);
+      var swapLoadoutRightAction = SteamVR_Actions.Menu.SwapLoadoutRight;
+      if (swapLoadoutRightAction.stateDown)
+        HandleAction(PlayerAction.SwapLoadoutRight);
+
+      // Intetact
+      var interactAction = SteamVR_Actions.Zombie.Interact;
+      if (interactAction.stateDown)
+        HandleAction(PlayerAction.Interact);
+
+      // Whistle
+      var whistleAction = SteamVR_Actions.Player.Whistle;
+      if (whistleAction.stateDown)
+        HandleAction(PlayerAction.Whistle);
+
+      // Start / end grapple (gentle)
+      var grappleAction = SteamVR_Actions.Player.Grapple;
+      if (
+        !_ragdoll._IsDead &&
+        _ragdoll._CanGrapple &&
+        grappleAction.stateDown
+      )
+      {
+        HandleAction(PlayerAction.GrappleGentle);
+      }
+
       // Gather move direction
       var moveAction = SteamVR_Actions.Player.Move;
       var moveDir = moveAction.GetAxis(SteamVR_Input_Sources.Any);
@@ -1335,7 +1365,7 @@ public class PlayerScript : PlayerScript.IHasRagdoll
           ControllerManager.GetMouseInput(2, ControllerManager.InputMode.UP)
           )
         {
-          _ragdoll.Grapple(true);
+          HandleAction(PlayerAction.GrappleGentle);
         }
 
         // End grapple (violently)
@@ -1343,11 +1373,11 @@ public class PlayerScript : PlayerScript.IHasRagdoll
         {
           if (_isLeftTwin)
             if (_ragdoll._ItemL == null && ControllerManager.GetMouseInput(0, ControllerManager.InputMode.UP))
-              _ragdoll.Grapple(false);
+              HandleAction(PlayerAction.Grapple);
 
           if (_isRightTwin)
             if (_ragdoll._ItemR == null && ControllerManager.GetMouseInput(1, ControllerManager.InputMode.UP))
-              _ragdoll.Grapple(false);
+              HandleAction(PlayerAction.Grapple);
         }
 
       }
@@ -1508,7 +1538,7 @@ public class PlayerScript : PlayerScript.IHasRagdoll
 
         // Swap weapon hands
         else if (gamepad.dpad.up.wasReleasedThisFrame)
-          HandleDpadDirection(0);
+          HandleAction(PlayerAction.SwapWeaponHands);
 
         // Buy specific weapon
         var dpadHoldTime = 0.6f;
@@ -1554,7 +1584,7 @@ public class PlayerScript : PlayerScript.IHasRagdoll
         if (!GameScript.s_IsPartyGameMode || (GameScript.s_IsPartyGameMode && VersusMode.s_PlayersCanMove))
         {
 
-          // Start grapple
+          // Start /end grapple (gentle)
           var grappleButton = _isRightTwin ? gamepad.rightStickButton : gamepad.leftStickButton;
           if (
             !_ragdoll._IsDead &&
@@ -1563,18 +1593,6 @@ public class PlayerScript : PlayerScript.IHasRagdoll
           )
           {
             HandleAction(PlayerAction.GrappleGentle);
-          }
-
-          // End grapple (violently)
-          if (_ragdoll._IsGrappling)
-          {
-            if (_isLeftTwin)
-              if (_ragdoll._ItemL == null && gamepad.leftTrigger.wasReleasedThisFrame)
-                HandleAction(PlayerAction.Grapple);
-
-            if (_isRightTwin)
-              if (_ragdoll._ItemR == null && gamepad.rightTrigger.wasReleasedThisFrame)
-                HandleAction(PlayerAction.Grapple);
           }
 
           // Start kick
@@ -1693,6 +1711,9 @@ public class PlayerScript : PlayerScript.IHasRagdoll
     SwapLoadout,
     SwapWeaponHands,
 
+    SwapLoadoutLeft,
+    SwapLoadoutRight,
+
     Grapple,
     GrappleGentle,
 
@@ -1700,9 +1721,16 @@ public class PlayerScript : PlayerScript.IHasRagdoll
     KickEnd,
 
     Interact,
+    Whistle,
+
   }
   void HandleAction(PlayerAction action)
   {
+    if (Menu.s_InMenus)
+      return;
+    if (_ragdoll?._IsDead ?? true)
+      return;
+
     //Debug.Log(action);
     switch (action)
     {
@@ -1738,12 +1766,20 @@ public class PlayerScript : PlayerScript.IHasRagdoll
           _ragdoll.UseRightUp();
         else
           _ragdoll.UseLeftUp();
+
+        if (_ragdoll._IsGrappling)
+          if (_isRightTwin && _ragdoll._ItemR == null)
+            HandleAction(PlayerAction.Grapple);
         break;
       case PlayerAction.RightWeaponUp:
         if (!_ragdoll._ItemR)
           _ragdoll.UseLeftUp();
         else
           _ragdoll.UseRightUp();
+
+        if (_ragdoll._IsGrappling)
+          if (_isLeftTwin && _ragdoll._ItemL == null)
+            HandleAction(PlayerAction.Grapple);
         break;
 
       case PlayerAction.LeftUtilityDown:
@@ -1771,6 +1807,13 @@ public class PlayerScript : PlayerScript.IHasRagdoll
         _Profile.UpdateIcons();
         break;
 
+      case PlayerAction.SwapLoadoutLeft:
+        HandleDpadDirection(2);
+        break;
+      case PlayerAction.SwapLoadoutRight:
+        HandleDpadDirection(3);
+        break;
+
       case PlayerAction.Grapple:
         _ragdoll.Grapple(false);
         break;
@@ -1796,6 +1839,10 @@ public class PlayerScript : PlayerScript.IHasRagdoll
           Achievements.UnlockAchievement(Achievements.Achievement.TABLE_FLIP);
 #endif
         }
+        break;
+
+      case PlayerAction.Whistle:
+        Whistle();
         break;
     }
   }
@@ -2076,7 +2123,6 @@ public class PlayerScript : PlayerScript.IHasRagdoll
     {
       // Up
       case 0:
-        HandleAction(PlayerAction.SwapWeaponHands);
         break;
 
       // Down
@@ -2091,7 +2137,7 @@ public class PlayerScript : PlayerScript.IHasRagdoll
 
         // If classic, whistle
         else
-          Whistle();
+          HandleAction(PlayerAction.Whistle);
         break;
 
       // Left

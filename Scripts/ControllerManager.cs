@@ -78,29 +78,34 @@ public static class ControllerManager
     if (GameScript.s_IsVr)
     {
 
-      var menuSelectState = SteamVR_Actions.Menu.Select.stateDown;
-      if (menuSelectState)
-        MenuSelect();
+      if (Menu.s_InMenus)
+      {
+        var menuSelectState = SteamVR_Actions.Menu.Select.stateDown;
+        if (menuSelectState)
+          MenuSelect();
 
-      var menuBackState = SteamVR_Actions.Menu.Back.stateDown;
-      if (menuBackState)
-        MenuBack();
+        var menuBackState = SteamVR_Actions.Menu.Back.stateDown;
+        if (menuBackState)
+          MenuBack();
 
-      var menuUpState = SteamVR_Actions.Menu.Up.stateDown;
-      if (menuUpState)
-        MenuUp();
+        var menuUpState = SteamVR_Actions.Menu.Up.stateDown;
+        if (menuUpState)
+          MenuUp();
 
-      var menuDownState = SteamVR_Actions.Menu.Down.stateDown;
-      if (menuDownState)
-        MenuDown();
+        var menuDownState = SteamVR_Actions.Menu.Down.stateDown;
+        if (menuDownState)
+          MenuDown();
+      }
+      else
+      {
+        var reloadState = SteamVR_Actions.Menu.ReloadMap.stateDown;
+        if (reloadState)
+          ReloadMap();
+      }
 
       var menuPauseState = SteamVR_Actions.Menu.Pause.stateDown;
       if (menuPauseState)
         TogglePause();
-
-      var reloadState = SteamVR_Actions.Menu.ReloadMap.stateDown;
-      if (reloadState)
-        ReloadMap();
     }
   }
 

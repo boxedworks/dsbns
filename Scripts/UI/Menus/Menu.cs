@@ -9,6 +9,7 @@ using Assets.Scripts.Ragdoll.Equippables;
 using Assets.Scripts.Settings;
 using Assets.Scripts.Settings.Serialization;
 using UnityEngine;
+using Valve.VR;
 
 namespace Assets.Scripts.UI.Menus
 {
@@ -190,7 +191,7 @@ namespace Assets.Scripts.UI.Menus
       _DropdownParentIndex;
 
     // Time the menu has been on screen
-    public float _TimeDisplayed;
+    public float _TimeDisplayed, _DropdownSpawnTime;
 
     bool _canSkip, _canSlowLoad;
 
@@ -754,13 +755,16 @@ namespace Assets.Scripts.UI.Menus
       // Show mission editor menu
       if (GameScript.s_UsingSteam)
       {
-        main_menu.AddComponent("mission editor\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-          .AddEvent(component =>
-          {
-            CommonEvents._SwitchMenu(MenuType.EDITOR_MAIN);
+        if (GameScript.s_IsVr)
+          main_menu.AddComponent("mission editor (disabled in vr)\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE, _COLOR_GRAY);
+        else
+          main_menu.AddComponent("mission editor\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
+            .AddEvent(component =>
+            {
+              CommonEvents._SwitchMenu(MenuType.EDITOR_MAIN);
 
-            SettingsHelper.OnGamemodeChanged(SettingsHelper.GamemodeChange.LEVEL_EDITOR);
-          });
+              SettingsHelper.OnGamemodeChanged(SettingsHelper.GamemodeChange.LEVEL_EDITOR);
+            });
       }
 #endif
       // Show options menu
@@ -3129,7 +3133,7 @@ namespace Assets.Scripts.UI.Menus
 
       // Mode selection menu
       var format_mode = "{0,-10} - {1,-50}\n";
-      new Menu(MenuType.MODE_SELECTION)
+      var menuMode = new Menu(MenuType.MODE_SELECTION)
       {
 
       }
@@ -3180,21 +3184,24 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
           return;
 #endif
           component._obscured = !ShopHelper.Unlocked(ShopHelper.Unlocks.MODE_ZOMBIE);
-        })
+        });
 
       // Switch to versus mode menu
-      .AddComponent(string.Format(format_mode, "party", "versus\n"), MenuComponent.ComponentType.BUTTON_SIMPLE)
-        .AddEvent(component =>
-        {
-          Levels._CurrentLevelCollectionIndex = 4;
-          GameScript.s_GameMode = GameScript.GameModes.PARTY;
-          CommonEvents._SwitchMenu(MenuType.VERSUS);
+      if (GameScript.s_IsVr)
+        menuMode.AddComponent(string.Format(format_mode, "party", "disabled in vr\n"), MenuComponent.ComponentType.BUTTON_SIMPLE, _COLOR_GRAY);
+      else
+        menuMode.AddComponent(string.Format(format_mode, "party", "versus\n"), MenuComponent.ComponentType.BUTTON_SIMPLE)
+          .AddEvent(component =>
+          {
+            Levels._CurrentLevelCollectionIndex = 4;
+            GameScript.s_GameMode = GameScript.GameModes.PARTY;
+            CommonEvents._SwitchMenu(MenuType.VERSUS);
 
-          SettingsHelper.OnGamemodeChanged(SettingsHelper.GamemodeChange.VERSUS);
-        })
+            SettingsHelper.OnGamemodeChanged(SettingsHelper.GamemodeChange.VERSUS);
+          });
 
       // Back button
-      .AddBackButton(MenuType.MAIN)
+      menuMode.AddBackButton(MenuType.MAIN)
 
       // Fire event on menu switch; save last selected
       ._OnSwitchTo += () =>
@@ -5683,7 +5690,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
 
       // Options menu
       var format_options = "{0,-25}{1,28}\n";
-      new Menu(MenuType.OPTIONS)
+      var menu_options = new Menu(MenuType.OPTIONS)
       {
 
       }
@@ -5715,7 +5722,23 @@ go to the <color=yellow>SHOP</color> to buy something~1
 
       // Control options
       .AddComponent("controls\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-        .AddEvent(component => { CommonEvents._SwitchMenu(MenuType.CONTROLS); })
+        .AddEvent(component =>
+        {
+          if (GameScript.s_IsVr)
+          {
+            try
+            {
+              OpenVR.Input.OpenBindingUI(SteamVR_Settings.instance.editorAppKey, 0, 0, true);
+            }
+            catch
+            {
+              Debug.LogError("VR controls menu not found");
+            }
+          }
+          else
+            CommonEvents._SwitchMenu(MenuType.CONTROLS);
+        })
+
       .AddComponent("control options\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
         .AddEvent(component => { CommonEvents._SwitchMenu(MenuType.OPTIONS_CONTROLS); })
         .AddEvent(EventType.ON_RENDER, component =>
@@ -7081,7 +7104,11 @@ system will provide and configure all loadouts.~9
           });
 
           // Update dropdown data
-          component.SetDropdownData("force keyboard as controller - REMEMBER this setting\n\n", selections, actions, selection_match);
+          var vrText = "";
+          if (GameScript.s_IsVr)
+            vrText = "\n*disabled in VR";
+          var forceKeyboardText = $"force keyboard as controller - REMEMBER this setting{vrText}\n\n";
+          component.SetDropdownData(forceKeyboardText, selections, actions, selection_match);
         })
 
       // Force keyboard toggle
