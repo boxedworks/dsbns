@@ -111,7 +111,7 @@ namespace Assets.Scripts.UI.Menus
 
         s_maxHeight = value;
         var height = s_Menu.GetChild(2).GetComponent<BoxCollider>().size.y;
-        var distance = new Vector3(-6f, Mathf.Clamp(3.4f + (height * (s_maxHeight - s_StartMaxHeight)), 3.4f, 1000f), -3.03f) - s_Text.transform.localPosition;
+        var distance = new Vector3(-6f, Mathf.Clamp(3.4f + (height * (s_maxHeight - s_StartMaxHeight)), 3.4f, 1000f), -0.6f) - s_Text.transform.localPosition;
 
         // Move text and boxcolliders
         if (distance.magnitude == 0f) return;
@@ -528,7 +528,7 @@ namespace Assets.Scripts.UI.Menus
       s_InMenus = true;
 
       // Get menu text mesh
-      s_Text = GameObject.Find("Menu2").transform.GetChild(0).GetComponent<TextMesh>();
+      s_Text = GameResources._Menu.GetChild(0).GetComponent<TextMesh>();
 
       // Menu audio
       s_MenuAudio = new Dictionary<Noise, AudioSource>();
@@ -980,7 +980,7 @@ namespace Assets.Scripts.UI.Menus
                   // Remove menus
 
                   // Show editor menu
-                  TileManager.EditorMenus._Menu_EditorTesting.gameObject.SetActive(true);
+                  GameResources._UI_Editor_Testing.gameObject.SetActive(true);
                 }
                 else
                 {
@@ -5279,8 +5279,8 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
 
             // Check editing
             if (GameScript.s_EditorTesting)
-              if (GameScript.s_EditorEnabled) TileManager.EditorMenus._Menu_Editor.gameObject.SetActive(true);
-              else TileManager.EditorMenus._Menu_EditorTesting.gameObject.SetActive(true);
+              if (GameScript.s_EditorEnabled) GameResources._UI_Editor.gameObject.SetActive(true);
+              else GameResources._UI_Editor_Testing.gameObject.SetActive(true);
           });
 
         if (Levels._HardcodedLoadout != null && !GameScript.s_EditorTesting)
@@ -6805,7 +6805,7 @@ www.reddit.com/u/quaterniusdev
           credits += $"<color={_COLOR_GRAY}>{musicCredit.ToLower()}</color>, kevin macleod (incompetech.com)\nlicensed under creative commons: by attribution 3.0\nhttp://creativecommons.org/licenses/by/3.0/\n\n";
 
         s_Text.text = credits;
-        s_Text.transform.localPosition = new Vector3(-6f, -3.5f, -3.03f);
+        s_Text.transform.localPosition = new Vector3(-6f, -3.5f, -0.6f);
         if (FunctionsC.MusicManager.s_CurrentTrack != 2)
           FunctionsC.MusicManager.TransitionTo(2);
 
@@ -6814,7 +6814,7 @@ www.reddit.com/u/quaterniusdev
           float t = 1f;
           while (t > 0f)
           {
-            s_Text.transform.localPosition = new Vector3(-6f, Mathf.Lerp(-3.5f, 30.15f, 1f - t), -3.03f);
+            s_Text.transform.localPosition = new Vector3(-6f, Mathf.Lerp(-3.5f, 30.15f, 1f - t), -0.6f);
             t -= 0.0001f * (ControllerManager.GetAnyButton() && t < 0.98f ? 20f : 1f);
             yield return new WaitForSecondsRealtime(0.01f);
           }

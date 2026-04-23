@@ -231,23 +231,18 @@ public class GameScript : MonoBehaviour
     GameResources.Init();
 
     var args = Environment.GetCommandLineArgs();
-    s_IsVr = false;//true;//Array.Exists(args, element => element.Equals("-vr", StringComparison.OrdinalIgnoreCase));
+    s_IsVr = true;//Array.Exists(args, element => element.Equals("-vr", StringComparison.OrdinalIgnoreCase));
 
-    // Move player ui into hands
     var handLeft = GameResources._XrLeft;
     var handRight = GameResources._XrRight;
-
-    var playerUi = GameResources._UI_Player;
-
-    //var
 
     if (!s_IsVr)
     {
       Application.runInBackground = false;
 
       // Disable XR objects
-      GameResources._XrLeft.gameObject.SetActive(false);
-      GameResources._XrRight.gameObject.SetActive(false);
+      handLeft.gameObject.SetActive(false);
+      handRight.gameObject.SetActive(false);
     }
     else
     {
@@ -255,17 +250,45 @@ public class GameScript : MonoBehaviour
 
       StartCoroutine(ManualXRControl.StartXRCoroutine(() =>
       {
-        // Adjust UI for VR mode
-        var menu = GameResources._Menu;
-        menu.parent = s_Singleton.transform;
-        menu.localScale = new Vector3(0.8f, 0.8f, 0.8f);
 
+        // Resize player acordingly
         var camera = GameResources._Camera_Main;
         camera.transform.parent.localScale = new Vector3(30f, 30f, 30f);
         camera.nearClipPlane = 0.01f;
 
-        // Move ammo / time to left hand
+        // Move player ui into hands
+        var menu = GameResources._Menu;
+        var menu_bg = menu.GetChild(1);
+        menu.parent = handLeft;
+        menu.localPosition = new Vector3(0f, 0f, 0.08f);
+        menu.localScale = new Vector3(0.02f, 0.02f, 0.02f);
 
+        menu_bg.localPosition = new Vector3(-0.1f, 0.38f, 0f);
+        menu_bg.localScale = new Vector3(12.2f, 6.2f, 1f);
+
+        // Move ammo / time to left hand
+        var playerUi = GameResources._UI_Player;
+        playerUi.parent = handLeft;
+        playerUi.localPosition = new Vector3(0.08f, 0f, -0.03f);
+        playerUi.localScale = new Vector3(0.023f, 0.023f, 0.023f);
+
+        // Missions mode ui
+        var classicUi = GameResources._UI_Classic;
+        classicUi.parent = handLeft;
+        classicUi.localPosition = new Vector3(0f, 0f, 0f);
+        classicUi.localScale = new Vector3(0.02f, 0.02f, 0.02f);
+
+        var text_levelNum = classicUi.GetChild(0);
+        var text_levelTimer = classicUi.GetChild(1);
+        var text_levelTimerBest = classicUi.GetChild(2);
+        var text_money = classicUi.GetChild(4);
+
+        text_levelNum.localPosition = text_levelTimer.localPosition = text_levelTimerBest.localPosition = text_money.localPosition = new Vector3(103.7f, -27.1f, 0f);
+        text_levelTimer.localPosition += new Vector3(0f, -0.45f, 0f);
+        text_levelTimerBest.localPosition += new Vector3(0f, -0.8f, 0f);
+
+        text_money.localPosition += new Vector3(-196.5f, 0f, 0f);
+        text_money.GetComponent<TMPro.TextMeshPro>().alignment = TMPro.TextAlignmentOptions.Left;
 
         // Enable vr scripts
         camera.transform.parent.GetComponent<SteamVR_PlayArea>().enabled = true;
@@ -919,7 +942,7 @@ public class GameScript : MonoBehaviour
               s_EditorEnabled = true;
               StartCoroutine(TileManager.EditorEnabled());
 
-              TileManager.EditorMenus._Menu_EditorTesting.gameObject.SetActive(false);
+              GameResources._UI_Editor_Testing.gameObject.SetActive(false);
             }
           }
 

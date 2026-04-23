@@ -56,7 +56,7 @@ public static class VersusMode
   {
     s_Settings = new();
 
-    s_announcementText = GameObject.Find("VersusUI").transform.GetChild(0).GetComponent<TMPro.TextMeshPro>();
+    s_announcementText = GameResources._UI_Versus.GetChild(0).GetComponent<TMPro.TextMeshPro>();
 
     s_playerTeams = new int[4];
 

@@ -279,10 +279,12 @@ namespace Assets.Scripts.UI.Menus
       _height = startHeight + height - 1;
       // Set collider
       var gameObject = new GameObject();
+#if UNITY_EDITOR
       gameObject.name = text;
+#endif
       gameObject.transform.parent = Menu.s_Menu;
       gameObject.transform.localEulerAngles = Vector3.zero;
-      gameObject.transform.localPosition = new Vector3(-5.87f, 3.2f, -3.1f);
+      gameObject.transform.localPosition = new Vector3(-5.87f, 3.2f, -0.6f);
       _collider = gameObject.AddComponent<BoxCollider>();
       var size = new Vector2(0.15f, 0.247f);
       _collider.size = new Vector3(size.x * width, size.y * height, 0.02f);

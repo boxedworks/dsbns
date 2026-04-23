@@ -160,8 +160,8 @@ public static class ControllerManager
         GameScript.TogglePause();
 
         // Check editing menus
-        if (GameScript.s_EditorEnabled) TileManager.EditorMenus._Menu_Editor.gameObject.SetActive(true);
-        else TileManager.EditorMenus._Menu_EditorTesting.gameObject.SetActive(true);
+        if (GameScript.s_EditorEnabled) GameResources._UI_Editor.gameObject.SetActive(true);
+        else GameResources._UI_Editor_Testing.gameObject.SetActive(true);
       }
       else if (!Menu.s_InMenus)
       {

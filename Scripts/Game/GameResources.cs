@@ -45,7 +45,7 @@ public static class GameResources
 
   public static bool _Loaded;
 
-  public static Transform _Container_Objects, _UI, _UI_Player, _Menu, _UI_Survival, _UI_Classic, s_Backrooms, s_Sounds,
+  public static Transform _Container_Objects, _UI, _UI_Editor, _UI_Editor_Testing, _UI_Player, _Menu, _UI_Survival, _UI_Classic, _UI_Versus, s_Backrooms, s_Sounds,
 
   _XrLeft, _XrRight;
 
@@ -145,6 +145,10 @@ public static class GameResources
     _Menu = _UI.GetChild(2);
     _UI_Survival = _UI.GetChild(3);
     _UI_Classic = _UI.GetChild(4);
+    _UI_Versus = _UI.GetChild(5);
+
+    _UI_Editor = GameObject.Find("Editor_UI").transform;
+    _UI_Editor_Testing = GameObject.Find("Editor_Testing_UI").transform;
 
     _Armor = Resources.Load("Armor") as GameObject;
     _Crown = Resources.Load("Crown") as GameObject;

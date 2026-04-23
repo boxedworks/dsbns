@@ -2187,7 +2187,6 @@ public class TileManager
   {
 
     public static RectTransform
-      _Menu_Editor,
       _Menu_Object_Select,
       _Menu_Infos,
       _Menu_Infos_Enemy,
@@ -2196,16 +2195,15 @@ public class TileManager
       _Menu_Infos_Goal,
       _Menu_Map_Rename,
       _Menu_Infos_Tile,
-      _Menu_Workshop_Infos,
+      _Menu_Workshop_Infos;
 
-
-      _Menu_EditorTesting;
+    static RectTransform _Menu_Editor { get { return GameResources._UI_Editor as RectTransform; } }
+    static RectTransform _Menu_EditorTesting { get { return GameResources._UI_Editor_Testing as RectTransform; } }
 
     // Init menus and buttons
     public static void Init()
     {
 
-      _Menu_Editor = GameObject.Find("Editor_UI").transform as RectTransform;
       _Menu_Object_Select = _Menu_Editor.transform.GetChild(0).transform as RectTransform;
       _Menu_Infos = _Menu_Editor.transform.GetChild(1).transform as RectTransform;
       _Menu_Infos_Enemy = _Menu_Editor.transform.GetChild(2).transform as RectTransform;
@@ -2216,8 +2214,6 @@ public class TileManager
 
       _Menu_Map_Rename = _Menu_Editor.transform.GetChild(3).transform as RectTransform;
       _Menu_Workshop_Infos = _Menu_Editor.transform.GetChild(8).transform as RectTransform;
-
-      _Menu_EditorTesting = GameObject.Find("Editor_Testing_UI").transform as RectTransform;
 
       HideMenus();
     }
@@ -4164,7 +4160,7 @@ public class TileManager
       SaveFileOverwrite(mapdata);
 
       // Show menu
-      EditorMenus._Menu_EditorTesting.gameObject.SetActive(true);
+      GameResources._UI_Editor_Testing.gameObject.SetActive(true);
     }
 
     // Basic editor shortcuts
