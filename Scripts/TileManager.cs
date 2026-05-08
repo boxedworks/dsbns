@@ -10,6 +10,7 @@ using Assets.Scripts.Ragdoll;
 using Assets.Scripts.Settings;
 using Assets.Scripts.Settings.Serialization;
 using Assets.Scripts.UI.Menus;
+using Assets.Scripts.XR;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -135,6 +136,21 @@ public class TileManager
   {
 
     //Debug.Log(spacingIndex);
+    if (_Positions_Monies == null)
+    {
+      var endPosition = GameScript.s_IsVr ? new Vector3(6.85f, -27.1f, _Text_Monies[0].transform.localPosition.z) : new Vector3(8.14f, -15.58f, _Text_Monies[0].transform.localPosition.z);
+      _Positions_Monies = new Vector3[]{
+
+        // Start positions
+        _Text_Monies[0].transform.localPosition,
+        _Text_Monies[1].transform.localPosition,
+        _Text_Monies[2].transform.localPosition,
+        _Text_Monies[3].transform.localPosition,
+
+        // End position
+        endPosition
+      };
+    }
 
     // Make sure UI / level is the same
     bool IsActive()
@@ -154,7 +170,7 @@ public class TileManager
         switch (spacingIndex)
         {
           case 1:
-            posStart.x = -6.37f;
+            posStart.x = GameScript.s_IsVr ? 6.4f : -6.37f;
             break;
         }
 
@@ -214,17 +230,6 @@ public class TileManager
         GameObject.Find("MoneyInstance1").GetComponent<TMPro.TextMeshPro>(),
         GameObject.Find("MoneyInstance2").GetComponent<TMPro.TextMeshPro>(),
         GameObject.Find("MoneyInstance3").GetComponent<TMPro.TextMeshPro>(),
-      };
-      _Positions_Monies = new Vector3[]{
-
-        // Start positions
-        _Text_Monies[0].transform.localPosition,
-        _Text_Monies[1].transform.localPosition,
-        _Text_Monies[2].transform.localPosition,
-        _Text_Monies[3].transform.localPosition,
-
-        // End position
-        new(8.14f, -15.58f, _Text_Monies[0].transform.localPosition.z)
       };
     }
 
@@ -890,7 +895,7 @@ public class TileManager
             GameScript._Coroutine_load = null;
             _LoadingMap = false;
 
-            throw new System.NullReferenceException("Error parsing object data: " + objectData);
+            throw new NullReferenceException("Error parsing object data: " + objectData);
           }
           else
           {
@@ -940,15 +945,7 @@ public class TileManager
       }
       else
       {
-        var xorigin = GameResources._Camera_Main.transform.parent;
-        var campos = xorigin.position;
-        campos.x = playerspawnpos.x;
-        campos.y = -10f;
-        campos.z = playerspawnpos.z + 3.6f;
-        xorigin.position = campos;
-
-        //var scale = 30f;
-        //xorigin.localScale = new Vector3(scale, scale, scale);
+        XRUIManager.UpdateCamera();
       }
 
       // Check special objects before build

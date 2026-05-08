@@ -40,6 +40,7 @@ namespace Assets.Scripts.Ragdoll
         Destroy(gameObject);
         return;
       }
+
       // Move text up
       transform.position += Vector3.up * Time.deltaTime * 1f;
 
@@ -59,6 +60,7 @@ namespace Assets.Scripts.Ragdoll
         scale = Vector3.Lerp(new Vector3(1f, 1f, 1f), Vector3.zero, Easings.Interpolate((time - middle) / (length - middle), Easings.Functions.CircularEaseIn));
       if (scale.x > 0f)
         transform.localScale = scale;
+
       // Destroy after 2 seconds
       if (time > length)
         Destroy(gameObject);
@@ -74,6 +76,19 @@ namespace Assets.Scripts.Ragdoll
       if (_bubbles == null) return;
       foreach (TextBubbleScript t in _bubbles)
         t._renderer.enabled = toggle;
+    }
+
+    public static TextBubbleScript SpawnBubbleWith(Transform transform, string text, Color color, float size = 0.75f)
+    {
+      var bubbleText = Instantiate(Resources.Load("TextBubble") as GameObject);
+      bubbleText.transform.parent = GameResources._Container_Objects;
+      bubbleText.transform.position = transform.position;
+
+      // Get the TextBubbleScript and init with text, position, and colot
+      var script = bubbleText.GetComponent<TextBubbleScript>();
+      script.Init(text, transform, color).fontSize = 3.5f * size;
+
+      return script;
     }
   }
 

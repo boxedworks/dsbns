@@ -98,8 +98,8 @@ public static class ControllerManager
       }
       else
       {
-        var reloadState = SteamVR_Actions.Menu.ReloadMap.stateDown;
-        if (reloadState)
+        var reloadMapState = SteamVR_Actions.Menu.ReloadMap.stateDown;
+        if (reloadMapState)
           ReloadMap();
       }
 
@@ -207,7 +207,7 @@ public static class ControllerManager
       p.ReloadMap();
     }
   }
-  static void ReloadMap()
+  public static void ReloadMap()
   {
     if (GameScript.s_IsPartyGameMode) return;
     if (!Menu.s_InMenus)

@@ -1638,7 +1638,7 @@ public class EnemyScript : PlayerScript.IHasRagdoll
   IEnumerator SuspiciousCo(Vector3 source, Loudness loudness, float wait)
   {
     yield return new WaitForSeconds(wait);
-    if (!(_agent?.enabled ?? false) || _ragdoll._IsDead) { }
+    if (_agent == null || !_agent.enabled || _ragdoll._IsDead) { }
     else
     {
       _waitAmount = 0f;

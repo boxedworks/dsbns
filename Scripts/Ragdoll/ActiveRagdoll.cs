@@ -481,7 +481,7 @@ namespace Assets.Scripts.Ragdoll
         // Use iter to move joints
         _movementIter += _Distance.magnitude / 3f * Time.deltaTime * 65f;
 
-        // Check melee movement
+        // Check melee quickstep
         var moveDir = (movePos - posSave).normalized;
         var martialArts = false;//HasTwohandedWeapon() || (_ItemL != null && _ItemR != null && _ItemL._type == _ItemR._type);
         if (
@@ -2280,16 +2280,10 @@ namespace Assets.Scripts.Ragdoll
         _bubbleScript._textMesh.text = text;
         return;
       }
-      // Create a new container for the text
-      GameObject g = UnityEngine.Object.Instantiate(Resources.Load("TextBubble") as GameObject);
-      g.transform.parent = GameResources._Container_Objects;
-      g.transform.position = _head.transform.position;
-      // Get the TextBubbleScript and init with text, position, and colot
-      TextBubbleScript bubbleScript = g.GetComponent<TextBubbleScript>();
-      bubbleScript.Init(text, _head.transform, _Color).fontSize = 3.5f * size;
+
       // Save for later
       _lastBubbleScriptTime = Time.time;
-      _bubbleScript = bubbleScript;
+      _bubbleScript = TextBubbleScript.SpawnBubbleWith(_head.transform, text, _Color, 0.75f);
     }
 
     void SetCollisionMode(CollisionDetectionMode mode)

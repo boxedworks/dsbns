@@ -16,6 +16,7 @@ using Assets.Scripts.Game.Items;
 using Valve.VR;
 using Assets.Scripts.FX;
 using Assets.Scripts.Ragdoll.Equippables;
+using Assets.Scripts.XR;
 
 public class PlayerScript : PlayerScript.IHasRagdoll
 {
@@ -1029,6 +1030,9 @@ public class PlayerScript : PlayerScript.IHasRagdoll
   }
 
   //
+  Vector2 _vr_currentMoveInput, _vr_currentLookInput;
+
+  //
   void HandleInput()
   {
     // Check if application is focused
@@ -1184,9 +1188,15 @@ public class PlayerScript : PlayerScript.IHasRagdoll
 
       var itemRightAction = SteamVR_Actions.Player.RightItem;
       if (itemRightAction.stateDown)
-        HandleAction(PlayerAction.RightWeaponDown);
+      {
+        if (!XRUIManager.s_HasControl)
+          HandleAction(PlayerAction.RightWeaponDown);
+      }
       else if (itemRightAction.stateUp)
-        HandleAction(PlayerAction.RightWeaponUp);
+      {
+        if (!XRUIManager.s_HasControl)
+          HandleAction(PlayerAction.RightWeaponUp);
+      }
 
       // Utilities
       var utilityLeftAction = SteamVR_Actions.Player.LeftUtility;
@@ -1233,14 +1243,46 @@ public class PlayerScript : PlayerScript.IHasRagdoll
       // Gather move direction
       var moveAction = SteamVR_Actions.Player.Move;
       var moveDir = moveAction.GetAxis(SteamVR_Input_Sources.Any);
-      x = moveDir.x;
-      y = moveDir.y;
 
       // Gather look direction
       var lookAction = SteamVR_Actions.Player.Look;
       var lookDir = lookAction.GetAxis(SteamVR_Input_Sources.Any);
-      x2 = lookDir.x;
-      y2 = lookDir.y;
+
+      // Compare with saved input to check if direction changed and normalize to camera
+      var deadzoneThreshold = 0.1f;
+      var deadzoneSetThreshold = 0.1f;
+
+      var camForward3 = GameResources._Camera_Main.transform.forward;
+      camForward3.y = 0f;
+      camForward3.Normalize();
+      var camForward = new Vector2(camForward3.x, camForward3.z);
+
+      var camRight3 = GameResources._Camera_Main.transform.right;
+      camRight3.y = 0f;
+      camRight3.Normalize();
+      var camRight = new Vector2(camRight3.x, camRight3.z);
+
+      if (moveDir.magnitude < deadzoneThreshold)
+      {
+        _vr_currentMoveInput = Vector2.zero;
+      }
+      if (
+        moveDir.magnitude > _vr_currentMoveInput.magnitude ||
+        //_vr_currentMoveInput.magnitude - moveDir.magnitude > deadzoneSetThreshold ||
+        (moveDir - _vr_currentMoveInput).magnitude > deadzoneSetThreshold
+        )
+      {
+        _vr_currentMoveInput = camForward * moveDir.y + camRight * moveDir.x;
+      }
+
+      _vr_currentLookInput = camForward * lookDir.y + camRight * lookDir.x;
+
+      //
+      x = _vr_currentMoveInput.x;
+      y = _vr_currentMoveInput.y;
+
+      x2 = _vr_currentLookInput.x;
+      y2 = _vr_currentLookInput.y;
     }
 
     // Check m&k controls
@@ -1641,19 +1683,6 @@ public class PlayerScript : PlayerScript.IHasRagdoll
     }
     var xy = new Vector2(x, y);
     var xy2 = new Vector2(x2, y2);
-
-    //     // Normalize input using camera forward
-    // #if UNITY_VR
-    //     var saveMag = xy.magnitude;
-    //     var cameraTransformed = GameResources._Camera_Main.transform.TransformDirection(new Vector3(xy.x, 0f, xy.y));
-    //     xy = new Vector2(cameraTransformed.x, cameraTransformed.z);
-    //     xy = xy.normalized * saveMag;
-    // #endif
-
-    //     var saveMag2 = xy2.magnitude;
-    //     var cameraTransformed2 = GameResources._Camera_Main.transform.TransformDirection(new Vector3(xy2.x, 0f, xy2.y));
-    //     xy2 = new Vector2(cameraTransformed2.x, cameraTransformed2.z);
-    //     xy2 = xy2.normalized * saveMag2;
 
     // Movespeed
     movespeed *= RUNSPEED *

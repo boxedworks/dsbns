@@ -75,6 +75,8 @@ public class GameScript : MonoBehaviour
 
   public static int s_GameId;
 
+  public XRUIManager _XrUiManager;
+
   public void OnApplicationQuit()
   {
     // Check window swap
@@ -231,7 +233,10 @@ public class GameScript : MonoBehaviour
     GameResources.Init();
 
     var args = Environment.GetCommandLineArgs();
-    s_IsVr = true;//Array.Exists(args, element => element.Equals("-vr", StringComparison.OrdinalIgnoreCase));
+    s_IsVr = Array.Exists(args, element => element.Equals("-vr", StringComparison.OrdinalIgnoreCase));
+#if UNITY_EDITOR
+    s_IsVr = true;
+#endif
 
     var handLeft = GameResources._XrLeft;
     var handRight = GameResources._XrRight;
@@ -251,10 +256,11 @@ public class GameScript : MonoBehaviour
       StartCoroutine(ManualXRControl.StartXRCoroutine(() =>
       {
 
-        // Resize player acordingly
+        //
+        _XrUiManager = new();
+
+        // Resize camera accordingly
         var camera = GameResources._Camera_Main;
-        camera.transform.parent.localScale = new Vector3(30f, 30f, 30f);
-        camera.nearClipPlane = 0.01f;
 
         // Move player ui into hands
         var menu = GameResources._Menu;
@@ -283,12 +289,21 @@ public class GameScript : MonoBehaviour
         var text_levelTimerBest = classicUi.GetChild(2);
         var text_money = classicUi.GetChild(4);
 
-        text_levelNum.localPosition = text_levelTimer.localPosition = text_levelTimerBest.localPosition = text_money.localPosition = new Vector3(103.7f, -27.1f, 0f);
+        var text_money0 = classicUi.GetChild(5);
+        var text_money1 = classicUi.GetChild(6);
+        var text_money2 = classicUi.GetChild(7);
+        var text_money3 = classicUi.GetChild(8);
+
+        text_levelNum.localPosition = text_levelTimer.localPosition = text_levelTimerBest.localPosition = new Vector3(103.7f, -27.1f, 0f);
         text_levelTimer.localPosition += new Vector3(0f, -0.45f, 0f);
         text_levelTimerBest.localPosition += new Vector3(0f, -0.8f, 0f);
 
-        text_money.localPosition += new Vector3(-196.5f, 0f, 0f);
-        text_money.GetComponent<TMPro.TextMeshPro>().alignment = TMPro.TextAlignmentOptions.Left;
+        text_money.localPosition = new Vector3(-92.8f, -27.1f, 0f);
+
+        text_money0.localPosition = new Vector3(6.25f, -28.44f, 0f);
+        text_money1.localPosition = new Vector3(6.25f, -28.71f, 0f);
+        text_money2.localPosition = new Vector3(6.25f, -28.98f, 0f);
+        text_money3.localPosition = new Vector3(6.25f, -29.25f, 0f);
 
         // Enable vr scripts
         camera.transform.parent.GetComponent<SteamVR_PlayArea>().enabled = true;
@@ -584,6 +599,11 @@ public class GameScript : MonoBehaviour
   void Update()
   {
 
+    //
+    if (s_IsVr)
+      _XrUiManager?.Update();
+
+    //
     if (s_ExitLightShow)
     {
       if (!s_ExitLight.enabled)
