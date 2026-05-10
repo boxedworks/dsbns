@@ -305,6 +305,21 @@ public class GameScript : MonoBehaviour
         text_money2.localPosition = new Vector3(6.25f, -28.98f, 0f);
         text_money3.localPosition = new Vector3(6.25f, -29.25f, 0f);
 
+        // Survival ui
+        var survivalUi = GameResources._UI_Survival;
+        survivalUi.parent = handLeft;
+        survivalUi.localPosition = Vector3.zero;
+        survivalUi.localScale = new Vector3(0.02f, 0.02f, 0.02f);
+
+        var text_playerScore = survivalUi.GetChild(0);
+        var text_wave = survivalUi.GetChild(1);
+
+        text_playerScore.localScale = Vector3.one;
+        text_playerScore.localPosition = new Vector3(13.72f, -5.37f, 0f);
+        text_playerScore.GetChild(0).localPosition = Vector3.zero;
+        text_wave.localPosition = new Vector3(2.42f, -3.62f, 0f);
+        text_wave.GetChild(0).localPosition = Vector3.zero;
+
         // Enable vr scripts
         camera.transform.parent.GetComponent<SteamVR_PlayArea>().enabled = true;
         camera.GetComponent<SteamVR_CameraHelper>().enabled = true;
@@ -1048,11 +1063,6 @@ public class GameScript : MonoBehaviour
     // Reload the map
     TileManager.ReloadMap();
     return true;
-  }
-
-  private void LateUpdate()
-  {
-    EnemyScript._RAYCOUNT = 0;
   }
 
   public static bool _Focused;

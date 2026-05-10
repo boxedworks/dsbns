@@ -6,12 +6,12 @@ namespace Assets.Scripts.XR
   public class XRCameraSettings
   {
     public Vector2 _Position;
-    public float _Height, _Size, _Pitch;
+    public float _Height, _Size, _Pitch, _YSpin;
 
     public XRCameraSettings()
     {
-      _Position = new Vector2(0f, -5f);
-      _Height = -10f;
+      _Position = new Vector2(0f, 0f);
+      _Height = 15f;// - GameResources._Camera_Main.transform.localPosition.y * 0.2f * _Size;
       _Size = 30f;
       _Pitch = 0f;
 
@@ -25,16 +25,23 @@ namespace Assets.Scripts.XR
       var xOrigin = camera.transform.parent;
       var cameraParent = xOrigin.parent;
 
+      float useSize = ((int)_Size) / 3 * 3;
+      if (useSize == 0f)
+        useSize = 0.5f;
+
       var playerspawnpos = PlayerspawnScript._PlayerSpawns[0].transform.position;
+      var mapCenter = TileManager._Floor.position;
+      cameraParent.rotation = Quaternion.Euler(_Pitch, _YSpin, 0f);
+      cameraParent.localScale = Vector3.one * useSize;
 
-      cameraParent.localScale = Vector3.one * _Size;
-      cameraParent.position = playerspawnpos + new Vector3(_Position.x, _Height - _Size, _Position.y);
+      var camPos = camera.transform.position;
+      var camDis = camPos - xOrigin.position;
+      xOrigin.position = mapCenter - camDis;
 
-      xOrigin.rotation = Quaternion.Euler(_Pitch, 0f, 0f);
+      xOrigin.position += new Vector3(_Position.x, _Height + _Size * 0.1f, _Position.y);
 
-      SetCameraClippingPlanes(0.05f, 35f + _Size * 0.5f);
+      SetCameraClippingPlanes(0.05f, 35f + useSize * 0.5f + _Height);
     }
-
     //
     static void SetCameraClippingPlanes(float near, float far)
     {

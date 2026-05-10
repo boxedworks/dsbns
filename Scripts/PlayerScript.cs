@@ -17,6 +17,7 @@ using Valve.VR;
 using Assets.Scripts.FX;
 using Assets.Scripts.Ragdoll.Equippables;
 using Assets.Scripts.XR;
+using System.Linq;
 
 public class PlayerScript : PlayerScript.IHasRagdoll
 {
@@ -1252,7 +1253,7 @@ public class PlayerScript : PlayerScript.IHasRagdoll
       var deadzoneThreshold = 0.1f;
       var deadzoneSetThreshold = 0.1f;
 
-      var camForward3 = GameResources._Camera_Main.transform.forward;
+      var camForward3 = GameResources._Camera_Main.transform.up;
       camForward3.y = 0f;
       camForward3.Normalize();
       var camForward = new Vector2(camForward3.x, camForward3.z);
@@ -2199,6 +2200,13 @@ public class PlayerScript : PlayerScript.IHasRagdoll
           _currentInteractable.Interact(this, CustomObstacle.InteractSide.RIGHT);
         break;
     }
+  }
+
+  public static void HandleDpadDirectionStatic(int playerId, int direction)
+  {
+    if (s_Players == null) return;
+    var player = s_Players.FirstOrDefault(p => p._Id == playerId);
+    player?.HandleDpadDirection(direction);
   }
 
   //

@@ -107,15 +107,25 @@ namespace Assets.Scripts.Game.Items
       public static string GetTip(GameScript.GameModes mode)
       {
         // Check modes
-        var array = mode == GameScript.GameModes.MISSIONS ? _Tips_Classic : (mode == GameScript.GameModes.ZOMBIE ? _Tips_Survival : _Tips_Versus);
+        var tipArray = mode == GameScript.GameModes.MISSIONS ? _Tips_Classic : (mode == GameScript.GameModes.ZOMBIE ? _Tips_Survival : _Tips_Versus);
         var mode_string = mode.ToString().ToLower();
         if (UnityEngine.Random.value <= 0.5f || mode == GameScript.GameModes.PARTY)
         {
-          array = _Tips_General;
+          tipArray = _Tips_General;
           mode_string = "general";
         }
+
         // Format tip
-        return string.Format("*tip(<color=yellow>{0}</color>): {1}", mode_string, array[UnityEngine.Random.Range(0, array.Length)]);
+        var selectedTip = "";
+        while (true)
+        {
+          selectedTip = tipArray[UnityEngine.Random.Range(0, tipArray.Length)];
+          if (GameScript.s_IsVr && !selectedTip.Contains("&"))
+            break;
+          else if (!GameScript.s_IsVr)
+            break;
+        }
+        return string.Format("*tip(<color=yellow>{0}</color>): {1}", mode_string, selectedTip);
       }
 
     }

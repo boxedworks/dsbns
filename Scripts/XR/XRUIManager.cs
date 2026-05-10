@@ -46,6 +46,10 @@ namespace Assets.Scripts.XR
       _pointerR.localPosition = Vector3.zero;
       _pointerR.localScale = Vector3.one * 0.02f;
 
+      var pointerLight = _pointerR.gameObject.AddComponent<Light>();
+      pointerLight.color = Color.red * Color.white;
+      pointerLight.shadows = LightShadows.Hard;
+
       var restartMapControls = _uiControls.GetChild(0);
       _buttonRestartMap = restartMapControls.GetChild(1);
 
@@ -115,6 +119,7 @@ namespace Assets.Scripts.XR
         controlFound = _hoveredControl != null;
       }
 
+      //_cameraSettings._Pitch = _cameraSettings._YSpin = 0f;
       if (controlFound)
       {
         if ((_dragControlX || _dragControlY) && _triggerToggle)
@@ -140,25 +145,29 @@ namespace Assets.Scripts.XR
             if (_hoveredControl.parent.name == _stylusPosition.parent.name)
             {
               var posClampVal = 15f;
+
+              // Translate input value based on camera rotation
+              var dir = Vector3.zero;
               if (isXAxisGreatest)
-              {
-                var val = _cameraSettings._Position.x;
-                val = Mathf.Clamp(val + normalizedValue * 0.2f, -posClampVal, posClampVal);
-                _cameraSettings._Position.x = val;
-              }
+                dir.x = normalizedValue;
               else
-              {
-                var val = _cameraSettings._Position.y;
-                val = Mathf.Clamp(val + normalizedValue * 0.2f, -posClampVal, posClampVal);
-                _cameraSettings._Position.y = val;
-              }
+                dir.z = normalizedValue;
+              dir = Quaternion.Euler(0f, _cameraSettings._YSpin, 0f) * dir * (_cameraSettings._Size < 3f ? 0.5f : 1f);
+
+              var val = _cameraSettings._Position.x;
+              val = Mathf.Clamp(val + dir.x * 0.2f, -posClampVal, posClampVal);
+              _cameraSettings._Position.x = val;
+
+              val = _cameraSettings._Position.y;
+              val = Mathf.Clamp(val + dir.z * 0.2f, -posClampVal, posClampVal);
+              _cameraSettings._Position.y = val;
             }
 
             // Size
             else if (_hoveredControl.parent.name == _stylusSize.parent.name)
             {
               var val = _cameraSettings._Size;
-              val = Mathf.Clamp(val + normalizedValue, 0.5f, 120f);
+              val = Mathf.Clamp(val - normalizedValue * 0.5f, 0.5f, 120f);
               _cameraSettings._Size = val;
             }
 
@@ -166,16 +175,31 @@ namespace Assets.Scripts.XR
             else if (_hoveredControl.parent.name == _stylusHeight.parent.name)
             {
               var val = _cameraSettings._Height;
-              val = Mathf.Clamp(val + normalizedValue, -10f, 60f);
+              val = Mathf.Clamp(val + normalizedValue * 0.4f, 0f, 50f);
               _cameraSettings._Height = val;
             }
 
             // Rotation
             else if (_hoveredControl.parent.name == _stylusRotation.parent.name)
             {
-              var val = _cameraSettings._Pitch;
-              val = Mathf.Clamp(val + normalizedValue, -90f, 90f);
-              _cameraSettings._Pitch = val;
+              if (isXAxisGreatest)
+              {
+                var val = _cameraSettings._YSpin;
+                val += normalizedValue * 1.3f;
+                if (val > 360f || val < -360f)
+                  val = 0f;
+                _cameraSettings._YSpin = val;
+                // _cameraSettings._YSpin = normalizedValue;
+              }
+              else
+              {
+                var val = _cameraSettings._Pitch;
+                val += normalizedValue * 0.6f;
+                if (val > 360f || val < -360f)
+                  val = 0f;
+                _cameraSettings._Pitch = val;
+                // _cameraSettings._Pitch = normalizedValue;
+              }
             }
 
             _cameraSettings.UpdateCamera();
@@ -229,15 +253,17 @@ namespace Assets.Scripts.XR
         )
       {
       }
-      else if (_hoveredControl.parent.name == _stylusPosition.parent.name)
+      else if (
+        _hoveredControl.parent.name == _stylusPosition.parent.name ||
+        _hoveredControl.parent.name == _stylusRotation.parent.name
+        )
       {
         _dragControlX = true;
         _dragControlY = true;
       }
       else if (
         _hoveredControl.parent.name == _stylusSize.parent.name ||
-        _hoveredControl.parent.name == _stylusHeight.parent.name ||
-        _hoveredControl.parent.name == _stylusRotation.parent.name
+        _hoveredControl.parent.name == _stylusHeight.parent.name
         )
       {
         _dragControlY = true;
@@ -255,15 +281,29 @@ namespace Assets.Scripts.XR
       {
         ControllerManager.ReloadMap();
       }
-      else if (_hoveredControl.parent.name == _buttonLoadoutLeft.parent.name)
+      else if (_hoveredControl.name == _buttonLoadoutLeft.name)
       {
-        var profile = PlayerProfile.s_Profiles[0];
-        profile._LoadoutIndex--;
+        if (GameScript.s_GameMode == GameScript.GameModes.ZOMBIE)
+        {
+          PlayerScript.HandleDpadDirectionStatic(0, 2);
+        }
+        else
+        {
+          var profile = PlayerProfile.s_Profiles[0];
+          profile._LoadoutIndex--;
+        }
       }
-      else if (_hoveredControl.parent.name == _buttonLoadoutRight.parent.name)
+      else if (_hoveredControl.name == _buttonLoadoutRight.name)
       {
-        var profile = PlayerProfile.s_Profiles[0];
-        profile._LoadoutIndex++;
+        if (GameScript.s_GameMode == GameScript.GameModes.ZOMBIE)
+        {
+          PlayerScript.HandleDpadDirectionStatic(0, 3);
+        }
+        else
+        {
+          var profile = PlayerProfile.s_Profiles[0];
+          profile._LoadoutIndex++;
+        }
       }
       else if (_hoveredControl.parent.name == _buttonResetUi.parent.name)
       {

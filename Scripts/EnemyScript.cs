@@ -116,7 +116,7 @@ public class EnemyScript : PlayerScript.IHasRagdoll
     _ragdoll.ToggleRaycasting(false, false);
   }
 
-  static public List<EnemyScript> _Enemies_alive, _Enemies_dead;
+  public static List<EnemyScript> _Enemies_alive, _Enemies_dead;
   public static Dictionary<EntityId, EnemyScript> s_Enemies;
   public static int _ID;
   public static int _MAX_RAGDOLLS_DEAD = 15, _MAX_RAGDOLLS_ALIVE = 40;
@@ -142,7 +142,7 @@ public class EnemyScript : PlayerScript.IHasRagdoll
   public bool _patroling, // Is enemy patrolling
     _targetFound, // Is the player found
     _targetInLOS, // Is the target (player) in LOS
-    _playerKnownWeapon, _playerKnownWeaponValue, // Is it known that the player has a weapon?
+    _playerKnownWeapon, // Is it known that the player has a weapon?
     _targetDirectlyInFront,
     _targetInFront,
     _canMove,
@@ -387,7 +387,6 @@ public class EnemyScript : PlayerScript.IHasRagdoll
           break;
 
         case ItemManager.Items.GRENADE_LAUNCHER:
-          _itemLeft = ItemManager.Items.GRENADE_LAUNCHER;
           _ragdoll.ChangeColor(Color.yellow);
           break;
       }
@@ -593,39 +592,42 @@ public class EnemyScript : PlayerScript.IHasRagdoll
         // Waiting
         else if (Time.time - _waitTimer < _waitAmount && (_state != State.PURSUIT))
         {
-          _atd = _waitAmount - (Time.time - _waitTimer);
-          waiting = true;
-
-          // Just started waiting
-          if (!saveWait && _state == State.SUSPICIOUS)
-            _waitLookPos = _lastKnownPos;
-
-          // Look around
-          if (!_patroling)
+          if (!_IsZombie)
           {
-            if (setstate)
+            _atd = _waitAmount - (Time.time - _waitTimer);
+            waiting = true;
+
+            // Just started waiting
+            if (!saveWait && _state == State.SUSPICIOUS)
+              _waitLookPos = _lastKnownPos;
+
+            // Look around
+            if (!_patroling)
             {
-              if (noPatrolWaitTurn)
+              if (setstate)
               {
-                //_waitLookPos = transform.position + (_state == State.SEARCHING ? -(transform.position - _lastKnownPos).normalized : transform.forward) * 2f + transform.right * 0.07f * (_strafeRight ? 1f : -1f);
-              }
-              else if (Time.time - _lookAroundT > noPartrolWaitTime)
-              {
-                _lookAroundT = Time.time;
-                SetRandomStrafe();
-                noPartrolWaitTime = 1f + Random.value * 4f;
+                if (noPatrolWaitTurn)
+                {
+                  //_waitLookPos = transform.position + (_state == State.SEARCHING ? -(transform.position - _lastKnownPos).normalized : transform.forward) * 2f + transform.right * 0.07f * (_strafeRight ? 1f : -1f);
+                }
+                else if (Time.time - _lookAroundT > noPartrolWaitTime)
+                {
+                  _lookAroundT = Time.time;
+                  SetRandomStrafe();
+                  noPartrolWaitTime = 1f + Random.value * 4f;
+                }
               }
             }
-          }
-          else if (Time.time - _lookAroundT > _PathScript.GetLookWait())
-          {
-            _lookAroundT = Time.time;
-            // Look in a direction
-            Turn();
-          }
+            else if (Time.time - _lookAroundT > _PathScript.GetLookWait())
+            {
+              _lookAroundT = Time.time;
+              // Look in a direction
+              Turn();
+            }
 
-          lookAtPos = _waitLookPos;
-          LookAt(lookAtPos);
+            lookAtPos = _waitLookPos;
+            LookAt(lookAtPos);
+          }
         }
 
         // Check states
@@ -1237,7 +1239,6 @@ public class EnemyScript : PlayerScript.IHasRagdoll
   }
 
   float _DIS;
-  public static int _RAYCOUNT;
   void Raycast()
   {
     if (_IsZombie)
@@ -1249,13 +1250,9 @@ public class EnemyScript : PlayerScript.IHasRagdoll
         SetRagdollTarget(closestPlayer._ragdoll);
       _DIS = closestPlayer._distance;
     }
-    else _DIS = FunctionsC.GetClosestTargetTo(_ragdoll, _ragdoll._Hip.position)._distance;
-    /*/ Try to limit Raycast calls via enemy number, distance, and Raycast function call number
-    if (!_targetInLOS && !_targetInFront && (_Enemies.Count - _NumDead) > 8)
-    {
-        if (_DIS > 10f) return;
-        if (_RAYCOUNT++ > 15) return;
-    }*/
+    else
+      _DIS = FunctionsC.GetClosestTargetTo(_ragdoll, _ragdoll._Hip.position)._distance;
+
     {
       _rayTimer = Time.time;
       RaycastHit h;
@@ -1353,7 +1350,7 @@ public class EnemyScript : PlayerScript.IHasRagdoll
           _targetDirectlyInFront = false;
           _targetInFront = false;
         }
-        else if (found)
+        else
         {
           _lastSeenTime = Time.time;
           _lastKnownPos = _ragdollTarget._Controller.position;
@@ -1480,7 +1477,7 @@ public class EnemyScript : PlayerScript.IHasRagdoll
   }
   void SetNextPatrolPoint()
   {
-    Vector3 newPos = _PathScript.GetNextPatrolPoint().position;
+    Vector3 newPos = _PathScript?.GetNextPatrolPoint().position ?? transform.position;
     _agent.SetDestination(newPos);
   }
 
@@ -1491,7 +1488,6 @@ public class EnemyScript : PlayerScript.IHasRagdoll
     StartCoroutine(ChaseTargetCo(checkTurnaround));
   }
 
-  float _zombie_chaseTimer;
   bool _chasingTarget = false;
   IEnumerator ChaseTargetCo(bool checkTurnaround)
   {
@@ -1596,13 +1592,12 @@ public class EnemyScript : PlayerScript.IHasRagdoll
 
   public void SetRandomStrafe()
   {
-    _strafeRight = Random.Range(0, 2) == 0 ? true : false;
+    _strafeRight = Random.Range(0, 2) == 0;
   }
 
   bool CheckShouldPanic()
   {
     _playerKnownWeapon = true;
-    if (_ragdollTarget != null) _playerKnownWeaponValue = _ragdollTarget.HasWeapon();
     if (_playerKnownWeapon) return !HasWeapon();
     return false;
   }
@@ -1769,88 +1764,6 @@ public class EnemyScript : PlayerScript.IHasRagdoll
     _waitLookPos = MathC.Get2DVector(p.position) + new Vector3(0f, transform.position.y, 0f);
   }
   #endregion
-
-  /*public EnemyScript _absorbee;
-  public List<EnemyScript> _bodies;
-  void AbsorbInfo(EnemyScript other)
-  {
-    if (MathC.Get2DDistance(other.transform.position, transform.position) > 25f) return;
-    _absorbee = other;
-    var otherNewer = _lastSeenTime < other._lastSeenTime;
-    // If other has newer info, take info
-    if (otherNewer && other._playerKnownWeapon)
-    {
-      _playerKnownWeapon = other._playerKnownWeapon;
-      _playerKnownWeaponValue = other._playerKnownWeaponValue;
-    }
-    // Check for dead bodies
-    if (other._ragdoll._dead)
-    {
-      // Check if seen this body before
-      if (_bodies == null) _bodies = new List<EnemyScript>();
-      var found = false;
-      foreach (var e in _bodies)
-      {
-        if (e._id == other._id)
-        {
-          found = true;
-          break;
-        }
-      }
-      if (!found)
-      {
-        if (CheckShouldPanic()) Panic();
-        else if (_state == State.NEUTRAL) Suspicious(other._ragdoll._hip.position, Loudness.SOFT, 0f);
-        LookAt(other._ragdoll.transform.position);
-        _bodies.Add(other);
-      }
-      return;
-    }
-    // Return if data is older than self or already panicked
-    if (!otherNewer && other._state != State.PANICKED) return;
-    _lastSeenTime = other._lastSeenTime;
-    switch (other._state)
-    {
-      case (State.PURSUIT):
-        if (_state == State.PANICKED)
-          break;
-        Alert(other._lastKnownPos);
-        if (_state != State.PURSUIT) ChangeState(State.SUSPICIOUS);
-        _agent.SetDestination(_lastKnownPos);
-        if (other._time_lost <= _time_lost || other._time_seen >= _time_seen)
-        {
-          _time_lost = other._time_lost;
-          _time_seen = other._time_seen;
-          if (other._targetInLOS)
-            _targetInLOS = other._targetInLOS;
-        }
-        break;
-      case (State.PANICKED):
-        if (_state == State.SUSPICIOUS || _state == State.PURSUIT) break;
-        // If the player is known to have a weapon and self is unarmed, panic
-        if (!HasWeapon())
-        {
-          _lastKnownPos = other._lastKnownPos;
-          Panic();
-          break;
-        }
-        // Else, if has weapon, go towards
-        Alert(other._lastKnownPos);
-        ChangeState(State.SUSPICIOUS);
-        _agent.SetDestination(_lastKnownPos);
-        Run();
-        break;
-      case (State.SUSPICIOUS):
-        if (_state == State.SUSPICIOUS || _state == State.PANICKED || _state == State.PURSUIT) break;
-        ChangeState(other._state);
-        _lastKnownPos = other._lastKnownPos;
-        _patroling = false;
-        _waitAmount = 0f;
-        _agent.SetDestination(_lastKnownPos);
-        Run();
-        break;
-    }
-  }*/
 
   void EquipStart()
   {
