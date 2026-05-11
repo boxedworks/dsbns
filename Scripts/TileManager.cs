@@ -1118,7 +1118,14 @@ public class TileManager
         case "BookcaseOpen":
           meshes["Bookcases"].Item1.Add(obj.GetChild(0).GetChild(0).gameObject);
           for (var u = 0; u < 3; u++)
-            meshes["Books"].Item1.Add(obj.GetChild(u + 1).GetChild(0).gameObject);
+          {
+            var book = obj.GetChild(u + 1).GetChild(0).gameObject;
+            meshes["Books"].Item1.Add(book);
+
+            // Move book randomly
+            book.transform.Rotate(0f, UnityEngine.Random.Range(-5f, 5f), 0f);
+            book.transform.localPosition += new Vector3(UnityEngine.Random.Range(-0.8f, 0.8f), 0f, UnityEngine.Random.Range(-0.3f, 0.3f));
+          }
           break;
         case "BookcaseBig":
           meshes["Bookcases"].Item1.Add(obj.GetChild(0).GetChild(0).gameObject);

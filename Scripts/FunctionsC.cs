@@ -616,7 +616,7 @@ public static class FunctionsC
   {
     void store(Mesh mesh)
     {
-      if (_Meshes == null) _Meshes = new Dictionary<string, Mesh>();
+      _Meshes ??= new();
       if (_Meshes.ContainsKey(key))
       {
         Object.Destroy(_Meshes[key]);
@@ -627,10 +627,13 @@ public static class FunctionsC
     // Check null or empty
     if (gameObjects == null || gameObjects.Length == 0)
       return null;
+
     // Create material list for final combine
     var master_materials = new List<Material>();
+
     // Create mesh list to hold final meshes
     var master_filters = new List<MeshFilter>();
+
     // Create a mesh for each subMesh in the gameObjects
     CombineInstance[] combine;
     GameObject master_gameObject = null;
@@ -644,8 +647,10 @@ public static class FunctionsC
       master_gameObject = new GameObject("MeshHolder");
       master_renderer = master_gameObject.AddComponent<MeshRenderer>();
       master_filter = master_gameObject.AddComponent<MeshFilter>();
-      master_mesh = new Mesh();
-      master_mesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
+      master_mesh = new Mesh
+      {
+        indexFormat = UnityEngine.Rendering.IndexFormat.UInt32
+      };
       iter = 0;
       foreach (var g in gameObjects)
       {
@@ -665,11 +670,14 @@ public static class FunctionsC
     {
       // Set materials
       master_renderer.sharedMaterials = master_materials.ToArray();
+
       // Store in dictionary
       store(master_mesh);
+
       // Return
       return master_gameObject;
     }
+
     // Else, combine remaining meshes into 1
     combine = new CombineInstance[master_filters.Count];
     master_gameObject = new GameObject("MeshHolder");
@@ -692,8 +700,10 @@ public static class FunctionsC
       Object.Destroy(master_filters[i].sharedMesh);
       Object.Destroy(master_filters[i].gameObject);
     }
+
     // Store in dictionary
     store(master_mesh);
+
     // Return
     return master_gameObject;
   }

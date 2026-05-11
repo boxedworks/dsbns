@@ -246,12 +246,15 @@ namespace Assets.Scripts.UI.Menus
 
       _displayText = text;
       _type = componentType;
+
       // Get start text height
       var startHeight = 0;
+
       // Check height of current text
       var h0 = 0;
       if (Menu.s_Text.text.Contains("\n"))
         h0 = Menu.s_Text.text.Split('\n').Length - 1;
+
       // Check height of components
       foreach (var component in menu._MenuComponents)
       {
@@ -260,6 +263,7 @@ namespace Assets.Scripts.UI.Menus
           h = component._displayText.Split('\n').Length - 1;
         startHeight += h;
       }
+
       // Set indexes
       foreach (var component in menu._MenuComponents)
       {
@@ -267,23 +271,27 @@ namespace Assets.Scripts.UI.Menus
         if (component._type == ComponentType.DISPLAY) continue;
         _buttonIndex++;
       }
+
       // Create colliders
       // Get maximum length
       var width = 0;
       foreach (var line in _displayText.Split('\n'))
         if (line.Length > width) width = line.Length;
+
       // Get height
       var height = 1;
       if (_displayText.Contains("\n"))
         height = _displayText.Split('\n').Length - 1;
       _height = startHeight + height - 1;
+
       // Set collider
       var gameObject = new GameObject();
 #if UNITY_EDITOR
       gameObject.name = text;
 #endif
-      gameObject.transform.parent = Menu.s_Menu;
+      gameObject.transform.SetParent(Menu.s_Menu);
       gameObject.transform.localEulerAngles = Vector3.zero;
+      gameObject.transform.localScale = Vector3.one;
       gameObject.transform.localPosition = new Vector3(-5.87f, 3.2f, -0.6f);
       _collider = gameObject.AddComponent<BoxCollider>();
       var size = new Vector2(0.15f, 0.247f);

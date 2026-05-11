@@ -77,29 +77,6 @@ public class GameScript : MonoBehaviour
 
   public XRUIManager _XrUiManager;
 
-  public void OnApplicationQuit()
-  {
-    // Check window swap
-    if (Screen.fullScreen != SettingsModule.Fullscreen)
-    {
-      SettingsModule.Fullscreen = Screen.fullScreen;
-    }
-    SettingsSaveData.Save();
-
-    // Check XR
-    if (s_IsVr)
-    {
-      ManualXRControl.StopXR();
-    }
-
-    //if (!Application.isEditor) System.Diagnostics.Process.GetCurrentProcess().Kill();
-    Application.Quit();
-  }
-  public static void OnApplicationQuitS()
-  {
-    s_Singleton.OnApplicationQuit();
-  }
-
   static float _levelEndTimer;
   public static PlayerScript s_InLevelEndPlayer;
   public static bool _inLevelEnd { get { return s_InLevelEndPlayer != null; } }
@@ -235,7 +212,7 @@ public class GameScript : MonoBehaviour
     var args = Environment.GetCommandLineArgs();
     s_IsVr = Array.Exists(args, element => element.Equals("-vr", StringComparison.OrdinalIgnoreCase));
 #if UNITY_EDITOR
-    s_IsVr = true;
+    //s_IsVr = true;
 #endif
 
     var handLeft = GameResources._XrLeft;
@@ -248,6 +225,8 @@ public class GameScript : MonoBehaviour
       // Disable XR objects
       handLeft.gameObject.SetActive(false);
       handRight.gameObject.SetActive(false);
+
+      GameObject.Find("XrControls").SetActive(false);
     }
     else
     {
@@ -351,12 +330,10 @@ public class GameScript : MonoBehaviour
     ShopHelper.Init();
 
     //
+    new LocalizationController();
     SettingsHelper.Init();
     LevelSaveData.Save();
     SettingsSaveData.Save();
-
-    //
-    new LocalizationController();
 
     //
     FunctionsC.Init();
@@ -431,6 +408,29 @@ public class GameScript : MonoBehaviour
     //}
 
     s_CrownPlayer = s_CrownEnemy = -1;
+  }
+
+  public void OnApplicationQuit()
+  {
+    // Check window swap
+    if (Screen.fullScreen != SettingsModule.Fullscreen)
+    {
+      SettingsModule.Fullscreen = Screen.fullScreen;
+    }
+    SettingsSaveData.Save();
+
+    // Check XR
+    if (s_IsVr)
+    {
+      ManualXRControl.StopXR();
+    }
+
+    //if (!Application.isEditor) System.Diagnostics.Process.GetCurrentProcess().Kill();
+    Application.Quit();
+  }
+  public static void OnApplicationQuitS()
+  {
+    s_Singleton.OnApplicationQuit();
   }
 
   public static Transform _lp0, _lp1, _lp2;
@@ -1050,6 +1050,13 @@ public class GameScript : MonoBehaviour
         ui.Rotate(new Vector3(90f, 0f, 0f), Space.Self);
       }
     }
+  }
+
+  void FixedUpdate()
+  {
+    //
+    if (s_IsVr)
+      _XrUiManager?.FixedUpdate();
   }
 
   //

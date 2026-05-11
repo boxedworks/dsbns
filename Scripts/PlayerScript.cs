@@ -2413,7 +2413,6 @@ public class PlayerScript : PlayerScript.IHasRagdoll
     if (_HasTwin && _ConnectedTwin._ragdoll != null && !_ConnectedTwin._ragdoll._IsDead) lastplayer = false;
     if (SettingsHelper._Slowmo_on_death && lastplayer && !HasPerk(Perk.PerkType.NO_SLOWMO)) _SlowmoTimer += 2f;
 
-    // Check for restart tutorial
     if (lastplayer && !GameScript.s_IsPartyGameMode)
     {
       _All_Dead = true;
@@ -2425,7 +2424,7 @@ public class PlayerScript : PlayerScript.IHasRagdoll
       if (SettingsModule.ShowDeathText)
         TileManager.ShowGameOverText("NOT SNEAKY.", "white", "red");
 
-      // Coroutine to show controls
+      // Check for restart tutorial
       IEnumerator FlashRestart()
       {
         var offset = GameResources._Camera_Main.transform.up * 4f;
@@ -2463,12 +2462,14 @@ public class PlayerScript : PlayerScript.IHasRagdoll
             tutorial_ui1.gameObject.SetActive(!flicker);
           }
         }
+
         // Hide tutorialinfo
         tutorial_ui0.position =
           tutorial_ui1.position =
           new Vector3(1000f, 0f, 0f);
       }
-      GameScript.s_Singleton.StartCoroutine(FlashRestart());
+      if (!GameScript.s_IsVr)
+        GameScript.s_Singleton.StartCoroutine(FlashRestart());
     }
     // Play death sound
     //_ragdoll._audioPlayer.volume = 1f;

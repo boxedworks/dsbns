@@ -23,8 +23,12 @@ namespace Assets.Scripts.XR
 
     // UI Components
     Transform _uiControls,
-      _pointerR,
-      _buttonRestartMap, _buttonLoadoutLeft, _buttonLoadoutRight, _buttonResetUi, _stylusPosition, _stylusHeight, _stylusSize, _stylusRotation;
+      _transformControlsBg,
+      _buttonRestartMap, _buttonLoadoutLeft, _buttonLoadoutRight, _buttonResetUi, _buttonToggleTransformControls,
+      _stylusPosition, _stylusHeight, _stylusSize, _stylusRotation;
+
+    Transform _pointerR;
+    Rigidbody _pointerR_physics;
 
     Transform _controllerLeft { get { return GameResources._XrLeft; } }
     Transform _controllerRight { get { return GameResources._XrRight; } }
@@ -42,13 +46,16 @@ namespace Assets.Scripts.XR
       _uiControls.localScale = Vector3.one * 0.11f;
 
       _pointerR = _uiControls.GetChild(3);
-      _pointerR.parent = _controllerRight;
-      _pointerR.localPosition = Vector3.zero;
-      _pointerR.localScale = Vector3.one * 0.02f;
+      _pointerR_physics = _uiControls.GetChild(4).GetComponent<Rigidbody>();
+      _pointerR.transform.parent = _pointerR_physics.transform.parent = _controllerRight;
+      _pointerR.transform.localScale = _pointerR_physics.transform.localScale = Vector3.one * 0.02f;
+      Physics.IgnoreCollision(_pointerR.GetComponent<Collider>(), _pointerR_physics.GetComponent<Collider>());
 
       var pointerLight = _pointerR.gameObject.AddComponent<Light>();
       pointerLight.color = Color.red * Color.white;
       pointerLight.shadows = LightShadows.Hard;
+      pointerLight.shadowResolution = UnityEngine.Rendering.LightShadowResolution.Low;
+      _pointerR.gameObject.AddComponent<PointerCollider>();
 
       var restartMapControls = _uiControls.GetChild(0);
       _buttonRestartMap = restartMapControls.GetChild(1);
@@ -58,14 +65,24 @@ namespace Assets.Scripts.XR
       _buttonLoadoutRight = loadoutControls.GetChild(2);
 
       var cameraTransformControls = _uiControls.GetChild(2);
+      _transformControlsBg = cameraTransformControls.GetChild(0);
       _stylusPosition = cameraTransformControls.GetChild(1).GetChild(0);
       _stylusSize = cameraTransformControls.GetChild(2).GetChild(0);
       _stylusHeight = cameraTransformControls.GetChild(3).GetChild(0);
       _stylusRotation = cameraTransformControls.GetChild(4).GetChild(0);
       _buttonResetUi = cameraTransformControls.GetChild(5).GetChild(0);
+      _buttonToggleTransformControls = cameraTransformControls.GetChild(6);
 
       _controls = new Transform[] {
-        _buttonRestartMap, _buttonLoadoutLeft, _buttonLoadoutRight, _stylusPosition, _stylusSize, _stylusHeight, _stylusRotation, _buttonResetUi
+        _buttonRestartMap,
+        _buttonLoadoutLeft,
+        _buttonLoadoutRight,
+        _stylusPosition,
+        _stylusSize,
+        _stylusHeight,
+        _stylusRotation,
+        _buttonResetUi,
+        _buttonToggleTransformControls
       };
       foreach (var control in _controls)
         control.GetComponent<Renderer>().sharedMaterial.color = Color.gray;
@@ -96,7 +113,9 @@ namespace Assets.Scripts.XR
       {
         foreach (var control in _controls)
         {
-          if (AreSpheresIntersecting(control.position, control.lossyScale.x * 0.5f, _controllerRight.position, _pointerR.lossyScale.x * 0.5f))
+          if (!control.gameObject.activeInHierarchy)
+            continue;
+          if (AreSpheresIntersecting(control.position, control.lossyScale.x * 0.5f, _controllerRight.position, _pointerR.transform.lossyScale.x * 0.5f))
           {
             controlFound = true;
 
@@ -215,12 +234,22 @@ namespace Assets.Scripts.XR
 
     }
 
+    public void FixedUpdate()
+    {
+      _pointerR_physics.MovePosition(_controllerRight.position);
+    }
+
     void UnselectHoveredControl()
     {
       if (_hoveredControl != null)
       {
+        if (_hoveredControl.parent.name == _stylusPosition.parent.name ||
+            _hoveredControl.parent.name == _stylusSize.parent.name ||
+            _hoveredControl.parent.name == _stylusHeight.parent.name ||
+            _hoveredControl.parent.name == _stylusRotation.parent.name)
+          _hoveredControl.localPosition = _hoveredControlSavePosition;
+
         _hoveredControl.GetComponent<Renderer>().sharedMaterial.color = Color.gray;
-        _hoveredControl.localPosition = _hoveredControlSavePosition;
         _hoveredControl = null;
       }
     }
@@ -238,7 +267,7 @@ namespace Assets.Scripts.XR
     void OnDown()
     {
       _triggerToggle = true;
-      _pointerR.localScale = Vector3.one * 0.01f;
+      _pointerR.transform.localScale = Vector3.one * 0.015f;
 
       if (_hoveredControl == null) return;
 
@@ -249,7 +278,8 @@ namespace Assets.Scripts.XR
         _hoveredControl.parent.name == _buttonRestartMap.parent.name ||
         _hoveredControl.parent.name == _buttonLoadoutLeft.parent.name ||
         _hoveredControl.parent.name == _buttonLoadoutRight.parent.name ||
-        _hoveredControl.parent.name == _buttonResetUi.parent.name
+        _hoveredControl.parent.name == _buttonResetUi.parent.name ||
+        _hoveredControl.parent.name == _buttonToggleTransformControls.name
         )
       {
       }
@@ -272,7 +302,7 @@ namespace Assets.Scripts.XR
     void OnUp()
     {
       _triggerToggle = false;
-      _pointerR.localScale = Vector3.one * 0.02f;
+      _pointerR.transform.localScale = Vector3.one * 0.02f;
 
       if (_hoveredControl == null) return;
 
@@ -308,6 +338,33 @@ namespace Assets.Scripts.XR
       else if (_hoveredControl.parent.name == _buttonResetUi.parent.name)
       {
         _cameraSettings = new();
+      }
+      else if (_hoveredControl.name == _buttonToggleTransformControls.name)
+      {
+        ToggleTransformControls();
+      }
+    }
+
+    void ToggleTransformControls()
+    {
+      ToggleTransformControls(!_transformControlsBg.gameObject.activeSelf);
+    }
+    void ToggleTransformControls(bool toggle)
+    {
+      _transformControlsBg.gameObject.SetActive(toggle);
+      _stylusPosition.parent.gameObject.SetActive(toggle);
+      _stylusSize.parent.gameObject.SetActive(toggle);
+      _stylusHeight.parent.gameObject.SetActive(toggle);
+      _stylusRotation.parent.gameObject.SetActive(toggle);
+      _buttonResetUi.parent.gameObject.SetActive(toggle);
+
+      if (toggle)
+      {
+        _buttonToggleTransformControls.localPosition = new Vector3(1.2f, 0f, 0f);
+      }
+      else
+      {
+        _buttonToggleTransformControls.localPosition = new Vector3(-1.05f, 0f, 0f);
       }
     }
 

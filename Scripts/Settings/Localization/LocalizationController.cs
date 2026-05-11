@@ -17,16 +17,17 @@ namespace Assets.Scripts.Settings.Localization
     {
       get
       {
-        var langStr = SettingsModule.Language;
-        if (Enum.TryParse(langStr, out Language lang))
-        {
-          return lang;
-        }
-        else
-        {
-          Debug.LogWarning($"Invalid language in settings: {langStr}. Defaulting to English.");
-          return Language.English;
-        }
+        // var langStr = SettingsModule.Language;
+        // if (Enum.TryParse(langStr, out Language lang))
+        // {
+        //   return lang;
+        // }
+        // else
+        // {
+        //   Debug.LogWarning($"Invalid language in settings: {langStr}. Defaulting to English.");
+        //   return Language.English;
+        // }
+        return Language.English;
       }
     }
 
@@ -64,8 +65,8 @@ namespace Assets.Scripts.Settings.Localization
       //Menu.Init();
 
       // Save new language to settings
-      SettingsModule.Language = language.ToString();
-      SettingsSaveData.Save();
+      //SettingsModule.Language = language.ToString();
+      //SettingsSaveData.Save();
     }
 
     // Get localized string by key

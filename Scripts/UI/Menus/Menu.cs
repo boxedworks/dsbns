@@ -2873,21 +2873,21 @@ namespace Assets.Scripts.UI.Menus
               // Save selection
               var save_selection = s_CurrentMenu._SelectionIndex;
               GenericMenu(new string[]
-              {
-            ShopHelper._AvailablePoints < cost ?
-            "cannot afford item\n\n- you do not have enough <color=yellow>($$)</color> to buy this item\n\n- gather MISSIONS mode ranks to get more <color=yellow>($$)</color>\n\n"
-            :
-            "cannot equip / purchase item\n\n- you do not have enough <color=yellow>equipment_points</color> to equip this item if you purchased it\n\n- buy more <color=yellow>MAX_EQUIP_POINTS</color> in the SHOP to equip / buy this\n\n"
-              },
-              "ok",
-              MenuType.SHOP,
-              null,
-              true,
-              component1 =>
-              {
-                s_menus[MenuType.SHOP]._SelectionIndex = save_selection;
-                RenderMenu();
-              });
+                {
+                  ShopHelper._AvailablePoints < cost ?
+                    "cannot afford item\n\n- you do not have enough <color=yellow>($$)</color> to buy this item\n\n- gather MISSIONS mode ranks to get more <color=yellow>($$)</color>\n\n"
+                    :
+                    "cannot equip / purchase item\n\n- you do not have enough <color=yellow>equipment_points</color> to equip this item if you purchased it\n\n- buy more <color=yellow>MAX_EQUIP_POINTS</color> in the SHOP to equip / buy this\n\n"
+                },
+                "ok",
+                MenuType.SHOP,
+                null,
+                true,
+                component1 =>
+                {
+                  s_menus[MenuType.SHOP]._SelectionIndex = save_selection;
+                  RenderMenu();
+                });
             });
           }
         }
@@ -5729,6 +5729,23 @@ go to the <color=yellow>SHOP</color> to buy something~1
             try
             {
               OpenVR.Input.OpenBindingUI(SteamVR_Settings.instance.editorAppKey, 0, 0, true);
+
+              var save_selection = s_CurrentMenu._SelectionIndex;
+              GenericMenu(
+                new string[]
+                {
+                  "your browser should have opened to the SteamVR input configuration page.\n\nplease check your browser outside of the game.\n"
+                },
+                "ok",
+                MenuType.OPTIONS,
+                null,
+                true,
+                component1 =>
+                {
+                  s_menus[MenuType.OPTIONS]._SelectionIndex = save_selection;
+                  RenderMenu();
+                }
+              );
             }
             catch
             {
@@ -8270,11 +8287,8 @@ about extras</color>
       if (!s_Menu.gameObject.activeSelf) return;
       if (Time.unscaledTime - s_times[(int)noise] < 0.05f) return;
       s_times[(int)noise] = Time.unscaledTime;
-      var audioSource = GetNoise(noise);
-      //var audioSource_ = SfxManager.GetAudioSource(GameResources._Camera_Main.transform.position, audioSource.clip, SfxManager.AudioClass.NONE, false, audioSource.volume, Random.Range(0.9f, 1.1f));
-      //if (audioSource_ != null)
-      //  SfxManager.PlayAudioSource(audioSource_, SfxManager.AudioClass.NONE, false);
 
+      var audioSource = GetNoise(noise);
       audioSource.volume = s_volumes[(int)noise] * (SettingsModule.VolumeSFX / 5f);
       audioSource.PlayOneShot(audioSource.clip);
     }

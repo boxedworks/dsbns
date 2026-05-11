@@ -1297,6 +1297,7 @@ namespace Assets.Scripts.Ragdoll.Equippables
     )
     {
       //Debug.Log($"Spawning bullet of type {itemType} with penetration {penatrationAmount} at position {spawnPos} towards direction {shootDirNormalized}");
+      var shootDirNormalized2D = MathC.Get2DVector(shootDirNormalized).normalized;
 
       BulletScript newBullet;
       var tryAmount = _BulletPool.Length;
@@ -1346,9 +1347,9 @@ namespace Assets.Scripts.Ragdoll.Equippables
         var mod = 1f;
         if (bulletIter % 2 == 1) mod = -1f;
         if (!randomSpread && bulletIter == 0 && projectilesPerShot % 2 == 1) mod = 0f;
-        addforce = Quaternion.AngleAxis(90f, Vector3.up) * shootDirNormalized * bulletSpread * (randomSpread ? Random.value : 1f) * mod;
+        addforce = Quaternion.AngleAxis(90f, Vector3.up) * shootDirNormalized2D * bulletSpread * (randomSpread ? Random.value : 1f) * mod;
       }
-      var bulletForce = 30f * speedMod * MathC.Get2DVector(shootDirNormalized + addforce);
+      var bulletForce = 30f * speedMod * MathC.Get2DVector(shootDirNormalized2D + addforce);
 
       rb.transform.LookAt(rb.position + bulletForce);
       rb.AddForce(bulletForce, ForceMode.Impulse);
@@ -1382,7 +1383,7 @@ namespace Assets.Scripts.Ragdoll.Equippables
         //Debug.Log(ps_gunsmoke.Length);
         //foreach (var psGunFire in ps_gunsmoke)
         {
-          ps_gunsmoke.transform.position = spawnPos + shootDirNormalized * (0.3f + (
+          ps_gunsmoke.transform.position = spawnPos + shootDirNormalized2D * (0.3f + (
             itemType == ItemType.DMR ||
             itemType == ItemType.AK47 ||
             itemType == ItemType.M16 ||
@@ -1393,7 +1394,7 @@ namespace Assets.Scripts.Ragdoll.Equippables
             itemType == ItemType.GRENADE_LAUNCHER ||
             itemType == ItemType.SHOTGUN_PUMP
             ? 0.35f : 0f));
-          ps_gunsmoke.transform.LookAt(ps_gunsmoke.transform.position + shootDirNormalized);
+          ps_gunsmoke.transform.LookAt(ps_gunsmoke.transform.position + shootDirNormalized2D);
           //var mainmodule = p_gunsmoke.main;
           //mainmodule.emitterVelocity = source._head?.GetComponent<Rigidbody>()?.velocity ?? Vector3.zero;
           ps_gunsmoke.Play();
