@@ -28,13 +28,14 @@ public class TileManager
   public static List<Tile> _Tiles;
   static int _MouseID, _Width = 50, _Height = 50;
   public static int _Map_Size_X, _Map_Size_Y;
-  static float _Tile_spacing = 2.5f;
+  static float _TileWidth = 2.5f;
   static Vector2 _offset;
 
   static List<PlayerScript> _Players { get { return PlayerScript.s_Players; } }
 
   public static Transform _Map, _Tile;
   public static Transform _Floor { get { return _Map.transform.GetChild(0); } }
+  static Vector2 s_boundsMin, s_boundsMax;
   public static Unity.AI.Navigation.NavMeshSurface _navMeshSurface, _navMeshSurface2;
   static List<string> s_levelObjectData;
   public static string _CurrentLevel_Name,
@@ -240,10 +241,13 @@ public class TileManager
     GetBaseTile();
     _Tile.gameObject.SetActive(true);
     if (_saveTilePos == Vector3.zero) _saveTilePos = _Tile.position;
-    _Tiles = new List<Tile>();
-    _Tiles.Add(new Tile(_Tile.gameObject));
+    _Tiles = new List<Tile>
+    {
+      new Tile(_Tile.gameObject)
+    };
     _Tile.GetComponent<Collider>().enabled = true;
-    // Check mats
+
+    // Check materials
     if (_Materials_Tiles == null)
     {
       _Materials_Tiles = new System.Tuple<Material, Material>(_Tiles[0]._tile.GetComponent<MeshRenderer>().sharedMaterial,
@@ -369,8 +373,8 @@ public class TileManager
     // Calculate dimensions of the map
     float dis_x = max_x - min_x,
       dis_z = max_z - min_z;
-    int width = (int)(dis_x / _Tile_spacing) + 1,
-      height = (int)(dis_z / _Tile_spacing) + 1;
+    int width = (int)(dis_x / _TileWidth) + 1,
+      height = (int)(dis_z / _TileWidth) + 1;
     returnString = string.Format("{0} {1} ", width, height);
 
     // Save only tiles that are in the map range
@@ -521,7 +525,7 @@ public class TileManager
   {
     _LoadingMap = true;
     _CurrentMapData = data;
-    s_levelObjectData = new List<string>();
+    s_levelObjectData = new();
     var game = GameObject.Find("Game").GetComponent<GameScript>();
     if (!GameResources._Loaded) GameResources.Init();
     if (!first_load) HideGameOverText();
@@ -553,15 +557,18 @@ public class TileManager
     material.color = color;
 
     //
-    System.GC.Collect();
+    GC.Collect();
 
     // Show unlocks
     _LoadingMap = false;
     if (!Menu.s_InMenus && ShopHelper.s_UnlockString != string.Empty)
       GameScript.TogglePause(Menu.MenuType.NONE);
 
+    var loadWaitTimeCo = new WaitForSeconds(0.01f);
+    var pauseWaitTimeCo = new WaitForSeconds(0.05f);
+
     while (GameScript.s_Paused)
-      yield return new WaitForSeconds(0.05f);
+      yield return pauseWaitTimeCo;
 
     if (_s_MapIndex != mapsaveindex) { }
     else
@@ -844,10 +851,10 @@ public class TileManager
             tiles_up.Add(tile);
           }
         }
-        if (waititer++ % 20 == 0) yield return new WaitForSeconds(0.01f);
+        if (waititer++ % 20 == 0) yield return loadWaitTimeCo;
       }
-      while (SceneThemes._ChangingTheme) yield return new WaitForSeconds(0.1f);
-      yield return new WaitForSeconds(0.1f);
+      while (SceneThemes._ChangingTheme) yield return pauseWaitTimeCo;
+      yield return pauseWaitTimeCo;
 
       // Set inner walls and tile visibility
       foreach (var tile in tiles_up)
@@ -865,7 +872,7 @@ public class TileManager
 
         // Check visibility
         if (next_to_tiles.Count == 0)
-          tile._tile.gameObject.SetActive(false);
+          tile._tile.SetActive(false);
         // Check inner walls
         else
         {
@@ -873,57 +880,6 @@ public class TileManager
             tile._tile.transform.GetChild(0).GetChild(i).gameObject.SetActive(next_to_tiles.Contains(tile_offsets[i]));
         }
       }
-
-      // Load objects
-      var candles = new List<GameObject>();
-      for (var i = 0; i < s_levelObjectData.Count;)
-      {
-        for (var u = 0; i < s_levelObjectData.Count && u < 15; u++)
-        {
-          var objectData = s_levelObjectData[i++];
-          var objectLoaded = LoadObject(objectData);
-          if (objectLoaded == null)
-          {
-
-            // Check bdt load
-            if (objectData.StartsWith("bdt_"))
-            {
-              continue;
-            }
-
-            // Throw object parse error
-            GameScript._Coroutine_load = null;
-            _LoadingMap = false;
-
-            throw new NullReferenceException("Error parsing object data: " + objectData);
-          }
-          else
-          {
-
-            if (objectLoaded.name.Equals(_LEO_CandelBarrel._name) || objectLoaded.name.Equals(_LEO_CandelBig._name) || objectLoaded.name.Equals(_LEO_CandelTable._name))
-            {
-              candles.Add(objectLoaded);
-            }
-
-          }
-        }
-        yield return new WaitForSeconds(0.01f);
-      }
-
-      // Check for light max
-      if (!GameScript.s_IsZombieGameMode)
-        if (candles.Count > 4)
-        {
-          Debug.LogWarning("Max light sources! Adding light dimmers");
-          foreach (var candle in candles)
-          {
-            var customObstacle = candle.AddComponent<CustomObstacle>();
-            customObstacle.InitCandle();
-
-            var candleScript = candle.GetComponent<CandleScript>();
-            candleScript._NormalizedEnable = 0f;
-          }
-        }
 
       // Set floor pos to center of map
       var floorPos = _Floor.position;
@@ -933,6 +889,55 @@ public class TileManager
       floorPos.z = center.z;
       _Floor.position = floorPos;
       _Floor.localScale = new Vector3(_Width * 0.5f, 1f, _Height * 0.5f);
+
+      // Get tilemap bounds
+      s_boundsMin = s_boundsMax = new Vector2(_Floor.position.x, _Floor.position.z);
+      var tileWidth = _TileWidth * 0.5f + 0.5f;
+      foreach (var tile in _Tiles)
+      {
+        if (tile._tile.activeSelf)
+        {
+          var pos = tile._tile.transform.position;
+          if (pos.x < s_boundsMin.x) s_boundsMin.x = pos.x - tileWidth;
+          else if (pos.x > s_boundsMax.x) s_boundsMax.x = pos.x + tileWidth;
+          if (pos.z < s_boundsMin.y) s_boundsMin.y = pos.z - tileWidth;
+          else if (pos.z > s_boundsMax.y) s_boundsMax.y = pos.z + tileWidth;
+        }
+      }
+
+      // Load objects
+      var candleGameObjects = new List<GameObject>();
+      for (var i = 0; i < s_levelObjectData.Count;)
+      {
+        for (var u = 0; i < s_levelObjectData.Count && u < 15; u++)
+        {
+          var objectData = s_levelObjectData[i++];
+          var objectLoaded = LoadObject(objectData, true);
+          if (objectLoaded != null)
+            if (
+              objectLoaded.name.Equals(_LEO_CandelBarrel._name) ||
+              objectLoaded.name.Equals(_LEO_CandelBig._name) ||
+              objectLoaded.name.Equals(_LEO_CandelTable._name)
+            )
+              candleGameObjects.Add(objectLoaded);
+        }
+        yield return loadWaitTimeCo;
+      }
+
+      // Check for light max
+      if (!GameScript.s_IsZombieGameMode)
+        if (candleGameObjects.Count > 4)
+        {
+          Debug.LogWarning("Max light sources! Adding light dimmers");
+          foreach (var candle in candleGameObjects)
+          {
+            var customObstacle = candle.AddComponent<CustomObstacle>();
+            customObstacle.InitCandle();
+
+            var candleScript = candle.GetComponent<CandleScript>();
+            candleScript._NormalizedEnable = 0f;
+          }
+        }
 
       // Set camera pos to playerspawn
       var playerspawnpos = PlayerspawnScript._PlayerSpawns[0].transform.position;
@@ -1046,7 +1051,7 @@ public class TileManager
         color.a = time;
         material.color = color;
 
-        yield return new WaitForSecondsRealtime(0.001f);
+        yield return loadWaitTimeCo;
         time -= 0.06f;
       }
       color.a = 0f;
@@ -1309,10 +1314,10 @@ public class TileManager
     Vector3 endpoint_pos = new(x, 0f, z),
       distance = endpoint_pos - _Tile.position;
     float width = _Tile.lossyScale.x;
-    return new Vector2((int)Mathf.Floor(distance.x / _Tile_spacing + width / 1.5f), (int)Mathf.Floor(distance.z / _Tile_spacing + width / 1.5f));
+    return new Vector2((int)Mathf.Floor(distance.x / _TileWidth + width / 1.5f), (int)Mathf.Floor(distance.z / _TileWidth + width / 1.5f));
   }
 
-  public static GameObject LoadObject(string object_data, bool enemy_original = false)
+  public static GameObject LoadObject(string object_data, bool check_bounds, bool enemy_original = false)
   {
     // Load enemy / object data
     if (object_data.Trim().Equals("")) return null;
@@ -1325,6 +1330,28 @@ public class TileManager
     Transform container_enemies = GameObject.Find("Game").transform.GetChild(0),
       container_objects = GameResources._Container_Objects;
     GameObject loadedObject = null;
+
+    // Check position
+    if (check_bounds)
+    {
+      var pos = new Vector2(object_base._x, object_base._z);
+      if (pos.x < s_boundsMin.x || pos.x > s_boundsMax.x || pos.y < s_boundsMin.y || pos.y > s_boundsMax.y)
+      {
+        if (object_base._type.Equals("e"))
+        {
+          var playerSpawnPos = PlayerspawnScript._PlayerSpawns[0].transform.position;
+          object_base._x = playerSpawnPos.x;
+          object_base._z = playerSpawnPos.z + 1f;
+
+          Debug.LogWarning($"Enemy object [{object_data}] [{pos}] is out of bounds [{s_boundsMin}, {s_boundsMax}] and will be loaded at playerspawn instead [{object_base._x}, {object_base._z}]");
+        }
+        else
+        {
+          Debug.LogWarning($"Object [{object_data}] [{pos}] is out of bounds [{s_boundsMin}, {s_boundsMax}] and will not be loaded");
+          return null;
+        }
+      }
+    }
 
     //Debug.Log($"= Loading object data => [{object_data}]\n=Parsed name: [{object_base._type}], pos: [{object_base._x}, {object_base._z}]");
 
@@ -1363,11 +1390,13 @@ public class TileManager
             object_data_split[1] = $"{posx}";
             object_data_split[2] = $"{posy}";
 
-            LoadObject(new_enemy, true);
+            LoadObject(new_enemy, check_bounds, true);
           }
         }
 
         loadedObject = object_base.LoadResource("Enemy", container_enemies, new Vector3(0.1f, 0.1f, 1f), -1.32f);
+        if (loadedObject == null) return null;
+
         var controller = loadedObject.transform.GetChild(0);
         controller.position = new Vector3(object_base._x, controller.position.y, object_base._z);
         var enemy = new EnemyScript(controller);
@@ -1482,15 +1511,17 @@ public class TileManager
           UnityEngine.Object.DestroyImmediate(default_lookpoint.gameObject);
         }
         break;
+
       // Load powerup
       case "p":
+
         // Check survival mode
         if (GameScript.s_IsZombieGameMode)
-        {
           break;
-        }
-        // Base mode
+
         loadedObject = object_base.LoadResource("Powerup", container_objects, -0.86f);
+        if (loadedObject == null) return null;
+
         var powerup_script = loadedObject.GetComponent<Powerup>();
         string type = object_data_split[object_data_iter];
         if (type.Equals("end")) powerup_script._type = Powerup.PowerupType.END;
@@ -1525,19 +1556,26 @@ public class TileManager
 
               }
 
-              var door_new = LoadObject(loadstring);
-              object_data_iter++;
-              var door_script = door_new.GetComponent<DoorScript>();
-              door_script.RegisterButton(ref ui_script);
+              var door_new = LoadObject(loadstring, check_bounds);
+              if (door_new != null)
+              {
+                object_data_iter++;
+                var door_script = door_new.GetComponent<DoorScript>();
+                door_script.RegisterButton(ref ui_script);
+              }
               break;
           }
         powerup_script.Init();
         break;
+
       // Load button
       case "button":
         loadedObject = object_base.LoadResource("Button", container_objects, new Vector3(0.6f, 0.1f, 0.6f), -1.28f);
+        if (loadedObject == null) return null;
+
         var button_script = loadedObject.GetComponent<CustomEntityUI>();
         button_script.gameObject.layer = GameScript.s_EditorEnabled ? 0 : 2;
+
         // Check for attached objects
         while (object_data_iter < object_data_split.Length)
           // Check object type
@@ -1545,7 +1583,8 @@ public class TileManager
           {
             // Check for doors
             case "door":
-              var door_new = LoadObject(string.Format("{0}_{1}_{2}_rot_{3}_open_{4}", object_data_split[object_data_iter++], object_data_split[object_data_iter++], object_data_split[object_data_iter++], object_data_split[++object_data_iter], object_data_split[++object_data_iter + 1]));
+              var door_new = LoadObject(string.Format("{0}_{1}_{2}_rot_{3}_open_{4}", object_data_split[object_data_iter++], object_data_split[object_data_iter++], object_data_split[object_data_iter++], object_data_split[++object_data_iter], object_data_split[++object_data_iter + 1]), check_bounds);
+              if (door_new == null) break;
               object_data_iter++;
               object_data_iter++;
               var door_script = door_new.GetComponent<DoorScript>();
@@ -1554,9 +1593,12 @@ public class TileManager
               break;
           }
         break;
+
       // Check for doors
       case "door":
         loadedObject = object_base.LoadResource("Door", container_objects, _LEO_Door._movementSettings._localPos);
+        if (loadedObject == null) return null;
+
         var door_script0 = loadedObject.GetComponent<DoorScript>();
         door_script0.enabled = false;
         door_script0.enabled = true;
@@ -1611,6 +1653,8 @@ public class TileManager
       // Check for laser
       case "laser":
         loadedObject = object_base.LoadResource("Laser", container_objects);
+        if (loadedObject == null) return null;
+
         // Get properties
         {
           LaserScript laser_script = loadedObject.GetComponent<LaserScript>();
@@ -1642,11 +1686,15 @@ public class TileManager
       // Check for explosive barrels
       case "expbarrel":
         loadedObject = object_base.LoadResource("ExplosiveBarrel", container_objects);
+        if (loadedObject == null) return null;
+
         loadedObject.transform.localPosition = new Vector3(loadedObject.transform.localPosition.x, _LEO_ExplosiveBarrel._movementSettings._localPos, loadedObject.transform.localPosition.z);
         break;
       // Check for player spawn
       case "playerspawn":
         loadedObject = PlayerspawnScript.GetPlayerSpawnScript().gameObject;
+        if (loadedObject == null) return null;
+
         loadedObject.transform.position = new Vector3(object_base._x, loadedObject.transform.position.y, object_base._z);
         // Move barricade
         //GameScript._EndLight.transform.position = new Vector3(object_base._x, 26f, object_base._z);
@@ -1671,16 +1719,23 @@ public class TileManager
           }
         break;
     }
+
     // If not loaded, try loading furniture
     if (loadedObject == null)
     {
       foreach (var leo in s_furniture)
       {
-        if (leo == null) Debug.LogError("LEO");
-        if (!object_base._type.Equals(leo._name.ToLower())) continue;
-        var isNavMesh = leo._name.Equals(_LEO_NavMeshBarrier._name);
+        if (!object_base._type.Equals(leo._name.ToLower()))
+          continue;
+
         loadedObject = object_base.LoadResource(leo._name, _Map.GetChild(1));
-        if ((isNavMesh || leo._name.Equals(_LEO_RugRectangle._name)) && !GameScript.s_EditorEnabled) { loadedObject.GetComponent<BoxCollider>().enabled = false; }
+        if (loadedObject == null)
+          break;
+
+        var isNavMesh = leo._name.Equals(_LEO_NavMeshBarrier._name);
+        if ((isNavMesh || leo._name.Equals(_LEO_RugRectangle._name)) && !GameScript.s_EditorEnabled)
+          loadedObject.GetComponent<BoxCollider>().enabled = false;
+
         loadedObject.transform.localPosition = new Vector3(loadedObject.transform.localPosition.x, leo._movementSettings._localPos, loadedObject.transform.localPosition.z);
 
         // Check fake wall
@@ -1773,6 +1828,7 @@ public class TileManager
       if (loadedObject == null)
         Debug.LogWarning("Error loading object data " + object_data);
     }
+
     // Return the loaded object
     return loadedObject;
   }
@@ -1818,13 +1874,15 @@ public class TileManager
   class ObjectData
   {
     public string _type, _modifier0;
-    public float _x, _z;
+    public float _x, _z, _xOrig, _zOrig;
 
     public ObjectData(string type, string x, string y)
     {
       _type = type;
-      _x = x.ParseFloatInvariant() + (_offset.x + _objectoffset.x) * _Tile_spacing;
-      _z = y.ParseFloatInvariant() + (_offset.y + _objectoffset.y) * _Tile_spacing;
+      _xOrig = x.ParseFloatInvariant();
+      _zOrig = y.ParseFloatInvariant();
+      _x = _xOrig + (_offset.x + _objectoffset.x) * _TileWidth;
+      _z = _zOrig + (_offset.y + _objectoffset.y) * _TileWidth;
     }
     public ObjectData(string type, string modifier0)
     {
@@ -1834,8 +1892,10 @@ public class TileManager
     public ObjectData(string type, string x, string y, string modifier0)
     {
       _type = type;
-      _x = x.ParseFloatInvariant() + (_offset.x + _objectoffset.x) * _Tile_spacing;
-      _z = y.ParseFloatInvariant() + (_offset.y + _objectoffset.y) * _Tile_spacing;
+      _xOrig = x.ParseFloatInvariant();
+      _zOrig = y.ParseFloatInvariant();
+      _x = _xOrig + (_offset.x + _objectoffset.x) * _TileWidth;
+      _z = _zOrig + (_offset.y + _objectoffset.y) * _TileWidth;
       _modifier0 = modifier0;
     }
 
@@ -2036,7 +2096,7 @@ public class TileManager
       foreach (var reloadObjectType in reloadObjectTypes)
       {
         if (!levelObjectData.StartsWith(reloadObjectType)) continue;
-        LoadObject(levelObjectData);
+        LoadObject(levelObjectData, true);
         loaded = true;
         break;
       }
@@ -2052,8 +2112,9 @@ public class TileManager
         }
         if (!levelObjectData.StartsWith(s)) continue;
 
-        var loadedObject = LoadObject(levelObjectData);
-        OnObjectLoad(loadedObject);
+        var loadedObject = LoadObject(levelObjectData, true);
+        if (loadedObject != null)
+          OnObjectLoad(loadedObject);
 
         break;
       }
@@ -2153,7 +2214,7 @@ public class TileManager
     var tile = UnityEngine.Object.Instantiate(_Tile.gameObject).transform;
     tile.gameObject.name = "Tile";
     tile.parent = _Map;
-    tile.localPosition = new Vector3(width * _Tile_spacing, _Tile.localPosition.y, height * _Tile_spacing);
+    tile.localPosition = new Vector3(width * _TileWidth, _Tile.localPosition.y, height * _TileWidth);
 
     return new Tile(tile.gameObject);
   }
@@ -2173,7 +2234,9 @@ public class TileManager
   {
     LevelEditorObject.SetIterOnName(leoobj._name);
     var addSettings = leoobj._addSettings;
-    var loaded = LoadObject(addSettings._data);
+    var loaded = LoadObject(addSettings._data, false);
+    if (loaded == null)
+      return;
 
     // Check special
     if (loaded.name == "Chair")
@@ -2514,7 +2577,7 @@ public class TileManager
         }
       if (found) continue;
 
-      var new_object = LoadObject(data);
+      var new_object = LoadObject(data, false);
       if (new_object == null) continue;
 
       // Laser script
@@ -5230,7 +5293,7 @@ public class TileManager
       if (_Tile != null)
       {
         Vector3 dis = _tile.transform.position - _Tile.transform.position;
-        _pos = new Vector2((int)(dis.x / _Tile_spacing), (int)(dis.z / _Tile_spacing));
+        _pos = new Vector2((int)(dis.x / _TileWidth), (int)(dis.z / _TileWidth));
       }
       else
       {

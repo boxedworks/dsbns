@@ -44,7 +44,8 @@ public class GameScript : MonoBehaviour
 
   public bool _GameEnded,
     _ExitOpen,
-    _IsDemo;
+    _IsDemo,
+    _ForceVr;
 
   public Material[] _ItemMaterials;
 
@@ -167,6 +168,19 @@ public class GameScript : MonoBehaviour
   public static bool s_IsZombieGameMode { get { return s_GameMode == GameModes.ZOMBIE; } }
   public static bool s_IsPartyGameMode { get { return s_GameMode == GameModes.PARTY; } }
 
+  public static bool s_IsCrownModeEnabled
+  {
+    get
+    {
+      return
+        LevelModule.ExtraCrownMode != 0 &&
+        s_IsMissionsGameMode &&
+        !s_EditorTesting &&
+        !Levels._LevelPack_Playing
+        ;
+    }
+  }
+
   public static int s_CrownPlayer, s_CrownEnemy;
 
   public Input_action _Controls;
@@ -212,7 +226,7 @@ public class GameScript : MonoBehaviour
     var args = Environment.GetCommandLineArgs();
     s_IsVr = Array.Exists(args, element => element.Equals("-vr", StringComparison.OrdinalIgnoreCase));
 #if UNITY_EDITOR
-    //s_IsVr = true;
+    s_IsVr = _ForceVr;
 #endif
 
     var handLeft = GameResources._XrLeft;
@@ -672,8 +686,12 @@ public class GameScript : MonoBehaviour
 
     // Update players
     if (PlayerScript.s_Players != null)
-      foreach (var player in PlayerScript.s_Players)
+      for (var i = PlayerScript.s_Players.Count - 1; i >= 0; i--)
+      {
+        if (PlayerScript.s_Players.Count <= i) continue;
+        var player = PlayerScript.s_Players[i];
         player?.Update();
+      }
 
     // Update enemies
     EnemyScript.UpdateEnemies();
@@ -686,24 +704,6 @@ public class GameScript : MonoBehaviour
 
     // Update menus
     Menu.UpdateMenus();
-
-    /*/ Update multiplayer
-    if (ControllerManager.GetKey(ControllerManager.Key.H))
-    {
-      s_CustomNetworkManager.Connect();
-    }
-    else if (ControllerManager.GetKey(ControllerManager.Key.J))
-    {
-      s_CustomNetworkManager.Host();
-    }
-    else if (ControllerManager.GetKey(ControllerManager.Key.K))
-    {
-      s_CustomNetworkManager.StopHost();
-    }
-    else if (ControllerManager.GetKey(ControllerManager.Key.L))
-    {
-      s_CustomNetworkManager.StopClient();
-    }*/
 
     // Update playerprofiles
     foreach (var profile in PlayerProfile.s_Profiles)
@@ -831,7 +831,12 @@ public class GameScript : MonoBehaviour
             _levelEndTimer += Time.deltaTime;
 
             // Check time
-            if (/*_levelEndTimer > timeToEnd || */Time.time - _goalPickupTime > 0.8f && EnemyScript.NumberAlive() == 0 && (LevelModule.ExtraCrownMode == 0 || (PlayerScript.GetNumberAlivePlayers() == 1)))
+            if (
+              /*_levelEndTimer > timeToEnd || */
+              Time.time - _goalPickupTime > 0.8f &&
+              EnemyScript.NumberAlive() == 0 &&
+              (!s_IsCrownModeEnabled || (PlayerScript.GetNumberAlivePlayers() == 1))
+            )
             {
 
               if (_levelEndTimer > timeToEnd || Levels._CurrentLevelIndex == 0)
@@ -1199,10 +1204,10 @@ public class GameScript : MonoBehaviour
     {
       s_Singleton._goalPickupTime = Time.time;
 
-      if (LevelModule.ExtraCrownMode == 0 || PlayerScript.GetNumberAlivePlayers() < 2)
+      if (!s_IsCrownModeEnabled || PlayerScript.GetNumberAlivePlayers() < 2)
         ToggleExitLight(true);
 
-      if (LevelModule.ExtraCrownMode != 0 && s_CrownPlayer == -1 && PlayerScript.GetNumberAlivePlayers() == 1)
+      if (s_IsCrownModeEnabled && s_CrownPlayer == -1 && PlayerScript.GetNumberAlivePlayers() == 1)
         GiveCrownToAlivePlayer();
 
       // Check achievements
@@ -1737,7 +1742,7 @@ public class GameScript : MonoBehaviour
     else if (!PlayerScript._TimerStarted)
       s_ExitLightShow = true;
 
-    else if (!EnemyScript.AllDead() || !PlayerScript.HasExit() || (LevelModule.ExtraCrownMode != 0 && PlayerScript.GetNumberAlivePlayers() > 1))
+    else if (!EnemyScript.AllDead() || !PlayerScript.HasExit() || (s_IsCrownModeEnabled && PlayerScript.GetNumberAlivePlayers() > 1))
       s_ExitLightShow = false;
     else
       s_ExitLightShow = toggle;

@@ -9,12 +9,33 @@ namespace Assets.Scripts.XR
 {
   public static class ManualXRControl
   {
+    static bool s_xrStarted { get { return XRGeneralSettings.Instance.Manager.activeLoader != null; } }
+
+    public static void StartXr(System.Action onComplete)
+    {
+      GameScript.s_Singleton.StartCoroutine(StartXRCoroutine(onComplete));
+    }
+
     public static IEnumerator StartXRCoroutine(System.Action onComplete)
+    {
+      while (!s_xrStarted)
+      {
+        yield return TryStartXRCoroutine(onComplete);
+
+        if (!s_xrStarted)
+          yield return new WaitForSeconds(5);
+      }
+
+      //
+      onComplete?.Invoke();
+    }
+
+    public static IEnumerator TryStartXRCoroutine(System.Action onComplete)
     {
       Debug.Log("Initializing XR...");
       yield return XRGeneralSettings.Instance.Manager.InitializeLoader();
 
-      if (XRGeneralSettings.Instance.Manager.activeLoader == null)
+      if (!s_xrStarted)
       {
         Debug.LogError("Initializing XR Failed. Check Editor or Player log for details.");
       }
@@ -22,7 +43,6 @@ namespace Assets.Scripts.XR
       {
         Debug.Log("Starting XR...");
         XRGeneralSettings.Instance.Manager.StartSubsystems();
-        onComplete?.Invoke();
       }
     }
 

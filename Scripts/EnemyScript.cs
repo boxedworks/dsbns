@@ -284,18 +284,17 @@ public class EnemyScript : PlayerScript.IHasRagdoll
     // Check crown
     bool getCrownBonuses = false;
     float crownRandom = 0f;
-    if (GameScript.s_IsMissionsGameMode)
-      if (LevelModule.ExtraCrownMode != 0)
-        if (GameScript.s_CrownEnemy == _Id)
-        {
-          _ragdoll.AddCrown(false);
+    if (GameScript.s_IsCrownModeEnabled)
+      if (GameScript.s_CrownEnemy == _Id)
+      {
+        _ragdoll.AddCrown(false);
 
-          if (LevelModule.ExtraCrownMode == 1)
-          {
-            getCrownBonuses = true;
-            crownRandom = Random.value;
-          }
+        if (LevelModule.ExtraCrownMode == 1)
+        {
+          getCrownBonuses = true;
+          crownRandom = Random.value;
         }
+      }
 
     // Check enemy type
     if (_enemyType == EnemyType.NORMAL)
@@ -517,7 +516,7 @@ public class EnemyScript : PlayerScript.IHasRagdoll
     {
 
       // Check for attacking
-      if (_ragdoll._IsGraplerPlayer)
+      if (_ragdoll._IsGrapplerPlayer)
       {
         DrawBackMelee(true);
 
@@ -683,6 +682,7 @@ public class EnemyScript : PlayerScript.IHasRagdoll
                     _waitLookPos = MathC.Get2DVector(transform.position + (lp.position - p.position).normalized) + new Vector3(0f, transform.position.y, 0f);
 
                   }
+
                   _agent.Move(_PathScript.GetPatrolPoint().position - transform.position);
 
                   // Wait until next movement
@@ -853,7 +853,12 @@ public class EnemyScript : PlayerScript.IHasRagdoll
                           var save_distance = FunctionsC.GetPathLength(_agent.path.corners);
                           var path = new UnityEngine.AI.NavMeshPath();
 
-                          if (UnityEngine.AI.NavMesh.CalculatePath(transform.position, samplePos, UnityEngine.AI.NavMesh.AllAreas, path))
+                          UnityEngine.AI.NavMeshQueryFilter filter = new()
+                          {
+                            agentTypeID = _agent.agentTypeID,
+                            areaMask = UnityEngine.AI.NavMesh.AllAreas
+                          };
+                          if (UnityEngine.AI.NavMesh.CalculatePath(transform.position, samplePos, filter, path))
                           {
                             var new_distance = FunctionsC.GetPathLength(path.corners);
                             var diff = new_distance - save_distance;
@@ -1858,7 +1863,7 @@ public class EnemyScript : PlayerScript.IHasRagdoll
 #if UNITY_STANDALONE
 
     // Grapple achievement
-    if (source != null && source._IsGraplerPlayer)
+    if (source != null && source._IsGrapplerPlayer)
       Achievements.UnlockAchievement(Achievements.Achievement.GRAPPLE_KILL);
 #endif
 
@@ -2402,7 +2407,7 @@ public class EnemyScript : PlayerScript.IHasRagdoll
             // Last killed settings
             if (last_killed && SettingsModule.LevelEndCondition == SettingsSaveData.LevelEndConditionType.LAST_ENEMY_KILLED)
             {
-              if ((LevelModule.ExtraHorde == 1 && !PlayerScript.HasExit()) || (LevelModule.ExtraCrownMode != 0 && PlayerScript.GetNumberAlivePlayers() > 1))
+              if ((LevelModule.ExtraHorde == 1 && !PlayerScript.HasExit()) || (GameScript.s_IsCrownModeEnabled && PlayerScript.GetNumberAlivePlayers() > 1))
               { }
               else
               {
@@ -2500,7 +2505,7 @@ public class EnemyScript : PlayerScript.IHasRagdoll
     else if (survivalAttributes._enemyType == SurvivalManager.EnemyType.PISTOL_WALK)
       weapon = "pistol";
 
-    var enemy = TileManager.LoadObject($"e_0_0_li_{weapon}_canmove_true_canhear_true");
+    var enemy = TileManager.LoadObject($"e_0_0_li_{weapon}_canmove_true_canhear_true", false);
     var enemyScript = s_Enemies[enemy.transform.GetChild(0).GetEntityId()];
     enemyScript.transform.position = new Vector3(spawnAtPos.x, enemy.transform.position.y, spawnAtPos.y);
     if (PlayerScript.s_Players != null && PlayerScript.s_Players.Count > 0 && PlayerScript.s_Players[0] != null)

@@ -141,10 +141,11 @@ public class PlayerScript : PlayerScript.IHasRagdoll
   bool _isRightTwin { get { return !_HasTwin || _connectedTwinSide == ActiveRagdoll.Side.RIGHT; } }
 
   // Use this for initialization
-  public PlayerScript(Transform controller, int playerSpawnId)
+  public PlayerScript(Transform controller, int playerSpawnId, PlayerScript connectedTwin)
   {
     _Controller = controller;
     _PlayerSpawnId = playerSpawnId;
+    _ConnectedTwin = connectedTwin;
 
     _All_Dead = false;
 
@@ -222,9 +223,6 @@ public class PlayerScript : PlayerScript.IHasRagdoll
 
     }
 
-    // Create health UI
-    //_profile.CreateHealthUI(health);
-
     // Assign color by _PlayerID
     _ragdoll.ChangeColor(_Profile.GetColor());
 
@@ -252,7 +250,7 @@ public class PlayerScript : PlayerScript.IHasRagdoll
     // Equip starting weapons
     _Profile._EquipmentIndex = 0;
 
-    CheckSpawnTwin();
+    CheckTwinSpawn();
 
     _itemLeft = _isLeftTwin || ShopHelper.IsActuallyTwoHanded(_Profile._ItemLeft) ? _Profile._ItemLeft : ItemManager.Items.NONE;
     _itemRight = _isRightTwin || ShopHelper.IsActuallyTwoHanded(_Profile._ItemRight) ? _Profile._ItemRight : ItemManager.Items.NONE;
@@ -340,12 +338,11 @@ public class PlayerScript : PlayerScript.IHasRagdoll
     }
 
     // Check crown
-    if (GameScript.s_IsMissionsGameMode)
-      if (LevelModule.ExtraCrownMode != 0)
-        if (GameScript.s_CrownPlayer == _Profile._Id)
-        {
-          _ragdoll.AddCrown(false);
-        }
+    if (GameScript.s_IsCrownModeEnabled)
+      if (GameScript.s_CrownPlayer == _Profile._Id && _IsOriginal)
+      {
+        _ragdoll.AddCrown(false);
+      }
   }
 
   //
@@ -783,7 +780,7 @@ public class PlayerScript : PlayerScript.IHasRagdoll
   //
   public static void ResetCamera()
   {
-    if (s_Players.Count > 0)
+    if (s_Players?.Count > 0)
       s_Players[0]._setCamera = false;
   }
 
@@ -988,22 +985,27 @@ public class PlayerScript : PlayerScript.IHasRagdoll
   float _crazyZombieTimer;
 
   //
-  void CheckSpawnTwin()
+  void CheckTwinSpawn()
   {
     // Check twin mod
-    if (HasPerk(Perk.PerkType.TWIN) && _ConnectedTwin == null)
+    if (HasPerk(Perk.PerkType.TWIN) && !_HasTwin)
     {
       _IsOriginalTwin = true;
 
       var spawnPos = transform.position + transform.right * 0.1f;
-      PlayerspawnScript.SpawnPlayerAt(spawnPos, transform.localEulerAngles.y, (playerScript) =>
-      {
-        _ConnectedTwin = playerScript;
-        playerScript._ConnectedTwin = this;
+      PlayerspawnScript.SpawnPlayerAt(
+        spawnPos,
+        transform.localEulerAngles.y,
+        this,
+        (playerScript) =>
+        {
+          _ConnectedTwin = playerScript;
 
-        _connectedTwinSide = ActiveRagdoll.Side.LEFT;
-        playerScript._connectedTwinSide = ActiveRagdoll.Side.RIGHT;
-      }, true, _PlayerSpawnId);
+          _connectedTwinSide = ActiveRagdoll.Side.LEFT;
+          playerScript._connectedTwinSide = ActiveRagdoll.Side.RIGHT;
+        },
+        true,
+        _PlayerSpawnId);
 
       // FX
       _ragdoll?.PlaySound("Ragdoll/Pop", 0.9f, 1.1f);
@@ -1022,8 +1024,8 @@ public class PlayerScript : PlayerScript.IHasRagdoll
         // Remove old twin
         ActiveRagdoll.s_Ragdolls.Remove(p._ragdoll);
         s_Players.RemoveAt(i);
-        p.Destroy();
         p._ragdoll.Destroy();
+        p.Destroy();
 
         break;
       }
@@ -1225,20 +1227,26 @@ public class PlayerScript : PlayerScript.IHasRagdoll
       if (interactAction.stateDown)
         HandleAction(PlayerAction.Interact);
 
-      // Whistle
-      var whistleAction = SteamVR_Actions.Player.Whistle;
-      if (whistleAction.stateDown)
-        HandleAction(PlayerAction.Whistle);
-
       // Start / end grapple (gentle)
       var grappleAction = SteamVR_Actions.Player.Grapple;
       if (
-        !_ragdoll._IsDead &&
         _ragdoll._CanGrapple &&
         grappleAction.stateDown
       )
+        if (_isRightTwin)
+          HandleAction(PlayerAction.GrappleGentle);
+
+      // Whistle
+      var whistleAction = SteamVR_Actions.Player.Whistle;
+      if (whistleAction.stateDown)
       {
-        HandleAction(PlayerAction.GrappleGentle);
+        if (_HasTwin)
+        {
+          if (_isLeftTwin && _ragdoll._CanGrapple)
+            HandleAction(PlayerAction.GrappleGentle);
+        }
+        else
+          HandleAction(PlayerAction.Whistle);
       }
 
       // Gather move direction
@@ -1284,6 +1292,21 @@ public class PlayerScript : PlayerScript.IHasRagdoll
 
       x2 = _vr_currentLookInput.x;
       y2 = _vr_currentLookInput.y;
+
+      //
+      if (_HasTwin)
+      {
+        if (_isLeftTwin)
+        {
+          x2 = x;
+          y2 = y;
+        }
+        if (_isRightTwin)
+        {
+          x = x2;
+          y = y2;
+        }
+      }
     }
 
     // Check m&k controls
@@ -1403,7 +1426,6 @@ public class PlayerScript : PlayerScript.IHasRagdoll
 
         // Start grapple
         if (
-          !_ragdoll._IsDead &&
           _ragdoll._CanGrapple &&
           ControllerManager.GetMouseInput(2, ControllerManager.InputMode.UP)
           )
@@ -1534,34 +1556,34 @@ public class PlayerScript : PlayerScript.IHasRagdoll
         if (!GameScript.s_IsPartyGameMode || (GameScript.s_IsPartyGameMode && VersusMode.s_PlayersCanMove))
         {
 
-          Vector2 input = new Vector2(ControllerManager.GetControllerAxis(gamepadId, ControllerManager.Axis.L2),
+          Vector2 triggerInputs = new(ControllerManager.GetControllerAxis(gamepadId, ControllerManager.Axis.L2),
             ControllerManager.GetControllerAxis(gamepadId, ControllerManager.Axis.R2));
 
           //
           if (_HasTwin)
           {
             if (_isLeftTwin)
-              input.y = 0f;
+              triggerInputs.y = 0f;
             if (_isRightTwin)
-              input.x = 0f;
+              triggerInputs.x = 0f;
           }
 
           //
-          float bias = 0.4f;
+          var bias = 0.4f;
           min = 0f + bias;
 
           //
-          if (input.x >= 1f - bias && _lastInputTriggers.x < 1f - bias)
+          if (triggerInputs.x >= 1f - bias && _lastInputTriggers.x < 1f - bias)
             HandleAction(PlayerAction.LeftWeaponDown);
-          else if (input.x <= min && _lastInputTriggers.x > min)
+          else if (triggerInputs.x <= min && _lastInputTriggers.x > min)
             HandleAction(PlayerAction.LeftWeaponUp);
 
-          if (input.y >= 1f - bias && _lastInputTriggers.y < 1f - bias)
+          if (triggerInputs.y >= 1f - bias && _lastInputTriggers.y < 1f - bias)
             HandleAction(PlayerAction.RightWeaponDown);
-          else if (input.y <= min && _lastInputTriggers.y > min)
+          else if (triggerInputs.y <= min && _lastInputTriggers.y > min)
             HandleAction(PlayerAction.RightWeaponUp);
 
-          _lastInputTriggers = input;
+          _lastInputTriggers = triggerInputs;
         }
 
         // Save dpad press times
@@ -1630,7 +1652,6 @@ public class PlayerScript : PlayerScript.IHasRagdoll
           // Start /end grapple (gentle)
           var grappleButton = _isRightTwin ? gamepad.rightStickButton : gamepad.leftStickButton;
           if (
-            !_ragdoll._IsDead &&
             _ragdoll._CanGrapple &&
             grappleButton.wasPressedThisFrame
           )
@@ -1769,6 +1790,7 @@ public class PlayerScript : PlayerScript.IHasRagdoll
         break;
 
       case PlayerAction.LeftWeaponDown:
+        if (!_isLeftTwin) break;
         if (!_ragdoll._ItemL && !_ragdoll._ItemR)
         {
           if (!_HasTwin)
@@ -1780,6 +1802,7 @@ public class PlayerScript : PlayerScript.IHasRagdoll
           _ragdoll.UseLeftDown();
         break;
       case PlayerAction.RightWeaponDown:
+        if (!_isRightTwin) break;
         if (!_ragdoll._ItemL && !_ragdoll._ItemR)
         {
           if (!_HasTwin)
@@ -1792,55 +1815,67 @@ public class PlayerScript : PlayerScript.IHasRagdoll
         break;
 
       case PlayerAction.LeftWeaponUp:
+        if (!_isLeftTwin) break;
         if (!_ragdoll._ItemL)
-          _ragdoll.UseRightUp();
+        {
+          if (_ragdoll._IsGrappling && _ragdoll._GrappleSide == ActiveRagdoll.Side.LEFT)
+            HandleAction(PlayerAction.Grapple);
+          else
+            _ragdoll.UseRightUp();
+        }
         else
           _ragdoll.UseLeftUp();
-
-        if (_ragdoll._IsGrappling)
-          if (_isRightTwin && _ragdoll._ItemR == null)
-            HandleAction(PlayerAction.Grapple);
         break;
       case PlayerAction.RightWeaponUp:
+        if (!_isRightTwin) break;
         if (!_ragdoll._ItemR)
-          _ragdoll.UseLeftUp();
+        {
+          if (_ragdoll._IsGrappling && _ragdoll._GrappleSide == ActiveRagdoll.Side.RIGHT)
+            HandleAction(PlayerAction.Grapple);
+          else
+            _ragdoll.UseLeftUp();
+        }
         else
           _ragdoll.UseRightUp();
-
-        if (_ragdoll._IsGrappling)
-          if (_isLeftTwin && _ragdoll._ItemL == null)
-            HandleAction(PlayerAction.Grapple);
         break;
 
       case PlayerAction.LeftUtilityDown:
+        if (!_isLeftTwin) break;
         if (_UtilitiesLeft.Count > 0)
           _UtilitiesLeft[0].UseDown();
         break;
       case PlayerAction.LeftUtilityUp:
+        if (!_isLeftTwin) break;
         if (_UtilitiesLeft.Count > 0)
           _UtilitiesLeft[0].UseUp();
         break;
       case PlayerAction.RightUtilityDown:
+        if (!_isRightTwin) break;
         if (_UtilitiesRight.Count > 0)
           _UtilitiesRight[0].UseDown();
         break;
       case PlayerAction.RightUtilityUp:
+        if (!_isRightTwin) break;
         if (_UtilitiesRight.Count > 0)
           _UtilitiesRight[0].UseUp();
         break;
 
       case PlayerAction.SwapLoadout:
+        if (!_IsOriginal) break;
         SwapLoadouts();
         break;
       case PlayerAction.SwapWeaponHands:
+        if (_HasTwin) break;
         _ragdoll.SwapItemHands(_Profile._EquipmentIndex);
         _Profile.UpdateIcons();
         break;
 
       case PlayerAction.SwapLoadoutLeft:
+        if (!_IsOriginal) break;
         HandleDpadDirection(2);
         break;
       case PlayerAction.SwapLoadoutRight:
+        if (!_IsOriginal) break;
         HandleDpadDirection(3);
         break;
 
@@ -1965,7 +2000,7 @@ public class PlayerScript : PlayerScript.IHasRagdoll
     if (_ragdoll.CanSwapWeapons())
     {
 
-      CheckSpawnTwin();
+      CheckTwinSpawn();
 
       var leftItem = _Profile._ItemLeft;
       var rightItem = _Profile._ItemRight;
@@ -2487,30 +2522,29 @@ public class PlayerScript : PlayerScript.IHasRagdoll
     }
 
     // Check last killed with crown mode
-    if (GameScript.s_IsMissionsGameMode)
-      if (GetNumberAlivePlayers() == 1 && EnemyScript.AllDead())
-        if (LevelModule.ExtraCrownMode != 0)
+    if (GetNumberAlivePlayers() == 1 && EnemyScript.AllDead())
+      if (GameScript.s_IsCrownModeEnabled)
+      {
+
+        if (GameScript.s_CrownPlayer == -1)
+          GameScript.GiveCrownToAlivePlayer();
+
+        GameScript.ToggleExitLight(true);
+
+        // Last killed settings
+        if (SettingsModule.LevelEndCondition == SettingsSaveData.LevelEndConditionType.LAST_ENEMY_KILLED)
         {
-
-          if (GameScript.s_CrownPlayer == -1)
-            GameScript.GiveCrownToAlivePlayer();
-
-          GameScript.ToggleExitLight(true);
-
-          // Last killed settings
-          if (SettingsModule.LevelEndCondition == SettingsSaveData.LevelEndConditionType.LAST_ENEMY_KILLED)
+          IEnumerator waitForComplete()
           {
-            IEnumerator waitForComplete()
-            {
-              var levelId = TileManager._s_MapIndex;
-              yield return new WaitForSecondsRealtime(0.5f);
+            var levelId = TileManager._s_MapIndex;
+            yield return new WaitForSecondsRealtime(0.5f);
 
-              if (levelId == TileManager._s_MapIndex)
-                GameScript.OnLevelComplete();
-            }
-            StartCoroutine(waitForComplete());
+            if (levelId == TileManager._s_MapIndex)
+              GameScript.OnLevelComplete();
           }
+          StartCoroutine(waitForComplete());
         }
+      }
   }
 
   CustomObstacle _currentInteractable;
@@ -2826,11 +2860,15 @@ public class PlayerScript : PlayerScript.IHasRagdoll
   public static int GetNumberAlivePlayers()
   {
     var numAlive = 0;
+    List<int> playerIds = new();
     foreach (var player in s_Players)
     {
-      if (!player._IsOriginal) continue;
+      if (playerIds.Contains(player._Id)) continue;
       if (player._ragdoll._health > 0)
+      {
+        playerIds.Add(player._Id);
         numAlive++;
+      }
     }
 
     return numAlive;

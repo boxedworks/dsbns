@@ -241,7 +241,6 @@ namespace Assets.Scripts.UI.Menus
           var component_last = _MenuComponentsSelectable[_MenuComponentsSelectable.Count - 1];
 
           _SelectionIndex = component_last._buttonIndex;
-          component_last._onFocus?.Invoke(component_last);
 
           _CanRender = false;
           RenderMenu();
@@ -907,7 +906,6 @@ namespace Assets.Scripts.UI.Menus
                 s_CurrentMenu._SelectionIndex = s_CurrentMenu._MenuComponentsSelectable.Count - 2;
                 _CanRender = false;
                 RenderMenu();
-                s_CurrentMenu._SelectedComponent._onFocus?.Invoke(s_CurrentMenu._SelectedComponent);
                 SendInput(Input.SPACE);
                 _CanRender = false;
                 RenderMenu();
@@ -1125,7 +1123,6 @@ namespace Assets.Scripts.UI.Menus
                   s_CurrentMenu._SelectionIndex = s_CurrentMenu._MenuComponentsSelectable.Count - 2;
                   _CanRender = false;
                   RenderMenu();
-                  s_CurrentMenu._SelectedComponent._onFocus?.Invoke(s_CurrentMenu._SelectedComponent);
                 });
 
                 // Delete level
@@ -1164,7 +1161,6 @@ namespace Assets.Scripts.UI.Menus
                     s_CurrentMenu._SelectionIndex = save_index - 1;
                     _CanRender = false;
                     RenderMenu();
-                    s_CurrentMenu._SelectedComponent._onFocus?.Invoke(s_CurrentMenu._SelectedComponent);
                   }
                   else
                   {
@@ -1296,13 +1292,11 @@ namespace Assets.Scripts.UI.Menus
 
           // Set up loadout editing
           if (Levels._HardcodedLoadout == null)
-            Levels._HardcodedLoadout = new Loadout()
+            Levels._HardcodedLoadout = new()
             {
               _Id = -1,
               _Equipment = new PlayerProfile.Equipment()
             };
-
-          s_CurrentMenu._SelectedComponent?._onFocus?.Invoke(s_CurrentMenu._SelectedComponent);
         };
 
         // Tip
@@ -1324,7 +1318,341 @@ namespace Assets.Scripts.UI.Menus
         if (!Levels._LevelPack_UploadingToWorkshop)
         {
           menu_levelpacks
-          .AddComponent($"<color={_COLOR_GRAY}>mission editor - level packs</color>\n\n")
+          .AddComponent($"<color={_COLOR_GRAY}>mission editor - level packs</color>\n\n");
+
+          // Display Steam Workshop-subscribed level packs
+          if (!Levels._LevelPack_UploadingToWorkshop)
+          {
+            menu_levelpacks
+            .AddComponent($"<color={_COLOR_GRAY}>level packs - steam workshop - SUBSCRIBED </color>\n\n");
+            /*.AddEvent((MenuComponent component) =>
+            {
+              // Open to workshop files
+              try
+              {
+                Steamworks.SteamFriends.ActivateGameOverlayToWebPage($"https://steamcommunity.com/profiles/{Steamworks.SteamUser.GetSteamID()}/myworkshopfiles/?appid=954010&sort=score&browsefilter=mysubscriptions&view=imagewall&browsesort=mysubscriptions&p=1");
+              }
+              catch (System.Exception e)
+              {
+                Debug.LogError(e.ToString());
+              }
+            });*/
+            if (SteamManager._SubscribedItems != null && SteamManager._SubscribedItems.Count > 0)
+            {
+              var i = 0;
+              foreach (var item_p in SteamManager._SubscribedItems)
+              {
+
+                var lastline = i++ == SteamManager._PublishedItems.Count - 1 ? "\n" : "";
+
+                menu_levelpacks
+                .AddComponent($"{item_p.Value.m_rgchTitle}\n{lastline}", MenuComponent.ComponentType.BUTTON_DROPDOWN)
+                  .AddEvent(EventType.ON_RENDER, component =>
+                  {
+
+                    // Open submenu with options
+                    var prompt = $"<color={_COLOR_GRAY}>=== level pack: </color>{item_p.Value.m_pchFileName}\n<color={_COLOR_GRAY}>=== level pack options</color>\n\n";
+                    var selections = new List<string>();
+                    var actions = new List<System.Action<MenuComponent>>();
+                    var first_selection = "start";
+
+                    var is_installed = SteamManager.Workshop_GetInstalledLocation(item_p.Value.m_nPublishedFileId) != null;
+                    if (!is_installed)
+                    {
+                      first_selection = "subscribed content not installed\n";
+                      selections.Add("subscribed content not installed\n");
+                      actions.Add(component0 =>
+                      {
+                      });
+                    }
+                    else
+                    {
+                      selections.Add("start");
+                      actions.Add(component0 =>
+                      {
+
+                        // Gather install location from Steam
+                        var file_loc = SteamManager.Workshop_GetInstalledLocation(item_p.Value.m_nPublishedFileId);
+                        if (file_loc == null)
+                          return;
+
+                        // Load level pack info into level collection
+                        var workshop_folder = Directory.GetFiles(file_loc);
+                        if (workshop_folder.Length != 1) return;
+
+                        var filename = workshop_folder[0];
+                        var filename_full = $"{filename}";
+                        Levels._LevelPack_Current = new Levels.LevelCollection()
+                        {
+                          _name = filename,
+                          _levelData = Levels.ReadFromFile(filename_full).Split('\n')
+                        };
+
+                        // Load map
+                        Levels._LevelPack_SelectingLevelsFromPack = true;
+                        Levels._LevelPacks_Play_SaveIndex = s_CurrentMenu._DropdownParentIndex;
+
+                        CommonEvents._SwitchMenu(MenuType.EDITOR_LEVELS);
+                      });
+                    }
+
+                    // Set dropdown data
+                    component.SetDropdownData(prompt, selections, actions, first_selection);
+                  });
+
+              }
+            }
+            else
+              menu_levelpacks
+              .AddComponent($"no subscribed maps\n\n");
+          }
+
+          // Display Steam Workshop-published level packs
+          menu_levelpacks
+          .AddComponent($"<color={_COLOR_GRAY}>level packs - steam workshop - PUBLISHED</color>\n\n");
+          /*.AddEvent((MenuComponent component) =>
+          {
+
+            // Open to published files
+            try
+            {
+              Steamworks.SteamFriends.ActivateGameOverlayToWebPage($"https://steamcommunity.com/profiles/{Steamworks.SteamUser.GetSteamID()}/myworkshopfiles/?appid=954010&sort=score&browsefilter=myfiles&view=imagewall");
+            }
+            catch (System.Exception e)
+            {
+              Debug.LogError(e.ToString());
+            }
+
+          });*/
+
+          if (Levels._LevelPack_UploadingToWorkshop)
+            menu_levelpacks
+            .AddComponent($"upload as new workshop item\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
+              .AddEvent(component =>
+              {
+
+                // Gather workshop info
+                TileManager.EditorMenus.ShowWorkshopMenu();
+                var menu = TileManager.EditorMenus._Menu_Workshop_Infos;
+
+                menu.GetChild(1).GetComponent<TMPro.TMP_InputField>().text = "";
+                menu.GetChild(2).GetComponent<TMPro.TMP_InputField>().text = "";
+
+                var button_ok = menu.GetChild(3).GetChild(0).GetComponent<UnityEngine.UI.Button>();
+                var button_no = menu.GetChild(3).GetChild(1).GetComponent<UnityEngine.UI.Button>();
+
+                button_ok.onClick.RemoveAllListeners();
+                button_ok.onClick.AddListener(() =>
+                {
+
+                  var title = menu.GetChild(1).GetComponent<TMPro.TMP_InputField>().text.Trim();
+                  var desc = menu.GetChild(2).GetComponent<TMPro.TMP_InputField>().text.Trim();
+
+                  if (title.Length == 0 || !System.Text.RegularExpressions.Regex.IsMatch(title, @"^[\w,\s-]+$")) return;
+                  //if (desc.Length > 0 && !System.Text.RegularExpressions.Regex.IsMatch(desc, @"^[\w,\s-]+$")) return;
+
+                  // Make sure file exists / copy
+                  var filename = Levels._LevelPack_Current._name;
+                  var filename_full = $"Levelpacks/Local/{filename}";
+                  if (!File.Exists(filename_full))
+                    return;
+
+                  // Create dir
+                  if (Directory.Exists($"{filestructure_workshop}{title}"))
+                    Directory.Delete($"{filestructure_workshop}{title}", true);
+                  Directory.CreateDirectory($"{filestructure_workshop}{title}");
+                  File.Copy(filename_full, $"{filestructure_workshop}{title}/{filename}");
+
+                  // Copy file to workshop
+                  SteamManager.Workshop_CreateNew(new SteamManager.SteamWorkshopItem()
+                  {
+                    _title = title,
+                    _description = desc,
+                    _filelocation = $"{Directory.GetCurrentDirectory()}/{filestructure_workshop}{title}"
+                  });
+
+                  // Hide menu
+                  menu.gameObject.SetActive(false);
+
+                  // Reload menus
+                  Levels._LevelPack_UploadingToWorkshop = false;
+                  CommonEvents._SwitchMenu(MenuType.EDITOR_PACKS);
+                  s_CurrentMenu._SelectionIndex = s_CurrentMenu._MenuComponentsSelectable.Count - 2;
+                  _CanRender = false;
+                  RenderMenu();
+                  SendInput(Input.SPACE);
+                  SendInput(Input.SPACE);
+                });
+
+                button_no.onClick.RemoveAllListeners();
+                button_no.onClick.AddListener(() =>
+                {
+
+                  menu.gameObject.SetActive(false);
+
+                });
+
+
+              });
+          else
+          {
+            menu_levelpacks
+              .AddComponent("open steam workshop\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
+                .AddEvent(component =>
+                {
+
+                  // Open to workshop files
+                  try
+                  {
+                    Steamworks.SteamFriends.ActivateGameOverlayToWebPage($"https://steamcommunity.com/app/954010/workshop/");
+                  }
+                  catch (System.Exception e)
+                  {
+                    Debug.LogError(e.ToString());
+                  }
+                })
+              .AddComponent("reload local / workshop content\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
+                .AddEvent(component =>
+                {
+
+                  // Load workshop items
+                  SteamManager.Workshop_GetUserItems();
+
+                  // Reload menu
+                  IEnumerator reloaddelay()
+                  {
+                    yield return new WaitForSecondsRealtime(1f);
+
+                    CommonEvents._RemoveDropdownSelections(s_CurrentMenu._SelectedComponent);
+                    CommonEvents._SwitchMenu(MenuType.EDITOR_PACKS);
+
+                    s_CurrentMenu._SelectionIndex = s_CurrentMenu._MenuComponentsSelectable.Count - 3;
+                    _CanRender = false;
+                    RenderMenu();
+                  }
+                  GameScript.s_Singleton.StartCoroutine(reloaddelay());
+                });
+          }
+
+          if (SteamManager._PublishedItems != null && SteamManager._PublishedItems.Count > 0)
+          {
+            var i = 0;
+            foreach (var item_p in SteamManager._PublishedItems)
+            {
+
+              var lastline = i++ == SteamManager._PublishedItems.Count - 1 ? "\n" : "";
+
+              // Dropdown options for published items
+              menu_levelpacks
+              .AddComponent($"{item_p.Value.m_rgchTitle}\n{lastline}", MenuComponent.ComponentType.BUTTON_DROPDOWN)
+                .AddEvent(EventType.ON_RENDER, component =>
+                {
+
+                  // Open submenu with options
+                  var prompt = $"<color={_COLOR_GRAY}>=== level pack: </color>{item_p.Value.m_pchFileName}\n<color={_COLOR_GRAY}>=== level pack options</color>\n\n";
+                  var selections = new List<string>();
+                  var actions = new List<System.Action<MenuComponent>>();
+                  var first_selection = "start";
+
+                  if (Levels._LevelPack_UploadingToWorkshop)
+                  {
+                    prompt = $"<color={_COLOR_GRAY}>=== level pack: </color>{item_p.Value.m_rgchTitle}\n<color={_COLOR_GRAY}>=== overwrite level pack?</color>\n\n";
+
+                    selections.Add("overwrite");
+                    actions.Add(component0 =>
+                    {
+
+                      // Make sure file exists / copy
+                      var filename = Levels._LevelPack_Current._name;
+                      var filename_full = $"Levelpacks/Local/{filename}";
+                      if (!File.Exists(filename_full))
+                        return;
+
+                      var title = item_p.Value.m_rgchTitle;
+                      var desc = item_p.Value.m_rgchDescription;
+
+                      // Create dir
+                      if (Directory.Exists($"{filestructure_workshop}{title}"))
+                        Directory.Delete($"{filestructure_workshop}{title}", true);
+                      Directory.CreateDirectory($"{filestructure_workshop}{title}");
+                      // Copy file
+                      File.Copy(filename_full, $"{filestructure_workshop}{title}/{filename}");
+
+                      // Copy file to workshop
+                      SteamManager.Workshop_Update(item_p.Value.m_nPublishedFileId, new SteamManager.SteamWorkshopItem()
+                      {
+                        _filelocation = $"{Directory.GetCurrentDirectory()}/{filestructure_workshop}{title}"
+                      });
+
+                      // Reload menus
+                      Levels._LevelPack_UploadingToWorkshop = false;
+                      CommonEvents._SwitchMenu(MenuType.EDITOR_PACKS);
+                      s_CurrentMenu._SelectionIndex = s_CurrentMenu._MenuComponentsSelectable.Count - 2;
+                      _CanRender = false;
+                      RenderMenu();
+                      SendInput(Input.SPACE);
+                      SendInput(Input.SPACE);
+                    });
+
+                    // Set dropdown data
+                    component.SetDropdownData(prompt, selections, actions, "overwrite");
+                  }
+                  else
+                  {
+
+                    var is_installed = SteamManager.Workshop_GetInstalledLocation(item_p.Value.m_nPublishedFileId) != null;
+                    if (!is_installed)
+                    {
+                      first_selection = "not subscribed to content\n";
+                      selections.Add("not subscribed to content\n");
+                      actions.Add(component0 =>
+                      {
+                      });
+                    }
+                    else
+                    {
+                      selections.Add("start");
+                      actions.Add(component0 =>
+                      {
+
+                        // Gather install location from Steam
+                        var file_loc = SteamManager.Workshop_GetInstalledLocation(item_p.Value.m_nPublishedFileId);
+                        if (file_loc == null)
+                          return;
+
+                        // Load level pack info into level collection
+                        var workshop_folder = Directory.GetFiles(file_loc);
+                        if (workshop_folder.Length != 1) return;
+
+                        var filename = workshop_folder[0];
+                        var filename_full = $"{filename}";
+                        Levels._LevelPack_Current = new Levels.LevelCollection()
+                        {
+                          _name = filename,
+                          _levelData = Levels.ReadFromFile(filename_full).Split('\n')
+                        };
+
+                        // Load map
+                        Levels._LevelPack_SelectingLevelsFromPack = true;
+                        Levels._LevelPacks_Play_SaveIndex = s_CurrentMenu._DropdownParentIndex;
+
+                        CommonEvents._SwitchMenu(MenuType.EDITOR_LEVELS);
+                      });
+                    }
+
+                    // Set dropdown data
+                    component.SetDropdownData(prompt, selections, actions, first_selection);
+                  }
+
+                });
+            }
+          }
+          else
+            menu_levelpacks
+            .AddComponent($"no published maps\n\n");
+
+          menu_levelpacks
+          .AddComponent($"<color={_COLOR_GRAY}>level packs - local</color>\n\n")
 
           // Create a new level pack
           .AddComponent("new level pack\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
@@ -1337,9 +1665,6 @@ namespace Assets.Scripts.UI.Menus
               _CanRender = false;
               RenderMenu();
             });
-
-          menu_levelpacks
-          .AddComponent($"<color={_COLOR_GRAY}>level packs - local</color>\n\n");
 
           // Load list of level packs
           Levels.LevelPacks_InitFolders();
@@ -1486,7 +1811,6 @@ namespace Assets.Scripts.UI.Menus
                   s_CurrentMenu._SelectionIndex = save_index;
                   _CanRender = false;
                   RenderMenu();
-                  s_CurrentMenu._SelectedComponent._onFocus?.Invoke(s_CurrentMenu._SelectedComponent);
                 }
 
               });
@@ -1516,7 +1840,6 @@ namespace Assets.Scripts.UI.Menus
                     s_CurrentMenu._SelectionIndex = save_index - 1;
                     _CanRender = false;
                     RenderMenu();
-                    s_CurrentMenu._SelectedComponent._onFocus?.Invoke(s_CurrentMenu._SelectedComponent);
                   }
 
               });
@@ -1524,12 +1847,12 @@ namespace Assets.Scripts.UI.Menus
               // Upload level pack
               if (Levels._LevelPack_Current != null && Levels._LevelPack_Current._levelData.Length == 0)
               {
-                selections.Add("upload to workshop - cannot upload empty level pack\n");
+                selections.Add("upload to workshop - cannot upload empty level pack");
                 actions.Add(component0 => { });
               }
               else
               {
-                selections.Add("upload to workshop\n");
+                selections.Add("upload to workshop");
                 actions.Add(component0 =>
                 {
 
@@ -1568,347 +1891,13 @@ namespace Assets.Scripts.UI.Menus
 
         }
 
-        // Display Steam Workshop-published level packs
-        menu_levelpacks
-        .AddComponent($"<color={_COLOR_GRAY}>level packs - steam workshop - PUBLISHED</color>\n\n");
-        /*.AddEvent((MenuComponent component) =>
-        {
-
-          // Open to published files
-          try
-          {
-            Steamworks.SteamFriends.ActivateGameOverlayToWebPage($"https://steamcommunity.com/profiles/{Steamworks.SteamUser.GetSteamID()}/myworkshopfiles/?appid=954010&sort=score&browsefilter=myfiles&view=imagewall");
-          }
-          catch (System.Exception e)
-          {
-            Debug.LogError(e.ToString());
-          }
-
-        });*/
-
-        if (Levels._LevelPack_UploadingToWorkshop)
-          menu_levelpacks
-          .AddComponent($"upload as new workshop item\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-            .AddEvent(component =>
-            {
-
-              // Gather workshop info
-              TileManager.EditorMenus.ShowWorkshopMenu();
-              var menu = TileManager.EditorMenus._Menu_Workshop_Infos;
-
-              menu.GetChild(1).GetComponent<TMPro.TMP_InputField>().text = "";
-              menu.GetChild(2).GetComponent<TMPro.TMP_InputField>().text = "";
-
-              var button_ok = menu.GetChild(3).GetChild(0).GetComponent<UnityEngine.UI.Button>();
-              var button_no = menu.GetChild(3).GetChild(1).GetComponent<UnityEngine.UI.Button>();
-
-              button_ok.onClick.RemoveAllListeners();
-              button_ok.onClick.AddListener(() =>
-              {
-
-                var title = menu.GetChild(1).GetComponent<TMPro.TMP_InputField>().text.Trim();
-                var desc = menu.GetChild(2).GetComponent<TMPro.TMP_InputField>().text.Trim();
-
-                if (title.Length == 0 || !System.Text.RegularExpressions.Regex.IsMatch(title, @"^[\w,\s-]+$")) return;
-                //if (desc.Length > 0 && !System.Text.RegularExpressions.Regex.IsMatch(desc, @"^[\w,\s-]+$")) return;
-
-                // Make sure file exists / copy
-                var filename = Levels._LevelPack_Current._name;
-                var filename_full = $"Levelpacks/Local/{filename}";
-                if (!File.Exists(filename_full))
-                  return;
-
-                // Create dir
-                if (Directory.Exists($"{filestructure_workshop}{title}"))
-                  Directory.Delete($"{filestructure_workshop}{title}", true);
-                Directory.CreateDirectory($"{filestructure_workshop}{title}");
-                File.Copy(filename_full, $"{filestructure_workshop}{title}/{filename}");
-
-                // Copy file to workshop
-                SteamManager.Workshop_CreateNew(new SteamManager.SteamWorkshopItem()
-                {
-                  _title = title,
-                  _description = desc,
-                  _filelocation = $"{Directory.GetCurrentDirectory()}/{filestructure_workshop}{title}"
-                });
-
-                // Hide menu
-                menu.gameObject.SetActive(false);
-
-                // Reload menus
-                Levels._LevelPack_UploadingToWorkshop = false;
-                CommonEvents._SwitchMenu(MenuType.EDITOR_PACKS);
-                s_CurrentMenu._SelectionIndex = s_CurrentMenu._MenuComponentsSelectable.Count - 2;
-                _CanRender = false;
-                RenderMenu();
-                SendInput(Input.SPACE);
-                SendInput(Input.SPACE);
-              });
-
-              button_no.onClick.RemoveAllListeners();
-              button_no.onClick.AddListener(() =>
-              {
-
-                menu.gameObject.SetActive(false);
-
-              });
-
-
-            });
-
-        if (SteamManager._PublishedItems != null && SteamManager._PublishedItems.Count > 0)
-        {
-          var i = 0;
-          foreach (var item_p in SteamManager._PublishedItems)
-          {
-
-            var lastline = i++ == SteamManager._PublishedItems.Count - 1 ? "\n" : "";
-
-            // Dropdown options for published items
-            menu_levelpacks
-            .AddComponent($"{item_p.Value.m_rgchTitle}\n{lastline}", MenuComponent.ComponentType.BUTTON_DROPDOWN)
-              .AddEvent(EventType.ON_RENDER, component =>
-              {
-
-                // Open submenu with options
-                var prompt = $"<color={_COLOR_GRAY}>=== level pack: </color>{item_p.Value.m_pchFileName}\n<color={_COLOR_GRAY}>=== level pack options</color>\n\n";
-                var selections = new List<string>();
-                var actions = new List<System.Action<MenuComponent>>();
-                var first_selection = "start";
-
-                if (Levels._LevelPack_UploadingToWorkshop)
-                {
-                  prompt = $"<color={_COLOR_GRAY}>=== level pack: </color>{item_p.Value.m_rgchTitle}\n<color={_COLOR_GRAY}>=== overwrite level pack?</color>\n\n";
-
-                  selections.Add("overwrite");
-                  actions.Add(component0 =>
-                  {
-
-                    // Make sure file exists / copy
-                    var filename = Levels._LevelPack_Current._name;
-                    var filename_full = $"Levelpacks/Local/{filename}";
-                    if (!File.Exists(filename_full))
-                      return;
-
-                    var title = item_p.Value.m_rgchTitle;
-                    var desc = item_p.Value.m_rgchDescription;
-
-                    // Create dir
-                    if (Directory.Exists($"{filestructure_workshop}{title}"))
-                      Directory.Delete($"{filestructure_workshop}{title}", true);
-                    Directory.CreateDirectory($"{filestructure_workshop}{title}");
-                    // Copy file
-                    File.Copy(filename_full, $"{filestructure_workshop}{title}/{filename}");
-
-                    // Copy file to workshop
-                    SteamManager.Workshop_Update(item_p.Value.m_nPublishedFileId, new SteamManager.SteamWorkshopItem()
-                    {
-                      _filelocation = $"{Directory.GetCurrentDirectory()}/{filestructure_workshop}{title}"
-                    });
-
-                    // Reload menus
-                    Levels._LevelPack_UploadingToWorkshop = false;
-                    CommonEvents._SwitchMenu(MenuType.EDITOR_PACKS);
-                    s_CurrentMenu._SelectionIndex = s_CurrentMenu._MenuComponentsSelectable.Count - 2;
-                    _CanRender = false;
-                    RenderMenu();
-                    SendInput(Input.SPACE);
-                    SendInput(Input.SPACE);
-                  });
-
-                  // Set dropdown data
-                  component.SetDropdownData(prompt, selections, actions, "overwrite");
-                }
-                else
-                {
-
-                  var is_installed = SteamManager.Workshop_GetInstalledLocation(item_p.Value.m_nPublishedFileId) != null;
-                  if (!is_installed)
-                  {
-                    first_selection = "not subscribed to content\n";
-                    selections.Add("not subscribed to content\n");
-                    actions.Add(component0 =>
-                    {
-                    });
-                  }
-                  else
-                  {
-                    selections.Add("start\n");
-                    actions.Add(component0 =>
-                    {
-
-                      // Gather install location from Steam
-                      var file_loc = SteamManager.Workshop_GetInstalledLocation(item_p.Value.m_nPublishedFileId);
-                      if (file_loc == null)
-                        return;
-
-                      // Load level pack info into level collection
-                      var workshop_folder = Directory.GetFiles(file_loc);
-                      if (workshop_folder.Length != 1) return;
-
-                      var filename = workshop_folder[0];
-                      var filename_full = $"{filename}";
-                      Levels._LevelPack_Current = new Levels.LevelCollection()
-                      {
-                        _name = filename,
-                        _levelData = Levels.ReadFromFile(filename_full).Split('\n')
-                      };
-
-                      // Load map
-                      Levels._LevelPack_SelectingLevelsFromPack = true;
-                      Levels._LevelPacks_Play_SaveIndex = s_CurrentMenu._DropdownParentIndex;
-
-                      CommonEvents._SwitchMenu(MenuType.EDITOR_LEVELS);
-                    });
-                  }
-
-                  // Set dropdown data
-                  component.SetDropdownData(prompt, selections, actions, first_selection);
-                }
-
-              });
-          }
-        }
-        else
-          menu_levelpacks
-          .AddComponent($"no published maps\n\n");
-
-        // Display Steam Workshop-subscribed level packs
+        // Return to editor main menu
         if (!Levels._LevelPack_UploadingToWorkshop)
         {
-          menu_levelpacks
-          .AddComponent($"<color={_COLOR_GRAY}>level packs - steam workshop - SUBSCRIBED </color>\n\n");
-          /*.AddEvent((MenuComponent component) =>
-          {
-            // Open to workshop files
-            try
-            {
-              Steamworks.SteamFriends.ActivateGameOverlayToWebPage($"https://steamcommunity.com/profiles/{Steamworks.SteamUser.GetSteamID()}/myworkshopfiles/?appid=954010&sort=score&browsefilter=mysubscriptions&view=imagewall&browsesort=mysubscriptions&p=1");
-            }
-            catch (System.Exception e)
-            {
-              Debug.LogError(e.ToString());
-            }
-          });*/
-          if (SteamManager._SubscribedItems != null && SteamManager._SubscribedItems.Count > 0)
-          {
-            var i = 0;
-            foreach (var item_p in SteamManager._SubscribedItems)
-            {
-
-              var lastline = i++ == SteamManager._PublishedItems.Count - 1 ? "\n" : "";
-
-              menu_levelpacks
-              .AddComponent($"{item_p.Value.m_rgchTitle}\n{lastline}", MenuComponent.ComponentType.BUTTON_DROPDOWN)
-                .AddEvent(EventType.ON_RENDER, component =>
-                {
-
-                  // Open submenu with options
-                  var prompt = $"<color={_COLOR_GRAY}>=== level pack: </color>{item_p.Value.m_pchFileName}\n<color={_COLOR_GRAY}>=== level pack options</color>\n\n";
-                  var selections = new List<string>();
-                  var actions = new List<System.Action<MenuComponent>>();
-                  var first_selection = "start";
-
-                  var is_installed = SteamManager.Workshop_GetInstalledLocation(item_p.Value.m_nPublishedFileId) != null;
-                  if (!is_installed)
-                  {
-                    first_selection = "subscribed content not installed\n";
-                    selections.Add("subscribed content not installed\n");
-                    actions.Add(component0 =>
-                    {
-                    });
-                  }
-                  else
-                  {
-                    selections.Add("start\n");
-                    actions.Add(component0 =>
-                    {
-
-                      // Gather install location from Steam
-                      var file_loc = SteamManager.Workshop_GetInstalledLocation(item_p.Value.m_nPublishedFileId);
-                      if (file_loc == null)
-                        return;
-
-                      // Load level pack info into level collection
-                      var workshop_folder = Directory.GetFiles(file_loc);
-                      if (workshop_folder.Length != 1) return;
-
-                      var filename = workshop_folder[0];
-                      var filename_full = $"{filename}";
-                      Levels._LevelPack_Current = new Levels.LevelCollection()
-                      {
-                        _name = filename,
-                        _levelData = Levels.ReadFromFile(filename_full).Split('\n')
-                      };
-
-                      // Load map
-                      Levels._LevelPack_SelectingLevelsFromPack = true;
-                      Levels._LevelPacks_Play_SaveIndex = s_CurrentMenu._DropdownParentIndex;
-
-                      CommonEvents._SwitchMenu(MenuType.EDITOR_LEVELS);
-                    });
-                  }
-
-                  // Set dropdown data
-                  component.SetDropdownData(prompt, selections, actions, first_selection);
-                });
-
-            }
-          }
-          else
-            menu_levelpacks
-            .AddComponent($"no subscribed maps\n\n");
-
-          menu_levelpacks
-          .AddComponent("open steam workshop\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-            .AddEvent(component =>
-            {
-
-              // Open to workshop files
-              try
-              {
-                Steamworks.SteamFriends.ActivateGameOverlayToWebPage($"https://steamcommunity.com/app/954010/workshop/");
-              }
-              catch (System.Exception e)
-              {
-                Debug.LogError(e.ToString());
-              }
-            })
-          .AddComponent("reload local / workshop content\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-            .AddEvent(component =>
-            {
-
-              // Load workshop items
-              SteamManager.Workshop_GetUserItems();
-
-              // Reload menu
-              IEnumerator reloaddelay()
-              {
-                yield return new WaitForSecondsRealtime(1f);
-
-                CommonEvents._RemoveDropdownSelections(s_CurrentMenu._SelectedComponent);
-                CommonEvents._SwitchMenu(MenuType.EDITOR_PACKS);
-
-                s_CurrentMenu._SelectionIndex = s_CurrentMenu._MenuComponentsSelectable.Count - 3;
-                _CanRender = false;
-                RenderMenu();
-              }
-              GameScript.s_Singleton.StartCoroutine(reloaddelay());
-            })
-          /*.AddComponent("open deleted levels / packs backup\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-            .AddEvent((MenuComponent component) =>
-            {
-              if (System.IO.Directory.Exists($"{filestructure_local}trashed"))
-                System.Diagnostics.Process.Start(new System.IO.DirectoryInfo($"{filestructure_local}trashed").FullName);
-            })*/
-
-          // Return to editor main menu
-          .AddBackButton(MenuType.EDITOR_MAIN);
-
+          menu_levelpacks.AddBackButton(MenuType.EDITOR_MAIN);
         }
         else
         {
-
           menu_levelpacks.AddBackButton(MenuType.EDITOR_PACKS)
           .AddEvent(component =>
           {
@@ -1916,7 +1905,6 @@ namespace Assets.Scripts.UI.Menus
             CommonEvents._SwitchMenu(MenuType.EDITOR_PACKS);
             RenderMenu();
           });
-
         }
 
         // Load on switch
@@ -1950,7 +1938,7 @@ namespace Assets.Scripts.UI.Menus
 
           // Set up loadout editing
           if (Levels._HardcodedLoadout == null)
-            Levels._HardcodedLoadout = new Loadout()
+            Levels._HardcodedLoadout = new()
             {
               _Id = -1,
               _Equipment = new PlayerProfile.Equipment()
@@ -1965,9 +1953,9 @@ namespace Assets.Scripts.UI.Menus
           return;
         }
 
-        Debug.Log(Levels._IsOverwritingLevel);
-        Debug.Log(Levels._IsReorderingLevel);
-        Debug.Log(Levels._LevelPack_Current._levelData.Length == Levels._LEVELPACK_MAX);
+        // Debug.Log(Levels._IsOverwritingLevel);
+        // Debug.Log(Levels._IsReorderingLevel);
+        // Debug.Log(Levels._LevelPack_Current._levelData.Length == Levels._LEVELPACK_MAX);
 
         // Start menu
         if (Levels._IsOverwritingLevel)
@@ -2071,7 +2059,6 @@ namespace Assets.Scripts.UI.Menus
                         RenderMenu();
                         SendInput(Input.SPACE);
                         s_CurrentMenu._SelectionIndex = save_index + 1;
-                        s_CurrentMenu._SelectedComponent._onFocus?.Invoke(s_CurrentMenu._SelectedComponent);
                         _CanRender = false;
                         RenderMenu();
                       }
@@ -2081,7 +2068,6 @@ namespace Assets.Scripts.UI.Menus
                         CommonEvents._SwitchMenu(MenuType.EDITOR_PACKS_EDIT);
                         s_CurrentMenu._SelectedComponent._focused = false;
                         s_CurrentMenu._SelectionIndex = 0;
-                        s_CurrentMenu._SelectedComponent._onFocus?.Invoke(s_CurrentMenu._SelectedComponent);
                         _CanRender = false;
                         RenderMenu();
                       }
@@ -2323,7 +2309,6 @@ namespace Assets.Scripts.UI.Menus
                     _CanRender = false;
                     RenderMenu();
                     s_CurrentMenu._SelectionIndex = save_index == s_CurrentMenu._MenuComponentsSelectable.Count - 1 ? save_index - 1 : save_index;
-                    s_CurrentMenu._SelectedComponent._onFocus?.Invoke(s_CurrentMenu._SelectedComponent);
                     _CanRender = false;
                     RenderMenu();
 
@@ -2343,8 +2328,6 @@ namespace Assets.Scripts.UI.Menus
                     s_CurrentMenu._SelectionIndex = 0;
                     _CanRender = false;
                     RenderMenu();
-                    s_CurrentMenu._SelectedComponent?._onFocus?.Invoke(s_CurrentMenu._SelectedComponent);
-
                   });
 
                   // Change theme
@@ -2855,7 +2838,6 @@ namespace Assets.Scripts.UI.Menus
                   if (s_CurrentMenu._SelectedComponent.GetDisplayText(false).Trim().EndsWith("back"))
                     s_CurrentMenu._SelectionIndex--;
                   s_CurrentMenu._MenuComponent_lastFocused = s_CurrentMenu._MenuComponentsSelectable[0];
-                  s_CurrentMenu._SelectedComponent._onFocus(s_CurrentMenu._SelectedComponent);
                   _CanRender = false;
                   RenderMenu();
                   PlayNoise(Noise.PURCHASE);
@@ -3958,7 +3940,6 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
           {
             s_CurrentMenu._SelectionIndex = s_CurrentMenu._MenuComponentsSelectable.Count - s_CurrentMenu._DropdownCount + save_saveLevelSelected;
             s_CurrentMenu._MenuComponent_lastFocused = s_CurrentMenu._MenuComponentsSelectable[s_CurrentMenu._MenuComponentsSelectable.Count - s_CurrentMenu._DropdownCount];
-            s_CurrentMenu._SelectedComponent._onFocus?.Invoke(s_CurrentMenu._SelectedComponent);
           }
           // Render
           RenderMenu();
@@ -4222,16 +4203,29 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
         var list_perks = ShopHelper.GetPerkList();
 
         var has_item = false;
-        foreach (var unlockDat in LevelModule.ShopUnlocksOrdered)
+        var has_utility = false;
+        var has_perk = false;
+
+        if (Levels._EditingLoadout)
         {
-          var unlock = unlockDat.Key;
-          if (unlockDat.Value.UnlockValue != ShopUnlockData.UnlockValueType.UNLOCKED) continue;
-          if (unlock.ToString().StartsWith("ITEM_"))
-          {
-            has_item = true;
-            break;
-          }
+          has_item = has_utility = has_perk = true;
         }
+        else
+          foreach (var unlockDat in LevelModule.ShopUnlocksOrdered)
+          {
+            var unlock = unlockDat.Key;
+            if (unlockDat.Value.UnlockValue != ShopUnlockData.UnlockValueType.UNLOCKED) continue;
+
+            if (unlock.ToString().StartsWith("ITEM_"))
+              has_item = true;
+            else if (unlock.ToString().StartsWith("UTILITY_"))
+              has_utility = true;
+            else if (unlock.ToString().StartsWith("MOD_"))
+              has_perk = true;
+
+            if (has_item && has_utility && has_perk)
+              break;
+          }
 
         var m = new Menu(MenuType.EDIT_LOADOUT)
         {
@@ -4705,31 +4699,8 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
               });
           }
         }
+
         // Utilities
-        var has_utility = false;
-        foreach (var unlockDat in LevelModule.ShopUnlocksOrdered)
-        {
-          var unlock = unlockDat.Key;
-          if (unlockDat.Value.UnlockValue != ShopUnlockData.UnlockValueType.UNLOCKED) continue;
-          if (unlock.ToString().StartsWith("UTILITY_"))
-          {
-            has_utility = true;
-            break;
-          }
-        }
-        /*
-
-
-                .AddEvent(EventType.ON_RENDER, (MenuComponent component) =>
-        {
-          var points = Loadout._POINTS_MAX;
-          if (component._focused)
-            component.SetDisplayText($"</color><color={_COLOR_GRAY}>max equipment points: {points}</color> <-- the higher the number the more things you can equip<color=white>\n\n");
-          else
-            component.SetDisplayText($"max equipment points: </color><color=yellow>{points}</color><color=white>\n\n");
-        })
-
-        */
         if (has_utility)
         {
           m.AddComponent("left utility\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
@@ -4939,20 +4910,6 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
         }
 
         // Perks
-        var has_perk = false;
-        if (Levels._EditingLoadout)
-          has_perk = true;
-        else
-          foreach (var unlockDat in LevelModule.ShopUnlocksOrdered)
-          {
-            var unlock = unlockDat.Key;
-            if (unlockDat.Value.UnlockValue != ShopUnlockData.UnlockValueType.UNLOCKED) continue;
-            if (unlock.ToString().StartsWith("MOD_"))
-            {
-              has_perk = true;
-              break;
-            }
-          }
         if (has_perk)
         {
           m.AddComponent("mods\n\n\n\n\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
@@ -5049,22 +5006,23 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
                   {
                     var save_selection = s_CurrentMenu._DropdownParentIndex;
                     var save_dropdown = s_CurrentMenu._SelectionIndex;
-                    GenericMenu(new string[]
-                    {
-                     "cannot equip mod\n\n- the maximum number of mods you can equip is 4\n\n- try unequipping a mod\n"
-                    },
-                    "ok",
-                    MenuType.EDIT_LOADOUT,
-                    null,
-                    true,
-                    component1 =>
-                    {
-                      s_menus[MenuType.EDIT_LOADOUT]._SelectionIndex = save_selection;
-                      SendInput(Input.SPACE);
-                      SendInput(Input.SPACE);
-                      s_menus[MenuType.EDIT_LOADOUT]._SelectionIndex = save_dropdown;
-                      RenderMenu();
-                    });
+                    GenericMenu(
+                      new string[]
+                      {
+                        "cannot equip mod\n\n- the maximum number of mods you can equip is 4\n\n- try unequipping a mod\n"
+                      },
+                      "ok",
+                      MenuType.EDIT_LOADOUT,
+                      null,
+                      true,
+                      component1 =>
+                      {
+                        s_menus[MenuType.EDIT_LOADOUT]._SelectionIndex = save_selection;
+                        SendInput(Input.SPACE);
+                        s_menus[MenuType.EDIT_LOADOUT]._SelectionIndex = save_dropdown;
+                        RenderMenu();
+                      }
+                    );
                   }
 
                   // Check for select
@@ -5077,7 +5035,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
                     var typ = "mod";
                     GenericMenu(new string[]
                     {
-                  string.Format(format_editLoadout, typ)
+                      string.Format(format_editLoadout, typ)
                     },
                     "ok",
                     MenuType.EDIT_LOADOUT,
@@ -5093,10 +5051,12 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
                     });
                   }
                   ;
+
                   // Update UI
                   foreach (var profile in PlayerProfile.s_Profiles)
                     profile.UpdateIcons();
                 });
+
                 // Check if utility is unlocked
                 if (perk0 == Perk.PerkType.NONE)
                   actions_onCreated.Add(component0 => { });
@@ -5109,8 +5069,15 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
                     actions_onCreated.Add(component0 => { component0._obscured = true; });
                 }
               }
+
               // Update dropdown data
-              component.SetDropdownData("=== " + string.Format(loadout_format, "mod", "description", "point value") + "\n\n", selections, actions, selection_match, actions_onCreated);
+              component.SetDropdownData(
+                "=== " + string.Format(loadout_format, "mod", "description", "point value") + "\n\n",
+                selections,
+                actions,
+                selection_match,
+                actions_onCreated
+              );
             });
         }
 
@@ -5976,8 +5943,12 @@ go to the <color=yellow>SHOP</color> to buy something~1
           .AddEvent(EventType.ON_RENDER, component =>
           {
             // Set display text to current resolution
-            var selection_match = Application.targetFrameRate == -1 ? "max" : SettingsHelper._ScreenResolution.ToString().Split('@')[1].Trim();
+            var selectedRefreshRate = SettingsHelper._ScreenResolution.ToString().Split('@')[1].Trim();
+            if (selectedRefreshRate.Contains('.'))
+              selectedRefreshRate = selectedRefreshRate.Split('.')[0] + "Hz";
+            var selection_match = Application.targetFrameRate == -1 ? "max" : selectedRefreshRate;
             component.SetDisplayText(string.Format(format_options, "refresh rate:", selection_match));
+
             // Set the dropdown selections to available resolutions
             var selections = new List<string>();
             var actions = new List<System.Action<MenuComponent>>();
@@ -5988,9 +5959,13 @@ go to the <color=yellow>SHOP</color> to buy something~1
               {
                 var res_split = res.ToString().Split('@')[1].Trim();
                 if (selections.Contains(res_split)) continue;
-                // Add resolution as selection
+
+                // Add refresh rate as selection
+                if (res_split.Contains('.'))
+                  res_split = res_split.Split('.')[0] + "Hz";
                 selections.Add(res_split);
-                // Action to change resolution
+
+                // Action to change refresh rate
                 actions.Add(component0 =>
                 {
                   var refreshText = component0.GetDisplayText()[4..].Trim();
@@ -6003,6 +5978,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
                 });
               }
             }
+
             // Add 'max' framerate
             selections.Add("max");
             actions.Add(component0 =>
@@ -7072,7 +7048,6 @@ system will provide and configure all loadouts.~9
           .AddEvent(c =>
           {
             s_CurrentMenu._SelectionIndex = s_saveIndex;
-            s_CurrentMenu._SelectedComponent._onFocus?.Invoke(s_CurrentMenu._SelectedComponent);
             _CanRender = true;
             RenderMenu();
           });
@@ -7828,7 +7803,6 @@ about extras</color>
         s_menus[MenuType.EXTRAS]._OnSwitchTo += () =>
         {
           SpawnMenu_Extras();
-          s_menus[MenuType.EXTRAS]._SelectedComponent._onFocus(s_menus[MenuType.EXTRAS]._SelectedComponent);
         };
 
         //
@@ -8070,6 +8044,8 @@ about extras</color>
       }
 
       // Render
+      if (s_CurrentMenu._SelectedComponent != null)
+        s_CurrentMenu._SelectedComponent._onFocus?.Invoke(s_CurrentMenu._SelectedComponent);
       s_CurrentMenu.Render();
     }
 
@@ -8158,7 +8134,6 @@ about extras</color>
               s_CurrentMenu._SelectionIndex = s_CurrentMenu._MenuComponentsSelectable.Count - 1;
           }
           if (s_CurrentMenu._SelectionIndex < 0) s_CurrentMenu._SelectionIndex = s_CurrentMenu._MenuComponentsSelectable.Count - s_CurrentMenu._SelectionIndex;
-          s_CurrentMenu._SelectedComponent._onFocus?.Invoke(s_CurrentMenu._SelectedComponent);
           _CanRender = false;
           RenderMenu();
 
@@ -8184,7 +8159,6 @@ about extras</color>
             if (s_CurrentMenu._SelectionIndex < s_CurrentMenu._MenuComponentsSelectable.Count - s_CurrentMenu._DropdownCount)
               s_CurrentMenu._SelectionIndex = s_CurrentMenu._MenuComponentsSelectable.Count - s_CurrentMenu._DropdownCount;
           }
-          s_CurrentMenu._SelectedComponent._onFocus?.Invoke(s_CurrentMenu._SelectedComponent);
           _CanRender = false;
           RenderMenu();
 
@@ -8375,7 +8349,6 @@ about extras</color>
       {
         CommonEvents._SwitchMenu(afterUnlockMenu);
         s_CurrentMenu._SelectionIndex = _EditorSaveIndex;
-        s_CurrentMenu._SelectedComponent._onFocus?.Invoke(s_CurrentMenu._SelectedComponent);
 
         _CanRender = false;
         RenderMenu();
@@ -8468,7 +8441,6 @@ about extras</color>
       s_CurrentMenu._SelectionIndex = s_CurrentMenu._MenuComponentsSelectable.Count - 2;
       _CanRender = false;
       RenderMenu();
-      s_CurrentMenu._SelectedComponent._onFocus?.Invoke(s_CurrentMenu._SelectedComponent);
       SendInput(Input.SPACE);
       _CanRender = false;
       RenderMenu();

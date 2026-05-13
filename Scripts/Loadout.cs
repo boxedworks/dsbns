@@ -15,7 +15,19 @@ public class Loadout
   //
   public static Loadout[] _Loadouts;
   public static int _CurrentLoadoutIndex;
-  public static Loadout _CurrentLoadout { get { if (Levels._EditingLoadout) return Levels._HardcodedLoadout; if (_Loadouts == null) return null; return _Loadouts[_CurrentLoadoutIndex]; } }
+  public static Loadout _CurrentLoadout
+  {
+    get
+    {
+      if (Levels._EditingLoadout)
+        return Levels._HardcodedLoadout;
+
+      if (_Loadouts == null)
+        return null;
+
+      return _Loadouts[_CurrentLoadoutIndex];
+    }
+  }
 
   public static void Init()
   {
@@ -111,6 +123,9 @@ public class Loadout
   // Save the loadout
   public void Save()
   {
+    if (_Id == -1)
+      return;
+
     var savestring = "";
     if (_Equipment._ItemLeft0 != Items.NONE) savestring += $"item_left0:{_Equipment._ItemLeft0.ToString()}|";
     if (_Equipment._ItemRight0 != Items.NONE) savestring += $"item_right0:{_Equipment._ItemRight0.ToString()}|";

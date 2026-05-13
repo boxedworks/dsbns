@@ -17,7 +17,7 @@ namespace Assets.Scripts.Settings
     static LevelSaveData LevelModule { get { return s_SaveData.LevelData; } }
 
     //
-    public static float _VERSION = 1.57f;
+    public static float _VERSION = 1.61f;
 
     //
     static Resolution ScreenResolution;
@@ -206,7 +206,7 @@ namespace Assets.Scripts.Settings
           LevelModule.ExtraPlayerAmmo != 0 ||
           LevelModule.ExtraEnemyAmmo != 0 ||
           LevelModule.ExtraBodyExplode != 0
-        //LevelModule.ExtraCrownMode != 0
+        //GameScript.s_IsCrownModeEnabled
         ;
       }
     }

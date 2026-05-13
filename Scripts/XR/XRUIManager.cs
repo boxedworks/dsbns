@@ -28,6 +28,7 @@ namespace Assets.Scripts.XR
       _stylusPosition, _stylusHeight, _stylusSize, _stylusRotation;
 
     Transform _pointerR;
+    Light _pointerR_light;
     Rigidbody _pointerR_physics;
 
     Transform _controllerLeft { get { return GameResources._XrLeft; } }
@@ -47,15 +48,17 @@ namespace Assets.Scripts.XR
 
       _pointerR = _uiControls.GetChild(3);
       _pointerR_physics = _uiControls.GetChild(4).GetComponent<Rigidbody>();
-      _pointerR.transform.parent = _pointerR_physics.transform.parent = _controllerRight;
-      _pointerR.transform.localScale = _pointerR_physics.transform.localScale = Vector3.one * 0.02f;
+      _pointerR.parent = _pointerR_physics.transform.parent = _controllerRight;
+      _pointerR.localPosition = Vector3.zero;
+      _pointerR.localScale = _pointerR_physics.transform.localScale = Vector3.one * 0.02f;
       Physics.IgnoreCollision(_pointerR.GetComponent<Collider>(), _pointerR_physics.GetComponent<Collider>());
 
-      var pointerLight = _pointerR.gameObject.AddComponent<Light>();
-      pointerLight.color = Color.red * Color.white;
-      pointerLight.shadows = LightShadows.Hard;
-      pointerLight.shadowResolution = UnityEngine.Rendering.LightShadowResolution.Low;
-      _pointerR.gameObject.AddComponent<PointerCollider>();
+      _pointerR_light = _pointerR.gameObject.AddComponent<Light>();
+      _pointerR_light.color = Color.red * Color.white;
+      _pointerR_light.shadows = LightShadows.Hard;
+      _pointerR_light.shadowResolution = UnityEngine.Rendering.LightShadowResolution.Low;
+
+      _pointerR_physics.gameObject.AddComponent<PointerCollider>();
 
       var restartMapControls = _uiControls.GetChild(0);
       _buttonRestartMap = restartMapControls.GetChild(1);
@@ -188,6 +191,7 @@ namespace Assets.Scripts.XR
               var val = _cameraSettings._Size;
               val = Mathf.Clamp(val - normalizedValue * 0.5f, 0.5f, 120f);
               _cameraSettings._Size = val;
+              _pointerR_light.range = 10f * (_cameraSettings._Size * 0.3f);
             }
 
             // Height

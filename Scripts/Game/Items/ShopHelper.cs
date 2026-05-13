@@ -289,7 +289,8 @@ namespace Assets.Scripts.Game.Items
     }
     public static string GetUnlockStringLocalized(Unlocks unlock)
     {
-      return LocalizationController.GetString($"unlocks.{unlock}");
+      return unlock.ToString();
+      //return LocalizationController.GetString($"unlocks.{unlock}");
     }
     public static string GetUnlockDescriptionStringLocalized(Unlocks unlock)
     {

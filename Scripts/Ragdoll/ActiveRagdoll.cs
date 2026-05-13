@@ -342,9 +342,7 @@ namespace Assets.Scripts.Ragdoll
         else
         {
           // Get melee side
-          var left_weapon = _ItemL != null && _ItemL.IsMelee();
-
-          _grapplee._Hip.position = _Hip.position + _Hip.transform.forward * 0.45f + _Hip.transform.right * 0.09f * (left_weapon ? -1f : 1f);
+          _grapplee._Hip.position = _Hip.position + _Hip.transform.forward * 0.45f + _Hip.transform.right * 0.09f * (_GrappleSide == Side.LEFT ? -1f : 1f);
           _grapplee._Hip.rotation = _Hip.rotation;
         }
       }
@@ -644,7 +642,7 @@ namespace Assets.Scripts.Ragdoll
         onGrappler?.Invoke(_grappler);
     }
 
-    public bool _IsGraplerPlayer { get { return _IsGrappled && _grappler._IsPlayer; } }
+    public bool _IsGrapplerPlayer { get { return _IsGrappled && _grappler._IsPlayer; } }
 
     // Bloody footprint increment
     public void SetBloodTimer()
@@ -1468,6 +1466,13 @@ namespace Assets.Scripts.Ragdoll
     public bool _IsGrappled;
     ActiveRagdoll _grappler, _grapplee;
     float _lastTryGrapple;
+    public Side _GrappleSide
+    {
+      get
+      {
+        return _ItemL == null || (_ItemL != null && _ItemL.IsMelee()) ? Side.LEFT : Side.RIGHT;
+      }
+    }
     float _kickTimer, _kickTimer_start;
     bool _kicking;
     public void Grapple(bool gentle)
@@ -1864,33 +1869,30 @@ namespace Assets.Scripts.Ragdoll
       if (!_IsRagdolled) _saveRot = _Hip.rotation;
 
       // Check crown
-      if (GameScript.s_IsMissionsGameMode)
-      {
-        if (LevelModule.ExtraCrownMode != 0)
-          if (source != null)
-            if (_hasCrown)
+      if (GameScript.s_IsCrownModeEnabled)
+        if (source != null)
+          if (_hasCrown)
+          {
+            GameScript.s_CrownPlayer = GameScript.s_CrownEnemy = -1;
+
+            RemoveCrown();
+            source.AddCrown(true);
+
+            if (source._IsPlayer)
+              GameScript.s_CrownPlayer = source._PlayerScript._Profile._Id;
+            else if (!source._EnemyScript.IsChaser())
+              GameScript.s_CrownEnemy = source._EnemyScript._Id;
+
+          }
+          else if (GameScript.s_CrownPlayer == -1 && GameScript.s_CrownEnemy == -1)
+          {
+            if (_IsPlayer && source._IsEnemy)
             {
-              GameScript.s_CrownPlayer = GameScript.s_CrownEnemy = -1;
-
-              RemoveCrown();
-              source.AddCrown(true);
-
-              if (source._IsPlayer)
-                GameScript.s_CrownPlayer = source._PlayerScript._Profile._Id;
-              else if (!source._EnemyScript.IsChaser())
+              if (!source._EnemyScript.IsChaser())
                 GameScript.s_CrownEnemy = source._EnemyScript._Id;
-
+              source.AddCrown(true);
             }
-            else if (GameScript.s_CrownPlayer == -1 && GameScript.s_CrownEnemy == -1)
-            {
-              if (_IsPlayer && source._IsEnemy)
-              {
-                if (!source._EnemyScript.IsChaser())
-                  GameScript.s_CrownEnemy = source._EnemyScript._Id;
-                source.AddCrown(true);
-              }
-            }
-      }
+          }
 
       // Invert values
       _Hip.isKinematic = !_Hip.isKinematic;
@@ -2140,7 +2142,7 @@ namespace Assets.Scripts.Ragdoll
     {
       get
       {
-        return (
+        return !_IsDead && (
           HasMelee() && !HasTwohandedWeapon()) ||
           (_ItemL == null && !(_ItemR?._twoHanded ?? false)) ||
           (_ItemR == null && !(_ItemL?._twoHanded ?? false)
@@ -2153,7 +2155,6 @@ namespace Assets.Scripts.Ragdoll
     {
 
       // Checks
-      if (_IsDead) return;
       if (_IsGrappling) return;
       if (GameScript.s_EditorEnabled) return;
       if (!_CanGrapple) return;

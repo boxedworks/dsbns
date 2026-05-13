@@ -10,8 +10,8 @@ namespace Assets.Scripts.XR
 
     public XRCameraSettings()
     {
-      _Position = new Vector2(0f, 0f);
-      _Height = 15f;// - GameResources._Camera_Main.transform.localPosition.y * 0.2f * _Size;
+      _Position = new Vector2(0f, -5f);
+      _Height = 20f;// - GameResources._Camera_Main.transform.localPosition.y * 0.2f * _Size;
       _Size = 30f;
       _Pitch = 0f;
 

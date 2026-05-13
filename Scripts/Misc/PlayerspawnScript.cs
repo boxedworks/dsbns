@@ -63,18 +63,16 @@ public class PlayerspawnScript : MonoBehaviour
 
   public void SpawnPlayer(System.Action<PlayerScript> onSpawn = null, bool setActive = true)
   {
-    SpawnPlayerAt(transform.position, transform.localEulerAngles.y, onSpawn, setActive, _id);
+    SpawnPlayerAt(transform.position, transform.localEulerAngles.y, null, onSpawn, setActive, _id);
   }
 
-  public static void SpawnPlayerAt(Vector3 atPosition, float rotateEulerAngle, System.Action<PlayerScript> onSpawn = null, bool setActive = true, int spawnId = 0)
+  public static void SpawnPlayerAt(Vector3 atPosition, float rotateEulerAngle, PlayerScript connectedTwin, System.Action<PlayerScript> onSpawn = null, bool setActive = true, int spawnId = 0)
   {
 
     // Create a new player
     var player = Instantiate(GameResources._Player);
     player.transform.parent = GameObject.Find("Players").transform;
     player.name = "Player";
-
-    var playerScript = new PlayerScript(player.transform.GetChild(0), spawnId);
 
     // Spawn them based on the this transform
     var spawnPosition = atPosition;
@@ -92,6 +90,7 @@ public class PlayerspawnScript : MonoBehaviour
     FunctionsC.RotateLocal(ref player, rotateEulerAngle);
 
     // Activate the player script
+    var playerScript = new PlayerScript(player.transform.GetChild(0), spawnId, connectedTwin);
     player.SetActive(setActive);
 
     // Fire level load
