@@ -186,9 +186,8 @@ public class PlayerScript : PlayerScript.IHasRagdoll
     //
     if (_HasTwin)
     {
-
       _Id = _ConnectedTwin._Id;
-
+      _connectedTwinSide = ActiveRagdoll.Side.RIGHT;
     }
     else
     {
@@ -1000,9 +999,7 @@ public class PlayerScript : PlayerScript.IHasRagdoll
         (playerScript) =>
         {
           _ConnectedTwin = playerScript;
-
           _connectedTwinSide = ActiveRagdoll.Side.LEFT;
-          playerScript._connectedTwinSide = ActiveRagdoll.Side.RIGHT;
         },
         true,
         _PlayerSpawnId);

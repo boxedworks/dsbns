@@ -215,6 +215,7 @@ public static class FunctionsC
     EXPLOSION_NEW,
     MUZZLE_FIRE,
     ELECTRIC_SPARK,
+    MELEE_TRAIL,
   }
   static int _ExplosionIter;
   public static ParticleSystem[] GetParticleSystem(ParticleSystemType particleType, int forceParticleIndex = -1)
@@ -348,6 +349,10 @@ public static class FunctionsC
       case ParticleSystemType.ELECTRIC_SPARK:
         index = 35;
         break;
+
+      case ParticleSystemType.MELEE_TRAIL:
+        index = 36;
+        break;
     }
 
     if (forceParticleIndex != -1)
@@ -480,7 +485,7 @@ public static class FunctionsC
       ragdoll.ToggleRaycasting(false, false);
 
     // SFX
-    PlayComplexParticleSystemAt(explosionType != ExplosiveScript.ExplosionType.STUN ? ParticleSystemType.EXPLOSION : ParticleSystemType.EXPLOSION_STUN, posAt + new Vector3(0f, 0.2f, 0f));
+    PlayComplexParticleSystemAt(explosionType != ExplosiveScript.ExplosionType.STUN ? ExplosiveScript.s_ExplosionParticleType : ParticleSystemType.EXPLOSION_STUN, posAt + new Vector3(0f, 0.2f, 0f));
 
     // Send explosion to rigidbody handler
     ActiveRagdoll.Rigidbody_Handler.ApplyExplosion(posAt, explosionRadius);

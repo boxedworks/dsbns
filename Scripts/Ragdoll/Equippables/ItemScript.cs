@@ -623,7 +623,8 @@ namespace Assets.Scripts.Ragdoll.Equippables
     {
       //
       var penatrationAmount = GetPenatrationAmount();
-      var smokeParts = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.GUN_SMOKE)[0];
+      var smokeParticles = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.GUN_SMOKE)[0];
+      var muzzleFlashParticles = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.MUZZLE_FIRE)[0];
 
       AnimateUi(penatrationAmount > 1 ? PlayerProfile.Animation.AnimationType.ShootLarge : PlayerProfile.Animation.AnimationType.Shoot, 0.2f);
 
@@ -705,13 +706,21 @@ namespace Assets.Scripts.Ragdoll.Equippables
           );
           bullet.SetSourceItem(this);
 
-          //
+          // Spawn smoke and muzzle flash effects
           if (SettingsModule.UseSmokeFx)
             if (_type != ItemType.FLAMETHROWER && _type != ItemType.CROSSBOW && _type != ItemType.STICKY_GUN)
             {
-              smokeParts.transform.position = spawn_pos + new Vector3(0f, 0.5f, 0f);
-              smokeParts.Emit(Mathf.Clamp(use_penatrationAmount, 1, 6));
+              smokeParticles.transform.position = spawn_pos + new Vector3(0f, 0.5f, 0f);
+              smokeParticles.Emit(Mathf.Clamp(use_penatrationAmount, 1, 6));
             }
+
+          if (_type != ItemType.FLAMETHROWER && _type != ItemType.CROSSBOW)
+          {
+            var muzzle = transform.GetChild(transform.childCount - 1);
+            muzzleFlashParticles.transform.position = muzzle.position;
+            muzzleFlashParticles.transform.rotation = muzzle.rotation;
+            muzzleFlashParticles.Emit(1);
+          }
         }
 
         // Custom projectile
@@ -805,6 +814,14 @@ namespace Assets.Scripts.Ragdoll.Equippables
       if (!_isUtility && IsGun() && _clip == 0)
       {
         TryAnimateUi(PlayerProfile.Animation.AnimationType.OutOfAmmo, 0f);
+      }
+
+      // Melee trail
+      if (_isMelee && _IsSwinging)
+      {
+        var meleeTrail = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.MELEE_TRAIL)[0];
+        meleeTrail.transform.position = _handle.position;
+        meleeTrail.Emit(1);
       }
 
       // Custom swing melee

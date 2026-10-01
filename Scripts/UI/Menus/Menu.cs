@@ -1494,45 +1494,6 @@ namespace Assets.Scripts.UI.Menus
 
 
               });
-          else
-          {
-            menu_levelpacks
-              .AddComponent("open steam workshop\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-                .AddEvent(component =>
-                {
-
-                  // Open to workshop files
-                  try
-                  {
-                    Steamworks.SteamFriends.ActivateGameOverlayToWebPage($"https://steamcommunity.com/app/954010/workshop/");
-                  }
-                  catch (System.Exception e)
-                  {
-                    Debug.LogError(e.ToString());
-                  }
-                })
-              .AddComponent("reload local / workshop content\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
-                .AddEvent(component =>
-                {
-
-                  // Load workshop items
-                  SteamManager.Workshop_GetUserItems();
-
-                  // Reload menu
-                  IEnumerator reloaddelay()
-                  {
-                    yield return new WaitForSecondsRealtime(1f);
-
-                    CommonEvents._RemoveDropdownSelections(s_CurrentMenu._SelectedComponent);
-                    CommonEvents._SwitchMenu(MenuType.EDITOR_PACKS);
-
-                    s_CurrentMenu._SelectionIndex = s_CurrentMenu._MenuComponentsSelectable.Count - 3;
-                    _CanRender = false;
-                    RenderMenu();
-                  }
-                  GameScript.s_Singleton.StartCoroutine(reloaddelay());
-                });
-          }
 
           if (SteamManager._PublishedItems != null && SteamManager._PublishedItems.Count > 0)
           {
@@ -1650,6 +1611,46 @@ namespace Assets.Scripts.UI.Menus
           else
             menu_levelpacks
             .AddComponent($"no published maps\n\n");
+
+          if (!Levels._LevelPack_UploadingToWorkshop)
+          {
+            menu_levelpacks
+              .AddComponent("open steam workshop\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
+                .AddEvent(component =>
+                {
+
+                  // Open to workshop files
+                  try
+                  {
+                    Steamworks.SteamFriends.ActivateGameOverlayToWebPage($"https://steamcommunity.com/app/954010/workshop/");
+                  }
+                  catch (System.Exception e)
+                  {
+                    Debug.LogError(e.ToString());
+                  }
+                })
+              .AddComponent("reload local / workshop content\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
+                .AddEvent(component =>
+                {
+
+                  // Load workshop items
+                  SteamManager.Workshop_GetUserItems();
+
+                  // Reload menu
+                  IEnumerator reloaddelay()
+                  {
+                    yield return new WaitForSecondsRealtime(1f);
+
+                    CommonEvents._RemoveDropdownSelections(s_CurrentMenu._SelectedComponent);
+                    CommonEvents._SwitchMenu(MenuType.EDITOR_PACKS);
+
+                    s_CurrentMenu._SelectionIndex = s_CurrentMenu._MenuComponentsSelectable.Count - 3;
+                    _CanRender = false;
+                    RenderMenu();
+                  }
+                  GameScript.s_Singleton.StartCoroutine(reloaddelay());
+                });
+          }
 
           menu_levelpacks
           .AddComponent($"<color={_COLOR_GRAY}>level packs - local</color>\n\n")
