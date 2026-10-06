@@ -817,7 +817,7 @@ public static class VersusMode
 
   static UtilityScript.UtilityType GetRandomUtility()
   {
-    return Random.Range(0, 14) switch
+    return Random.Range(0, 15) switch
     {
       1 => UtilityScript.UtilityType.GRENADE_IMPACT,
       2 => UtilityScript.UtilityType.GRENADE_STUN,
@@ -837,12 +837,14 @@ public static class VersusMode
       12 => UtilityScript.UtilityType.BEAR_TRAP,
       13 => UtilityScript.UtilityType.MINE,
 
+      14 => UtilityScript.UtilityType.COIN,
+
       _ => UtilityScript.UtilityType.GRENADE
     };
   }
   static Perk.PerkType GetRandomPerk()
   {
-    return Random.Range(0, 9) switch
+    return Random.Range(0, 10) switch
     {
       1 => Perk.PerkType.MAX_AMMO_UP,
       2 => Perk.PerkType.EXPLOSION_RESISTANCE,
@@ -852,6 +854,7 @@ public static class VersusMode
       6 => Perk.PerkType.MARTIAL_ARTIST,
       7 => Perk.PerkType.THRUST,
       8 => Perk.PerkType.TWIN,
+      9 => Perk.PerkType.BULLET_DESTROYER,
 
       _ => Perk.PerkType.FASTER_RELOAD
     };

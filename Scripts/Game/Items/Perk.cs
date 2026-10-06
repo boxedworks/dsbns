@@ -27,6 +27,7 @@ namespace Assets.Scripts.Game.Items
       THRUST,
 
       TWIN,
+      BULLET_DESTROYER,
 
       NONE
     }
@@ -54,6 +55,7 @@ namespace Assets.Scripts.Game.Items
         { PerkType.SPEED_UP, "1.15x movement speed" },
         { PerkType.EXPLOSIVE_PARRY, "parried bullets explode" },
         { PerkType.TWIN, "summon linked twin" },
+        { PerkType.BULLET_DESTROYER, "destroy bullets to make more" },
       };
     }
 

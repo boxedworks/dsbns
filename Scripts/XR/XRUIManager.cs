@@ -18,7 +18,7 @@ namespace Assets.Scripts.XR
     public static float _CameraSize { get { return s_Singleton._cameraSettings._Size; } }
     public static void UpdateCamera()
     {
-      s_Singleton._cameraSettings.UpdateCamera();
+      s_Singleton?._cameraSettings?.UpdateCamera();
     }
 
     // UI Components

@@ -1870,7 +1870,7 @@ namespace Assets.Scripts.Ragdoll
 
       // Check crown
       if (GameScript.s_IsCrownModeEnabled)
-        if (source != null)
+        if (source != null && !source._IsDead)
           if (_hasCrown)
           {
             GameScript.s_CrownPlayer = GameScript.s_CrownEnemy = -1;

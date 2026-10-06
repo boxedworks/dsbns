@@ -392,7 +392,7 @@ public class TileManager
     foreach (var p in PlayerspawnScript._PlayerSpawns)
     {
       var pos_use = p.transform.position - offset;
-      returnString += "playerspawn_" + System.Math.Round(pos_use.x, 2) + "_" + System.Math.Round(pos_use.z, 2) + "_";
+      returnString += "playerspawn_" + Math.Round(pos_use.x, 2) + "_" + Math.Round(pos_use.z, 2) + "_";
       // Add rotation
       returnString += "rot_" + p.transform.localRotation.eulerAngles.y + "_";
       var co = p.GetComponent<CustomObstacle>();
@@ -415,7 +415,7 @@ public class TileManager
 
           // Basic position info
           var pos_save = enemy.transform.position - offset;
-          returnString += "e_" + System.Math.Round(pos_save.x, 1) + "_" + System.Math.Round(pos_save.z, 1) + "_";
+          returnString += "e_" + Math.Round(pos_save.x, 1) + "_" + Math.Round(pos_save.z, 1) + "_";
 
           // Item info
           static string check_item(ItemManager.Items item)
@@ -462,12 +462,12 @@ public class TileManager
           {
             var waypoint = path.GetChild(u);
             var pos_use = waypoint.position - offset;
-            returnString += "w_" + System.Math.Round(pos_use.x, 1) + "_" + System.Math.Round(pos_use.z, 1) + "_";
+            returnString += "w_" + Math.Round(pos_use.x, 1) + "_" + Math.Round(pos_use.z, 1) + "_";
             for (int x = 0; x < waypoint.childCount; x++)
             {
               var lookPos = waypoint.GetChild(x);
               pos_use = lookPos.position - offset;
-              returnString += "l_" + System.Math.Round(pos_use.x, 1) + "_" + System.Math.Round(pos_use.z, 1) + "_";
+              returnString += "l_" + Math.Round(pos_use.x, 1) + "_" + Math.Round(pos_use.z, 1) + "_";
             }
           }
 
@@ -1098,19 +1098,19 @@ public class TileManager
 
     // Gather objects to combine
     var meshes = new Dictionary<string, System.Tuple<List<GameObject>, bool>>();
-    meshes.Add("Barrels", System.Tuple.Create(new List<GameObject>(), false));
-    meshes.Add("Books", System.Tuple.Create(new List<GameObject>(), true));
-    meshes.Add("Bookcases", System.Tuple.Create(new List<GameObject>(), true));
-    meshes.Add("Tables", System.Tuple.Create(new List<GameObject>(), false));
-    meshes.Add("Chairs", System.Tuple.Create(new List<GameObject>(), false));
-    meshes.Add("Arches", System.Tuple.Create(new List<GameObject>(), false));
+    meshes.Add("Barrels", Tuple.Create(new List<GameObject>(), false));
+    meshes.Add("Books", Tuple.Create(new List<GameObject>(), true));
+    meshes.Add("Bookcases", Tuple.Create(new List<GameObject>(), true));
+    meshes.Add("Tables", Tuple.Create(new List<GameObject>(), false));
+    meshes.Add("Chairs", Tuple.Create(new List<GameObject>(), false));
+    meshes.Add("Arches", Tuple.Create(new List<GameObject>(), false));
 
-    meshes.Add("Bushes", System.Tuple.Create(new List<GameObject>(), false));
-    meshes.Add("Rocks", System.Tuple.Create(new List<GameObject>(), false));
+    meshes.Add("Bushes", Tuple.Create(new List<GameObject>(), false));
+    meshes.Add("Rocks", Tuple.Create(new List<GameObject>(), false));
 
-    meshes.Add("Walls", System.Tuple.Create(new List<GameObject>(), false));
-    meshes.Add("Outers", System.Tuple.Create(new List<GameObject>(), true));
-    meshes.Add("NavmeshBarriers", System.Tuple.Create(new List<GameObject>(), true));
+    meshes.Add("Walls", Tuple.Create(new List<GameObject>(), false));
+    meshes.Add("Outers", Tuple.Create(new List<GameObject>(), true));
+    meshes.Add("NavmeshBarriers", Tuple.Create(new List<GameObject>(), true));
 
     for (var i = 0; i < objects.childCount; i++)
     {
@@ -1779,7 +1779,7 @@ public class TileManager
             case "co":
               var co = loadedObject.GetComponent<CustomObstacle>();
               var split = pair.Value.Split('.');
-              var type = (CustomObstacle.InteractType)System.Enum.Parse(typeof(CustomObstacle.InteractType), split[0]);
+              var type = (CustomObstacle.InteractType)Enum.Parse(typeof(CustomObstacle.InteractType), split[0]);
               var index = split[1].ParseIntInvariant();
               var index2 = 0;
               if (split.Length > 2)
@@ -2845,7 +2845,7 @@ public class TileManager
         var p = g.GetComponent<Powerup>();
         if (p != null)
         {
-          returnString += "p_" + System.Math.Round(pos_use.x, 2) + "_" + System.Math.Round(pos_use.z, 2) + "_";
+          returnString += "p_" + Math.Round(pos_use.x, 2) + "_" + Math.Round(pos_use.z, 2) + "_";
           // Add powerup type
           switch (p._type)
           {
@@ -2898,19 +2898,21 @@ public class TileManager
       // Normal select / deselect
       LevelEditorObject._UpdateFunction_Object(g);
       if (_SelectedObject == null) return;
-      var script_enemy = EnemyScript.s_Enemies[LevelEditorObject.GetCurrentObject()._name.Equals("Enemy") ? _SelectedObject.GetChild(0).GetEntityId() : _SelectedObject.parent.GetEntityId()];
+
+      var controller = LevelEditorObject.GetCurrentObject()._name.Equals("Enemy") ? _SelectedObject.GetChild(0) : _SelectedObject.parent;
+      if (!EnemyScript.s_Enemies.TryGetValue(controller.GetEntityId(), out var enemy)) return;
 
       // Check for change type
       if (ControllerManager.GetKey(Key.T))
-        ChangeEnemyType(script_enemy, script_enemy.transform.GetChild(0).GetComponent<MeshRenderer>(), 1);
+        ChangeEnemyType(enemy, enemy.transform.GetChild(0).GetComponent<MeshRenderer>(), 1);
 
       // Change movement mode
       if (ControllerManager.GetKey(Key.M))
-        script_enemy._canMove = !script_enemy._canMove;
+        enemy._canMove = !enemy._canMove;
 
       // Change hearing mode
       if (ControllerManager.GetKey(Key.H))
-        script_enemy._reactToSound = !script_enemy._reactToSound;
+        enemy._reactToSound = !enemy._reactToSound;
 
       // Create new waypoint
       if (ControllerManager.GetKey(Key.W))
@@ -2940,9 +2942,9 @@ public class TileManager
       {
         _IsLinking = false;
 
-        if (script_enemy._linkedDoor != null)
+        if (enemy._linkedDoor != null)
         {
-          script_enemy._linkedDoor.UnregisterEnemy(script_enemy);
+          enemy._linkedDoor.UnregisterEnemy(enemy);
         }
       }
 
@@ -2954,21 +2956,20 @@ public class TileManager
         Vector3 mousePos = h.point;
         mousePos.y = -1f;
         _LineRenderers[1].positionCount = 2;
-        _LineRenderers[1].SetPositions(new Vector3[] { script_enemy.transform.position, mousePos });
+        _LineRenderers[1].SetPositions(new Vector3[] { enemy.transform.position, mousePos });
         // Check for selection
         if (ControllerManager.GetMouseInput(0, ControllerManager.InputMode.DOWN))
         {
-          var d = h.collider.transform.parent.parent.GetComponent<DoorScript>();
-          if (d != null)
+          if (h.collider.transform.parent.parent.TryGetComponent<DoorScript>(out var door))
           {
 
-            if (script_enemy._linkedDoor != null)
+            if (enemy._linkedDoor != null)
             {
-              script_enemy._linkedDoor.UnregisterEnemy(script_enemy);
+              enemy._linkedDoor.UnregisterEnemy(enemy);
             }
 
-            d.RegisterEnemyEditor(script_enemy);
-            script_enemy._linkedDoor = d;
+            door.RegisterEnemyEditor(enemy);
+            enemy._linkedDoor = door;
           }
           _IsLinking = false;
         }
@@ -2977,12 +2978,12 @@ public class TileManager
       // Display line renderer
       else
       {
-        if (script_enemy._linkedDoor == null)
+        if (enemy._linkedDoor == null)
           _LineRenderers[1].positionCount = 0;
         else
         {
           _LineRenderers[1].positionCount = 2;
-          _LineRenderers[1].SetPositions(new Vector3[] { script_enemy.transform.position, script_enemy._linkedDoor.transform.position });
+          _LineRenderers[1].SetPositions(new Vector3[] { enemy.transform.position, enemy._linkedDoor.transform.position });
         }
       }
     },
@@ -2994,7 +2995,22 @@ public class TileManager
       {
         _axis = LevelEditorObject.Axis.Z
       },
-      new LevelEditorObject.CopySettings(),
+      new LevelEditorObject.CopySettings()
+      {
+        _onCopy = (original, copy) =>
+        {
+          if (EnemyScript.s_Enemies.TryGetValue(original.transform.GetChild(0).GetEntityId(), out var enemyOriginal))
+          {
+            var enemyCopy = new EnemyScript(copy.transform.GetChild(0))
+            {
+              _itemLeft = enemyOriginal._itemLeft,
+              _itemRight = enemyOriginal._itemRight,
+              _canMove = enemyOriginal._canMove,
+              _reactToSound = enemyOriginal._reactToSound
+            };
+          }
+        }
+      },
       new LevelEditorObject.AddSettings()
       {
         _data = "e_0_0_li_knife_canmove_true_canhear_true",
@@ -3020,17 +3036,17 @@ public class TileManager
       g =>
       {
         if (g == null || _SelectedObject == null) return;
-        EnemyScript s = EnemyScript.s_Enemies[LevelEditorObject.GetCurrentObject()._name.Equals("Enemy") ? _SelectedObject.GetChild(0).GetEntityId() : _SelectedObject.parent.GetEntityId()];
-        if (s == null) return;
+        var controller = LevelEditorObject.GetCurrentObject()._name.Equals("Enemy") ? _SelectedObject.GetChild(0) : _SelectedObject.parent;
+        if (!EnemyScript.s_Enemies.TryGetValue(controller.GetEntityId(), out var enemy)) return;
         ClearText();
-        _text.Add(string.Format("Type (T): {0}", s._itemLeft));
-        _text.Add(string.Format("Can move (M): {0}", s._canMove));
-        _text.Add(string.Format("Can hear (H): {0}", s._reactToSound));
+        _text.Add(string.Format("Type (T): {0}", enemy._itemLeft));
+        _text.Add(string.Format("Can move (M): {0}", enemy._canMove));
+        _text.Add(string.Format("Can hear (H): {0}", enemy._reactToSound));
         UpdateText();
 
         // Update menus
         var enemy_type = "";
-        switch (s._itemLeft)
+        switch (enemy._itemLeft)
         {
           case ItemManager.Items.KNIFE:
 
@@ -3064,10 +3080,10 @@ public class TileManager
         }
         EditorMenus.SetTextQuick(EditorMenus._Menu_Infos_Enemy.GetChild(1).GetChild(0), $"[T] Enemy type: {enemy_type}");
 
-        var movement_string = s._canMove ? "Normal" : "Can't move";
+        var movement_string = enemy._canMove ? "Normal" : "Can't move";
         EditorMenus.SetTextQuick(EditorMenus._Menu_Infos_Enemy.GetChild(2).GetChild(0), $"[M] Enemy movement: {movement_string}");
 
-        var hearing_string = s._reactToSound ? "Normal" : "Can't hear";
+        var hearing_string = enemy._reactToSound ? "Normal" : "Can't hear";
         EditorMenus.SetTextQuick(EditorMenus._Menu_Infos_Enemy.GetChild(3).GetChild(0), $"[H] Enemy hearing: {hearing_string}");
       })
     {
@@ -3084,7 +3100,7 @@ public class TileManager
       new LevelEditorObject.CopySettings()
       {
         _target = LevelEditorObject.TransformTarget.PARENT_PARENT,
-        _onCopy = copy =>
+        _onCopy = (original, copy) =>
         {
           LevelEditorObject.SetIterOnName(copy.name);
         }
@@ -3223,7 +3239,7 @@ public class TileManager
         if (g.name.Equals("Button"))
         {
           CustomEntityUI b = g.GetComponent<CustomEntityUI>();
-          returnString += "button_" + System.Math.Round(pos_use.x, 2) + "_" + System.Math.Round(pos_use.z, 2) + "_";
+          returnString += "button_" + Math.Round(pos_use.x, 2) + "_" + Math.Round(pos_use.z, 2) + "_";
           // Check connected entities
           foreach (CustomEntity entity in b._activate)
           {
@@ -3233,7 +3249,7 @@ public class TileManager
             if (ds != null)
             {
               Vector3 pos_use2 = ds.transform.position - offset;
-              returnString += "door_" + System.Math.Round(pos_use2.x, 2) + "_" + System.Math.Round(pos_use2.z, 2) + "_";
+              returnString += "door_" + Math.Round(pos_use2.x, 2) + "_" + Math.Round(pos_use2.z, 2) + "_";
               // Add y rotation
               returnString += "rot_" + ds.transform.localRotation.eulerAngles.y + "_";
               // Add open status
@@ -3274,10 +3290,10 @@ public class TileManager
       new LevelEditorObject.RotationSettings(),
       new LevelEditorObject.CopySettings()
       {
-        _onCopy = g =>
+        _onCopy = (original, copy) =>
         {
           // Link new door to old
-          g.GetComponent<DoorScript>().LinkToDoor(_SelectedObject.GetComponent<DoorScript>());
+          copy.GetComponent<DoorScript>().LinkToDoor(_SelectedObject.GetComponent<DoorScript>());
         }
       },
       new LevelEditorObject.AddSettings()
@@ -3387,7 +3403,7 @@ public class TileManager
         var ls = g.GetComponent<LaserScript>();
         if (ls != null)
         {
-          returnString += "laser_" + System.Math.Round(pos_use.x, 2) + "_" + System.Math.Round(pos_use.z, 2) + "_";
+          returnString += "laser_" + Math.Round(pos_use.x, 2) + "_" + Math.Round(pos_use.z, 2) + "_";
           // Add rotation speed
           returnString += "rotspeed_" + ls._rotationSpeed + "_";
           // Add laser type
@@ -3859,6 +3875,7 @@ public class TileManager
       PARENT_PARENT_PARENT
     }
     public delegate void UpdateFunction(GameObject selection);
+    public delegate void CopyFunction(GameObject original, GameObject copy);
     public delegate string SaveFunction(LevelEditorObject leo, GameObject reference, Vector3 offset, Vector3 pos_use);
 
     public class MovementSettings
@@ -3875,7 +3892,7 @@ public class TileManager
     public class CopySettings
     {
       public TransformTarget _target;
-      public UpdateFunction _onCopy;
+      public CopyFunction _onCopy;
     }
     public class DeleteSettings
     {
@@ -4056,7 +4073,7 @@ public class TileManager
 
     public static string _SaveFunction_Pos(LevelEditorObject self, Vector3 pos_use)
     {
-      return self._addSettings._data.Split('_')[0] + "_" + System.Math.Round(pos_use.x, 2) + "_" + System.Math.Round(pos_use.z, 2);
+      return self._addSettings._data.Split('_')[0] + "_" + Math.Round(pos_use.x, 2) + "_" + Math.Round(pos_use.z, 2);
     }
     public static string _SaveFunction_Rot(GameObject g)
     {
@@ -4652,7 +4669,7 @@ public class TileManager
     copy.gameObject.layer = LevelEditorObject.s_SelectedObjectSaveLayer;
 
     // Fire onCopy function
-    copySettings._onCopy?.Invoke(copy.gameObject);
+    copySettings._onCopy?.Invoke(copy_target.gameObject, copy.gameObject);
 
     // Select and move the object
     LevelEditorObject.Select(copy.gameObject);

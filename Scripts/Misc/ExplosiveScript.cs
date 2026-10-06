@@ -130,6 +130,7 @@ public class ExplosiveScript : MonoBehaviour
         var b = bullets[i];
         if (b == null) continue;
         if (MathC.Get2DDistance(transform.position, b.transform.position) > _radius) continue;
+        b.CheckOnDestroy(source);
         b.Hide();
       }
 

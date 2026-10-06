@@ -17,7 +17,7 @@ namespace Assets.Scripts.Settings
     static LevelSaveData LevelModule { get { return s_SaveData.LevelData; } }
 
     //
-    public static float _VERSION = 1.61f;
+    public static float _VERSION = 1.62f;
 
     //
     static Resolution ScreenResolution;

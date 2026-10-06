@@ -259,6 +259,8 @@ namespace Assets.Scripts.Objects
                 PlayBulletEffectDropBullets(transform.position, 1);
 
                 item_fryingPan._ragdoll.Recoil(-(_sourceItemRagdoll._Hip.position - item_fryingPan.transform.position).normalized, _rb.linearVelocity.magnitude / 2f, false);
+
+                CheckOnDestroy(item_fryingPan._ragdoll);
                 OnHideBullet();
                 Hide();
               }
@@ -360,7 +362,7 @@ namespace Assets.Scripts.Objects
       _rb.position = setPosition;
 
       // Check closest enemy
-      var target = FunctionsC.GetClosestTargetTo(_sourceDamageRagdoll, transform.position, -1, false);
+      var target = FunctionsC.GetClosestTargetTo(_sourceDamageRagdoll, transform.position);
       if (target != null && target._ragdoll != null)
         targetPosition = GetLocalPosition(target._ragdoll._Hip.position);
 
@@ -724,6 +726,34 @@ namespace Assets.Scripts.Objects
       _Particles.gameObject.SetActive(false);
 
       _hidingCoroutine = null;
+    }
+
+    //
+    public void CheckOnDestroy(ActiveRagdoll sourceRagdoll)
+    {
+      if (sourceRagdoll == null)
+        return;
+
+      if (sourceRagdoll._IsPlayer && (sourceRagdoll._PlayerScript?.HasPerk(Perk.PerkType.BULLET_DESTROYER) ?? false))
+      {
+        var target = FunctionsC.GetClosestTargetTo(sourceRagdoll, transform.position);
+        var bullet = ItemScript.SpawnBulletTowards(
+          sourceRagdoll,
+          transform.position,
+          (target._ragdoll._Hip.position - transform.position).normalized,
+          ItemManager.Items.NONE,
+          0
+        );
+        bullet.SetBulletData(
+          sourceRagdoll,
+          true,
+          0.25f,
+          false,
+          ItemManager.Items.PISTOL_SILENCED,
+
+          true
+        );
+      }
     }
 
     ActiveRagdoll _sourceDamageRagdoll;

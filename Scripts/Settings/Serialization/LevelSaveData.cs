@@ -139,43 +139,59 @@ namespace Assets.Scripts.Settings.Serialization
     public static void Load()
     {
       // Load json
-      if (!System.IO.File.Exists("save.json"))
+      try
       {
-        SettingsHelper.s_SaveData.LevelData = new LevelSaveData();
-
-        // Empty level data
-        LevelModule.LevelData = new();
-        for (var i = 0; i < 2; i++)
+        var fileName = "save.json";
+        if (System.IO.File.Exists(fileName))
         {
-
-          LevelModule.LevelData.Add(new());
-          LevelModule.LevelData[i] = new LevelDataWrapper()
-          {
-            Data = new()
-          };
-          for (var u = 0; u < Levels._LevelCollections[i]._levelData.Length; u++)
-          {
-            LevelModule.LevelData[i].Data.Add(new LevelData()
-            {
-              LevelNumber = u,
-              Completed = false,
-              BestCompletionTime = "-1.000"
-            });
-          }
+          var jsonData = System.IO.File.ReadAllText(fileName);
+          SettingsHelper.s_SaveData.LevelData = JsonUtility.FromJson<LevelSaveData>(jsonData);
         }
-
-        LevelModule.SurvivalHighestWave = new();
-
-        //
-        LevelModule.ShopUnlocks = new();
-        LevelModule.LoadoutData = new();
+        else
+        {
+          InitializeDefaultLevelData();
+        }
       }
-      else
+      catch (System.Exception e)
       {
-        var jsonData = System.IO.File.ReadAllText("save.json");
-        SettingsHelper.s_SaveData.LevelData = JsonUtility.FromJson<LevelSaveData>(jsonData);
+        Debug.LogError($"Failed to load save.json: {e.Message}\n{e.StackTrace}");
+
+        InitializeDefaultLevelData();
       }
     }
+
+    static void InitializeDefaultLevelData()
+    {
+      SettingsHelper.s_SaveData.LevelData = new();
+
+      // Empty level data
+      LevelModule.LevelData = new();
+      for (var i = 0; i < 2; i++)
+      {
+
+        LevelModule.LevelData.Add(new());
+        LevelModule.LevelData[i] = new LevelDataWrapper()
+        {
+          Data = new()
+        };
+        for (var u = 0; u < Levels._LevelCollections[i]._levelData.Length; u++)
+        {
+          LevelModule.LevelData[i].Data.Add(new LevelData()
+          {
+            LevelNumber = u,
+            Completed = false,
+            BestCompletionTime = "-1.000"
+          });
+        }
+      }
+
+      LevelModule.SurvivalHighestWave = new();
+
+      //
+      LevelModule.ShopUnlocks = new();
+      LevelModule.LoadoutData = new();
+    }
+
     public static void Save()
     {
       var json = JsonUtility.ToJson(LevelModule, Application.isEditor || Debug.isDebugBuild);

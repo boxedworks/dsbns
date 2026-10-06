@@ -548,7 +548,7 @@ namespace Assets.Scripts.UI.Menus
         var after_lines = "";
         while (afterNewLineCount-- > 0) after_lines += "\n";
         s_menus[type].AddComponent(lines)
-          .AddComponent(ShopHelper.TipHelper.GetTip(GameScript.s_GameMode) + after_lines)
+          .AddComponent(TipHelper.GetTip(GameScript.s_GameMode) + after_lines)
           .AddEvent(EventType.ON_RENDER, component =>
           {
             component._visible = SettingsModule.ShowTips;
@@ -560,9 +560,9 @@ namespace Assets.Scripts.UI.Menus
         var onSwitch = new System.Action(() =>
         {
           if (!SettingsModule.ShowTips) return;
-          var last_c = s_menus[type]._MenuComponents.Where(component => component.GetDisplayText(false).Contains("*tip")).Single();
+          var last_c = s_menus[type]._MenuComponents.Single(component => component.GetDisplayText(false).Contains("*tip"));
           var afterNewLineCount = System.Text.RegularExpressions.Regex.Matches(last_c.GetDisplayText(false), "\n").Count;
-          var tip = ShopHelper.TipHelper.GetTip(GameScript.s_GameMode);
+          var tip = TipHelper.GetTip(GameScript.s_GameMode);
 
           // Check if tip has buttons to display
           if (tip.Contains("&"))
@@ -6584,6 +6584,29 @@ go to the <color=yellow>SHOP</color> to buy something~1
           component.SetDropdownData("show loadout numbers in MISSIONS mode?\n\n", selections, actions, selection_match);
         })
 
+      // Toggle muzzle flash
+      .AddComponent("muzzle flash\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
+        .AddEvent(EventType.ON_RENDER, component =>
+        {
+          var display_toggle = SettingsModule.UseMuzzleFlashFx ? "on" : "off";
+          component.SetDisplayText(string.Format(format_options, "muzzle flash:", $"{display_toggle}"));
+
+          var selections = new List<string>();
+          var actions = new List<System.Action<MenuComponent>>();
+          var selection_match = display_toggle;
+          selections.Add("on [DEFAULT]");
+          actions.Add(component0 =>
+          {
+            SettingsModule.UseMuzzleFlashFx = true;
+          });
+          selections.Add("off");
+          actions.Add(component0 =>
+          {
+            SettingsModule.UseMuzzleFlashFx = false;
+          });
+          component.SetDropdownData("use muzzle flash fx?\n\n", selections, actions, selection_match);
+        })
+
       // Toggle smoke
       .AddComponent("smoke\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
         .AddEvent(EventType.ON_RENDER, component =>
@@ -8176,12 +8199,12 @@ about extras</color>
             break;
 
           //
-          if (s_TextBuffer != string.Empty && s_TextBuffer.Length > 10)
-          {
-            _CanRender = false;
-            RenderMenu();
-            break;
-          }
+          // if (s_TextBuffer != string.Empty && s_TextBuffer.Length > 10)
+          // {
+          //   _CanRender = false;
+          //   RenderMenu();
+          //   break;
+          // }
           s_CurrentMenu._OnSpace?.Invoke();
           var save_selected = s_CurrentMenu._SelectedComponent;
           var save_selectedLast = s_CurrentMenu._MenuComponent_lastSelected;

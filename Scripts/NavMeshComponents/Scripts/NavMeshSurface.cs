@@ -384,12 +384,12 @@ namespace UnityEngine.AI
               break;
             }
           case NavMeshBuildSourceShape.Terrain:
-            {
-              // Terrain pivot is lower/left corner - shift bounds accordingly
-              var t = src.sourceObject as TerrainData;
-              result.Encapsulate(GetWorldBounds(worldToLocal * src.transform, new Bounds(0.5f * t.size, t.size)));
-              break;
-            }
+          // {
+          //   // Terrain pivot is lower/left corner - shift bounds accordingly
+          //   var t = src.sourceObject as TerrainData;
+          //   result.Encapsulate(GetWorldBounds(worldToLocal * src.transform, new Bounds(0.5f * t.size, t.size)));
+          //   break;
+          // }
           case NavMeshBuildSourceShape.Box:
           case NavMeshBuildSourceShape.Sphere:
           case NavMeshBuildSourceShape.Capsule:

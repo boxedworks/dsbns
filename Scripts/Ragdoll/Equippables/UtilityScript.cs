@@ -43,6 +43,8 @@ namespace Assets.Scripts.Ragdoll.Equippables
 
       BEAR_TRAP,
       MINE,
+
+      COIN
     }
 
     public UtilityType _utility_type;
@@ -250,6 +252,10 @@ namespace Assets.Scripts.Ragdoll.Equippables
         case UtilityType.SHURIKEN:
           _throwSpeed = 3f;
           _spinYAxis = true;
+          break;
+
+        case UtilityType.COIN:
+          _throwSpeed = 0.4f;
           break;
 
         case UtilityType.SHURIKEN_BIG:
@@ -731,7 +737,7 @@ namespace Assets.Scripts.Ragdoll.Equippables
               EnemyScript.CheckSound(transform.position, EnemyScript.Loudness.SOFT);
               PlaySound(3);
             }
-            System.Action<ProjectileCollisionData> onDisable = p =>
+            System.Action<ProjectileCollisionData, ProjectileCollisionData> onDisable = (self, other) =>
             {
               TactBulletFX();
             };
@@ -912,9 +918,44 @@ namespace Assets.Scripts.Ragdoll.Equippables
               PlaySound(Audio.UTILITY_HIT_FLOOR);
 
             };
+
             // Throw and queue next
             transform.GetChild(1).GetComponent<ParticleSystem>().Play();
+            Throw();
+            Unregister();
 
+            break;
+
+          //
+          case UtilityType.COIN:
+
+            //
+            _onTriggerEnter += c =>
+            {
+
+              // Projectile handler
+              if (SimpleProjectileHandler(_c, c))
+                return;
+            };
+
+            // Add kill on impact event
+            _onCollisionEnter += c =>
+            {
+
+              // Projectile handler
+              if (SimpleProjectileHandler(_c, c.collider))
+                return;
+
+            };
+
+            _onUpdate += () =>
+            {
+              if (!_rb.useGravity && Time.time - _thrownTimer > 1.5f)
+                _rb.useGravity = true;
+            };
+
+            // Throw and queue next
+            transform.GetChild(1).GetComponent<ParticleSystem>().Play();
             Throw();
             Unregister();
             break;
@@ -1365,15 +1406,29 @@ namespace Assets.Scripts.Ragdoll.Equippables
       // Rotate
       if (_spin)
       {
-        if (_spinYAxis)
-          _rb.maxAngularVelocity = 45f + 5f * Random.value;
-        _rb.AddTorque(_spinYAxis ? Vector3.up * 50f : _ragdoll._Hip.transform.right * 50f, ForceMode.Impulse);
+        var isCoin = _utility_type == UtilityType.COIN;
+        if (isCoin)
+          CoinSpin(_ragdoll._Hip.transform.right);
+        else
+        {
+          if (_spinYAxis)
+            _rb.maxAngularVelocity = 45f + 5f * Random.value;
+          var spinForce = 50f;
+          _rb.AddTorque((_spinYAxis ? Vector3.up : _ragdoll._Hip.transform.right) * spinForce, ForceMode.Impulse);
+        }
       }
 
       else
       {
         _rb.rotation = Quaternion.LookRotation(forward) * Quaternion.Euler(0f, -90f, 0f);
       }
+    }
+
+    void CoinSpin(Vector3 spinAxis)
+    {
+      _rb.maxAngularVelocity = 45f + 5f * Random.value;
+      var spinForce = 150f;
+      _rb.AddTorque(spinAxis * spinForce, ForceMode.Impulse);
     }
 
     //
@@ -1580,12 +1635,12 @@ namespace Assets.Scripts.Ragdoll.Equippables
 
         if (p0._ShouldDisable)
         {
-          p0._OnDisable?.Invoke(p0);
+          p0._OnDisable?.Invoke(p0, p1);
           p0._GameObject.SetActive(false);
         }
         if (p1._ShouldDisable)
         {
-          p1._OnDisable?.Invoke(p1);
+          p1._OnDisable?.Invoke(p1, p0);
           p1._GameObject.SetActive(false);
         }
 
@@ -1605,7 +1660,7 @@ namespace Assets.Scripts.Ragdoll.Equippables
           lesser = p0;
         }
 
-        lesser._OnDisable?.Invoke(lesser);
+        lesser._OnDisable?.Invoke(lesser, greater);
         lesser._GameObject.SetActive(false);
         if (lesser._IsBullet) numBullets++;
 
@@ -1647,8 +1702,9 @@ namespace Assets.Scripts.Ragdoll.Equippables
           projectileData._SpawnPosition = bulletScript.GetShootPosition();
           projectileData._DamageSource = bulletScript.GetDamageSource();
 
-          projectileData._OnDisable += p =>
+          projectileData._OnDisable += (p, other) =>
           {
+            p._BulletScript.CheckOnDestroy(other._DamageSource);
             p._BulletScript.Hide();
             p._BulletScript.OnHideBullet();
           };
@@ -1666,7 +1722,7 @@ namespace Assets.Scripts.Ragdoll.Equippables
         case "molotov":
         case "mine":
           projectileData._PenatrationAmount = 0;
-          projectileData._OnDisable += p =>
+          projectileData._OnDisable += (p, other) =>
           {
             p._GameObject.GetComponent<UtilityScript>().Explode();
           };
@@ -1674,6 +1730,7 @@ namespace Assets.Scripts.Ragdoll.Equippables
 
         // Normal
         case "shuriken":
+        case "coin":
         case "bear_trap":
         case "tactical_bullet":
           projectileData._PenatrationAmount = 0;
@@ -1720,7 +1777,7 @@ namespace Assets.Scripts.Ragdoll.Equippables
     }
 
     //
-    public static bool SimpleProjectileHandler(Collider c0, Collider c1, System.Action<ProjectileCollisionData> onDisable = null)
+    public static bool SimpleProjectileHandler(Collider c0, Collider c1, System.Action<ProjectileCollisionData, ProjectileCollisionData> onDisable = null)
     {
 
       var c0Name = c0.name.ToLower();
@@ -1739,6 +1796,11 @@ namespace Assets.Scripts.Ragdoll.Equippables
           var pSelf_ = pSelf.Value;
           var pOther_ = pOther.Value;
 
+          bool isTypeNotSelf(string type)
+          {
+            return (c0Name == type && c1Name != type) || (c1Name == type && c0Name != type);
+          }
+
           if (onDisable != null)
             pSelf_._OnDisable += onDisable;
 
@@ -1746,17 +1808,32 @@ namespace Assets.Scripts.Ragdoll.Equippables
           if (pSelf_._IsBullet && pOther_._IsBullet && !pSelf_._BulletScript.CanInteractWithOther(pOther_._BulletScript)) { }
 
           //
-          else if ((c0Name == "mirror" && c1Name != "mirror") || (c1Name == "mirror" && c0Name != "mirror"))
+          else if (isTypeNotSelf("mirror") || isTypeNotSelf("coin"))
           {
 
-            var mirror = c0Name == "mirror" ? pSelf_ : pOther_;
-            var bullet = c0Name == "mirror" ? pOther_ : pSelf_;
+            var reflector = pSelf_._IsBullet ? pOther_ : pSelf_;
+            var bullet = pSelf_._IsBullet ? pSelf_ : pOther_;
             if (bullet._IsBullet)
             {
 
-              if (bullet._BulletScript.RedirectToClosestTarget(mirror._GameObject.transform.GetChild(0).GetChild(0).gameObject, false))
+              var isCoin = reflector._GameObject.name.ToLower().Equals("coin");
+              if (bullet._BulletScript.RedirectToClosestTarget(!isCoin ? reflector._GameObject.transform.GetChild(0).GetChild(0).gameObject : reflector._GameObject, false))
               {
                 bullet._BulletScript.PlaySparks(true, 0, BulletScript.BulletImpactType.MIRROR);
+
+                // Coin retrigger
+                if (isCoin)
+                {
+                  var rb = reflector._GameObject.GetComponent<Rigidbody>();
+                  var velocity = rb.linearVelocity.magnitude;
+                  rb.AddForce(bullet._BulletScript._rb.linearVelocity * -0.02f, ForceMode.Impulse);
+                  rb.linearVelocity = rb.linearVelocity.normalized * velocity;
+
+                  var utilityScript = reflector._GameObject.GetComponent<UtilityScript>();
+                  utilityScript._thrownTimer = Time.time;
+                  utilityScript.PlaySound(0);
+                  utilityScript.CoinSpin(bullet._GameObject.transform.right);
+                }
               }
 
               return true;

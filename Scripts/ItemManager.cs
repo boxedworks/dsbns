@@ -267,6 +267,7 @@ public static class ItemManager
         break;
       case "SHURIKEN":
       case "SHURIKEN_BIG":
+      case "COIN":
         transform.localPosition += new Vector3(-0.22f, 0.02f, 0f);
         transform.localEulerAngles = new Vector3(90f, 0f, 0f);
         transform.localScale = new Vector3(0.7f, 0.7f, 0.7f);
@@ -416,6 +417,7 @@ public static class ItemManager
       case UtilityScript.UtilityType.TACTICAL_BULLET:
       case UtilityScript.UtilityType.MIRROR:
       case UtilityScript.UtilityType.BEAR_TRAP:
+      case UtilityScript.UtilityType.COIN:
         return 1;
       case UtilityScript.UtilityType.GRENADE:
       case UtilityScript.UtilityType.GRENADE_IMPACT:
@@ -449,6 +451,7 @@ public static class ItemManager
       case Perk.PerkType.THRUST:
       case Perk.PerkType.SPEED_UP:
       case Perk.PerkType.TWIN:
+      case Perk.PerkType.BULLET_DESTROYER:
         return 2;
       case Perk.PerkType.EXPLOSIONS_UP:
       case Perk.PerkType.GRAPPLE_MASTER:

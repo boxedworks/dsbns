@@ -43,6 +43,7 @@ namespace Assets.Scripts.Settings.Serialization
     public int DepthOfFieldAmount = 2;
 
     public bool UseSmokeFx = true;
+    public bool UseMuzzleFlashFx = true;
 
     public enum CameraZoomType
     {
@@ -93,30 +94,46 @@ namespace Assets.Scripts.Settings.Serialization
     public static void Load()
     {
       // Load json
-      if (!System.IO.File.Exists("Settings.json"))
+      try
       {
-        SettingsHelper.s_SaveData.Settings = new SettingsSaveData();
-
-        // Player profiles
-        SettingsModule.PlayerProfiles = new();
-        for (var i = 0; i < 4; i++)
-          SettingsModule.PlayerProfiles.Add(new PlayerProfileData()
-          {
-            Id = i,
-
-            LoadoutIndex = 0,
-
-            Color = i,
-            ReloadSameTime = true,
-            FaceLookDirection = true
-          });
+        var fileName = "Settings.json";
+        if (System.IO.File.Exists(fileName))
+        {
+          var jsonData = System.IO.File.ReadAllText(fileName);
+          SettingsHelper.s_SaveData.Settings = JsonUtility.FromJson<SettingsSaveData>(jsonData);
+        }
+        else
+        {
+          InitializeDefaultSettings();
+        }
       }
-      else
+      catch (System.Exception e)
       {
-        var jsonData = System.IO.File.ReadAllText("Settings.json");
-        SettingsHelper.s_SaveData.Settings = JsonUtility.FromJson<SettingsSaveData>(jsonData);
+        Debug.LogError($"Failed to load Settings.json: {e.Message}\n{e.StackTrace}");
+
+        InitializeDefaultSettings();
       }
     }
+
+    static void InitializeDefaultSettings()
+    {
+      SettingsHelper.s_SaveData.Settings = new();
+
+      // Player profiles
+      SettingsModule.PlayerProfiles = new();
+      for (var i = 0; i < 4; i++)
+        SettingsModule.PlayerProfiles.Add(new PlayerProfileData()
+        {
+          Id = i,
+
+          LoadoutIndex = 0,
+
+          Color = i,
+          ReloadSameTime = true,
+          FaceLookDirection = true
+        });
+    }
+
     public static void Save()
     {
       var json = JsonUtility.ToJson(SettingsModule, Application.isEditor || Debug.isDebugBuild);

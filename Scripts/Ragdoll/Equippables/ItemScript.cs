@@ -714,13 +714,13 @@ namespace Assets.Scripts.Ragdoll.Equippables
               smokeParticles.Emit(Mathf.Clamp(use_penatrationAmount, 1, 6));
             }
 
-          if (_type != ItemType.FLAMETHROWER && _type != ItemType.CROSSBOW)
-          {
-            var muzzle = transform.GetChild(transform.childCount - 1);
-            muzzleFlashParticles.transform.position = muzzle.position;
-            muzzleFlashParticles.transform.rotation = muzzle.rotation;
-            muzzleFlashParticles.Emit(1);
-          }
+          if (SettingsModule.UseMuzzleFlashFx)
+            if (_type != ItemType.FLAMETHROWER && _type != ItemType.CROSSBOW)
+            {
+              var muzzle = transform.GetChild(transform.childCount - 1);
+              muzzleFlashParticles.transform.SetPositionAndRotation(muzzle.position, muzzle.rotation);
+              muzzleFlashParticles.Emit(1);
+            }
         }
 
         // Custom projectile
@@ -1606,6 +1606,8 @@ namespace Assets.Scripts.Ragdoll.Equippables
     //
     public virtual bool UseDown()
     {
+      _triggerDownReal = true;
+
       //_ragdoll._playerScript?.ResetLoadout();
       //if (this == null) return;
 
@@ -1619,7 +1621,6 @@ namespace Assets.Scripts.Ragdoll.Equippables
 
       //
       _triggerDown = true;
-      _triggerDownReal = true;
 
       _upTime = 0f;
       _downTime = 0.01f;
@@ -1644,6 +1645,8 @@ namespace Assets.Scripts.Ragdoll.Equippables
 
     public bool UseUp()
     {
+      _triggerDownReal = false;
+
       if (!_triggerDown) return false;
       if (_ForceIgnoreUseUp)
       {
@@ -1656,7 +1659,6 @@ namespace Assets.Scripts.Ragdoll.Equippables
       //if (this == null) return;
 
       _triggerDown = false;
-      _triggerDownReal = false;
 
       _upTime = 0.01f;
       _downTimeSave = _downTime;
