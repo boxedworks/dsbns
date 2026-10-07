@@ -72,8 +72,8 @@ namespace Assets.Scripts.FX
 
       // Set footstep FX per theme
       _footstep = GameObject.Find($"Footstep_{_Theme._tile}")?.GetComponent<AudioSource>();
-      _footstepBloody = FunctionsC.GetAudioSource("Ragdoll/Footstep_blood");
-      if (_footstep == null) { _footstep = GameObject.Find("Footstep").GetComponent<AudioSource>(); }
+      _footstepBloody = SfxManager.GetAudioSource("Ragdoll/Footstep_blood");
+      _footstep ??= GameObject.Find("Footstep").GetComponent<AudioSource>();
       var color = _Theme._tileColorDown * 1.5f;
       color.a = 1f;
       FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.FOOTPRINT)[0].GetComponent<ParticleSystemRenderer>().sharedMaterial.color = color;
@@ -178,7 +178,7 @@ namespace Assets.Scripts.FX
     public static void PrintThemes()
     {
 #if !UNITY_EDITOR
-    return;
+      return;
 #endif
       // Function to conver Color class to string
       static string GetColorString(Color c)

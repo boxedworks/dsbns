@@ -9,32 +9,14 @@ using UnityEngine;
 
 public static class FunctionsC
 {
-  static Dictionary<string, Dictionary<string, AudioSource>> s_soundLibrary;
   public static ParticleSystem[] s_ParticlesAll;
   //static List<ParticleSystem> _BloodParticles;
-  public static Transform s_Sounds { get { return GameResources.s_Sounds; } }
 
   public static BookManager s_BookManager;
   public static void Init()
   {
-    s_soundLibrary = new();
     s_ParticlesAll = Object.FindObjectsByType<ParticleSystem>();
-
-    // Populate audio library
-    for (var i = 0; i < s_Sounds.childCount; i++)
-    {
-      var root = s_Sounds.GetChild(i);
-      var sublib = new Dictionary<string, AudioSource>();
-      for (var u = 0; u < root.childCount; u++)
-      {
-        var sound = root.GetChild(u);
-        sublib.Add(sound.name, sound.GetComponent<AudioSource>());
-      }
-      s_soundLibrary.Add(root.name, sublib);
-    }
-
-    //
-    s_BookManager = new BookManager();
+    s_BookManager = new();
   }
 
   public static void RotateLocal(ref GameObject gameObject, float newLocalY)
@@ -419,21 +401,6 @@ public static class FunctionsC
     var particles = GetParticleSystem(type);
     PlayComplexParticleSystemAt(particles, position);
     return particles;
-  }
-
-  // Find folder
-  static public AudioSource GetAudioSource(string soundPath)
-  {
-    var split = soundPath.Split('/');
-    string folder = split[0], name = split[1];
-    var sfx_source = s_soundLibrary[folder][name];
-    if (sfx_source == null)
-    {
-      Debug.LogError("Need to implement random picker");
-      return null;
-    }
-
-    return sfx_source;
   }
 
   public static Powerup SpawnPowerup(Powerup.PowerupType type)

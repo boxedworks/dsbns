@@ -19,6 +19,7 @@ namespace Assets.Scripts.Ragdoll
 
   public class ActiveRagdoll
   {
+
     //
     static LevelSaveData LevelModule { get { return SettingsHelper.s_SaveData.LevelData; } }
     static SettingsSaveData SettingsModule { get { return SettingsHelper.s_SaveData.Settings; } }
@@ -715,26 +716,6 @@ namespace Assets.Scripts.Ragdoll
         _invisibility_timer = 0f;
     }
 
-    // Kick
-    public void KickStart()
-    {
-
-    }
-    void Kick()
-    {
-
-    }
-    public void KickEnd()
-    {
-      // Kick
-      if (!_kicking)// && Time.time - _kickTimer_start >= 2f)
-      {
-        _kicking = true;
-        _kickTimer = Time.time - 1f;
-        _kickTimer_start = Time.time;
-      }
-    }
-
     // Use item(s) in hand(s)
     public void UseLeft()
     {
@@ -908,7 +889,6 @@ namespace Assets.Scripts.Ragdoll
       var forwardSelf = _Hip.transform.forward;
       var forwardOther = ragdollOther._Hip.transform.forward;
       var forwardMagnitude = (forwardOther - forwardSelf).magnitude;
-      //Debug.Log(forwardMagnitude);
       if (forwardMagnitude < 1.7f)
       {
         return null;
@@ -1313,15 +1293,18 @@ namespace Assets.Scripts.Ragdoll
       var timer = 0f;
       var timeLast = Time.time;
 
+      var levelId = TileManager._s_MapIndex;
+
       // Skin
       Color startColor0 = mesh.sharedMaterials[1].color,
         // Clothes
         startColor1 = mesh.sharedMaterials[0].color;
 
+      var waitForSeconds = new WaitForSecondsRealtime(0.02f);
       while (true)
       {
-        yield return new WaitForSecondsRealtime(0.02f);
-        if (_Hip == null) break;
+        yield return waitForSeconds;
+        if (_Hip == null || levelId != TileManager._s_MapIndex) break;
 
         timer = Mathf.Clamp(timer + (Time.time - timeLast) * 1.25f, 0f, lerpAmount);
         timeLast = Time.time;
@@ -1567,7 +1550,6 @@ namespace Assets.Scripts.Ragdoll
               }
 
               // Check facing somewhat away dir
-              //Debug.Log((_Controller.forward - ragdoll._Controller.forward).magnitude);
               if ((_Controller.forward - ragdoll._Controller.forward).magnitude > 1.1f || (ragdoll._EnemyScript?.IsChaser() ?? false))
               {
                 continue;
@@ -1686,9 +1668,6 @@ namespace Assets.Scripts.Ragdoll
           system.Stop();
           system.Clear();
         }
-
-        //if(this != null)
-        //  EnemyScript.CheckSound(system.transform.position, EnemyScript.Loudness.SOFT);
       }
 
       // Check follower
@@ -1976,7 +1955,7 @@ namespace Assets.Scripts.Ragdoll
 
     // Stun the ragdoll
     public bool _IsStunned { get { return Time.time - _stunTimer < 0f; } }
-    [System.NonSerialized]
+    [NonSerialized]
     public bool _HasBeenStunned;
     float _stunTimer;
     public void Stun(float duration = 1.5f)
@@ -2041,28 +2020,7 @@ namespace Assets.Scripts.Ragdoll
       Recoil(_IsGrappled ? -_Hip.transform.forward : -_Controller.forward, force, true);
     }
 
-    IEnumerator Rise()
-    {
-      var startRot = _Hip.rotation;
-
-      // Pick ragdoll back up using Lerp with current rotation and saved rotation from before fall
-      var iter = 0f;
-      while (iter < 1f)
-      {
-        yield return new WaitForSeconds(0.005f);
-        iter += 0.07f;
-        _Hip.rotation = Quaternion.Lerp(startRot, _saveRot, iter);
-      }
-      iter = 1f;
-      _Hip.rotation = Quaternion.Lerp(startRot, _saveRot, iter);
-
-      // Set controller to position
-      _Controller.position = new Vector3(_Hip.position.x, _Controller.position.y, _Hip.position.z);
-      _IsReviving = false;
-    }
-
     bool _hasCrown;
-    public bool _HasCrown { get { return _hasCrown; } }
     public void AddCrown(bool playSfx)
     {
       if (_hasCrown) return;

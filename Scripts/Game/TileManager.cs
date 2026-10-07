@@ -2030,6 +2030,8 @@ public class TileManager
     // Check if map reloading
     if (_LoadingMap) return;
 
+    _s_MapIndex++;
+
     // Hide text
     HideGameOverText();
 
