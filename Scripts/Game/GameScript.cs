@@ -12,6 +12,7 @@ using Assets.Scripts.Settings.Localization;
 using Assets.Scripts.Settings.Serialization;
 using Assets.Scripts.UI.Menus;
 using Assets.Scripts.XR;
+using SneakyEngine.Engine;
 using UnityEngine;
 using Valve.VR;
 using Random = UnityEngine.Random;
@@ -220,6 +221,8 @@ public class GameScript : MonoBehaviour
   void Start()
   {
     s_Singleton = this;
+
+    SneakyEngineSystem.Initialize();
 
     GameResources.Init();
 

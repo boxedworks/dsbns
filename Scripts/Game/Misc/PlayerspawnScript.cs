@@ -87,7 +87,7 @@ public class PlayerspawnScript : MonoBehaviour
     }
     player.transform.position = spawnPosition;
 
-    FunctionsC.RotateLocal(ref player, rotateEulerAngle);
+    FunctionsC.SetRotationLocalY(ref player, rotateEulerAngle);
 
     // Activate the player script
     var playerScript = new PlayerScript(player.transform.GetChild(0), spawnId, connectedTwin);

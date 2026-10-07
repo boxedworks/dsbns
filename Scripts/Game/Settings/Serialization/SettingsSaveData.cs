@@ -113,6 +113,11 @@ namespace Assets.Scripts.Settings.Serialization
 
         InitializeDefaultSettings();
       }
+
+      // Set volume
+      SettingsHelper._VolumeSFX = SettingsHelper.s_SaveData.Settings.VolumeSFX;
+      SettingsHelper._UseBlood = SettingsHelper.s_SaveData.Settings.UseBlood;
+      SettingsHelper._UseSmoke = SettingsHelper.s_SaveData.Settings.UseSmokeFx;
     }
 
     static void InitializeDefaultSettings()

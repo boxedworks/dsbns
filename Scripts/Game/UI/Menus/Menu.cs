@@ -5795,11 +5795,11 @@ go to the <color=yellow>SHOP</color> to buy something~1
         .AddEvent(EventType.ON_RENDER, component =>
         {
           // Set display text
-          component.SetDisplayText(string.Format(format_options, "sfx volume:", $"{SettingsModule.VolumeSFX}/5") + "\n");
+          component.SetDisplayText(string.Format(format_options, "sfx volume:", $"{SettingsHelper._VolumeSFX}/5") + "\n");
           // Set dropdown data
           var selections = new List<string>();
           var actions = new List<System.Action<MenuComponent>>();
-          var selection_match = "" + SettingsModule.VolumeSFX;
+          var selection_match = "" + SettingsHelper._VolumeSFX;
           for (int i = 0; i < 6; i++)
           {
             // Add volume level
@@ -5807,7 +5807,8 @@ go to the <color=yellow>SHOP</color> to buy something~1
             // Add action to update sfx volume
             actions.Add(component0 =>
             {
-              SettingsModule.VolumeSFX = component0._dropdownIndex;
+              SettingsHelper._VolumeSFX = component0._dropdownIndex;
+              SfxManager.SetVolume(SettingsHelper._VolumeSFX);
             });
           }
           // Update dropdown data
@@ -6285,14 +6286,14 @@ go to the <color=yellow>SHOP</color> to buy something~1
         {
 
           // Set display text
-          var selection = SettingsModule.UseBlood ? "on" : "off";
+          var selection = SettingsHelper._UseBlood ? "on" : "off";
           component.SetDisplayText(string.Format(format_options, "blood:", selection) + '\n');
         })
 
         // Toggle blood
         .AddEvent(component =>
         {
-          SettingsModule.UseBlood = !SettingsModule.UseBlood;
+          SettingsHelper._UseBlood = !SettingsHelper._UseBlood;
           _CanRender = false;
           RenderMenu();
         })
@@ -6612,7 +6613,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
         .AddEvent(EventType.ON_RENDER, component =>
         {
           // Set display text
-          var display_toggle = SettingsModule.UseSmokeFx ? "on" : "off";
+          var display_toggle = SettingsHelper._UseSmoke ? "on" : "off";
           component.SetDisplayText(string.Format(format_options, "smoke:", $"{display_toggle}"));
 
           // Set dropdown data
@@ -6628,14 +6629,14 @@ go to the <color=yellow>SHOP</color> to buy something~1
                 selections.Add("on [DEFAULT]");
                 actions.Add(component0 =>
                 {
-                  SettingsModule.UseSmokeFx = true;
+                  SettingsHelper._UseSmoke = true;
                 });
                 break;
               case 1:
                 selections.Add("off");
                 actions.Add(component0 =>
                 {
-                  SettingsModule.UseSmokeFx = false;
+                  SettingsHelper._UseSmoke = false;
                 });
                 break;
             }
@@ -6747,7 +6748,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
 
       s_menus[MenuType.OPTIONS_GAME]._OnSwitched += () =>
       {
-        if (!SettingsModule.UseBlood)
+        if (!SettingsHelper._UseBlood)
           TileManager.ResetParticles();
 
         SettingsSaveData.Save();
@@ -7637,7 +7638,7 @@ system will provide and configure all loadouts.~9
             "blood fx`",
             () =>
             {
-              switch (LevelModule.ExtraBloodType)
+              switch (SettingsHelper._Extras_BloodType)
               {
                 case 0:
                   return "normal";
@@ -7648,10 +7649,10 @@ system will provide and configure all loadouts.~9
             },
             new DropdownSelectionComponent[] {
         new DropdownSelectionComponent("normal", "blood", component => {
-          LevelModule.ExtraBloodType = 0;
+          SettingsHelper._Extras_BloodType = 0;
         }),
         new DropdownSelectionComponent("confetti", "party time", component => {
-          LevelModule.ExtraBloodType = 1;
+          SettingsHelper._Extras_BloodType = 1;
         }),
             },
             "change what blood looks like",
@@ -7665,7 +7666,7 @@ system will provide and configure all loadouts.~9
             "explode death",
             () =>
             {
-              switch (LevelModule.ExtraBodyExplode)
+              switch (SettingsHelper._Extras_BodyExplode)
               {
                 case 0:
                   return "off";
@@ -7680,16 +7681,16 @@ system will provide and configure all loadouts.~9
             },
             new DropdownSelectionComponent[] {
             new DropdownSelectionComponent("off", "", component => {
-                LevelModule.ExtraBodyExplode = 0;
+                SettingsHelper._Extras_BodyExplode = 0;
               }),
             new DropdownSelectionComponent("all", "", component => {
-                LevelModule.ExtraBodyExplode = 1;
+                SettingsHelper._Extras_BodyExplode = 1;
               }),
             new DropdownSelectionComponent("enemies", "", component => {
-                LevelModule.ExtraBodyExplode = 2;
+                SettingsHelper._Extras_BodyExplode = 2;
               }),
             new DropdownSelectionComponent("players", "", component => {
-                LevelModule.ExtraBodyExplode = 3;
+                SettingsHelper._Extras_BodyExplode = 3;
               }),
             },
             "explode on death",
@@ -8287,7 +8288,7 @@ about extras</color>
       s_times[(int)noise] = Time.unscaledTime;
 
       var audioSource = GetNoise(noise);
-      audioSource.volume = s_volumes[(int)noise] * (SettingsModule.VolumeSFX / 5f);
+      audioSource.volume = s_volumes[(int)noise] * (SettingsHelper._VolumeSFX / 5f);
       audioSource.PlayOneShot(audioSource.clip);
     }
 

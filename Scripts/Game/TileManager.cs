@@ -1665,7 +1665,7 @@ public class TileManager
             {
               // Rotation
               case "rot":
-                FunctionsC.RotateLocal(ref loadedObject, pair.Value.ParseFloatInvariant());
+                FunctionsC.SetRotationLocalY(ref loadedObject, pair.Value.ParseFloatInvariant());
                 break;
               // Set the rotation speed
               case "rotspeed":
@@ -1704,7 +1704,7 @@ public class TileManager
           {
             // Rotation
             case "rot":
-              FunctionsC.RotateLocal(ref loadedObject, pair.Value.ParseFloatInvariant());
+              FunctionsC.SetRotationLocalY(ref loadedObject, pair.Value.ParseFloatInvariant());
               break;
             case "co":
               var co = loadedObject.AddComponent<CustomObstacle>();
@@ -1774,7 +1774,7 @@ public class TileManager
           {
             // Rotation
             case "rot":
-              FunctionsC.RotateLocal(ref loadedObject, pair.Value.ParseFloatInvariant());
+              FunctionsC.SetRotationLocalY(ref loadedObject, pair.Value.ParseFloatInvariant());
               break;
             case "co":
               var co = loadedObject.GetComponent<CustomObstacle>();

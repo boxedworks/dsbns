@@ -415,9 +415,7 @@ namespace Assets.Scripts.Ragdoll.Equippables
         // Melee
         if (_isMelee)
         {
-
-          var raycastInfo = new RaycastInfo();
-          var isHit = MeleeCast(raycastInfo, _meleeIter++);
+          var isHit = MeleeCast(out MeleecastHit raycastInfo, _meleeIter++);
 
           // Sanitize
           if (isHit)
@@ -707,7 +705,7 @@ namespace Assets.Scripts.Ragdoll.Equippables
           bullet.SetSourceItem(this);
 
           // Spawn smoke and muzzle flash effects
-          if (SettingsModule.UseSmokeFx)
+          if (SettingsHelper._UseSmoke)
             if (_type != ItemType.FLAMETHROWER && _type != ItemType.CROSSBOW && _type != ItemType.STICKY_GUN)
             {
               smokeParticles.transform.position = spawn_pos + new Vector3(0f, 0.5f, 0f);
@@ -878,15 +876,15 @@ namespace Assets.Scripts.Ragdoll.Equippables
           case ItemType.KNIFE:
           case ItemType.RAPIER:
           case ItemType.FIST:
-            SetRotationLocal(_arm_upper, Vector3.Lerp(_save_rot_upper, _save_rot_upper + new Vector3(-60f, -130f * sideMod, -20f * sideMod), _meleeLerper));
-            SetRotationLocal(_arm_lower, Vector3.Lerp(_save_rot_lower, _save_rot_lower + new Vector3(110f, 0f, 0f), _meleeLerper));
+            FunctionsC.SetRotationLocal(_arm_upper, Vector3.Lerp(_save_rot_upper, _save_rot_upper + new Vector3(-60f, -130f * sideMod, -20f * sideMod), _meleeLerper));
+            FunctionsC.SetRotationLocal(_arm_lower, Vector3.Lerp(_save_rot_lower, _save_rot_lower + new Vector3(110f, 0f, 0f), _meleeLerper));
             break;
 
           case ItemType.FRYING_PAN:
           case ItemType.AXE:
           case ItemType.STUN_BATON:
-            SetRotationLocal(_arm_upper, Vector3.Lerp(_save_rot_upper, _save_rot_upper + new Vector3(0f, 70f * sideMod, 0f), _meleeLerper));
-            SetRotationLocal(_arm_lower, Vector3.Lerp(_save_rot_lower, _save_rot_lower + new Vector3(55f, 0f, 0f), _meleeLerper));
+            FunctionsC.SetRotationLocal(_arm_upper, Vector3.Lerp(_save_rot_upper, _save_rot_upper + new Vector3(0f, 70f * sideMod, 0f), _meleeLerper));
+            FunctionsC.SetRotationLocal(_arm_lower, Vector3.Lerp(_save_rot_lower, _save_rot_lower + new Vector3(55f, 0f, 0f), _meleeLerper));
             break;
 
           case ItemType.KATANA:
@@ -897,14 +895,14 @@ namespace Assets.Scripts.Ragdoll.Equippables
             _swordLerp0 += (_swordLerpDesired0 - _swordLerp0) * Time.deltaTime * 50f;
             _swordLerp1 += (_swordLerpDesired1 - _swordLerp1) * Time.deltaTime * 50f;
 
-            SetRotationLocal(
+            FunctionsC.SetRotationLocal(
               _arm_upper,
               Vector3.Lerp(
                 _save_rot_upper + _swordLerp0,
                 _save_rot_upper + (swingingRelease ? new Vector3(70f, 250f, 0f) : new Vector3(-20f, -10f, 0f)),
                 _meleeLerper
             ));
-            SetRotationLocal(
+            FunctionsC.SetRotationLocal(
               _arm_lower,
               Vector3.Lerp(
                 _save_rot_lower,
@@ -1546,14 +1544,14 @@ namespace Assets.Scripts.Ragdoll.Equippables
       else
       {
         // Upper arm
-        SetRotationLocal(_arm_upper, new Vector3(
+        FunctionsC.SetRotationLocal(_arm_upper, new Vector3(
           29f,
           _side == ActiveRagdoll.Side.LEFT ? -50f : -21f,
           (_side == ActiveRagdoll.Side.LEFT ? 1f : -1f) * 73f
         ));
 
         // Lower arm
-        SetRotationLocal(_arm_lower, new Vector3(
+        FunctionsC.SetRotationLocal(_arm_lower, new Vector3(
           0f,
           0f,
           (_side == ActiveRagdoll.Side.LEFT ? 1f : -1f) * 7f
@@ -1587,11 +1585,6 @@ namespace Assets.Scripts.Ragdoll.Equippables
     {
       _arm_lower.localEulerAngles = _original_rot_lower;
       _arm_upper.localEulerAngles = _original_rot_upper;
-    }
-
-    public static void SetRotationLocal(Transform t, Vector3 euler)
-    {
-      t.localEulerAngles = euler;
     }
 
     void ResetV()
@@ -1870,8 +1863,10 @@ namespace Assets.Scripts.Ragdoll.Equippables
       return _clip;
     }
 
-    bool MeleeCast(RaycastInfo raycastInfo, int iter)
+    bool MeleeCast(out MeleecastHit raycastInfo, int iter)
     {
+      raycastInfo = new MeleecastHit();
+
       _ragdoll.ToggleRaycasting(false, true);
 
       var add = Vector3.zero;
@@ -1947,11 +1942,11 @@ namespace Assets.Scripts.Ragdoll.Equippables
         {
           yield return null;
           timer += Time.deltaTime;
-          SetRotationLocal(t, Vector3.Lerp(startEulerRot, desiredEulerRot, timer / totalTime));
+          FunctionsC.SetRotationLocal(t, Vector3.Lerp(startEulerRot, desiredEulerRot, timer / totalTime));
         }
 
         // Return to original rot
-        SetRotationLocal(t, desiredEulerRot);
+        FunctionsC.SetRotationLocal(t, desiredEulerRot);
 
         // Fire action
         onEnd?.Invoke();

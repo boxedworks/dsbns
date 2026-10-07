@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using SneakyEngine.Engine;
 using UnityEngine;
 
 namespace Assets.Scripts.FX
@@ -19,8 +20,6 @@ namespace Assets.Scripts.FX
       }
     }
     static SceneThemes m_Instance;
-
-    public static AudioSource _footstep, _footstepBloody;
 
     [SerializeField]
     public SceneTheme[] _Themes;
@@ -71,9 +70,15 @@ namespace Assets.Scripts.FX
       _Instance.StartCoroutine(ChangeMapThemeCo(oldtheme));
 
       // Set footstep FX per theme
-      _footstep = GameObject.Find($"Footstep_{_Theme._tile}")?.GetComponent<AudioSource>();
-      _footstepBloody = SfxManager.GetAudioSource("Ragdoll/Footstep_blood");
-      _footstep ??= GameObject.Find("Footstep").GetComponent<AudioSource>();
+      var footstepTheme = GameObject.Find($"Footstep_{_Theme._tile}");
+      AudioSource footstepSfx = null;
+      if (footstepTheme != null)
+        footstepSfx = footstepTheme.GetComponent<AudioSource>();
+      if (footstepSfx == null)
+        footstepSfx = GameObject.Find("Footstep").GetComponent<AudioSource>();
+      var footstepBloody = SfxManager.GetAudioLibrarySource("Ragdoll/Footstep_blood");
+      SneakyEngineSystem.RagdollSystem.SetFootstepAudioSources(footstepSfx, footstepBloody);
+
       var color = _Theme._tileColorDown * 1.5f;
       color.a = 1f;
       FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.FOOTPRINT)[0].GetComponent<ParticleSystemRenderer>().sharedMaterial.color = color;

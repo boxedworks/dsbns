@@ -158,6 +158,10 @@ namespace Assets.Scripts.Settings.Serialization
 
         InitializeDefaultLevelData();
       }
+
+      //
+      SettingsHelper._Extras_BloodType = LevelModule.ExtraBloodType;
+      SettingsHelper._Extras_BodyExplode = LevelModule.ExtraBodyExplode;
     }
 
     static void InitializeDefaultLevelData()

@@ -19,11 +19,16 @@ public static class FunctionsC
     s_BookManager = new();
   }
 
-  public static void RotateLocal(ref GameObject gameObject, float newLocalY)
+  public static void SetRotationLocalY(ref GameObject gameObject, float newLocalY)
   {
-    Quaternion rotation = gameObject.transform.localRotation;
+    var rotation = gameObject.transform.localRotation;
     rotation.eulerAngles = new Vector3(rotation.eulerAngles.x, newLocalY, rotation.eulerAngles.z);
     gameObject.transform.localRotation = rotation;
+  }
+
+  public static void SetRotationLocal(Transform t, Vector3 euler)
+  {
+    t.localEulerAngles = euler;
   }
 
   // Data structure returned via Player distance queries

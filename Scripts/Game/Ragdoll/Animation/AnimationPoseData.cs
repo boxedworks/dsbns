@@ -13,12 +13,12 @@ namespace Assets.Scripts.Ragdoll.Animation
 
     public void Set(ActiveRagdoll ragdoll, Transform item_mesh)
     {
-      ItemScript.SetRotationLocal(ragdoll._transform_parts._arm_lower_l, _arm_lower_l);
-      ItemScript.SetRotationLocal(ragdoll._transform_parts._arm_upper_l, _arm_upper_l);
-      ItemScript.SetRotationLocal(ragdoll._transform_parts._arm_lower_r, _arm_lower_r);
-      ItemScript.SetRotationLocal(ragdoll._transform_parts._arm_upper_r, _arm_upper_r);
-      ItemScript.SetRotationLocal(ragdoll._transform_parts._spine, _spine_upper);
-      ItemScript.SetRotationLocal(item_mesh, _item_mesh);
+      FunctionsC.SetRotationLocal(ragdoll._transform_parts._arm_lower_l, _arm_lower_l);
+      FunctionsC.SetRotationLocal(ragdoll._transform_parts._arm_upper_l, _arm_upper_l);
+      FunctionsC.SetRotationLocal(ragdoll._transform_parts._arm_lower_r, _arm_lower_r);
+      FunctionsC.SetRotationLocal(ragdoll._transform_parts._arm_upper_r, _arm_upper_r);
+      FunctionsC.SetRotationLocal(ragdoll._transform_parts._spine, _spine_upper);
+      FunctionsC.SetRotationLocal(item_mesh, _item_mesh);
     }
 
     public static void Animate(ItemScript item, AnimationPoseData start, AnimationPoseData end, Transform item_mesh, float totalTime, float halfTime)

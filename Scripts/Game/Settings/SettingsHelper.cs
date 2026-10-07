@@ -3,6 +3,8 @@ using Assets.Scripts.Game.Items;
 using Assets.Scripts.Ragdoll.Equippables;
 using Assets.Scripts.Settings.Extras;
 using Assets.Scripts.Settings.Serialization;
+using SneakyEngine.Engine;
+using SneakyEngine.Ragdoll;
 using UnityEngine;
 using UnityEngine.Rendering.Universal;
 
@@ -16,6 +18,8 @@ namespace Assets.Scripts.Settings
     static SettingsSaveData SettingsModule { get { return s_SaveData.Settings; } }
     static LevelSaveData LevelModule { get { return s_SaveData.LevelData; } }
 
+    static RagdollSystem RagdollModule { get { return SneakyEngineSystem.RagdollSystem; } }
+
     //
     public static float _VERSION = 1.62f;
 
@@ -23,8 +27,7 @@ namespace Assets.Scripts.Settings
     static Resolution ScreenResolution;
 
     public static bool _Slowmo_on_death = true,
-      _Slowmo_on_lastkill = true,
-      _PLAYER_INVINCIBLE = false;
+      _Slowmo_on_lastkill = true;
 
     public static int _DeleteSaveDataIter, _DeleteStatsIter;
 
@@ -127,6 +130,23 @@ namespace Assets.Scripts.Settings
       }
     }
 
+    public static int _VolumeSFX
+    {
+      get
+      {
+        return SettingsModule.VolumeSFX;
+      }
+      set
+      {
+        SettingsModule.VolumeSFX = value % 6;
+        if (SettingsModule.VolumeSFX < 0)
+          SettingsModule.VolumeSFX = 5;
+
+        // Update SFX volume
+        SfxManager.SetVolume(SettingsModule.VolumeSFX);
+      }
+    }
+
     public static int _VolumeMusic
     {
       get
@@ -144,6 +164,33 @@ namespace Assets.Scripts.Settings
       }
     }
 
+    // Extra settings
+    public static int _Extras_BloodType
+    {
+      get
+      {
+        return LevelModule.ExtraBloodType;
+      }
+      set
+      {
+        LevelModule.ExtraBloodType = value;
+        RagdollModule.SetBloodType((RagdollSystem.BloodParticleType)value);
+      }
+    }
+    public static int _Extras_BodyExplode
+    {
+      get
+      {
+        return LevelModule.ExtraBodyExplode;
+      }
+      set
+      {
+        LevelModule.ExtraBodyExplode = value;
+        RagdollModule.SetExplodeOnDeath((RagdollSystem.TargetAlignmentType)value);
+      }
+    }
+
+    //
     public static int _QualityLevel
     {
       get
@@ -181,6 +228,34 @@ namespace Assets.Scripts.Settings
       }
     }
 
+    // Blood
+    public static bool _UseBlood
+    {
+      get
+      {
+        return SettingsModule.UseBlood;
+      }
+      set
+      {
+        SettingsModule.UseBlood = value;
+        RagdollModule.SetUseBlood(value);
+
+
+      }
+    }
+    public static bool _UseSmoke
+    {
+      get
+      {
+        return SettingsModule.UseSmokeFx;
+      }
+      set
+      {
+        SettingsModule.UseSmokeFx = value;
+        RagdollModule.SetUseBloodSmoke(value);
+      }
+    }
+
     // Extras
     public static bool _Extras_CanUse { get { return GameScript.s_IsMissionsGameMode && !_LevelEditorEnabled; } }
     public static bool _Extras_UsingAny
@@ -189,7 +264,7 @@ namespace Assets.Scripts.Settings
       {
         return
           _Extras_UsingAnyImportant ||
-          LevelModule.ExtraBloodType != 0
+          _Extras_BloodType != 0
         ;
       }
     }
@@ -205,7 +280,7 @@ namespace Assets.Scripts.Settings
           LevelModule.ExtraEnemyMultiplier != 0 ||
           LevelModule.ExtraPlayerAmmo != 0 ||
           LevelModule.ExtraEnemyAmmo != 0 ||
-          LevelModule.ExtraBodyExplode != 0
+          _Extras_BodyExplode != 0
         //GameScript.s_IsCrownModeEnabled
         ;
       }
@@ -266,7 +341,7 @@ namespace Assets.Scripts.Settings
         {
 
           // Settings
-          SettingsModule.UseBlood = PlayerPrefs.GetInt("show_blood", 1) == 1;
+          _UseBlood = PlayerPrefs.GetInt("show_blood", 1) == 1;
           SettingsModule.ForceKeyboard = PlayerPrefs.GetInt("force_keyboard", 0) == 1;
           SettingsModule.ShowTips = PlayerPrefs.GetInt("show_tips", 1) == 1;
           SettingsModule.ShowDeathText = PlayerPrefs.GetInt("showDeathText", 1) == 1;
@@ -287,8 +362,8 @@ namespace Assets.Scripts.Settings
           SettingsModule.UseOrthographicCamera = PlayerPrefs.GetInt("CameraType_ortho", 1) == 1;
           SettingsModule.CameraZoom = (SettingsSaveData.CameraZoomType)PlayerPrefs.GetInt("CameraZoom", _UseOrthographicCamera ? 3 : 1);
 
-          SettingsModule.VolumeMusic = PlayerPrefs.GetInt("VolumeMusic", 3);
-          SettingsModule.VolumeSFX = PlayerPrefs.GetInt("VolumeSFX", 3);
+          _VolumeMusic = PlayerPrefs.GetInt("VolumeMusic", 3);
+          _VolumeSFX = PlayerPrefs.GetInt("VolumeSFX", 3);
 
           SettingsModule.LevelCompletionBehavior = (SettingsSaveData.LevelCompletionBehaviorType)PlayerPrefs.GetInt("LevelCompletion", 0);
 
@@ -387,9 +462,9 @@ namespace Assets.Scripts.Settings
           LevelModule.ExtraTime = PlayerPrefs.GetInt("extra_superhot", 0);
           LevelModule.ExtraHorde = PlayerPrefs.GetInt("extra_crazyzombies", 0);
           LevelModule.ExtraRemoveChaser = PlayerPrefs.GetInt("extra_batguy", 0);
-          LevelModule.ExtraBloodType = PlayerPrefs.GetInt("extra_bloodtype", 0);
+          _Extras_BloodType = PlayerPrefs.GetInt("extra_bloodtype", 0);
           LevelModule.ExtraEnemyMultiplier = PlayerPrefs.GetInt("extra_emulti", 0);
-          LevelModule.ExtraBodyExplode = PlayerPrefs.GetInt("extra_bodyexplode", 0);
+          _Extras_BodyExplode = PlayerPrefs.GetInt("extra_bodyexplode", 0);
           LevelModule.ExtraEnemyAmmo = PlayerPrefs.GetInt("extra_enemyammo", 0);
           LevelModule.ExtraPlayerAmmo = PlayerPrefs.GetInt("extra_playerammo", 0);
 
@@ -661,8 +736,8 @@ namespace Assets.Scripts.Settings
         LevelModule.ExtraGravity,
         LevelModule.ExtraRemoveChaser,
         LevelModule.ExtraTime,
-        LevelModule.ExtraBloodType,
-        LevelModule.ExtraBodyExplode
+        _Extras_BloodType,
+        _Extras_BodyExplode
       };
     }
 
@@ -676,8 +751,8 @@ namespace Assets.Scripts.Settings
       LevelModule.ExtraGravity = 0;
       LevelModule.ExtraRemoveChaser = 0;
       LevelModule.ExtraTime = 0;
-      LevelModule.ExtraBloodType = 0;
-      LevelModule.ExtraBodyExplode = 0;
+      _Extras_BloodType = 0;
+      _Extras_BodyExplode = 0;
     }
 
     public enum GamemodeChange

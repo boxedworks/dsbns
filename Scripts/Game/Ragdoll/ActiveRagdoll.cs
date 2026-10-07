@@ -6,12 +6,12 @@ using System;
 
 using Random = UnityEngine.Random;
 using Assets.Scripts.Settings;
-using Assets.Scripts.Settings.Serialization;
 using Assets.Scripts.Objects;
 using Assets.Scripts.Objects.CustomEntities;
 using Assets.Scripts.Game.Items;
-using Assets.Scripts.FX;
 using Assets.Scripts.Ragdoll.Equippables;
+using SneakyEngine.Engine;
+using SneakyEngine.Ragdoll;
 
 namespace Assets.Scripts.Ragdoll
 {
@@ -20,9 +20,7 @@ namespace Assets.Scripts.Ragdoll
   public class ActiveRagdoll
   {
 
-    //
-    static LevelSaveData LevelModule { get { return SettingsHelper.s_SaveData.LevelData; } }
-    static SettingsSaveData SettingsModule { get { return SettingsHelper.s_SaveData.Settings; } }
+    static RagdollSystem RagdollSystem { get { return SneakyEngineSystem.RagdollSystem; } }
 
     //
     public static List<ActiveRagdoll> s_Ragdolls;
@@ -442,7 +440,7 @@ namespace Assets.Scripts.Ragdoll
             EnemyScript.CheckSound(_Controller.position, _Distance.magnitude > 0.2f ? EnemyScript.Loudness.SOFT : EnemyScript.Loudness.SUPERSOFT);
 
           // Sfx
-          var footstepAudioSource = false && _bloodFootprintTimer > 0f ? SceneThemes._footstepBloody : SceneThemes._footstep;
+          var footstepAudioSource = false && _bloodFootprintTimer > 0f ? RagdollSystem.SfxFootstepBloody : RagdollSystem.SfxFootstep;
           SfxManager.PlayAudioSourceSimple(_Controller.position, footstepAudioSource.clip, footstepAudioSource.volume, 0.89f, 1.11f, SfxManager.AudioClass.FOOTSTEP);
 
           // Footprint
@@ -1607,8 +1605,6 @@ namespace Assets.Scripts.Ragdoll
 
     public void Kill(ActiveRagdoll source, DamageSourceType damageSourceType, Vector3 hitForce)
     {
-      if (_IsPlayer && SettingsHelper._PLAYER_INVINCIBLE) return;
-
       // Disintegrate
       if (damageSourceType == DamageSourceType.FIRE)
       {
@@ -1699,11 +1695,11 @@ namespace Assets.Scripts.Ragdoll
       }
 
       // Check global blood setting
-      if (!SettingsModule.UseBlood) return;
+      if (!RagdollSystem.UseBlood) return;
 
       /// Particles
       // Confetti
-      var useConfetti = LevelModule.ExtraBloodType == 1;
+      var useConfetti = RagdollSystem.BloodType == RagdollSystem.BloodParticleType.CONFETTI;
       if (useConfetti)
       {
         var particlesConfetti = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.CONFETTI);
@@ -1724,15 +1720,6 @@ namespace Assets.Scripts.Ragdoll
           rotationConfetti = confetti.transform.localRotation;
 
           GameScript.s_Singleton.StartCoroutine(BloodFollow(confetti));
-
-          /*/
-          if (SettingsModule.UseSmokeFx)
-          {
-            var parts = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.BLOOD_SMOKE_CONFETTI)[0];
-            parts.transform.position = _Hip.position + new Vector3(0f, 0.5f, 0f);
-            parts.Emit(4);
-          }*/
-
 
           // Audio
           PlaySound("Ragdoll/Confetti", 0.6f, 1.2f);
@@ -1813,8 +1800,8 @@ namespace Assets.Scripts.Ragdoll
 
         GameScript.s_Singleton.StartCoroutine(BloodFollow(blood));
 
-        //
-        if (SettingsModule.UseSmokeFx)
+        // Blood smoke
+        if (RagdollSystem.UseBloodSmoke)
         {
           var parts = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.BLOOD_SMOKE)[0];
           parts.transform.position = _Hip.position + new Vector3(0f, 0.5f, 0f);
@@ -1912,31 +1899,31 @@ namespace Assets.Scripts.Ragdoll
         // Check extras
         if (SettingsHelper._Extras_CanUse)
         {
-          var explode_self = false;
-          switch (LevelModule.ExtraBodyExplode)
+          var shouldExplode = false;
+          switch (RagdollSystem.ExplodeOnDeath)
           {
 
             // All
-            case 1:
-              explode_self = true;
+            case RagdollSystem.TargetAlignmentType.ALL:
+              shouldExplode = true;
               break;
 
             // Enemies
-            case 2:
-              explode_self = !_IsPlayer;
+            case RagdollSystem.TargetAlignmentType.ENEMIES:
+              shouldExplode = !_IsPlayer;
               break;
 
             // Players
-            case 3:
-              explode_self = _IsPlayer;
+            case RagdollSystem.TargetAlignmentType.PLAYERS:
+              shouldExplode = _IsPlayer;
               break;
           }
-          if (explode_self)
+          if (shouldExplode)
           {
-            var explode_script = _Hip.gameObject.AddComponent<ExplosiveScript>();
-            explode_script._explosionType = ExplosiveScript.ExplosionType.AWAY;
-            explode_script._radius = 3 * 0.8f;
-            explode_script.Trigger(source, damageSourceType == DamageSourceType.MELEE ? 1f : 0.1f, false, true);
+            var explosion = _Hip.gameObject.AddComponent<ExplosiveScript>();
+            explosion._explosionType = ExplosiveScript.ExplosionType.AWAY;
+            explosion._radius = 3 * 0.8f;
+            explosion.Trigger(source, damageSourceType == DamageSourceType.MELEE ? 1f : 0.1f, false, true);
           }
         }
 
