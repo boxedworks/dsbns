@@ -172,6 +172,7 @@ namespace Assets.Scripts.Game.Items
       UTILITY_MINE,
       UTILITY_COIN,
       MOD_BULLET_DESTROYER,
+      ITEM_CHAINSAW,
     }
     public static string GetUnlockStringLocalized(Unlocks unlock)
     {
@@ -211,7 +212,8 @@ namespace Assets.Scripts.Game.Items
       { Unlocks.ITEM_AXE, new Tuple<string, int>("melee, slower, wide-sweep", 10) },
       //_Unlocks_Descriptions.Add(Unlocks.ITEM_BAT, new Tuple<string, int>("melee, two-handed, wide-sweep", 10));
       { Unlocks.ITEM_RAPIER, new Tuple<string, int>("melee, one-handed, lunge", 15) },
-      { Unlocks.ITEM_KATANA, new Tuple<string, int>("melee, two-handed, wide-sweep", 20) },
+      { Unlocks.ITEM_KATANA, new Tuple<string, int>("melee, two-handed, wide-sweep", 15) },
+      { Unlocks.ITEM_CHAINSAW, new Tuple<string, int>("melee, one-handed, relentless", 15) },
 
       { Unlocks.ITEM_PISTOL_SILENCED, new Tuple<string, int>("handgun, silenced, fast-reload", 15) },
       { Unlocks.ITEM_PISTOL_MACHINE, new Tuple<string, int>("handgun, 3-burst, fast-reload", 10) },
@@ -229,7 +231,7 @@ namespace Assets.Scripts.Game.Items
       { Unlocks.ITEM_RIFLE_LEVER, new Tuple<string, int>("rifle, semi-automatic, fast-fire", 20) },
       { Unlocks.ITEM_RIFLE_CHARGE, new Tuple<string, int>("rifle, semi/automatic, charged", 15) },
       { Unlocks.ITEM_DMR, new Tuple<string, int>("rifle, semi-automatic, slow-reload", 22) },
-      { Unlocks.ITEM_SNIPER, new Tuple<string, int>("bolt-action, semi-automatic, powerful", 20) },
+      { Unlocks.ITEM_SNIPER, new Tuple<string, int>("bolt-action, semi-automatic, powerful", 10) },
       { Unlocks.ITEM_GRENADE_LAUNCHER, new Tuple<string, int>("explosive, semi-automatic, slow-reload", 15) },
       { Unlocks.ITEM_STICKY_GUN, new Tuple<string, int>("stealthy, chain, slow-reload", 15) },
 
@@ -351,7 +353,7 @@ namespace Assets.Scripts.Game.Items
         _Unlocks_Vault.Add("classic_5", new Unlocks[] { Unlocks.ITEM_RAPIER, Unlocks.ITEM_STICKY_GUN, Unlocks.UTILITY_GRENADE_IMPACT });
         _Unlocks_Vault.Add("classic_6", new Unlocks[] { Unlocks.ITEM_FRYING_PAN, Unlocks.ITEM_CROSSBOW, Unlocks.ITEM_GRENADE_LAUNCHER, Unlocks.UTILITY_TACTICAL_BULLET, Unlocks.MAX_EQUIPMENT_POINTS_4 });
         _Unlocks_Vault.Add("classic_7", new Unlocks[] { Unlocks.MOD_THRUST, Unlocks.UTILITY_KUNAI_STICKY, Unlocks.UTILITY_INVISIBILITY, Unlocks.LOADOUT_SLOT_X2_2 });
-        _Unlocks_Vault.Add("classic_8", new Unlocks[] { Unlocks.ITEM_UZI, Unlocks.ITEM_SHOTGUN_PUMP, Unlocks.MOD_GRAPPLE_MASTER });
+        _Unlocks_Vault.Add("classic_8", new Unlocks[] { /*Unlocks.ITEM_CHAINSAW,*/ Unlocks.ITEM_UZI, Unlocks.ITEM_SHOTGUN_PUMP, Unlocks.MOD_GRAPPLE_MASTER });
         _Unlocks_Vault.Add("classic_9", new Unlocks[] { Unlocks.ITEM_RIFLE_LEVER, Unlocks.MOD_EXPLOSIVE_PARRY, Unlocks.LOADOUT_SLOT_X2_3, Unlocks.MAX_EQUIPMENT_POINTS_5 });
         _Unlocks_Vault.Add("classic_10", new Unlocks[] { Unlocks.ITEM_RIFLE_CHARGE, Unlocks.UTILITY_MORTAR_STRIKE, Unlocks.MOD_EXPLOSIONS_UP });
 
@@ -625,7 +627,7 @@ namespace Assets.Scripts.Game.Items
         AddAvailableUnlock(unlock, true);
     }
 
-    public static bool Unlocked(Unlocks unlock)
+    public static bool IsUnlocked(Unlocks unlock)
     {
 
       // Disallow beta items

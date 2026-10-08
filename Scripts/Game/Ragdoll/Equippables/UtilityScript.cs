@@ -447,13 +447,6 @@ namespace Assets.Scripts.Ragdoll.Equippables
 
             };
             // Throw and queue next
-            transform.GetChild(1).GetComponent<ParticleSystem>().Play();
-            /*var mode = 0;
-            if (_ragdoll._isPlayer)
-            {
-              if (ControllerManager.GetPlayerGamepad(_ragdoll._playerScript._id).buttonSouth.isPressed)
-                mode = 1;
-            }*/
             Throw();
             Unregister();
             break;
@@ -523,7 +516,6 @@ namespace Assets.Scripts.Ragdoll.Equippables
             };
 
             // Throw and queue next
-            transform.GetChild(1).GetComponent<ParticleSystem>().Play();
             Throw();
             Unregister();
             _hitRagdolls = new List<int>();
@@ -552,7 +544,6 @@ namespace Assets.Scripts.Ragdoll.Equippables
             };
 
             // Throw and queue next
-            transform.GetChild(1).GetComponent<ParticleSystem>().Play();
             Throw();
             Unregister();
             break;
@@ -607,7 +598,6 @@ namespace Assets.Scripts.Ragdoll.Equippables
             };
 
             // Throw and queue next
-            transform.GetChild(1).GetComponent<ParticleSystem>().Play();
             Throw();
             Unregister();
             break;
@@ -655,7 +645,6 @@ namespace Assets.Scripts.Ragdoll.Equippables
             };
 
             // Throw and queue next
-            transform.GetChild(1).GetComponent<ParticleSystem>().Play();
             Throw();
             Unregister();
             break;
@@ -855,7 +844,6 @@ namespace Assets.Scripts.Ragdoll.Equippables
             // Throw and queue next
             Throw();
             Unregister();
-            transform.GetChild(1).GetComponent<ParticleSystem>().Play();
 
             break;
 
@@ -920,7 +908,6 @@ namespace Assets.Scripts.Ragdoll.Equippables
             };
 
             // Throw and queue next
-            transform.GetChild(1).GetComponent<ParticleSystem>().Play();
             Throw();
             Unregister();
 
@@ -955,7 +942,6 @@ namespace Assets.Scripts.Ragdoll.Equippables
             };
 
             // Throw and queue next
-            transform.GetChild(1).GetComponent<ParticleSystem>().Play();
             Throw();
             Unregister();
             break;
@@ -1202,12 +1188,22 @@ namespace Assets.Scripts.Ragdoll.Equippables
         //
         if (_thrown)
         {
-          if (Time.time - _thrownTimer > 0.02f && !_mesh.activeSelf)
+          if (!_mesh.activeSelf && Time.time - _thrownTimer > 0.02f)
           {
             if (_ring != null && !_exploded)
               _ring.enabled = true;
             _mesh.SetActive(true);
           }
+
+          // Slowly make object bigger
+          var scaleTime = 0.25f;
+          if (Time.time - _thrownTimer < scaleTime)
+          {
+            var scale = Mathf.Lerp(0.01f, 1f, (Time.time - _thrownTimer) / scaleTime);
+            transform.localScale = new Vector3(scale, scale, scale);
+          }
+          else if (transform.localScale.x < 1f)
+            transform.localScale = new Vector3(1f, 1f, 1f);
 
           if (_expirationTimer != -1f && Time.time - _thrownTimer > _expirationTimer)
           {
@@ -1391,6 +1387,7 @@ namespace Assets.Scripts.Ragdoll.Equippables
         _ragdoll._spine.transform.position + forward * 0.6f + new Vector3(0f, _explosion != null ? 0.25f : 0.1f, 0f);
       spawnPosition.y = BulletScript.s_BULLET_HEIGHT;
       _rb.position = _throwPosition = spawnPosition;
+      transform.localScale = new Vector3(0.01f, 0.01f, 0.01f);
 
       // Configure Rigidbody
       if (_utility_type != UtilityType.MORTAR_STRIKE)
@@ -1422,6 +1419,13 @@ namespace Assets.Scripts.Ragdoll.Equippables
       {
         _rb.rotation = Quaternion.LookRotation(forward) * Quaternion.Euler(0f, -90f, 0f);
       }
+
+      // Particle FX
+      var ps = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.THROWABLE_TRAIL);
+      var psNewGO = Instantiate(ps[0].gameObject, _rb.transform);
+      psNewGO.transform.localPosition = Vector3.zero;
+      psNewGO.transform.localRotation = Quaternion.identity;
+      psNewGO.GetComponent<ParticleSystem>().Play();
     }
 
     void CoinSpin(Vector3 spinAxis)
@@ -1566,7 +1570,8 @@ namespace Assets.Scripts.Ragdoll.Equippables
     private void OnDestroy()
     {
       //
-      if (_ring != null && _ring.transform.parent != null) Destroy(_ring.transform.parent.gameObject);
+      if (_ring != null && _ring.transform.parent != null)
+        Destroy(_ring.transform.parent.gameObject);
 
       //
       if (_utility_type == UtilityType.MORTAR_STRIKE)

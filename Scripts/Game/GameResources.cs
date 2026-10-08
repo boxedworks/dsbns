@@ -45,9 +45,11 @@ public static class GameResources
 
   public static bool _Loaded;
 
-  public static Transform _Container_Objects, _UI, _UI_Editor, _UI_Editor_Testing, _UI_Player, _Menu, _UI_Survival, _UI_Classic, _UI_Versus, s_Backrooms, s_Sounds,
+  public static Transform _Container_Objects, _UI, _UI_Editor, _UI_Editor_Testing, _UI_Player, _Menu, _UI_Survival, _UI_Classic, _UI_Versus, s_Sounds,
 
   _XrLeft, _XrRight;
+
+  public static Transform s_Backrooms, s_Backrooms_White;
 
   public static Camera _Camera_Main, _Camera_Menu, _Camera_IgnorePP;
   public static AudioListener s_AudioListener;
@@ -162,6 +164,9 @@ public static class GameResources
 
     s_Backrooms = GameObject.Find("Backrooms").transform;
     s_Backrooms.gameObject.SetActive(false);
+
+    s_Backrooms_White = GameObject.Find("WhitePlane").transform;
+    s_Backrooms_White.gameObject.SetActive(false);
 
     _XrLeft = GameObject.Find("Controller (left)").transform;
     _XrRight = GameObject.Find("Controller (right)").transform;

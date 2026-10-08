@@ -2587,7 +2587,7 @@ namespace Assets.Scripts.UI.Menus
           .SetSelectorType(MenuComponent.SelectorType.QUESTION);
 
         // Show shop filter
-        if (ShopHelper.Unlocked(ShopHelper.Unlocks.TUTORIAL_PART1))
+        if (ShopHelper.IsUnlocked(ShopHelper.Unlocks.TUTORIAL_PART1))
           m.AddComponent("filter: available\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
             .AddEvent(component =>
             {
@@ -2692,7 +2692,7 @@ namespace Assets.Scripts.UI.Menus
           }
 
           // Only show available unlocks
-          if (display_mode == ShopHelper.DisplayModes.AVAILABLE && ShopHelper.Unlocked(unlock))
+          if (display_mode == ShopHelper.DisplayModes.AVAILABLE && ShopHelper.IsUnlocked(unlock))
             continue;
 
           /*/ Reformat item types
@@ -2721,7 +2721,7 @@ namespace Assets.Scripts.UI.Menus
           var equip_cost_string = equip_cost == 0 ? "-" : equip_cost + "";
           if (display_mode == ShopHelper.DisplayModes.PURCHASED)
           {
-            if (!ShopHelper.Unlocked(unlock))
+            if (!ShopHelper.IsUnlocked(unlock))
               continue;
 
             OnPrintItem(itemType);
@@ -2735,7 +2735,7 @@ namespace Assets.Scripts.UI.Menus
 
           var set_text = true;
           var max_equip = Loadout._POINTS_MAX;
-          if (display_mode == ShopHelper.DisplayModes.ALL && ShopHelper.Unlocked(unlock))
+          if (display_mode == ShopHelper.DisplayModes.ALL && ShopHelper.IsUnlocked(unlock))
           {
             var ct = string.Format(format_shop2, name, shop_details.Item1, cost, equip_cost_string, "yellow", "yellow", "yellow");
             if (ct.Contains('['))
@@ -2755,7 +2755,7 @@ namespace Assets.Scripts.UI.Menus
           else
           {
             set_text = false;
-            var color = ShopHelper.Unlocked(unlock) ? "yellow" : "white";
+            var color = ShopHelper.IsUnlocked(unlock) ? "yellow" : "white";
 
             // Regex search for color change pattern
             /*string tf(string input)
@@ -2820,7 +2820,7 @@ namespace Assets.Scripts.UI.Menus
                 var unlock0 = (ShopHelper.Unlocks)System.Enum.Parse(typeof(ShopHelper.Unlocks), unlockText, true);
                 var shop_info = ShopHelper._Unlocks_Descriptions[unlock0];
                 //var equip_cost = ItemManager.GetItemValue(unlock0);
-                if (shop_info.Item2 <= ShopHelper._AvailablePoints && !ShopHelper.Unlocked(unlock0))
+                if (shop_info.Item2 <= ShopHelper._AvailablePoints && !ShopHelper.IsUnlocked(unlock0))
                 {
                   // Unlock item
                   ShopHelper.Unlock(unlock0);
@@ -2890,7 +2890,7 @@ namespace Assets.Scripts.UI.Menus
         {
           ShopHelper._DisplayMode = 0;
           SpawnMenu_Shop();
-          s_CurrentMenu._SelectionIndex = ShopHelper.Unlocked(ShopHelper.Unlocks.TUTORIAL_PART1) ? 3 : 2;
+          s_CurrentMenu._SelectionIndex = ShopHelper.IsUnlocked(ShopHelper.Unlocks.TUTORIAL_PART1) ? 3 : 2;
           _CanRender = false;
           RenderMenu();
         };
@@ -3128,7 +3128,7 @@ namespace Assets.Scripts.UI.Menus
           Levels._CurrentLevelCollectionIndex = SettingsHelper._DIFFICULTY;
           SettingsHelper.OnGamemodeChanged(SettingsHelper.GamemodeChange.CLASSIC);
 
-          if (ShopHelper.Unlocked(ShopHelper.Unlocks.TUTORIAL_PART1))
+          if (ShopHelper.IsUnlocked(ShopHelper.Unlocks.TUTORIAL_PART1))
             CommonEvents._SwitchMenu(MenuType.GAMETYPE_MISSION);
 
           // Tutorial
@@ -3166,7 +3166,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
 #if UNITY_EDITOR
           return;
 #endif
-          component._obscured = !ShopHelper.Unlocked(ShopHelper.Unlocks.MODE_ZOMBIE);
+          component._obscured = !ShopHelper.IsUnlocked(ShopHelper.Unlocks.MODE_ZOMBIE);
         });
 
       // Switch to versus mode menu
@@ -4141,15 +4141,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
         // Back button
         s_menus[MenuType.SELECT_LOADOUT].AddBackButton(component =>
         {
-
-          // Check for empty loadout for tutorial
-          foreach (var loadout in Loadout._Loadouts)
-            if (!loadout._Equipment.IsEmpty())
-            {
-              ShopHelper.Unlock(ShopHelper.Unlocks.TUTORIAL_PART1);
-              LevelSaveData.Save();
-              break;
-            }
+          Loadout.SaveAll();
 
           // Switch back
           CommonEvents._SwitchMenu(s_InPause ? MenuType.PAUSE : MenuType.GAMETYPE_MISSION);
@@ -4207,7 +4199,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
         var has_utility = false;
         var has_perk = false;
 
-        if (Levels._EditingLoadout)
+        if (Levels._EditingLoadout || Debug.isDebugBuild)
         {
           has_item = has_utility = has_perk = true;
         }
@@ -4238,7 +4230,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
             component.SetDisplayText($"<color={_COLOR_GRAY}>edit loadout {CurrentLoadout()._Id + 1}</color>\n\n");
           })
         .AddComponent("===\n\n");
-        if (ShopHelper.Unlocked(ShopHelper.Unlocks.TUTORIAL_PART1) && has_item)
+        if (ShopHelper.IsUnlocked(ShopHelper.Unlocks.TUTORIAL_PART1) && has_item)
         {
           /*.AddComponent("filter: UNLOCKED\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
             .AddEvent((MenuComponent component) =>
@@ -4258,7 +4250,6 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
             {
               var loadout = CurrentLoadout();
               loadout._two_weapon_pairs = !loadout._two_weapon_pairs;
-              loadout.Save();
 
               SpawnMenu_LoadoutEditor();
 
@@ -4321,7 +4312,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
                   desc = ShopHelper._Unlocks_Descriptions[unlock].Item1;
 
                   // Check filter
-                  if (ShopHelper._LoadoutDisplayMode == 0 && !ShopHelper.Unlocked(unlock)) continue;
+                  if (ShopHelper._LoadoutDisplayMode == 0 && !ShopHelper.IsUnlocked(unlock)) continue;
                 }
                 var it_val = ItemManager.GetItemValue(item0);
                 var use_color = it_val > CurrentLoadout()._available_points + item_cost ? "red" : "white";
@@ -4378,7 +4369,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
                   actions_onCreated.Add(component0 => { });
                 else
                 {
-                  var unlocked = ShopHelper.Unlocked((ShopHelper.Unlocks)System.Enum.Parse(typeof(ShopHelper.Unlocks), $"ITEM_{item0}", true));
+                  var unlocked = ShopHelper.IsUnlocked((ShopHelper.Unlocks)System.Enum.Parse(typeof(ShopHelper.Unlocks), $"ITEM_{item0}", true));
                   if (unlocked)
                     actions_onCreated.Add(component0 => { });
                   else
@@ -4426,7 +4417,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
                   desc = ShopHelper._Unlocks_Descriptions[unlock].Item1;
 
                   // Check filter
-                  if (ShopHelper._LoadoutDisplayMode == 0 && !ShopHelper.Unlocked(unlock)) continue;
+                  if (ShopHelper._LoadoutDisplayMode == 0 && !ShopHelper.IsUnlocked(unlock)) continue;
                 }
                 var it_val = ItemManager.GetItemValue(item0);
                 var use_color = it_val > CurrentLoadout()._available_points + item_cost ? "red" : "white";
@@ -4482,7 +4473,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
                   actions_onCreated.Add(component0 => { });
                 else
                 {
-                  var unlocked = ShopHelper.Unlocked((ShopHelper.Unlocks)System.Enum.Parse(typeof(ShopHelper.Unlocks), $"ITEM_{item0}", true));
+                  var unlocked = ShopHelper.IsUnlocked((ShopHelper.Unlocks)System.Enum.Parse(typeof(ShopHelper.Unlocks), $"ITEM_{item0}", true));
                   if (unlocked)
                     actions_onCreated.Add(component0 => { });
                   else
@@ -4527,7 +4518,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
                     desc = ShopHelper._Unlocks_Descriptions[unlock].Item1;
 
                     // Check filter
-                    if (ShopHelper._LoadoutDisplayMode == 0 && !ShopHelper.Unlocked(unlock)) continue;
+                    if (ShopHelper._LoadoutDisplayMode == 0 && !ShopHelper.IsUnlocked(unlock)) continue;
                   }
                   var it_val = ItemManager.GetItemValue(item0);
                   var use_color = it_val > CurrentLoadout()._available_points + item_cost ? "red" : "white";
@@ -4583,7 +4574,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
                     actions_onCreated.Add(component0 => { });
                   else
                   {
-                    var unlocked = ShopHelper.Unlocked((ShopHelper.Unlocks)System.Enum.Parse(typeof(ShopHelper.Unlocks), $"ITEM_{item0}", true));
+                    var unlocked = ShopHelper.IsUnlocked((ShopHelper.Unlocks)System.Enum.Parse(typeof(ShopHelper.Unlocks), $"ITEM_{item0}", true));
                     if (unlocked)
                       actions_onCreated.Add(component0 => { });
                     else
@@ -4624,7 +4615,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
                     desc = ShopHelper._Unlocks_Descriptions[unlock].Item1;
 
                     // Check filter
-                    if (ShopHelper._LoadoutDisplayMode == 0 && !ShopHelper.Unlocked(unlock)) continue;
+                    if (ShopHelper._LoadoutDisplayMode == 0 && !ShopHelper.IsUnlocked(unlock)) continue;
                   }
                   var it_val = ItemManager.GetItemValue(item0);
                   var use_color = it_val > CurrentLoadout()._available_points + item_cost ? "red" : "white";
@@ -4687,7 +4678,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
                     actions_onCreated.Add(component0 => { });
                   else
                   {
-                    var unlocked = ShopHelper.Unlocked((ShopHelper.Unlocks)System.Enum.Parse(typeof(ShopHelper.Unlocks), $"ITEM_{item0}", true));
+                    var unlocked = ShopHelper.IsUnlocked((ShopHelper.Unlocks)System.Enum.Parse(typeof(ShopHelper.Unlocks), $"ITEM_{item0}", true));
                     if (unlocked)
                       actions_onCreated.Add(component0 => { });
                     else
@@ -4735,7 +4726,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
                   desc = ShopHelper._Unlocks_Descriptions[unlock].Item1;
 
                   // Check filter
-                  if (ShopHelper._LoadoutDisplayMode == 0 && !ShopHelper.Unlocked(unlock)) continue;
+                  if (ShopHelper._LoadoutDisplayMode == 0 && !ShopHelper.IsUnlocked(unlock)) continue;
                 }
                 var ut_val = ItemManager.GetUtilityValue(utility0);
                 var use_color = ut_val > CurrentLoadout()._available_points + utility_cost ? "red" : "white";
@@ -4796,7 +4787,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
                   actions_onCreated.Add(component0 => { });
                 else
                 {
-                  var unlocked = ShopHelper.Unlocked((ShopHelper.Unlocks)System.Enum.Parse(typeof(ShopHelper.Unlocks), $"UTILITY_{utility0}", true));
+                  var unlocked = ShopHelper.IsUnlocked((ShopHelper.Unlocks)System.Enum.Parse(typeof(ShopHelper.Unlocks), $"UTILITY_{utility0}", true));
                   if (unlocked)
                     actions_onCreated.Add(component0 => { });
                   else
@@ -4838,7 +4829,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
                   desc = ShopHelper._Unlocks_Descriptions[unlock].Item1;
 
                   // Check filter
-                  if (ShopHelper._LoadoutDisplayMode == 0 && !ShopHelper.Unlocked(unlock)) continue;
+                  if (ShopHelper._LoadoutDisplayMode == 0 && !ShopHelper.IsUnlocked(unlock)) continue;
                 }
                 var ut_val = ItemManager.GetUtilityValue(utility0);
                 var use_color = ut_val > CurrentLoadout()._available_points + utility_cost ? "red" : "white";
@@ -4898,7 +4889,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
                   actions_onCreated.Add(component0 => { });
                 else
                 {
-                  var unlocked = ShopHelper.Unlocked((ShopHelper.Unlocks)System.Enum.Parse(typeof(ShopHelper.Unlocks), $"UTILITY_{utility0}", true));
+                  var unlocked = ShopHelper.IsUnlocked((ShopHelper.Unlocks)System.Enum.Parse(typeof(ShopHelper.Unlocks), $"UTILITY_{utility0}", true));
                   if (unlocked)
                     actions_onCreated.Add(component0 => { });
                   else
@@ -4951,7 +4942,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
                   desc = Perk._PERK_DESCRIPTIONS[perk0];
 
                   // Check filter
-                  if (ShopHelper._LoadoutDisplayMode == 0 && !ShopHelper.Unlocked(unlock)) continue;
+                  if (ShopHelper._LoadoutDisplayMode == 0 && !ShopHelper.IsUnlocked(unlock)) continue;
                 }
 
                 //
@@ -5063,7 +5054,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
                   actions_onCreated.Add(component0 => { });
                 else
                 {
-                  var unlocked = ShopHelper.Unlocked((ShopHelper.Unlocks)System.Enum.Parse(typeof(ShopHelper.Unlocks), $"MOD_{perk0}", true));
+                  var unlocked = ShopHelper.IsUnlocked((ShopHelper.Unlocks)System.Enum.Parse(typeof(ShopHelper.Unlocks), $"MOD_{perk0}", true));
                   if (unlocked)
                     actions_onCreated.Add(component0 => { });
                   else
@@ -5150,9 +5141,6 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
             });
         s_menus[MenuType.EDIT_LOADOUT]._OnDropdownRemoved += () =>
         {
-          foreach (var loadout in Loadout._Loadouts)
-            loadout.Save();
-
           // Check empty loadout
           foreach (var profile in PlayerProfile.s_Profiles)
             profile.ChangeLoadoutIfEmpty();
@@ -5162,7 +5150,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
         s_menus[MenuType.EDIT_LOADOUT]._OnSwitchTo += () =>
         {
           SpawnMenu_LoadoutEditor();
-          s_CurrentMenu._SelectionIndex = ShopHelper.Unlocked(ShopHelper.Unlocks.TUTORIAL_PART1) && has_item ? 2 : 1;
+          s_CurrentMenu._SelectionIndex = ShopHelper.IsUnlocked(ShopHelper.Unlocks.TUTORIAL_PART1) && has_item ? 2 : 1;
           _CanRender = false;
           RenderMenu();
         };
@@ -5359,7 +5347,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
         if (!GameScript.s_IsZombieGameMode && !GameScript.s_IsPartyGameMode)
         {
           mPause.AddComponent("extras*\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE);
-          if (ShopHelper.Unlocked(ShopHelper.Unlocks.MODE_EXTRAS))
+          if (ShopHelper.IsUnlocked(ShopHelper.Unlocks.MODE_EXTRAS))
           {
             mPause.AddEvent(component =>
             {
@@ -5525,7 +5513,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
           }
           else
           {
-            if (!ShopHelper.Unlocked(ShopHelper.Unlocks.TUTORIAL_PART0))
+            if (!ShopHelper.IsUnlocked(ShopHelper.Unlocks.TUTORIAL_PART0))
               GenericMenu(
       new string[] { @"no items~1
 
@@ -5557,7 +5545,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
         })
         .AddEvent(EventType.ON_RENDER, component =>
         {
-          component._textColor = ShopHelper.Unlocked(ShopHelper.Unlocks.TUTORIAL_PART1) ? "" : _COLOR_GRAY;
+          component._textColor = ShopHelper.IsUnlocked(ShopHelper.Unlocks.TUTORIAL_PART1) ? "" : _COLOR_GRAY;
         })
       // Edit loadout
       .AddComponent("edit loadouts\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
@@ -5582,21 +5570,21 @@ go to the <color=yellow>SHOP</color> to buy something~1
         })
         .AddEvent(EventType.ON_RENDER, component =>
         {
-          component._textColor = ShopHelper.Unlocked(ShopHelper.Unlocks.TUTORIAL_PART0) ? (ShopHelper.Unlocked(ShopHelper.Unlocks.TUTORIAL_PART1) ? "" : "yellow") : _COLOR_GRAY;
+          component._textColor = ShopHelper.IsUnlocked(ShopHelper.Unlocks.TUTORIAL_PART0) ? (ShopHelper.IsUnlocked(ShopHelper.Unlocks.TUTORIAL_PART1) ? "" : "yellow") : _COLOR_GRAY;
         })
       // Visit shop
       .AddComponent("shop\n", MenuComponent.ComponentType.BUTTON_SIMPLE)
         .AddEvent(component => { CommonEvents._SwitchMenu(MenuType.SHOP); })
         .AddEvent(EventType.ON_RENDER, c =>
         {
-          c._textColor = ShopHelper.Unlocked(ShopHelper.Unlocks.TUTORIAL_PART0) ? "white" : "yellow";
+          c._textColor = ShopHelper.IsUnlocked(ShopHelper.Unlocks.TUTORIAL_PART0) ? "white" : "yellow";
         })
 
       // Extras
       .AddComponent("extras*\n\n", MenuComponent.ComponentType.BUTTON_SIMPLE);
       menu_classic.AddEvent(component =>
       {
-        if (ShopHelper.Unlocked(ShopHelper.Unlocks.MODE_EXTRAS))
+        if (ShopHelper.IsUnlocked(ShopHelper.Unlocks.MODE_EXTRAS))
           CommonEvents._SwitchMenu(MenuType.EXTRAS);
       })
       .AddEvent(EventType.ON_RENDER, c =>
@@ -5605,7 +5593,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
       });
       menu_classic.AddEvent(EventType.ON_RENDER, c =>
       {
-        c._obscured = !ShopHelper.Unlocked(ShopHelper.Unlocks.MODE_EXTRAS);
+        c._obscured = !ShopHelper.IsUnlocked(ShopHelper.Unlocks.MODE_EXTRAS);
       });
 
       // Tutorial
@@ -5613,7 +5601,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
         .AddEvent(component => { CommonEvents._SwitchMenu(MenuType.HOWTOPLAY_MISSION); })
         .AddEvent(EventType.ON_RENDER, c =>
         {
-          c._textColor = ShopHelper.Unlocked(ShopHelper.Unlocks.TUTORIAL_PART1) ? "white" : "yellow";
+          c._textColor = ShopHelper.IsUnlocked(ShopHelper.Unlocks.TUTORIAL_PART1) ? "white" : "yellow";
         })
       // Back
       .AddBackButton(component =>
@@ -5625,9 +5613,9 @@ go to the <color=yellow>SHOP</color> to buy something~1
       ._OnSwitchTo += () =>
       {
         if (s_PreviousMenuType == MenuType.MODE_SELECTION)
-          if (!ShopHelper.Unlocked(ShopHelper.Unlocks.TUTORIAL_PART0))
+          if (!ShopHelper.IsUnlocked(ShopHelper.Unlocks.TUTORIAL_PART0))
             s_CurrentMenu._SelectionIndex = 2;
-          else if (!ShopHelper.Unlocked(ShopHelper.Unlocks.TUTORIAL_PART1))
+          else if (!ShopHelper.IsUnlocked(ShopHelper.Unlocks.TUTORIAL_PART1))
             s_CurrentMenu._SelectionIndex = 1;
       };
       // Tip
@@ -7493,7 +7481,7 @@ system will provide and configure all loadouts.~9
             "modify the chasing guy",
 
             ShopHelper.Unlocks.EXTRA_CHASE,
-            () => { return ShopHelper.Unlocked(ShopHelper.Unlocks.EXTRA_CHASE); }
+            () => { return ShopHelper.IsUnlocked(ShopHelper.Unlocks.EXTRA_CHASE); }
           );
 
           // Gravity direction
@@ -7521,7 +7509,7 @@ system will provide and configure all loadouts.~9
             "set gravity's direction",
 
             ShopHelper.Unlocks.EXTRA_GRAVITY,
-            () => { return ShopHelper.Unlocked(ShopHelper.Unlocks.EXTRA_GRAVITY); }
+            () => { return ShopHelper.IsUnlocked(ShopHelper.Unlocks.EXTRA_GRAVITY); }
           );
 
           // Ammo
@@ -7559,7 +7547,7 @@ system will provide and configure all loadouts.~9
             "change the max ammo of your weapons / utilities",
 
             ShopHelper.Unlocks.EXTRA_PLAYER_AMMO,
-            () => { return ShopHelper.Unlocked(ShopHelper.Unlocks.EXTRA_PLAYER_AMMO); },
+            () => { return ShopHelper.IsUnlocked(ShopHelper.Unlocks.EXTRA_PLAYER_AMMO); },
 
             "\n\n"
           );
@@ -7579,7 +7567,7 @@ system will provide and configure all loadouts.~9
             "set the speed that time passes",
 
             ShopHelper.Unlocks.EXTRA_TIME,
-            () => { return ShopHelper.Unlocked(ShopHelper.Unlocks.EXTRA_TIME); }
+            () => { return ShopHelper.IsUnlocked(ShopHelper.Unlocks.EXTRA_TIME); }
           );
 
           // Crazy zombies
@@ -7597,7 +7585,7 @@ system will provide and configure all loadouts.~9
             "toggle a horde mode",
 
             ShopHelper.Unlocks.EXTRA_HORDE,
-            () => { return ShopHelper.Unlocked(ShopHelper.Unlocks.EXTRA_HORDE); }
+            () => { return ShopHelper.IsUnlocked(ShopHelper.Unlocks.EXTRA_HORDE); }
           );
 
           // Enemy off
@@ -7630,7 +7618,7 @@ system will provide and configure all loadouts.~9
             "modify the number of enemies spawned",
 
             ShopHelper.Unlocks.EXTRA_ENEMY_OFF,
-            () => { return ShopHelper.Unlocked(ShopHelper.Unlocks.EXTRA_ENEMY_OFF); }
+            () => { return ShopHelper.IsUnlocked(ShopHelper.Unlocks.EXTRA_ENEMY_OFF); }
           );
 
           // Blood type
@@ -7658,7 +7646,7 @@ system will provide and configure all loadouts.~9
             "change what blood looks like",
 
             ShopHelper.Unlocks.EXTRA_BLOOD_FX,
-            () => { return ShopHelper.Unlocked(ShopHelper.Unlocks.EXTRA_BLOOD_FX); }
+            () => { return ShopHelper.IsUnlocked(ShopHelper.Unlocks.EXTRA_BLOOD_FX); }
           );
 
           // Body explode
@@ -7696,7 +7684,7 @@ system will provide and configure all loadouts.~9
             "explode on death",
 
             ShopHelper.Unlocks.EXTRA_EXPLODED,
-            () => { return ShopHelper.Unlocked(ShopHelper.Unlocks.EXTRA_EXPLODED); },
+            () => { return ShopHelper.IsUnlocked(ShopHelper.Unlocks.EXTRA_EXPLODED); },
 
             "\n\n"
           );

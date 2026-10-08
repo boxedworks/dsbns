@@ -1986,18 +1986,18 @@ namespace Assets.Scripts.Ragdoll
       }
     }
 
-    public void Recoil(Vector3 dir, float force, bool overwright)
+    public void Recoil(Vector3 dir, float force, bool overwrite)
     {
-      _grappler?.Recoil(dir, force * 0.75f, overwright);
+      _grappler?.Recoil(dir, force * 0.75f, overwrite);
 
-      if (overwright)
+      if (overwrite)
       {
         _ForceGlobal = MathC.Get2DVector(dir) * force;
         return;
       }
       _ForceGlobal += MathC.Get2DVector(dir) * force;
     }
-    public void RecoilSimple(float force)
+    public void RecoilSimple(float force, bool overwrite)
     {
       // Mod
       if (force < 0f)
@@ -2005,7 +2005,7 @@ namespace Assets.Scripts.Ragdoll
           force *= 2f;
 
       //
-      Recoil(_IsGrappled ? -_Hip.transform.forward : -_Controller.forward, force, true);
+      Recoil(_IsGrappled ? -_Hip.transform.forward : -_Controller.forward, force, overwrite);
     }
 
     bool _hasCrown;

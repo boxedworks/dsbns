@@ -98,7 +98,7 @@ namespace Assets.Scripts.Ragdoll.Equippables
     }
 
     bool _isZombie { get { return !_ragdoll._IsPlayer && _ragdoll._EnemyScript._IsZombieReal; } }
-    bool _canMeleePenatrate { get { return _twoHanded || (_type == ItemType.AXE && !_isZombie) || _type == ItemType.ROCKET_FIST /*|| _type == ItemType.FIST*/; } }
+    bool _canMeleePenatrate { get { return _twoHanded || (_type == ItemType.AXE && !_isZombie) || _type == ItemType.ROCKET_FIST || _type == ItemType.CHAINSAW /*|| _type == ItemType.FIST*/; } }
 
     float _time { get { return /*_ragdoll._isPlayer_twoHanded ? Time.unscaledTime : */Time.time; } }
 
@@ -266,13 +266,14 @@ namespace Assets.Scripts.Ragdoll.Equippables
       return iter;
     }
     // Play SFX via enum
-    protected void PlaySound(Audio audioType, float pitchMin = 0.9f, float pitchMax = 1.1f, bool priorty = false)
+    protected AudioSource PlaySound(Audio audioType, float pitchMin = 0.9f, float pitchMax = 1.1f, bool priorty = false)
     {
       var sfx = PlaySound(GetAudioSource(audioType), pitchMin, pitchMax, priorty);
       if (audioType == Audio.MELEE_SWING || audioType == Audio.GUN_RELOAD)
       {
         _sfx_hold = sfx;
       }
+      return sfx;
     }
     protected AudioSource PlaySound(int source_index, float pitchMin = 0.9f, float pitchMax = 1.1f, bool priority = false)
     {
@@ -619,6 +620,44 @@ namespace Assets.Scripts.Ragdoll.Equippables
         //
         Shoot();
       };
+
+      // Chainsaw
+      if (_type == ItemType.CHAINSAW)
+      {
+
+        // Start chainsaw sfx
+        _sfx0 = PlaySound(Audio.GUN_EXTRA, 0.95f, 1.05f);
+        _sfx0.loop = true;
+
+        _onUpdate += () =>
+        {
+          if (_sfx0 != null)
+            _sfx0.transform.position = transform.position;
+
+          var swinging = _triggerDownReal;
+          if (swinging)
+          {
+            if (_sfx1 == null)
+            {
+              _sfx1 = PlaySound(Audio.GUN_SHOOT, 0.95f, 1.05f);
+            }
+            else
+            {
+              _sfx1.transform.position = transform.position;
+              if (!_sfx1.isPlaying)
+              {
+                _sfx1 = PlaySound(Audio.MELEE_EXTRA, 0.95f, 1.05f);
+                _sfx1.loop = true;
+              }
+            }
+          }
+          else if (_sfx1 != null)
+          {
+            _sfx1.Stop();
+            _sfx1 = null;
+          }
+        };
+      }
     }
 
     void Shoot()
@@ -765,7 +804,7 @@ namespace Assets.Scripts.Ragdoll.Equippables
       _ragdoll._head.GetComponent<Rigidbody>().AddRelativeTorque(torqueForce);
 
       // Recoil player
-      _ragdoll.RecoilSimple(_shoot_force);
+      _ragdoll.RecoilSimple(_shoot_force, false);
 
       // Recoil arm
       if (_type != ItemType.FLAMETHROWER && _type != ItemType.ROCKET_FIST)
@@ -942,13 +981,9 @@ namespace Assets.Scripts.Ragdoll.Equippables
         }
 
         if (_sfx0 != null)
-        {
           _sfx0.transform.position = transform.position;
-        }
         if (_sfx1 != null)
-        {
           _sfx1.transform.position = transform.position;
-        }
       }
 
       // Check for dead
@@ -1162,7 +1197,8 @@ namespace Assets.Scripts.Ragdoll.Equippables
         //if(_customProjetile != UtilityScript.UtilityType.NONE) playSound = false;
         if (playSound)
         {
-          PlaySound(Audio.GUN_SHOOT);
+          if (_type != ItemType.CHAINSAW)
+            PlaySound(Audio.GUN_SHOOT);
           if (IsGun())
           {
             EnemyScript.CheckSound(_ragdoll._Hip.position, _silenced ? EnemyScript.Loudness.SUPERSOFT : EnemyScript.Loudness.NORMAL);
@@ -1197,6 +1233,31 @@ namespace Assets.Scripts.Ragdoll.Equippables
         {
           _bufferUse = false;
 
+          // Melee animation
+          if (_isMelee)
+          {
+            if (_hitRagdolls == null)
+              _hitRagdolls = new();
+            else
+              _hitRagdolls.Clear();
+
+            _meleeReleaseTimer = 1f;
+            if (_meleeLerper < 0.75f)
+            {
+              _meleeReleaseTimerOverfill = 1f;
+            }
+
+            switch (_type)
+            {
+              case ItemType.BAT:
+                //case ItemType.SWORD:
+                var totalTime = UseRate();
+                var halfTime = totalTime * 0.2f;
+                EasyAnimate(AnimationData._Sword, totalTime, halfTime);
+                break;
+            }
+          }
+
           if (_fireMode == FireMode.BURST)
           {
 
@@ -1210,32 +1271,7 @@ namespace Assets.Scripts.Ragdoll.Equippables
             {
               if (IsChargeWeapon()) _burstPerShot = _clip;
               _used = true;
-              _ragdoll.RecoilSimple(_shoot_forward_force * _clip);
-            }
-
-            // Melee animation
-            if (_isMelee)
-            {
-              if (_hitRagdolls == null)
-                _hitRagdolls = new();
-              else
-                _hitRagdolls.Clear();
-
-              _meleeReleaseTimer = 1f;
-              if (_meleeLerper < 0.75f)
-              {
-                _meleeReleaseTimerOverfill = 1f;
-              }
-
-              switch (_type)
-              {
-                case ItemType.BAT:
-                  //case ItemType.SWORD:
-                  var totalTime = UseRate();
-                  var halfTime = totalTime * 0.2f;
-                  EasyAnimate(AnimationData._Sword, totalTime, halfTime);
-                  break;
-              }
+              _ragdoll.RecoilSimple(_shoot_forward_force * _clip, false);
             }
           }
           else
@@ -1251,16 +1287,19 @@ namespace Assets.Scripts.Ragdoll.Equippables
               case ItemType.KATANA:
               case ItemType.BAT:
               case ItemType.RAPIER:
-                _ragdoll.RecoilSimple(_downTimeSave > 1f ? -1.85f : -1.35f);
+                _ragdoll.RecoilSimple(_downTimeSave > 1f ? -1.85f : -1.35f, false);
                 break;
               case ItemType.KNIFE:
               case ItemType.AXE:
               case ItemType.FRYING_PAN:
               case ItemType.STUN_BATON:
-                _ragdoll.RecoilSimple(-0.65f);
+                _ragdoll.RecoilSimple(-0.65f, false);
+                break;
+              case ItemType.CHAINSAW:
+                _ragdoll.RecoilSimple(-0.1f, false);
                 break;
               case ItemType.FIST:
-                _ragdoll.RecoilSimple(_downTimeSave > 0.5f ? -1.4f : -1f);
+                _ragdoll.RecoilSimple(_downTimeSave > 0.5f ? -1.4f : -1f, false);
                 break;
             }
 
@@ -1484,6 +1523,10 @@ namespace Assets.Scripts.Ragdoll.Equippables
         // Dismember
         if (targetRagdoll._IsDead && shouldDismember)
           targetRagdoll.DismemberRandomTimes(hitForce, 3);
+
+        // Chainsaw
+        if (meleeItemType == ItemType.CHAINSAW && targetRagdoll._IsDead)
+          sourceRagdoll.RecoilSimple(-0.75f, false);
 
         return true;
       }
@@ -1899,6 +1942,8 @@ namespace Assets.Scripts.Ragdoll.Equippables
         maxDistance *= 2.35f;
       else if (_type == ItemType.FIST)
         maxDistance *= 0.85f;
+      else if (_type == ItemType.CHAINSAW)
+        maxDistance *= 1.5f;
       if (Physics.SphereCast(ray, Mathf.Clamp(_ragdoll._IsEnemy && (_ragdoll._EnemyScript.IsChaser() || _ragdoll._EnemyScript._IsZombieReal) ? 0.4f : 0.23f, 0.05f, maxDistance), out raycastInfo._raycastHit, maxDistance, GameResources._Layermask_Ragdoll))
       {
         //Debug.Log(raycastInfo._raycastHit.collider.gameObject.name);

@@ -183,6 +183,9 @@ public static class ControllerManager
         PlayerScript.CheckSetNewLoadouts(loadoutIndex);
       }
 
+      if (Menu.s_CurrentMenuType == Menu.MenuType.SELECT_LOADOUT || Menu.s_CurrentMenuType == Menu.MenuType.EDIT_LOADOUT)
+        Loadout.SaveAll();
+
       //
       Menu.s_InMenus = false;
       Menu.s_Menu.gameObject.SetActive(false);

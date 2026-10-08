@@ -129,6 +129,7 @@ namespace Assets.Scripts.Objects.CustomEntities
         _BUYABLE_ITEM_TIERS[5].Add(System.Tuple.Create(ItemManager.Items.M16, 400));
         _BUYABLE_ITEM_TIERS[5].Add(System.Tuple.Create(ItemManager.Items.SHOTGUN_BURST, 450));
         _BUYABLE_ITEM_TIERS[5].Add(System.Tuple.Create(ItemManager.Items.KATANA, 350));
+        _BUYABLE_ITEM_TIERS[5].Add(System.Tuple.Create(ItemManager.Items.CHAINSAW, 300));
         _BUYABLE_ITEM_TIERS[5].Add(System.Tuple.Create(ItemManager.Items.AXE, 200));
         _BUYABLE_ITEM_TIERS[5].Add(System.Tuple.Create(ItemManager.Items.FLAMETHROWER, 450));
         _BUYABLE_ITEM_TIERS[5].Add(System.Tuple.Create(ItemManager.Items.SNIPER, 300));

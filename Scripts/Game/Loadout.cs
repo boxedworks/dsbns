@@ -141,6 +141,20 @@ public class Loadout
     LevelModule.SetLoadout(_Id, savestring);
   }
 
+  public static void SaveAll()
+  {
+    foreach (var loadout in _Loadouts)
+    {
+      loadout.Save();
+      if (!loadout._Equipment.IsEmpty())
+      {
+        ShopHelper.Unlock(ShopHelper.Unlocks.TUTORIAL_PART1);
+        break;
+      }
+    }
+    LevelSaveData.Save();
+  }
+
   public void Load()
   {
     _Equipment = new PlayerProfile.Equipment();

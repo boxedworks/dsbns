@@ -668,15 +668,11 @@ public class GameScript : MonoBehaviour
       // Check backrooms
       if (Debug.isDebugBuild && ControllerManager.GetKey(ControllerManager.Key.B) && ControllerManager.GetKey(ControllerManager.Key.R, ControllerManager.InputMode.HOLD))
       {
-        //Screen.SetResolution(720, 1280, true);
-
         s_Backrooms = true;
         var clipboardData = ClipboardHelper.clipBoard;
         var levelData = clipboardData.EndsWith("loaded map") ? clipboardData : "11 10 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 playerspawn_-29_-51.4_rot_0_ e_-42.9_-32.9_li_knife_w_-42.9_-32.9_l_-43.4_-32.3_canmove_false_canhear_false_ e_-29_-41.8_li_pistol_w_-29_-41.8_l_-29_-40.9_canmove_true_canhear_true_ p_-29.25_-32.75_end_ +unnamed loaded map";
         NextLevel(levelData);
         GameObject.Find("GlobalLight").GetComponent<Light>().enabled = true;
-
-        //GameResources.s_Backrooms.transform.position = new Vector3(837.4f, -2.3f, -53.95f);
       }
     }
 

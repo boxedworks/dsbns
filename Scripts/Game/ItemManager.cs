@@ -62,6 +62,7 @@ public static class ItemManager
     RIFLE_CHARGE,
     FIST,
     STUN_BATON,
+    CHAINSAW,
   }
 
   // Spawn a single item
@@ -161,6 +162,10 @@ public static class ItemManager
         transform.localPosition += new Vector3(-0.2f, -0.05f, 0f);
         transform.localScale = new Vector3(0.11f, 0.1f, 0.11f);
         transform.localEulerAngles = new Vector3(8f, 0f, -75f);
+        break;
+      case "CHAINSAW":
+        transform.localPosition += new Vector3(-0.14f, 0.03f, 0f);
+        transform.localScale = new Vector3(0.09f, 0.11f, 0.08f);
         break;
       case "FIST":
         transform.localPosition += new Vector3(-0.2f, 0.03f, 0f);
@@ -385,6 +390,7 @@ public static class ItemManager
       case Items.SNIPER:
       case Items.CROSSBOW:
       case Items.KATANA:
+      case Items.CHAINSAW:
       case Items.SHOTGUN_DOUBLE:
       case Items.SHOTGUN_PUMP:
       case Items.BAT:

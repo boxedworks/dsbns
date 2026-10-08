@@ -1954,409 +1954,415 @@ public class EnemyScript : PlayerScript.IHasRagdoll
 
             var saveDat = false;
 
-            if (PlayerScript._All_Dead || gameId != GameScript.s_GameId)
+            if (gameId == GameScript.s_GameId)
             {
-              TileManager._Text_LevelTimer_Best.text += string.Format(" -> <s>{0}</s> (dead)", level_time.ToStringTimer());
-            }
-            else
-            {
-
-              // Check best player time
-              if (can_save_timers)
+              if (PlayerScript._All_Dead)
               {
-                if (level_time_best == -1 || level_time < level_time_best)
-                {
-                  LevelModule.SetLevelBestTime(level_time);
-                  TileManager._Text_LevelTimer_Best.text += string.Format(" -> {0}", level_time.ToStringTimer());
-
-                  saveDat = true;
-                }
+                TileManager._Text_LevelTimer_Best.text += string.Format(" -> <s>{0}</s> (dead)", level_time.ToStringTimer());
               }
-
-              // Cannot save score
               else
               {
-                TileManager._Text_LevelTimer_Best.text += string.Format(" -> <s>{0}</s> (extras on)", level_time.ToStringTimer());
-              }
 
-              // Show time difference between best time
-              if (level_time_best != -1f && level_time != level_time_best)
-              {
-                if (level_time < level_time_best)
-                  TileManager._Text_LevelTimer.text = string.Format($"{{0}} (<color=green>-{{1}}</color>)", level_time.ToStringTimer(), (level_time_best - level_time).ToStringTimer());
-                else
-                  TileManager._Text_LevelTimer.text = string.Format($"{{0}} (<color=red>+{{1}}</color>)", level_time.ToStringTimer(), (level_time - level_time_best).ToStringTimer());
-              }
-
-              // Time ratings
-              var ratingIndex = -1;
-              var best_dev_time = TileManager._LevelTime_Dev;
-
-              var medal_times = Levels.GetLevelRatingTimings(best_dev_time);
-              var ratings = Levels.GetLevelRatings();
-
-              var index = 0;
-              var points_awarded = 0;
-              var points_awarded_table = new int[] { -1, -1, -1, -1 };
-              foreach (var time in medal_times)
-              {
-                var time_ = time.ToStringTimer().ParseFloatInvariant();
-                if (level_time <= time_)
+                // Check best player time
+                if (can_save_timers)
                 {
-
-                  if (ratingIndex == -1)
-                    ratingIndex = index;
-
-                  // Check new medal
-                  if (level_time_best > time || level_time_best == -1f)
+                  if (level_time_best == -1 || level_time < level_time_best)
                   {
-                    points_awarded++;
-                    points_awarded_table[index] = index;
-                  }
+                    LevelModule.SetLevelBestTime(level_time);
+                    TileManager._Text_LevelTimer_Best.text += string.Format(" -> {0}", level_time.ToStringTimer());
 
+                    saveDat = true;
+                  }
                 }
 
-                index++;
-              }
+                // Cannot save score
+                else
+                {
+                  TileManager._Text_LevelTimer_Best.text += string.Format(" -> <s>{0}</s> (extras on)", level_time.ToStringTimer());
+                }
 
-              // FX
-              TileManager._Text_LevelTimer_Best.text += "\n\n";
-              var medalFormat = "<color={0}>{1,-5}: {2,-6}</color>\n";
-              var medalFormatStrikeout = "<color={0}><s>{1,-5}: {2,-6}</s></color>\n";
-              var playedWrong = false;
-              var points_awarded_counter = points_awarded;
-              if (can_save_timers && ShopHelper._AvailablePoints != 999)
-                TileManager._Text_Money.text = $"$${ShopHelper._AvailablePoints}";
-              for (var i = medal_times.Length - 1; i >= 0; i--)
-              {
-                var time = medal_times[i];
-                var time_ = string.Format("{0}", time.ToStringTimer()).ParseFloatInvariant();
-                var timeText = string.Format("{0}", time_.ToStringTimer());
+                // Show time difference between best time
+                if (level_time_best != -1f && level_time != level_time_best)
+                {
+                  if (level_time < level_time_best)
+                    TileManager._Text_LevelTimer.text = string.Format($"{{0}} (<color=green>-{{1}}</color>)", level_time.ToStringTimer(), (level_time_best - level_time).ToStringTimer());
+                  else
+                    TileManager._Text_LevelTimer.text = string.Format($"{{0}} (<color=red>+{{1}}</color>)", level_time.ToStringTimer(), (level_time - level_time_best).ToStringTimer());
+                }
 
-                if (playedWrong)
-                  medalFormat = medalFormatStrikeout;
-                TileManager._Text_LevelTimer_Best.text += string.Format(medalFormat, ratings[i].Item2, ratings[i].Item1, time == -1f ? "-" : timeText + (ratingIndex == i ? "*" : ""));
+                // Time ratings
+                var ratingIndex = -1;
+                var best_dev_time = TileManager._LevelTime_Dev;
 
-                // Show $$
-                if (can_save_timers && ShopHelper._AvailablePoints != 999 && points_awarded_table.Contains(i))
-                  TileManager.MoveMonie(3 - i, points_awarded - points_awarded_counter--, timeText.Length < 6 ? 0 : 1);
+                var medal_times = Levels.GetLevelRatingTimings(best_dev_time);
+                var ratings = Levels.GetLevelRatings();
 
-                //
-                if (playedWrong)
-                  continue;
+                var index = 0;
+                var points_awarded = 0;
+                var points_awarded_table = new int[] { -1, -1, -1, -1 };
+                foreach (var time in medal_times)
+                {
+                  var time_ = time.ToStringTimer().ParseFloatInvariant();
+                  if (level_time <= time_)
+                  {
+
+                    if (ratingIndex == -1)
+                      ratingIndex = index;
+
+                    // Check new medal
+                    if (level_time_best > time || level_time_best == -1f)
+                    {
+                      points_awarded++;
+                      points_awarded_table[index] = index;
+                    }
+
+                  }
+
+                  index++;
+                }
 
                 // FX
-                if (i == ratingIndex && i != 0)
+                TileManager._Text_LevelTimer_Best.text += "\n\n";
+                var medalFormat = "<color={0}>{1,-5}: {2,-6}</color>\n";
+                var medalFormatStrikeout = "<color={0}><s>{1,-5}: {2,-6}</s></color>\n";
+                var playedWrong = false;
+                var points_awarded_counter = points_awarded;
+                if (can_save_timers && ShopHelper._AvailablePoints != 999)
+                  TileManager._Text_Money.text = $"$${ShopHelper._AvailablePoints}";
+                for (var i = medal_times.Length - 1; i >= 0; i--)
                 {
+                  if (gameId != GameScript.s_GameId)
+                    break;
+
+                  var time = medal_times[i];
+                  var time_ = string.Format("{0}", time.ToStringTimer()).ParseFloatInvariant();
+                  var timeText = string.Format("{0}", time_.ToStringTimer());
+
+                  if (playedWrong)
+                    medalFormat = medalFormatStrikeout;
+                  TileManager._Text_LevelTimer_Best.text += string.Format(medalFormat, ratings[i].Item2, ratings[i].Item1, time == -1f ? "-" : timeText + (ratingIndex == i ? "*" : ""));
+
+                  // Show $$
+                  if (can_save_timers && ShopHelper._AvailablePoints != 999 && points_awarded_table.Contains(i))
+                    TileManager.MoveMonie(3 - i, points_awarded - points_awarded_counter--, timeText.Length < 6 ? 0 : 1);
+
+                  //
+                  if (playedWrong)
+                    continue;
+
+                  // FX
+                  if (i == ratingIndex && i != 0)
+                  {
+                    if (!playedWrong)
+                    {
+                      playedWrong = true;
+                      SfxManager.PlayAudioSourceSimple(GameResources.s_AudioListener.transform.position, "Etc/Wrong", 0.95f, 1f, SfxManager.AudioClass.NONE, false, false);
+                    }
+                  }
+                  else
+                  {
+                    var mod = i * 0.15f;
+                    SfxManager.PlayAudioSourceSimple(GameResources.s_AudioListener.transform.position, "Etc/Best_rank", 0.95f - mod, 1f - mod, SfxManager.AudioClass.NONE, false, false);
+                  }
+
+
                   if (!playedWrong)
-                  {
-                    playedWrong = true;
-                    SfxManager.PlayAudioSourceSimple(GameResources.s_AudioListener.transform.position, "Etc/Wrong", 0.95f, 1f, SfxManager.AudioClass.NONE, false, false);
-                  }
-                }
-                else
-                {
-                  var mod = i * 0.15f;
-                  SfxManager.PlayAudioSourceSimple(GameResources.s_AudioListener.transform.position, "Etc/Best_rank", 0.95f - mod, 1f - mod, SfxManager.AudioClass.NONE, false, false);
+                    yield return new WaitForSecondsRealtime(0.1f);
                 }
 
-
-                if (!playedWrong)
-                  yield return new WaitForSecondsRealtime(0.1f);
-              }
-
-              // Save stuff
-              if (can_save_timers)
-              {
-
-                // Save best dev time
-                if (/*false && */Debug.isDebugBuild)
+                // Save stuff
+                if (can_save_timers)
                 {
 
-                  if (TileManager._LevelTime_Dev == -1 /*|| level_time < TileManager._LevelTime_Dev*/)
+                  // Save best dev time
+                  if (/*false && */Debug.isDebugBuild)
                   {
-                    TileManager._LevelTime_Dev = level_time;
 
-                    // Set level data
-                    var level_data_split = Levels._CurrentLevelData.Split(' ');
-                    var level_data_new = new List<string>();
-                    index = -1;
-                    var levelname_index = -1;
-                    foreach (var d in level_data_split)
+                    if (TileManager._LevelTime_Dev == -1 /*|| level_time < TileManager._LevelTime_Dev*/)
                     {
+                      TileManager._LevelTime_Dev = level_time;
 
-                      index++;
-
-                      if (d.StartsWith("bdt_"))
+                      // Set level data
+                      var level_data_split = Levels._CurrentLevelData.Split(' ');
+                      var level_data_new = new List<string>();
+                      index = -1;
+                      var levelname_index = -1;
+                      foreach (var d in level_data_split)
                       {
-                        index--;
-                        continue;
-                      }
 
-                      level_data_new.Add(d);
+                        index++;
 
-                      if (d.StartsWith("+"))
-                      {
-                        levelname_index = index;
-                      }
-                    }
-
-                    var add_data = $"bdt_{level_time}";
-
-                    if (levelname_index == -1)
-                    {
-                      level_data_new.Add(add_data);
-                    }
-                    else
-                    {
-                      level_data_new.Insert(levelname_index - 1, add_data);
-                    }
-
-                    Levels._CurrentLevelCollection._levelData[Levels._CurrentLevelIndex] = TileManager._CurrentMapData = string.Join(" ", level_data_new);
-                    Levels.SaveLevels();
-
-                    LevelModule.SetLevelBestTime(-1f);
-                    saveDat = true;
-
-                    Debug.Log($"Set best dev time: {level_time}");
-                  }
-
-                }
-
-                // Give points based on medals
-                {
-
-                  if (points_awarded > 0)
-                  {
-                    if (can_save_timers)
-                    {
-                      ShopHelper._AvailablePoints += points_awarded;
-                      saveDat = true;
-                      //Debug.Log($"Awarded {points_awarded} points");
-
-                      // Check all levels in difficulty completed
-                      if (SettingsHelper._CurrentDifficulty_NotTopRated)
-                      {
-                        var levelratings_difficulty = Levels._Levels_All_TopRatings[SettingsHelper._DIFFICULTY];
-                        levelratings_difficulty[Levels._CurrentLevelIndex] = ratingIndex == 0;
-
-                        var all_top_rated = true;
-                        for (var i = Levels._CurrentLevelCollection._levelData.Length - 1; i > 0; i--)
+                        if (d.StartsWith("bdt_"))
                         {
-                          var top_rated = levelratings_difficulty[i];
-                          if (!top_rated)
+                          index--;
+                          continue;
+                        }
+
+                        level_data_new.Add(d);
+
+                        if (d.StartsWith("+"))
+                        {
+                          levelname_index = index;
+                        }
+                      }
+
+                      var add_data = $"bdt_{level_time}";
+
+                      if (levelname_index == -1)
+                      {
+                        level_data_new.Add(add_data);
+                      }
+                      else
+                      {
+                        level_data_new.Insert(levelname_index - 1, add_data);
+                      }
+
+                      Levels._CurrentLevelCollection._levelData[Levels._CurrentLevelIndex] = TileManager._CurrentMapData = string.Join(" ", level_data_new);
+                      Levels.SaveLevels();
+
+                      LevelModule.SetLevelBestTime(-1f);
+                      saveDat = true;
+
+                      Debug.Log($"Set best dev time: {level_time}");
+                    }
+
+                  }
+
+                  // Give points based on medals
+                  {
+
+                    if (points_awarded > 0)
+                    {
+                      if (can_save_timers)
+                      {
+                        ShopHelper._AvailablePoints += points_awarded;
+                        saveDat = true;
+                        //Debug.Log($"Awarded {points_awarded} points");
+
+                        // Check all levels in difficulty completed
+                        if (SettingsHelper._CurrentDifficulty_NotTopRated)
+                        {
+                          var levelratings_difficulty = Levels._Levels_All_TopRatings[SettingsHelper._DIFFICULTY];
+                          levelratings_difficulty[Levels._CurrentLevelIndex] = ratingIndex == 0;
+
+                          var all_top_rated = true;
+                          for (var i = Levels._CurrentLevelCollection._levelData.Length - 1; i > 0; i--)
                           {
-                            all_top_rated = false;
-                            break;
+                            var top_rated = levelratings_difficulty[i];
+                            if (!top_rated)
+                            {
+                              all_top_rated = false;
+                              break;
+                            }
+                          }
+                          //Debug.Log($"All top rated: {all_top_rated}: {SettingsHelper._DIFFICULTY}");
+                          if (all_top_rated)
+                          {
+                            if (SettingsHelper._DIFFICULTY == 0)
+                              LevelModule.IsTopRatedClassic0 = true;
+                            else
+                              LevelModule.IsTopRatedClassic1 = true;
                           }
                         }
-                        //Debug.Log($"All top rated: {all_top_rated}: {SettingsHelper._DIFFICULTY}");
-                        if (all_top_rated)
-                        {
-                          if (SettingsHelper._DIFFICULTY == 0)
-                            LevelModule.IsTopRatedClassic0 = true;
-                          else
-                            LevelModule.IsTopRatedClassic1 = true;
-                        }
                       }
+                      //else
+                      //Debug.Log($"Fake awarded {points_awarded} points");
                     }
-                    //else
-                    //Debug.Log($"Fake awarded {points_awarded} points");
                   }
+
                 }
 
-              }
-
-              // Check extra unlocks
-              {
-                var prereqsSatisfied = true;
-
-                // Check extras menu
-                if (!ShopHelper.Unlocked(ShopHelper.Unlocks.MODE_EXTRAS))
+                // Check extra unlocks
                 {
-                  //Debug.LogWarning($"No extras; extras menu not unlocked");
-                  prereqsSatisfied = false;
-                }
+                  var prereqsSatisfied = true;
 
-                // Make sure player count not changed
-                if (PlayerScript.s_NumPlayersStart != 1 || SettingsHelper._NumberPlayers != 1)
-                {
-                  //Debug.LogWarning($"No extras; player count: {PlayerScript.s_NumPlayersStart} - {PlayerScript.s_Players.Count}");
-                  prereqsSatisfied = false;
-                }
+                  // Check extras menu
+                  if (!ShopHelper.IsUnlocked(ShopHelper.Unlocks.MODE_EXTRAS))
+                  {
+                    //Debug.LogWarning($"No extras; extras menu not unlocked");
+                    prereqsSatisfied = false;
+                  }
 
-                // Make sure extras not changed
-                var extrasSnapshot = SettingsHelper.GetExtrasSnapshot();
-                if (!extrasSnapshot.SequenceEqual(PlayerScript.s_ExtrasSnapshot))
-                {
-                  //Debug.LogWarning("No extras; extras changed");
-                  prereqsSatisfied = false;
-                }
+                  // Make sure player count not changed
+                  if (PlayerScript.s_NumPlayersStart != 1 || SettingsHelper._NumberPlayers != 1)
+                  {
+                    //Debug.LogWarning($"No extras; player count: {PlayerScript.s_NumPlayersStart} - {PlayerScript.s_Players.Count}");
+                    prereqsSatisfied = false;
+                  }
 
-                // Make sure loadout not changed
-                bool EquipmentIsEqual(PlayerProfile.Equipment e0, PlayerProfile.Equipment e1)
-                {
+                  // Make sure extras not changed
+                  var extrasSnapshot = SettingsHelper.GetExtrasSnapshot();
+                  if (!extrasSnapshot.SequenceEqual(PlayerScript.s_ExtrasSnapshot))
+                  {
+                    //Debug.LogWarning("No extras; extras changed");
+                    prereqsSatisfied = false;
+                  }
 
-                  if (e0 == null || e1 == null)
-                    return false;
+                  // Make sure loadout not changed
+                  bool EquipmentIsEqual(PlayerProfile.Equipment e0, PlayerProfile.Equipment e1)
+                  {
 
-                  // Check items equal
-                  var equipment0_items = new List<ItemManager.Items>(){
+                    if (e0 == null || e1 == null)
+                      return false;
+
+                    // Check items equal
+                    var equipment0_items = new List<ItemManager.Items>(){
                     e0._ItemLeft0,
                     e0._ItemRight0,
                     e0._ItemLeft1,
                     e0._ItemRight1
                   };
-                  var equipment1_items = new List<ItemManager.Items>(){
+                    var equipment1_items = new List<ItemManager.Items>(){
                     e1._ItemLeft0,
                     e1._ItemRight0,
                     e1._ItemLeft1,
                     e1._ItemRight1
                   };
-                  foreach (var item in equipment0_items)
-                  {
-                    if (equipment1_items.Contains(item))
+                    foreach (var item in equipment0_items)
                     {
-                      equipment1_items.Remove(item);
-                    }
-                  }
-                  if (equipment1_items.Count > 0)
-                    return false;
-
-                  // Check perks equal
-                  if (e0._Perks.Count != e1._Perks.Count)
-                  {
-                    return false;
-                  }
-                  var perkList = new List<Perk.PerkType>(e1._Perks);
-                  foreach (var perk0 in e0._Perks)
-                  {
-                    if (perkList.Contains(perk0))
-                    {
-                      perkList.Remove(perk0);
-                    }
-                  }
-                  if (perkList.Count > 0)
-                    return false;
-
-                  // Check utilities equal
-                  var utilsTotal = new List<UtilityScript.UtilityType>();
-                  foreach (var util in e0._UtilitiesLeft)
-                    utilsTotal.Add(util);
-                  foreach (var util in e0._UtilitiesRight)
-                    utilsTotal.Add(util);
-
-                  foreach (var util in e1._UtilitiesLeft)
-                  {
-                    if (utilsTotal.Contains(util))
-                    {
-                      utilsTotal.Remove(util);
-                    }
-                  }
-                  foreach (var util in e1._UtilitiesRight)
-                  {
-                    if (utilsTotal.Contains(util))
-                    {
-                      utilsTotal.Remove(util);
-                    }
-                  }
-                  if (utilsTotal.Count > 0)
-                    return false;
-
-                  //
-                  return true;
-                }
-
-                var equipmentStart = PlayerScript.s_Players[0]._EquipmentStart;
-                var equipment_changed = PlayerScript.s_Players[0]._EquipmentChanged;
-                if (equipment_changed || !EquipmentIsEqual(equipmentStart, PlayerScript.s_Players[0]._Equipment))
-                {
-                  //Debug.LogWarning($"No extras; equipment changed ({equipment_changed})");
-                  prereqsSatisfied = false;
-                }
-
-                if (prereqsSatisfied)
-                  foreach (var extraMeta in SettingsHelper.s_Extra_UnlockCriterea)
-                  {
-
-                    var extraUnlock = extraMeta.Key;
-                    var extraInfo = extraMeta.Value;
-
-                    // Check level and difficulty
-                    var level = extraInfo.level;
-                    var diff = extraInfo.difficulty;
-
-                    if (Levels._CurrentLevelIndex + 1 != level || SettingsHelper._DIFFICULTY != diff)
-                    {
-                      continue;
-                    }
-
-                    // Check extras
-                    if (extraInfo.extras != null)
-                    {
-
-                      // Horde
-                      if (extraInfo.extras.Contains(ShopHelper.Unlocks.EXTRA_HORDE))
+                      if (equipment1_items.Contains(item))
                       {
-                        if (LevelModule.ExtraHorde == 0)
-                          continue;
+                        equipment1_items.Remove(item);
+                      }
+                    }
+                    if (equipment1_items.Count > 0)
+                      return false;
+
+                    // Check perks equal
+                    if (e0._Perks.Count != e1._Perks.Count)
+                    {
+                      return false;
+                    }
+                    var perkList = new List<Perk.PerkType>(e1._Perks);
+                    foreach (var perk0 in e0._Perks)
+                    {
+                      if (perkList.Contains(perk0))
+                      {
+                        perkList.Remove(perk0);
+                      }
+                    }
+                    if (perkList.Count > 0)
+                      return false;
+
+                    // Check utilities equal
+                    var utilsTotal = new List<UtilityScript.UtilityType>();
+                    foreach (var util in e0._UtilitiesLeft)
+                      utilsTotal.Add(util);
+                    foreach (var util in e0._UtilitiesRight)
+                      utilsTotal.Add(util);
+
+                    foreach (var util in e1._UtilitiesLeft)
+                    {
+                      if (utilsTotal.Contains(util))
+                      {
+                        utilsTotal.Remove(util);
+                      }
+                    }
+                    foreach (var util in e1._UtilitiesRight)
+                    {
+                      if (utilsTotal.Contains(util))
+                      {
+                        utilsTotal.Remove(util);
+                      }
+                    }
+                    if (utilsTotal.Count > 0)
+                      return false;
+
+                    //
+                    return true;
+                  }
+
+                  var equipmentStart = PlayerScript.s_Players[0]._EquipmentStart;
+                  var equipment_changed = PlayerScript.s_Players[0]._EquipmentChanged;
+                  if (equipment_changed || !EquipmentIsEqual(equipmentStart, PlayerScript.s_Players[0]._Equipment))
+                  {
+                    //Debug.LogWarning($"No extras; equipment changed ({equipment_changed})");
+                    prereqsSatisfied = false;
+                  }
+
+                  if (prereqsSatisfied)
+                    foreach (var extraMeta in SettingsHelper.s_Extra_UnlockCriterea)
+                    {
+
+                      var extraUnlock = extraMeta.Key;
+                      var extraInfo = extraMeta.Value;
+
+                      // Check level and difficulty
+                      var level = extraInfo.level;
+                      var diff = extraInfo.difficulty;
+
+                      if (Levels._CurrentLevelIndex + 1 != level || SettingsHelper._DIFFICULTY != diff)
+                      {
+                        continue;
                       }
 
-                      // Time
-                      if (extraInfo.extras.Contains(ShopHelper.Unlocks.EXTRA_TIME))
+                      // Check extras
+                      if (extraInfo.extras != null)
                       {
-                        if (LevelModule.ExtraTime == 0)
-                          continue;
+
+                        // Horde
+                        if (extraInfo.extras.Contains(ShopHelper.Unlocks.EXTRA_HORDE))
+                        {
+                          if (LevelModule.ExtraHorde == 0)
+                            continue;
+                        }
+
+                        // Time
+                        if (extraInfo.extras.Contains(ShopHelper.Unlocks.EXTRA_TIME))
+                        {
+                          if (LevelModule.ExtraTime == 0)
+                            continue;
+                        }
+
                       }
 
-                    }
+                      // Check ranking
+                      if (ratingIndex == -1 || extraMeta.Value.rating < ratingIndex)
+                      {
+                        continue;
+                      }
 
-                    // Check ranking
-                    if (ratingIndex == -1 || extraMeta.Value.rating < ratingIndex)
-                    {
-                      continue;
-                    }
+                      // Check loadout
+                      var equipmentFake = new PlayerProfile.Equipment();
+                      {
+                        if (extraInfo.items?.Length > 0)
+                          equipmentFake._ItemLeft0 = extraInfo.items[0];
+                        if (extraInfo.items?.Length > 1)
+                          equipmentFake._ItemRight0 = extraInfo.items[1];
+                        if (extraInfo.items?.Length > 2)
+                          equipmentFake._ItemLeft1 = extraInfo.items[2];
+                        if (extraInfo.items?.Length > 3)
+                          equipmentFake._ItemRight1 = extraInfo.items[3];
 
-                    // Check loadout
-                    var equipmentFake = new PlayerProfile.Equipment();
-                    {
-                      if (extraInfo.items?.Length > 0)
-                        equipmentFake._ItemLeft0 = extraInfo.items[0];
-                      if (extraInfo.items?.Length > 1)
-                        equipmentFake._ItemRight0 = extraInfo.items[1];
-                      if (extraInfo.items?.Length > 2)
-                        equipmentFake._ItemLeft1 = extraInfo.items[2];
-                      if (extraInfo.items?.Length > 3)
-                        equipmentFake._ItemRight1 = extraInfo.items[3];
+                        equipmentFake._UtilitiesLeft = extraInfo.utilities == null ? new UtilityScript.UtilityType[0] : extraInfo.utilities;
 
-                      equipmentFake._UtilitiesLeft = extraInfo.utilities == null ? new UtilityScript.UtilityType[0] : extraInfo.utilities;
+                        if (extraInfo.perks != null)
+                          equipmentFake._Perks = new List<Perk.PerkType>(extraInfo.perks);
+                      }
 
-                      if (extraInfo.perks != null)
-                        equipmentFake._Perks = new List<Perk.PerkType>(extraInfo.perks);
-                    }
+                      if (!EquipmentIsEqual(equipmentStart, equipmentFake))
+                      {
+                        continue;
+                      }
 
-                    if (!EquipmentIsEqual(equipmentStart, equipmentFake))
-                    {
-                      continue;
-                    }
+                      // Award extra in shop
+                      //Debug.Log($"Unlocked {extraUnlock}");
+                      ShopHelper.AddAvailableUnlock(extraUnlock, true);
+                      ShopHelper.Unlock(extraUnlock);
+                      saveDat = true;
 
-                    // Award extra in shop
-                    //Debug.Log($"Unlocked {extraUnlock}");
-                    ShopHelper.AddAvailableUnlock(extraUnlock, true);
-                    ShopHelper.Unlock(extraUnlock);
-                    saveDat = true;
-
-                    // Achievements
+                      // Achievements
 #if UNITY_STANDALONE
 
-                    // Unlock one achievement
-                    Achievements.UnlockAchievement(Achievements.Achievement.EXTRA_UNLOCK1);
+                      // Unlock one achievement
+                      Achievements.UnlockAchievement(Achievements.Achievement.EXTRA_UNLOCK1);
 
-                    // Unlocked all achievements
-                    if (ShopHelper.AllExtrasUnlocked())
-                      Achievements.UnlockAchievement(Achievements.Achievement.EXTRA_UNLOCK_ALL);
+                      // Unlocked all achievements
+                      if (ShopHelper.AllExtrasUnlocked())
+                        Achievements.UnlockAchievement(Achievements.Achievement.EXTRA_UNLOCK_ALL);
 #endif
-                  }
+                    }
+                }
               }
             }
 
@@ -2385,7 +2391,8 @@ public class EnemyScript : PlayerScript.IHasRagdoll
               else
               {
                 yield return new WaitForSecondsRealtime(0.5f);
-                GameScript.OnLevelComplete();
+                if (gameId == GameScript.s_GameId)
+                  GameScript.OnLevelComplete();
               }
             }
 

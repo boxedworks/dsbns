@@ -199,6 +199,7 @@ public static class FunctionsC
     MUZZLE_FIRE,
     ELECTRIC_SPARK,
     MELEE_TRAIL,
+    THROWABLE_TRAIL,
   }
   static int _ExplosionIter;
   public static ParticleSystem[] GetParticleSystem(ParticleSystemType particleType, int forceParticleIndex = -1)
@@ -335,6 +336,9 @@ public static class FunctionsC
 
       case ParticleSystemType.MELEE_TRAIL:
         index = 36;
+        break;
+      case ParticleSystemType.THROWABLE_TRAIL:
+        index = 37;
         break;
     }
 

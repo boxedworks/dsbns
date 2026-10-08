@@ -773,13 +773,14 @@ public static class VersusMode
   //
   static ItemManager.Items GetRandomMeleeWeapon()
   {
-    return Random.Range(0, 6) switch
+    return Random.Range(0, 7) switch
     {
       1 => ItemManager.Items.FRYING_PAN,
       2 => ItemManager.Items.RAPIER,
       3 => ItemManager.Items.AXE,
       4 => ItemManager.Items.FIST,
       5 => ItemManager.Items.STUN_BATON,
+      6 => ItemManager.Items.CHAINSAW,
 
       _ => ItemManager.Items.KNIFE,
     };

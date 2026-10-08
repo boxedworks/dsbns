@@ -999,9 +999,12 @@ public class TileManager
       // Backrooms
       if (GameScript.s_Backrooms)
       {
-        var backrooms = GameResources.s_Backrooms;
+        var usePlane = true;
+        var yVal = usePlane ? -1.26f : -2.3f;
+
+        var backrooms = usePlane ? GameResources.s_Backrooms_White : GameResources.s_Backrooms;
         backrooms.gameObject.SetActive(true);
-        backrooms.position = new Vector3(-42.49f, -2.3f, -53.95f);
+        backrooms.position = new Vector3(-42.49f, yVal, -53.95f);
 
         UnityEngine.Object.Destroy(GameObject.Find("Meshes_Tiles_Up"));
         UnityEngine.Object.Destroy(GameObject.Find("Meshes_Tiles_Down"));
