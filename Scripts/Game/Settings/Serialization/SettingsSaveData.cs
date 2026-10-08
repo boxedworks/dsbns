@@ -118,6 +118,7 @@ namespace Assets.Scripts.Settings.Serialization
       SettingsHelper._VolumeSFX = SettingsHelper.s_SaveData.Settings.VolumeSFX;
       SettingsHelper._UseBlood = SettingsHelper.s_SaveData.Settings.UseBlood;
       SettingsHelper._UseSmoke = SettingsHelper.s_SaveData.Settings.UseSmokeFx;
+      SettingsHelper._UseMuzzleFlash = SettingsHelper.s_SaveData.Settings.UseMuzzleFlashFx;
     }
 
     static void InitializeDefaultSettings()

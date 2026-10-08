@@ -361,8 +361,8 @@ namespace Assets.Scripts.Objects
       var setPosition = GetLocalPosition(usingGameObject.transform.position);
       _rb.position = setPosition;
 
-      // Check closest enemy
-      var target = FunctionsC.GetClosestTargetTo(_sourceDamageRagdoll, transform.position);
+      // Check closest target
+      var target = FunctionsC.GetClosestTargetTo(_sourceDamageRagdoll, transform.position, false, false);
       if (target != null && target._ragdoll != null)
         targetPosition = GetLocalPosition(target._ragdoll._Hip.position);
 
@@ -371,7 +371,7 @@ namespace Assets.Scripts.Objects
       var raycastinfo = new RaycastHit();
       if (targetPosition != Vector3.zero && Physics.SphereCast(new Ray(bulletPos, MathC.Get2DVector(targetPosition - _rb.position).normalized), 0.05f, out raycastinfo, 100f, LayerMask.GetMask("ParticleCollision")) && raycastinfo.distance < target._distance)
       {
-        target = FunctionsC.GetClosestTargetTo(_sourceDamageRagdoll, transform.position, target._ragdoll._Id, false);
+        target = FunctionsC.GetClosestTargetTo(_sourceDamageRagdoll, transform.position, false, false);
         if (target != null && target._ragdoll != null)
           targetPosition = GetLocalPosition(target._ragdoll._Hip.position);
       }

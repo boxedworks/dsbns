@@ -231,7 +231,7 @@ namespace Assets.Scripts.Objects
       else
       {
 
-        var pl_info = FunctionsC.GetClosestTargetTo(-1, transform.position);
+        var pl_info = FunctionsC.GetClosestPlayerTo(transform.position);
         if (pl_info != null && pl_info._ragdoll != null)
         {
           var dist = pl_info._distance;

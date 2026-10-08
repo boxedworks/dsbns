@@ -16,32 +16,6 @@ namespace SneakyEngine.Ragdoll
       _sfx_footstepBloody = footstepBloody;
     }
 
-    // Blood / blood smoke toggles
-    bool _useBlood, _useBloodSmoke;
-    public bool UseBlood => _useBlood;
-    public bool UseBloodSmoke => _useBloodSmoke;
-    public void SetUseBlood(bool toggle)
-    {
-      _useBlood = toggle;
-    }
-    public void SetUseBloodSmoke(bool toggle)
-    {
-      _useBloodSmoke = toggle;
-    }
-
-    // Blood type
-    public enum BloodParticleType
-    {
-      BLOOD,
-      CONFETTI
-    }
-    BloodParticleType _bloodType;
-    public BloodParticleType BloodType => _bloodType;
-    public void SetBloodType(BloodParticleType type)
-    {
-      _bloodType = type;
-    }
-
     //
     public enum TargetAlignmentType
     {
@@ -52,7 +26,7 @@ namespace SneakyEngine.Ragdoll
       PLAYERS
     }
 
-    // Death effect
+    // Explode on death effect
     TargetAlignmentType _explodeOnDeath;
     public TargetAlignmentType ExplodeOnDeath => _explodeOnDeath;
     public void SetExplodeOnDeath(TargetAlignmentType type)

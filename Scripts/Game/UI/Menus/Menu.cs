@@ -6589,7 +6589,7 @@ go to the <color=yellow>SHOP</color> to buy something~1
       .AddComponent("muzzle flash\n", MenuComponent.ComponentType.BUTTON_DROPDOWN)
         .AddEvent(EventType.ON_RENDER, component =>
         {
-          var display_toggle = SettingsModule.UseMuzzleFlashFx ? "on" : "off";
+          var display_toggle = SettingsHelper._UseMuzzleFlash ? "on" : "off";
           component.SetDisplayText(string.Format(format_options, "muzzle flash:", $"{display_toggle}"));
 
           var selections = new List<string>();
@@ -6598,12 +6598,12 @@ go to the <color=yellow>SHOP</color> to buy something~1
           selections.Add("on [DEFAULT]");
           actions.Add(component0 =>
           {
-            SettingsModule.UseMuzzleFlashFx = true;
+            SettingsHelper._UseMuzzleFlash = true;
           });
           selections.Add("off");
           actions.Add(component0 =>
           {
-            SettingsModule.UseMuzzleFlashFx = false;
+            SettingsHelper._UseMuzzleFlash = false;
           });
           component.SetDropdownData("use muzzle flash fx?\n\n", selections, actions, selection_match);
         })

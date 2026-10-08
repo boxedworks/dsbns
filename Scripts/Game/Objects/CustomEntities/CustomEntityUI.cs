@@ -15,21 +15,26 @@ namespace Assets.Scripts.Objects.CustomEntities
     public bool _activated;
 
     MeshRenderer _renderer;
-    static List<Material> _Materials_CE;
+    static List<Material> s_Materials_CE;
 
-    public static int _ID;
+    static int s_Id;
     int _id;
+
+    public static void ResetMaterialIndex()
+    {
+      s_Id = 0;
+    }
 
     // Use this for initialization
     void Start()
     {
-      _id = _ID++;
+      _id = s_Id++;
 
       _renderer = GetComponent<MeshRenderer>();
-      _Materials_CE ??= new();
-      if (_Materials_CE.Count == _id)
-        _Materials_CE.Add(new Material(_renderer.sharedMaterial));
-      _renderer.sharedMaterial = _Materials_CE[_id];
+      s_Materials_CE ??= new();
+      if (s_Materials_CE.Count == _id)
+        s_Materials_CE.Add(new Material(_renderer.sharedMaterial));
+      _renderer.sharedMaterial = s_Materials_CE[_id];
 
       if (_colors != null && _colors.Length > 0)
       {
@@ -80,7 +85,7 @@ namespace Assets.Scripts.Objects.CustomEntities
         }
       }
       System.Array.Resize(ref _activate, _activate.Length + 1);
-      _activate[_activate.Length - 1] = entity;
+      _activate[^1] = entity;
     }
   }
 }

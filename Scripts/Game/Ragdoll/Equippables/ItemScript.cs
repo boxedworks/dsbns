@@ -8,6 +8,8 @@ using UnityEngine;
 
 using ItemType = ItemManager.Items;
 using Assets.Scripts.Ragdoll.Animation;
+using SneakyEngine.Engine;
+using SneakyEngine.Effects;
 
 namespace Assets.Scripts.Ragdoll.Equippables
 {
@@ -16,7 +18,8 @@ namespace Assets.Scripts.Ragdoll.Equippables
   {
     //
     static LevelSaveData LevelModule { get { return SettingsHelper.s_SaveData.LevelData; } }
-    static SettingsSaveData SettingsModule { get { return SettingsHelper.s_SaveData.Settings; } }
+
+    static VfxSystem VfxModule { get { return SneakyEngineSystem.VfxSystem; } }
 
     [System.NonSerialized]
     public int _Id;
@@ -25,6 +28,7 @@ namespace Assets.Scripts.Ragdoll.Equippables
     protected bool _isUtility;
 
     // Information about weapon holder
+    [System.NonSerialized]
     public ActiveRagdoll _ragdoll;
     protected ActiveRagdoll.Side _side;
     public void SetSide(ActiveRagdoll.Side side)
@@ -712,7 +716,7 @@ namespace Assets.Scripts.Ragdoll.Equippables
               smokeParticles.Emit(Mathf.Clamp(use_penatrationAmount, 1, 6));
             }
 
-          if (SettingsModule.UseMuzzleFlashFx)
+          if (VfxModule.UseMuzzleFlash)
             if (_type != ItemType.FLAMETHROWER && _type != ItemType.CROSSBOW)
             {
               var muzzle = transform.GetChild(transform.childCount - 1);

@@ -3,6 +3,7 @@ using Assets.Scripts.Game.Items;
 using Assets.Scripts.Ragdoll.Equippables;
 using Assets.Scripts.Settings.Extras;
 using Assets.Scripts.Settings.Serialization;
+using SneakyEngine.Effects;
 using SneakyEngine.Engine;
 using SneakyEngine.Ragdoll;
 using UnityEngine;
@@ -19,6 +20,7 @@ namespace Assets.Scripts.Settings
     static LevelSaveData LevelModule { get { return s_SaveData.LevelData; } }
 
     static RagdollSystem RagdollModule { get { return SneakyEngineSystem.RagdollSystem; } }
+    static VfxSystem VfxModule { get { return SneakyEngineSystem.VfxSystem; } }
 
     //
     public static float _VERSION = 1.62f;
@@ -174,7 +176,7 @@ namespace Assets.Scripts.Settings
       set
       {
         LevelModule.ExtraBloodType = value;
-        RagdollModule.SetBloodType((RagdollSystem.BloodParticleType)value);
+        VfxModule.SetBloodType((VfxSystem.BloodParticleType)value);
       }
     }
     public static int _Extras_BodyExplode
@@ -238,9 +240,7 @@ namespace Assets.Scripts.Settings
       set
       {
         SettingsModule.UseBlood = value;
-        RagdollModule.SetUseBlood(value);
-
-
+        VfxModule.SetUseBlood(value);
       }
     }
     public static bool _UseSmoke
@@ -252,7 +252,21 @@ namespace Assets.Scripts.Settings
       set
       {
         SettingsModule.UseSmokeFx = value;
-        RagdollModule.SetUseBloodSmoke(value);
+        VfxModule.SetUseBloodSmoke(value);
+      }
+    }
+
+    // Muzzle flash
+    public static bool _UseMuzzleFlash
+    {
+      get
+      {
+        return SettingsModule.UseMuzzleFlashFx;
+      }
+      set
+      {
+        SettingsModule.UseMuzzleFlashFx = value;
+        VfxModule.SetUseMuzzleFlash(value);
       }
     }
 

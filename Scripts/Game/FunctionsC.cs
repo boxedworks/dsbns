@@ -38,33 +38,28 @@ public static class FunctionsC
     public float _distance;
   }
   // Return the closest player to a point
-  static DistanceInfo GetClosestPlayerTo(Vector3 pos, int playerRagdollIdFilter = -1)
+  public static DistanceInfo GetClosestPlayerTo(Vector3 pos, ActiveRagdoll sourceRagdoll = null)
   {
     if (PlayerScript.s_Players == null) return null;
-    return GetClosestTargetOf(pos, new List<PlayerScript.IHasRagdoll>(PlayerScript.s_Players), playerRagdollIdFilter);
+    return GetClosestTargetOf(pos, new List<PlayerScript.IHasRagdoll>(PlayerScript.s_Players), sourceRagdoll);
   }
-  static DistanceInfo GetClosestEnemyTo(Vector3 pos, int ragdollIdFilter = -1, bool include_chaser = true)
+  public static DistanceInfo GetClosestEnemyTo(Vector3 pos, ActiveRagdoll sourceRagdoll = null, bool include_chaser = true, bool include_graplee = false)
   {
     if (EnemyScript._Enemies_alive == null) return null;
-    return GetClosestTargetOf(pos, new List<PlayerScript.IHasRagdoll>(EnemyScript._Enemies_alive), ragdollIdFilter, include_chaser);
+    return GetClosestTargetOf(pos, new List<PlayerScript.IHasRagdoll>(EnemyScript._Enemies_alive), sourceRagdoll, include_chaser);
   }
 
-  public static DistanceInfo GetClosestTargetTo(ActiveRagdoll host, Vector3 pos, int ragdollIdFilter = -1, bool include_chaser = false)
-  {
-    return GetClosestTargetTo(host._IsPlayer ? host._PlayerScript._Id : -1, pos, ragdollIdFilter, include_chaser);
-  }
-  public static DistanceInfo GetClosestTargetTo(int isPlayerId, Vector3 pos, int ragdollIdFilter = -1, bool include_chaser = false)
+  public static DistanceInfo GetClosestTargetTo(ActiveRagdoll host, Vector3 pos, bool include_chaser = false, bool include_graplee = false)
   {
 
     // If enemy, target will be player
-    var isPlayer = isPlayerId > -1;
-    if (!isPlayer)
+    if (!host._IsPlayer)
       return GetClosestPlayerTo(pos);
 
     // If player, check modes
     // Survival / Classic, always look for enemies only
     if (GameScript.s_IsZombieGameMode)
-      return GetClosestEnemyTo(pos, ragdollIdFilter, include_chaser);
+      return GetClosestEnemyTo(pos, host, include_chaser, include_graplee);
     if (GameScript.s_IsMissionsGameMode)
     {
       // Check if all enemies dead, use other players as targets
@@ -72,23 +67,23 @@ public static class FunctionsC
       {
         var targetList = new List<PlayerScript.IHasRagdoll>(PlayerScript.s_Players);
         // Remove self
-        targetList.RemoveAll(p => p._Ragdoll._PlayerScript._Id == isPlayerId);
-        return GetClosestTargetOf(pos, targetList, ragdollIdFilter);
+        targetList.RemoveAll(p => p._Ragdoll._PlayerScript._Id == host._PlayerScript._Id);
+        return GetClosestTargetOf(pos, targetList, host);
       }
 
       // Normal behavior
-      return GetClosestEnemyTo(pos, ragdollIdFilter, include_chaser);
+      return GetClosestEnemyTo(pos, host, include_chaser, include_graplee);
     }
 
     // Versus, group enemies and enemy players together (teams)
     if (GameScript.s_IsPartyGameMode)
     {
       var targetList = new List<PlayerScript.IHasRagdoll>(EnemyScript._Enemies_alive);
-      var enemyPlayers = VersusMode.GetEnemyPlayers(isPlayerId);
+      var enemyPlayers = VersusMode.GetEnemyPlayers(host._PlayerScript._Id);
       foreach (var enemyPlayer in enemyPlayers)
         targetList.Add(enemyPlayer);
 
-      return GetClosestTargetOf(pos, targetList, ragdollIdFilter);
+      return GetClosestTargetOf(pos, targetList, host);
     }
 
     return null;
@@ -117,7 +112,7 @@ public static class FunctionsC
   }
 
   //
-  static DistanceInfo GetClosestTargetOf(Vector3 atPos, List<PlayerScript.IHasRagdoll> ofRagdolls, int ragdollIdFilter = -1, bool include_chaser = false)
+  static DistanceInfo GetClosestTargetOf(Vector3 atPos, List<PlayerScript.IHasRagdoll> ofRagdolls, ActiveRagdoll sourceRagdoll = null, bool include_chaser = false, bool include_graplee = false)
   {
     if (ofRagdolls == null || ofRagdolls.Count == 0) return null;
 
@@ -127,8 +122,9 @@ public static class FunctionsC
     };
     foreach (var ragdollHolder in ofRagdolls)
     {
-      if (ragdollHolder._Ragdoll._Id == ragdollIdFilter || ragdollHolder._Ragdoll._IsDead || ragdollHolder._Ragdoll._Hip == null) continue;
+      if (ragdollHolder._Ragdoll._Id == (sourceRagdoll?._Id ?? -1) || ragdollHolder._Ragdoll._IsDead || ragdollHolder._Ragdoll._Hip == null) continue;
       if (!include_chaser && ragdollHolder._Ragdoll._IsEnemy && ragdollHolder._Ragdoll._EnemyScript.IsChaser()) continue;
+      if (!include_graplee && sourceRagdoll != null && ragdollHolder._Ragdoll.IsGrappledBy(sourceRagdoll)) continue;
 
       var dist = MathC.Get2DDistance(ragdollHolder._Ragdoll._Hip.position, atPos);
       if (dist < info._distance)

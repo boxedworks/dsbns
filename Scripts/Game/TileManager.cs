@@ -44,7 +44,7 @@ public class TileManager
 
   static Vector3 _saveTilePos;
 
-  static System.Tuple<Material, Material> _Materials_Tiles;
+  static Tuple<Material, Material> _Materials_Tiles;
 
   public static TMPro.TextMeshPro
     _Text_LevelNum,
@@ -250,13 +250,13 @@ public class TileManager
     // Check materials
     if (_Materials_Tiles == null)
     {
-      _Materials_Tiles = new System.Tuple<Material, Material>(_Tiles[0]._tile.GetComponent<MeshRenderer>().sharedMaterial,
+      _Materials_Tiles = new Tuple<Material, Material>(_Tiles[0]._tile.GetComponent<MeshRenderer>().sharedMaterial,
         new Material(_Tiles[0]._tile.GetComponent<MeshRenderer>().sharedMaterial));
       _Materials_Tiles.Item1.name = "TileUp";
       _Materials_Tiles.Item2.name = "TileDown";
     }
     if (_Ring == null) _Ring = GameObject.Find("ring").transform;
-    if (_Tile == null || _Tile.gameObject == null) throw new System.NullReferenceException("_Tile is null!");
+    if (_Tile == null || _Tile.gameObject == null) throw new NullReferenceException("_Tile is null!");
 
     // Check if map already loaded
     if (_Map.childCount > 3)
@@ -609,14 +609,14 @@ public class TileManager
         height = data_split[data_iter++].ParseIntInvariant();
       }
       // If fails to load map, just load the first level
-      catch (System.FormatException e)
+      catch (FormatException e)
       {
         Menu.QuickEnableMenus();
 
         GameScript._Coroutine_load = null;
         _LoadingMap = false;
 
-        throw new System.FormatException("Cannot load level with data: " + data + "\n" + e.StackTrace);
+        throw new FormatException("Cannot load level with data: " + data + "\n" + e.StackTrace);
       }
 
       // Remove prior enemies / objects
@@ -637,7 +637,7 @@ public class TileManager
       CandleScript.Reset();
       PlayerspawnScript.ResetPlayerSpawnIndex();
       PlayerspawnScript.ResetPlayerSpawns();
-      CustomEntityUI._ID = 0;
+      CustomEntityUI.ResetMaterialIndex();
       EnemyScript._ID = 0;
 
       // Set theme
@@ -1097,7 +1097,7 @@ public class TileManager
     var objects = _Map.GetChild(1);
 
     // Gather objects to combine
-    var meshes = new Dictionary<string, System.Tuple<List<GameObject>, bool>>();
+    var meshes = new Dictionary<string, Tuple<List<GameObject>, bool>>();
     meshes.Add("Barrels", Tuple.Create(new List<GameObject>(), false));
     meshes.Add("Books", Tuple.Create(new List<GameObject>(), true));
     meshes.Add("Bookcases", Tuple.Create(new List<GameObject>(), true));
@@ -1637,7 +1637,7 @@ public class TileManager
                 // Out of bounds
                 if (idP >= enemies.childCount)
                 {
-                  throw new System.IndexOutOfRangeException($"Trying to link door with enemy ID {idP} out of {enemies.childCount}");
+                  throw new IndexOutOfRangeException($"Trying to link door with enemy ID {idP} out of {enemies.childCount}");
                 }
                 var e = EnemyScript.s_Enemies[enemies.GetChild(idP).GetChild(0).GetEntityId()];
                 door_script0.RegisterEnemyEditor(e);
@@ -1863,7 +1863,7 @@ public class TileManager
       {
         properties.Add(object_data_split[object_data_iter++], object_data_split[object_data_iter++]);
       }
-      catch (System.Exception e)
+      catch (Exception e)
       {
         Debug.LogWarning("Caught exception at TileManager.GetProperties() => " + e.ToString());
       }
@@ -2048,7 +2048,7 @@ public class TileManager
     PlayerScript.Reset();
     Powerup.Reset();
     CustomObstacle.Reset();
-    CustomEntityUI._ID = 0;
+    CustomEntityUI.ResetMaterialIndex();
     ExplosiveScript.Reset();
     FunctionsC.AoeHandler.Reset();
     PlayerspawnScript.ResetPlayerSpawnIndex();
@@ -3916,7 +3916,7 @@ public class TileManager
     public DeleteSettings _deleteSettings;
     public SaveFunction _saveFunction;
     public UpdateFunction _textDisplayFunction;
-    public System.Action _onLoadGame;
+    public Action _onLoadGame;
     public bool _hide; // If true, when cycling through objects, will be skipped
 
     public LevelEditorObject(string name, UpdateFunction onSelect, MovementSettings movementSettings, RotationSettings rotationSettings, CopySettings copySettings, AddSettings addSettings, DeleteSettings deleteSettings, SaveFunction saveFunction, UpdateFunction textDisplayFunction)
@@ -4191,7 +4191,7 @@ public class TileManager
     {
       LineRenderer_Update();
     }
-    catch (System.Exception e)
+    catch (Exception e)
     {
       Debug.LogError("Cause exception at LineRenderer_Update() => " + e.ToString());
     }
@@ -5281,7 +5281,7 @@ public class TileManager
     }
   }
 
-  public class Tile : System.IComparable<Tile>
+  public class Tile : IComparable<Tile>
   {
     static int _ID;
     public int _id, _lastMouseID;
@@ -5317,7 +5317,7 @@ public class TileManager
       else
       {
         _pos = Vector3.zero;
-        throw new System.NullReferenceException("_Tile is null while setting tile _pos");
+        throw new NullReferenceException("_Tile is null while setting tile _pos");
       }
       _lastMouseID = -1;
     }

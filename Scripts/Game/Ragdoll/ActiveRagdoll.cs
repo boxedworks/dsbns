@@ -12,6 +12,7 @@ using Assets.Scripts.Game.Items;
 using Assets.Scripts.Ragdoll.Equippables;
 using SneakyEngine.Engine;
 using SneakyEngine.Ragdoll;
+using SneakyEngine.Effects;
 
 namespace Assets.Scripts.Ragdoll
 {
@@ -21,6 +22,7 @@ namespace Assets.Scripts.Ragdoll
   {
 
     static RagdollSystem RagdollSystem { get { return SneakyEngineSystem.RagdollSystem; } }
+    static VfxSystem VfxSystem { get { return SneakyEngineSystem.VfxSystem; } }
 
     //
     public static List<ActiveRagdoll> s_Ragdolls;
@@ -1077,8 +1079,7 @@ namespace Assets.Scripts.Ragdoll
       if (_IsPlayer) _PlayerScript.OnTriggerEnter(other);
 
       // Check general triggers
-      var u = other.GetComponent<CustomEntityUI>();
-      if (u != null)
+      if (other.TryGetComponent<CustomEntityUI>(out var u))
       {
         u.Activate();
       }
@@ -1695,11 +1696,11 @@ namespace Assets.Scripts.Ragdoll
       }
 
       // Check global blood setting
-      if (!RagdollSystem.UseBlood) return;
+      if (!VfxSystem.UseBlood) return;
 
       /// Particles
       // Confetti
-      var useConfetti = RagdollSystem.BloodType == RagdollSystem.BloodParticleType.CONFETTI;
+      var useConfetti = VfxSystem.BloodType == VfxSystem.BloodParticleType.CONFETTI;
       if (useConfetti)
       {
         var particlesConfetti = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.CONFETTI);
@@ -1801,7 +1802,7 @@ namespace Assets.Scripts.Ragdoll
         GameScript.s_Singleton.StartCoroutine(BloodFollow(blood));
 
         // Blood smoke
-        if (RagdollSystem.UseBloodSmoke)
+        if (VfxSystem.UseBloodSmoke)
         {
           var parts = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.BLOOD_SMOKE)[0];
           parts.transform.position = _Hip.position + new Vector3(0f, 0.5f, 0f);
