@@ -1902,6 +1902,12 @@ namespace Assets.Scripts.Ragdoll.Equippables
       {
         transform.GetChild(0).GetComponent<BoxCollider>().enabled = false;
       }
+
+      //
+      if (_ragdoll._IsEnemy && _ragdoll._EnemyScript._IsZombie)
+        Destroy(gameObject);
+      else
+        Destroy(this);
     }
 
     public int GetClip()

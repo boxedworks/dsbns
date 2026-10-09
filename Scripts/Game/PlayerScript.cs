@@ -224,6 +224,10 @@ public class PlayerScript : PlayerScript.IHasRagdoll
 
     // Assign color by _PlayerID
     _ragdoll.ChangeColor(_Profile.GetColor());
+    // _ragdoll.SetColors(
+    //   new Color(201f / 255f, 181f / 255f, 141f / 255f),
+    //   _Profile.GetColor()
+    // );
 
     // Create ring
     var new_ring = Object.Instantiate(TileManager._Ring.gameObject);

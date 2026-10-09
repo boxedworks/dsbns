@@ -315,7 +315,20 @@ public class EnemyScript : PlayerScript.IHasRagdoll
             _itemLeft = ItemManager.Items.NONE;
           }
 
-          _ragdoll.ChangeColor(Color.green);
+          var knifeColor = Color.green;
+          if (_survivalAttributes != null)
+          {
+            knifeColor = _survivalAttributes._enemyType switch
+            {
+              SurvivalManager.EnemyType.KNIFE_WALK_SLOW => Color.green,
+              SurvivalManager.EnemyType.KNIFE_WALK => Color.green,
+              SurvivalManager.EnemyType.KNIFE_JOG => Color.green + Color.white,
+              SurvivalManager.EnemyType.KNIFE_RUN => Color.green + Color.white,
+              _ => Color.green
+            };
+          }
+
+          _ragdoll.ChangeColor(knifeColor);
           break;
 
         case ItemManager.Items.PISTOL:

@@ -3756,7 +3756,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
                   Levels.BufferLevelTimeDatas();
 
                   SpawnMenu_Levels();
-                  s_CurrentMenu._SelectionIndex = s_CurrentMenu._MenuComponentsSelectable.Count - 2;
+                  s_CurrentMenu._SelectionIndex = s_CurrentMenu._MenuComponentsSelectable.Count - 3;
                   _CanRender = false;
                   RenderMenu();
                   SendInput(Input.SPACE);

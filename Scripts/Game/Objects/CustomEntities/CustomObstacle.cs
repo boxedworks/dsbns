@@ -47,6 +47,9 @@ namespace Assets.Scripts.Objects.CustomEntities
       set { index2 = value % _MAX_ROOMS; }
     }
 
+    // Dice info
+    Rigidbody _diceRigidbody;
+
     // Weapons
     static Dictionary<int, List<System.Tuple<ItemManager.Items, int>>> _BUYABLE_ITEM_TIERS;
     System.Tuple<ItemManager.Items, int> _weapon_info;
@@ -60,7 +63,7 @@ namespace Assets.Scripts.Objects.CustomEntities
     System.Tuple<UtilityScript.UtilityType, int> _utility_info;
 
     // Random
-    static List<CustomObstacle> _RandomObstacles;
+    static List<CustomObstacle> _RandomObstaclesList;
     InteractType _randomType;
 
     public static List<CustomObstacle> _CustomBarriers, _CustomInteractables, _CustomCandles;
@@ -192,32 +195,49 @@ namespace Assets.Scripts.Objects.CustomEntities
       {
         _Materials = new Material[]
         {
-        new Material(_renderer.sharedMaterial),
-        new Material(_renderer.sharedMaterial),
-        new Material(_renderer.sharedMaterial),
-        new Material(_renderer.sharedMaterial),
+          new(_renderer.sharedMaterial),
+          new(_renderer.sharedMaterial),
+          new(_renderer.sharedMaterial),
+          new(_renderer.sharedMaterial),
         };
       }
 
       var use_type = _type;
 
       // Check random type
-      var random = use_type == InteractType.BUYRANDOM;
+      var random = _type == InteractType.BUYRANDOM;
       if (random)
       {
-        if (_RandomObstacles == null) _RandomObstacles = new List<CustomObstacle>();
-        if (!_RandomObstacles.Contains(this)) _RandomObstacles.Add(this);
-        var r = Random.value;
+        _RandomObstaclesList ??= new();
+        if (!_RandomObstaclesList.Contains(this))
+          _RandomObstaclesList.Add(this);
+
         // Set type to item
+        var r = Random.value;
         if (r < 0.6f)
           use_type = InteractType.BUYITEM;
+
         // Utility
         else if (r < 0.8f)
           use_type = InteractType.BUYUTILITY;
+
         // Perk
         else
           use_type = InteractType.BUYPERK;
         _randomType = use_type;
+
+        if (!midgame)
+        {
+          var diceModel = GameResources._Dice;
+          var diceInstance = Instantiate(diceModel);
+          var diceParent = transform.GetChild(1);
+          diceInstance.transform.parent = diceParent;
+          diceInstance.transform.localPosition = Vector3.zero;
+          diceInstance.transform.localRotation = Quaternion.identity;
+          diceInstance.transform.localScale = Vector3.one * 0.8f;
+          _diceRigidbody = diceParent.gameObject.AddComponent<Rigidbody>();
+          _diceRigidbody.useGravity = false;
+        }
       }
 
       // Set defaults
@@ -230,6 +250,7 @@ namespace Assets.Scripts.Objects.CustomEntities
         _text.text = $"remove wall: {_pointCost}";
         _renderer.sharedMaterial = _Materials[0];
       }
+
       // Select random items based on tier
       else if (use_type == InteractType.BUYITEM)
       {
@@ -335,7 +356,7 @@ namespace Assets.Scripts.Objects.CustomEntities
       }
 
       // Hide interactable
-      if (!GameScript.s_EditorEnabled && !midgame)
+      if (!GameScript.s_EditorEnabled && !midgame && _type != InteractType.BUYRANDOM)
         gameObject.SetActive(false);
 
       // Set scale
@@ -687,10 +708,17 @@ namespace Assets.Scripts.Objects.CustomEntities
     float _desiredScale;
     public void Update()
     {
+      // Rotate
+      if (_diceRigidbody != null)
+      {
+        _diceRigidbody.transform.Rotate(50f * Random.value * Time.deltaTime * Vector3.up);
+        _diceRigidbody.transform.Rotate(50f * Random.value * Time.deltaTime * Vector3.left);
+      }
+
       // Scale
       if (!_interactable) return;
-      transform.GetChild(1).localScale += ((new Vector3(1f, 1f, 1f) * (GameScript.s_EditorEnabled ? 0.3f : _desiredScale)) - transform.GetChild(1).localScale) * Time.deltaTime * 8f;
-      _text.transform.localScale += ((new Vector3(1f, 1f, 1f) * ((_desiredScale - 0.15f) / 0.15f)) - _text.transform.localScale) * Time.deltaTime * 8f;
+      transform.GetChild(1).localScale += 8f * Time.deltaTime * ((new Vector3(1f, 1f, 1f) * (GameScript.s_EditorEnabled ? 0.3f : _desiredScale)) - transform.GetChild(1).localScale);
+      _text.transform.localScale += 8f * Time.deltaTime * ((new Vector3(1f, 1f, 1f) * ((_desiredScale - 0.15f) / 0.15f)) - _text.transform.localScale);
       if (_text.transform.localScale.x < 0f) _text.transform.localScale = Vector3.zero;
     }
 
@@ -959,7 +987,7 @@ namespace Assets.Scripts.Objects.CustomEntities
 
     public static void Randomize()
     {
-      foreach (var r in _RandomObstacles)
+      foreach (var r in _RandomObstaclesList)
         r.Init(true);
     }
 
@@ -982,9 +1010,11 @@ namespace Assets.Scripts.Objects.CustomEntities
         {
           if (player._Ragdoll._IsDead || player == null) continue;
           var path = new UnityEngine.AI.NavMeshPath();
-          var filter = new UnityEngine.AI.NavMeshQueryFilter();
-          filter.areaMask = 1;
-          filter.agentTypeID = GameScript.s_IsZombieGameMode ? TileManager._navMeshSurface2.agentTypeID : TileManager._navMeshSurface.agentTypeID;
+          var filter = new UnityEngine.AI.NavMeshQueryFilter
+          {
+            areaMask = 1,
+            agentTypeID = GameScript.s_IsZombieGameMode ? TileManager._navMeshSurface2.agentTypeID : TileManager._navMeshSurface.agentTypeID
+          };
           var usePosition = transform.position;
           if (ctype == CType.CANDLE)
           {
@@ -1003,7 +1033,12 @@ namespace Assets.Scripts.Objects.CustomEntities
         }
 
         if (ctype == CType.INTERACT)
-          _desiredScale = min_dist < 0.6f ? 0.3f : (min_dist < 1.5f ? 0.15f : 0f);
+        {
+          if (_type == InteractType.BUYRANDOM)
+            _desiredScale = min_dist < 0.6f ? 0.3f : (min_dist < 1.5f ? 0.22f : 0.15f);
+          else
+            _desiredScale = min_dist < 0.6f ? 0.3f : (min_dist < 1.5f ? 0.15f : 0f);
+        }
         else if (ctype == CType.CANDLE)
         {
           //Debug.Log(min_dist);
@@ -1018,12 +1053,10 @@ namespace Assets.Scripts.Objects.CustomEntities
         _text.gameObject.SetActive(_desiredScale >= 0.13f);
     }
 
-    public static void HandleAll()
+    public static void HandleIncremental()
     {
-      if (_CustomInteractables != null)
-        _CustomInteractables[_CustomInteractables_index++ % _CustomInteractables.Count].Handle(CType.INTERACT);
-      if (_CustomCandles != null)
-        _CustomCandles[_CustomCandle_index++ % _CustomCandles.Count].Handle(CType.CANDLE);
+      _CustomInteractables?[_CustomInteractables_index++ % _CustomInteractables.Count].Handle(CType.INTERACT);
+      _CustomCandles?[_CustomCandle_index++ % _CustomCandles.Count].Handle(CType.CANDLE);
     }
 
     // Reset all data containers
@@ -1034,7 +1067,7 @@ namespace Assets.Scripts.Objects.CustomEntities
       _CustomCandles = null;
       _PlayerSpawn = null;
 
-      _RandomObstacles = null;
+      _RandomObstaclesList = null;
 
       _CustomInteractables = null;
       _CustomInteractables_index = 0;

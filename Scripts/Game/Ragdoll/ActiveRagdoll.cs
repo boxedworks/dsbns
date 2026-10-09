@@ -1256,6 +1256,14 @@ namespace Assets.Scripts.Ragdoll
       Rigidbody_Handler.AddListener(rb, Rigidbody_Handler.RigidbodyType.BODY);
     }
 
+    public void SetColors(Color skinColor, Color clothesColor)
+    {
+      _Color = skinColor;
+      var mesh = Transform.GetChild(0).GetComponent<SkinnedMeshRenderer>();
+      mesh.sharedMaterials[1].color = skinColor;
+      mesh.sharedMaterials[0].color = clothesColor;
+    }
+
     Coroutine _color_Coroutine;
     public void ChangeColor(Color c, float lerpAmount = 0f)
     {

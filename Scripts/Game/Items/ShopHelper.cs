@@ -187,7 +187,12 @@ namespace Assets.Scripts.Game.Items
 
     public static int _Max_Equipment_Points
     {
-      get { return s_ShopEquipmentPoints; }
+      get
+      {
+        if (Debug.isDebugBuild)
+          return 20;
+        return s_ShopEquipmentPoints;
+      }
       set
       {
         s_ShopEquipmentPoints = value;

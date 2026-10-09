@@ -942,7 +942,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
 
     IncrementalUpdate();
 
-    CustomObstacle.HandleAll();
+    CustomObstacle.HandleIncremental();
 
     // Check if wave in progress
     if (s_wavePlaying)
@@ -1030,7 +1030,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
             case EnemyType.ARMORED:
               movespeed = 0.25f;
               health = 4;
-              e._Ragdoll.ChangeColor(Color.gray);
+              //e._Ragdoll.ChangeColor(Color.gray);
               break;
           }
 

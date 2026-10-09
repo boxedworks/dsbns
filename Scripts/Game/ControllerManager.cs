@@ -431,6 +431,7 @@ public static class ControllerManager
     O,
     PERIOD,
     PERIOD_NUMPAD,
+    FORWARDSLASH,
     BACKSLASH,
     Q,
     E,
@@ -543,6 +544,9 @@ public static class ControllerManager
         break;
       case Key.BACKSLASH:
         gotKey = keyboard.backslashKey;
+        break;
+      case Key.FORWARDSLASH:
+        gotKey = keyboard.slashKey;
         break;
       case Key.DELETE:
         gotKey = keyboard.deleteKey;

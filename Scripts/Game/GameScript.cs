@@ -662,7 +662,7 @@ public class GameScript : MonoBehaviour
       // If more candles than can handle, hide some
       if (CustomObstacle._CustomCandles != null && CustomObstacle._CustomCandles.Count > 4)
       {
-        CustomObstacle.HandleAll();
+        CustomObstacle.HandleIncremental();
       }
 
       // Check backrooms

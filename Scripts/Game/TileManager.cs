@@ -1,7 +1,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using Assets.Scripts.FX;
 using Assets.Scripts.Game.Items;
 using Assets.Scripts.Objects;
@@ -389,13 +388,13 @@ public class TileManager
     var offset = new Vector3(min_x - _Tile.position.x, 0f, min_z - _Tile.position.z) + (_Tile.position - _saveTilePos);
 
     // Add PlayerSpawn information
-    foreach (var p in PlayerspawnScript._PlayerSpawns)
+    foreach (var playerSpawn in PlayerspawnScript._PlayerSpawns)
     {
-      var pos_use = p.transform.position - offset;
+      var pos_use = playerSpawn.transform.position - offset;
       returnString += "playerspawn_" + Math.Round(pos_use.x, 2) + "_" + Math.Round(pos_use.z, 2) + "_";
       // Add rotation
-      returnString += "rot_" + p.transform.localRotation.eulerAngles.y + "_";
-      var co = p.GetComponent<CustomObstacle>();
+      returnString += "rot_" + playerSpawn.transform.localRotation.eulerAngles.y + "_";
+      var co = playerSpawn.GetComponent<CustomObstacle>();
       if (co != null) returnString += $"co_{co._type}.{co._index}.{co._index2}";
       returnString += " ";
     }
@@ -1002,9 +1001,8 @@ public class TileManager
         var usePlane = true;
         var yVal = usePlane ? -1.26f : -2.3f;
 
-        var backrooms = usePlane ? GameResources.s_Backrooms_White : GameResources.s_Backrooms;
-        backrooms.gameObject.SetActive(true);
-        backrooms.position = new Vector3(-42.49f, yVal, -53.95f);
+        var backrooms = usePlane ? GameObject.Instantiate(GameResources._DebugViews.transform.GetChild(1).gameObject) : GameObject.Instantiate(GameResources._DebugViews.transform.GetChild(0).gameObject);
+        backrooms.transform.position = new Vector3(-42.49f, yVal, -53.95f);
 
         UnityEngine.Object.Destroy(GameObject.Find("Meshes_Tiles_Up"));
         UnityEngine.Object.Destroy(GameObject.Find("Meshes_Tiles_Down"));
@@ -2267,6 +2265,7 @@ public class TileManager
       _Menu_Infos_Goal,
       _Menu_Map_Rename,
       _Menu_Infos_Tile,
+      _Menu_Custom_Obstacle,
       _Menu_Workshop_Infos;
 
     static RectTransform _Menu_Editor { get { return GameResources._UI_Editor as RectTransform; } }
@@ -2283,9 +2282,10 @@ public class TileManager
       _Menu_Infos_Button = _Menu_Editor.transform.GetChild(5).transform as RectTransform;
       _Menu_Infos_Goal = _Menu_Editor.transform.GetChild(6).transform as RectTransform;
       _Menu_Infos_Tile = _Menu_Editor.transform.GetChild(7).transform as RectTransform;
+      _Menu_Custom_Obstacle = _Menu_Editor.transform.GetChild(8).transform as RectTransform;
 
       _Menu_Map_Rename = _Menu_Editor.transform.GetChild(3).transform as RectTransform;
-      _Menu_Workshop_Infos = _Menu_Editor.transform.GetChild(8).transform as RectTransform;
+      _Menu_Workshop_Infos = _Menu_Editor.transform.GetChild(9).transform as RectTransform;
 
       HideMenus();
     }
@@ -2298,13 +2298,8 @@ public class TileManager
       _Menu_Map_Rename.gameObject.SetActive(false);
       _Menu_Workshop_Infos.gameObject.SetActive(false);
     }
-    public static void ShowMenus()
+    public static void HideSubMenus()
     {
-      _Menu_Editor.gameObject.SetActive(true);
-
-      _Menu_Object_Select.gameObject.SetActive(true);
-      _Menu_Infos.gameObject.SetActive(true);
-
       _Menu_Infos_Enemy.gameObject.SetActive(false);
       _Menu_Infos_Door.gameObject.SetActive(false);
       _Menu_Infos_Button.gameObject.SetActive(false);
@@ -2312,6 +2307,16 @@ public class TileManager
       _Menu_Infos_Tile.gameObject.SetActive(false);
       _Menu_Map_Rename.gameObject.SetActive(false);
       _Menu_Workshop_Infos.gameObject.SetActive(false);
+      _Menu_Custom_Obstacle.gameObject.SetActive(false);
+    }
+    public static void ShowMenus()
+    {
+      _Menu_Editor.gameObject.SetActive(true);
+
+      _Menu_Object_Select.gameObject.SetActive(true);
+      _Menu_Infos.gameObject.SetActive(true);
+
+      HideSubMenus();
     }
 
     public static RectTransform ShowRenameMenuMenu()
@@ -2325,6 +2330,7 @@ public class TileManager
       _Menu_Infos_Button.gameObject.SetActive(false);
       _Menu_Infos_Goal.gameObject.SetActive(false);
       _Menu_Infos_Tile.gameObject.SetActive(false);
+      _Menu_Custom_Obstacle.gameObject.SetActive(false);
 
       _Menu_Workshop_Infos.gameObject.SetActive(false);
 
@@ -2332,7 +2338,7 @@ public class TileManager
 
       return _Menu_Map_Rename;
     }
-    public static RectTransform ShowWorkshopMenu()
+    public static void ShowWorkshopMenu()
     {
       _Menu_Editor.gameObject.SetActive(true);
 
@@ -2343,13 +2349,11 @@ public class TileManager
       _Menu_Infos_Button.gameObject.SetActive(false);
       _Menu_Infos_Goal.gameObject.SetActive(false);
       _Menu_Infos_Tile.gameObject.SetActive(false);
+      _Menu_Custom_Obstacle.gameObject.SetActive(false);
 
       _Menu_Map_Rename.gameObject.SetActive(false);
 
       _Menu_Workshop_Infos.gameObject.SetActive(true);
-
-
-      return _Menu_Map_Rename;
     }
 
 
@@ -2778,22 +2782,74 @@ public class TileManager
       if (_SelectedObject != null && CanCustomObject())
       {
         var co = _SelectedObject.GetComponent<CustomObstacle>();
-        var hasObstacle = co != null ? true : false;
-        var add = "";
+        var hasObstacle = co != null;
+        var textEnabled = "[B] Enabled: " + (hasObstacle ? "true" : "false");
         var type = "";
+        var roomId = "-";
+        var otherText = "";
+
         if (hasObstacle)
         {
+          switch (co._type)
+          {
+            case CustomObstacle.InteractType.BUYITEM:
+              type = "Buy (item)";
+              break;
+            case CustomObstacle.InteractType.BUYUTILITY:
+              type = "Buy (utility)";
+              break;
+            case CustomObstacle.InteractType.BUYPERK:
+              type = "Buy (perk)";
+              break;
+            case CustomObstacle.InteractType.BUYRANDOM:
+              type = "Buy (random)";
+              break;
+            case CustomObstacle.InteractType.REMOVEBARRIER:
+              if (_SelectedObject.name.Equals(_LEO_Interactable))
+              {
+                type = "Buy (door)";
+              }
+              else if (_SelectedObject.name.Equals(_LEO_BookcaseOpen._name))
+              {
+                type = "Door";
+              }
+              else if (_SelectedObject.name.Equals(_LEO_RugRectangle._name))
+              {
+                type = "Zombie Spawner";
+              }
+              else if (
+                _SelectedObject.name.Equals(_LEO_CandelBarrel._name) ||
+                _SelectedObject.name.Equals(_LEO_CandelBig._name) ||
+               _SelectedObject.name.Equals(_LEO_CandelTable._name)
+               )
+              {
+                type = "Light";
+              }
+              else if (_SelectedObject.name.Equals(_LEO_Playerspawn._name))
+              {
+                type = "Player Spawn";
+              }
+              else
+                type = "Other";
+              break;
+          }
+          roomId = co._index2.ToString();
+
           if (co._type == CustomObstacle.InteractType.BUYITEM)
-            add = $"weapon tier: {co._index} (N) | current roomID: {co._index2} (M) |";
+            otherText = $"Weapon Tier: {co._index}";
           else if (co._type == CustomObstacle.InteractType.BUYUTILITY)
-            add = $"utility tier: {co._index} (N) | current roomID: {co._index2} (M) |";
+            otherText = $"Utility Tier: {co._index}";
           else if (co._type == CustomObstacle.InteractType.BUYPERK)
-            add = $"perk tier: {co._index} (N) | current roomID: {co._index2} (M) |";
+            otherText = $"Perk Tier: {co._index}";
           else
-            add = $"roomID: {co._index} (N) | current roomID: {co._index2} (M) |";
-          type = co._type.ToString();
+            otherText = $"Linked Room ID: {co._index}";
+          otherText = $"[N] {otherText}";
         }
-        _TextMesh.text += $"custom obstacle: {hasObstacle} (B) | {add} mode: {type} (,)\n";
+
+        EditorMenus.SetTextQuick(EditorMenus._Menu_Custom_Obstacle.GetChild(1).GetChild(0), textEnabled);
+        EditorMenus.SetTextQuick(EditorMenus._Menu_Custom_Obstacle.GetChild(2).GetChild(0), $"[/] Type: {type}");
+        EditorMenus.SetTextQuick(EditorMenus._Menu_Custom_Obstacle.GetChild(3).GetChild(0), $"[M] Room ID: {roomId}");
+        EditorMenus.SetTextQuick(EditorMenus._Menu_Custom_Obstacle.GetChild(4).GetChild(0), $"{otherText}");
       }
   }
   static void ClearText()
@@ -2811,7 +2867,7 @@ public class TileManager
       _LEO_CandelBarrel, _LEO_CandelBig, _LEO_CandelTable,
       _LEO_Playerspawn,
     })
-      if (_SelectedObject.name == ob._name && cu._name == ob._name)
+      if (cu._name == ob._name)
         return true;
     return false;
   }
@@ -3965,6 +4021,7 @@ public class TileManager
       if (GetCurrentObject()._name.Equals(_LEO_Button._name)) EditorMenus._Menu_Infos_Button.gameObject.SetActive(false);
       if (GetCurrentObject()._name.Equals(_LEO_Goal._name)) EditorMenus._Menu_Infos_Goal.gameObject.SetActive(false);
       if (GetCurrentObject()._name.Equals(_LEO_Tile._name)) EditorMenus._Menu_Infos_Tile.gameObject.SetActive(false);
+      if (CanCustomObject()) EditorMenus._Menu_Custom_Obstacle.gameObject.SetActive(false);
 
       // Else, move ring
       else _Ring.position = new Vector3(0f, -100f, 0f);
@@ -3987,6 +4044,7 @@ public class TileManager
       if (GetCurrentObject()._name.Equals(_LEO_Button._name)) EditorMenus._Menu_Infos_Button.gameObject.SetActive(true);
       if (GetCurrentObject()._name.Equals(_LEO_Goal._name)) EditorMenus._Menu_Infos_Goal.gameObject.SetActive(true);
       if (GetCurrentObject()._name.Equals(_LEO_Tile._name)) EditorMenus._Menu_Infos_Tile.gameObject.SetActive(true);
+      if (CanCustomObject()) EditorMenus._Menu_Custom_Obstacle.gameObject.SetActive(true);
     }
 
     public static void SetIterOnName(string name)
@@ -4443,7 +4501,7 @@ public class TileManager
           _CurrentMode = EditorMode.MOVE;
 
         // Check for custom obstacles
-        if (CanCustomObject() && (ControllerManager.GetKey(Key.SHIFT_L, ControllerManager.InputMode.HOLD) || ControllerManager.GetKey(Key.SHIFT_R, ControllerManager.InputMode.HOLD)))
+        if (CanCustomObject())
         {
           var co = _SelectedObject.GetComponent<CustomObstacle>();
           // Add / remove
@@ -4456,8 +4514,9 @@ public class TileManager
             //ClearText();
             //UpdateText();
           }
-          /*var mod = 1;
+          var mod = 1;
           if (ControllerManager.GetKey(Key.CONTROL_LEFT, ControllerManager.InputMode.HOLD)) mod = -1;
+
           // Change index
           if (ControllerManager.GetKey(Key.N) && co != null)
           {
@@ -4471,14 +4530,15 @@ public class TileManager
             co._index2 += mod;
             ClearText();
             UpdateText();
-          }*/
+          }
+
           // Change type
-          if (ControllerManager.GetKey(Key.COMMA) && co != null)
+          if (ControllerManager.GetKey(Key.FORWARDSLASH) && co != null)
           {
             co._type = (CustomObstacle.InteractType)((((int)co._type) + 1) % 5);
             co._index = co._index;
-            //ClearText();
-            //UpdateText();
+            ClearText();
+            UpdateText();
           }
         }
       }
@@ -4529,11 +4589,15 @@ public class TileManager
 
           // Remove from alive
           var enemyScript = EnemyScript.s_Enemies[delete_target.GetChild(0).GetEntityId()];
-          EnemyScript._Enemies_alive.Remove(enemyScript);
-          //EnemyScript.s_Enemies.Remove(enemyScript.transform.GetEntityId());
+          if (enemyScript != null)
+          {
+            EnemyScript._Enemies_alive.Remove(enemyScript);
 
-          // Check if linked to any doors
-          enemyScript?._linkedDoor?.UnregisterEnemy(enemyScript);
+            // Check if linked to any doors
+            var linkedDoor = enemyScript._linkedDoor;
+            if (linkedDoor != null)
+              linkedDoor.UnregisterEnemy(enemyScript);
+          }
         }
 
         else if (LevelEditorObject.GetCurrentObject()._name == _LEO_Playerspawn._name)
@@ -4565,6 +4629,8 @@ public class TileManager
           _CurrentMode = EditorMode.NONE;
           _SelectedObject = null;
           _Ring.position = new Vector3(0f, -100f, 0f);
+
+          EditorMenus.HideSubMenus();
         }
       }
     }

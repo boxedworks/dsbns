@@ -18,6 +18,7 @@ public static class GameResources
 
     _RugRectangle,
 
+    _Dice,
 
     _Barrel, _Barrel_Rock,
     _ColumnNormal, _ColumnBroken,
@@ -37,6 +38,8 @@ public static class GameResources
 
     _PerkTypes,
 
+    _DebugViews,
+
     s_Game, s_Particles, s_AmmoUi;
 
   public static TMPro.TextMeshPro s_AmmoSideUi;
@@ -48,8 +51,6 @@ public static class GameResources
   public static Transform _Container_Objects, _UI, _UI_Editor, _UI_Editor_Testing, _UI_Player, _Menu, _UI_Survival, _UI_Classic, _UI_Versus, s_Sounds,
 
   _XrLeft, _XrRight;
-
-  public static Transform s_Backrooms, s_Backrooms_White;
 
   public static Camera _Camera_Main, _Camera_Menu, _Camera_IgnorePP;
   public static AudioListener s_AudioListener;
@@ -93,6 +94,8 @@ public static class GameResources
 
     _RugRectangle = Resources.Load("RugRectangle") as GameObject;
 
+    _Dice = Resources.Load("Die") as GameObject;
+
     _Barrel = Resources.Load("Barrel") as GameObject;
     _Barrel_Rock = Resources.Load("Barrel_Rock") as GameObject;
 
@@ -130,6 +133,8 @@ public static class GameResources
 
     _PerkTypes = Resources.Load("PerkTypes") as GameObject;
 
+    _DebugViews = Resources.Load("DebugViews") as GameObject;
+
     _Camera_Main = GameObject.Find("Main Camera").GetComponent<Camera>();
     _Camera_Menu = GameObject.Find("Menu Camera").GetComponent<Camera>();
     _Camera_IgnorePP = GameObject.Find("NoPPCamera").GetComponent<Camera>();
@@ -162,18 +167,8 @@ public static class GameResources
 
     s_Blood0 = GameObject.Find("Blood_0").GetComponent<Renderer>();
 
-    s_Backrooms = GameObject.Find("Backrooms").transform;
-    s_Backrooms.gameObject.SetActive(false);
-
-    s_Backrooms_White = GameObject.Find("WhitePlane").transform;
-    s_Backrooms_White.gameObject.SetActive(false);
-
     _XrLeft = GameObject.Find("Controller (left)").transform;
     _XrRight = GameObject.Find("Controller (right)").transform;
-
-    //
-    //if (GameScript._s_Singleton.ReplacementShader != null)
-    //  _Camera_Main.SetReplacementShader(GameScript._s_Singleton.ReplacementShader, "");
 
     //
     _Loaded = true;
