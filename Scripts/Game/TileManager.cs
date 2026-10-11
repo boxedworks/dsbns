@@ -577,8 +577,6 @@ public class TileManager
 
       _LoadingMap = true;
 
-      //Debug.Log("Loading map with data:\n== BEGIN ==\n" + data + "\n== END ==");
-
       var level_meta = Levels.GetLevelMeta(data);
 
       // Check for editor maps
@@ -601,9 +599,7 @@ public class TileManager
       var data_split = level_meta[0].Split(' ');
       var data_iter = 0;
       // Load map
-      int width = 0,
-        height = 0;
-      //var reversed = data.Contains("__reversed_");
+      int width, height;
       try
       {
         width = data_split[data_iter++].ParseIntInvariant();
@@ -729,8 +725,7 @@ public class TileManager
           break;
       }
 
-      Vector2 offset = new(0, 0),
-        difference = Vector2.zero;
+      Vector2 difference;
       if (spawnpoint_data != null)
       {
 
@@ -830,11 +825,13 @@ public class TileManager
       {
         for (var h = 0; h < _Height; h++)
         {
-          var useData = 1;
-          if (w < _offset.x || w >= width + _offset.x || h < _offset.y || h >= height + _offset.y) { }
+          int useData;
+          if (w < _offset.x || w >= width + _offset.x || h < _offset.y || h >= height + _offset.y)
+            useData = GameScript.s_IsIncrementalGameMode ? 0 : 1;
           else
             useData = data_split[data_iter++].ParseIntInvariant();
           var tile = _Tiles[w * _Height + h];
+
           // Down
           if (useData == 0)
           {
@@ -843,6 +840,7 @@ public class TileManager
             tile._tile.transform.localPosition = new Vector3(tile._tile.transform.localPosition.x, pos_down.y, tile._tile.transform.localPosition.z);
             tiles_down.Add(tile);
           }
+
           // Up
           else
           {
@@ -877,7 +875,7 @@ public class TileManager
         // Check inner walls
         else
         {
-          for (int i = 0; i < 4; i++)
+          for (var i = 0; i < 4; i++)
             tile._tile.transform.GetChild(0).GetChild(i).gameObject.SetActive(next_to_tiles.Contains(tile_offsets[i]));
         }
       }
@@ -1030,7 +1028,7 @@ public class TileManager
           VersusMode.OnLevelLoad();
 
         // Spawn player
-        GameScript.SpawnPlayers();
+        PlayerspawnScript.SpawnPlayers();
       }
 
       // Refill player ammo
@@ -1100,20 +1098,20 @@ public class TileManager
     var objects = _Map.GetChild(1);
 
     // Gather objects to combine
-    var meshes = new Dictionary<string, Tuple<List<GameObject>, bool>>();
-    meshes.Add("Barrels", Tuple.Create(new List<GameObject>(), false));
-    meshes.Add("Books", Tuple.Create(new List<GameObject>(), true));
-    meshes.Add("Bookcases", Tuple.Create(new List<GameObject>(), true));
-    meshes.Add("Tables", Tuple.Create(new List<GameObject>(), false));
-    meshes.Add("Chairs", Tuple.Create(new List<GameObject>(), false));
-    meshes.Add("Arches", Tuple.Create(new List<GameObject>(), false));
-
-    meshes.Add("Bushes", Tuple.Create(new List<GameObject>(), false));
-    meshes.Add("Rocks", Tuple.Create(new List<GameObject>(), false));
-
-    meshes.Add("Walls", Tuple.Create(new List<GameObject>(), false));
-    meshes.Add("Outers", Tuple.Create(new List<GameObject>(), true));
-    meshes.Add("NavmeshBarriers", Tuple.Create(new List<GameObject>(), true));
+    var meshes = new Dictionary<string, Tuple<List<GameObject>, bool>>
+    {
+      { "Barrels", Tuple.Create(new List<GameObject>(), false) },
+      { "Books", Tuple.Create(new List<GameObject>(), true) },
+      { "Bookcases", Tuple.Create(new List<GameObject>(), true) },
+      { "Tables", Tuple.Create(new List<GameObject>(), false) },
+      { "Chairs", Tuple.Create(new List<GameObject>(), false) },
+      { "Arches", Tuple.Create(new List<GameObject>(), false) },
+      { "Bushes", Tuple.Create(new List<GameObject>(), false) },
+      { "Rocks", Tuple.Create(new List<GameObject>(), false) },
+      { "Walls", Tuple.Create(new List<GameObject>(), false) },
+      { "Outers", Tuple.Create(new List<GameObject>(), true) },
+      { "NavmeshBarriers", Tuple.Create(new List<GameObject>(), true) }
+    };
 
     for (var i = 0; i < objects.childCount; i++)
     {
@@ -1237,13 +1235,12 @@ public class TileManager
         }
       }
       // Combine
-      GameObject combine_tiles_up = FunctionsC.CombineMeshes(names[0], tiles_up.ToArray()),
-        combine_tiles_down = FunctionsC.CombineMeshes(names[1], tiles_down.ToArray()),
-        combine_tile_sides = FunctionsC.CombineMeshes(names[2], tile_sides.ToArray(), false);
-      combine_tiles_up.name = names[0];
-      combine_tiles_down.name = names[1];
-      if (combine_tile_sides != null)
-        combine_tile_sides.name = names[2];
+      GameObject combined_tilesUp = FunctionsC.CombineMeshes(names[0], tiles_up.ToArray()),
+        combined_tilesDown = FunctionsC.CombineMeshes(names[1], tiles_down.ToArray()),
+        combined_tileSides = FunctionsC.CombineMeshes(names[2], tile_sides.ToArray(), false);
+      if (combined_tilesUp != null) combined_tilesUp.name = names[0];
+      if (combined_tilesDown != null) combined_tilesDown.name = names[1];
+      if (combined_tileSides != null) combined_tileSides.name = names[2];
     }
   }
 
@@ -2173,7 +2170,7 @@ public class TileManager
       EnemyScript.HardInitAll();
 
       // Spawn player
-      GameScript.SpawnPlayers();
+      PlayerspawnScript.SpawnPlayers();
       OnMapLoad();
 
       //

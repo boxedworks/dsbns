@@ -19,6 +19,7 @@ using SneakyGame.FX;
 using SneakyGame.Ragdoll.Equippables;
 using SneakyGame.XR;
 using System.Linq;
+using SneakyGame.Game.Tutorial;
 
 namespace SneakyGame.Game.Player
 {
@@ -2154,8 +2155,8 @@ namespace SneakyGame.Game.Player
       {
         if (GameScript.ReloadMap(true, true))
         {
-          if (!GameScript.TutorialInformation._HasRestarted)
-            GameScript.TutorialInformation._HasRestarted = true;
+          if (!TutorialInformation._HasRestarted)
+            TutorialInformation._HasRestarted = true;
         }
       }
     }
@@ -2458,7 +2459,7 @@ namespace SneakyGame.Game.Player
         _All_Dead = true;
 
         // Save setting before changing
-        var saveinfo = GameScript.TutorialInformation._HasRestarted;
+        var saveinfo = TutorialInformation._HasRestarted;
 
         // Embarass player ultimately leading to the return of the title
         if (SettingsModule.ShowDeathText)
@@ -2472,8 +2473,8 @@ namespace SneakyGame.Game.Player
           var flicker = false;
 
           var tutorial_keyboard = ControllerManager._NumberGamepads == 0;
-          var tutorial_ui0 = tutorial_keyboard ? GameScript.TutorialInformation._Tutorial_Restart_Keyboard0 : GameScript.TutorialInformation._Tutorial_Restart_Controller0;
-          var tutorial_ui1 = tutorial_keyboard ? GameScript.TutorialInformation._Tutorial_Restart_Keyboard1 : GameScript.TutorialInformation._Tutorial_Restart_Controller1;
+          var tutorial_ui0 = tutorial_keyboard ? TutorialInformation._Tutorial_Restart_Keyboard0 : TutorialInformation._Tutorial_Restart_Controller0;
+          var tutorial_ui1 = tutorial_keyboard ? TutorialInformation._Tutorial_Restart_Keyboard1 : TutorialInformation._Tutorial_Restart_Controller1;
 
           while (this != null && _ragdoll != null && _ragdoll._head != null)
           {

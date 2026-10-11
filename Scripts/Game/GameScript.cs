@@ -18,6 +18,8 @@ using SneakyEngine.Engine;
 using UnityEngine;
 using Valve.VR;
 using Random = UnityEngine.Random;
+using SneakyGame.Game.Incremental;
+using SneakyGame.Game.Tutorial;
 
 public class GameScript : MonoBehaviour
 {
@@ -52,8 +54,6 @@ public class GameScript : MonoBehaviour
 
   public Material[] _ItemMaterials;
 
-  public static int s_PlayerIter;
-
   public static Light s_CameraLight, s_ExitLight;
   public static bool s_ExitLightShow;
 
@@ -79,7 +79,11 @@ public class GameScript : MonoBehaviour
 
   public static int s_GameId;
 
+  [NonSerialized]
   public XRUIManager _XrUiManager;
+
+  [NonSerialized]
+  public IncrementalManager _IncrementalManager;
 
   static float _levelEndTimer;
   public static PlayerScript s_InLevelEndPlayer;
@@ -185,38 +189,8 @@ public class GameScript : MonoBehaviour
 
   public static int s_CrownPlayer, s_CrownEnemy;
 
+  [NonSerialized]
   public Input_action _Controls;
-
-  /// <summary>
-  /// Holds are information about tutorial such as how to restart or change weapons.
-  /// </summary>
-  public static class TutorialInformation
-  {
-    public static bool _HasRestarted // Will be true when the player has restarted the game
-    {
-      set
-      {
-        LevelModule.HasRestarted = value;
-      }
-      get
-      {
-        return LevelModule.HasRestarted;
-      }
-    }
-
-    public static Transform _TutorialArrow,
-      _Tutorial_Restart_Controller0, _Tutorial_Restart_Controller1,
-      _Tutorial_Restart_Keyboard0, _Tutorial_Restart_Keyboard1;
-
-    public static void Init()
-    {
-      _TutorialArrow = GameObject.Find("TutorialArrow").transform;
-      _Tutorial_Restart_Controller0 = GameObject.Find("RestartTutorial0").transform;
-      _Tutorial_Restart_Controller1 = GameObject.Find("RestartTutorial1").transform;
-      _Tutorial_Restart_Keyboard0 = GameObject.Find("RestartTutorial2").transform;
-      _Tutorial_Restart_Keyboard1 = GameObject.Find("RestartTutorial3").transform;
-    }
-  }
 
   // Use this for initialization
   void Start()
@@ -453,95 +427,6 @@ public class GameScript : MonoBehaviour
 
   public static Transform _lp0, _lp1, _lp2;
 
-  public static void SpawnPlayers()
-  {
-    PlayerScript._PLAYERID = 0;
-    s_PlayerIter = 0;
-    if (PlayerScript.s_Players != null)
-    {
-
-      // Count number of players to spawn.. only used if trying to stay persistant or players joined?
-      foreach (var p in PlayerScript.s_Players) if (p != null && !p._Ragdoll._IsDead) s_PlayerIter++;
-
-      // Remove null / dead players
-      for (var i = PlayerScript.s_Players.Count - 1; i >= 0; i--)
-      {
-        var p = PlayerScript.s_Players[i];
-        if (p == null || p._Ragdoll == null || !p._Ragdoll._IsDead)
-          PlayerScript.s_Players.RemoveAt(i);
-      }
-    }
-
-    // Spawn players
-    var rnd = new System.Random();
-    var numSpawns = PlayerspawnScript._PlayerSpawns.Count;
-    var spawnList = new int[numSpawns];
-    for (var i = 0; i < spawnList.Length; i++)
-      spawnList[i] = i;
-    rnd.Shuffle(spawnList);
-
-    var numPlayers = SettingsHelper._NumberPlayers;
-    var numTeams = VersusMode.GetNumberTeams();
-
-    if ((s_IsPartyGameMode && !VersusMode.s_Settings._FreeForAll ? numTeams : numPlayers) <= numSpawns || !s_IsPartyGameMode || (s_IsPartyGameMode && VersusMode.s_Settings._FreeForAll))
-    {
-      var spawnLocation = new int[numPlayers];
-      if (s_IsPartyGameMode && !VersusMode.s_Settings._FreeForAll && numPlayers > numSpawns)
-      {
-        var teamListSpawn = new Dictionary<int, int>();
-        var spawnList_ = new List<int>(spawnList);
-        for (var i = 0; i < numPlayers; i++)
-        {
-
-          var teamId = VersusMode.GetTeamId(i);
-          if (teamListSpawn.ContainsKey(teamId))
-          {
-            var spawnIndex = teamListSpawn[teamId];
-            spawnLocation[i] = spawnIndex;
-          }
-          else
-          {
-            var spawnIndex = spawnList_[Random.Range(0, spawnList_.Count)];
-            spawnList_.Remove(spawnIndex);
-            teamListSpawn.Add(teamId, spawnIndex);
-
-            spawnLocation[i] = spawnIndex;
-          }
-
-        }
-      }
-      else
-      {
-        for (var i = 0; i < numPlayers; i++)
-        {
-          spawnLocation[i] = spawnList[i % spawnList.Length];
-        }
-      }
-
-      var playerSpawnIndex = 0;
-      if (s_PlayerIter < SettingsHelper._NumberPlayers)
-        for (; s_PlayerIter < SettingsHelper._NumberPlayers; s_PlayerIter++)
-          PlayerspawnScript._PlayerSpawns[spawnLocation[playerSpawnIndex++]].SpawnPlayer();
-    }
-
-    else
-    {
-
-      // Get level data
-      //Debug.Log($"numTeams: {numTeams} .. numSpawn: {numSpawns}");
-
-      var spawnOrder = new int[numTeams];
-      rnd.Shuffle(spawnList);
-      if (spawnOrder.Length <= spawnList.Length)
-        for (var i = 0; i < spawnOrder.Length; i++)
-          spawnOrder[i] = spawnList[i];
-
-      if (s_PlayerIter < SettingsHelper._NumberPlayers)
-        for (; s_PlayerIter < SettingsHelper._NumberPlayers; s_PlayerIter++)
-          PlayerspawnScript._PlayerSpawns[spawnList[VersusMode.GetTeamId(s_PlayerIter) % spawnList.Length]].SpawnPlayer();
-    }
-  }
-
   static Coroutine _tutorialCo;
   public static void OnLevelStart()
   {
@@ -628,13 +513,16 @@ public class GameScript : MonoBehaviour
   // Update is called once per frame
   public static bool s_Backrooms;
   public static bool s_InteractableObjects { get { return s_IsMissionsGameMode || s_IsPartyGameMode; } }
-  public Light _GlobalLight;
   void Update()
   {
 
     //
     if (s_IsVr)
       _XrUiManager?.Update();
+
+    //
+    if (s_IsIncrementalGameMode)
+      _IncrementalManager?.Update();
 
     //
     if (s_ExitLightShow)
@@ -673,7 +561,15 @@ public class GameScript : MonoBehaviour
         var clipboardData = ClipboardHelper.clipBoard;
         var levelData = clipboardData.EndsWith("loaded map") ? clipboardData : "11 10 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 playerspawn_-29_-51.4_rot_0_ e_-42.9_-32.9_li_knife_w_-42.9_-32.9_l_-43.4_-32.3_canmove_false_canhear_false_ e_-29_-41.8_li_pistol_w_-29_-41.8_l_-29_-40.9_canmove_true_canhear_true_ p_-29.25_-32.75_end_ +unnamed loaded map";
         NextLevel(levelData);
-        GameObject.Find("GlobalLight").GetComponent<Light>().enabled = true;
+        var globalLight = GameObject.Find("GlobalLight").GetComponent<Light>();
+        globalLight.intensity = 0.25f;
+        globalLight.enabled = true;
+
+        if (!s_IsIncrementalGameMode)
+        {
+          s_GameMode = GameModes.INCREMENTAL;
+          IncrementalManager.Initialize();
+        }
       }
     }
 

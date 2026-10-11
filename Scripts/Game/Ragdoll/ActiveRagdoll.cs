@@ -1335,7 +1335,6 @@ namespace SneakyGame.Ragdoll
     float _lastMetalHit;
     public bool TakeDamage(RagdollDamageSource ragdollDamageSource)
     {
-
       var source = ragdollDamageSource.Source;
       var hitForce = ragdollDamageSource.HitForce;
       var damage = ragdollDamageSource.Damage;
@@ -1362,7 +1361,10 @@ namespace SneakyGame.Ragdoll
       var save_health = _health;
       if (!_IsDead)
       {
-        _health -= damage;
+        if (_IsPlayer && GameScript.s_IsIncrementalGameMode)
+        { }
+        else
+          _health -= damage;
 
         if (_health <= 0f)
         {

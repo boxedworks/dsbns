@@ -189,7 +189,7 @@ namespace SneakyGame.Game.Survival
     public static void OnWaveStart()
     {
       // Respawn players and heal
-      GameScript.s_PlayerIter = 0;
+      PlayerspawnScript.s_PlayerIter = 0;
       if (PlayerScript.s_Players != null)
       {
         PlayerScript alive_player = null;
@@ -206,7 +206,7 @@ namespace SneakyGame.Game.Survival
         if (alive_player == null) return;
 
         // Count number of players to spawn.. only used if trying to stay persistant or players joined?
-        foreach (var p in PlayerScript.s_Players) if (p != null && !p._Ragdoll._IsDead) GameScript.s_PlayerIter++;
+        foreach (var p in PlayerScript.s_Players) if (p != null && !p._Ragdoll._IsDead) PlayerspawnScript.s_PlayerIter++;
 
         // Remove null / dead players
         for (var i = PlayerScript.s_Players.Count - 1; i >= 0; i--)
@@ -611,7 +611,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       //Stats.OverallStats._Waves_Played++;
 
       // Respawn players
-      GameScript.s_PlayerIter = 0;
+      PlayerspawnScript.s_PlayerIter = 0;
       if (PlayerScript.s_Players != null)
       {
         PlayerScript alive_player = null;
@@ -628,7 +628,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
         if (alive_player == null) return;
 
         // Count number of players to spawn.. only used if trying to stay persistant or players joined?
-        foreach (var p in PlayerScript.s_Players) if (p != null && !p._Ragdoll._IsDead) GameScript.s_PlayerIter++;
+        foreach (var p in PlayerScript.s_Players) if (p != null && !p._Ragdoll._IsDead) PlayerspawnScript.s_PlayerIter++;
 
         // Remove null / dead players
         for (var i = PlayerScript.s_Players.Count - 1; i >= 0; i--)
