@@ -1,4 +1,6 @@
-﻿public static class Stats
+﻿using SneakyGame.Game.Survival;
+
+public static class Stats
 {
   // Class for player stats
   public class Stat

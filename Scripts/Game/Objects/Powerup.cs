@@ -1,10 +1,10 @@
 ﻿using System.Collections.Generic;
-using Assets.Scripts.Objects.CustomEntities;
-using Assets.Scripts.Ragdoll;
-using Assets.Scripts.UI.Menus;
+using SneakyGame.Objects.CustomEntities;
+using SneakyGame.Ragdoll;
+using SneakyGame.UI.Menus;
 using UnityEngine;
 
-namespace Assets.Scripts.Objects
+namespace SneakyGame.Objects
 {
   public class Powerup : MonoBehaviour
   {

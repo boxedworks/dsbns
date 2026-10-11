@@ -1,11 +1,11 @@
 ﻿using System.Collections.Generic;
 
 using System.IO;
-using Assets.Scripts.Settings;
-using Assets.Scripts.Settings.Serialization;
-using Assets.Scripts.Game.Items;
+using SneakyGame.Settings;
+using SneakyGame.Settings.Serialization;
+using SneakyGame.Game.Items;
 using UnityEngine;
-using Assets.Scripts.Ragdoll.Equippables;
+using SneakyGame.Ragdoll.Equippables;
 
 public class Levels : MonoBehaviour
 {

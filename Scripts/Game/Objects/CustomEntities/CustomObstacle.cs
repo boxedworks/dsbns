@@ -1,11 +1,13 @@
 ﻿using System.Collections.Generic;
-using Assets.Scripts.Game.Items;
-using Assets.Scripts.Ragdoll;
-using Assets.Scripts.Ragdoll.Equippables;
-using Assets.Scripts.Settings.Localization;
+using SneakyGame.Game.Items;
+using SneakyGame.Ragdoll;
+using SneakyGame.Ragdoll.Equippables;
+using SneakyGame.Settings.Localization;
+using SneakyGame.Game.Survival;
+using SneakyGame.Game.Player;
 using UnityEngine;
 
-namespace Assets.Scripts.Objects.CustomEntities
+namespace SneakyGame.Objects.CustomEntities
 {
   public class CustomObstacle : MonoBehaviour
   {
@@ -59,8 +61,8 @@ namespace Assets.Scripts.Objects.CustomEntities
     System.Tuple<Perk.PerkType, int> _perk_info;
 
     // Utilities
-    static Dictionary<int, List<System.Tuple<UtilityScript.UtilityType, int>>> _BUYABLE_UTILITY_TIERS;
-    System.Tuple<UtilityScript.UtilityType, int> _utility_info;
+    static Dictionary<int, List<System.Tuple<UtilityScript.UtilityType, int, int>>> _BUYABLE_UTILITY_TIERS;
+    System.Tuple<UtilityScript.UtilityType, int, int> _utility_info;
 
     // Random
     static List<CustomObstacle> _RandomObstaclesList;
@@ -74,7 +76,9 @@ namespace Assets.Scripts.Objects.CustomEntities
     // Interactable data
     bool _interactable;
     TextMesh _text;
-    public int _pointCost;
+
+    [System.NonSerialized]
+    public int _pointCost, _purchaseAmount;
     MeshRenderer _renderer;
 
     // Starting room
@@ -132,7 +136,6 @@ namespace Assets.Scripts.Objects.CustomEntities
         _BUYABLE_ITEM_TIERS[5].Add(System.Tuple.Create(ItemManager.Items.M16, 400));
         _BUYABLE_ITEM_TIERS[5].Add(System.Tuple.Create(ItemManager.Items.SHOTGUN_BURST, 450));
         _BUYABLE_ITEM_TIERS[5].Add(System.Tuple.Create(ItemManager.Items.KATANA, 350));
-        _BUYABLE_ITEM_TIERS[5].Add(System.Tuple.Create(ItemManager.Items.CHAINSAW, 300));
         _BUYABLE_ITEM_TIERS[5].Add(System.Tuple.Create(ItemManager.Items.AXE, 200));
         _BUYABLE_ITEM_TIERS[5].Add(System.Tuple.Create(ItemManager.Items.FLAMETHROWER, 450));
         _BUYABLE_ITEM_TIERS[5].Add(System.Tuple.Create(ItemManager.Items.SNIPER, 300));
@@ -157,26 +160,36 @@ namespace Assets.Scripts.Objects.CustomEntities
       }
       if (_BUYABLE_UTILITY_TIERS == null)
       {
-        _BUYABLE_UTILITY_TIERS = new Dictionary<int, List<System.Tuple<UtilityScript.UtilityType, int>>>();
+        _BUYABLE_UTILITY_TIERS = new();
 
-        _BUYABLE_UTILITY_TIERS.Add(0, new List<System.Tuple<UtilityScript.UtilityType, int>>());
-        _BUYABLE_UTILITY_TIERS[0].Add(System.Tuple.Create(UtilityScript.UtilityType.GRENADE, 90));
+        // Tier 0 is a utility the player can always buy from the start
+        CreateUtilityTier(0, UtilityScript.UtilityType.GRENADE, 90);
 
-        _BUYABLE_UTILITY_TIERS.Add(1, new List<System.Tuple<UtilityScript.UtilityType, int>>());
-        _BUYABLE_UTILITY_TIERS[1].Add(System.Tuple.Create(UtilityScript.UtilityType.SHURIKEN, 35));
-        _BUYABLE_UTILITY_TIERS[1].Add(System.Tuple.Create(UtilityScript.UtilityType.GRENADE_IMPACT, 75));
-        _BUYABLE_UTILITY_TIERS[1].Add(System.Tuple.Create(UtilityScript.UtilityType.GRENADE_STUN, 30));
-        _BUYABLE_UTILITY_TIERS[1].Add(System.Tuple.Create(UtilityScript.UtilityType.MIRROR, 50));
-        //_BUYABLE_UTILITY_TIERS[1].Add(System.Tuple.Create(UtilityScript.UtilityType.TACTICAL_BULLET, 25));
-        _BUYABLE_UTILITY_TIERS[1].Add(System.Tuple.Create(UtilityScript.UtilityType.KUNAI_STICKY, 60));
-        _BUYABLE_UTILITY_TIERS[1].Add(System.Tuple.Create(UtilityScript.UtilityType.C4, 40));
-        _BUYABLE_UTILITY_TIERS[1].Add(System.Tuple.Create(UtilityScript.UtilityType.STOP_WATCH, 40));
-        _BUYABLE_UTILITY_TIERS[1].Add(System.Tuple.Create(UtilityScript.UtilityType.MORTAR_STRIKE, 45));
-        //_BUYABLE_UTILITY_TIERS[1].Add(System.Tuple.Create(UtilityScript.UtilityType.MOLOTOV, 65));
-        _BUYABLE_UTILITY_TIERS[1].Add(System.Tuple.Create(UtilityScript.UtilityType.BEAR_TRAP, 30));
-        _BUYABLE_UTILITY_TIERS[1].Add(System.Tuple.Create(UtilityScript.UtilityType.MINE, 60));
+        CreateUtilityTier(1, UtilityScript.UtilityType.GRENADE, 90);
+        CreateUtilityTier(1, UtilityScript.UtilityType.SHURIKEN, 35, 2);
+        CreateUtilityTier(1, UtilityScript.UtilityType.GRENADE_IMPACT, 75);
+        CreateUtilityTier(1, UtilityScript.UtilityType.GRENADE_STUN, 30);
+        CreateUtilityTier(1, UtilityScript.UtilityType.MIRROR, 50);
+        CreateUtilityTier(1, UtilityScript.UtilityType.TACTICAL_BULLET, 25, 2);
+        CreateUtilityTier(1, UtilityScript.UtilityType.KUNAI_STICKY, 60);
+        CreateUtilityTier(1, UtilityScript.UtilityType.C4, 40);
+        CreateUtilityTier(1, UtilityScript.UtilityType.STOP_WATCH, 40);
+        CreateUtilityTier(1, UtilityScript.UtilityType.MORTAR_STRIKE, 45);
+        //CreateUtilityTier(1, UtilityScript.UtilityType.MOLOTOV, 65);
+        CreateUtilityTier(1, UtilityScript.UtilityType.BEAR_TRAP, 30, 2);
+        CreateUtilityTier(1, UtilityScript.UtilityType.MINE, 60);
       }
 
+    }
+
+    static void CreateUtilityTier(int tier, UtilityScript.UtilityType utility, int price, int quantity = 1)
+    {
+      _BUYABLE_UTILITY_TIERS ??= new();
+
+      if (!_BUYABLE_UTILITY_TIERS.ContainsKey(tier))
+        _BUYABLE_UTILITY_TIERS.Add(tier, new());
+
+      _BUYABLE_UTILITY_TIERS[tier].Add(System.Tuple.Create(utility, price, quantity));
     }
 
     public void Init(bool midgame = false)
@@ -316,7 +329,9 @@ namespace Assets.Scripts.Objects.CustomEntities
           _utility_info = utilities[utility_index];
         }
         _pointCost = _utility_info.Item2;
-        _text.text = $"buy {_utility_info.Item1}: {_pointCost}";
+        _purchaseAmount = _utility_info.Item3;
+        var purchaseAmountText = _purchaseAmount > 1 ? $" x{_purchaseAmount}" : "";
+        _text.text = $"buy {_utility_info.Item1}: {_pointCost}{purchaseAmountText}";
         _renderer.sharedMaterial = _Materials[2];
         _renderer.sharedMaterial.SetColor("_EmissionColor", Color.green);
       }
@@ -522,6 +537,7 @@ namespace Assets.Scripts.Objects.CustomEntities
         else if (use_type == InteractType.BUYUTILITY)
         {
           var utility_type = _utility_info.Item1;
+          var purchase_amount = _utility_info.Item3;
           var equip_side = side == InteractSide.LEFT ? ActiveRagdoll.Side.LEFT : ActiveRagdoll.Side.RIGHT;
           if (side == InteractSide.DEFAULT) equip_side = ActiveRagdoll.Side.RIGHT;
 
@@ -534,7 +550,7 @@ namespace Assets.Scripts.Objects.CustomEntities
             if (equipment._UtilitiesRight.Length > 0 && equipment._UtilitiesRight[0] == utility_type)
             {
               // Check utility cap
-              if (equipment._UtilitiesRight.Length == ShopHelper._Utility_Cap[utility_type])
+              if (equipment._UtilitiesRight.Length == ShopHelper.GetUtilityCap(utility_type))
               {
                 if (equipment._UtilitiesLeft.Length == 0)
                 {
@@ -543,7 +559,7 @@ namespace Assets.Scripts.Objects.CustomEntities
                 else if (equipment._UtilitiesLeft.Length > 0 && equipment._UtilitiesLeft[0] == utility_type)
                 {
                   // Check utility cap
-                  if (equipment._UtilitiesLeft.Length == ShopHelper._Utility_Cap[utility_type])
+                  if (equipment._UtilitiesLeft.Length == ShopHelper.GetUtilityCap(utility_type))
                   {
                     p._Ragdoll.DisplayText(LocalizationController.GetString("customObstacle_tooMany"));
                     return;
@@ -565,7 +581,7 @@ namespace Assets.Scripts.Objects.CustomEntities
             else if (equipment._UtilitiesLeft.Length > 0 && equipment._UtilitiesLeft[0] == utility_type)
             {
               // Check utility cap
-              if (equipment._UtilitiesLeft.Length == ShopHelper._Utility_Cap[utility_type])
+              if (equipment._UtilitiesLeft.Length == ShopHelper.GetUtilityCap(utility_type))
               {
                 if (equipment._UtilitiesRight.Length == 0)
                 {
@@ -574,7 +590,7 @@ namespace Assets.Scripts.Objects.CustomEntities
                 else if (equipment._UtilitiesRight.Length > 0 && equipment._UtilitiesRight[0] == utility_type)
                 {
                   // Check utility cap
-                  if (equipment._UtilitiesRight.Length == ShopHelper._Utility_Cap[utility_type])
+                  if (equipment._UtilitiesRight.Length == ShopHelper.GetUtilityCap(utility_type))
                   {
                     p._Ragdoll.DisplayText(LocalizationController.GetString("customObstacle_tooMany"));
                     return;
@@ -601,7 +617,7 @@ namespace Assets.Scripts.Objects.CustomEntities
             else if (equipment._UtilitiesLeft.Length > 0 && equipment._UtilitiesLeft[0] == utility_type)
             {
               // Check utility cap
-              if (equipment._UtilitiesLeft.Length == ShopHelper._Utility_Cap[utility_type])
+              if (equipment._UtilitiesLeft.Length == ShopHelper.GetUtilityCap(utility_type))
               {
                 p._Ragdoll.DisplayText(LocalizationController.GetString("customObstacle_tooMany"));
                 return;
@@ -620,7 +636,7 @@ namespace Assets.Scripts.Objects.CustomEntities
             else if (equipment._UtilitiesRight.Length > 0 && equipment._UtilitiesRight[0] == utility_type)
             {
               // Check utility cap
-              if (equipment._UtilitiesRight.Length == ShopHelper._Utility_Cap[utility_type])
+              if (equipment._UtilitiesRight.Length == ShopHelper.GetUtilityCap(utility_type))
               {
                 p._Ragdoll.DisplayText(LocalizationController.GetString("customObstacle_tooMany"));
                 return;
@@ -637,9 +653,10 @@ namespace Assets.Scripts.Objects.CustomEntities
           // Check if replacing utility
           var utilities = equip_side == ActiveRagdoll.Side.LEFT ? equipment._UtilitiesLeft : equipment._UtilitiesRight;
 
-          // Equip
-          var saveamount = add ? p.UtilityCount(equip_side) + 1 : -1;
-          var new_amount = add ? utilities.Length + 1 : 1;
+          // Equip; add vs overwrite
+          var add_amount = _purchaseAmount;
+          var saveamount = add ? p.UtilityCount(equip_side) + add_amount : -1;
+          var new_amount = add ? utilities.Length + add_amount : add_amount;
           if (equip_side == ActiveRagdoll.Side.LEFT)
           {
             equipment._UtilitiesLeft = new UtilityScript.UtilityType[new_amount];

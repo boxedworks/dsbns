@@ -1,11 +1,12 @@
 ﻿using System.Collections;
-using Assets.Scripts.Ragdoll;
-using Assets.Scripts.Game.Items;
+using SneakyGame.Ragdoll;
+using SneakyGame.Game.Items;
+using SneakyGame.Game.Player;
 using UnityEngine;
-using Assets.Scripts.FX;
-using Assets.Scripts.Ragdoll.Equippables;
+using SneakyGame.FX;
+using SneakyGame.Ragdoll.Equippables;
 
-namespace Assets.Scripts.Objects
+namespace SneakyGame.Objects
 {
   public class BulletScript : MonoBehaviour
   {

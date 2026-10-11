@@ -1,4 +1,4 @@
-using Assets.Scripts.Ragdoll;
+using SneakyGame.Ragdoll;
 using UnityEngine;
 
 public class TVScript : MonoBehaviour

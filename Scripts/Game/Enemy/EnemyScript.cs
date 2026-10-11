@@ -5,14 +5,16 @@ using Unity.Jobs;
 using Unity.Collections;
 
 using System.Linq;
-using Assets.Scripts.Settings;
-using Assets.Scripts.Settings.Localization;
-using Assets.Scripts.Settings.Serialization;
-using Assets.Scripts.Ragdoll;
-using Assets.Scripts.UI.Menus;
-using Assets.Scripts.Objects;
-using Assets.Scripts.Game.Items;
-using Assets.Scripts.Ragdoll.Equippables;
+using SneakyGame.Settings;
+using SneakyGame.Settings.Localization;
+using SneakyGame.Settings.Serialization;
+using SneakyGame.Ragdoll;
+using SneakyGame.UI.Menus;
+using SneakyGame.Objects;
+using SneakyGame.Game.Items;
+using SneakyGame.Ragdoll.Equippables;
+using SneakyGame.Game.Player;
+using SneakyGame.Game.Survival;
 
 public class EnemyScript : PlayerScript.IHasRagdoll
 {
@@ -1190,9 +1192,9 @@ public class EnemyScript : PlayerScript.IHasRagdoll
     // Check survial
     if (GameScript.s_IsZombieGameMode)
     {
-      if (SurvivalManager._Wave_enemies == null) return;
-      if (SurvivalManager._Wave_enemies.Count <= 1 ||
-        (SurvivalManager._Number_enemies_spawned - _survivalAttributes._WaitForEnemyHordeSizeStart) >= _survivalAttributes._WaitForEnemyHordeSize)
+      if (SurvivalManager.s_Wave_enemies == null) return;
+      if (SurvivalManager.s_Wave_enemies.Count <= 1 ||
+        (SurvivalManager.s_Number_enemies_spawned - _survivalAttributes._WaitForEnemyHordeSizeStart) >= _survivalAttributes._WaitForEnemyHordeSize)
       { }
       else return;
     }
@@ -1476,8 +1478,8 @@ public class EnemyScript : PlayerScript.IHasRagdoll
 
   void ChaseTarget(bool checkTurnaround = true)
   {
-    //if (_isZombie) return;
     if (_chasingTarget || _ragdollTarget._IsDead || !_canMove) return;
+    if (_IsZombie) checkTurnaround = false;
     StartCoroutine(ChaseTargetCo(checkTurnaround));
   }
 
@@ -1865,6 +1867,8 @@ public class EnemyScript : PlayerScript.IHasRagdoll
     _Enemies_alive.Remove(this);
     _Enemies_dead ??= new List<EnemyScript>();
     _Enemies_dead.Add(this);
+
+    // Check if we have exceeded the maximum number of dead ragdolls
     if (_Enemies_dead.Count > _MAX_RAGDOLLS_DEAD)
     {
       var enemy = _Enemies_dead[0];
@@ -1874,7 +1878,7 @@ public class EnemyScript : PlayerScript.IHasRagdoll
       enemy.Destroy();
     }
 
-    // Check to see if #bodies is too much
+    // Check if we have too many dead ragdolls and disable the oldest one if necessary
     if (_Enemies_dead.Count > 8)
       foreach (var enemy in _Enemies_dead)
         if (enemy._ragdoll._IsDead && !enemy._ragdoll._IsDisabled)
@@ -1882,6 +1886,10 @@ public class EnemyScript : PlayerScript.IHasRagdoll
           enemy._ragdoll.Disable();
           break;
         }
+
+    // Notify survival manager that an enemy has been killed
+    if (GameScript.s_GameMode == GameScript.GameModes.ZOMBIE)
+      SurvivalManager.OnEnemyKilled();
 
     // Check for last enemy killed
     var last_killed = false;
@@ -1933,7 +1941,7 @@ public class EnemyScript : PlayerScript.IHasRagdoll
       if (GameScript.s_IsZombieGameMode)
       {
         if (source._IsPlayer)
-          SurvivalManager.GivePoints(source._PlayerScript._Id, 5 * SurvivalManager._Wave, true);
+          SurvivalManager.GivePoints(source._PlayerScript._Id, 5 * SurvivalManager.s_WaveNumber, true);
       }
 
       else

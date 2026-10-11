@@ -1,12 +1,13 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
-using Assets.Scripts.Objects;
-using Assets.Scripts.Settings;
-using Assets.Scripts.Settings.Serialization;
-using Assets.Scripts.Game.Items;
+using SneakyGame.Objects;
+using SneakyGame.Settings;
+using SneakyGame.Settings.Serialization;
+using SneakyGame.Game.Items;
+using SneakyGame.Game.Player;
 using UnityEngine;
 
-namespace Assets.Scripts.Ragdoll.Equippables
+namespace SneakyGame.Ragdoll.Equippables
 {
 
   public class UtilityScript : ItemScript
@@ -1709,6 +1710,7 @@ namespace Assets.Scripts.Ragdoll.Equippables
 
           projectileData._OnDisable += (p, other) =>
           {
+            Debug.Log(other._GameObject.name);
             p._BulletScript.CheckOnDestroy(other._DamageSource);
             p._BulletScript.Hide();
             p._BulletScript.OnHideBullet();

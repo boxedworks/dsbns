@@ -1,7 +1,8 @@
 using UnityEngine;
 using Valve.VR;
+using SneakyGame.Game.Player;
 
-namespace Assets.Scripts.XR
+namespace SneakyGame.XR
 {
 
   public class XRUIManager

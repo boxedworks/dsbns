@@ -1,10 +1,11 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
-using Assets.Scripts.Objects;
-using Assets.Scripts.Ragdoll;
-using Assets.Scripts.Settings;
-using Assets.Scripts.UI.Menus;
-using Assets.Scripts.Game.Items;
+using SneakyGame.Objects;
+using SneakyGame.Ragdoll;
+using SneakyGame.Settings;
+using SneakyGame.UI.Menus;
+using SneakyGame.Game.Items;
+using SneakyGame.Game.Player;
 using UnityEngine;
 
 public static class FunctionsC

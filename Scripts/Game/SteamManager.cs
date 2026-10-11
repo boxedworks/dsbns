@@ -7,7 +7,7 @@
 
 using UnityEngine;
 using System.Collections.Generic;
-using Assets.Scripts.UI.Menus;
+using SneakyGame.UI.Menus;
 
 
 

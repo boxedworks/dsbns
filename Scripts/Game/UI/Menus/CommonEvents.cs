@@ -1,7 +1,7 @@
 
 using UnityEngine;
 
-namespace Assets.Scripts.UI.Menus
+namespace SneakyGame.UI.Menus
 {
   public static class CommonEvents
   {

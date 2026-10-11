@@ -1,6 +1,7 @@
-﻿using Assets.Scripts.Settings;
-using Assets.Scripts.Settings.Serialization;
-using Assets.Scripts.UI.Menus;
+﻿using SneakyGame.Settings;
+using SneakyGame.Settings.Serialization;
+using SneakyGame.UI.Menus;
+using SneakyGame.Game.Player;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using Valve.VR;

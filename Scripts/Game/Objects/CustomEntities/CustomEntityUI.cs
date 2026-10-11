@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 
-namespace Assets.Scripts.Objects.CustomEntities
+namespace SneakyGame.Objects.CustomEntities
 {
   public class CustomEntityUI : MonoBehaviour
   {

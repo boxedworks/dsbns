@@ -1,7 +1,8 @@
 
 using System.Collections.Generic;
+using SneakyGame.Game.Player;
 
-namespace Assets.Scripts.Game.Items
+namespace SneakyGame.Game.Items
 {
 
   public static class Perk

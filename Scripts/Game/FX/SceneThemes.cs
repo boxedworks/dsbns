@@ -2,7 +2,7 @@
 using SneakyEngine.Engine;
 using UnityEngine;
 
-namespace Assets.Scripts.FX
+namespace SneakyGame.FX
 {
   public class SceneThemes : MonoBehaviour
   {

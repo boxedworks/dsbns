@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 
-namespace Assets.Scripts.Objects
+namespace SneakyGame.Objects
 {
   public class CandleScript : MonoBehaviour
   {

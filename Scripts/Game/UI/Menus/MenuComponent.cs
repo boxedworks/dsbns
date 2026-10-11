@@ -1,9 +1,9 @@
 using System.Collections.Generic;
-using Assets.Scripts.Settings;
-using Assets.Scripts.Settings.Serialization;
+using SneakyGame.Settings;
+using SneakyGame.Settings.Serialization;
 using UnityEngine;
 
-namespace Assets.Scripts.UI.Menus
+namespace SneakyGame.UI.Menus
 {
   public class MenuComponent
   {

@@ -1,10 +1,11 @@
+using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
-using Assets.Scripts.Settings;
-using Assets.Scripts.UI.Menus;
-using Assets.Scripts.Game.Items;
-using UnityEngine;
-using Assets.Scripts.Ragdoll.Equippables;
+using SneakyGame.Settings;
+using SneakyGame.UI.Menus;
+using SneakyGame.Game.Items;
+using SneakyGame.Game.Player;
+using SneakyGame.Ragdoll.Equippables;
 
 // Holds functions for versus mode
 public static class VersusMode
@@ -773,14 +774,13 @@ public static class VersusMode
   //
   static ItemManager.Items GetRandomMeleeWeapon()
   {
-    return Random.Range(0, 7) switch
+    return Random.Range(0, 6) switch
     {
-      1 => ItemManager.Items.FRYING_PAN,
-      2 => ItemManager.Items.RAPIER,
-      3 => ItemManager.Items.AXE,
-      4 => ItemManager.Items.FIST,
-      5 => ItemManager.Items.STUN_BATON,
-      6 => ItemManager.Items.CHAINSAW,
+      0 => ItemManager.Items.FRYING_PAN,
+      1 => ItemManager.Items.RAPIER,
+      2 => ItemManager.Items.AXE,
+      3 => ItemManager.Items.FIST,
+      4 => ItemManager.Items.STUN_BATON,
 
       _ => ItemManager.Items.KNIFE,
     };
@@ -789,28 +789,28 @@ public static class VersusMode
   {
     return Random.Range(0, 20) switch
     {
-      1 => ItemManager.Items.PISTOL_DOUBLE,
-      2 => ItemManager.Items.PISTOL_MACHINE,
-      3 => ItemManager.Items.PISTOL_CHARGE,
-      4 => ItemManager.Items.REVOLVER,
+      0 => ItemManager.Items.PISTOL_DOUBLE,
+      1 => ItemManager.Items.PISTOL_MACHINE,
+      2 => ItemManager.Items.PISTOL_CHARGE,
+      3 => ItemManager.Items.REVOLVER,
 
-      5 => ItemManager.Items.RIFLE,
-      6 => ItemManager.Items.RIFLE_LEVER,
-      7 => ItemManager.Items.RIFLE_CHARGE,
+      4 => ItemManager.Items.RIFLE,
+      5 => ItemManager.Items.RIFLE_LEVER,
+      6 => ItemManager.Items.RIFLE_CHARGE,
 
-      8 => ItemManager.Items.UZI,
-      9 => ItemManager.Items.AK47,
-      10 => ItemManager.Items.SNIPER,
-      11 => ItemManager.Items.FLAMETHROWER,
-      12 => ItemManager.Items.GRENADE_LAUNCHER,
-      13 => ItemManager.Items.CROSSBOW,
-      14 => ItemManager.Items.DMR,
-      15 => ItemManager.Items.M16,
+      7 => ItemManager.Items.UZI,
+      8 => ItemManager.Items.AK47,
+      9 => ItemManager.Items.SNIPER,
+      10 => ItemManager.Items.FLAMETHROWER,
+      11 => ItemManager.Items.GRENADE_LAUNCHER,
+      12 => ItemManager.Items.CROSSBOW,
+      13 => ItemManager.Items.DMR,
+      14 => ItemManager.Items.M16,
 
-      16 => ItemManager.Items.SHOTGUN_BURST,
-      17 => ItemManager.Items.SHOTGUN_DOUBLE,
-      18 => ItemManager.Items.SHOTGUN_PUMP,
-      19 => ItemManager.Items.STICKY_GUN,
+      15 => ItemManager.Items.SHOTGUN_BURST,
+      16 => ItemManager.Items.SHOTGUN_DOUBLE,
+      17 => ItemManager.Items.SHOTGUN_PUMP,
+      18 => ItemManager.Items.STICKY_GUN,
 
       _ => ItemManager.Items.PISTOL_SILENCED,
     };
@@ -847,15 +847,15 @@ public static class VersusMode
   {
     return Random.Range(0, 10) switch
     {
-      1 => Perk.PerkType.MAX_AMMO_UP,
-      2 => Perk.PerkType.EXPLOSION_RESISTANCE,
-      3 => Perk.PerkType.SMART_BULLETS,
-      4 => Perk.PerkType.LASER_SIGHTS,
-      5 => Perk.PerkType.SPEED_UP,
-      6 => Perk.PerkType.MARTIAL_ARTIST,
-      7 => Perk.PerkType.THRUST,
-      8 => Perk.PerkType.TWIN,
-      9 => Perk.PerkType.BULLET_DESTROYER,
+      0 => Perk.PerkType.MAX_AMMO_UP,
+      1 => Perk.PerkType.EXPLOSION_RESISTANCE,
+      2 => Perk.PerkType.SMART_BULLETS,
+      3 => Perk.PerkType.LASER_SIGHTS,
+      4 => Perk.PerkType.SPEED_UP,
+      5 => Perk.PerkType.MARTIAL_ARTIST,
+      6 => Perk.PerkType.THRUST,
+      7 => Perk.PerkType.TWIN,
+      8 => Perk.PerkType.BULLET_DESTROYER,
 
       _ => Perk.PerkType.FASTER_RELOAD
     };

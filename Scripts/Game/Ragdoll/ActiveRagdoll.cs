@@ -5,16 +5,18 @@ using UnityEngine;
 using System;
 
 using Random = UnityEngine.Random;
-using Assets.Scripts.Settings;
-using Assets.Scripts.Objects;
-using Assets.Scripts.Objects.CustomEntities;
-using Assets.Scripts.Game.Items;
-using Assets.Scripts.Ragdoll.Equippables;
+using SneakyGame.Settings;
+using SneakyGame.Objects;
+using SneakyGame.Objects.CustomEntities;
+using SneakyGame.Game.Items;
+using SneakyGame.Ragdoll.Equippables;
+using SneakyGame.Game.Survival;
+using SneakyGame.Game.Player;
 using SneakyEngine.Engine;
 using SneakyEngine.Ragdoll;
 using SneakyEngine.Effects;
 
-namespace Assets.Scripts.Ragdoll
+namespace SneakyGame.Ragdoll
 {
 
 

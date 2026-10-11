@@ -1,10 +1,10 @@
 ﻿using System.Collections.Generic;
-using Assets.Scripts.Objects.CustomEntities;
-using Assets.Scripts.Settings;
-using Assets.Scripts.Settings.Serialization;
+using SneakyGame.Objects.CustomEntities;
+using SneakyGame.Settings;
+using SneakyGame.Settings.Serialization;
 using UnityEngine;
 
-namespace Assets.Scripts.Objects
+namespace SneakyGame.Objects
 {
   public class DoorScript : CustomEntity
   {

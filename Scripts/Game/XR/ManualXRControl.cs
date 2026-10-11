@@ -5,7 +5,7 @@ using UnityEngine;
 using UnityEngine.XR;
 using UnityEngine.XR.Management;
 
-namespace Assets.Scripts.XR
+namespace SneakyGame.XR
 {
   public static class ManualXRControl
   {

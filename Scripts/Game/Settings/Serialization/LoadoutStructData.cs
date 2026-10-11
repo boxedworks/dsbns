@@ -1,5 +1,5 @@
 
-namespace Assets.Scripts.Settings.Serialization
+namespace SneakyGame.Settings.Serialization
 {
   [System.Serializable]
   public struct LoadoutStructData

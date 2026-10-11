@@ -1,7 +1,7 @@
 
 using UnityEngine;
 
-namespace Assets.Scripts.XR
+namespace SneakyGame.XR
 {
   public class PointerCollider : MonoBehaviour
   {

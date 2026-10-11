@@ -1,15 +1,15 @@
 using System.Collections.Generic;
-using Assets.Scripts.Game.Items;
-using Assets.Scripts.Ragdoll.Equippables;
-using Assets.Scripts.Settings.Extras;
-using Assets.Scripts.Settings.Serialization;
+using SneakyGame.Game.Items;
+using SneakyGame.Ragdoll.Equippables;
+using SneakyGame.Settings.Extras;
+using SneakyGame.Settings.Serialization;
 using SneakyEngine.Effects;
 using SneakyEngine.Engine;
 using SneakyEngine.Ragdoll;
 using UnityEngine;
 using UnityEngine.Rendering.Universal;
 
-namespace Assets.Scripts.Settings
+namespace SneakyGame.Settings
 {
 
   // Holds settings you may see in a game menu

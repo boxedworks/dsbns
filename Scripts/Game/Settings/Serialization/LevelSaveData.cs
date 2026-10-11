@@ -1,9 +1,9 @@
 
 using System.Collections.Generic;
-using Assets.Scripts.Game.Items;
+using SneakyGame.Game.Items;
 using UnityEngine;
 
-namespace Assets.Scripts.Settings.Serialization
+namespace SneakyGame.Settings.Serialization
 {
   //
   [System.Serializable]

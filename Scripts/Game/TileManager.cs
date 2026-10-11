@@ -1,15 +1,17 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using Assets.Scripts.FX;
-using Assets.Scripts.Game.Items;
-using Assets.Scripts.Objects;
-using Assets.Scripts.Objects.CustomEntities;
-using Assets.Scripts.Ragdoll;
-using Assets.Scripts.Settings;
-using Assets.Scripts.Settings.Serialization;
-using Assets.Scripts.UI.Menus;
-using Assets.Scripts.XR;
+using SneakyGame.FX;
+using SneakyGame.Game.Items;
+using SneakyGame.Objects;
+using SneakyGame.Objects.CustomEntities;
+using SneakyGame.Ragdoll;
+using SneakyGame.Settings;
+using SneakyGame.Settings.Serialization;
+using SneakyGame.UI.Menus;
+using SneakyGame.XR;
+using SneakyGame.Game.Survival;
+using SneakyGame.Game.Player;
 using UnityEngine;
 using UnityEngine.AI;
 

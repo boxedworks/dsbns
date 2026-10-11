@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace Assets.Scripts.Objects.CustomEntities
+namespace SneakyGame.Objects.CustomEntities
 {
   public abstract class CustomEntity : MonoBehaviour
   {

@@ -1,10 +1,10 @@
 
 using System;
 using System.Collections.Generic;
-using Assets.Scripts.Settings.Serialization;
+using SneakyGame.Settings.Serialization;
 using UnityEngine;
 
-namespace Assets.Scripts.Settings.Localization
+namespace SneakyGame.Settings.Localization
 {
   public class LocalizationController
   {

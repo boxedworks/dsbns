@@ -1,7 +1,7 @@
-using Assets.Scripts.Ragdoll.Equippables;
+using SneakyGame.Ragdoll.Equippables;
 using UnityEngine;
 
-namespace Assets.Scripts.Ragdoll.Animation
+namespace SneakyGame.Ragdoll.Animation
 {
 
   public class AnimationPoseData

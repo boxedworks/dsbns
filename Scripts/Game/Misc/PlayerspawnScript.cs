@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
-using Assets.Scripts.Settings;
+using SneakyGame.Settings;
 using UnityEngine;
+using SneakyGame.Game.Player;
 
 public class PlayerspawnScript : MonoBehaviour
 {

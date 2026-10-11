@@ -1,9 +1,10 @@
 using System.Collections.Generic;
-using Assets.Scripts.Settings;
-using Assets.Scripts.Settings.Serialization;
-using Assets.Scripts.Game.Items;
+using SneakyGame.Settings;
+using SneakyGame.Settings.Serialization;
+using SneakyGame.Game.Items;
+using SneakyGame.Game.Player;
 using UnityEngine;
-using Assets.Scripts.Ragdoll.Equippables;
+using SneakyGame.Ragdoll.Equippables;
 
 public static class ItemManager
 {

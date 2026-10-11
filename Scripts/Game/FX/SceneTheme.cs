@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Assets.Scripts.FX
+namespace SneakyGame.FX
 {
 
   [System.Serializable]

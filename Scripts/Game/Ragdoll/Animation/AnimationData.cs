@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace Assets.Scripts.Ragdoll.Animation
+namespace SneakyGame.Ragdoll.Animation
 {
 
   class AnimationData

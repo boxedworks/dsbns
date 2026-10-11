@@ -1,7 +1,7 @@
 
-using Assets.Scripts.Game.Items;
+using SneakyGame.Game.Items;
 
-namespace Assets.Scripts.Settings.Serialization
+namespace SneakyGame.Settings.Serialization
 {
   [System.Serializable]
   public struct ShopUnlockData

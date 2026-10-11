@@ -2,16 +2,18 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Assets.Scripts.FX;
-using Assets.Scripts.Game.Items;
-using Assets.Scripts.Ragdoll;
-using Assets.Scripts.Ragdoll.Equippables;
-using Assets.Scripts.Settings;
-using Assets.Scripts.Settings.Serialization;
+using SneakyGame.FX;
+using SneakyGame.Game.Items;
+using SneakyGame.Game.Player;
+using SneakyGame.Ragdoll;
+using SneakyGame.Ragdoll.Equippables;
+using SneakyGame.Settings;
+using SneakyGame.Settings.Serialization;
+using SneakyGame.Game.Survival;
 using UnityEngine;
 using Valve.VR;
 
-namespace Assets.Scripts.UI.Menus
+namespace SneakyGame.UI.Menus
 {
   public class Menu
   {
@@ -3450,7 +3452,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
         {
           dirs = Mathf.CeilToInt((float)Levels._CurrentLevelCollection._levelData.Length / levels_per_dir);
         }
-        else if (GameScript.s_GameMode == GameScript.GameModes.CHALLENGE || GameScript.s_IsZombieGameMode)
+        else if (GameScript.s_IsZombieGameMode)
           dirs = Levels._CurrentLevelCollection._levelData.Length;
 
         for (var i = 0; i < dirs; i++)
@@ -3677,31 +3679,6 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
 
                 // Set dropdown data
                 component.SetDropdownData($"=== {string.Format(format_subdirs, "mission", "time", "rank", "layout")}\n\n", selections, actions, match, actions_onCreated, null, actions_onFocus, actions_onUnfocus);
-              }
-
-              // CHALLENGE levels; WIP
-              else if (GameScript.s_GameMode == GameScript.GameModes.CHALLENGE)
-              {
-                // Update dropdown data
-                var prompt = $"=== {string.Format(format_subdirs, "level", "time", "layout")}\n\n";
-                var selections = new List<string>();
-                var actions = new List<System.Action<MenuComponent>>();
-                selections.Add("yes");
-                actions.Add(component0 =>
-                {
-                  GameScript.NextLevel(s_SaveMenuDir);
-                  CommonEvents._RemoveDropdownSelections(component0);
-                  // Remove menus
-                  s_Menu.gameObject.SetActive(false);
-                  s_InMenus = false;
-                  TileManager._Text_LevelNum.gameObject.SetActive(true);
-                  TileManager._Text_LevelTimer.gameObject.SetActive(true);
-                  TileManager._Text_LevelTimer_Best.gameObject.SetActive(true);
-                  TileManager._Text_Money.gameObject.SetActive(true);
-                  TileManager.ResetMonies();
-                });
-                // Set dropdown data
-                component.SetDropdownData(prompt, selections, actions, "yes");
               }
 
               // SURVIVAL

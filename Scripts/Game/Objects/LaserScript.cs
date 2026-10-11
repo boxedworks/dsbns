@@ -1,8 +1,8 @@
-﻿using Assets.Scripts.Objects.CustomEntities;
-using Assets.Scripts.Ragdoll;
+﻿using SneakyGame.Objects.CustomEntities;
+using SneakyGame.Ragdoll;
 using UnityEngine;
 
-namespace Assets.Scripts.Objects
+namespace SneakyGame.Objects
 {
   public class LaserScript : CustomEntity
   {

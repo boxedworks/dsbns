@@ -1,8 +1,8 @@
 
-using Assets.Scripts.Game.Items;
-using Assets.Scripts.Ragdoll.Equippables;
+using SneakyGame.Game.Items;
+using SneakyGame.Ragdoll.Equippables;
 
-namespace Assets.Scripts.Settings.Extras
+namespace SneakyGame.Settings.Extras
 {
 
   public struct UnlockCriteria

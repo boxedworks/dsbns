@@ -1,7 +1,7 @@
-using Assets.Scripts.Objects;
+using SneakyGame.Objects;
 using UnityEngine;
 
-namespace Assets.Scripts.Ragdoll.Equippables
+namespace SneakyGame.Ragdoll.Equippables
 {
 
   //

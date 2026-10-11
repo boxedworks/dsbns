@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using Assets.Scripts.Ragdoll.Equippables;
-using Assets.Scripts.Settings;
-using Assets.Scripts.Settings.Localization;
-using Assets.Scripts.Settings.Serialization;
-using Assets.Scripts.UI.Menus;
+using SneakyGame.Ragdoll.Equippables;
+using SneakyGame.Settings;
+using SneakyGame.Settings.Localization;
+using SneakyGame.Settings.Serialization;
+using SneakyGame.UI.Menus;
 using UnityEngine;
 
-namespace Assets.Scripts.Game.Items
+namespace SneakyGame.Game.Items
 {
   public static class ShopHelper
   {
@@ -58,7 +58,14 @@ namespace Assets.Scripts.Game.Items
     }
 
     // Max amount of a utility you can have in one side
-    public static Dictionary<UtilityScript.UtilityType, int> _Utility_Cap;
+    public static int GetUtilityCap(UtilityScript.UtilityType utility)
+    {
+      return utility switch
+      {
+        //UtilityScript.UtilityType.SHURIKEN => 10,
+        _ => 6,
+      };
+    }
 
     public enum Unlocks
     {
@@ -374,28 +381,6 @@ namespace Assets.Scripts.Game.Items
         _Unlocks_Vault.Add("classic_20", new Unlocks[] { Unlocks.MAX_EQUIPMENT_POINTS_9, Unlocks.MAX_EQUIPMENT_POINTS_10 });
       }
 
-      // Create utility cap
-      _Utility_Cap = new Dictionary<UtilityScript.UtilityType, int>
-    {
-      { UtilityScript.UtilityType.GRENADE, 6 },
-      { UtilityScript.UtilityType.GRENADE_IMPACT, 6 },
-      { UtilityScript.UtilityType.C4, 6 },
-      { UtilityScript.UtilityType.SHURIKEN, 6 },
-      { UtilityScript.UtilityType.SHURIKEN_BIG, 6 },
-      { UtilityScript.UtilityType.KUNAI_EXPLOSIVE, 6 },
-      { UtilityScript.UtilityType.KUNAI_STICKY, 6 },
-      { UtilityScript.UtilityType.STOP_WATCH, 6 },
-      { UtilityScript.UtilityType.TEMP_SHIELD, 6 },
-      { UtilityScript.UtilityType.INVISIBILITY, 6 },
-      { UtilityScript.UtilityType.DASH, 6 },
-      { UtilityScript.UtilityType.STICKY_GUN_BULLET, 50 },
-      { UtilityScript.UtilityType.MORTAR_STRIKE, 6 },
-      { UtilityScript.UtilityType.TACTICAL_BULLET, 6 },
-      { UtilityScript.UtilityType.MIRROR, 6 },
-      { UtilityScript.UtilityType.MOLOTOV, 6 },
-      { UtilityScript.UtilityType.COIN, 6 },
-    };
-
       //
       _TwoHanded_Dictionary = new List<ItemManager.Items>
     {
@@ -425,8 +410,10 @@ namespace Assets.Scripts.Game.Items
     // Get a list of items with ItemManager.Items enum
     public static ItemManager.Items[] GetItemList()
     {
-      var list = new List<ItemManager.Items>();
-      list.Add(ItemManager.Items.NONE);
+      var list = new List<ItemManager.Items>
+      {
+        ItemManager.Items.NONE
+      };
       foreach (var entry in _Unlocks_Descriptions)
         if (entry.Key.ToString().StartsWith("ITEM_"))
           list.Add((ItemManager.Items)Enum.Parse(typeof(ItemManager.Items), entry.Key.ToString()[5..]));
@@ -520,24 +507,24 @@ namespace Assets.Scripts.Game.Items
     public static bool AllExtrasUnlocked()
     {
       return
-      UnlockUnlocked(Unlocks.EXTRA_BLOOD_FX) &&
-      UnlockUnlocked(Unlocks.EXTRA_ENEMY_OFF) &&
-      UnlockUnlocked(Unlocks.EXTRA_EXPLODED) &&
-      UnlockUnlocked(Unlocks.EXTRA_GRAVITY) &&
-      UnlockUnlocked(Unlocks.EXTRA_HORDE) &&
-      UnlockUnlocked(Unlocks.EXTRA_PLAYER_AMMO) &&
-      UnlockUnlocked(Unlocks.EXTRA_TIME);
+        UnlockUnlocked(Unlocks.EXTRA_BLOOD_FX) &&
+        UnlockUnlocked(Unlocks.EXTRA_ENEMY_OFF) &&
+        UnlockUnlocked(Unlocks.EXTRA_EXPLODED) &&
+        UnlockUnlocked(Unlocks.EXTRA_GRAVITY) &&
+        UnlockUnlocked(Unlocks.EXTRA_HORDE) &&
+        UnlockUnlocked(Unlocks.EXTRA_PLAYER_AMMO) &&
+        UnlockUnlocked(Unlocks.EXTRA_TIME);
     }
     public static bool AnyExtrasUnlocked()
     {
       return
-      UnlockUnlocked(Unlocks.EXTRA_BLOOD_FX) ||
-      UnlockUnlocked(Unlocks.EXTRA_ENEMY_OFF) ||
-      UnlockUnlocked(Unlocks.EXTRA_EXPLODED) ||
-      UnlockUnlocked(Unlocks.EXTRA_GRAVITY) ||
-      UnlockUnlocked(Unlocks.EXTRA_HORDE) ||
-      UnlockUnlocked(Unlocks.EXTRA_PLAYER_AMMO) ||
-      UnlockUnlocked(Unlocks.EXTRA_TIME);
+        UnlockUnlocked(Unlocks.EXTRA_BLOOD_FX) ||
+        UnlockUnlocked(Unlocks.EXTRA_ENEMY_OFF) ||
+        UnlockUnlocked(Unlocks.EXTRA_EXPLODED) ||
+        UnlockUnlocked(Unlocks.EXTRA_GRAVITY) ||
+        UnlockUnlocked(Unlocks.EXTRA_HORDE) ||
+        UnlockUnlocked(Unlocks.EXTRA_PLAYER_AMMO) ||
+        UnlockUnlocked(Unlocks.EXTRA_TIME);
     }
 
     public static string s_UnlockString

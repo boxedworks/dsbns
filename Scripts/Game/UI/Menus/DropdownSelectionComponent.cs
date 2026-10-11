@@ -1,5 +1,5 @@
 
-namespace Assets.Scripts.UI.Menus
+namespace SneakyGame.UI.Menus
 {
   // Wrapper class for adding dropdown selections
   class DropdownSelectionComponent

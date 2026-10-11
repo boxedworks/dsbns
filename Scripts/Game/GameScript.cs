@@ -1,17 +1,19 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using Assets.Scripts.FX;
-using Assets.Scripts.Game.Items;
-using Assets.Scripts.Objects;
-using Assets.Scripts.Objects.CustomEntities;
-using Assets.Scripts.Ragdoll;
-using Assets.Scripts.Ragdoll.Equippables;
-using Assets.Scripts.Settings;
-using Assets.Scripts.Settings.Localization;
-using Assets.Scripts.Settings.Serialization;
-using Assets.Scripts.UI.Menus;
-using Assets.Scripts.XR;
+using SneakyGame.FX;
+using SneakyGame.Game.Items;
+using SneakyGame.Objects;
+using SneakyGame.Objects.CustomEntities;
+using SneakyGame.Ragdoll;
+using SneakyGame.Ragdoll.Equippables;
+using SneakyGame.Settings;
+using SneakyGame.Settings.Localization;
+using SneakyGame.Settings.Serialization;
+using SneakyGame.UI.Menus;
+using SneakyGame.XR;
+using SneakyGame.Game.Survival;
+using SneakyGame.Game.Player;
 using SneakyEngine.Engine;
 using UnityEngine;
 using Valve.VR;
@@ -159,15 +161,14 @@ public class GameScript : MonoBehaviour
   {
     MISSIONS,
     ZOMBIE,
-
-    CHALLENGE,
-
-    PARTY
+    PARTY,
+    INCREMENTAL
   }
   public static GameModes s_GameMode;
   public static bool s_IsMissionsGameMode { get { return s_GameMode == GameModes.MISSIONS; } }
   public static bool s_IsZombieGameMode { get { return s_GameMode == GameModes.ZOMBIE; } }
   public static bool s_IsPartyGameMode { get { return s_GameMode == GameModes.PARTY; } }
+  public static bool s_IsIncrementalGameMode { get { return s_GameMode == GameModes.INCREMENTAL; } }
 
   public static bool s_IsCrownModeEnabled
   {
@@ -892,13 +893,13 @@ public class GameScript : MonoBehaviour
               {
                 if (ControllerManager.GetKey(ControllerManager.Key.PAGE_UP, ControllerManager.InputMode.DOWN))
                 {
-                  SurvivalManager._Wave++;
-                  Debug.Log($"Survival wave incremented to: {SurvivalManager._Wave}");
+                  SurvivalManager.s_WaveNumber++;
+                  Debug.Log($"Survival wave incremented to: {SurvivalManager.s_WaveNumber}");
                 }
                 if (ControllerManager.GetKey(ControllerManager.Key.PAGE_DOWN, ControllerManager.InputMode.DOWN))
                 {
-                  SurvivalManager._Wave--;
-                  Debug.Log($"Survival wave incremented to: {SurvivalManager._Wave}");
+                  SurvivalManager.s_WaveNumber--;
+                  Debug.Log($"Survival wave incremented to: {SurvivalManager.s_WaveNumber}");
                 }
                 if (ControllerManager.GetKey(ControllerManager.Key.INSERT, ControllerManager.InputMode.DOWN))
                 {
@@ -1737,7 +1738,7 @@ public class GameScript : MonoBehaviour
   {
     s_ExitLight.transform.position = PlayerspawnScript._PlayerSpawns[0].transform.position + new Vector3(0f, 3f, 0f);
 
-    if (!s_IsMissionsGameMode && s_GameMode != GameModes.CHALLENGE)
+    if (!s_IsMissionsGameMode)
       s_ExitLightShow = false;
 
     else if (!PlayerScript._TimerStarted)

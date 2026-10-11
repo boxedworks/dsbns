@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
-using Assets.Scripts.Ragdoll;
-using Assets.Scripts.Ragdoll.Equippables;
+using SneakyGame.Game.Player;
+using SneakyGame.Ragdoll;
+using SneakyGame.Ragdoll.Equippables;
 using UnityEngine;
 
 public class ExplosiveScript : MonoBehaviour

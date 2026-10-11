@@ -1,17 +1,18 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
-using Assets.Scripts.Objects;
-using Assets.Scripts.Settings;
-using Assets.Scripts.Settings.Serialization;
-using Assets.Scripts.Game.Items;
+using SneakyGame.Objects;
+using SneakyGame.Settings;
+using SneakyGame.Settings.Serialization;
+using SneakyGame.Game.Items;
+using SneakyGame.Game.Player;
 using UnityEngine;
 
 using ItemType = ItemManager.Items;
-using Assets.Scripts.Ragdoll.Animation;
+using SneakyGame.Ragdoll.Animation;
 using SneakyEngine.Engine;
 using SneakyEngine.Effects;
 
-namespace Assets.Scripts.Ragdoll.Equippables
+namespace SneakyGame.Ragdoll.Equippables
 {
 
   public class ItemScript : MonoBehaviour
@@ -1281,27 +1282,29 @@ namespace Assets.Scripts.Ragdoll.Equippables
           }
           if (_isMelee)
           {
-
-            switch (_type)
-            {
-              case ItemType.KATANA:
-              case ItemType.BAT:
-              case ItemType.RAPIER:
-                _ragdoll.RecoilSimple(_downTimeSave > 1f ? -1.85f : -1.35f, false);
-                break;
-              case ItemType.KNIFE:
-              case ItemType.AXE:
-              case ItemType.FRYING_PAN:
-              case ItemType.STUN_BATON:
-                _ragdoll.RecoilSimple(-0.65f, false);
-                break;
-              case ItemType.CHAINSAW:
-                _ragdoll.RecoilSimple(-0.1f, false);
-                break;
-              case ItemType.FIST:
-                _ragdoll.RecoilSimple(_downTimeSave > 0.5f ? -1.4f : -1f, false);
-                break;
-            }
+            if (_ragdoll._IsEnemy && _ragdoll._EnemyScript._IsZombie)
+              _ragdoll.RecoilSimple(-0.25f, false);
+            else
+              switch (_type)
+              {
+                case ItemType.KATANA:
+                case ItemType.BAT:
+                case ItemType.RAPIER:
+                  _ragdoll.RecoilSimple(_downTimeSave > 1f ? -1.85f : -1.35f, false);
+                  break;
+                case ItemType.KNIFE:
+                case ItemType.AXE:
+                case ItemType.FRYING_PAN:
+                case ItemType.STUN_BATON:
+                  _ragdoll.RecoilSimple(-0.65f, false);
+                  break;
+                case ItemType.CHAINSAW:
+                  _ragdoll.RecoilSimple(-0.1f, false);
+                  break;
+                case ItemType.FIST:
+                  _ragdoll.RecoilSimple(_downTimeSave > 0.5f ? -1.4f : -1f, false);
+                  break;
+              }
 
             _IsSwinging = true;
           }

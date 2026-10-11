@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Assets.Scripts.Ragdoll.Equippables
+namespace SneakyGame.Ragdoll.Equippables
 {
   public class MeleecastHit
   {
