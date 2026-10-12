@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using SneakyEngine.Equippable.Utility;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -6,7 +7,6 @@ using SneakyGame.FX;
 using SneakyGame.Game.Items;
 using SneakyGame.Game.Player;
 using SneakyGame.Ragdoll;
-using SneakyGame.Ragdoll.Equippables;
 using SneakyGame.Settings;
 using SneakyGame.Settings.Serialization;
 using SneakyGame.Game.Survival;
@@ -2649,7 +2649,7 @@ namespace SneakyGame.UI.Menus
             itemType = 1;
 
             name = string.Format("{0,-17}{1,9}", name[8..], "[utility]");
-            equip_cost = ItemManager.GetUtilityValue((UtilityScript.UtilityType)System.Enum.Parse(typeof(UtilityScript.UtilityType), unlock_s[8..], true));
+            equip_cost = ItemManager.GetUtilityValue((UtilityType)System.Enum.Parse(typeof(UtilityType), unlock_s[8..], true));
           }
           else if (name.StartsWith("MOD_"))
           {
@@ -4697,7 +4697,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
               foreach (var utility0 in list_utilities)
               {
                 var desc = "-";
-                if (utility0 != UtilityScript.UtilityType.NONE)
+                if (utility0 != UtilityType.NONE)
                 {
                   var unlock = (ShopHelper.Unlocks)System.Enum.Parse(typeof(ShopHelper.Unlocks), $"UTILITY_{utility0}", true);
                   desc = ShopHelper._Unlocks_Descriptions[unlock].Item1;
@@ -4708,22 +4708,22 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
                 var ut_val = ItemManager.GetUtilityValue(utility0);
                 var use_color = ut_val > CurrentLoadout()._available_points + utility_cost ? "red" : "white";
                 var use_color2 = use_color == "white" ? "white" : _COLOR_GRAY;
-                if (utility0.ToString() == utility_name && utility_name != UtilityScript.UtilityType.NONE.ToString()) use_color = use_color2 = "yellow";
+                if (utility0.ToString() == utility_name && utility_name != UtilityType.NONE.ToString()) use_color = use_color2 = "yellow";
                 selections.Add(string.Format($"</color><color={use_color2}>{loadout_format}<color=white>", utility0, desc, $"</color><color={use_color}>{ut_val}</color>"));
                 actions.Add(component0 =>
                 {
-                  var utility_selected = (UtilityScript.UtilityType)System.Enum.Parse(typeof(UtilityScript.UtilityType), component0.GetDisplayText(false).Trim().Split(' ')[2].Split('>')[2]);
+                  var utility_selected = (UtilityType)System.Enum.Parse(typeof(UtilityType), component0.GetDisplayText(false).Trim().Split(' ')[2].Split('>')[2]);
 
-                  if (utility_selected == UtilityScript.UtilityType.NONE)
-                    CurrentLoadout()._Equipment._UtilitiesLeft = new UtilityScript.UtilityType[0];
+                  if (utility_selected == UtilityType.NONE)
+                    CurrentLoadout()._Equipment._UtilitiesLeft = new UtilityType[0];
                   else if (CurrentLoadout().CanEquipUtility(ActiveRagdoll.Side.LEFT, utility_selected))
                   {
                     // Check if different
                     if (CurrentLoadout()._Equipment._UtilitiesLeft.Length == 0 || utility_selected != CurrentLoadout()._Equipment._UtilitiesLeft[0])
-                      CurrentLoadout()._Equipment._UtilitiesLeft = new UtilityScript.UtilityType[] { utility_selected };
+                      CurrentLoadout()._Equipment._UtilitiesLeft = new UtilityType[] { utility_selected };
                     else
                     {
-                      var list_new = new List<UtilityScript.UtilityType>();
+                      var list_new = new List<UtilityType>();
                       foreach (var util in CurrentLoadout()._Equipment._UtilitiesLeft)
                         list_new.Add(util);
                       list_new.Add(utility_selected);
@@ -4732,7 +4732,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
                   }
                   // If can't equip and utility is the same, set to 1
                   else if (CurrentLoadout()._Equipment._UtilitiesLeft.Length != 0 && utility_selected == CurrentLoadout()._Equipment._UtilitiesLeft[0])
-                    CurrentLoadout()._Equipment._UtilitiesLeft = new UtilityScript.UtilityType[] { utility_selected };
+                    CurrentLoadout()._Equipment._UtilitiesLeft = new UtilityType[] { utility_selected };
                   else
                   {
                     var save_selection = s_CurrentMenu._DropdownParentIndex;
@@ -4760,7 +4760,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
                     profile.UpdateIcons();
                 });
                 // Check if utility is unlocked
-                if (utility0 == UtilityScript.UtilityType.NONE)
+                if (utility0 == UtilityType.NONE)
                   actions_onCreated.Add(component0 => { });
                 else
                 {
@@ -4800,7 +4800,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
               {
                 // Get item desciption from Shop
                 var desc = "-";
-                if (utility0 != UtilityScript.UtilityType.NONE)
+                if (utility0 != UtilityType.NONE)
                 {
                   var unlock = (ShopHelper.Unlocks)System.Enum.Parse(typeof(ShopHelper.Unlocks), $"UTILITY_{utility0}", true);
                   desc = ShopHelper._Unlocks_Descriptions[unlock].Item1;
@@ -4811,21 +4811,21 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
                 var ut_val = ItemManager.GetUtilityValue(utility0);
                 var use_color = ut_val > CurrentLoadout()._available_points + utility_cost ? "red" : "white";
                 var use_color2 = use_color == "white" ? "white" : _COLOR_GRAY;
-                if (utility0.ToString() == utility_name && utility_name != UtilityScript.UtilityType.NONE.ToString()) use_color = use_color2 = "yellow";
+                if (utility0.ToString() == utility_name && utility_name != UtilityType.NONE.ToString()) use_color = use_color2 = "yellow";
                 selections.Add(string.Format($"</color><color={use_color2}>{loadout_format}<color=white>", utility0, desc, $"</color><color={use_color}>{ut_val}</color>"));
                 actions.Add(component0 =>
                 {
-                  var utility_selected = (UtilityScript.UtilityType)System.Enum.Parse(typeof(UtilityScript.UtilityType), component0.GetDisplayText(false).Trim().Split(' ')[2].Split('>')[2]);
-                  if (utility_selected == UtilityScript.UtilityType.NONE)
-                    CurrentLoadout()._Equipment._UtilitiesRight = new UtilityScript.UtilityType[0];
+                  var utility_selected = (UtilityType)System.Enum.Parse(typeof(UtilityType), component0.GetDisplayText(false).Trim().Split(' ')[2].Split('>')[2]);
+                  if (utility_selected == UtilityType.NONE)
+                    CurrentLoadout()._Equipment._UtilitiesRight = new UtilityType[0];
                   else if (CurrentLoadout().CanEquipUtility(ActiveRagdoll.Side.RIGHT, utility_selected))
                   {
                     // Check if different
                     if (CurrentLoadout()._Equipment._UtilitiesRight.Length == 0 || utility_selected != CurrentLoadout()._Equipment._UtilitiesRight[0])
-                      CurrentLoadout()._Equipment._UtilitiesRight = new UtilityScript.UtilityType[] { utility_selected };
+                      CurrentLoadout()._Equipment._UtilitiesRight = new UtilityType[] { utility_selected };
                     else
                     {
-                      var list_new = new List<UtilityScript.UtilityType>();
+                      var list_new = new List<UtilityType>();
                       foreach (var util in CurrentLoadout()._Equipment._UtilitiesRight)
                         list_new.Add(util);
                       list_new.Add(utility_selected);
@@ -4834,7 +4834,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
                   }
                   // If can't equip and utility is the same, set to 1
                   else if (CurrentLoadout()._Equipment._UtilitiesRight.Length != 0 && utility_selected == CurrentLoadout()._Equipment._UtilitiesRight[0])
-                    CurrentLoadout()._Equipment._UtilitiesRight = new UtilityScript.UtilityType[] { utility_selected };
+                    CurrentLoadout()._Equipment._UtilitiesRight = new UtilityType[] { utility_selected };
                   else
                   {
                     var save_selection = s_CurrentMenu._DropdownParentIndex;
@@ -4862,7 +4862,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
                     profile.UpdateIcons();
                 });
                 // Check if utility is unlocked
-                if (utility0 == UtilityScript.UtilityType.NONE)
+                if (utility0 == UtilityType.NONE)
                   actions_onCreated.Add(component0 => { });
                 else
                 {

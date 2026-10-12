@@ -1,11 +1,11 @@
 using UnityEngine;
+using SneakyEngine.Equippable.Utility;
 using System.Collections;
 using System.Collections.Generic;
 using SneakyGame.Settings;
 using SneakyGame.UI.Menus;
 using SneakyGame.Game.Items;
 using SneakyGame.Game.Player;
-using SneakyGame.Ragdoll.Equippables;
 
 // Holds functions for versus mode
 public static class VersusMode
@@ -816,31 +816,31 @@ public static class VersusMode
     };
   }
 
-  static UtilityScript.UtilityType GetRandomUtility()
+  static UtilityType GetRandomUtility()
   {
     return Random.Range(0, 15) switch
     {
-      1 => UtilityScript.UtilityType.GRENADE_IMPACT,
-      2 => UtilityScript.UtilityType.GRENADE_STUN,
+      1 => UtilityType.GRENADE_IMPACT,
+      2 => UtilityType.GRENADE_STUN,
 
-      3 => UtilityScript.UtilityType.KUNAI_STICKY,
-      4 => UtilityScript.UtilityType.SHURIKEN,
-      5 => UtilityScript.UtilityType.SHURIKEN_BIG,
+      3 => UtilityType.KUNAI_STICKY,
+      4 => UtilityType.SHURIKEN,
+      5 => UtilityType.SHURIKEN_BIG,
 
-      6 => UtilityScript.UtilityType.TACTICAL_BULLET,
-      7 => UtilityScript.UtilityType.MIRROR,
+      6 => UtilityType.TACTICAL_BULLET,
+      7 => UtilityType.MIRROR,
 
-      8 => UtilityScript.UtilityType.MORTAR_STRIKE,
-      9 => UtilityScript.UtilityType.C4,
-      10 => UtilityScript.UtilityType.INVISIBILITY,
-      11 => UtilityScript.UtilityType.TEMP_SHIELD,
+      8 => UtilityType.MORTAR_STRIKE,
+      9 => UtilityType.C4,
+      10 => UtilityType.INVISIBILITY,
+      11 => UtilityType.TEMP_SHIELD,
 
-      12 => UtilityScript.UtilityType.BEAR_TRAP,
-      13 => UtilityScript.UtilityType.MINE,
+      12 => UtilityType.BEAR_TRAP,
+      13 => UtilityType.MINE,
 
-      14 => UtilityScript.UtilityType.COIN,
+      14 => UtilityType.COIN,
 
-      _ => UtilityScript.UtilityType.GRENADE
+      _ => UtilityType.GRENADE
     };
   }
   static Perk.PerkType GetRandomPerk()
@@ -925,7 +925,7 @@ public static class VersusMode
     // Add utilities
     if (Random.Range(0, 5) == 0)
     {
-      s_PlayerLoadouts._Equipment._UtilitiesLeft = new UtilityScript.UtilityType[Random.Range(1, 4)];
+      s_PlayerLoadouts._Equipment._UtilitiesLeft = new UtilityType[Random.Range(1, 4)];
       var randomUtil = GetRandomUtility();
       for (var i = 0; i < s_PlayerLoadouts._Equipment._UtilitiesLeft.Length; i++)
       {
@@ -934,7 +934,7 @@ public static class VersusMode
 
       if (Random.Range(0, 5) == 0)
       {
-        s_PlayerLoadouts._Equipment._UtilitiesRight = new UtilityScript.UtilityType[Random.Range(1, 4)];
+        s_PlayerLoadouts._Equipment._UtilitiesRight = new UtilityType[Random.Range(1, 4)];
         randomUtil = GetRandomUtility();
         for (var i = 0; i < s_PlayerLoadouts._Equipment._UtilitiesRight.Length; i++)
         {

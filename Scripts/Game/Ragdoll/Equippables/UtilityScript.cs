@@ -5,6 +5,7 @@ using SneakyGame.Settings;
 using SneakyGame.Settings.Serialization;
 using SneakyGame.Game.Items;
 using SneakyGame.Game.Player;
+using SneakyEngine.Equippable.Utility;
 using UnityEngine;
 
 namespace SneakyGame.Ragdoll.Equippables
@@ -14,39 +15,6 @@ namespace SneakyGame.Ragdoll.Equippables
   {
     //
     static LevelSaveData LevelModule { get { return SettingsHelper.s_SaveData.LevelData; } }
-
-    //
-    public enum UtilityType
-    {
-      NONE,
-      GRENADE,
-      GRENADE_IMPACT,
-      C4,
-      SHURIKEN,
-      SHURIKEN_BIG,
-      KUNAI_EXPLOSIVE,
-      KUNAI_STICKY,
-
-      STOP_WATCH,
-      INVISIBILITY,
-      DASH,
-
-      TEMP_SHIELD,
-      GRENADE_STUN,
-
-      STICKY_GUN_BULLET,
-      MORTAR_STRIKE,
-      TACTICAL_BULLET,
-
-      MOLOTOV,
-
-      MIRROR,
-
-      BEAR_TRAP,
-      MINE,
-
-      COIN
-    }
 
     public UtilityType _utility_type;
 
@@ -494,7 +462,7 @@ namespace SneakyGame.Ragdoll.Equippables
                       SpawnBlood = true,
                       SpawnGiblets = true
                     });
-                  rag.Dismember(rag._spine);
+                  rag.Dismember(rag._Spine);
                   EnemyScript.CheckSound(transform.position, EnemyScript.Loudness.SUPERSOFT);
                   PlaySound(Audio.UTILITY_ACTION);
                 }
@@ -810,7 +778,7 @@ namespace SneakyGame.Ragdoll.Equippables
                       var shootDir = (targetPosition - transform.position).normalized;
                       var bullet = SpawnBulletTowards(
                         _ragdoll,
-                        new Vector3(transform.position.x, _ragdoll._spine.transform.position.y, transform.position.z) + shootDir * 0.2f + MathC.Get2DVector(_throwPosition - transform.position).normalized * 0.2f,
+                        new Vector3(transform.position.x, _ragdoll._Spine.transform.position.y, transform.position.z) + shootDir * 0.2f + MathC.Get2DVector(_throwPosition - transform.position).normalized * 0.2f,
                         shootDir,
                         ItemManager.Items.NONE,
                         0
@@ -1010,25 +978,12 @@ namespace SneakyGame.Ragdoll.Equippables
           //
           case UtilityType.BEAR_TRAP:
 
-            //
-            _onTriggerEnter += c =>
+            void bearTrapTrigger(Collider c)
             {
-
-              // Projectile handler
-              if (SimpleProjectileHandler(_c, c))
-                return;
-            };
-            _onCollisionStay += c =>
-            {
-
-              // Projectile handler
-              if (SimpleProjectileHandler(_c, c.collider))
-                return;
-
               // Kill first person walked into
               if (_flag == 0)
               {
-                var rag = ActiveRagdoll.GetRagdoll(c.collider.gameObject);
+                var rag = ActiveRagdoll.GetRagdoll(c.gameObject);
                 if (rag != null)
                 {
 
@@ -1047,7 +1002,7 @@ namespace SneakyGame.Ragdoll.Equippables
                     if (grappleeDistance < distance)
                     {
                       rag = grapplee;
-                      stickToTransform = (rag._leg_lower_l != null ? rag._leg_lower_l : rag._leg_lower_r).transform;
+                      stickToTransform = (rag._Leg_lower_l != null ? rag._Leg_lower_l : rag._Leg_lower_r).transform;
                     }
                   });
 
@@ -1084,6 +1039,26 @@ namespace SneakyGame.Ragdoll.Equippables
                   PlaySound(Audio.UTILITY_ACTION);
                 }
               }
+            }
+
+            //
+            _onTriggerEnter += c =>
+            {
+
+              // Projectile handler
+              if (SimpleProjectileHandler(_c, c))
+                return;
+
+              bearTrapTrigger(c);
+            };
+            _onCollisionStay += c =>
+            {
+
+              // Projectile handler
+              if (SimpleProjectileHandler(_c, c.collider))
+                return;
+
+              bearTrapTrigger(c.collider);
             };
 
             // Throw
@@ -1095,25 +1070,13 @@ namespace SneakyGame.Ragdoll.Equippables
           //
           case UtilityType.MINE:
 
-            //
-            _onTriggerEnter += c =>
+
+            void triggerMine(Collider c)
             {
-
-              // Projectile handler
-              if (SimpleProjectileHandler(_c, c))
-                return;
-            };
-            _onCollisionStay += c =>
-            {
-
-              // Projectile handler
-              if (SimpleProjectileHandler(_c, c.collider))
-                return;
-
               // Kill first person walked into
               if (_flag == 0)
               {
-                var rag = ActiveRagdoll.GetRagdoll(c.collider.gameObject);
+                var rag = ActiveRagdoll.GetRagdoll(c.gameObject);
                 if (rag != null)
                 {
 
@@ -1128,6 +1091,26 @@ namespace SneakyGame.Ragdoll.Equippables
                   Explode();
                 }
               }
+            }
+
+            //
+            _onTriggerEnter += c =>
+            {
+
+              // Projectile handler
+              if (SimpleProjectileHandler(_c, c))
+                return;
+
+              triggerMine(c);
+            };
+            _onCollisionStay += c =>
+            {
+
+              // Projectile handler
+              if (SimpleProjectileHandler(_c, c.collider))
+                return;
+
+              triggerMine(c.collider);
             };
 
             // Throw
@@ -1385,7 +1368,7 @@ namespace SneakyGame.Ragdoll.Equippables
       }
 
       var spawnPosition = _spawnLocation != Vector3.zero ? _spawnLocation :
-        _ragdoll._spine.transform.position + forward * 0.6f + new Vector3(0f, _explosion != null ? 0.25f : 0.1f, 0f);
+        _ragdoll._Spine.transform.position + forward * 0.6f + new Vector3(0f, _explosion != null ? 0.25f : 0.1f, 0f);
       spawnPosition.y = BulletScript.s_BULLET_HEIGHT;
       _rb.position = _throwPosition = spawnPosition;
       transform.localScale = new Vector3(0.01f, 0.01f, 0.01f);

@@ -1,7 +1,7 @@
 using System.Collections.Generic;
+using SneakyEngine.Equippable.Utility;
 using SneakyGame.Game.Items;
 using SneakyGame.Ragdoll;
-using SneakyGame.Ragdoll.Equippables;
 using SneakyGame.Settings;
 using SneakyGame.Settings.Serialization;
 using SneakyGame.UI.Menus;
@@ -202,14 +202,14 @@ public class PlayerProfile
   {
     public Equipment()
     {
-      _UtilitiesLeft = new UtilityScript.UtilityType[0];
-      _UtilitiesRight = new UtilityScript.UtilityType[0];
+      _UtilitiesLeft = new UtilityType[0];
+      _UtilitiesRight = new UtilityType[0];
 
       _Perks = new List<Perk.PerkType>();
     }
     public ItemManager.Items _ItemLeft0, _ItemRight0, _ItemLeft1, _ItemRight1;
 
-    public UtilityScript.UtilityType[] _UtilitiesLeft, _UtilitiesRight;
+    public UtilityType[] _UtilitiesLeft, _UtilitiesRight;
     public List<Perk.PerkType> _Perks;
 
     public bool HasWeapons0()

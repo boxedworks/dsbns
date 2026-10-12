@@ -1,11 +1,11 @@
 ﻿using System.Collections.Generic;
+using SneakyEngine.Equippable.Utility;
 
 using System.IO;
 using SneakyGame.Settings;
 using SneakyGame.Settings.Serialization;
 using SneakyGame.Game.Items;
 using UnityEngine;
-using SneakyGame.Ragdoll.Equippables;
 
 public class Levels : MonoBehaviour
 {
@@ -569,7 +569,7 @@ public class Levels : MonoBehaviour
       equipment._ItemLeft1 = (ItemManager.Items)System.Enum.Parse(typeof(ItemManager.Items), left_item1);
       equipment._ItemRight1 = (ItemManager.Items)System.Enum.Parse(typeof(ItemManager.Items), right_item1);
 
-      var utilities_left = new List<UtilityScript.UtilityType>();
+      var utilities_left = new List<UtilityType>();
       if (left_util.Trim().Length > 0)
       {
         var left_util_split = left_util.Split(':');
@@ -578,12 +578,12 @@ public class Levels : MonoBehaviour
           var util = left_util_split[0];
           var amount = left_util_split[1].ParseIntInvariant();
           for (var i = 0; i < amount; i++)
-            utilities_left.Add((UtilityScript.UtilityType)System.Enum.Parse(typeof(UtilityScript.UtilityType), util));
+            utilities_left.Add((UtilityType)System.Enum.Parse(typeof(UtilityType), util));
         }
       }
       equipment._UtilitiesLeft = utilities_left.ToArray();
 
-      var utilities_right = new List<UtilityScript.UtilityType>();
+      var utilities_right = new List<UtilityType>();
       if (right_util.Length > 0)
       {
         var right_util_split = right_util.Split(':');
@@ -592,7 +592,7 @@ public class Levels : MonoBehaviour
           var util = right_util_split[0];
           var amount = right_util_split[1].ParseIntInvariant();
           for (var i = 0; i < amount; i++)
-            utilities_right.Add((UtilityScript.UtilityType)System.Enum.Parse(typeof(UtilityScript.UtilityType), util));
+            utilities_right.Add((UtilityType)System.Enum.Parse(typeof(UtilityType), util));
         }
       }
       equipment._UtilitiesRight = utilities_right.ToArray();

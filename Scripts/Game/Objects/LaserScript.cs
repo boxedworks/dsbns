@@ -96,7 +96,7 @@ namespace SneakyGame.Objects
                   }))
                   break;
                 HingeJoint j = null;// h.collider.GetComponent<HingeJoint>();
-                if (j == null) j = r._spine;
+                if (j == null) j = r._Spine;
                 r.Dismember(j);
                 r._Hip.linearVelocity = Vector3.zero;
                 // Particles

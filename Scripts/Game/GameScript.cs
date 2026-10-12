@@ -1,6 +1,5 @@
 using System;
 using System.Collections;
-using System.Collections.Generic;
 using SneakyGame.FX;
 using SneakyGame.Game.Items;
 using SneakyGame.Objects;

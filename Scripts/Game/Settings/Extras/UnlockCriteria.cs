@@ -1,6 +1,6 @@
 
 using SneakyGame.Game.Items;
-using SneakyGame.Ragdoll.Equippables;
+using SneakyEngine.Equippable.Utility;
 
 namespace SneakyGame.Settings.Extras
 {
@@ -18,7 +18,7 @@ namespace SneakyGame.Settings.Extras
     // Loadout
     public string loadoutDesc;
     public ItemManager.Items[] items;
-    public UtilityScript.UtilityType[] utilities;
+    public UtilityType[] utilities;
     public Perk.PerkType[] perks;
   }
 

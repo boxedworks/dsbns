@@ -16,7 +16,7 @@ public static class FunctionsC
   public static BookManager s_BookManager;
   public static void Init()
   {
-    s_ParticlesAll = Object.FindObjectsByType<ParticleSystem>();
+    CacheParticleSystemData();
     s_BookManager = new();
   }
 
@@ -202,187 +202,252 @@ public static class FunctionsC
     MELEE_TRAIL,
     THROWABLE_TRAIL,
   }
+
+  class ParticleSystemData
+  {
+    public bool RandomChild;
+    public List<ParticleSystem> ParticleSystems;
+
+    public Transform Transform;
+  }
+
+  static Dictionary<ParticleSystemType, ParticleSystemData> s_ParticleSystemData;
+  static void CacheParticleSystemData()
+  {
+    s_ParticlesAll = Object.FindObjectsByType<ParticleSystem>();
+
+    s_ParticleSystemData = new();
+    var particlesContainer = GameResources.s_Particles.transform;
+
+    foreach (ParticleSystemType particleType in System.Enum.GetValues(typeof(ParticleSystemType)))
+    {
+      var index = -1;
+      bool randomChild = false,
+        hasChildren = false; // True = contains multiple particle systems
+      switch (particleType)
+      {
+        case ParticleSystemType.BLOOD:
+          index = 0;
+          randomChild = true;
+          hasChildren = true;
+          break;
+        case ParticleSystemType.BULLET_CASING:
+          index = 1;
+          break;
+        case ParticleSystemType.SPARKS:
+          index = 2;
+          hasChildren = true;
+          break;
+        case ParticleSystemType.EXPLOSION:
+          index = 3;
+          hasChildren = true;
+          break;
+        case ParticleSystemType.GUN_FIRE:
+          index = 4;
+          hasChildren = true;
+          break;
+        case ParticleSystemType.SMOKE:
+          index = 5;
+          break;
+        case ParticleSystemType.FIREBALL:
+          index = 6;
+          hasChildren = true;
+          break;
+        case ParticleSystemType.SMOKEBALL:
+          index = 7;
+          hasChildren = true;
+          break;
+        case ParticleSystemType.FOOTPRINT:
+          index = 8;
+          break;
+        case ParticleSystemType.RAIN:
+          index = 9;
+          break;
+        case ParticleSystemType.RAIN_FAKE:
+          index = 10;
+          break;
+        case ParticleSystemType.MAGAZINE:
+          index = 12;
+          break;
+        case ParticleSystemType.SPARKS_ROBOT:
+          index = 13;
+          break;
+        case ParticleSystemType.PAPER:
+          index = 14;
+          randomChild = true;
+          hasChildren = true;
+          break;
+        case ParticleSystemType.BULLET_COLLIDE:
+          index = 15;
+          randomChild = true;
+          hasChildren = true;
+          break;
+        case ParticleSystemType.EXPLOSION_MARK:
+          index = 16;
+          break;
+        case ParticleSystemType.EXPLOSION_MARK_SMALL:
+          index = 17;
+          break;
+        case ParticleSystemType.GIBLETS:
+          index = 18;
+          hasChildren = true;
+          break;
+        case ParticleSystemType.CONFETTI:
+          index = 19;
+          randomChild = true;
+          hasChildren = true;
+          break;
+        case ParticleSystemType.BULLET_CASING_HOT:
+          index = 21;
+          break;
+
+        case ParticleSystemType.BLOOD_SMOKE:
+          index = 22;
+          hasChildren = true;
+          break;
+        case ParticleSystemType.BLOOD_SMOKE_CONFETTI:
+          index = 34;
+          hasChildren = true;
+          break;
+        case ParticleSystemType.GUN_SMOKE:
+          index = 30;
+          hasChildren = true;
+          break;
+        case ParticleSystemType.EXPLOSION_SMOKE:
+          index = 31;
+          hasChildren = true;
+          break;
+        case ParticleSystemType.EXPLOSION_NEW:
+          index = 32;
+          hasChildren = true;
+          break;
+
+        case ParticleSystemType.MUZZLE_FIRE:
+          index = 33;
+          hasChildren = true;
+          break;
+
+        case ParticleSystemType.CONFUSED:
+          index = 23;
+          break;
+        case ParticleSystemType.EXPLOSION_STUN:
+          index = 24;
+          hasChildren = true;
+          break;
+        case ParticleSystemType.SMOKE_RING:
+          index = 25;
+          break;
+        case ParticleSystemType.FOOTPRINT_BLOOD:
+          index = 26;
+          break;
+        case ParticleSystemType.TACTICAL_BULLET:
+          index = 27;
+          break;
+        case ParticleSystemType.TABLE_FLIP:
+          index = 28;
+          break;
+        case ParticleSystemType.CLOUD_RING:
+          index = 29;
+          hasChildren = true;
+          break;
+
+        case ParticleSystemType.ELECTRIC_SPARK:
+          index = 35;
+          break;
+
+        case ParticleSystemType.MELEE_TRAIL:
+          index = 36;
+          break;
+        case ParticleSystemType.THROWABLE_TRAIL:
+          index = 37;
+          break;
+      }
+
+      if (index == -1) continue;
+
+      var particles = new List<ParticleSystem>();
+      Transform transform = null;
+      if (hasChildren)
+      {
+
+        // For complex particle systems like explosions, fireballs, and smoke balls, we add a null placeholder to the list to indicate
+        if (
+          particleType == ParticleSystemType.EXPLOSION ||
+          particleType == ParticleSystemType.EXPLOSION_STUN ||
+          particleType == ParticleSystemType.FIREBALL ||
+          particleType == ParticleSystemType.SMOKEBALL
+          )
+        {
+          particles.Add(null);
+          transform = particlesContainer.GetChild(index);
+        }
+        else
+        {
+          var container = particlesContainer.GetChild(index);
+          for (var i = 0; i < container.childCount; i++)
+            particles.Add(container.GetChild(i).GetComponent<ParticleSystem>());
+        }
+      }
+      else
+      {
+        particles.Add(particlesContainer.GetChild(index).GetComponent<ParticleSystem>());
+      }
+      var particleData = new ParticleSystemData
+      {
+        ParticleSystems = particles,
+        RandomChild = randomChild,
+        Transform = transform
+      };
+
+      s_ParticleSystemData.Add(particleType, particleData);
+    }
+  }
+
   static int _ExplosionIter;
   public static ParticleSystem[] GetParticleSystem(ParticleSystemType particleType, int forceParticleIndex = -1)
   {
-    var particles = GameResources.s_Particles.transform;
-    var index = -1;
-    bool randomChild = false,
-      hasChildren = false; // True if contains multiple particle systems
-    switch (particleType)
-    {
-      case ParticleSystemType.BLOOD:
-        index = 0;
-        randomChild = true;
-        break;
-      case ParticleSystemType.BULLET_CASING:
-        index = 1;
-        break;
-      case ParticleSystemType.SPARKS:
-        index = 2;
-        hasChildren = true;
-        break;
-      case ParticleSystemType.EXPLOSION:
-        index = 3;
-        hasChildren = true;
-        break;
-      case ParticleSystemType.GUN_FIRE:
-        index = 4;
-        hasChildren = true;
-        break;
-      case ParticleSystemType.SMOKE:
-        index = 5;
-        break;
-      case ParticleSystemType.FIREBALL:
-        index = 6;
-        hasChildren = true;
-        break;
-      case ParticleSystemType.SMOKEBALL:
-        index = 7;
-        hasChildren = true;
-        break;
-      case ParticleSystemType.FOOTPRINT:
-        index = 8;
-        break;
-      case ParticleSystemType.RAIN:
-        index = 9;
-        break;
-      case ParticleSystemType.RAIN_FAKE:
-        index = 10;
-        break;
-      case ParticleSystemType.MAGAZINE:
-        index = 12;
-        break;
-      case ParticleSystemType.SPARKS_ROBOT:
-        index = 13;
-        break;
-      case ParticleSystemType.PAPER:
-        index = 14;
-        randomChild = true;
-        break;
-      case ParticleSystemType.BULLET_COLLIDE:
-        index = 15;
-        randomChild = true;
-        break;
-      case ParticleSystemType.EXPLOSION_MARK:
-        index = 16;
-        break;
-      case ParticleSystemType.EXPLOSION_MARK_SMALL:
-        index = 17;
-        break;
-      case ParticleSystemType.GIBLETS:
-        index = 18;
-        break;
-      case ParticleSystemType.CONFETTI:
-        index = 19;
-        randomChild = true;
-        break;
-      case ParticleSystemType.BULLET_CASING_HOT:
-        index = 21;
-        break;
+    if (!s_ParticleSystemData.TryGetValue(particleType, out var particleData))
+      return null;
 
-      case ParticleSystemType.BLOOD_SMOKE:
-        index = 22;
-        hasChildren = true;
-        break;
-      case ParticleSystemType.BLOOD_SMOKE_CONFETTI:
-        index = 34;
-        hasChildren = true;
-        break;
-      case ParticleSystemType.GUN_SMOKE:
-        index = 30;
-        hasChildren = true;
-        break;
-      case ParticleSystemType.EXPLOSION_SMOKE:
-        index = 31;
-        hasChildren = true;
-        break;
-      case ParticleSystemType.EXPLOSION_NEW:
-        index = 32;
-        hasChildren = true;
-        break;
-
-      case ParticleSystemType.MUZZLE_FIRE:
-        index = 33;
-        hasChildren = true;
-        break;
-
-      case ParticleSystemType.CONFUSED:
-        index = 23;
-        break;
-      case ParticleSystemType.EXPLOSION_STUN:
-        index = 24;
-        hasChildren = true;
-        break;
-      case ParticleSystemType.SMOKE_RING:
-        index = 25;
-        break;
-      case ParticleSystemType.FOOTPRINT_BLOOD:
-        index = 26;
-        break;
-      case ParticleSystemType.TACTICAL_BULLET:
-        index = 27;
-        break;
-      case ParticleSystemType.TABLE_FLIP:
-        index = 28;
-        break;
-      case ParticleSystemType.CLOUD_RING:
-        index = 29;
-        hasChildren = true;
-        break;
-
-      case ParticleSystemType.ELECTRIC_SPARK:
-        index = 35;
-        break;
-
-      case ParticleSystemType.MELEE_TRAIL:
-        index = 36;
-        break;
-      case ParticleSystemType.THROWABLE_TRAIL:
-        index = 37;
-        break;
-    }
+    var particles = particleData.ParticleSystems;
+    var randomChild = particleData.RandomChild;
 
     if (forceParticleIndex != -1)
     {
-      return new ParticleSystem[] { particles.GetChild(index).GetChild(forceParticleIndex).GetComponent<ParticleSystem>() };
+      return new ParticleSystem[] { particles[forceParticleIndex] };
     }
 
     if (randomChild)
     {
-      var cn = particles.GetChild(index).childCount;
+      var cn = particles.Count;
       if (cn == 0) return null;
       ParticleSystem particle_return = null;
       int loops = cn, startIter = Mathf.RoundToInt(Random.value * (cn - 1));
       while (particle_return == null || particle_return.isPlaying)
       {
-        particle_return = particles.GetChild(index).GetChild(startIter++ % cn).GetComponent<ParticleSystem>();
+        particle_return = particles[startIter++ % cn];
         if (--loops < 0) break;
       }
       return new ParticleSystem[] { particle_return };
     }
 
-    else if (hasChildren)
+    else if (particles.Count == 1)
     {
-      var container = particles.GetChild(index);
-      if (
-        particleType == ParticleSystemType.EXPLOSION ||
-        particleType == ParticleSystemType.EXPLOSION_STUN ||
-        particleType == ParticleSystemType.FIREBALL ||
-        particleType == ParticleSystemType.SMOKEBALL
-        )
-        container = particles.GetChild(index).GetChild(_ExplosionIter++ % container.childCount);
-      var returnList = new List<ParticleSystem>();
-      for (var i = 0; i < container.childCount; i++)
-      {
-        returnList.Add(container.GetChild(i).GetComponent<ParticleSystem>());
-      }
 
-      return returnList.ToArray();
+      // Check for simple
+      if (particles[0] != null)
+        return new ParticleSystem[] { particles[0] };
+      else
+      {
+        var returnList = new List<ParticleSystem>();
+        var container = particleData.Transform.GetChild(_ExplosionIter++ % particleData.Transform.childCount);
+        for (var i = 0; i < container.childCount; i++)
+          returnList.Add(container.GetChild(i).GetComponent<ParticleSystem>());
+        return returnList.ToArray();
+      }
     }
 
-    else
-      return new ParticleSystem[] { particles.GetChild(index).GetComponent<ParticleSystem>() };
+    return particles.ToArray();
   }
 
   public static void PlayComplexParticleSystemAt(ParticleSystem[] particles, Vector3 position)

@@ -1,6 +1,6 @@
 ﻿using System;
+using SneakyEngine.Equippable.Utility;
 using System.Collections.Generic;
-using SneakyGame.Ragdoll.Equippables;
 using SneakyGame.Settings;
 using SneakyGame.Settings.Localization;
 using SneakyGame.Settings.Serialization;
@@ -58,11 +58,11 @@ namespace SneakyGame.Game.Items
     }
 
     // Max amount of a utility you can have in one side
-    public static int GetUtilityCap(UtilityScript.UtilityType utility)
+    public static int GetUtilityCap(UtilityType utility)
     {
       return utility switch
       {
-        //UtilityScript.UtilityType.SHURIKEN => 10,
+        //UtilityType.SHURIKEN => 10,
         _ => 6,
       };
     }
@@ -419,14 +419,14 @@ namespace SneakyGame.Game.Items
           list.Add((ItemManager.Items)Enum.Parse(typeof(ItemManager.Items), entry.Key.ToString()[5..]));
       return list.ToArray();
     }
-    // Get a list of utilities with UtilityScript.UtilityType enum
-    public static UtilityScript.UtilityType[] GetUtilityList()
+    // Get a list of utilities with UtilityType enum
+    public static UtilityType[] GetUtilityList()
     {
-      var list = new List<UtilityScript.UtilityType>();
-      list.Add(UtilityScript.UtilityType.NONE);
+      var list = new List<UtilityType>();
+      list.Add(UtilityType.NONE);
       foreach (var entry in _Unlocks_Descriptions)
         if (entry.Key.ToString().StartsWith("UTILITY_"))
-          list.Add((UtilityScript.UtilityType)Enum.Parse(typeof(UtilityScript.UtilityType), entry.Key.ToString()[8..]));
+          list.Add((UtilityType)Enum.Parse(typeof(UtilityType), entry.Key.ToString()[8..]));
       return list.ToArray();
     }
     // Get a list of perks with Perk.PerkType enum
@@ -599,12 +599,12 @@ namespace SneakyGame.Game.Items
 
     public static int s_ShopLoadoutCount, s_ShopEquipmentPoints;
 
-    public static int GetUtilityCount(UtilityScript.UtilityType utility)
+    public static int GetUtilityCount(UtilityType utility)
     {
       var count = 1;
       switch (utility)
       {
-        case UtilityScript.UtilityType.SHURIKEN:
+        case UtilityType.SHURIKEN:
           count = 2;
           break;
       }

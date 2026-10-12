@@ -1,6 +1,6 @@
 using SneakyGame.Game.Items;
+using SneakyEngine.Equippable.Utility;
 using SneakyGame.Ragdoll;
-using SneakyGame.Ragdoll.Equippables;
 using SneakyGame.Settings;
 using SneakyGame.Settings.Serialization;
 using UnityEngine;
@@ -108,7 +108,7 @@ public class Loadout
     var currentEquipValue = ItemManager.GetItemValue(side == ActiveRagdoll.Side.LEFT ? (index == 0 ? _Equipment._ItemLeft0 : _Equipment._ItemLeft1) : (index == 0 ? _Equipment._ItemRight0 : _Equipment._ItemRight1));
     return _available_points + currentEquipValue - ItemManager.GetItemValue(item) >= 0;
   }
-  public bool CanEquipUtility(ActiveRagdoll.Side side, UtilityScript.UtilityType utility)
+  public bool CanEquipUtility(ActiveRagdoll.Side side, UtilityType utility)
   {
     var currentUtilities = side == ActiveRagdoll.Side.LEFT ? _Equipment._UtilitiesLeft : _Equipment._UtilitiesRight;
     var currentEquipValue = 0;
@@ -143,6 +143,8 @@ public class Loadout
 
   public static void SaveAll()
   {
+    Debug.Log("Saved all loadouts");
+
     foreach (var loadout in _Loadouts)
     {
       loadout.Save();
@@ -203,18 +205,18 @@ public class Loadout
             break;
           case "utility_left":
             var split1 = val.Split(',');
-            var util = (UtilityScript.UtilityType)System.Enum.Parse(typeof(UtilityScript.UtilityType), split1[0], true);
+            var util = (UtilityType)System.Enum.Parse(typeof(UtilityType), split1[0], true);
             var count = split1[1].ParseIntInvariant();
-            var utils = new UtilityScript.UtilityType[count];
+            var utils = new UtilityType[count];
             for (var i = 0; i < count; i++)
               utils[i] = util;
             _Equipment._UtilitiesLeft = utils;
             break;
           case "utility_right":
             split1 = val.Split(',');
-            util = (UtilityScript.UtilityType)System.Enum.Parse(typeof(UtilityScript.UtilityType), split1[0], true);
+            util = (UtilityType)System.Enum.Parse(typeof(UtilityType), split1[0], true);
             count = split1[1].ParseIntInvariant();
-            utils = new UtilityScript.UtilityType[count];
+            utils = new UtilityType[count];
             for (var i = 0; i < count; i++)
               utils[i] = util;
             _Equipment._UtilitiesRight = utils;

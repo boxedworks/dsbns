@@ -33,7 +33,8 @@ namespace SneakyGame.Ragdoll
     public Transform Transform, _Controller;
     // Body parts
     public Rigidbody _Hip;
-    public HingeJoint _head, _spine, _arm_upper_l, _arm_upper_r, _arm_lower_l, _arm_lower_r, _leg_upper_l, _leg_upper_r, _leg_lower_l, _leg_lower_r;
+    public HingeJoint _Spine, _Arm_upper_l, _Arm_upper_r, _Arm_lower_l, _Arm_lower_r, _Leg_upper_l, _Leg_upper_r, _Leg_lower_l, _Leg_lower_r;
+    public Transform _Head;
 
     // Item info
     public ItemScript _ItemL, _ItemR;
@@ -84,7 +85,14 @@ namespace SneakyGame.Ragdoll
     public Vector3 _ForceGlobal;
 
     // Height above ground
-    static readonly public Vector3 _GROUNDHEIGHT = new Vector3(0f, 0.73f, 0f);
+    static readonly public Vector3 _GROUNDHEIGHT = new(0f, 0.73f, 0f);
+
+    static readonly Vector3
+      collider_upperLegPosition = new(0f, 0.71f, 0f),
+      collider_upperLegScale = new(0.78f, 1.5f, 0.6f),
+
+      collider_lowerLegPosition = new(0f, 0.96f, 0f),
+      collider_lowerLegScale = new(0.5f, 2.24f, 0.36f);
 
     // Holds rotation before Toggle()
     Quaternion _saveRot;
@@ -102,7 +110,7 @@ namespace SneakyGame.Ragdoll
     public Parts _transform_parts;
     public class Parts
     {
-      public Transform _hip, _spine, _arm_upper_l, _arm_upper_r, _arm_lower_l, _arm_lower_r, _head;
+      public Transform _hip, _spine, _arm_upper_l, _arm_upper_r, _arm_lower_l, _arm_lower_r, _head, _leg_upper_l, _leg_upper_r, _leg_lower_l, _leg_lower_r;
 
       Dictionary<EntityId, SaveInfo> _saveInfo;
       public class SaveInfo
@@ -118,11 +126,15 @@ namespace SneakyGame.Ragdoll
       public Parts(ActiveRagdoll ragdoll)
       {
         _hip = ragdoll._parts[0].transform;
-        _spine = ragdoll._parts[5].transform.GetChild(0);
+        _leg_upper_l = ragdoll._parts[1].transform;
+        _leg_upper_r = ragdoll._parts[2].transform;
+        _leg_lower_l = ragdoll._parts[3].transform;
+        _leg_lower_r = ragdoll._parts[4].transform;
         _arm_upper_l = ragdoll._parts[6].transform;
         _arm_upper_r = ragdoll._parts[7].transform;
         _arm_lower_l = ragdoll._parts[8].transform;
         _arm_lower_r = ragdoll._parts[9].transform;
+        _spine = ragdoll._parts[5].transform.GetChild(0);
         _head = ragdoll._parts[10].transform;
 
         _saveInfo = new();
@@ -213,16 +225,16 @@ namespace SneakyGame.Ragdoll
 
       // Index body parts
       _Hip = ragdoll.transform.GetChild(1).GetChild(0).GetChild(0).GetComponent<Rigidbody>();
-      _leg_upper_l = _Hip.transform.GetChild(0).GetComponent<HingeJoint>();
-      _leg_upper_r = _Hip.transform.GetChild(1).GetComponent<HingeJoint>();
-      _leg_lower_l = _leg_upper_l.transform.GetChild(0).GetComponent<HingeJoint>();
-      _leg_lower_r = _leg_upper_r.transform.GetChild(0).GetComponent<HingeJoint>();
-      _spine = _Hip.transform.GetChild(2).GetChild(0).GetComponent<HingeJoint>();
+      _Leg_upper_l = _Hip.transform.GetChild(0).GetComponent<HingeJoint>();
+      _Leg_upper_r = _Hip.transform.GetChild(1).GetComponent<HingeJoint>();
+      _Leg_lower_l = _Leg_upper_l.transform.GetChild(0).GetComponent<HingeJoint>();
+      _Leg_lower_r = _Leg_upper_r.transform.GetChild(0).GetComponent<HingeJoint>();
+      _Spine = _Hip.transform.GetChild(2).GetChild(0).GetComponent<HingeJoint>();
       /*_arm_upper_l = _spine.transform.GetChild(0).GetChild(0).GetChild(0).GetComponent<HingeJoint>();
       _arm_upper_r = _spine.transform.GetChild(0).GetChild(1).GetChild(0).GetComponent<HingeJoint>();
       _arm_lower_l = _arm_upper_l.transform.GetChild(0).GetComponent<HingeJoint>();
       _arm_lower_r = _arm_upper_r.transform.GetChild(0).GetComponent<HingeJoint>();*/
-      _head = _spine.transform.GetChild(0).GetChild(2).GetComponent<HingeJoint>();
+      _Head = _Spine.transform.GetChild(0).GetChild(2);
 
       _parts = GetParts();
       _transform_parts = new Parts(this);
@@ -274,25 +286,25 @@ namespace SneakyGame.Ragdoll
       lower_joint.axis = new Vector3(0f, 0f, 1f);
       lower_joint.useLimits = true;
       SetJointLimits(lower_joint, -150f * side_mod, 0f);
-      upper_joint.connectedBody = _spine.GetComponent<Rigidbody>();
+      upper_joint.connectedBody = _Spine.GetComponent<Rigidbody>();
       lower_joint.connectedBody = upper_rb;
       if (side == Side.LEFT)
       {
-        _arm_upper_l = upper_joint;
-        _arm_lower_l = lower_joint;
+        _Arm_upper_l = upper_joint;
+        _Arm_lower_l = lower_joint;
       }
       else
       {
-        _arm_upper_r = upper_joint;
-        _arm_lower_r = lower_joint;
+        _Arm_upper_r = upper_joint;
+        _Arm_lower_r = lower_joint;
       }
     }
 
     public void RemoveArmJoint(Side side)
     {
       var joints = new HingeJoint[] {
-      side == Side.LEFT ? _arm_upper_l : _arm_upper_r,
-      side == Side.LEFT ? _arm_lower_l : _arm_lower_r
+      side == Side.LEFT ? _Arm_upper_l : _Arm_upper_r,
+      side == Side.LEFT ? _Arm_lower_l : _Arm_lower_r
     };
       foreach (var joint in joints)
       {
@@ -351,7 +363,7 @@ namespace SneakyGame.Ragdoll
       }
 
       // Update arm spread
-      if (_spine != null)
+      if (_Spine != null)
       {
         if (_ItemL != null && _ItemL._twoHanded) { }
         else
@@ -365,7 +377,7 @@ namespace SneakyGame.Ragdoll
 
               // Lerp
               _la_limit = Mathf.Clamp(_la_limit + ((_la_targetLimit - _la_limit) > 0f ? 1f : -1f) * 0.5f * spread_speed, 0f, 1f);
-              var arm_upper = _spine.transform.GetChild(0).GetChild(0).GetChild(0);
+              var arm_upper = _Spine.transform.GetChild(0).GetChild(0).GetChild(0);
               var localrot = arm_upper.localRotation.eulerAngles;
               localrot.z = Mathf.Lerp(startPos, startPos - 90f, _la_limit);
               var q = arm_upper.localRotation;
@@ -380,7 +392,7 @@ namespace SneakyGame.Ragdoll
 
               // Lerp
               _ra_limit = Mathf.Clamp(_ra_limit + ((_ra_targetLimit - _ra_limit) > 0f ? 1f : -1f) * 0.5f * spread_speed, 0f, 1f);
-              var arm_upper = _spine.transform.GetChild(0).GetChild(1).GetChild(0);
+              var arm_upper = _Spine.transform.GetChild(0).GetChild(1).GetChild(0);
               var localrot = arm_upper.localRotation.eulerAngles;
               localrot.z = Mathf.Lerp(startPos, startPos + 90f, _ra_limit);
               var q = arm_upper.localRotation;
@@ -448,7 +460,7 @@ namespace SneakyGame.Ragdoll
           SfxManager.PlayAudioSourceSimple(_Controller.position, footstepAudioSource.clip, footstepAudioSource.volume, 0.89f, 1.11f, SfxManager.AudioClass.FOOTSTEP);
 
           // Footprint
-          var footprint_pos = _footprint ? _leg_lower_l.transform.position : _leg_lower_r.transform.position;
+          var footprint_pos = _footprint ? _Leg_lower_l.transform.position : _Leg_lower_r.transform.position;
           footprint_pos.y -= 0.4f;
           _footprint = !_footprint;
           FunctionsC.PlayComplexParticleSystemAt(_bloodFootprintTimer > 0f ? FunctionsC.ParticleSystemType.FOOTPRINT_BLOOD : FunctionsC.ParticleSystemType.FOOTPRINT, footprint_pos);
@@ -509,7 +521,7 @@ namespace SneakyGame.Ragdoll
           {
             _confusedTimer = Time.time + Random.Range(0.2f, 0.5f);
             var p = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.CONFUSED)[0];
-            p.transform.position = _head != null ? _head.transform.position : _Controller.position;
+            p.transform.position = _Head != null ? _Head.position : _Controller.position;
             p.Play();
           }
         }
@@ -560,7 +572,7 @@ namespace SneakyGame.Ragdoll
       }
 
       // Animate joints; walking
-      var joints = new HingeJoint[] { _leg_upper_l, _leg_upper_r, _arm_lower_l, _arm_lower_r };
+      var joints = new HingeJoint[] { _Leg_upper_l, _Leg_upper_r, _Arm_lower_l, _Arm_lower_r };
       var opposite = false;
       var first = true;
       foreach (var joint in joints)
@@ -778,6 +790,26 @@ namespace SneakyGame.Ragdoll
     public void RightArmCenter()
     {
       _ra_targetLimit = 0f;
+    }
+
+    void AddLegCollider(Side side)
+    {
+      var upperLeg = side == Side.LEFT ? _transform_parts._leg_upper_l : _transform_parts._leg_upper_r;
+      var lowerLeg = side == Side.LEFT ? _transform_parts._leg_lower_l : _transform_parts._leg_lower_r;
+
+      if (upperLeg != null)
+      {
+        var upperLegCollider = upperLeg.gameObject.AddComponent<BoxCollider>();
+        upperLegCollider.center = collider_upperLegPosition;
+        upperLegCollider.size = collider_upperLegScale;
+      }
+
+      if (lowerLeg != null)
+      {
+        var lowerLegCollider = lowerLeg.gameObject.AddComponent<BoxCollider>();
+        lowerLegCollider.center = collider_lowerLegPosition;
+        lowerLegCollider.size = collider_lowerLegScale;
+      }
     }
 
     public enum Side
@@ -1552,7 +1584,7 @@ namespace SneakyGame.Ragdoll
               dir += _Controller.right * 0.25f;
             else if (i == 1)
               dir += -_Controller.right * 0.25f;
-            if (Physics.SphereCast(_spine != null ? _spine.transform.position : _Hip.transform.position, 0.3f, dir, out hit, 0.75f, GameResources._Layermask_Ragdoll))
+            if (Physics.SphereCast(_Spine != null ? _Spine.transform.position : _Hip.transform.position, 0.3f, dir, out hit, 0.75f, GameResources._Layermask_Ragdoll))
             {
               var ragdoll = GetRagdoll(hit.collider.gameObject);
               if (ragdoll == null)
@@ -1648,8 +1680,6 @@ namespace SneakyGame.Ragdoll
     {
       IEnumerator BloodFollow(ParticleSystem system)
       {
-        var saveParent = system.transform.parent;
-        system.transform.parent = system.transform.parent.parent;
         system.transform.position = _Hip.position;
 
         EnemyScript.CheckSound(system.transform.position, EnemyScript.Loudness.SUPERSOFT);
@@ -1660,18 +1690,18 @@ namespace SneakyGame.Ragdoll
         system.Play();
         var time = system.main.duration;
         var timeLast = Time.time;
+        var waitForSeconds2 = new WaitForSecondsRealtime(0.02f);
         while (time > 0f)
         {
           time -= (Time.time - timeLast) * 1f;
           timeLast = Time.time;
 
-          yield return new WaitForSecondsRealtime(0.02f);
+          yield return waitForSeconds2;
           if (_Hip == null) break;
 
           system.transform.position = _Hip.position;
         }
 
-        system.transform.parent = saveParent;
         if (Time.time - GameScript.s_LevelStartTime < 1f)
         {
           system.Stop();
@@ -1721,26 +1751,29 @@ namespace SneakyGame.Ragdoll
         {
           var confetti = particlesConfetti[0];
 
-          var emissionconfetti = confetti.emission;
-          emissionconfetti.enabled = false;
-          confetti.transform.position = _Hip.position;
-          confetti.transform.LookAt(damageSource);
-          confetti.transform.Rotate(new Vector3(0f, 1f, 0f) * 180f);
-          var rotationConfetti = confetti.transform.localRotation;
-          rotationConfetti.eulerAngles = new Vector3(0f, rotationConfetti.eulerAngles.y, rotationConfetti.eulerAngles.z);
-          confetti.transform.localRotation = rotationConfetti;
-          confetti.transform.Rotate(new Vector3(1f, 0f, 0f), Random.value * -20f);
-          rotationConfetti = confetti.transform.localRotation;
+          if (confetti != null)
+          {
+            var emissionconfetti = confetti.emission;
+            emissionconfetti.enabled = false;
+            confetti.transform.position = _Hip.position;
+            confetti.transform.LookAt(damageSource);
+            confetti.transform.Rotate(new Vector3(0f, 1f, 0f) * 180f);
+            var rotationConfetti = confetti.transform.localRotation;
+            rotationConfetti.eulerAngles = new Vector3(0f, rotationConfetti.eulerAngles.y, rotationConfetti.eulerAngles.z);
+            confetti.transform.localRotation = rotationConfetti;
+            confetti.transform.Rotate(new Vector3(1f, 0f, 0f), Random.value * -20f);
+            rotationConfetti = confetti.transform.localRotation;
 
-          GameScript.s_Singleton.StartCoroutine(BloodFollow(confetti));
+            GameScript.s_Singleton.StartCoroutine(BloodFollow(confetti));
 
-          // Audio
-          PlaySound("Ragdoll/Confetti", 0.6f, 1.2f);
+            // Audio
+            PlaySound("Ragdoll/Confetti", 0.6f, 1.2f);
 
-          // Achievement
+            // Achievement
 #if UNITY_STANDALONE
-          Achievements.UnlockAchievement(Achievements.Achievement.EXTRA_USE_CONFETTI);
+            Achievements.UnlockAchievement(Achievements.Achievement.EXTRA_USE_CONFETTI);
 #endif
+          }
         }
 
       }
@@ -1753,65 +1786,72 @@ namespace SneakyGame.Ragdoll
         if (particlesBlood == null || particlesBlood.Length == 0) return;
 
         var blood = particlesBlood[0];
-
-        var emissionBlood = blood.emission;
-        emissionBlood.enabled = false;
-        blood.transform.position = _Hip.position;// + _hip.transform.forward * 0.2f;//point;
-        blood.transform.LookAt(damageSource);
-        blood.transform.Rotate(new Vector3(0f, 1f, 0f) * 180f);
-        var rotationBlood = blood.transform.localRotation;
-        rotationBlood.eulerAngles = new Vector3(0f, rotationBlood.eulerAngles.y, rotationBlood.eulerAngles.z);
-        blood.transform.localRotation = rotationBlood;
-        blood.transform.Rotate(new Vector3(1f, 0f, 0f), Random.value * -20f);
-        rotationBlood = blood.transform.localRotation;
-
-        // Giblets
-        if (spawnGiblets)
+        if (blood != null)
         {
-          var bloodIndex = blood.name.Split('_')[1].ParseIntInvariant();
-          var gibletIndex = -1;
-          switch (bloodIndex)
+          var emissionBlood = blood.emission;
+          emissionBlood.enabled = false;
+          blood.transform.position = _Hip.position;// + _hip.transform.forward * 0.2f;//point;
+          blood.transform.LookAt(damageSource);
+          blood.transform.Rotate(new Vector3(0f, 1f, 0f) * 180f);
+          var rotationBlood = blood.transform.localRotation;
+          rotationBlood.eulerAngles = new Vector3(0f, rotationBlood.eulerAngles.y, rotationBlood.eulerAngles.z);
+          blood.transform.localRotation = rotationBlood;
+          blood.transform.Rotate(new Vector3(1f, 0f, 0f), Random.value * -20f);
+          rotationBlood = blood.transform.localRotation;
+          GameScript.s_Singleton.StartCoroutine(BloodFollow(blood));
+
+          // Giblets
+          if (spawnGiblets)
           {
-            case 0:
-            case 8:
-            case 9:
-            case 11:
-            case 12:
-            case 13:
-            case 14:
+            var bloodIndex = blood.name.Split('_')[1].ParseIntInvariant();
+            var gibletIndex = -1;
+            switch (bloodIndex)
+            {
+              case 0:
+              case 8:
+              case 9:
+              case 11:
+              case 12:
+              case 13:
+              case 14:
 
-              gibletIndex = 0;
-              break;
+                gibletIndex = 0;
+                break;
 
-            case 3:
-            case 6:
-            case 10:
+              case 3:
+              case 6:
+              case 10:
 
-              gibletIndex = 1;
-              break;
+                gibletIndex = 1;
+                break;
 
-            case 1:
-            case 2:
-            case 4:
-            case 5:
-            case 7:
+              case 1:
+              case 2:
+              case 4:
+              case 5:
+              case 7:
 
-              gibletIndex = 2;
-              break;
+                gibletIndex = 2;
+                break;
+            }
+
+            var particlesGiblet = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.GIBLETS, gibletIndex);
+            if (particlesGiblet == null || particlesGiblet.Length == 0) return;
+
+            var giblets = particlesGiblet[0];
+            giblets.transform.position = _Hip.position;
+            giblets.transform.LookAt(damageSource);
+            giblets.transform.localRotation = rotationBlood;
+
+            giblets.Play();
           }
 
-          var particlesGiblet = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.GIBLETS, gibletIndex);
-          if (particlesGiblet == null || particlesGiblet.Length == 0) return;
+          // Bloody footprint
+          FunctionsC.AoeHandler.RegisterAoeEffect(this, FunctionsC.AoeHandler.AoeType.BLOOD, _Hip.position, 1f, 20f);
 
-          var giblets = particlesGiblet[0];
-          giblets.transform.position = _Hip.position;
-          giblets.transform.LookAt(damageSource);
-          giblets.transform.localRotation = rotationBlood;
-
-          giblets.Play();
+          // Audio
+          PlaySound($"Ragdoll/Blood{/*Random.Range(0, 10) < 3 ? 1 : */0}", 1.1f, 1.5f);
         }
-
-        GameScript.s_Singleton.StartCoroutine(BloodFollow(blood));
 
         // Blood smoke
         if (VfxSystem.UseBloodSmoke)
@@ -1820,12 +1860,6 @@ namespace SneakyGame.Ragdoll
           parts.transform.position = _Hip.position + new Vector3(0f, 0.5f, 0f);
           parts.Emit(2);
         }
-
-        // Bloody footprint
-        FunctionsC.AoeHandler.RegisterAoeEffect(this, FunctionsC.AoeHandler.AoeType.BLOOD, _Hip.position, 1f, 20f);
-
-        // Audio
-        PlaySound($"Ragdoll/Blood{/*Random.Range(0, 10) < 3 ? 1 : */0}", 1.1f, 1.5f);
       }
     }
 
@@ -1891,9 +1925,16 @@ namespace SneakyGame.Ragdoll
       else
       {
         Ragdoll(true);
-        _Hip.AddForce(hitForce, ForceMode.Impulse);
+
+        if (changeColor)
+          ChangeColor(_IsPlayer ? Color.black * 0.5f : Color.black, 0.8f);
+
+        //
         _Controller.GetComponent<UnityEngine.AI.NavMeshAgent>().enabled = false;
-        if (changeColor) ChangeColor(_IsPlayer ? Color.black * 0.5f : Color.black, 0.8f);
+
+        _Hip.AddForce(hitForce, ForceMode.Impulse);
+        AddLegCollider(Side.LEFT);
+        AddLegCollider(Side.RIGHT);
       }
 
       if (changeColor)
@@ -1984,8 +2025,8 @@ namespace SneakyGame.Ragdoll
           joints[i].useSpring = false;
           joints[i].useLimits = true;
         }
-        if (_arm_upper_l != null) _arm_upper_l.useLimits = false;
-        if (_arm_upper_r != null) _arm_upper_r.useLimits = false;
+        if (_Arm_upper_l != null) _Arm_upper_l.useLimits = false;
+        if (_Arm_upper_r != null) _Arm_upper_r.useLimits = false;
       }
       else
       {
@@ -2027,7 +2068,7 @@ namespace SneakyGame.Ragdoll
 
       var crown = UnityEngine.Object.Instantiate(GameResources._Crown).transform;
 
-      crown.transform.parent = _head.transform;
+      crown.transform.parent = _Head;
       crown.localScale = Vector3.one * 2f;
       crown.localEulerAngles = new Vector3(-60f, 90f, 0f);
       crown.localPosition = new Vector3(0.067f, 1f, 0.095f);
@@ -2041,7 +2082,7 @@ namespace SneakyGame.Ragdoll
     {
       if (!_hasCrown) return;
 
-      UnityEngine.Object.Destroy(_head.transform.GetChild(0).gameObject);
+      UnityEngine.Object.Destroy(_Head.GetChild(0).gameObject);
 
       _hasCrown = false;
     }
@@ -2057,9 +2098,9 @@ namespace SneakyGame.Ragdoll
       PlaySound("Enemies/Armor_give", 0.9f, 1.1f);
 
       // Equip helmet
-      _head.transform.localScale = new Vector3(0.3f, 0.3f, 0.3f);
+      _Head.localScale = new Vector3(0.3f, 0.3f, 0.3f);
 
-      helmet.transform.parent = _head.transform;
+      helmet.transform.parent = _Head;
       helmet.localScale = new Vector3(5f, 5f, 5f);
       helmet.localEulerAngles = new Vector3(-90f, 180f, 0f);
       helmet.localPosition = new Vector3(0f, 2.1f, 0.9f);
@@ -2078,7 +2119,7 @@ namespace SneakyGame.Ragdoll
       parts.transform.position = _Hip.position;
       parts.Play();
 
-      var helmet = _head.transform.GetChild(0).gameObject;
+      var helmet = _Head.GetChild(0).gameObject;
       helmet.transform.parent =
         save_til_die ? _Controller.parent : GameResources._Container_Objects;
 
@@ -2090,7 +2131,7 @@ namespace SneakyGame.Ragdoll
       rb.AddForce(hitForce.normalized * 4f, ForceMode.Impulse);
       rb.AddTorque(new Vector3(1f, 0f, 0f) * 50f, ForceMode.Impulse);
 
-      _head.transform.localScale = new Vector3(1f, 1f, 1f);
+      _Head.localScale = new Vector3(1f, 1f, 1f);
 
       _hasArmor = false;
     }
@@ -2242,7 +2283,7 @@ namespace SneakyGame.Ragdoll
 
       // Save for later
       _lastBubbleScriptTime = Time.time;
-      _bubbleScript = TextBubbleScript.SpawnBubbleWith(_head.transform, text, _Color, 0.75f);
+      _bubbleScript = TextBubbleScript.SpawnBubbleWith(_Head, text, _Color, 0.75f);
     }
 
     void SetCollisionMode(CollisionDetectionMode mode)
@@ -2296,7 +2337,7 @@ namespace SneakyGame.Ragdoll
     {
       return new HingeJoint[]
       {
-      _spine, _arm_upper_l, _head, _arm_upper_r, _arm_lower_l, _arm_lower_r, _leg_upper_l, _leg_upper_r, _leg_lower_l, _leg_lower_r
+      _Spine, _Arm_upper_l, _Arm_upper_r, _Arm_lower_l, _Arm_lower_r, _Leg_upper_l, _Leg_upper_r, _Leg_lower_l, _Leg_lower_r
       };
     }
 
@@ -2351,14 +2392,13 @@ namespace SneakyGame.Ragdoll
 
     public HingeJoint GetRandomJoint()
     {
-      return Random.Range(0, 6) switch
+      return Random.Range(0, 5) switch
       {
-        0 => _spine,
-        1 => _head,
-        2 => _arm_upper_l,
-        3 => _arm_upper_r,
-        4 => _leg_upper_l,
-        5 => _leg_upper_r,
+        0 => _Spine,
+        1 => _Arm_upper_l,
+        2 => _Arm_upper_r,
+        3 => _Leg_upper_l,
+        4 => _Leg_upper_r,
 
         _ => null,
       };

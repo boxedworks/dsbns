@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using SneakyEngine.Equippable.Utility;
 using SneakyGame.Settings;
 using SneakyGame.Settings.Serialization;
 using SneakyGame.Game.Items;
@@ -411,33 +412,33 @@ public static class ItemManager
     }
     return -1;
   }
-  public static int GetUtilityValue(UtilityScript.UtilityType utility)
+  public static int GetUtilityValue(UtilityType utility)
   {
     switch (utility)
     {
-      case UtilityScript.UtilityType.NONE:
+      case UtilityType.NONE:
         return 0;
-      case UtilityScript.UtilityType.DASH:
-      case UtilityScript.UtilityType.SHURIKEN:
-      case UtilityScript.UtilityType.SHURIKEN_BIG:
-      case UtilityScript.UtilityType.GRENADE_STUN:
-      case UtilityScript.UtilityType.TACTICAL_BULLET:
-      case UtilityScript.UtilityType.MIRROR:
-      case UtilityScript.UtilityType.BEAR_TRAP:
-      case UtilityScript.UtilityType.COIN:
+      case UtilityType.DASH:
+      case UtilityType.SHURIKEN:
+      case UtilityType.SHURIKEN_BIG:
+      case UtilityType.GRENADE_STUN:
+      case UtilityType.TACTICAL_BULLET:
+      case UtilityType.MIRROR:
+      case UtilityType.BEAR_TRAP:
+      case UtilityType.COIN:
         return 1;
-      case UtilityScript.UtilityType.GRENADE:
-      case UtilityScript.UtilityType.GRENADE_IMPACT:
-      case UtilityScript.UtilityType.C4:
-      case UtilityScript.UtilityType.MINE:
-      case UtilityScript.UtilityType.MOLOTOV:
-      case UtilityScript.UtilityType.KUNAI_EXPLOSIVE:
-      case UtilityScript.UtilityType.KUNAI_STICKY:
-      case UtilityScript.UtilityType.STOP_WATCH:
-      case UtilityScript.UtilityType.TEMP_SHIELD:
+      case UtilityType.GRENADE:
+      case UtilityType.GRENADE_IMPACT:
+      case UtilityType.C4:
+      case UtilityType.MINE:
+      case UtilityType.MOLOTOV:
+      case UtilityType.KUNAI_EXPLOSIVE:
+      case UtilityType.KUNAI_STICKY:
+      case UtilityType.STOP_WATCH:
+      case UtilityType.TEMP_SHIELD:
         return 2;
-      case UtilityScript.UtilityType.INVISIBILITY:
-      case UtilityScript.UtilityType.MORTAR_STRIKE:
+      case UtilityType.INVISIBILITY:
+      case UtilityType.MORTAR_STRIKE:
         return 3;
     }
     return 100;

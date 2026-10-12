@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
+using SneakyEngine.Equippable.Utility;
 using SneakyGame.Game.Items;
 using SneakyGame.Ragdoll;
-using SneakyGame.Ragdoll.Equippables;
 using SneakyGame.Settings.Localization;
 using SneakyGame.Game.Survival;
 using SneakyGame.Game.Player;
@@ -61,8 +61,8 @@ namespace SneakyGame.Objects.CustomEntities
     System.Tuple<Perk.PerkType, int> _perk_info;
 
     // Utilities
-    static Dictionary<int, List<System.Tuple<UtilityScript.UtilityType, int, int>>> _BUYABLE_UTILITY_TIERS;
-    System.Tuple<UtilityScript.UtilityType, int, int> _utility_info;
+    static Dictionary<int, List<System.Tuple<UtilityType, int, int>>> _BUYABLE_UTILITY_TIERS;
+    System.Tuple<UtilityType, int, int> _utility_info;
 
     // Random
     static List<CustomObstacle> _RandomObstaclesList;
@@ -163,26 +163,26 @@ namespace SneakyGame.Objects.CustomEntities
         _BUYABLE_UTILITY_TIERS = new();
 
         // Tier 0 is a utility the player can always buy from the start
-        CreateUtilityTier(0, UtilityScript.UtilityType.GRENADE, 90);
+        CreateUtilityTier(0, UtilityType.GRENADE, 90);
 
-        CreateUtilityTier(1, UtilityScript.UtilityType.GRENADE, 90);
-        CreateUtilityTier(1, UtilityScript.UtilityType.SHURIKEN, 35, 2);
-        CreateUtilityTier(1, UtilityScript.UtilityType.GRENADE_IMPACT, 75);
-        CreateUtilityTier(1, UtilityScript.UtilityType.GRENADE_STUN, 30);
-        CreateUtilityTier(1, UtilityScript.UtilityType.MIRROR, 50);
-        CreateUtilityTier(1, UtilityScript.UtilityType.TACTICAL_BULLET, 25, 2);
-        CreateUtilityTier(1, UtilityScript.UtilityType.KUNAI_STICKY, 60);
-        CreateUtilityTier(1, UtilityScript.UtilityType.C4, 40);
-        CreateUtilityTier(1, UtilityScript.UtilityType.STOP_WATCH, 40);
-        CreateUtilityTier(1, UtilityScript.UtilityType.MORTAR_STRIKE, 45);
-        //CreateUtilityTier(1, UtilityScript.UtilityType.MOLOTOV, 65);
-        CreateUtilityTier(1, UtilityScript.UtilityType.BEAR_TRAP, 30, 2);
-        CreateUtilityTier(1, UtilityScript.UtilityType.MINE, 60);
+        CreateUtilityTier(1, UtilityType.GRENADE, 90);
+        CreateUtilityTier(1, UtilityType.SHURIKEN, 35, 2);
+        CreateUtilityTier(1, UtilityType.GRENADE_IMPACT, 75);
+        CreateUtilityTier(1, UtilityType.GRENADE_STUN, 30);
+        CreateUtilityTier(1, UtilityType.MIRROR, 50);
+        CreateUtilityTier(1, UtilityType.TACTICAL_BULLET, 25, 2);
+        CreateUtilityTier(1, UtilityType.KUNAI_STICKY, 60);
+        CreateUtilityTier(1, UtilityType.C4, 40);
+        CreateUtilityTier(1, UtilityType.STOP_WATCH, 40);
+        CreateUtilityTier(1, UtilityType.MORTAR_STRIKE, 45);
+        //CreateUtilityTier(1, UtilityType.MOLOTOV, 65);
+        CreateUtilityTier(1, UtilityType.BEAR_TRAP, 30, 2);
+        CreateUtilityTier(1, UtilityType.MINE, 60);
       }
 
     }
 
-    static void CreateUtilityTier(int tier, UtilityScript.UtilityType utility, int price, int quantity = 1)
+    static void CreateUtilityTier(int tier, UtilityType utility, int price, int quantity = 1)
     {
       _BUYABLE_UTILITY_TIERS ??= new();
 
@@ -659,13 +659,13 @@ namespace SneakyGame.Objects.CustomEntities
           var new_amount = add ? utilities.Length + add_amount : add_amount;
           if (equip_side == ActiveRagdoll.Side.LEFT)
           {
-            equipment._UtilitiesLeft = new UtilityScript.UtilityType[new_amount];
+            equipment._UtilitiesLeft = new UtilityType[new_amount];
             for (var i = 0; i < equipment._UtilitiesLeft.Length; i++)
               equipment._UtilitiesLeft[i] = utility_type;
           }
           else
           {
-            equipment._UtilitiesRight = new UtilityScript.UtilityType[new_amount];
+            equipment._UtilitiesRight = new UtilityType[new_amount];
             for (var i = 0; i < equipment._UtilitiesRight.Length; i++)
               equipment._UtilitiesRight[i] = utility_type;
           }

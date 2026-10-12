@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using SneakyEngine.Equippable.Utility;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.AI;
@@ -417,7 +418,7 @@ namespace SneakyGame.Game.Player
       }
     }
 
-    public void AddUtility(UtilityScript.UtilityType utility, ActiveRagdoll.Side side)
+    public void AddUtility(UtilityType utility, ActiveRagdoll.Side side)
     {
       var util = UtilityScript.GetUtility(utility);
       util.SetSide(side);
@@ -463,7 +464,7 @@ namespace SneakyGame.Game.Player
 
     public void AddLight()
     {
-      var light = _ragdoll._head.gameObject.AddComponent<Light>();
+      var light = _ragdoll._Head.gameObject.AddComponent<Light>();
       light.type = LightType.Point;
       light.shadows = LightShadows.Hard;
       light.color = Color.white;// _ragdoll._color;
@@ -2476,7 +2477,7 @@ namespace SneakyGame.Game.Player
           var tutorial_ui0 = tutorial_keyboard ? TutorialInformation._Tutorial_Restart_Keyboard0 : TutorialInformation._Tutorial_Restart_Controller0;
           var tutorial_ui1 = tutorial_keyboard ? TutorialInformation._Tutorial_Restart_Keyboard1 : TutorialInformation._Tutorial_Restart_Controller1;
 
-          while (this != null && _ragdoll != null && _ragdoll._head != null)
+          while (this != null && _ragdoll != null && _ragdoll._Head != null)
           {
             yield return new WaitForSecondsRealtime(0.01f);
             // Wait before showing tutorial; wait longer if already seen tutorial
@@ -2642,7 +2643,7 @@ namespace SneakyGame.Game.Player
       _ring = null;
     }
 
-    public System.Tuple<bool, ActiveRagdoll.Side> HasUtility(UtilityScript.UtilityType utility)
+    public System.Tuple<bool, ActiveRagdoll.Side> HasUtility(UtilityType utility)
     {
       if (_Equipment._UtilitiesLeft != null && _Equipment._UtilitiesLeft.Length > 0 && _Equipment._UtilitiesLeft[0] == utility)
         return System.Tuple.Create(true, ActiveRagdoll.Side.LEFT);
@@ -2650,7 +2651,7 @@ namespace SneakyGame.Game.Player
         return System.Tuple.Create(true, ActiveRagdoll.Side.RIGHT);
       return System.Tuple.Create(false, ActiveRagdoll.Side.LEFT);
     }
-    public System.Tuple<bool, ActiveRagdoll.Side> HasUtility(UtilityScript.UtilityType utility, ActiveRagdoll.Side side)
+    public System.Tuple<bool, ActiveRagdoll.Side> HasUtility(UtilityType utility, ActiveRagdoll.Side side)
     {
       if (_Equipment._UtilitiesLeft != null && _Equipment._UtilitiesLeft.Length > 0 && _Equipment._UtilitiesLeft[0] == utility && side == ActiveRagdoll.Side.LEFT)
         return System.Tuple.Create(true, ActiveRagdoll.Side.LEFT);

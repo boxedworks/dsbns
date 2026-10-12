@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using SneakyEngine.Equippable.Utility;
 using SneakyGame.Ragdoll;
 using SneakyGame.Game.Items;
 using SneakyGame.Game.Player;
@@ -193,7 +194,7 @@ namespace SneakyGame.Objects
           }
           ))
         {
-          if (_sourceDismember && r._health <= 0) r.Dismember(r._spine, hitForce);
+          if (_sourceDismember && r._health <= 0) r.Dismember(r._Spine, hitForce);
           _hitAmount += (int)damage;
           if (_hitAmount <= _penatrationAmount)
           {
@@ -382,7 +383,7 @@ namespace SneakyGame.Objects
       if (targetPosition == Vector3.zero || (Physics.SphereCast(new Ray(bulletPos, MathC.Get2DVector(targetPosition - _rb.position).normalized), 0.05f, out raycastinfo, 100f, LayerMask.GetMask("ParticleCollision")) && raycastinfo.distance < target._distance))
       {
 
-        var mirrors = UtilityScript.s_Utilities_Thrown.ContainsKey(UtilityScript.UtilityType.MIRROR) ? UtilityScript.s_Utilities_Thrown[UtilityScript.UtilityType.MIRROR] : null;
+        var mirrors = UtilityScript.s_Utilities_Thrown.ContainsKey(UtilityType.MIRROR) ? UtilityScript.s_Utilities_Thrown[UtilityType.MIRROR] : null;
         if (mirrors != null && mirrors.Count > 0)
         {
 

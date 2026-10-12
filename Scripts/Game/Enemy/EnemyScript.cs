@@ -1,4 +1,5 @@
 using System.Collections;
+using SneakyEngine.Equippable.Utility;
 using System.Collections.Generic;
 using UnityEngine;
 using Unity.Jobs;
@@ -12,7 +13,6 @@ using SneakyGame.Ragdoll;
 using SneakyGame.UI.Menus;
 using SneakyGame.Objects;
 using SneakyGame.Game.Items;
-using SneakyGame.Ragdoll.Equippables;
 using SneakyGame.Game.Player;
 using SneakyGame.Game.Survival;
 
@@ -89,7 +89,7 @@ public class EnemyScript : PlayerScript.IHasRagdoll
     // Register to handler to index this._id
     SpherecastHandler.Register(this);
 
-    var origin = _ragdoll._head.transform.position;// + new Vector3(0f, -0.3f, 0f);
+    var origin = _ragdoll._Head.position;// + new Vector3(0f, -0.3f, 0f);
     var radius = 0.2f;
 
     // 0; Cast at ragdolltarget
@@ -98,8 +98,8 @@ public class EnemyScript : PlayerScript.IHasRagdoll
     SpherecastHandler.QueueSpherecast(origin, dir, radius);
 
     // Cast two directions
-    var forward = MathC.Get2DVector(_ragdoll._head.transform.forward).normalized;
-    var right = MathC.Get2DVector(_ragdoll._head.transform.right).normalized;
+    var forward = MathC.Get2DVector(_ragdoll._Head.forward).normalized;
+    var right = MathC.Get2DVector(_ragdoll._Head.right).normalized;
 
     // 1; left
     dir = (forward + right * (0.025f + Mathf.PingPong(Time.time * 4f, 0.9f))).normalized;
@@ -111,7 +111,7 @@ public class EnemyScript : PlayerScript.IHasRagdoll
     SpherecastHandler.QueueSpherecast(origin, dir, radius);
 
     // 3; Cast towards lastknownpos
-    dir = -MathC.Get2DVector(_ragdoll._head.transform.position - _lastKnownPos).normalized + right * (0.1f + (Mathf.PingPong(Time.time * 1.5f + _Id, 2f) - 1f));
+    dir = -MathC.Get2DVector(_ragdoll._Head.position - _lastKnownPos).normalized + right * (0.1f + (Mathf.PingPong(Time.time * 1.5f + _Id, 2f) - 1f));
     SpherecastHandler.QueueSpherecast(origin, dir, radius);
 
     // Disable self casting collide
@@ -495,6 +495,9 @@ public class EnemyScript : PlayerScript.IHasRagdoll
     if (!_Enabled) return;
     if (_ragdoll == null || !_ragdoll._CanReceiveInput) return;
 
+    var hasGun = _ragdoll.HasGun();
+    var position = _ragdoll._Hip.position;
+
     if (!_beganPatrolling)
     {
       _ragdoll.SetActive(true);
@@ -543,14 +546,14 @@ public class EnemyScript : PlayerScript.IHasRagdoll
             var useItem = _leftweaponuse ? _ragdoll._ItemL : (_ragdoll._ItemR != null ? _ragdoll._ItemR : _ragdoll._ItemL);
 
             // Check for reload
-            if (_ragdoll.HasGun() && useItem.NeedsReload())
+            if (hasGun && useItem.NeedsReload())
             {
               _ragdoll.Reload();
               SetAttackTime(true);
             }
 
             // Attack if close enough or pointed at target
-            else if (_ragdoll.HasGun() || _ragdoll.HasMelee())
+            else if (hasGun || _ragdoll.HasMelee())
             {
               UseItem(true);
               if (HasMachineGun())
@@ -582,17 +585,17 @@ public class EnemyScript : PlayerScript.IHasRagdoll
         {
           if (Time.time - GameScript.s_LevelStartTime > 0.5f)
           {
-            var info = FunctionsC.GetFarthestPlayerFrom(transform.position);
+            var info = FunctionsC.GetFarthestPlayerFrom(position);
             if (info != null && info._distance > 3f + (SettingsHelper._NumberPlayers > 1 ? (1.5f * Mathf.Clamp(SettingsHelper._NumberPlayers, 0, 2) - 1) : 0f))
             {
               _canAttack = true;
               _canMove = true;
-              SetRagdollTarget(FunctionsC.GetClosestTargetTo(_ragdoll, transform.position)._ragdoll);
+              SetRagdollTarget(FunctionsC.GetClosestTargetTo(_ragdoll, position)._ragdoll);
               TargetFound();
             }
             else
             {
-              var close_data = FunctionsC.GetClosestTargetTo(_ragdoll, transform.position);
+              var close_data = FunctionsC.GetClosestTargetTo(_ragdoll, position);
               if (close_data._ragdoll != null)
               {
                 lookAtPos = close_data._ragdoll.Transform.position;
@@ -683,7 +686,7 @@ public class EnemyScript : PlayerScript.IHasRagdoll
               // Update patrol
               if (_patroling && !IsChaser())
               {
-                var dis = MathC.Get2DDistance(transform.position, _PathScript.GetPatrolPoint().position);
+                var dis = MathC.Get2DDistance(position, _PathScript.GetPatrolPoint().position);
                 _atd = dis;
                 if (dis < 0.1f)
                 {
@@ -693,11 +696,11 @@ public class EnemyScript : PlayerScript.IHasRagdoll
                     // Look at direction
                     Transform lp = _PathScript.GetLookPoint(),
                      p = _PathScript.GetPatrolPoint();
-                    _waitLookPos = MathC.Get2DVector(transform.position + (lp.position - p.position).normalized) + new Vector3(0f, transform.position.y, 0f);
+                    _waitLookPos = MathC.Get2DVector(position + (lp.position - p.position).normalized) + new Vector3(0f, position.y, 0f);
 
                   }
 
-                  _agent.Move(_PathScript.GetPatrolPoint().position - transform.position);
+                  _agent.Move(_PathScript.GetPatrolPoint().position - position);
 
                   // Wait until next movement
                   Wait(_PathScript.GetPatrolWait(), _PathScript.GetPathLength() > 1);
@@ -719,7 +722,7 @@ public class EnemyScript : PlayerScript.IHasRagdoll
               _waitAmount = 1f + Random.value * 3f;
               return;
             }
-            var dis = MathC.Get2DDistance(transform.position, _lastKnownPos);
+            var dis = MathC.Get2DDistance(position, _lastKnownPos);
             _atd = dis;
             if (dis < 0.8f)
             {
@@ -762,9 +765,9 @@ public class EnemyScript : PlayerScript.IHasRagdoll
             {
 
               // Check if close to steering pos; try to look around corner before going around corner
-              if (_canMove)
+              if (_canMove && !_IsZombie)
               {
-                if (MathC.Get2DDistance(_ragdoll._Hip.position, _agent.steeringTarget) < 3f)
+                if (MathC.Get2DDistance(position, _agent.steeringTarget) < 3f)
                 {
                   var iter = 0;
                   if (_agent.path.corners.Length > 0 && !_agent.path.corners[_agent.path.corners.Length - 1].Equals(_agent.steeringTarget))
@@ -779,21 +782,21 @@ public class EnemyScript : PlayerScript.IHasRagdoll
                       }
                       iter++;
                     }
-                  //Debug.DrawLine(transform.position, _agent.steeringTarget, Color.red);
-                  //Debug.DrawLine(transform.position, _lastKnownPos, Color.blue);
+                  //Debug.DrawLine(position, _agent.steeringTarget, Color.red);
+                  //Debug.DrawLine(position, _lastKnownPos, Color.blue);
                 }
               }
 
               if (_targetInLOS)
               {
-                var dir = MathC.Get2DVector(_ragdollTarget._Hip.position - _ragdoll._Hip.position);
+                var dir = MathC.Get2DVector(_ragdollTarget._Hip.position - position);
                 var dis = dir.magnitude;
                 dir = dir.normalized;
 
                 // If can't move, has gun, and player gets too close, start to chase
                 if (!_canMove)
                 {
-                  if (_ragdoll.HasGun() && dis < 1.5f)
+                  if (hasGun && dis < 1.5f)
                   {
                     _canMove = true;
                     if (!_agent.hasPath)
@@ -812,10 +815,10 @@ public class EnemyScript : PlayerScript.IHasRagdoll
                 }
 
                 // If has gun, keep distance to shoot
-                if (_ragdoll.HasGun())
+                if (hasGun)
                 {
                   if (_targetInFront)
-                    lookAtPos = new Vector3(_ragdollTarget._Hip.position.x, transform.position.y, _ragdollTarget._Hip.position.z) + dir;
+                    lookAtPos = new Vector3(_ragdollTarget._Hip.position.x, position.y, _ragdollTarget._Hip.position.z) + dir;
                   else
                     lookAtPos = _lastKnownPos;
 
@@ -841,7 +844,7 @@ public class EnemyScript : PlayerScript.IHasRagdoll
                     // Keep distance per close and far values
                     if (dis > close && dis < far && Time.time - _lastPosSetTime > 0.1f)
                     {
-                      _agent.SetDestination(transform.position);
+                      _agent.SetDestination(position);
                       _lastPosSetTime = Time.time;
                     }
 
@@ -850,9 +853,8 @@ public class EnemyScript : PlayerScript.IHasRagdoll
                       ChaseTarget(false);
                     else
                     {
-                      UnityEngine.AI.NavMeshHit hit;
-                      var samplePos = transform.position + (_ragdoll._Hip.position - _ragdollTarget._Hip.position).normalized * 5f;
-                      if (UnityEngine.AI.NavMesh.SamplePosition(samplePos, out hit, 4f, UnityEngine.AI.NavMesh.AllAreas))
+                      var samplePos = position + (position - _ragdollTarget._Hip.position).normalized * 5f;
+                      if (UnityEngine.AI.NavMesh.SamplePosition(samplePos, out _, 4f, UnityEngine.AI.NavMesh.AllAreas))
                       {
                         var save_distance = FunctionsC.GetPathLength(_agent.path.corners);
                         var path = new UnityEngine.AI.NavMeshPath();
@@ -862,7 +864,7 @@ public class EnemyScript : PlayerScript.IHasRagdoll
                           agentTypeID = _agent.agentTypeID,
                           areaMask = UnityEngine.AI.NavMesh.AllAreas
                         };
-                        if (UnityEngine.AI.NavMesh.CalculatePath(transform.position, samplePos, filter, path))
+                        if (UnityEngine.AI.NavMesh.CalculatePath(position, samplePos, filter, path))
                         {
                           var new_distance = FunctionsC.GetPathLength(path.corners);
                           var diff = new_distance - save_distance;
@@ -881,7 +883,7 @@ public class EnemyScript : PlayerScript.IHasRagdoll
 
                 // Check melee
                 bool hasFryingPan = _itemLeft == ItemManager.Items.FRYING_PAN || _itemRight == ItemManager.Items.FRYING_PAN;
-                if (hasFryingPan && (_ragdoll.HasGun() || _itemLeft == ItemManager.Items.GRENADE_HOLD)) { }
+                if (hasFryingPan && (hasGun || _itemLeft == ItemManager.Items.GRENADE_HOLD)) { }
                 else if (!_meleeDrawn && ((!_IsZombieReal && dis < (hasFryingPan ? 2f : 4f)) || (_IsZombieReal && dis < 2.5f)))
                 {
                   DrawBackMelee(true);
@@ -899,14 +901,14 @@ public class EnemyScript : PlayerScript.IHasRagdoll
                 {
 
                   // If has a melee weapon and sees the target, run at them
-                  if (!_ragdoll.HasGun() && _time_seen > 0.05f && _targetInLOS && _enemyType != EnemyType.ROBOT && !_IsZombie)
+                  if (!hasGun && _time_seen > 0.05f && _targetInLOS && _enemyType != EnemyType.ROBOT && !_IsZombie)
                     _moveSpeed = PlayerScript.RUNSPEED;
 
                   // If grappling, slower
                   if (_ragdoll._IsGrappling) { _moveSpeed *= 0.9f; }
 
                   // Only attack if is alive, the target is alive, and (the target is in front, or has a machine gun, or has a melee weapon)
-                  if (!_ragdoll._IsDead && !_ragdollTarget._IsDead && (_targetDirectlyInFront || HasMachineGun() || !_ragdoll.HasGun()))
+                  if (!_ragdoll._IsDead && !_ragdollTarget._IsDead && (_targetDirectlyInFront || HasMachineGun() || !hasGun))
                   {
                     if (_itemLeft == ItemManager.Items.GRENADE_HOLD)
                       _leftweaponuse = true;
@@ -914,7 +916,7 @@ public class EnemyScript : PlayerScript.IHasRagdoll
                     var useitem = _leftweaponuse ? (_ragdoll._ItemL != null ? _ragdoll._ItemL : _ragdoll._ItemR) : (_ragdoll._ItemR != null ? _ragdoll._ItemR : _ragdoll._ItemL);
 
                     // Check for reload
-                    if (_ragdoll.HasGun() && useitem.NeedsReload())
+                    if (hasGun && useitem.NeedsReload())
                     {
                       _ragdoll.Reload();
                       SetAttackTime(true);
@@ -922,8 +924,8 @@ public class EnemyScript : PlayerScript.IHasRagdoll
 
                     // Attack if close enough or pointed at target
                     else if (
-                      _ragdoll.HasGun() ||
-                      (!_ragdoll.HasGun() && dis < (_itemLeft == ItemManager.Items.GRENADE_HOLD ? 1f : (_itemLeft == ItemManager.Items.BAT ? 1.2f : (_IsZombieReal ? 0.85f : (useitem._type == ItemManager.Items.RAPIER ? 2.8f : 1.8f)))))
+                      hasGun ||
+                      (!hasGun && dis < (_itemLeft == ItemManager.Items.GRENADE_HOLD ? 1f : (_itemLeft == ItemManager.Items.BAT ? 1.2f : (_IsZombieReal ? 0.85f : (useitem._type == ItemManager.Items.RAPIER ? 2.8f : 1.8f)))))
                       )
                     {
                       UseItem(dis < 1.4f);
@@ -965,7 +967,7 @@ public class EnemyScript : PlayerScript.IHasRagdoll
           // Searching
           else if (_state == State.SEARCHING)
           {
-            _lastKnownPos = transform.position + _searchDir;
+            _lastKnownPos = position + _searchDir;
             lookAtPos = _lastKnownPos;
             if (_agent.remainingDistance < 1f || !_canMove)
             {
@@ -989,7 +991,7 @@ public class EnemyScript : PlayerScript.IHasRagdoll
           MoveRotateTransform(lookAtPos);
 
           // Check if stuck and attempt to fix
-          if (_ragdoll.HasGun() && _targetInLOS) { }
+          if (hasGun && _targetInLOS) { }
           else if (_straightChase) { }
           else if (!_agent.hasPath && _state != State.NEUTRAL && _canMove)
           {
@@ -1256,8 +1258,8 @@ public class EnemyScript : PlayerScript.IHasRagdoll
     {
       _rayTimer = Time.time;
       RaycastHit h;
-      Vector3 f = MathC.Get2DVector(_ragdoll._head.transform.forward).normalized,
-         r = _ragdoll._head.transform.up;
+      Vector3 f = MathC.Get2DVector(_ragdoll._Head.forward).normalized,
+         r = _ragdoll._Head.up;
 
       // Check if lost object perusing
       if (_targetFound && _ragdollTarget != null)
@@ -1357,7 +1359,7 @@ public class EnemyScript : PlayerScript.IHasRagdoll
           _time_seen += Time.deltaTime;
           _time_lost = 0f;
           _targetInLOS = true;
-          float lookMagnitude = (dirToTarget - MathC.Get2DVector(_ragdoll._head.transform.forward)).magnitude;
+          float lookMagnitude = (dirToTarget - MathC.Get2DVector(_ragdoll._Head.forward)).magnitude;
           if (lookMagnitude < 1.4f)
           {
             _targetInFront = true;
@@ -1390,7 +1392,7 @@ public class EnemyScript : PlayerScript.IHasRagdoll
           if (h.collider != null)
           {
             CheckRay(h, true);
-            if ((_state == State.SEARCHING || (_state == State.SUSPICIOUS && _patroling)) && _canMove) LookAt(_canMove ? transform.position + f : transform.position + -MathC.Get2DVector(_ragdoll._head.transform.position - _lastKnownPos).normalized);
+            if ((_state == State.SEARCHING || (_state == State.SUSPICIOUS && _patroling)) && _canMove) LookAt(_canMove ? transform.position + f : transform.position + -MathC.Get2DVector(_ragdoll._Head.position - _lastKnownPos).normalized);
           }
         }
     }
@@ -1428,8 +1430,8 @@ public class EnemyScript : PlayerScript.IHasRagdoll
       {
         c = false;
         var minVal = 0.5f;
-        var dirToTarget = -MathC.Get2DVector(_ragdoll._head.transform.position - _ragdollTarget._Hip.transform.position).normalized;
-        var lookMagnitude = (dirToTarget - MathC.Get2DVector(_ragdoll._head.transform.forward)).magnitude;
+        var dirToTarget = -MathC.Get2DVector(_ragdoll._Head.position - _ragdollTarget._Hip.transform.position).normalized;
+        var lookMagnitude = (dirToTarget - MathC.Get2DVector(_ragdoll._Head.forward)).magnitude;
         if (lookMagnitude < minVal)
           c = true;
       }
@@ -1484,15 +1486,14 @@ public class EnemyScript : PlayerScript.IHasRagdoll
   void ChaseTarget(bool checkTurnaround = true)
   {
     if (_straightChase) return;
-    if (_chasingTarget || _ragdollTarget._IsDead || !_canMove) return;
+    if (Time.time < _nextChaseTargetTime || _ragdollTarget._IsDead || !_canMove) return;
     if (_IsZombie) checkTurnaround = false;
-    StartCoroutine(ChaseTargetCo(checkTurnaround));
+    UpdateChaseTarget(checkTurnaround);
   }
 
-  bool _chasingTarget = false;
-  IEnumerator ChaseTargetCo(bool checkTurnaround)
+  float _nextChaseTargetTime;
+  void UpdateChaseTarget(bool checkTurnaround)
   {
-    _chasingTarget = true;
     //if(_targetInLOS && _time_lost < 10f)
     _lastKnownPos = _ragdollTarget._Controller.position;
 
@@ -1533,8 +1534,8 @@ public class EnemyScript : PlayerScript.IHasRagdoll
           _agent.SetPath(path_new);
       }
     }
-    yield return new WaitForSeconds(0.15f + Random.value * 0.15f);
-    _chasingTarget = false;
+
+    _nextChaseTargetTime = Time.time + 0.1f + Random.value * 0.1f;
   }
   #endregion
 
@@ -2273,7 +2274,7 @@ public class EnemyScript : PlayerScript.IHasRagdoll
                       return false;
 
                     // Check utilities equal
-                    var utilsTotal = new List<UtilityScript.UtilityType>();
+                    var utilsTotal = new List<UtilityType>();
                     foreach (var util in e0._UtilitiesLeft)
                       utilsTotal.Add(util);
                     foreach (var util in e0._UtilitiesRight)
@@ -2362,7 +2363,7 @@ public class EnemyScript : PlayerScript.IHasRagdoll
                         if (extraInfo.items?.Length > 3)
                           equipmentFake._ItemRight1 = extraInfo.items[3];
 
-                        equipmentFake._UtilitiesLeft = extraInfo.utilities == null ? new UtilityScript.UtilityType[0] : extraInfo.utilities;
+                        equipmentFake._UtilitiesLeft = extraInfo.utilities == null ? new UtilityType[0] : extraInfo.utilities;
 
                         if (extraInfo.perks != null)
                           equipmentFake._Perks = new List<Perk.PerkType>(extraInfo.perks);

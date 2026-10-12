@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using SneakyEngine.Equippable.Utility;
 using SneakyGame.Objects;
 using SneakyGame.Objects.CustomEntities;
 using SneakyGame.Ragdoll;
@@ -7,7 +8,6 @@ using SneakyGame.Settings.Serialization;
 using SneakyGame.UI.Menus;
 using SneakyGame.Game.Items;
 using UnityEngine;
-using SneakyGame.Ragdoll.Equippables;
 using SneakyGame.Game.Player;
 
 namespace SneakyGame.Game.Survival
@@ -152,8 +152,8 @@ namespace SneakyGame.Game.Survival
     // Revert player loadout to starting loadout
     public static void OnPlayerDead(int playerId)
     {
-      s_PlayerLoadouts[playerId]._Equipment._UtilitiesLeft = new UtilityScript.UtilityType[] { UtilityScript.UtilityType.GRENADE, };
-      s_PlayerLoadouts[playerId]._Equipment._UtilitiesRight = new UtilityScript.UtilityType[0];
+      s_PlayerLoadouts[playerId]._Equipment._UtilitiesLeft = new UtilityType[] { UtilityType.GRENADE, };
+      s_PlayerLoadouts[playerId]._Equipment._UtilitiesRight = new UtilityType[0];
       s_PlayerLoadouts[playerId]._Equipment._ItemLeft0 = ItemManager.Items.KNIFE;
       s_PlayerLoadouts[playerId]._Equipment._ItemRight0 = ItemManager.Items.NONE;
       s_PlayerLoadouts[playerId]._Equipment._ItemLeft1 = ItemManager.Items.NONE;

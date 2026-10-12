@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using SneakyEngine.Equippable.Utility;
 using System.Collections.Generic;
 using SneakyGame.Objects;
 using SneakyGame.Settings;
@@ -47,7 +48,7 @@ namespace SneakyGame.Ragdoll.Equippables
 
     float _upTime;
 
-    public UtilityScript.UtilityType _customProjetile;
+    public UtilityType _customProjetile;
     public UtilityScript[] _customProjectiles;
     int _customProjectileIter;
     float _customProjectileVelocityMod;
@@ -156,8 +157,8 @@ namespace SneakyGame.Ragdoll.Equippables
       return _penatrationAmount;
     }
 
-    Transform _arm_lower { get { return transform.parent.parent; } }
-    Transform _arm_upper { get { return _arm_lower.parent; } }
+    Transform _arm_lower;
+    Transform _arm_upper;
     Vector3 _save_rot_lower, _save_rot_upper,
       _original_rot_lower, _original_rot_upper;
 
@@ -676,7 +677,7 @@ namespace SneakyGame.Ragdoll.Equippables
         var use_penatrationAmount = penatrationAmount;
 
         // Normal bullet
-        if (_customProjetile == UtilityScript.UtilityType.NONE)
+        if (_customProjetile == UtilityType.NONE)
         {
 
           // Special
@@ -732,7 +733,7 @@ namespace SneakyGame.Ragdoll.Equippables
           var spawn_pos = _forward.position;
           if (_type == ItemType.ROCKET_FIST)
             spawn_pos = _ragdoll._Hip.position;
-          spawn_pos.y = _ragdoll._spine.transform.position.y;
+          spawn_pos.y = _ragdoll._Spine.transform.position.y;
 
           var bullet = SpawnBulletTowards(
             _ragdoll,
@@ -801,8 +802,8 @@ namespace SneakyGame.Ragdoll.Equippables
 
       // Add force to spine
       var torqueForce = _hit_force * 20000f * -Vector3.right.normalized;
-      _ragdoll._spine.GetComponent<Rigidbody>().AddRelativeTorque(torqueForce);
-      _ragdoll._head.GetComponent<Rigidbody>().AddRelativeTorque(torqueForce);
+      _ragdoll._Spine.GetComponent<Rigidbody>().AddRelativeTorque(torqueForce);
+      _ragdoll._Head.GetComponent<Rigidbody>().AddRelativeTorque(torqueForce);
 
       // Recoil player
       _ragdoll.RecoilSimple(_shoot_force, false);
@@ -1195,7 +1196,7 @@ namespace SneakyGame.Ragdoll.Equippables
         }
 
         // Play sound
-        //if(_customProjetile != UtilityScript.UtilityType.NONE) playSound = false;
+        //if(_customProjetile != UtilityType.NONE) playSound = false;
         if (playSound)
         {
           if (_type != ItemType.CHAINSAW)
@@ -1557,6 +1558,9 @@ namespace SneakyGame.Ragdoll.Equippables
       _ragdoll = ragdoll;
       _side = side;
 
+      _arm_lower = transform.parent.parent;
+      _arm_upper = _arm_lower.parent;
+
       // Check for laser sight
       if (!_isMelee && _ragdoll._IsPlayer && _ragdoll._PlayerScript.HasPerk(Perk.PerkType.LASER_SIGHTS))
         AddLaserSight();
@@ -1569,7 +1573,7 @@ namespace SneakyGame.Ragdoll.Equippables
       if (itemId != -1)
       {
         if (_type == ItemType.STICKY_GUN)
-          UtilityScript.ParentUtilitiesById(itemId, _ItemId, UtilityScript.UtilityType.STICKY_GUN_BULLET);
+          UtilityScript.ParentUtilitiesById(itemId, _ItemId, UtilityType.STICKY_GUN_BULLET);
       }
 
       /*/ Gather bullets
@@ -1764,7 +1768,7 @@ namespace SneakyGame.Ragdoll.Equippables
 
       // Check special
       if (_type == ItemType.STICKY_GUN)
-        UtilityScript.Detonate_UtilitiesById(this, UtilityScript.UtilityType.STICKY_GUN_BULLET, _triggerDownReal ? 1 : -1);
+        UtilityScript.Detonate_UtilitiesById(this, UtilityType.STICKY_GUN_BULLET, _triggerDownReal ? 1 : -1);
 
       // Show progress bar
       var reloadTime = _reloadTime / reload_speed_mod;
@@ -1840,7 +1844,7 @@ namespace SneakyGame.Ragdoll.Equippables
     // Reload custom projectiles
     public void ReloadCustom()
     {
-      if (_customProjetile != UtilityScript.UtilityType.NONE)
+      if (_customProjetile != UtilityType.NONE)
       {
 
         // Delete old

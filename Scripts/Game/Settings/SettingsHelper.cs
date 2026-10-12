@@ -1,6 +1,6 @@
 using System.Collections.Generic;
+using SneakyEngine.Equippable.Utility;
 using SneakyGame.Game.Items;
-using SneakyGame.Ragdoll.Equippables;
 using SneakyGame.Settings.Extras;
 using SneakyGame.Settings.Serialization;
 using SneakyEngine.Effects;
@@ -699,9 +699,9 @@ namespace SneakyGame.Settings
           items = new ItemManager.Items[] {
             ItemManager.Items.KATANA,
             },
-          utilities = new UtilityScript.UtilityType[]{
-            UtilityScript.UtilityType.SHURIKEN,
-            UtilityScript.UtilityType.SHURIKEN,
+          utilities = new UtilityType[]{
+            UtilityType.SHURIKEN,
+            UtilityType.SHURIKEN,
           },
           perks = null
         }
@@ -718,12 +718,12 @@ namespace SneakyGame.Settings
           extras = null,
           loadoutDesc = "grenade impact x4, explosion res.",
           items = null,
-          utilities = new UtilityScript.UtilityType[]
+          utilities = new UtilityType[]
           {
-            UtilityScript.UtilityType.GRENADE_IMPACT,
-            UtilityScript.UtilityType.GRENADE_IMPACT,
-            UtilityScript.UtilityType.GRENADE_IMPACT,
-            UtilityScript.UtilityType.GRENADE_IMPACT,
+            UtilityType.GRENADE_IMPACT,
+            UtilityType.GRENADE_IMPACT,
+            UtilityType.GRENADE_IMPACT,
+            UtilityType.GRENADE_IMPACT,
           },
           perks = new Perk.PerkType[]
           {

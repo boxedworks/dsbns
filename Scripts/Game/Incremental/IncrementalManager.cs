@@ -17,7 +17,7 @@ namespace SneakyGame.Game.Incremental
 
     float _nextSpawnTime;
 
-    public SpawnBehavior _SpawnBehavior = SpawnBehavior.RANDOM;
+    public SpawnBehavior _SpawnBehavior = SpawnBehavior.TOP;
 
     public enum SpawnBehavior
     {
@@ -95,6 +95,8 @@ namespace SneakyGame.Game.Incremental
       var radius = Mathf.Sqrt(Random.Range(s_minSpawnRadius * s_minSpawnRadius, s_maxSpawnRadius * s_maxSpawnRadius));
       Vector3 offset;
 
+      var horizontalRadius = 10f;
+
       switch (_SpawnBehavior)
       {
         case SpawnBehavior.NONE:
@@ -102,19 +104,19 @@ namespace SneakyGame.Game.Incremental
           return false;
 
         case SpawnBehavior.TOP:
-          offset = new Vector3(Random.Range(-radius, radius), 0f, radius);
+          offset = new Vector3(Random.Range(-horizontalRadius, horizontalRadius), 0f, radius);
           break;
 
         case SpawnBehavior.BOTTOM:
-          offset = new Vector3(Random.Range(-radius, radius), 0f, -radius);
+          offset = new Vector3(Random.Range(-horizontalRadius, horizontalRadius), 0f, -radius);
           break;
 
         case SpawnBehavior.LEFT:
-          offset = new Vector3(-radius, 0f, Random.Range(-radius, radius));
+          offset = new Vector3(-radius, 0f, Random.Range(-horizontalRadius, horizontalRadius));
           break;
 
         case SpawnBehavior.RIGHT:
-          offset = new Vector3(radius, 0f, Random.Range(-radius, radius));
+          offset = new Vector3(radius, 0f, Random.Range(-horizontalRadius, horizontalRadius));
           break;
 
         default:
