@@ -405,7 +405,7 @@ namespace SneakyGame.Ragdoll.Equippables
               }
 
               EnemyScript.CheckSound(transform.position, killed ? EnemyScript.Loudness.SUPERSOFT : EnemyScript.Loudness.SOFT);
-              transform.GetChild(1).GetComponent<ParticleSystem>().Stop();
+              _throwParticles.Stop();
               Destroy(_rb);
               _stuck = true;
 
@@ -469,7 +469,7 @@ namespace SneakyGame.Ragdoll.Equippables
               }
               else
               {
-                transform.GetChild(1).GetComponent<ParticleSystem>().Stop();
+                _throwParticles.Stop();
                 Destroy(_rb);
                 _stuck = true;
 
@@ -549,7 +549,7 @@ namespace SneakyGame.Ragdoll.Equippables
                 }
                 else
                   PlaySound(Audio.UTILITY_HIT_FLOOR);
-                transform.GetChild(1).GetComponent<ParticleSystem>().Stop();
+                _throwParticles.Stop();
                 Destroy(_rb);
                 //_rb.isKinematic = true;
 
@@ -602,7 +602,7 @@ namespace SneakyGame.Ragdoll.Equippables
                 }
                 else
                   PlaySound(Audio.UTILITY_HIT_FLOOR);
-                transform.GetChild(1).GetComponent<ParticleSystem>().Stop();
+                _throwParticles.Stop();
                 Destroy(_rb);
               }
             };
@@ -746,7 +746,7 @@ namespace SneakyGame.Ragdoll.Equippables
               }
               else
                 PlaySound(Audio.UTILITY_HIT_FLOOR);
-              transform.GetChild(1).GetComponent<ParticleSystem>().Stop();
+              _throwParticles.Stop();
               EnemyScript.CheckSound(transform.position, killed ? EnemyScript.Loudness.SUPERSOFT : EnemyScript.Loudness.SOFT);
               Destroy(_rb);
 
@@ -863,7 +863,7 @@ namespace SneakyGame.Ragdoll.Equippables
               }
 
               EnemyScript.CheckSound(transform.position, killed ? EnemyScript.Loudness.SUPERSOFT : EnemyScript.Loudness.SOFT);
-              transform.GetChild(1).GetComponent<ParticleSystem>().Stop();
+              _throwParticles.Stop();
               Destroy(_rb);
               _stuck = true;
 
@@ -1304,9 +1304,9 @@ namespace SneakyGame.Ragdoll.Equippables
       {
         if (_utility_type == UtilityType.SHURIKEN_BIG)
         {
+          source.IgnoreCollision(transform.GetChild(1).GetComponent<Collider>());
           source.IgnoreCollision(transform.GetChild(2).GetComponent<Collider>());
           source.IgnoreCollision(transform.GetChild(3).GetComponent<Collider>());
-          source.IgnoreCollision(transform.GetChild(4).GetComponent<Collider>());
         }
         else if (_c != null)
           source.IgnoreCollision(_c);
@@ -1327,6 +1327,7 @@ namespace SneakyGame.Ragdoll.Equippables
     // Throw the item
     float _thrownTimer;
     Vector3 _throwPosition;
+    ParticleSystem _throwParticles;
     void Throw(int mode = 0)
     {
       // Set switch
@@ -1405,11 +1406,15 @@ namespace SneakyGame.Ragdoll.Equippables
       }
 
       // Particle FX
-      var ps = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.THROWABLE_TRAIL);
-      var psNewGO = Instantiate(ps[0].gameObject, _rb.transform);
-      psNewGO.transform.localPosition = Vector3.zero;
-      psNewGO.transform.localRotation = Quaternion.identity;
-      psNewGO.GetComponent<ParticleSystem>().Play();
+      if (_utility_type != UtilityType.MORTAR_STRIKE)
+      {
+        var ps = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.THROWABLE_TRAIL);
+        var psNewGO = Instantiate(ps[0].gameObject, _rb.transform);
+        psNewGO.transform.localPosition = Vector3.zero;
+        psNewGO.transform.localRotation = Quaternion.identity;
+        _throwParticles = psNewGO.GetComponent<ParticleSystem>();
+        _throwParticles.Play();
+      }
     }
 
     void CoinSpin(Vector3 spinAxis)

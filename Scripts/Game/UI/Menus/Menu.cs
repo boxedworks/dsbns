@@ -4057,11 +4057,11 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
           var perks_split = perks.Split('\n');
           var equipment_string = new string[]
           {
-          equipment,
-          equipment1,
-          utilities,
-          perks_split.Length > 0 ? perks_split[0] : "",
-          perks_split.Length > 1 ? perks_split[1] : ""
+            equipment,
+            equipment1,
+            utilities,
+            perks_split.Length > 0 ? perks_split[0] : "",
+            perks_split.Length > 1 ? perks_split[1] : ""
           };
           var equipment_strings2 = new List<string>();
           foreach (var e in equipment_string)
@@ -4321,7 +4321,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
                     var typ = "item";
                     GenericMenu(new string[]
                     {
-                    string.Format(format_editLoadout, typ)
+                      string.Format(format_editLoadout, typ)
                     },
                   "ok",
                     MenuType.EDIT_LOADOUT,

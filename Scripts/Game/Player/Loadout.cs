@@ -127,12 +127,12 @@ public class Loadout
       return;
 
     var savestring = "";
-    if (_Equipment._ItemLeft0 != Items.NONE) savestring += $"item_left0:{_Equipment._ItemLeft0.ToString()}|";
-    if (_Equipment._ItemRight0 != Items.NONE) savestring += $"item_right0:{_Equipment._ItemRight0.ToString()}|";
-    if (_Equipment._ItemLeft1 != Items.NONE) savestring += $"item_left1:{_Equipment._ItemLeft1.ToString()}|";
-    if (_Equipment._ItemRight1 != Items.NONE) savestring += $"item_right1:{_Equipment._ItemRight1.ToString()}|";
-    if (_Equipment._UtilitiesLeft != null && _Equipment._UtilitiesLeft.Length > 0) savestring += $"utility_left:{_Equipment._UtilitiesLeft[0].ToString()},{_Equipment._UtilitiesLeft.Length}|";
-    if (_Equipment._UtilitiesRight != null && _Equipment._UtilitiesRight.Length > 0) savestring += $"utility_right:{_Equipment._UtilitiesRight[0].ToString()},{_Equipment._UtilitiesRight.Length}|";
+    if (_Equipment._ItemLeft0 != Items.NONE) savestring += $"item_left0:{_Equipment._ItemLeft0}|";
+    if (_Equipment._ItemRight0 != Items.NONE) savestring += $"item_right0:{_Equipment._ItemRight0}|";
+    if (_Equipment._ItemLeft1 != Items.NONE) savestring += $"item_left1:{_Equipment._ItemLeft1}|";
+    if (_Equipment._ItemRight1 != Items.NONE) savestring += $"item_right1:{_Equipment._ItemRight1}|";
+    if (_Equipment._UtilitiesLeft != null && _Equipment._UtilitiesLeft.Length > 0) savestring += $"utility_left:{_Equipment._UtilitiesLeft[0]},{_Equipment._UtilitiesLeft.Length}|";
+    if (_Equipment._UtilitiesRight != null && _Equipment._UtilitiesRight.Length > 0) savestring += $"utility_right:{_Equipment._UtilitiesRight[0]},{_Equipment._UtilitiesRight.Length}|";
     foreach (var perk in _Equipment._Perks)
       savestring += $"perk:{perk}|";
     var pairs = _two_weapon_pairs ? 1 : 0;
@@ -143,16 +143,16 @@ public class Loadout
 
   public static void SaveAll()
   {
-    Debug.Log("Saved all loadouts");
-
+    var tutorialUnlocked = false;
     foreach (var loadout in _Loadouts)
     {
       loadout.Save();
       if (!loadout._Equipment.IsEmpty())
-      {
-        ShopHelper.Unlock(ShopHelper.Unlocks.TUTORIAL_PART1);
-        break;
-      }
+        if (!tutorialUnlocked)
+        {
+          ShopHelper.Unlock(ShopHelper.Unlocks.TUTORIAL_PART1);
+          tutorialUnlocked = true;
+        }
     }
     LevelSaveData.Save();
   }

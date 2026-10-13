@@ -803,7 +803,6 @@ namespace SneakyGame.Ragdoll.Equippables
       // Add force to spine
       var torqueForce = _hit_force * 20000f * -Vector3.right.normalized;
       _ragdoll._Spine.GetComponent<Rigidbody>().AddRelativeTorque(torqueForce);
-      _ragdoll._Head.GetComponent<Rigidbody>().AddRelativeTorque(torqueForce);
 
       // Recoil player
       _ragdoll.RecoilSimple(_shoot_force, false);
