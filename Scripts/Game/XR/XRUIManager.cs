@@ -316,7 +316,7 @@ namespace SneakyGame.XR
       }
       else if (_hoveredControl.name == _buttonLoadoutLeft.name)
       {
-        if (GameScript.s_GameMode == GameScript.GameModes.ZOMBIE)
+        if (GameScript.s_GameMode == GameScript.GameMode.ZOMBIE)
         {
           PlayerScript.HandleDpadDirectionStatic(0, 2);
         }
@@ -328,7 +328,7 @@ namespace SneakyGame.XR
       }
       else if (_hoveredControl.name == _buttonLoadoutRight.name)
       {
-        if (GameScript.s_GameMode == GameScript.GameModes.ZOMBIE)
+        if (GameScript.s_GameMode == GameScript.GameMode.ZOMBIE)
         {
           PlayerScript.HandleDpadDirectionStatic(0, 3);
         }

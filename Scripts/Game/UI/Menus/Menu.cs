@@ -934,7 +934,7 @@ namespace SneakyGame.UI.Menus
 
         // Add local levels
         Levels._CurrentLevelCollectionIndex = 3;
-        GameScript.s_GameMode = GameScript.GameModes.MISSIONS;
+        GameScript.s_GameMode = GameScript.GameMode.MISSIONS;
 
         var leveldata = Levels._LevelPack_SelectingLevelsFromPack ? Levels._LevelPack_Current._levelData : Levels._CurrentLevelCollection._levelData;
 
@@ -1937,7 +1937,7 @@ namespace SneakyGame.UI.Menus
 
           // Set current level collection to editor levels
           Levels._CurrentLevelCollectionIndex = 3;
-          GameScript.s_GameMode = GameScript.GameModes.MISSIONS;
+          GameScript.s_GameMode = GameScript.GameMode.MISSIONS;
 
           // Set up loadout editing
           if (Levels._HardcodedLoadout == null)
@@ -3126,7 +3126,7 @@ namespace SneakyGame.UI.Menus
       .AddComponent(string.Format(format_mode, "missions", "clean site and retrieve DATA"), MenuComponent.ComponentType.BUTTON_SIMPLE)
         .AddEvent(component =>
         {
-          GameScript.s_GameMode = GameScript.GameModes.MISSIONS;
+          GameScript.s_GameMode = GameScript.GameMode.MISSIONS;
           Levels._CurrentLevelCollectionIndex = SettingsHelper._DIFFICULTY;
           SettingsHelper.OnGamemodeChanged(SettingsHelper.GamemodeChange.CLASSIC);
 
@@ -3158,7 +3158,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
         .AddEvent(component =>
         {
           Levels._CurrentLevelCollectionIndex = 2;
-          GameScript.s_GameMode = GameScript.GameModes.ZOMBIE;
+          GameScript.s_GameMode = GameScript.GameMode.ZOMBIE;
           CommonEvents._SwitchMenu(MenuType.GAMETYPE_ZOMBIE);
 
           SettingsHelper.OnGamemodeChanged(SettingsHelper.GamemodeChange.SURVIVAL);
@@ -3179,7 +3179,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
           .AddEvent(component =>
           {
             Levels._CurrentLevelCollectionIndex = 4;
-            GameScript.s_GameMode = GameScript.GameModes.PARTY;
+            GameScript.s_GameMode = GameScript.GameMode.PARTY;
             CommonEvents._SwitchMenu(MenuType.VERSUS);
 
             SettingsHelper.OnGamemodeChanged(SettingsHelper.GamemodeChange.VERSUS);
@@ -3195,7 +3195,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
 
         SurvivalManager.OnLeaveMode();
 
-        GameScript.s_GameMode = GameScript.GameModes.MISSIONS;
+        GameScript.s_GameMode = GameScript.GameMode.MISSIONS;
         SettingsHelper.OnGamemodeChanged(SettingsHelper.GamemodeChange.CLASSIC);
       };
       // Set tip
@@ -5466,8 +5466,8 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
         // Tip
         ModifyMenu_TipComponents(MenuType.PAUSE, GameScript.s_GameMode switch
         {
-          GameScript.GameModes.ZOMBIE => 5,
-          GameScript.GameModes.PARTY => 7,
+          GameScript.GameMode.ZOMBIE => 5,
+          GameScript.GameMode.PARTY => 7,
           _ => 3,
         });
         ModifyMenu_TipSwitch(MenuType.PAUSE);

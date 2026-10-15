@@ -936,8 +936,8 @@ namespace SneakyGame.Ragdoll.Equippables
             _swordLerpDesired0 = swinging || _meleeComplexResetTrigger ? new Vector3(70f, 250f, 0f) : new Vector3(0f, 0f, 0f);
             _swordLerpDesired1 = swinging || _meleeComplexResetTrigger ? new Vector3(40f, 0f, 0f) : new Vector3(0f, 0f, 0f);
 
-            _swordLerp0 += (_swordLerpDesired0 - _swordLerp0) * Time.deltaTime * 50f;
-            _swordLerp1 += (_swordLerpDesired1 - _swordLerp1) * Time.deltaTime * 50f;
+            _swordLerp0 += 50f * Time.deltaTime * (_swordLerpDesired0 - _swordLerp0);
+            _swordLerp1 += 50f * Time.deltaTime * (_swordLerpDesired1 - _swordLerp1);
 
             FunctionsC.SetRotationLocal(
               _arm_upper,
@@ -1028,7 +1028,7 @@ namespace SneakyGame.Ragdoll.Equippables
 
           _laserSight.transform.position = start + (forward * (dist / 2f));
           _laserSight.transform.localScale = new Vector3(0.03f, 0.03f, dist);
-          _laserSight.transform.LookAt(start + forward * dist * 1.2f);
+          _laserSight.transform.LookAt(start + 1.2f * dist * forward);
           _laserSight.transform.position += new Vector3(0f, -0.2f, 0f);
         }
       }

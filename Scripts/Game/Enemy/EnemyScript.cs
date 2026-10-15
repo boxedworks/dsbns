@@ -15,6 +15,7 @@ using SneakyGame.Objects;
 using SneakyGame.Game.Items;
 using SneakyGame.Game.Player;
 using SneakyGame.Game.Survival;
+using SneakyGame.Game.Incremental;
 
 public class EnemyScript : PlayerScript.IHasRagdoll
 {
@@ -487,7 +488,7 @@ public class EnemyScript : PlayerScript.IHasRagdoll
     _sawWithGoal;
   State _setstate;
   float noPartrolWaitTime;
-  bool _straightChase { get { return GameScript.s_IsIncrementalGameMode; } }
+  bool _straightChase { get { return false; } }//GameScript.s_IsIncrementalGameMode; } }
 
   // Update is called once per frame
   void Handle()
@@ -511,9 +512,7 @@ public class EnemyScript : PlayerScript.IHasRagdoll
 
       _beganPatrolling = true;
       if (!_ragdoll._IsGrappled)
-      {
         _agent.enabled = true;
-      }
 
       // Set state and begin patrolling
       _state = State.NEUTRAL;
@@ -522,7 +521,39 @@ public class EnemyScript : PlayerScript.IHasRagdoll
       BeginPatrol();
     }
 
-    // Update line renderer under enemy
+    // Incremental mode
+    if (GameScript.s_GameMode == GameScript.GameMode.INCREMENTAL && _IsZombie)
+    {
+
+      // Movement
+      if (_agent.enabled)
+      {
+        var moveDir = new Vector3(-1f, 0f, 0f);
+        _agent.SetDestination(transform.position + moveDir);
+
+        // Update controller
+        _moveSpeed_lerped += (_moveSpeed - _moveSpeed_lerped) * Time.deltaTime * 3f;
+        transform.LookAt(transform.position + moveDir);
+        Move();
+      }
+
+      // Death
+      if (transform.position.x < -IncrementalManager.s_screenWidth)
+      {
+        _ragdoll.TakeDamage(new ActiveRagdoll.RagdollDamageSource()
+        {
+          Damage = 9999,
+          DamageSourceType = ActiveRagdoll.DamageSourceType.MELEE,
+          MuteAudio = true
+        });
+      }
+
+      // Update ragdoll
+      _ragdoll.Update();
+      return;
+    }
+
+    // Disable raycasting to not interfere with other calculations
     if (!_ragdoll._IsDead)
     {
       if (!_IsZombieReal)
@@ -1204,7 +1235,7 @@ public class EnemyScript : PlayerScript.IHasRagdoll
     }
 
     var moveDir = (_straightChase ? _lastKnownPos : _agent.steeringTarget) - transform.position;
-    var movePos = moveDir.normalized * PlayerScript.MOVESPEED * Time.deltaTime * _moveSpeed_lerped;
+    var movePos = _moveSpeed_lerped * PlayerScript.MOVESPEED * Time.deltaTime * moveDir.normalized;
     if (_straightChase || !Equals(_agent.destination, transform.position))
     {
       _agent.Move(movePos);
@@ -1462,7 +1493,7 @@ public class EnemyScript : PlayerScript.IHasRagdoll
       {
         //rag._enemyScript.AbsorbInfo(this);
         if (hit.distance < 2f && !rag._IsDead)
-          _agent.Move((_strafeRight ? transform.right : -transform.right) * 0.6f * Time.deltaTime * _moveSpeed_lerped);
+          _agent.Move(_moveSpeed_lerped * 0.6f * Time.deltaTime * (_strafeRight ? transform.right : -transform.right));
       }
     }
     return false;
@@ -1896,7 +1927,7 @@ public class EnemyScript : PlayerScript.IHasRagdoll
         }
 
     // Notify survival manager that an enemy has been killed
-    if (GameScript.s_GameMode == GameScript.GameModes.ZOMBIE)
+    if (GameScript.s_GameMode == GameScript.GameMode.ZOMBIE)
       SurvivalManager.OnEnemyKilled();
 
     // Check for last enemy killed

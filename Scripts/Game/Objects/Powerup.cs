@@ -190,7 +190,7 @@ namespace SneakyGame.Objects
       }
       if (GameScript.s_EditorEnabled || _rb == null)
       {
-        _icon.transform.Rotate(new Vector3(1f, 1f, Mathf.Sin(Time.time)) * Time.deltaTime * 15f);
+        _icon.transform.Rotate(15f * Time.deltaTime * new Vector3(1f, 1f, Mathf.Sin(Time.time)));
         return;
       }
 
@@ -212,7 +212,7 @@ namespace SneakyGame.Objects
         // If activated2, move icon into sky
         if (_activated2)
         {
-          _rb.MovePosition(_rb.position + (new Vector3(_icon.transform.position.x, transform.position.y + 21f, _icon.transform.position.z) - _rb.position) * Time.deltaTime * 3f);
+          _rb.MovePosition(_rb.position + 3f * Time.deltaTime * (new Vector3(_icon.transform.position.x, transform.position.y + 21f, _icon.transform.position.z) - _rb.position));
           if (_icon.transform.position.y > transform.position.y + 20f)
           {
             Destroy(_icon);
@@ -224,7 +224,7 @@ namespace SneakyGame.Objects
         {
           //Vector3 newPos = MathC.Get2DVector(_icon.transform.position - GameObject.Find("EndLight").transform.position);
           //if (newPos.magnitude > 1f) newPos.Normalize();
-          _rb.MovePosition(_rb.position + (_activator._Controller.transform.position - _activator._Hip.transform.forward + new Vector3(0f, 1f, 0f) - _rb.position) * Time.deltaTime * 4f);
+          _rb.MovePosition(_rb.position + 4f * Time.deltaTime * (_activator._Controller.transform.position - _activator._Hip.transform.forward + new Vector3(0f, 1f, 0f) - _rb.position));
         }
 
       }

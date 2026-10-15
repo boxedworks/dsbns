@@ -999,7 +999,7 @@ public class TileManager
       if (GameScript.s_Backrooms)
       {
         var usePlane = true;
-        var yVal = usePlane ? -1.26f : -2.3f;
+        var yVal = usePlane ? -1.3f : -2.3f;
 
         var backrooms = usePlane ? GameObject.Instantiate(GameResources._DebugViews.transform.GetChild(1).gameObject) : GameObject.Instantiate(GameResources._DebugViews.transform.GetChild(0).gameObject);
         backrooms.transform.position = new Vector3(-42.49f, yVal, -53.95f);
@@ -4266,22 +4266,22 @@ public class TileManager
     // Move camera with arrows
     if (ControllerManager.GetKey(Key.ARROW_U, ControllerManager.InputMode.HOLD))
     {
-      var movePos = new Vector3(0f, 0f, 1f) * Time.deltaTime * 10f;
+      var movePos = 10f * Time.deltaTime * new Vector3(0f, 0f, 1f);
       GameResources._Camera_Main.transform.position += movePos;
     }
     if (ControllerManager.GetKey(Key.ARROW_D, ControllerManager.InputMode.HOLD))
     {
-      var movePos = -new Vector3(0f, 0f, 1f) * Time.deltaTime * 10f;
+      var movePos = 10f * Time.deltaTime * -new Vector3(0f, 0f, 1f);
       GameResources._Camera_Main.transform.position += movePos;
     }
     if (ControllerManager.GetKey(Key.ARROW_L, ControllerManager.InputMode.HOLD))
     {
-      var movePos = -new Vector3(1f, 0f, 0f) * Time.deltaTime * 10f;
+      var movePos = 10f * Time.deltaTime * -new Vector3(1f, 0f, 0f);
       GameResources._Camera_Main.transform.position += movePos;
     }
     if (ControllerManager.GetKey(Key.ARROW_R, ControllerManager.InputMode.HOLD))
     {
-      var movePos = new Vector3(1f, 0f, 0f) * Time.deltaTime * 10f;
+      var movePos = 10f * Time.deltaTime * new Vector3(1f, 0f, 0f);
       GameResources._Camera_Main.transform.position += movePos;
     }
 

@@ -23,7 +23,7 @@ namespace SneakyGame.Settings
     static VfxSystem VfxModule { get { return SneakyEngineSystem.VfxSystem; } }
 
     //
-    public static float _VERSION = 1.62f;
+    public static float _VERSION = 1.63f;
 
     //
     static Resolution ScreenResolution;

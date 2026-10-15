@@ -474,9 +474,9 @@ namespace SneakyGame.Ragdoll.Equippables
                 _stuck = true;
 
                 // Stop ignoring holder's ragdoll
+                source.IgnoreCollision(transform.GetChild(1).GetComponent<Collider>(), false);
                 source.IgnoreCollision(transform.GetChild(2).GetComponent<Collider>(), false);
                 source.IgnoreCollision(transform.GetChild(3).GetComponent<Collider>(), false);
-                source.IgnoreCollision(transform.GetChild(4).GetComponent<Collider>(), false);
 
                 //((SphereCollider)_c).radius *= 1.7f;
                 PlaySound(Audio.UTILITY_HIT_FLOOR);
@@ -1141,14 +1141,14 @@ namespace SneakyGame.Ragdoll.Equippables
 
           case UtilityType.INVISIBILITY:
 
-            _ragdoll.SetInvisible(true);
+            _ragdoll.SetInvisible(true, 1f);
             Unregister();
 
             break;
 
           case UtilityType.DASH:
 
-            _ragdoll.SetInvisible(true);
+            _ragdoll.SetInvisible(true, 1f);
             Unregister();
 
             break;
@@ -1206,7 +1206,7 @@ namespace SneakyGame.Ragdoll.Equippables
           if (_triggerDown)
           {
             var desiredPos = _ragdoll._Hip.position + MathC.Get2DVector(_ragdoll._Hip.transform.forward) * Mathf.Clamp(_downTime * 6f, 0f, 3f);
-            _mortarAim.position += (desiredPos - _mortarAim.position) * Time.deltaTime * 20f;
+            _mortarAim.position += 20f * Time.deltaTime * (desiredPos - _mortarAim.position);
 
             var scaleMod = 2f + Mathf.Sin(Time.time * 6f) * 0.1f;
             _mortarAim.localScale = new Vector3(scaleMod, scaleMod, scaleMod);
@@ -1698,8 +1698,7 @@ namespace SneakyGame.Ragdoll.Equippables
 
           projectileData._OnDisable += (p, other) =>
           {
-            Debug.Log(other._GameObject.name);
-            p._BulletScript.CheckOnDestroy(other._DamageSource);
+            p._BulletScript.CheckOnDestroy(other._DamageSource, other._GameObject != null && (other._PenatrationAmount < 100 || other._GameObject.name.Equals("Door_Obstacle")) ? other._GameObject.GetEntityId() : EntityId.None);
             p._BulletScript.Hide();
             p._BulletScript.OnHideBullet();
           };

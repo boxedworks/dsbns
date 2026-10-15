@@ -57,7 +57,7 @@ namespace SneakyGame.Objects
       // Rotate laser
       if (_canRotate && _rotationSpeed != 0f)
       {
-        _machine.Rotate(new Vector3(0f, 1f, 0f) * _rotationSpeed * 0.8f * Time.deltaTime);
+        _machine.Rotate(_rotationSpeed * 0.8f * Time.deltaTime * new Vector3(0f, 1f, 0f));
       }
 
       if (_on)

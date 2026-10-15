@@ -737,18 +737,18 @@ public class PlayerProfile
       {
         case AnimationType.OutOfAmmo:
           var shakeIntensity = 0.15f;
-          var shakeDisplacement = Random.insideUnitSphere * shakeIntensity * 0.1f;
+          var shakeDisplacement = 0.1f * shakeIntensity * Random.insideUnitSphere;
           _transform.localPosition = _animationStartPos + shakeDisplacement;
           break;
 
         case AnimationType.Shoot:
           shakeIntensity = 0.75f * (1f - animationTimeNormalized);
-          shakeDisplacement = Random.insideUnitSphere * shakeIntensity * 0.1f;
+          shakeDisplacement = 0.1f * shakeIntensity * Random.insideUnitSphere;
           _transform.localPosition = _animationStartPos + shakeDisplacement;
           break;
         case AnimationType.ShootLarge:
           shakeIntensity = 1.5f * (1f - animationTimeNormalized);
-          shakeDisplacement = Random.insideUnitSphere * shakeIntensity * 0.1f;
+          shakeDisplacement = 0.1f * shakeIntensity * Random.insideUnitSphere;
           _transform.localPosition = _animationStartPos + shakeDisplacement;
           break;
 
@@ -766,7 +766,7 @@ public class PlayerProfile
           var moveDistance = 0.12f;
           var moveDirection = Vector3.right;
 
-          var moveOffset = moveDirection * moveDistance * Mathf.Sin(animationTimeNormalized * Mathf.PI);
+          var moveOffset = Mathf.Sin(animationTimeNormalized * Mathf.PI) * moveDistance * moveDirection;
           _transform.localPosition = _animationStartPos + moveOffset;
 
           break;

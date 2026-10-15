@@ -42,13 +42,13 @@ namespace SneakyGame.Ragdoll
       }
 
       // Move text up
-      transform.position += Vector3.up * Time.deltaTime * 1f;
+      transform.position += 1f * Time.deltaTime * Vector3.up;
 
       // Move text with _source
       var pos = transform.position;
       pos.x = _source.position.x;
       pos.z = _source.position.z;
-      transform.position += (pos - transform.position) * Time.deltaTime * 4f;
+      transform.position += 4f * Time.deltaTime * (pos - transform.position);
 
       // Scale text size in and out
       var time = Time.time - _timeStart;

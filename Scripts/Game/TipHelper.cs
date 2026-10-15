@@ -89,12 +89,12 @@ public static class TipHelper
         "try out different versus settings",
   };
 
-  public static string GetTip(GameScript.GameModes mode)
+  public static string GetTip(GameScript.GameMode mode)
   {
     // Check modes
-    var tipArray = mode == GameScript.GameModes.MISSIONS ? _Tips_Classic : (mode == GameScript.GameModes.ZOMBIE ? _Tips_Survival : _Tips_Versus);
+    var tipArray = mode == GameScript.GameMode.MISSIONS ? _Tips_Classic : (mode == GameScript.GameMode.ZOMBIE ? _Tips_Survival : _Tips_Versus);
     var mode_string = mode.ToString().ToLower();
-    if (UnityEngine.Random.value <= 0.5f || mode == GameScript.GameModes.PARTY)
+    if (UnityEngine.Random.value <= 0.5f || mode == GameScript.GameMode.PARTY)
     {
       tipArray = _Tips_General;
       mode_string = "general";

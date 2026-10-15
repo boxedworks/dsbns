@@ -205,7 +205,7 @@ public static class FunctionsC
 
   class ParticleSystemData
   {
-    public bool RandomChild;
+    public bool RandomChild, CheckEmitting;
     public List<ParticleSystem> ParticleSystems;
 
     public Transform Transform;
@@ -223,13 +223,15 @@ public static class FunctionsC
     {
       var index = -1;
       bool randomChild = false,
-        hasChildren = false; // True = contains multiple particle systems
+        hasChildren = false,
+        checkEmitting = false; // True = contains multiple particle systems
       switch (particleType)
       {
         case ParticleSystemType.BLOOD:
           index = 0;
           randomChild = true;
           hasChildren = true;
+          checkEmitting = true;
           break;
         case ParticleSystemType.BULLET_CASING:
           index = 1;
@@ -296,6 +298,7 @@ public static class FunctionsC
           index = 19;
           randomChild = true;
           hasChildren = true;
+          checkEmitting = true;
           break;
         case ParticleSystemType.BULLET_CASING_HOT:
           index = 21;
@@ -396,6 +399,7 @@ public static class FunctionsC
       {
         ParticleSystems = particles,
         RandomChild = randomChild,
+        CheckEmitting = checkEmitting,
         Transform = transform
       };
 
@@ -411,6 +415,7 @@ public static class FunctionsC
 
     var particles = particleData.ParticleSystems;
     var randomChild = particleData.RandomChild;
+    var checkEmitting = particleData.CheckEmitting;
 
     if (forceParticleIndex != -1)
     {
@@ -423,11 +428,12 @@ public static class FunctionsC
       if (cn == 0) return null;
       ParticleSystem particle_return = null;
       int loops = cn, startIter = Mathf.RoundToInt(Random.value * (cn - 1));
-      while (particle_return == null || particle_return.isPlaying)
+      do
       {
         particle_return = particles[startIter++ % cn];
         if (--loops < 0) break;
-      }
+      } while ((checkEmitting && particle_return.isEmitting) || particle_return.transform.parent == GameScript.s_Singleton.transform);
+      if ((checkEmitting && particle_return.isEmitting) || particle_return.transform.parent == GameScript.s_Singleton.transform) return null;
       return new ParticleSystem[] { particle_return };
     }
 

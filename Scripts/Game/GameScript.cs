@@ -160,18 +160,18 @@ public class GameScript : MonoBehaviour
     }
   }
 
-  public enum GameModes
+  public enum GameMode
   {
     MISSIONS,
     ZOMBIE,
     PARTY,
     INCREMENTAL
   }
-  public static GameModes s_GameMode;
-  public static bool s_IsMissionsGameMode { get { return s_GameMode == GameModes.MISSIONS; } }
-  public static bool s_IsZombieGameMode { get { return s_GameMode == GameModes.ZOMBIE; } }
-  public static bool s_IsPartyGameMode { get { return s_GameMode == GameModes.PARTY; } }
-  public static bool s_IsIncrementalGameMode { get { return s_GameMode == GameModes.INCREMENTAL; } }
+  public static GameMode s_GameMode;
+  public static bool s_IsMissionsGameMode { get { return s_GameMode == GameMode.MISSIONS; } }
+  public static bool s_IsZombieGameMode { get { return s_GameMode == GameMode.ZOMBIE; } }
+  public static bool s_IsPartyGameMode { get { return s_GameMode == GameMode.PARTY; } }
+  public static bool s_IsIncrementalGameMode { get { return s_GameMode == GameMode.INCREMENTAL; } }
 
   public static bool s_IsCrownModeEnabled
   {
@@ -564,11 +564,12 @@ public class GameScript : MonoBehaviour
         globalLight.intensity = 0.25f;
         globalLight.enabled = true;
 
-        if (!s_IsIncrementalGameMode)
-        {
-          s_GameMode = GameModes.INCREMENTAL;
-          IncrementalManager.Initialize();
-        }
+        if (ControllerManager.GetKey(ControllerManager.Key.SPACE, ControllerManager.InputMode.HOLD))
+          if (!s_IsIncrementalGameMode)
+          {
+            s_GameMode = GameMode.INCREMENTAL;
+            IncrementalManager.Initialize();
+          }
       }
     }
 

@@ -260,9 +260,9 @@ namespace SneakyGame.Objects
                 PlaySparks(true);
                 PlayBulletEffectDropBullets(transform.position, 1);
 
-                item_fryingPan._ragdoll.Recoil(-(_sourceItemRagdoll._Hip.position - item_fryingPan.transform.position).normalized, _rb.linearVelocity.magnitude / 2f, false);
+                item_fryingPan._ragdoll.Recoil(-(_sourceItemRagdoll._Hip.position - item_fryingPan.transform.position).normalized, _rb.linearVelocity.magnitude / 15f, false);
 
-                CheckOnDestroy(item_fryingPan._ragdoll);
+                CheckOnDestroy(item_fryingPan._ragdoll, item_fryingPan.GetEntityId());
                 OnHideBullet();
                 Hide();
               }
@@ -647,6 +647,7 @@ namespace SneakyGame.Objects
       _Particles.transform.parent = transform;
       _Particles.transform.localPosition = new Vector3(0f, 0f, 0.5f);
       _saveSmartVelocity = -1f;
+      _destroyerId = EntityId.None;
 
       _c.enabled = true;
 
@@ -667,7 +668,7 @@ namespace SneakyGame.Objects
       var alphas_original = _Particles.colorOverLifetime.color.gradient.alphaKeys;
       var alphas = new GradientAlphaKey[alphas_original.Length];
       System.Array.Copy(alphas_original, 0, alphas, 0, alphas_original.Length);
-      g.SetKeys(new GradientColorKey[] { new GradientColorKey(start, 0f), new GradientColorKey(end, 1f) }, alphas);
+      g.SetKeys(new GradientColorKey[] { new(start, 0f), new(end, 1f) }, alphas);
 
       var lifetime = _Particles.colorOverLifetime;
       lifetime.color = g;
@@ -731,30 +732,39 @@ namespace SneakyGame.Objects
     }
 
     //
-    public void CheckOnDestroy(ActiveRagdoll sourceRagdoll)
+    EntityId _destroyerId;
+    public void CheckOnDestroy(ActiveRagdoll sourceRagdoll, EntityId destroyerId)
     {
       if (sourceRagdoll == null)
         return;
 
-      if (sourceRagdoll._IsPlayer && (sourceRagdoll._PlayerScript?.HasPerk(Perk.PerkType.BULLET_DESTROYER) ?? false))
+      if (
+        sourceRagdoll._IsPlayer &&
+        !(_destroyerId != EntityId.None && _destroyerId == destroyerId) &&
+        (sourceRagdoll._PlayerScript?.HasPerk(Perk.PerkType.BULLET_DESTROYER) ?? false)
+      )
       {
         var target = FunctionsC.GetClosestTargetTo(sourceRagdoll, transform.position);
-        var bullet = ItemScript.SpawnBulletTowards(
-          sourceRagdoll,
-          transform.position,
-          (target._ragdoll._Hip.position - transform.position).normalized,
-          ItemManager.Items.NONE,
-          0
-        );
-        bullet.SetBulletData(
-          sourceRagdoll,
-          true,
-          0.25f,
-          false,
-          ItemManager.Items.PISTOL_SILENCED,
+        if (target != null)
+        {
+          var bullet = ItemScript.SpawnBulletTowards(
+            sourceRagdoll,
+            transform.position,
+            (target._ragdoll._Hip.position - transform.position).normalized,
+            ItemManager.Items.NONE,
+            0
+          );
+          bullet.SetBulletData(
+            sourceRagdoll,
+            true,
+            0.25f,
+            false,
+            ItemManager.Items.PISTOL_SILENCED,
 
-          true
-        );
+            true
+          );
+          bullet._destroyerId = destroyerId;
+        }
       }
     }
 

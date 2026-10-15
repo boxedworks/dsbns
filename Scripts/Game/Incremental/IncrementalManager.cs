@@ -15,9 +15,11 @@ namespace SneakyGame.Game.Incremental
     const float s_navMeshSearchRadius = 4f;
     const int s_maxAliveZombies = 200;
 
+    public const int s_screenWidth = 42;
+
     float _nextSpawnTime;
 
-    public SpawnBehavior _SpawnBehavior = SpawnBehavior.TOP;
+    public SpawnBehavior _SpawnBehavior = SpawnBehavior.RIGHT;
 
     public enum SpawnBehavior
     {
@@ -95,7 +97,7 @@ namespace SneakyGame.Game.Incremental
       var radius = Mathf.Sqrt(Random.Range(s_minSpawnRadius * s_minSpawnRadius, s_maxSpawnRadius * s_maxSpawnRadius));
       Vector3 offset;
 
-      var horizontalRadius = 10f;
+      var horizontalRadius = 5f;
 
       switch (_SpawnBehavior)
       {

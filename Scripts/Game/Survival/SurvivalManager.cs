@@ -837,7 +837,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
           var ragdoll = ActiveRagdoll.GetRagdoll(hit.collider.gameObject);
           if (ragdoll == null || ragdoll._IsPlayer) return;
 
-          enemy_ragdoll._ForceGlobal += enemy_ragdoll._Hip.transform.right * (enemy_next._strafeRight ? 1f : -1f) * Time.deltaTime * 3f;
+          enemy_ragdoll._ForceGlobal += (enemy_next._strafeRight ? 1f : -1f) * 3f * Time.deltaTime * enemy_ragdoll._Hip.transform.right;
           return;
         }
 

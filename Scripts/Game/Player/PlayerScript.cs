@@ -939,7 +939,7 @@ namespace SneakyGame.Game.Player
           }
           else*/
           {
-            _camPos += (changePos - _camPos) * Mathf.Clamp(unscaled_dt, 0f, 1f) * 1.5f * camSpeed;
+            _camPos += 1.5f * camSpeed * Mathf.Clamp(unscaled_dt, 0f, 1f) * (changePos - _camPos);
             //GameScript.ToggleCameraLight(false);
           }
 
@@ -1940,10 +1940,10 @@ namespace SneakyGame.Game.Player
         if (savepos.Equals(Vector3.zero) && !dis2.Equals(Vector3.zero))
         {
           savepos = _agent.transform.position;
-          _agent.Move(movepos * 0.5f + transform.right * movepos.magnitude * 0.5f * deltaTime * 2f);//new Vector3(movepos.x * 0.5f + movepos.z * 0.5f, 0f, movepos.z * 0.5f + movepos.x * 0.5f));
+          _agent.Move(movepos * 0.5f + 0.5f * 2f * deltaTime * movepos.magnitude * transform.right);//new Vector3(movepos.x * 0.5f + movepos.z * 0.5f, 0f, movepos.z * 0.5f + movepos.x * 0.5f));
           savepos = _agent.transform.position - savepos;
           if (savepos.Equals(Vector3.zero))
-            _agent.Move(movepos * 0.5f - transform.right * movepos.magnitude * 0.5f * deltaTime * 2f);//new Vector3(movepos.x * 0.5f - movepos.z * 0.5f, 0f, movepos.z * 0.5f - movepos.x * 0.5f));
+            _agent.Move(movepos * 0.5f - 0.5f * 2f * deltaTime * movepos.magnitude * transform.right);//new Vector3(movepos.x * 0.5f - movepos.z * 0.5f, 0f, movepos.z * 0.5f - movepos.x * 0.5f));
         }
 
         if (movepos.magnitude > 0.01f)

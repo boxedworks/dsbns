@@ -357,7 +357,7 @@ namespace SneakyGame.Ragdoll
         else
         {
           // Get melee side
-          _grapplee._Hip.position = _Hip.position + _Hip.transform.forward * 0.45f + _Hip.transform.right * 0.09f * (_GrappleSide == Side.LEFT ? -1f : 1f);
+          _grapplee._Hip.position = _Hip.position + _Hip.transform.forward * 0.45f + (_GrappleSide == Side.LEFT ? -1f : 1f) * 0.09f * _Hip.transform.right;
           _grapplee._Hip.rotation = _Hip.rotation;
         }
       }
@@ -409,7 +409,7 @@ namespace SneakyGame.Ragdoll
         if (_ForceGlobal.magnitude > 0f)
         {
           var force_normalize = _ForceGlobal.magnitude < 1f ? _ForceGlobal : _ForceGlobal.normalized;
-          var force_apply = _ForceGlobal * Time.deltaTime * 10f;
+          var force_apply = 10f * Time.deltaTime * _ForceGlobal;
 
           var agent = _IsPlayer ? _PlayerScript._agent : _EnemyScript._agent;
           if (!_IsGrappled)
@@ -710,7 +710,7 @@ namespace SneakyGame.Ragdoll
 
     // Invisibility
     public bool _invisible;
-    public void SetInvisible(bool toggle)
+    public void SetInvisible(bool toggle, float duration = 1f)
     {
       // Set toggle
       _invisible = toggle;
@@ -725,7 +725,7 @@ namespace SneakyGame.Ragdoll
 
       // Set timer
       if (toggle)
-        _invisibility_timer += 1f;
+        _invisibility_timer += duration;
       else
         _invisibility_timer = 0f;
     }
@@ -1240,11 +1240,11 @@ namespace SneakyGame.Ragdoll
 
               case RigidbodyType.BODY:
                 var soundName = mag_old > 7f ? "Thud_loud" : "Thud";
-                SfxManager.PlayAudioSourceSimple(rb.position, $"Ragdoll/{soundName}", 0.7f, 1.25f, SfxManager.AudioClass.NONE);
+                SfxManager.PlayAudioSourceSimple(rb.position, $"Ragdoll/{soundName}", 0.7f, 1.25f, SfxManager.AudioClass.FOOTSTEP);
                 break;
               case RigidbodyType.WOOD:
                 soundName = mag_old > 6f ? "Wood_hard" : "Wood_soft";
-                SfxManager.PlayAudioSourceSimple(rb.position, $"Etc/{soundName}", 0.7f, 1.25f, SfxManager.AudioClass.NONE);
+                SfxManager.PlayAudioSourceSimple(rb.position, $"Etc/{soundName}", 0.7f, 1.25f, SfxManager.AudioClass.FOOTSTEP);
                 break;
 
             }
@@ -1356,13 +1356,13 @@ namespace SneakyGame.Ragdoll
       _color_Coroutine = null;
     }
 
-    public struct RagdollDamageSource
+    public class RagdollDamageSource
     {
       public ActiveRagdoll Source;
       public DamageSourceType DamageSourceType;
       public Vector3 HitForce, DamageSource;
       public int Damage;
-      public bool SpawnBlood, SpawnGiblets;
+      public bool SpawnBlood, SpawnGiblets, MuteAudio;
     }
     float _lastMetalHit;
     public bool TakeDamage(RagdollDamageSource ragdollDamageSource)
@@ -1374,6 +1374,13 @@ namespace SneakyGame.Ragdoll
       var damageSourceType = ragdollDamageSource.DamageSourceType;
       var spawnBlood = ragdollDamageSource.SpawnBlood;
       var spawnGiblets = ragdollDamageSource.SpawnGiblets;
+      var muteAudio = ragdollDamageSource.MuteAudio;
+
+      void PlaySoundLocal(String soundPath, float pitchMin, float pitchMax)
+      {
+        if (!muteAudio)
+          PlaySound(soundPath, pitchMin, pitchMax);
+      }
 
       // If is robot, do not damage from bullet and play 'dink'
       if (_EnemyScript != null && _EnemyScript._enemyType == EnemyScript.EnemyType.ROBOT && damage <= 10f)
@@ -1381,7 +1388,7 @@ namespace SneakyGame.Ragdoll
         if (Time.time - _lastMetalHit > 0.05f && damageSourceType == DamageSourceType.BULLET)
         {
           _lastMetalHit = Time.time;
-          PlaySound("Enemies/Metal_hit", 0.8f, 1.2f);
+          PlaySoundLocal("Enemies/Metal_hit", 0.8f, 1.2f);
 
           var parts = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.BULLET_COLLIDE)[0];
           parts.transform.position = _Hip.position;
@@ -1408,7 +1415,7 @@ namespace SneakyGame.Ragdoll
         {
           // Fire player events
           _PlayerScript.OnDamageTaken(ragdollDamageSource);
-          PlaySound("Enemies/Ugh0", 0.9f, 1.1f);
+          PlaySoundLocal("Enemies/Ugh0", 0.9f, 1.1f);
 
           if (_hasArmor)
           {
@@ -1418,7 +1425,7 @@ namespace SneakyGame.Ragdoll
               RemoveArmor(hitForce, false);
             else
             {
-              PlaySound("Enemies/Metal_hit", 0.8f, 1.2f);
+              PlaySoundLocal("Enemies/Metal_hit", 0.8f, 1.2f);
               var parts = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.BULLET_COLLIDE)[0];
               parts.transform.position = _Hip.position;
               parts.Play();
@@ -1428,11 +1435,11 @@ namespace SneakyGame.Ragdoll
           {
             if (damageSourceType == DamageSourceType.FIRE)
             {
-              PlaySound("Ragdoll/Combust", 0.9f, 1.1f);
+              PlaySoundLocal("Ragdoll/Combust", 0.9f, 1.1f);
               FunctionsC.PlayComplexParticleSystemAt(FunctionsC.ParticleSystemType.FIREBALL, _Hip.position);
             }
             else
-              PlaySound("Ragdoll/Punch", 0.9f, 1.1f);
+              PlaySoundLocal("Ragdoll/Punch", 0.9f, 1.1f);
           }
         }
         // Enemy armor
@@ -1457,7 +1464,7 @@ namespace SneakyGame.Ragdoll
             }
             else if (_health > 0)
             {
-              PlaySound("Enemies/Metal_hit", 0.8f, 1.2f);
+              PlaySoundLocal("Enemies/Metal_hit", 0.8f, 1.2f);
               var parts = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.BULLET_COLLIDE)[0];
               parts.transform.position = _Hip.position;
               parts.Play();
@@ -1467,7 +1474,7 @@ namespace SneakyGame.Ragdoll
           {
             if (damageSourceType == DamageSourceType.FIRE)
             {
-              PlaySound("Ragdoll/Combust", 0.9f, 1.1f);
+              PlaySoundLocal("Ragdoll/Combust", 0.9f, 1.1f);
               FunctionsC.PlayComplexParticleSystemAt(FunctionsC.ParticleSystemType.FIREBALL, _Hip.position);
               FunctionsC.SpawnExplosionScar(_Hip.position);
 
@@ -1478,7 +1485,7 @@ namespace SneakyGame.Ragdoll
               smokeParts.Emit(3);
             }
             else
-              PlaySound("Ragdoll/Punch", 0.9f, 1.1f);
+              PlaySoundLocal("Ragdoll/Punch", 0.9f, 1.1f);
           }
         }
 
@@ -1680,13 +1687,16 @@ namespace SneakyGame.Ragdoll
     {
       IEnumerator BloodFollow(ParticleSystem system)
       {
+        var saveParent = system.transform.parent;
+        system.transform.parent = GameScript.s_Singleton.transform;
+
         system.transform.position = _Hip.position;
 
         EnemyScript.CheckSound(system.transform.position, EnemyScript.Loudness.SUPERSOFT);
         yield return new WaitForSeconds(0.05f);
 
-        var emission2 = system.emission;
-        emission2.enabled = true;
+        var emission = system.emission;
+        emission.enabled = true;
         system.Play();
         var time = system.main.duration;
         var timeLast = Time.time;
@@ -1707,6 +1717,7 @@ namespace SneakyGame.Ragdoll
           system.Stop();
           system.Clear();
         }
+        system.transform.parent = saveParent;
       }
 
       // Check follower
@@ -1746,34 +1757,31 @@ namespace SneakyGame.Ragdoll
       if (useConfetti)
       {
         var particlesConfetti = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.CONFETTI);
-        if (particlesConfetti == null || particlesConfetti.Length == 0) { }
-        else
+        if (particlesConfetti == null || particlesConfetti.Length == 0) return;
+
+        var confetti = particlesConfetti[0];
+        if (confetti != null)
         {
-          var confetti = particlesConfetti[0];
+          var emissionconfetti = confetti.emission;
+          emissionconfetti.enabled = false;
+          confetti.transform.position = _Hip.position;
+          confetti.transform.LookAt(damageSource);
+          confetti.transform.Rotate(new Vector3(0f, 1f, 0f) * 180f);
+          var rotationConfetti = confetti.transform.localRotation;
+          rotationConfetti.eulerAngles = new Vector3(0f, rotationConfetti.eulerAngles.y, rotationConfetti.eulerAngles.z);
+          confetti.transform.localRotation = rotationConfetti;
+          confetti.transform.Rotate(new Vector3(1f, 0f, 0f), Random.value * -20f);
+          rotationConfetti = confetti.transform.localRotation;
 
-          if (confetti != null)
-          {
-            var emissionconfetti = confetti.emission;
-            emissionconfetti.enabled = false;
-            confetti.transform.position = _Hip.position;
-            confetti.transform.LookAt(damageSource);
-            confetti.transform.Rotate(new Vector3(0f, 1f, 0f) * 180f);
-            var rotationConfetti = confetti.transform.localRotation;
-            rotationConfetti.eulerAngles = new Vector3(0f, rotationConfetti.eulerAngles.y, rotationConfetti.eulerAngles.z);
-            confetti.transform.localRotation = rotationConfetti;
-            confetti.transform.Rotate(new Vector3(1f, 0f, 0f), Random.value * -20f);
-            rotationConfetti = confetti.transform.localRotation;
+          GameScript.s_Singleton.StartCoroutine(BloodFollow(confetti));
 
-            GameScript.s_Singleton.StartCoroutine(BloodFollow(confetti));
+          // Audio
+          PlaySound("Ragdoll/Confetti", 0.6f, 1.2f);
 
-            // Audio
-            PlaySound("Ragdoll/Confetti", 0.6f, 1.2f);
-
-            // Achievement
+          // Achievement
 #if UNITY_STANDALONE
-            Achievements.UnlockAchievement(Achievements.Achievement.EXTRA_USE_CONFETTI);
+          Achievements.UnlockAchievement(Achievements.Achievement.EXTRA_USE_CONFETTI);
 #endif
-          }
         }
 
       }
@@ -1790,7 +1798,7 @@ namespace SneakyGame.Ragdoll
         {
           var emissionBlood = blood.emission;
           emissionBlood.enabled = false;
-          blood.transform.position = _Hip.position;// + _hip.transform.forward * 0.2f;//point;
+          blood.transform.position = _Hip.position;
           blood.transform.LookAt(damageSource);
           blood.transform.Rotate(new Vector3(0f, 1f, 0f) * 180f);
           var rotationBlood = blood.transform.localRotation;
@@ -1798,7 +1806,14 @@ namespace SneakyGame.Ragdoll
           blood.transform.localRotation = rotationBlood;
           blood.transform.Rotate(new Vector3(1f, 0f, 0f), Random.value * -20f);
           rotationBlood = blood.transform.localRotation;
+
           GameScript.s_Singleton.StartCoroutine(BloodFollow(blood));
+
+          // Bloody footprint
+          FunctionsC.AoeHandler.RegisterAoeEffect(this, FunctionsC.AoeHandler.AoeType.BLOOD, _Hip.position, 1f, 20f);
+
+          // Audio
+          PlaySound($"Ragdoll/Blood{/*Random.Range(0, 10) < 3 ? 1 : */0}", 1.1f, 1.5f);
 
           // Giblets
           if (spawnGiblets)
@@ -1845,12 +1860,6 @@ namespace SneakyGame.Ragdoll
 
             giblets.Play();
           }
-
-          // Bloody footprint
-          FunctionsC.AoeHandler.RegisterAoeEffect(this, FunctionsC.AoeHandler.AoeType.BLOOD, _Hip.position, 1f, 20f);
-
-          // Audio
-          PlaySound($"Ragdoll/Blood{/*Random.Range(0, 10) < 3 ? 1 : */0}", 1.1f, 1.5f);
         }
 
         // Blood smoke
