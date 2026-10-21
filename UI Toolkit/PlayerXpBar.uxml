@@ -1,0 +1,9 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+    <Style src="project://database/Assets/UI%20Toolkit/PlayerXpBar.uss?fileID=7433441132597879392&amp;guid=00ae89813b2c7fc4caa82da40a1f8e34&amp;type=3#PlayerXpBar"/>
+    <ui:VisualElement name="player-xp-bar" class="player-xp-bar" style="top: 61px; left: 99px;">
+        <ui:Label name="xp-label" text="XP 0 / 100" class="player-xp-label"/>
+        <ui:VisualElement name="xp-track" class="player-xp-track">
+            <ui:VisualElement name="xp-fill" class="player-xp-fill"/>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>
