@@ -540,6 +540,8 @@ public class EnemyScript : PlayerScript.IHasRagdoll
       // Death
       if (transform.position.x < -IncrementalManager.s_screenWidth)
       {
+        GameScript.s_Singleton._IncrementalManager?.OnZombieReachedExit();
+
         _ragdoll.TakeDamage(new ActiveRagdoll.RagdollDamageSource()
         {
           Damage = 9999,

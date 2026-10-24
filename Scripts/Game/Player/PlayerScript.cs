@@ -2417,6 +2417,9 @@ namespace SneakyGame.Game.Player
       if (GameScript.s_IsZombieGameMode)
         SurvivalManager.OnPlayerDead(_Id);
 
+      if (GameScript.s_IsIncrementalGameMode)
+        GameScript.s_Singleton._IncrementalManager?.OnPlayerDead(_Id);
+
       // Versus
       if (GameScript.s_IsPartyGameMode)
       {

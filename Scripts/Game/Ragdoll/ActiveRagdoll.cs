@@ -1400,10 +1400,7 @@ namespace SneakyGame.Ragdoll
       var save_health = _health;
       if (!_IsDead)
       {
-        if (_IsPlayer && GameScript.s_IsIncrementalGameMode)
-        { }
-        else
-          _health -= damage;
+        _health -= damage;
 
         if (_health <= 0f)
         {

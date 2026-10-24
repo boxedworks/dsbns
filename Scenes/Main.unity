@@ -121652,7 +121652,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 12c8d0070c1a4704a8d31d4fe82b309c, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::PlayerXpBarController
+  m_EditorClassIdentifier: Assembly-CSharp::GameUIController
   _uiDocument: {fileID: 576962688}
   _playerHead: {fileID: 0}
   _worldCamera: {fileID: 1712314499}

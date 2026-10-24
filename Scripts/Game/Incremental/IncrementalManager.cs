@@ -1,6 +1,7 @@
 
 using SneakyGame.Game.Player;
 using SneakyGame.Game.Survival;
+using SneakyGame.Ragdoll;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -9,17 +10,26 @@ namespace SneakyGame.Game.Incremental
 
   public class IncrementalManager
   {
+    const int s_startingHealth = 10;
     const float s_spawnInterval = 0.1f;
     const float s_minSpawnRadius = 18f;
     const float s_maxSpawnRadius = 22f;
     const float s_navMeshSearchRadius = 4f;
     const int s_maxAliveZombies = 200;
+    const float s_likesRequestInterval = 5f;
+    const float s_respawnDelay = 5f;
 
     public const int s_screenWidth = 42;
 
     float _nextSpawnTime;
+    float _nextLikesRequestTime;
+    float _respawnTime = -1f;
+    int _health = s_startingHealth;
+    int _respawningPlayerId = -1;
+    bool _restartRequested;
 
     public SpawnBehavior _SpawnBehavior = SpawnBehavior.RIGHT;
+    public int Health => _health;
 
     public enum SpawnBehavior
     {
@@ -36,9 +46,115 @@ namespace SneakyGame.Game.Incremental
     {
       var instance = new IncrementalManager();
       GameScript.s_Singleton._IncrementalManager = instance;
+
+      GameUIController.SetIncrementalHealth(instance._health);
+      IncrementalApiHelper.Init();
     }
 
     public void Update()
+    {
+      if (UpdateRespawn())
+        return;
+
+      if (UpdateRestart())
+        return;
+
+      UpdateLikesRequest();
+      UpdateZombieSpawning();
+    }
+
+    bool UpdateRespawn()
+    {
+      if (_respawningPlayerId < 0)
+        return false;
+
+      var secondsRemaining = Mathf.Max(0, Mathf.CeilToInt(_respawnTime - Time.time));
+      GameUIController.SetIncrementalRespawnCountdown(secondsRemaining);
+      if (secondsRemaining > 0)
+        return true;
+
+      RespawnPlayer(_respawningPlayerId);
+      _respawningPlayerId = -1;
+      _respawnTime = -1f;
+      GameUIController.HideIncrementalRespawnCountdown();
+      return true;
+    }
+
+    bool UpdateRestart()
+    {
+      if (!_restartRequested)
+        return false;
+
+      if (!GameScript.ReloadMap())
+        return true;
+
+      _health = s_startingHealth;
+      _restartRequested = false;
+      GameUIController.SetIncrementalHealth(_health);
+      return true;
+    }
+
+    public void OnZombieReachedExit()
+    {
+      if (_restartRequested)
+        return;
+
+      _health = Mathf.Max(0, _health - 1);
+      GameUIController.SetIncrementalHealth(_health);
+      _restartRequested = _health == 0;
+    }
+
+    public void OnPlayerDead(int playerId)
+    {
+      if (_respawningPlayerId >= 0)
+        return;
+
+      _respawningPlayerId = playerId;
+      _respawnTime = Time.time + s_respawnDelay;
+      GameUIController.SetIncrementalRespawnCountdown(Mathf.CeilToInt(s_respawnDelay));
+    }
+
+    static void RespawnPlayer(int playerId)
+    {
+      if (PlayerScript.s_Players != null)
+      {
+        for (var i = PlayerScript.s_Players.Count - 1; i >= 0; i--)
+        {
+          var player = PlayerScript.s_Players[i];
+          if (player == null || player._Id != playerId)
+            continue;
+
+          if (player._Ragdoll != null)
+            ActiveRagdoll.s_Ragdolls.Remove(player._Ragdoll);
+
+          Object.Destroy(player.transform.parent.gameObject);
+          PlayerScript.s_Players.RemoveAt(i);
+          break;
+        }
+      }
+
+      if (PlayerspawnScript._PlayerSpawns == null || PlayerspawnScript._PlayerSpawns.Count == 0)
+      {
+        Debug.LogError("Cannot respawn incremental player because no player spawn is available.");
+        return;
+      }
+
+      PlayerScript._PLAYERID = playerId;
+      PlayerspawnScript._PlayerSpawns[0].SpawnPlayer();
+    }
+
+    // Request total likes at regular intervals.
+    void UpdateLikesRequest()
+    {
+      if (Time.time < _nextLikesRequestTime)
+        return;
+
+      _nextLikesRequestTime = Time.time + s_likesRequestInterval;
+      IncrementalApiHelper.RequestInteractionData();
+    }
+
+    // Spawn zombies at regular intervals if conditions are met.
+    void UpdateZombieSpawning()
     {
       if (Time.time < _nextSpawnTime || !CanSpawnZombie())
         return;
