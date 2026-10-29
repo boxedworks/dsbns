@@ -8,10 +8,10 @@ using SneakyGame.Game.Items;
 using SneakyGame.Game.Player;
 using UnityEngine;
 
-using ItemType = ItemManager.Items;
 using SneakyGame.Ragdoll.Animation;
 using SneakyEngine.Engine;
 using SneakyEngine.Effects;
+using SneakyEngine.Equippable.Item;
 
 namespace SneakyGame.Ragdoll.Equippables
 {
@@ -22,6 +22,14 @@ namespace SneakyGame.Ragdoll.Equippables
     static LevelSaveData LevelModule { get { return SettingsHelper.s_SaveData.LevelData; } }
 
     static VfxSystem VfxModule { get { return SneakyEngineSystem.VfxSystem; } }
+
+    ItemData _itemData;
+    public void SetItemData(ItemData itemData)
+    {
+      _itemData = itemData;
+    }
+    public ItemType _ItemType { get { return (ItemType)_itemData.Type; } }
+    public FireMode _FireMode { get { return (FireMode)_itemData.FireMode; } set { _itemData.FireMode = (int)value; } }
 
     protected bool _isUtility;
 
@@ -70,14 +78,13 @@ namespace SneakyGame.Ragdoll.Equippables
       _shoot_forward_force;
 
     protected float _downTimeSave;
-    public FireMode _fireMode;
 
     public UtilityType _customProjetile;
     public UtilityScript[] _customProjectiles;
     int _customProjectileIter;
     float _customProjectileVelocityMod;
 
-    public bool _IsBulletDeflector { get { return _type == ItemType.FRYING_PAN || _type == ItemType.KATANA; } }
+    public bool _IsBulletDeflector { get { return _ItemType == ItemType.FRYING_PAN || _ItemType == ItemType.KATANA; } }
 
     // Custom components
     ParticleSystem[] _customParticles;
@@ -124,7 +131,7 @@ namespace SneakyGame.Ragdoll.Equippables
     }
 
     bool _isZombie { get { return !_ragdoll._IsPlayer && _ragdoll._EnemyScript._IsZombieReal; } }
-    bool _canMeleePenatrate { get { return _twoHanded || (_type == ItemType.AXE && !_isZombie) || _type == ItemType.ROCKET_FIST || _type == ItemType.CHAINSAW /*|| _type == ItemType.FIST*/; } }
+    bool _canMeleePenatrate { get { return _twoHanded || (_ItemType == ItemType.AXE && !_isZombie) || _ItemType == ItemType.ROCKET_FIST || _ItemType == ItemType.CHAINSAW /*|| _type == ItemType.FIST*/; } }
 
     float _time { get { return /*_ragdoll._isPlayer_twoHanded ? Time.unscaledTime : */Time.time; } }
 
@@ -191,8 +198,6 @@ namespace SneakyGame.Ragdoll.Equippables
     public AudioClip[] _sfx_clip;
     public float[] _sfx_volume;
 
-    public ItemType _type;
-
     protected List<int> _hitRagdolls;
     public bool HasHitRagdoll(ActiveRagdoll ragdoll)
     {
@@ -233,11 +238,11 @@ namespace SneakyGame.Ragdoll.Equippables
       switch (audio)
       {
         case Audio.GUN_SHOOT:
-          if (_type == ItemType.FLAMETHROWER)
+          if (_ItemType == ItemType.FLAMETHROWER)
           {
             iter = -1;
           }
-          else if (_type == ItemType.PISTOL_CHARGE || _type == ItemType.RIFLE_CHARGE)
+          else if (_ItemType == ItemType.PISTOL_CHARGE || _ItemType == ItemType.RIFLE_CHARGE)
           {
             if (_downTimeSave >= 1.25f)
               iter = 6;
@@ -246,7 +251,7 @@ namespace SneakyGame.Ragdoll.Equippables
           }
           break;
         case Audio.GUN_RELOAD:
-          if (_type == ItemType.FLAMETHROWER && _clip % 15 == 14)
+          if (_ItemType == ItemType.FLAMETHROWER && _clip % 15 == 14)
           {
             iter = 5;
             break;
@@ -399,7 +404,7 @@ namespace SneakyGame.Ragdoll.Equippables
       }
 
       // Check special types
-      switch (_type)
+      switch (_ItemType)
       {
         case ItemType.FLAMETHROWER:
           _customParticles = new ParticleSystem[] { transform.GetChild(4).gameObject.GetComponent<ParticleSystem>() };
@@ -433,7 +438,7 @@ namespace SneakyGame.Ragdoll.Equippables
           _ragdoll.SetInvisible(false);
 
         //
-        switch (_type)
+        switch (_ItemType)
         {
           case ItemType.PISTOL_CHARGE:
           case ItemType.RIFLE_CHARGE:
@@ -531,7 +536,7 @@ namespace SneakyGame.Ragdoll.Equippables
                   }
 
                   // Check incompatible types
-                  if (_type == ItemType.FIST && deflectData._type != ItemType.FIST)
+                  if (_ItemType == ItemType.FIST && deflectData._ItemType != ItemType.FIST)
                   {
                     // Die self
                     if (!_ragdoll._IsGrappling)
@@ -540,7 +545,7 @@ namespace SneakyGame.Ragdoll.Equippables
                       _ragdoll.OnGrapplee((grapplee) => deflectData.MeleeDamageOther(grapplee, deflectData._dismember));
                     return;
                   }
-                  else if (_type != ItemType.FIST && deflectData._type == ItemType.FIST)
+                  else if (_ItemType != ItemType.FIST && deflectData._ItemType == ItemType.FIST)
                   {
                     // Die other
                     MeleeDamageOther(raycastInfo._ragdoll, _dismember);
@@ -559,8 +564,8 @@ namespace SneakyGame.Ragdoll.Equippables
                   raycastInfo._ragdoll.BounceFromPosition(_ragdoll._Hip.position, 1.5f, true);
 
                   // Check stun from baton
-                  var hasBaton = _type == ItemType.STUN_BATON;
-                  var otherHasBaton = deflectData._type == ItemType.STUN_BATON;
+                  var hasBaton = _ItemType == ItemType.STUN_BATON;
+                  var otherHasBaton = deflectData._ItemType == ItemType.STUN_BATON;
                   if (hasBaton)
                   {
                     raycastInfo._ragdoll.Stun();
@@ -569,7 +574,7 @@ namespace SneakyGame.Ragdoll.Equippables
                   if (otherHasBaton)
                   {
                     _ragdoll.Stun();
-                    var stunBaton = raycastInfo._ragdoll._ItemL == null || raycastInfo._ragdoll._ItemL._type != ItemType.STUN_BATON ? raycastInfo._ragdoll._ItemR : raycastInfo._ragdoll._ItemL;
+                    var stunBaton = raycastInfo._ragdoll._ItemL == null || raycastInfo._ragdoll._ItemL._ItemType != ItemType.STUN_BATON ? raycastInfo._ragdoll._ItemR : raycastInfo._ragdoll._ItemL;
                     stunBaton.PlaySound(3);
                   }
                   if (otherHasBaton || hasBaton)
@@ -620,7 +625,7 @@ namespace SneakyGame.Ragdoll.Equippables
               raycastInfo._ragdoll.BounceFromPosition(_ragdoll._Hip.position, 0.5f, false);
 
             // Play noise
-            if (_type == ItemType.FRYING_PAN)
+            if (_ItemType == ItemType.FRYING_PAN)
             {
               PlaySound(Audio.MELEE_HIT, 0.78f, 1.1f);
               EnemyScript.CheckSound(_ragdoll._Hip.position, EnemyScript.Loudness.SOFT);
@@ -628,7 +633,7 @@ namespace SneakyGame.Ragdoll.Equippables
             else
             {
               var playExtra = false;
-              if (_type == ItemType.FIST && _isChargedFist)
+              if (_ItemType == ItemType.FIST && _isChargedFist)
                 playExtra = true;
               PlaySound(raycastInfo._ragdoll._IsEnemy && raycastInfo._ragdoll._EnemyScript.IsChaser() ? Audio.MELEE_HIT_METAL : (playExtra ? Audio.MELEE_HIT_BULLET : Audio.MELEE_HIT));
               EnemyScript.CheckSound(_ragdoll._Hip.position, EnemyScript.Loudness.SUPERSOFT);
@@ -646,7 +651,7 @@ namespace SneakyGame.Ragdoll.Equippables
       };
 
       // Chainsaw
-      if (_type == ItemType.CHAINSAW)
+      if (_ItemType == ItemType.CHAINSAW)
       {
 
         // Start chainsaw sfx
@@ -703,7 +708,7 @@ namespace SneakyGame.Ragdoll.Equippables
         {
 
           // Special
-          switch (_type)
+          switch (_ItemType)
           {
             case ItemType.PISTOL_CHARGE:
               if (_downTimeSave >= 1.25f)
@@ -746,14 +751,14 @@ namespace SneakyGame.Ragdoll.Equippables
 
                 _burstPerShot = 0;
                 _burstRate = 0f;
-                _fireMode = FireMode.SEMI;
+                _FireMode = FireMode.SEMI;
               }
               break;
           }
 
           // Spawn bullet
           var spawn_pos = _forward.position;
-          if (_type == ItemType.ROCKET_FIST)
+          if (_ItemType == ItemType.ROCKET_FIST)
             spawn_pos = _ragdoll._Hip.position;
           spawn_pos.y = _ragdoll._Spine.transform.position.y;
 
@@ -761,7 +766,7 @@ namespace SneakyGame.Ragdoll.Equippables
             _ragdoll,
             spawn_pos,
             transform.forward,
-            _type,
+            _ItemType,
             use_penatrationAmount,
 
             _randomSpread,
@@ -773,14 +778,14 @@ namespace SneakyGame.Ragdoll.Equippables
 
           // Spawn smoke and muzzle flash effects
           if (SettingsHelper._UseSmoke)
-            if (_type != ItemType.FLAMETHROWER && _type != ItemType.CROSSBOW && _type != ItemType.STICKY_GUN)
+            if (_ItemType != ItemType.FLAMETHROWER && _ItemType != ItemType.CROSSBOW && _ItemType != ItemType.STICKY_GUN)
             {
               smokeParticles.transform.position = spawn_pos + new Vector3(0f, 0.5f, 0f);
               smokeParticles.Emit(Mathf.Clamp(use_penatrationAmount, 1, 6));
             }
 
           if (VfxModule.UseMuzzleFlash)
-            if (_type != ItemType.FLAMETHROWER && _type != ItemType.CROSSBOW)
+            if (_ItemType != ItemType.FLAMETHROWER && _ItemType != ItemType.CROSSBOW)
             {
               var muzzle = transform.GetChild(transform.childCount - 1);
               muzzleFlashParticles.transform.SetPositionAndRotation(muzzle.position, muzzle.rotation);
@@ -811,7 +816,7 @@ namespace SneakyGame.Ragdoll.Equippables
 
           // Set custom velocity
           _customProjectileVelocityMod = 1f;
-          if (_type == ItemType.GRENADE_LAUNCHER) _customProjectileVelocityMod = 2f;
+          if (_ItemType == ItemType.GRENADE_LAUNCHER) _customProjectileVelocityMod = 2f;
           utility.SetForceModifier(_customProjectileVelocityMod);
         }
       }
@@ -830,7 +835,7 @@ namespace SneakyGame.Ragdoll.Equippables
       _ragdoll.RecoilSimple(_shoot_force, false);
 
       // Recoil arm
-      if (_type != ItemType.FLAMETHROWER && _type != ItemType.ROCKET_FIST)
+      if (_ItemType != ItemType.FLAMETHROWER && _ItemType != ItemType.ROCKET_FIST)
       {
         float totalTime = 0.3f,
           halfTime = totalTime * 0.4f;
@@ -853,7 +858,7 @@ namespace SneakyGame.Ragdoll.Equippables
 
     void OnClipEmpty()
     {
-      if (_type == ItemType.DMR)
+      if (_ItemType == ItemType.DMR)
         PlaySound(Audio.GUN_EXTRA);
     }
 
@@ -915,7 +920,7 @@ namespace SneakyGame.Ragdoll.Equippables
           {
             _meleeReleaseTimer = 0f;
 
-            if (_type == ItemType.KATANA)
+            if (_ItemType == ItemType.KATANA)
               _meleeComplexResetTrigger = true;
           }
 
@@ -937,7 +942,7 @@ namespace SneakyGame.Ragdoll.Equippables
 
         //
         var sideMod = _side == ActiveRagdoll.Side.LEFT ? 1f : -1f;
-        switch (_type)
+        switch (_ItemType)
         {
           case ItemType.KNIFE:
           case ItemType.RAPIER:
@@ -988,7 +993,7 @@ namespace SneakyGame.Ragdoll.Equippables
       }
 
       // Custom type before death check
-      if (_type == ItemType.FLAMETHROWER)
+      if (_ItemType == ItemType.FLAMETHROWER)
       {
         var flames = _customParticles[0];
         var light = _customLights[0];
@@ -1060,7 +1065,7 @@ namespace SneakyGame.Ragdoll.Equippables
       if (_triggerDown && CanUse(false)) _downTime += Time.deltaTime;
 
       // Check special cases
-      if (_type == ItemType.FLAMETHROWER)
+      if (_ItemType == ItemType.FLAMETHROWER)
       {
         var flames = _customParticles[0];
         var light = _customLights[0];
@@ -1104,7 +1109,7 @@ namespace SneakyGame.Ragdoll.Equippables
 
       // Charge pistol
       //if (!_used && CanUse(false))
-      if (_type == ItemType.PISTOL_CHARGE || _type == ItemType.RIFLE_CHARGE)
+      if (_ItemType == ItemType.PISTOL_CHARGE || _ItemType == ItemType.RIFLE_CHARGE)
       {
 
         if (downTimeLast < 0.02f && _downTime >= 0.02f)
@@ -1113,7 +1118,7 @@ namespace SneakyGame.Ragdoll.Equippables
 
           _burstPerShot = 0;
           _burstRate = 0f;
-          _fireMode = FireMode.SEMI;
+          _FireMode = FireMode.SEMI;
         }
         else if (downTimeLast < 0.5f && _downTime >= 0.5f)
         {
@@ -1125,7 +1130,7 @@ namespace SneakyGame.Ragdoll.Equippables
 
           _burstPerShot = 0;
           _burstRate = 0f;
-          _fireMode = FireMode.SEMI;
+          _FireMode = FireMode.SEMI;
         }
         else if (downTimeLast < 1.25f && _downTime >= 1.25f)
         {
@@ -1134,11 +1139,11 @@ namespace SneakyGame.Ragdoll.Equippables
           var emission = _customParticles[0].emission;
           emission.rateOverTime = 25;
 
-          if (_type == ItemType.RIFLE_CHARGE)
+          if (_ItemType == ItemType.RIFLE_CHARGE)
           {
             _burstPerShot = _clip;
             _burstRate = 0.13f;
-            _fireMode = FireMode.BURST;
+            _FireMode = FireMode.BURST;
 
             /*if (_clip < _burstPerShot)
             {
@@ -1219,7 +1224,7 @@ namespace SneakyGame.Ragdoll.Equippables
         //if(_customProjetile != UtilityType.NONE) playSound = false;
         if (playSound)
         {
-          if (_type != ItemType.CHAINSAW)
+          if (_ItemType != ItemType.CHAINSAW)
             PlaySound(Audio.GUN_SHOOT);
           if (IsGun())
           {
@@ -1233,7 +1238,7 @@ namespace SneakyGame.Ragdoll.Equippables
       }
 
       // Check use conditions
-      if (_fireMode == FireMode.BURST && _used)
+      if (_FireMode == FireMode.BURST && _used)
       {
         if (CanUse() && (_time >= _UseTime + _burstRate) && _bursts < _burstPerShot)
         {
@@ -1269,7 +1274,7 @@ namespace SneakyGame.Ragdoll.Equippables
               _meleeReleaseTimerOverfill = 1f;
             }
 
-            switch (_type)
+            switch (_ItemType)
             {
               case ItemType.BAT:
                 //case ItemType.SWORD:
@@ -1280,7 +1285,7 @@ namespace SneakyGame.Ragdoll.Equippables
             }
           }
 
-          if (_fireMode == FireMode.BURST)
+          if (_FireMode == FireMode.BURST)
           {
 
             if (IsChargeWeapon() && _clip < _minimumClipToFire)
@@ -1298,7 +1303,7 @@ namespace SneakyGame.Ragdoll.Equippables
           }
           else
           {
-            if (_fireMode == FireMode.SEMI) { _triggerDown = false; }
+            if (_FireMode == FireMode.SEMI) { _triggerDown = false; }
             Local_Use();
           }
           if (_isMelee)
@@ -1306,7 +1311,7 @@ namespace SneakyGame.Ragdoll.Equippables
             if (_ragdoll._IsEnemy && _ragdoll._EnemyScript._IsZombie)
               _ragdoll.RecoilSimple(-0.25f, false);
             else
-              switch (_type)
+              switch (_ItemType)
               {
                 case ItemType.KATANA:
                 case ItemType.BAT:
@@ -1509,7 +1514,7 @@ namespace SneakyGame.Ragdoll.Equippables
     //
     public void MeleeDamageOther(ActiveRagdoll targetRagdoll, bool shouldDismember)
     {
-      MeleeDamageOther(_type, _ragdoll, targetRagdoll, _hit_force, shouldDismember, _downTimeSave);
+      MeleeDamageOther(_ItemType, _ragdoll, targetRagdoll, _hit_force, shouldDismember, _downTimeSave);
     }
     public static bool MeleeDamageOther(ItemType meleeItemType, ActiveRagdoll sourceRagdoll, ActiveRagdoll targetRagdoll, float hitForceMultiplier, bool shouldDismember, float downTime)
     {
@@ -1592,7 +1597,7 @@ namespace SneakyGame.Ragdoll.Equippables
       // Gather custom utilities
       if (itemId != -1)
       {
-        if (_type == ItemType.STICKY_GUN)
+        if (_ItemType == ItemType.STICKY_GUN)
           UtilityScript.ParentUtilitiesById(itemId, _ItemId, UtilityType.STICKY_GUN_BULLET);
       }
 
@@ -1609,7 +1614,7 @@ namespace SneakyGame.Ragdoll.Equippables
       _original_rot_upper = _arm_upper.localEulerAngles;
 
       // Set arm pos per weapon
-      if (_type == ItemType.KATANA || _type == ItemType.BAT)
+      if (_ItemType == ItemType.KATANA || _ItemType == ItemType.BAT)
       {
         AnimationData.Init();
         AnimationData._Bat._Start.Set(_ragdoll, transform.GetChild(0));
@@ -1739,11 +1744,11 @@ namespace SneakyGame.Ragdoll.Equippables
     public bool CanUse(bool playEmpty = true)
     {
       if (_isMelee)
-        return (_time >= _UseTime + UseRate()) || (_bursts > 0 && _fireMode == FireMode.BURST && _time >= _UseTime + _burstRate);
+        return (_time >= _UseTime + UseRate()) || (_bursts > 0 && _FireMode == FireMode.BURST && _time >= _UseTime + _burstRate);
 
       // Check clip
       if (_clip > 0)
-        return ((_time >= _UseTime + UseRate()) || (_fireMode == FireMode.BURST && _bursts > 0 && _time >= _UseTime + _burstRate)) && (!_used || _fireMode == FireMode.BURST) && (!_IsReloading || IsChargeWeapon());
+        return ((_time >= _UseTime + UseRate()) || (_FireMode == FireMode.BURST && _bursts > 0 && _time >= _UseTime + _burstRate)) && (!_used || _FireMode == FireMode.BURST) && (!_IsReloading || IsChargeWeapon());
       if (playEmpty)
         PlayEmpty();
       return false;
@@ -1785,7 +1790,7 @@ namespace SneakyGame.Ragdoll.Equippables
       var clipDiff = _clip - clipSave;
 
       // Check special
-      if (_type == ItemType.STICKY_GUN)
+      if (_ItemType == ItemType.STICKY_GUN)
         UtilityScript.Detonate_UtilitiesById(this, UtilityType.STICKY_GUN_BULLET, _triggerDownReal ? 1 : -1);
 
       // Show progress bar
@@ -1801,21 +1806,6 @@ namespace SneakyGame.Ragdoll.Equippables
         {
           if (_ragdoll._IsDead)
             instance._enabled = false;
-
-          /*/ Drop magazine
-          if (_last_magazineDropId != instance._id && instance._timer / instance._timer_start < 0.6f)
-          {
-            _last_magazineDropId = instance._id;
-
-            var magazine = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.MAGAZINE)[0];
-            var q = magazine.transform.rotation;
-            q.eulerAngles = new Vector3(q.eulerAngles.x, Random.value * 360f, q.eulerAngles.z);
-            magazine.transform.rotation = q;
-            var p = new ParticleSystem.EmitParams();
-            p.position = transform.position + Vector3.up * 0.5f;
-            p.rotation3D = q.eulerAngles;
-            magazine.Emit(p, 1);
-          }*/
         });
 
       AnimateUi(PlayerProfile.Animation.AnimationType.Reload, reloadTime);
@@ -1846,7 +1836,7 @@ namespace SneakyGame.Ragdoll.Equippables
     {
       if (_isMelee && !IsChargeWeapon()) return false;
       if (!_isMelee && _useOnRelease && !IsChargeWeapon() && _triggerDownReal) return false;
-      return _clip < GetClipSize() && ((_time >= _UseTime + (UseRate() * 0.6f)) || (_bursts > 0 && _fireMode == FireMode.BURST && _time >= _UseTime + _burstRate * 0.3f)) && !_used && !_IsReloading;
+      return _clip < GetClipSize() && ((_time >= _UseTime + (UseRate() * 0.6f)) || (_bursts > 0 && _FireMode == FireMode.BURST && _time >= _UseTime + _burstRate * 0.3f)) && !_used && !_IsReloading;
     }
     public bool NeedsReload()
     {
@@ -1897,7 +1887,7 @@ namespace SneakyGame.Ragdoll.Equippables
     }
     public bool IsEmpty()
     {
-      return _type == ItemType.NONE;
+      return _ItemType == ItemType.NONE;
     }
 
     public bool IsThrowable()
@@ -1923,7 +1913,7 @@ namespace SneakyGame.Ragdoll.Equippables
           light.enabled = false;
 
       // Hide colliders
-      if (_type == ItemType.FRYING_PAN)
+      if (_ItemType == ItemType.FRYING_PAN)
       {
         transform.GetChild(0).GetComponent<BoxCollider>().enabled = false;
       }
@@ -1969,11 +1959,11 @@ namespace SneakyGame.Ragdoll.Equippables
       var hit = false;
       var canMeleePenatrate = _canMeleePenatrate && (_ragdoll._EnemyScript?._IsZombieReal ?? true);
       var maxDistance = (!_ragdoll._IsPlayer && _ragdoll._EnemyScript._IsZombieReal) ? 0.5f : 0.7f * (canMeleePenatrate ? 1.3f : 1f);
-      if (_type == ItemType.RAPIER)
+      if (_ItemType == ItemType.RAPIER)
         maxDistance *= 2.35f;
-      else if (_type == ItemType.FIST)
+      else if (_ItemType == ItemType.FIST)
         maxDistance *= 0.85f;
-      else if (_type == ItemType.CHAINSAW)
+      else if (_ItemType == ItemType.CHAINSAW)
         maxDistance *= 1.5f;
       if (Physics.SphereCast(ray, Mathf.Clamp(_ragdoll._IsEnemy && (_ragdoll._EnemyScript.IsChaser() || _ragdoll._EnemyScript._IsZombieReal) ? 0.4f : 0.23f, 0.05f, maxDistance), out raycastInfo._raycastHit, maxDistance, GameResources._Layermask_Ragdoll))
       {

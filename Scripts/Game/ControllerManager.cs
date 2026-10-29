@@ -186,6 +186,8 @@ public static class ControllerManager
 
       if (Menu.s_CurrentMenuType == Menu.MenuType.SELECT_LOADOUT || Menu.s_CurrentMenuType == Menu.MenuType.EDIT_LOADOUT)
         Loadout.SaveAll();
+      else if (Menu.s_CurrentMenuType == Menu.MenuType.EXTRAS)
+        LevelSaveData.Save();
 
       //
       Menu.s_InMenus = false;

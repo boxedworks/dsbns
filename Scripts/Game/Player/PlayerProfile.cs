@@ -7,8 +7,10 @@ using SneakyGame.Settings.Serialization;
 using SneakyGame.UI.Menus;
 using SneakyGame.Game.Survival;
 using SneakyGame.Game.Player;
+using SneakyGame.Ragdoll.Equippables;
 using UnityEngine;
 using Valve.VR;
+using SneakyEngine.Equippable.Item;
 
 // Assists with controls
 public class PlayerProfile
@@ -142,14 +144,14 @@ public class PlayerProfile
     }
   }
 
-  ItemManager.Items GetItem(ItemManager.Items item, ItemManager.Items other)
+  ItemType GetItem(ItemType item, ItemType other)
   {
-    if (item == ItemManager.Items.NONE && !ShopHelper.IsActuallyTwoHanded(other) && _Equipment._Perks.Contains(Perk.PerkType.MARTIAL_ARTIST))
-      return ItemManager.Items.FIST;
+    if (item == ItemType.NONE && !ShopHelper.IsActuallyTwoHanded(other) && _Equipment._Perks.Contains(Perk.PerkType.MARTIAL_ARTIST))
+      return ItemType.FIST;
     return item;
   }
 
-  public ItemManager.Items _ItemLeft
+  public ItemType _ItemLeft
   {
     get
     {
@@ -159,7 +161,7 @@ public class PlayerProfile
     }
     set { if (_EquipmentIndex == 0) _Equipment._ItemLeft0 = value; else _Equipment._ItemLeft1 = value; }
   }
-  public ItemManager.Items _ItemRight
+  public ItemType _ItemRight
   {
     get
     {
@@ -169,7 +171,7 @@ public class PlayerProfile
     }
     set { if (_EquipmentIndex == 0) _Equipment._ItemRight0 = value; else _Equipment._ItemRight1 = value; }
   }
-  public ItemManager.Items _ItemLeft_Other
+  public ItemType _ItemLeft_Other
   {
     get
     {
@@ -179,7 +181,7 @@ public class PlayerProfile
     }
     set { if (_EquipmentIndex == 1) _Equipment._ItemLeft0 = value; else _Equipment._ItemLeft1 = value; }
   }
-  public ItemManager.Items _ItemRight_Other
+  public ItemType _ItemRight_Other
   {
     get
     {
@@ -207,20 +209,20 @@ public class PlayerProfile
 
       _Perks = new List<Perk.PerkType>();
     }
-    public ItemManager.Items _ItemLeft0, _ItemRight0, _ItemLeft1, _ItemRight1;
+    public ItemType _ItemLeft0, _ItemRight0, _ItemLeft1, _ItemRight1;
 
     public UtilityType[] _UtilitiesLeft, _UtilitiesRight;
     public List<Perk.PerkType> _Perks;
 
     public bool HasWeapons0()
     {
-      return _ItemLeft0 != ItemManager.Items.NONE ||
-        _ItemRight0 != ItemManager.Items.NONE;
+      return _ItemLeft0 != ItemType.NONE ||
+        _ItemRight0 != ItemType.NONE;
     }
     public bool HasWeapons1()
     {
-      return _ItemLeft1 != ItemManager.Items.NONE ||
-        _ItemRight1 != ItemManager.Items.NONE;
+      return _ItemLeft1 != ItemType.NONE ||
+        _ItemRight1 != ItemType.NONE;
     }
 
     public bool IsEmpty()
@@ -843,7 +845,7 @@ public class PlayerProfile
       Object.Destroy(_ammoUI.gameObject);
     }
 
-    public void Init(ItemManager.ItemUIInfo data, int index, System.Tuple<PlayerScript, bool, ActiveRagdoll.Side> item_data, bool is_utility)
+    public void Init(EquippableManager.ItemUIInfo data, int index, System.Tuple<PlayerScript, bool, ActiveRagdoll.Side> item_data, bool is_utility)
     {
       _base = data._Transform;
       _base.localPosition += new Vector3(_Offset.x, _Offset.y, 0f);
@@ -1094,7 +1096,7 @@ public class PlayerProfile
     var bg = _ui.GetChild(1).transform;
 
     // Check for empty
-    if (_ItemLeft == ItemManager.Items.NONE && _ItemRight == ItemManager.Items.NONE && utilLength_left == 0 && utilLength_right == 0)
+    if (_ItemLeft == ItemType.NONE && _ItemRight == ItemType.NONE && utilLength_left == 0 && utilLength_right == 0)
     {
       bg.localPosition = new Vector3(0f, -0.05f, 0f);
       bg.localScale = new Vector3(0.6f, 0.74f, 0.001f);
@@ -1105,30 +1107,30 @@ public class PlayerProfile
     }
 
     var equipmentIter = 0;
-    if (_ItemLeft != ItemManager.Items.NONE)
+    if (_ItemLeft != ItemType.NONE)
     {
       var itemIcon = new ItemIcon();
-      itemIcon.Init(ItemManager.LoadIcon(_ItemLeft.ToString(), equipmentIter, _Player, _ui), equipmentIter++, System.Tuple.Create(_Player, false, ActiveRagdoll.Side.LEFT), false);
+      itemIcon.Init(EquippableManager.LoadIcon(_ItemLeft.ToString(), equipmentIter, _Player, _ui), equipmentIter++, System.Tuple.Create(_Player, false, ActiveRagdoll.Side.LEFT), false);
       _itemIcons.Add(IconType.ITEM_LEFT, itemIcon);
     }
-    if (_ItemRight != ItemManager.Items.NONE)
+    if (_ItemRight != ItemType.NONE)
     {
       var itemIcon = new ItemIcon();
-      itemIcon.Init(ItemManager.LoadIcon(_ItemRight.ToString(), equipmentIter, _Player, _ui), equipmentIter++, System.Tuple.Create(_Player, false, ActiveRagdoll.Side.RIGHT), false);
+      itemIcon.Init(EquippableManager.LoadIcon(_ItemRight.ToString(), equipmentIter, _Player, _ui), equipmentIter++, System.Tuple.Create(_Player, false, ActiveRagdoll.Side.RIGHT), false);
       _itemIcons.Add(IconType.ITEM_RIGHT, itemIcon);
     }
 
     // Load utilities
-    var utilsLoaded = new List<System.Tuple<ItemManager.ItemUIInfo, int, ActiveRagdoll.Side>>();
+    var utilsLoaded = new List<System.Tuple<EquippableManager.ItemUIInfo, int, ActiveRagdoll.Side>>();
     if (_Equipment._UtilitiesLeft.Length > 0)
     {
-      var itemInfo = ItemManager.LoadIcon(_Equipment._UtilitiesLeft[0].ToString(), equipmentIter, _Player, _ui);
+      var itemInfo = EquippableManager.LoadIcon(_Equipment._UtilitiesLeft[0].ToString(), equipmentIter, _Player, _ui);
       itemInfo._ClipSize = utilLength_left;
       utilsLoaded.Add(System.Tuple.Create(itemInfo, equipmentIter++, ActiveRagdoll.Side.LEFT));
     }
     if (_Equipment._UtilitiesRight.Length > 0)
     {
-      var itemInfo = ItemManager.LoadIcon(_Equipment._UtilitiesRight[0].ToString(), equipmentIter, _Player, _ui);
+      var itemInfo = EquippableManager.LoadIcon(_Equipment._UtilitiesRight[0].ToString(), equipmentIter, _Player, _ui);
       itemInfo._ClipSize = utilLength_right;
       utilsLoaded.Add(System.Tuple.Create(itemInfo, equipmentIter++, ActiveRagdoll.Side.RIGHT));
     }

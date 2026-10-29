@@ -7,6 +7,7 @@ using SneakyGame.Game.Items;
 using SneakyGame.Game.Player;
 using SneakyEngine.Equippable.Utility;
 using UnityEngine;
+using SneakyEngine.Equippable.Item;
 
 namespace SneakyGame.Ragdoll.Equippables
 {
@@ -780,7 +781,7 @@ namespace SneakyGame.Ragdoll.Equippables
                         _ragdoll,
                         new Vector3(transform.position.x, _ragdoll._Spine.transform.position.y, transform.position.z) + shootDir * 0.2f + MathC.Get2DVector(_throwPosition - transform.position).normalized * 0.2f,
                         shootDir,
-                        ItemManager.Items.NONE,
+                        ItemType.NONE,
                         0
                       );
                       bullet.SetBulletData(
@@ -788,7 +789,7 @@ namespace SneakyGame.Ragdoll.Equippables
                         true,
                         0.25f,
                         false,
-                        ItemManager.Items.PISTOL_SILENCED,
+                        ItemType.PISTOL_SILENCED,
 
                         true
                       );
@@ -1607,10 +1608,8 @@ namespace SneakyGame.Ragdoll.Equippables
     // Static function to load a utility from Resources
     public static UtilityScript GetUtility(UtilityType type)
     {
-      var utilityName = type.ToString();
-
-      var gameObject = Instantiate(Resources.Load($"Items\\{utilityName}"), GameResources._Container_Objects) as GameObject;
-      gameObject.name = utilityName;
+      var gameObject = Instantiate(Resources.Load($"Items\\{type}"), GameResources._Container_Objects) as GameObject;
+      gameObject.name = type.ToString();
       gameObject.transform.position = new Vector3(1000, -100f, 0f);
       return gameObject.GetComponent<UtilityScript>();
     }

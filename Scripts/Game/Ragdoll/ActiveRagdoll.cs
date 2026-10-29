@@ -15,10 +15,10 @@ using SneakyGame.Game.Player;
 using SneakyEngine.Engine;
 using SneakyEngine.Ragdoll;
 using SneakyEngine.Effects;
+using SneakyEngine.Equippable.Item;
 
 namespace SneakyGame.Ragdoll
 {
-
 
   public class ActiveRagdoll
   {
@@ -532,7 +532,7 @@ namespace SneakyGame.Ragdoll
               if (ragdoll != null)
               {
                 var hitForce = 2f;
-                if (ItemScript.MeleeDamageOther(ItemManager.Items.FIST, this, ragdoll, hitForce, false, 0f))
+                if (ItemScript.MeleeDamageOther(ItemType.FIST, this, ragdoll, hitForce, false, 0f))
                 {
                   _kicking = false;
                 }
@@ -791,23 +791,16 @@ namespace SneakyGame.Ragdoll
       RIGHT
     }
 
-    public void EquipItem(ItemManager.Items itemType, Side side, int clipSize = -1, float useTime = -1f, int itemId = -1)
+    public void EquipItem(ItemType itemType, Side side, int clipSize = -1, float useTime = -1f, int itemId = -1)
     {
-      if (itemType == ItemManager.Items.NONE)
+      if (itemType == ItemType.NONE)
       {
         AddArmJoint(side);
         return;
       }
 
       // Spawn item
-      var item = ItemManager.GetItem(itemType);
-      if (item == null)
-      {
-        ItemManager.SpawnItem(itemType);
-        item = ItemManager.GetItem(itemType);
-      }
-      if (item == null) return;
-      var itemScript = item.GetComponent<ItemScript>();
+      var itemScript = EquippableManager.SpawnItem(itemType);
 
       bool two_hands = itemScript._twoHanded;
       var side_other = side == Side.LEFT ? Side.RIGHT : Side.LEFT;
@@ -818,7 +811,7 @@ namespace SneakyGame.Ragdoll
         UnequipItem(side_other);
 
       // Rotate / positon per specific item
-      var rb = item.GetComponent<Rigidbody>();
+      var rb = itemScript.GetComponent<Rigidbody>();
       if (rb != null) UnityEngine.Object.Destroy(rb);
 
       // Remove joints for better aiming
@@ -837,7 +830,7 @@ namespace SneakyGame.Ragdoll
         arm = _transform_parts._arm_lower_r;
         _ItemR = itemScript;
       }
-      item.transform.parent = arm.GetChild(0);
+      itemScript.transform.parent = arm.GetChild(0);
       itemScript.OnEquip(this, side, clipSize, useTime, itemId);
     }
 
@@ -867,14 +860,14 @@ namespace SneakyGame.Ragdoll
       SwapItems(
         new WeaponSwapData()
         {
-          ItemType = _ItemR?._type ?? ItemManager.Items.NONE,
+          ItemType = _ItemR?._ItemType ?? ItemType.NONE,
           ItemId = _ItemR?._ItemId ?? -1,
           ItemClip = _ItemR?.GetClip() ?? -1,
           ItemUseItem = _ItemR?._UseTime ?? -1f
         },
         new WeaponSwapData()
         {
-          ItemType = _ItemL?._type ?? ItemManager.Items.NONE,
+          ItemType = _ItemL?._ItemType ?? ItemType.NONE,
           ItemId = _ItemL?._ItemId ?? -1,
           ItemClip = _ItemL?.GetClip() ?? -1,
           ItemUseItem = _ItemL?._UseTime ?? -1f
@@ -968,7 +961,7 @@ namespace SneakyGame.Ragdoll
     // Change weapons mid-game
     public struct WeaponSwapData
     {
-      public ItemManager.Items ItemType;
+      public ItemType ItemType;
       public int ItemClip, ItemId;
       public float ItemUseItem;
     }
@@ -992,7 +985,7 @@ namespace SneakyGame.Ragdoll
         UnequipItem(Side.LEFT);
         AddArmJoint(Side.LEFT);
       }
-      else if (itemL_type != ItemManager.Items.NONE)
+      else if (itemL_type != ItemType.NONE)
         EquipItem(itemL_type, Side.LEFT, itemL_clip, itemL_useTime, itemL_id);
       else
       {
@@ -1008,7 +1001,7 @@ namespace SneakyGame.Ragdoll
           AddArmJoint(Side.RIGHT);
         }
       }
-      else if (itemR_type != ItemManager.Items.NONE)
+      else if (itemR_type != ItemType.NONE)
         EquipItem(itemR_type, Side.RIGHT, itemR_clip, itemR_useTime, itemR_id);
       else
       {
@@ -2170,7 +2163,7 @@ namespace SneakyGame.Ragdoll
     }
     public bool HasAutomatic()
     {
-      return (_ItemL != null && _ItemL._fireMode == ItemScript.FireMode.AUTOMATIC) || (_ItemR != null && _ItemR._fireMode == ItemScript.FireMode.AUTOMATIC);
+      return (_ItemL != null && _ItemL._FireMode == ItemScript.FireMode.AUTOMATIC) || (_ItemR != null && _ItemR._FireMode == ItemScript.FireMode.AUTOMATIC);
     }
     public bool HasUseOnReleaseWeapon()
     {
@@ -2178,7 +2171,7 @@ namespace SneakyGame.Ragdoll
     }
     public bool HasSemiAutomatic()
     {
-      return (_ItemL != null && _ItemL._fireMode == ItemScript.FireMode.SEMI) || (_ItemR != null && _ItemR._fireMode == ItemScript.FireMode.SEMI);
+      return (_ItemL != null && _ItemL._FireMode == ItemScript.FireMode.SEMI) || (_ItemR != null && _ItemR._FireMode == ItemScript.FireMode.SEMI);
     }
     public bool HasSilencedWeapon()
     {
@@ -2192,11 +2185,11 @@ namespace SneakyGame.Ragdoll
     {
       return (_ItemL?.IsEmpty() ?? false) || (_ItemR?.IsEmpty() ?? false);
     }
-    public bool HasItem(ItemManager.Items item)
+    public bool HasItem(ItemType item)
     {
       return
-        (_ItemL?._type ?? ItemManager.Items.NONE) == item ||
-        (_ItemR?._type ?? ItemManager.Items.NONE) == item;
+        (_ItemL?._ItemType ?? ItemType.NONE) == item ||
+        (_ItemR?._ItemType ?? ItemType.NONE) == item;
     }
     public bool HasActiveBulletDeflector()
     {

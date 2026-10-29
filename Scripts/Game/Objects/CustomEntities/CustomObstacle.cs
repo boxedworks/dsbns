@@ -6,6 +6,7 @@ using SneakyGame.Settings.Localization;
 using SneakyGame.Game.Survival;
 using SneakyGame.Game.Player;
 using UnityEngine;
+using SneakyEngine.Equippable.Item;
 
 namespace SneakyGame.Objects.CustomEntities
 {
@@ -53,8 +54,8 @@ namespace SneakyGame.Objects.CustomEntities
     Rigidbody _diceRigidbody;
 
     // Weapons
-    static Dictionary<int, List<System.Tuple<ItemManager.Items, int>>> _BUYABLE_ITEM_TIERS;
-    System.Tuple<ItemManager.Items, int> _weapon_info;
+    static Dictionary<int, List<System.Tuple<ItemType, int>>> _BUYABLE_ITEM_TIERS;
+    System.Tuple<ItemType, int> _weapon_info;
 
     // Perks
     static Dictionary<int, List<System.Tuple<Perk.PerkType, int>>> _BUYABLE_PERK_TIERS;
@@ -103,42 +104,42 @@ namespace SneakyGame.Objects.CustomEntities
       // Create pricing lists
       if (_BUYABLE_ITEM_TIERS == null)
       {
-        _BUYABLE_ITEM_TIERS = new Dictionary<int, List<System.Tuple<ItemManager.Items, int>>>();
+        _BUYABLE_ITEM_TIERS = new Dictionary<int, List<System.Tuple<ItemType, int>>>();
 
-        _BUYABLE_ITEM_TIERS.Add(0, new List<System.Tuple<ItemManager.Items, int>>());
-        _BUYABLE_ITEM_TIERS[0].Add(System.Tuple.Create(ItemManager.Items.KNIFE, 15));
+        _BUYABLE_ITEM_TIERS.Add(0, new List<System.Tuple<ItemType, int>>());
+        _BUYABLE_ITEM_TIERS[0].Add(System.Tuple.Create(ItemType.KNIFE, 15));
 
-        _BUYABLE_ITEM_TIERS.Add(1, new List<System.Tuple<ItemManager.Items, int>>());
-        _BUYABLE_ITEM_TIERS[1].Add(System.Tuple.Create(ItemManager.Items.PISTOL, 25));
+        _BUYABLE_ITEM_TIERS.Add(1, new List<System.Tuple<ItemType, int>>());
+        _BUYABLE_ITEM_TIERS[1].Add(System.Tuple.Create(ItemType.PISTOL, 25));
 
-        _BUYABLE_ITEM_TIERS.Add(2, new List<System.Tuple<ItemManager.Items, int>>());
-        _BUYABLE_ITEM_TIERS[2].Add(System.Tuple.Create(ItemManager.Items.RIFLE, 40));
+        _BUYABLE_ITEM_TIERS.Add(2, new List<System.Tuple<ItemType, int>>());
+        _BUYABLE_ITEM_TIERS[2].Add(System.Tuple.Create(ItemType.RIFLE, 40));
 
-        _BUYABLE_ITEM_TIERS.Add(3, new List<System.Tuple<ItemManager.Items, int>>());
-        _BUYABLE_ITEM_TIERS[3].Add(System.Tuple.Create(ItemManager.Items.PISTOL_DOUBLE, 100));
-        _BUYABLE_ITEM_TIERS[3].Add(System.Tuple.Create(ItemManager.Items.SHOTGUN_PUMP, 150));
+        _BUYABLE_ITEM_TIERS.Add(3, new List<System.Tuple<ItemType, int>>());
+        _BUYABLE_ITEM_TIERS[3].Add(System.Tuple.Create(ItemType.PISTOL_DOUBLE, 100));
+        _BUYABLE_ITEM_TIERS[3].Add(System.Tuple.Create(ItemType.SHOTGUN_PUMP, 150));
         //_BUYABLE_ITEM_TIERS[3].Add(System.Tuple.Create(ItemManager.Items.RAPIER, 75));
-        _BUYABLE_ITEM_TIERS[3].Add(System.Tuple.Create(ItemManager.Items.CROSSBOW, 85));
-        _BUYABLE_ITEM_TIERS[3].Add(System.Tuple.Create(ItemManager.Items.PISTOL_MACHINE, 75));
-        _BUYABLE_ITEM_TIERS[3].Add(System.Tuple.Create(ItemManager.Items.PISTOL_CHARGE, 85));
+        _BUYABLE_ITEM_TIERS[3].Add(System.Tuple.Create(ItemType.CROSSBOW, 85));
+        _BUYABLE_ITEM_TIERS[3].Add(System.Tuple.Create(ItemType.PISTOL_MACHINE, 75));
+        _BUYABLE_ITEM_TIERS[3].Add(System.Tuple.Create(ItemType.PISTOL_CHARGE, 85));
 
-        _BUYABLE_ITEM_TIERS.Add(4, new List<System.Tuple<ItemManager.Items, int>>());
-        _BUYABLE_ITEM_TIERS[4].Add(System.Tuple.Create(ItemManager.Items.UZI, 160));
-        _BUYABLE_ITEM_TIERS[4].Add(System.Tuple.Create(ItemManager.Items.REVOLVER, 250));
-        _BUYABLE_ITEM_TIERS[4].Add(System.Tuple.Create(ItemManager.Items.SHOTGUN_DOUBLE, 350));
-        _BUYABLE_ITEM_TIERS[4].Add(System.Tuple.Create(ItemManager.Items.DMR, 325));
-        _BUYABLE_ITEM_TIERS[4].Add(System.Tuple.Create(ItemManager.Items.RIFLE_CHARGE, 300));
-        _BUYABLE_ITEM_TIERS[4].Add(System.Tuple.Create(ItemManager.Items.RIFLE_LEVER, 250));
-        _BUYABLE_ITEM_TIERS[4].Add(System.Tuple.Create(ItemManager.Items.STICKY_GUN, 160));
+        _BUYABLE_ITEM_TIERS.Add(4, new List<System.Tuple<ItemType, int>>());
+        _BUYABLE_ITEM_TIERS[4].Add(System.Tuple.Create(ItemType.UZI, 160));
+        _BUYABLE_ITEM_TIERS[4].Add(System.Tuple.Create(ItemType.REVOLVER, 250));
+        _BUYABLE_ITEM_TIERS[4].Add(System.Tuple.Create(ItemType.SHOTGUN_DOUBLE, 350));
+        _BUYABLE_ITEM_TIERS[4].Add(System.Tuple.Create(ItemType.DMR, 325));
+        _BUYABLE_ITEM_TIERS[4].Add(System.Tuple.Create(ItemType.RIFLE_CHARGE, 300));
+        _BUYABLE_ITEM_TIERS[4].Add(System.Tuple.Create(ItemType.RIFLE_LEVER, 250));
+        _BUYABLE_ITEM_TIERS[4].Add(System.Tuple.Create(ItemType.STICKY_GUN, 160));
 
-        _BUYABLE_ITEM_TIERS.Add(5, new List<System.Tuple<ItemManager.Items, int>>());
-        _BUYABLE_ITEM_TIERS[5].Add(System.Tuple.Create(ItemManager.Items.AK47, 500));
-        _BUYABLE_ITEM_TIERS[5].Add(System.Tuple.Create(ItemManager.Items.M16, 400));
-        _BUYABLE_ITEM_TIERS[5].Add(System.Tuple.Create(ItemManager.Items.SHOTGUN_BURST, 450));
-        _BUYABLE_ITEM_TIERS[5].Add(System.Tuple.Create(ItemManager.Items.KATANA, 350));
-        _BUYABLE_ITEM_TIERS[5].Add(System.Tuple.Create(ItemManager.Items.AXE, 200));
-        _BUYABLE_ITEM_TIERS[5].Add(System.Tuple.Create(ItemManager.Items.FLAMETHROWER, 450));
-        _BUYABLE_ITEM_TIERS[5].Add(System.Tuple.Create(ItemManager.Items.SNIPER, 300));
+        _BUYABLE_ITEM_TIERS.Add(5, new List<System.Tuple<ItemType, int>>());
+        _BUYABLE_ITEM_TIERS[5].Add(System.Tuple.Create(ItemType.AK47, 500));
+        _BUYABLE_ITEM_TIERS[5].Add(System.Tuple.Create(ItemType.M16, 400));
+        _BUYABLE_ITEM_TIERS[5].Add(System.Tuple.Create(ItemType.SHOTGUN_BURST, 450));
+        _BUYABLE_ITEM_TIERS[5].Add(System.Tuple.Create(ItemType.KATANA, 350));
+        _BUYABLE_ITEM_TIERS[5].Add(System.Tuple.Create(ItemType.AXE, 200));
+        _BUYABLE_ITEM_TIERS[5].Add(System.Tuple.Create(ItemType.FLAMETHROWER, 450));
+        _BUYABLE_ITEM_TIERS[5].Add(System.Tuple.Create(ItemType.SNIPER, 300));
       }
       if (_BUYABLE_PERK_TIERS == null)
       {
@@ -459,20 +460,20 @@ namespace SneakyGame.Objects.CustomEntities
           // Check if replacing a weapon
           if (equip_info.Item3 == "BOTH")
           {
-            if (p._Profile._ItemLeft == ItemManager.Items.NONE && p._Profile._ItemRight == ItemManager.Items.NONE) { }
-            else if (p._Profile._ItemLeft_Other != ItemManager.Items.NONE && p._Profile._ItemRight_Other != ItemManager.Items.NONE) { }
-            else if (p._Profile._ItemLeft_Other == ItemManager.Items.NONE && p._Profile._ItemRight_Other == ItemManager.Items.NONE)
+            if (p._Profile._ItemLeft == ItemType.NONE && p._Profile._ItemRight == ItemType.NONE) { }
+            else if (p._Profile._ItemLeft_Other != ItemType.NONE && p._Profile._ItemRight_Other != ItemType.NONE) { }
+            else if (p._Profile._ItemLeft_Other == ItemType.NONE && p._Profile._ItemRight_Other == ItemType.NONE)
             {
               p._Profile._ItemLeft_Other = p._Profile._ItemLeft;
               p._Profile._ItemRight_Other = p._Profile._ItemRight;
             }
             else
             {
-              ItemManager.Items[] items = null;
-              if (p._Profile._ItemLeft_Other == ItemManager.Items.NONE && p._Profile._ItemLeft != ItemManager.Items.NONE)
-                items = new ItemManager.Items[] { p._Profile._ItemLeft, p._Profile._ItemRight };
-              else if (p._Profile._ItemRight_Other == ItemManager.Items.NONE && p._Profile._ItemRight != ItemManager.Items.NONE)
-                items = new ItemManager.Items[] { p._Profile._ItemRight, p._Profile._ItemLeft };
+              ItemType[] items = null;
+              if (p._Profile._ItemLeft_Other == ItemType.NONE && p._Profile._ItemLeft != ItemType.NONE)
+                items = new ItemType[] { p._Profile._ItemLeft, p._Profile._ItemRight };
+              else if (p._Profile._ItemRight_Other == ItemType.NONE && p._Profile._ItemRight != ItemType.NONE)
+                items = new ItemType[] { p._Profile._ItemRight, p._Profile._ItemLeft };
               if (items != null)
                 foreach (var current_item in items)
                 {
@@ -481,7 +482,7 @@ namespace SneakyGame.Objects.CustomEntities
                   var equip_side2 = equip_info2.Item2;
 
                   var current_item2 = equip_side2 == ActiveRagdoll.Side.LEFT ? p._Profile._ItemLeft_Other : p._Profile._ItemRight_Other;
-                  if (current_item2 == ItemManager.Items.NONE)
+                  if (current_item2 == ItemType.NONE)
                     if (equip_info2.Item1)
                     {
                       if (equip_side2 == ActiveRagdoll.Side.LEFT)
@@ -496,14 +497,14 @@ namespace SneakyGame.Objects.CustomEntities
           else
           {
             var current_item = equip_side == ActiveRagdoll.Side.LEFT ? p._Profile._ItemLeft : p._Profile._ItemRight;
-            if (current_item != ItemManager.Items.NONE)
+            if (current_item != ItemType.NONE)
             {
               // Try to equip in other slots
               var equip_info2 = CheckEquip(p, current_item, InteractSide.DEFAULT, hasAkimbo, 1);
               var equip_side2 = equip_info2.Item2;
 
               var current_item2 = equip_side2 == ActiveRagdoll.Side.LEFT ? p._Profile._ItemLeft_Other : p._Profile._ItemRight_Other;
-              if (current_item2 == ItemManager.Items.NONE)
+              if (current_item2 == ItemType.NONE)
                 if (equip_info2.Item1)
                 {
                   if (equip_side2 == ActiveRagdoll.Side.LEFT)
@@ -517,7 +518,7 @@ namespace SneakyGame.Objects.CustomEntities
           // Equip
           p._Ragdoll.EquipItem(item_type, equip_side);
           if (equip_info.Item3 == "BOTH")
-            p._Profile._ItemRight = ItemManager.Items.NONE;
+            p._Profile._ItemRight = ItemType.NONE;
 
           // Update UI
           if (equip_side == ActiveRagdoll.Side.LEFT)
@@ -740,7 +741,7 @@ namespace SneakyGame.Objects.CustomEntities
     }
 
     //
-    System.Tuple<bool, ActiveRagdoll.Side, string> CheckEquip(PlayerScript p, ItemManager.Items item_type, InteractSide side, bool akimbo, int equipmentIndex)
+    System.Tuple<bool, ActiveRagdoll.Side, string> CheckEquip(PlayerScript p, ItemType item_type, InteractSide side, bool akimbo, int equipmentIndex)
     {
       var equip_side = ActiveRagdoll.Side.RIGHT;
       if (side == InteractSide.LEFT) equip_side = ActiveRagdoll.Side.LEFT;
@@ -748,12 +749,12 @@ namespace SneakyGame.Objects.CustomEntities
       var item_type_l = equipmentIndex == 0 ? p._Profile._ItemLeft : p._Profile._ItemLeft_Other;
       var item_type_r = equipmentIndex == 0 ? p._Profile._ItemRight : p._Profile._ItemRight_Other;
 
-      var has_item_l = item_type_l != ItemManager.Items.NONE;
-      var has_item_r = item_type_r != ItemManager.Items.NONE;
+      var has_item_l = item_type_l != ItemType.NONE;
+      var has_item_r = item_type_r != ItemType.NONE;
 
-      var has_actual_two_handed = (item_type_l != ItemManager.Items.NONE && ShopHelper.IsActuallyTwoHanded(item_type_l)) ||
-        (item_type_r != ItemManager.Items.NONE && ShopHelper.IsActuallyTwoHanded(item_type_r));
-      var actual_two_handed_side = item_type_l != ItemManager.Items.NONE ? ActiveRagdoll.Side.LEFT : ActiveRagdoll.Side.RIGHT;
+      var has_actual_two_handed = (item_type_l != ItemType.NONE && ShopHelper.IsActuallyTwoHanded(item_type_l)) ||
+        (item_type_r != ItemType.NONE && ShopHelper.IsActuallyTwoHanded(item_type_r));
+      var actual_two_handed_side = item_type_l != ItemType.NONE ? ActiveRagdoll.Side.LEFT : ActiveRagdoll.Side.RIGHT;
       var actual_two_handed_type = actual_two_handed_side == ActiveRagdoll.Side.LEFT ? item_type_l : item_type_r;
 
       // Ragdoll text

@@ -39,9 +39,6 @@ public class GameScript : MonoBehaviour
     }
   }
 
-  //
-  public static TextMesh s_DebugText;
-
   public static GameScript s_Singleton;
 
   public static bool s_Paused;
@@ -199,6 +196,7 @@ public class GameScript : MonoBehaviour
     SneakyEngineSystem.Initialize();
 
     GameResources.Init();
+    EquippableManager.Init();
 
     var args = Environment.GetCommandLineArgs();
     s_IsVr = Array.Exists(args, element => element.Equals("-vr", StringComparison.OrdinalIgnoreCase));
@@ -310,9 +308,6 @@ public class GameScript : MonoBehaviour
         Debug.Log("XR Mode started successfully.");
       }));
     }
-
-    //
-    s_DebugText = GameObject.Find("DebugText").GetComponent<TextMesh>();
 
     s_Music = GameObject.Find("Music").GetComponent<AudioSource>();
     FunctionsC.MusicManager.Init();

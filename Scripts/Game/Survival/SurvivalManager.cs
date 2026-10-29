@@ -9,6 +9,7 @@ using SneakyGame.UI.Menus;
 using SneakyGame.Game.Items;
 using UnityEngine;
 using SneakyGame.Game.Player;
+using SneakyEngine.Equippable.Item;
 
 namespace SneakyGame.Game.Survival
 {
@@ -154,10 +155,10 @@ namespace SneakyGame.Game.Survival
     {
       s_PlayerLoadouts[playerId]._Equipment._UtilitiesLeft = new UtilityType[] { UtilityType.GRENADE, };
       s_PlayerLoadouts[playerId]._Equipment._UtilitiesRight = new UtilityType[0];
-      s_PlayerLoadouts[playerId]._Equipment._ItemLeft0 = ItemManager.Items.KNIFE;
-      s_PlayerLoadouts[playerId]._Equipment._ItemRight0 = ItemManager.Items.NONE;
-      s_PlayerLoadouts[playerId]._Equipment._ItemLeft1 = ItemManager.Items.NONE;
-      s_PlayerLoadouts[playerId]._Equipment._ItemRight1 = ItemManager.Items.NONE;
+      s_PlayerLoadouts[playerId]._Equipment._ItemLeft0 = ItemType.KNIFE;
+      s_PlayerLoadouts[playerId]._Equipment._ItemRight0 = ItemType.NONE;
+      s_PlayerLoadouts[playerId]._Equipment._ItemLeft1 = ItemType.NONE;
+      s_PlayerLoadouts[playerId]._Equipment._ItemRight1 = ItemType.NONE;
 
       s_PlayerLoadouts[playerId]._Equipment._Perks.Clear();
 

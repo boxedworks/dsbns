@@ -84,6 +84,7 @@ namespace SneakyGame.Game.Incremental
       }
       catch (Exception exception)
       {
+        Debug.LogError("Error occurred while requesting interaction data.");
         Debug.LogException(exception);
       }
       finally

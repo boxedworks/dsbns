@@ -16,6 +16,7 @@ using UnityEngine;
 using UnityEngine.AI;
 
 using Key = ControllerManager.Key;
+using SneakyEngine.Equippable.Item;
 
 public class TileManager
 {
@@ -412,45 +413,45 @@ public class TileManager
           // Don't save bat enemy if not mission editor
           /*if (SettingsHelper._DIFFICULTY > 0)*/
           if (!GameScript.s_EditorTesting)
-            if (enemy._itemLeft == ItemManager.Items.BAT || enemy._itemRight == ItemManager.Items.BAT) continue;
+            if (enemy._itemLeft == ItemType.BAT || enemy._itemRight == ItemType.BAT) continue;
 
           // Basic position info
           var pos_save = enemy.transform.position - offset;
           returnString += "e_" + Math.Round(pos_save.x, 1) + "_" + Math.Round(pos_save.z, 1) + "_";
 
           // Item info
-          static string check_item(ItemManager.Items item)
+          static string check_item(ItemType item)
           {
             switch (item)
             {
-              case ItemManager.Items.KNIFE:
+              case ItemType.KNIFE:
                 return "knife";
-              case ItemManager.Items.PISTOL:
+              case ItemType.PISTOL:
                 return "pistol";
-              case ItemManager.Items.PISTOL_SILENCED:
+              case ItemType.PISTOL_SILENCED:
                 return "pistolsilenced";
-              case ItemManager.Items.REVOLVER:
+              case ItemType.REVOLVER:
                 return "revolver";
-              case ItemManager.Items.GRENADE_HOLD:
+              case ItemType.GRENADE_HOLD:
                 return "grenade";
-              case ItemManager.Items.SHOTGUN_PUMP:
+              case ItemType.SHOTGUN_PUMP:
                 return "shotgun";
-              case ItemManager.Items.GRENADE_LAUNCHER:
+              case ItemType.GRENADE_LAUNCHER:
                 return "grenadelauncher";
-              case ItemManager.Items.BAT:
+              case ItemType.BAT:
                 return "bat";
             }
             //throw new System.Exception("No weapon set for " + item);
             Debug.LogWarning($"No weapon set for {item} - returning knife");
             return "knife";
           }
-          if (enemy._itemLeft != ItemManager.Items.NONE)
+          if (enemy._itemLeft != ItemType.NONE)
           {
             returnString += "li_";
             var addWeapon = check_item(enemy._itemLeft);
             returnString += addWeapon + "_";
           }
-          if (enemy._itemRight != ItemManager.Items.NONE)
+          if (enemy._itemRight != ItemType.NONE)
           {
             returnString += "ri_";
             var addWeapon = check_item(enemy._itemRight);
@@ -1265,7 +1266,7 @@ public class TileManager
       var hasBat = false;
       if (EnemyScript._Enemies_alive != null)
         foreach (var e in EnemyScript._Enemies_alive)
-          if (e._itemLeft == ItemManager.Items.BAT || e._itemRight == ItemManager.Items.BAT)
+          if (e._itemLeft == ItemType.BAT || e._itemRight == ItemType.BAT)
           {
             hasBat = true;
             break;
@@ -1287,7 +1288,7 @@ public class TileManager
 
         var enemy = new EnemyScript(new_gameobject.transform.GetChild(0))
         {
-          _itemLeft = ItemManager.Items.BAT
+          _itemLeft = ItemType.BAT
         };
         enemy.Init(null);
       }
@@ -1400,7 +1401,7 @@ public class TileManager
         var controller = loadedObject.transform.GetChild(0);
         controller.position = new Vector3(object_base._x, controller.position.y, object_base._z);
         var enemy = new EnemyScript(controller);
-        enemy._itemLeft = enemy._itemRight = ItemManager.Items.NONE;
+        enemy._itemLeft = enemy._itemRight = ItemType.NONE;
 
         // Load path info
         Transform path = loadedObject.transform.GetChild(1),
@@ -1448,32 +1449,32 @@ public class TileManager
             // Left / right item
             case "li":
             case "ri":
-              ItemManager.Items item;
+              ItemType item;
               switch (subobject_base._modifier0)
               {
                 case "pistol":
-                  item = ItemManager.Items.PISTOL;
+                  item = ItemType.PISTOL;
                   break;
                 case "pistolsilenced":
-                  item = ItemManager.Items.PISTOL_SILENCED;
+                  item = ItemType.PISTOL_SILENCED;
                   break;
                 case "revolver":
-                  item = ItemManager.Items.REVOLVER;
+                  item = ItemType.REVOLVER;
                   break;
                 case "grenade":
-                  item = ItemManager.Items.GRENADE_HOLD;
+                  item = ItemType.GRENADE_HOLD;
                   break;
                 case "shotgun":
-                  item = ItemManager.Items.SHOTGUN_PUMP;
+                  item = ItemType.SHOTGUN_PUMP;
                   break;
                 case "grenadelauncher":
-                  item = ItemManager.Items.GRENADE_LAUNCHER;
+                  item = ItemType.GRENADE_LAUNCHER;
                   break;
                 case "bat":
-                  item = ItemManager.Items.BAT;
+                  item = ItemType.BAT;
                   break;
                 default:
-                  item = ItemManager.Items.KNIFE;
+                  item = ItemType.KNIFE;
                   break;
               }
               if (object_type.Equals("ri"))
@@ -3108,32 +3109,32 @@ public class TileManager
         var enemy_type = "";
         switch (enemy._itemLeft)
         {
-          case ItemManager.Items.KNIFE:
+          case ItemType.KNIFE:
 
             enemy_type = "Knife";
             break;
-          case ItemManager.Items.PISTOL:
+          case ItemType.PISTOL:
 
             enemy_type = "Pistol";
             break;
-          case ItemManager.Items.PISTOL_SILENCED:
+          case ItemType.PISTOL_SILENCED:
 
             enemy_type = "Silenced pistol";
             break;
-          case ItemManager.Items.REVOLVER:
+          case ItemType.REVOLVER:
 
             enemy_type = "Revolvers";
             break;
-          case ItemManager.Items.GRENADE_HOLD:
+          case ItemType.GRENADE_HOLD:
 
             enemy_type = "Grenade";
             break;
-          case ItemManager.Items.GRENADE_LAUNCHER:
+          case ItemType.GRENADE_LAUNCHER:
 
             enemy_type = "Grenade launcher";
             break;
 
-          case ItemManager.Items.BAT:
+          case ItemType.BAT:
 
             enemy_type = "Chase robot";
             break;
@@ -4766,14 +4767,14 @@ public class TileManager
   {
     // Change enemy type
     int currentType = 0;
-    if (script._itemLeft == ItemManager.Items.KNIFE) currentType = 1;
-    else if (script._itemLeft == ItemManager.Items.PISTOL) currentType = 2;
-    else if (script._itemLeft == ItemManager.Items.PISTOL_SILENCED) currentType = 3;
-    else if (script._itemLeft == ItemManager.Items.REVOLVER) currentType = 4;
-    else if (script._itemLeft == ItemManager.Items.SHOTGUN_PUMP) currentType = 5;
-    else if (script._itemLeft == ItemManager.Items.GRENADE_HOLD) currentType = 6;
-    else if (script._itemLeft == ItemManager.Items.GRENADE_LAUNCHER) currentType = 7;
-    else if (script._itemLeft == ItemManager.Items.BAT) currentType = 8;
+    if (script._itemLeft == ItemType.KNIFE) currentType = 1;
+    else if (script._itemLeft == ItemType.PISTOL) currentType = 2;
+    else if (script._itemLeft == ItemType.PISTOL_SILENCED) currentType = 3;
+    else if (script._itemLeft == ItemType.REVOLVER) currentType = 4;
+    else if (script._itemLeft == ItemType.SHOTGUN_PUMP) currentType = 5;
+    else if (script._itemLeft == ItemType.GRENADE_HOLD) currentType = 6;
+    else if (script._itemLeft == ItemType.GRENADE_LAUNCHER) currentType = 7;
+    else if (script._itemLeft == ItemType.BAT) currentType = 8;
     currentType += change;
 
     currentType %= 9;
@@ -4783,44 +4784,44 @@ public class TileManager
     if (currentType == 5) currentType++;
     //if (currentType == 6) currentType++;
 
-    script._itemLeft = script._itemRight = ItemManager.Items.NONE;
+    script._itemLeft = script._itemRight = ItemType.NONE;
     switch (currentType)
     {
       case 0:
-        script._itemLeft = ItemManager.Items.NONE;
+        script._itemLeft = ItemType.NONE;
         changeColor.material.color = Color.white;
         break;
       case 1:
-        script._itemLeft = ItemManager.Items.KNIFE;
+        script._itemLeft = ItemType.KNIFE;
         changeColor.material.color = Color.green;
         break;
       case 2:
-        script._itemLeft = ItemManager.Items.PISTOL;
+        script._itemLeft = ItemType.PISTOL;
         changeColor.material.color = Color.magenta;
         break;
       case 3:
-        script._itemLeft = ItemManager.Items.PISTOL_SILENCED;
+        script._itemLeft = ItemType.PISTOL_SILENCED;
         changeColor.material.color = Color.magenta / 3f;
         break;
       case 4:
-        script._itemLeft = ItemManager.Items.REVOLVER;
-        script._itemRight = ItemManager.Items.REVOLVER;
+        script._itemLeft = ItemType.REVOLVER;
+        script._itemRight = ItemType.REVOLVER;
         changeColor.material.color = (Color.red + Color.yellow) / 3f;
         break;
       case 5:
-        script._itemLeft = ItemManager.Items.SHOTGUN_PUMP;
+        script._itemLeft = ItemType.SHOTGUN_PUMP;
         changeColor.material.color = Color.gray * 1.5f;
         break;
       case 6:
-        script._itemLeft = ItemManager.Items.GRENADE_HOLD;
+        script._itemLeft = ItemType.GRENADE_HOLD;
         changeColor.material.color = Color.red + Color.yellow;
         break;
       case 7:
-        script._itemLeft = ItemManager.Items.GRENADE_LAUNCHER;
+        script._itemLeft = ItemType.GRENADE_LAUNCHER;
         changeColor.material.color = Color.yellow;
         break;
       case 8:
-        script._itemLeft = ItemManager.Items.BAT;
+        script._itemLeft = ItemType.BAT;
         changeColor.material.color = Color.gray * 1.5f;
         break;
     }

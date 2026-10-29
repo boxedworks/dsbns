@@ -6,6 +6,7 @@ using SneakyGame.Settings;
 using SneakyGame.UI.Menus;
 using SneakyGame.Game.Items;
 using SneakyGame.Game.Player;
+using SneakyEngine.Equippable.Item;
 
 // Holds functions for versus mode
 public static class VersusMode
@@ -772,47 +773,47 @@ public static class VersusMode
   }
 
   //
-  static ItemManager.Items GetRandomMeleeWeapon()
+  static ItemType GetRandomMeleeWeapon()
   {
     return Random.Range(0, 6) switch
     {
-      0 => ItemManager.Items.FRYING_PAN,
-      1 => ItemManager.Items.RAPIER,
-      2 => ItemManager.Items.AXE,
-      3 => ItemManager.Items.FIST,
-      4 => ItemManager.Items.STUN_BATON,
+      0 => ItemType.FRYING_PAN,
+      1 => ItemType.RAPIER,
+      2 => ItemType.AXE,
+      3 => ItemType.FIST,
+      4 => ItemType.STUN_BATON,
 
-      _ => ItemManager.Items.KNIFE,
+      _ => ItemType.KNIFE,
     };
   }
-  static ItemManager.Items GetRandomGun()
+  static ItemType GetRandomGun()
   {
     return Random.Range(0, 20) switch
     {
-      0 => ItemManager.Items.PISTOL_DOUBLE,
-      1 => ItemManager.Items.PISTOL_MACHINE,
-      2 => ItemManager.Items.PISTOL_CHARGE,
-      3 => ItemManager.Items.REVOLVER,
+      0 => ItemType.PISTOL_DOUBLE,
+      1 => ItemType.PISTOL_MACHINE,
+      2 => ItemType.PISTOL_CHARGE,
+      3 => ItemType.REVOLVER,
 
-      4 => ItemManager.Items.RIFLE,
-      5 => ItemManager.Items.RIFLE_LEVER,
-      6 => ItemManager.Items.RIFLE_CHARGE,
+      4 => ItemType.RIFLE,
+      5 => ItemType.RIFLE_LEVER,
+      6 => ItemType.RIFLE_CHARGE,
 
-      7 => ItemManager.Items.UZI,
-      8 => ItemManager.Items.AK47,
-      9 => ItemManager.Items.SNIPER,
-      10 => ItemManager.Items.FLAMETHROWER,
-      11 => ItemManager.Items.GRENADE_LAUNCHER,
-      12 => ItemManager.Items.CROSSBOW,
-      13 => ItemManager.Items.DMR,
-      14 => ItemManager.Items.M16,
+      7 => ItemType.UZI,
+      8 => ItemType.AK47,
+      9 => ItemType.SNIPER,
+      10 => ItemType.FLAMETHROWER,
+      11 => ItemType.GRENADE_LAUNCHER,
+      12 => ItemType.CROSSBOW,
+      13 => ItemType.DMR,
+      14 => ItemType.M16,
 
-      15 => ItemManager.Items.SHOTGUN_BURST,
-      16 => ItemManager.Items.SHOTGUN_DOUBLE,
-      17 => ItemManager.Items.SHOTGUN_PUMP,
-      18 => ItemManager.Items.STICKY_GUN,
+      15 => ItemType.SHOTGUN_BURST,
+      16 => ItemType.SHOTGUN_DOUBLE,
+      17 => ItemType.SHOTGUN_PUMP,
+      18 => ItemType.STICKY_GUN,
 
-      _ => ItemManager.Items.PISTOL_SILENCED,
+      _ => ItemType.PISTOL_SILENCED,
     };
   }
 
@@ -869,7 +870,7 @@ public static class VersusMode
       {
         _Equipment = new PlayerProfile.Equipment()
         {
-          _ItemLeft0 = ItemManager.Items.KATANA,
+          _ItemLeft0 = ItemType.KATANA,
         }
       };
     }
@@ -905,7 +906,7 @@ public static class VersusMode
           {
             _Equipment = new PlayerProfile.Equipment()
             {
-              _ItemLeft0 = ItemManager.Items.NONE,
+              _ItemLeft0 = ItemType.NONE,
               _ItemRight0 = GetRandomGun()
             }
           };
@@ -916,7 +917,7 @@ public static class VersusMode
             _Equipment = new PlayerProfile.Equipment()
             {
               _ItemLeft0 = GetRandomMeleeWeapon(),
-              _ItemRight0 = ItemManager.Items.NONE
+              _ItemRight0 = ItemType.NONE
             }
           };
           break;

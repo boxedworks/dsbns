@@ -5,6 +5,7 @@ namespace SneakyEngine.Equippable.Utility
   public enum UtilityType
   {
     NONE,
+
     GRENADE,
     GRENADE_IMPACT,
     C4,

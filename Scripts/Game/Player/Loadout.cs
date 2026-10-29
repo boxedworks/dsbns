@@ -3,9 +3,9 @@ using SneakyEngine.Equippable.Utility;
 using SneakyGame.Ragdoll;
 using SneakyGame.Settings;
 using SneakyGame.Settings.Serialization;
+using SneakyGame.Ragdoll.Equippables;
 using UnityEngine;
-
-using Items = ItemManager.Items;
+using SneakyEngine.Equippable.Item;
 
 public class Loadout
 {
@@ -56,21 +56,21 @@ public class Loadout
     {
       var total = 0;
       // Items
-      foreach (var item in _two_weapon_pairs ? new Items[] {
+      foreach (var item in _two_weapon_pairs ? new ItemType[] {
             _Equipment._ItemLeft0, _Equipment._ItemRight0,
             _Equipment._ItemLeft1, _Equipment._ItemRight1,
-          } : new Items[] {
+          } : new ItemType[] {
             _Equipment._ItemLeft0, _Equipment._ItemRight0,
           })
-        total += ItemManager.GetItemValue(item);
+        total += EquippableManager.GetItemValue(item);
       // Utils
       foreach (var utility in _Equipment._UtilitiesLeft)
-        total += ItemManager.GetUtilityValue(utility);
+        total += EquippableManager.GetUtilityValue(utility);
       foreach (var utility in _Equipment._UtilitiesRight)
-        total += ItemManager.GetUtilityValue(utility);
+        total += EquippableManager.GetUtilityValue(utility);
       // Perks
       foreach (var perk in _Equipment._Perks)
-        total += ItemManager.GetPerkValue(perk);
+        total += EquippableManager.GetPerkValue(perk);
       return _POINTS_MAX - total;
     }
   }
@@ -103,10 +103,10 @@ public class Loadout
     Load();
   }
 
-  public bool CanEquipItem(ActiveRagdoll.Side side, int index, Items item)
+  public bool CanEquipItem(ActiveRagdoll.Side side, int index, ItemType item)
   {
-    var currentEquipValue = ItemManager.GetItemValue(side == ActiveRagdoll.Side.LEFT ? (index == 0 ? _Equipment._ItemLeft0 : _Equipment._ItemLeft1) : (index == 0 ? _Equipment._ItemRight0 : _Equipment._ItemRight1));
-    return _available_points + currentEquipValue - ItemManager.GetItemValue(item) >= 0;
+    var currentEquipValue = EquippableManager.GetItemValue(side == ActiveRagdoll.Side.LEFT ? (index == 0 ? _Equipment._ItemLeft0 : _Equipment._ItemLeft1) : (index == 0 ? _Equipment._ItemRight0 : _Equipment._ItemRight1));
+    return _available_points + currentEquipValue - EquippableManager.GetItemValue(item) >= 0;
   }
   public bool CanEquipUtility(ActiveRagdoll.Side side, UtilityType utility)
   {
@@ -115,9 +115,9 @@ public class Loadout
     // Check if adding a new utility or adding additional
     if (currentUtilities.Length > 0 && utility != currentUtilities[0])
     {
-      currentEquipValue = ItemManager.GetUtilityValue(currentUtilities[0]) * currentUtilities.Length;
+      currentEquipValue = EquippableManager.GetUtilityValue(currentUtilities[0]) * currentUtilities.Length;
     }
-    return _available_points + currentEquipValue - ItemManager.GetUtilityValue(utility) >= 0;
+    return _available_points + currentEquipValue - EquippableManager.GetUtilityValue(utility) >= 0;
   }
 
   // Save the loadout
@@ -127,10 +127,10 @@ public class Loadout
       return;
 
     var savestring = "";
-    if (_Equipment._ItemLeft0 != Items.NONE) savestring += $"item_left0:{_Equipment._ItemLeft0}|";
-    if (_Equipment._ItemRight0 != Items.NONE) savestring += $"item_right0:{_Equipment._ItemRight0}|";
-    if (_Equipment._ItemLeft1 != Items.NONE) savestring += $"item_left1:{_Equipment._ItemLeft1}|";
-    if (_Equipment._ItemRight1 != Items.NONE) savestring += $"item_right1:{_Equipment._ItemRight1}|";
+    if (_Equipment._ItemLeft0 != ItemType.NONE) savestring += $"item_left0:{_Equipment._ItemLeft0}|";
+    if (_Equipment._ItemRight0 != ItemType.NONE) savestring += $"item_right0:{_Equipment._ItemRight0}|";
+    if (_Equipment._ItemLeft1 != ItemType.NONE) savestring += $"item_left1:{_Equipment._ItemLeft1}|";
+    if (_Equipment._ItemRight1 != ItemType.NONE) savestring += $"item_right1:{_Equipment._ItemRight1}|";
     if (_Equipment._UtilitiesLeft != null && _Equipment._UtilitiesLeft.Length > 0) savestring += $"utility_left:{_Equipment._UtilitiesLeft[0]},{_Equipment._UtilitiesLeft.Length}|";
     if (_Equipment._UtilitiesRight != null && _Equipment._UtilitiesRight.Length > 0) savestring += $"utility_right:{_Equipment._UtilitiesRight[0]},{_Equipment._UtilitiesRight.Length}|";
     foreach (var perk in _Equipment._Perks)
@@ -188,19 +188,19 @@ public class Loadout
         switch (variable)
         {
           case "item_left0":
-            var item = (Items)System.Enum.Parse(typeof(Items), val, true);
+            var item = (ItemType)System.Enum.Parse(typeof(ItemType), val, true);
             _Equipment._ItemLeft0 = item;
             break;
           case "item_right0":
-            item = (Items)System.Enum.Parse(typeof(Items), val, true);
+            item = (ItemType)System.Enum.Parse(typeof(ItemType), val, true);
             _Equipment._ItemRight0 = item;
             break;
           case "item_left1":
-            item = (Items)System.Enum.Parse(typeof(Items), val, true);
+            item = (ItemType)System.Enum.Parse(typeof(ItemType), val, true);
             _Equipment._ItemLeft1 = item;
             break;
           case "item_right1":
-            item = (Items)System.Enum.Parse(typeof(Items), val, true);
+            item = (ItemType)System.Enum.Parse(typeof(ItemType), val, true);
             _Equipment._ItemRight1 = item;
             break;
           case "utility_left":

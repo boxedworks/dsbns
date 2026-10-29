@@ -12,6 +12,8 @@ using SneakyGame.Settings.Serialization;
 using SneakyGame.Game.Survival;
 using UnityEngine;
 using Valve.VR;
+using SneakyGame.Ragdoll.Equippables;
+using SneakyEngine.Equippable.Item;
 
 namespace SneakyGame.UI.Menus
 {
@@ -2642,14 +2644,14 @@ namespace SneakyGame.UI.Menus
           if (name.StartsWith("ITEM_"))
           {
             name = string.Format("{0,-20}{1,6}", name[5..], "[item]");
-            equip_cost = ItemManager.GetItemValue((ItemManager.Items)System.Enum.Parse(typeof(ItemManager.Items), unlock_s[5..], true));
+            equip_cost = EquippableManager.GetItemValue((ItemType)System.Enum.Parse(typeof(ItemType), unlock_s[5..], true));
           }
           else if (name.StartsWith("UTILITY_"))
           {
             itemType = 1;
 
             name = string.Format("{0,-17}{1,9}", name[8..], "[utility]");
-            equip_cost = ItemManager.GetUtilityValue((UtilityType)System.Enum.Parse(typeof(UtilityType), unlock_s[8..], true));
+            equip_cost = EquippableManager.GetUtilityValue((UtilityType)System.Enum.Parse(typeof(UtilityType), unlock_s[8..], true));
           }
           else if (name.StartsWith("MOD_"))
           {
@@ -2657,7 +2659,7 @@ namespace SneakyGame.UI.Menus
 
             name = string.Format("{0,-21}{1,5}", name[4..], "[mod]");
             var perk = (Perk.PerkType)System.Enum.Parse(typeof(Perk.PerkType), unlock_s[4..], true);
-            equip_cost = ItemManager.GetPerkValue(perk);
+            equip_cost = EquippableManager.GetPerkValue(perk);
             shop_details = System.Tuple.Create(Perk._PERK_DESCRIPTIONS[perk], shop_details.Item2);
           }
           else if (name.StartsWith("MAX_EQUIPMENT_POINTS_"))
@@ -3959,11 +3961,11 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
           var loadout = Loadout._Loadouts[i];
 
           // Gather equipment pairs
-          bool isValidItemType(ItemManager.Items itemType)
+          bool isValidItemType(ItemType itemType)
           {
             return
-              itemType != ItemManager.Items.NONE &&
-              itemType != ItemManager.Items.FIST;
+              itemType != ItemType.NONE &&
+              itemType != ItemType.FIST;
           }
 
           var equipment = "";
@@ -4262,17 +4264,17 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
             .AddEvent(EventType.ON_RENDER, component =>
             {
               var item = CurrentLoadout()._Equipment._ItemLeft0;
-              if (item == ItemManager.Items.FIST) item = ItemManager.Items.NONE;
+              if (item == ItemType.FIST) item = ItemType.NONE;
 
               var item_name = item.ToString();
-              var item_cost = ItemManager.GetItemValue(item);
-              if (item == ItemManager.Items.NONE)
+              var item_cost = EquippableManager.GetItemValue(item);
+              if (item == ItemType.NONE)
                 component.SetDisplayText(string.Format(loadout_format, "left hand", $"-", $"-") + "\n");
               else
                 component.SetDisplayText(string.Format(loadoutEquip_format, "left hand", $"{item_name}", $"{item_cost}") + "\n", true);
 
               // Check for two handed
-              component._obscured = CurrentLoadout()._Equipment._ItemRight0 == ItemManager.Items.KATANA;
+              component._obscured = CurrentLoadout()._Equipment._ItemRight0 == ItemType.KATANA;
 
               // Set dropdown data
               var selections = new List<string>();
@@ -4283,7 +4285,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
               foreach (var item0 in list_items)
               {
                 var desc = "-";
-                if (item0 != ItemManager.Items.NONE)
+                if (item0 != ItemType.NONE)
                 {
                   var unlock = (ShopHelper.Unlocks)System.Enum.Parse(typeof(ShopHelper.Unlocks), $"ITEM_{item0}", true);
                   desc = ShopHelper._Unlocks_Descriptions[unlock].Item1;
@@ -4291,22 +4293,22 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
                   // Check filter
                   if (ShopHelper._LoadoutDisplayMode == 0 && !ShopHelper.IsUnlocked(unlock)) continue;
                 }
-                var it_val = ItemManager.GetItemValue(item0);
+                var it_val = EquippableManager.GetItemValue(item0);
                 var use_color = it_val > CurrentLoadout()._available_points + item_cost ? "red" : "white";
                 var use_color2 = use_color == "white" ? "white" : _COLOR_GRAY;
-                if (item0 == item && item != ItemManager.Items.NONE) use_color = use_color2 = "yellow";
+                if (item0 == item && item != ItemType.NONE) use_color = use_color2 = "yellow";
                 selections.Add(string.Format($"</color><color={use_color2}>{loadout_format}<color=white>", item0, desc, $"</color><color={use_color}>{it_val}</color>"));
                 actions.Add(component0 =>
                 {
-                  var item_selected = (ItemManager.Items)System.Enum.Parse(typeof(ItemManager.Items), component0.GetDisplayText(false).Trim().Split(' ')[2].Split('>')[2]);
+                  var item_selected = (ItemType)System.Enum.Parse(typeof(ItemType), component0.GetDisplayText(false).Trim().Split(' ')[2].Split('>')[2]);
                   var item_other = CurrentLoadout()._Equipment._ItemRight0;
                   // Check for two handed
-                  if (((item_selected == ItemManager.Items.BAT || item_selected == ItemManager.Items.KATANA) &&
-                    (item_other != ItemManager.Items.NONE)) ||
-                    ((item_other == ItemManager.Items.BAT || item_other == ItemManager.Items.KATANA) &&
-                    (item_selected != ItemManager.Items.NONE))
+                  if (((item_selected == ItemType.BAT || item_selected == ItemType.KATANA) &&
+                    (item_other != ItemType.NONE)) ||
+                    ((item_other == ItemType.BAT || item_other == ItemType.KATANA) &&
+                    (item_selected != ItemType.NONE))
                     )
-                    CurrentLoadout()._Equipment._ItemRight0 = ItemManager.Items.NONE;
+                    CurrentLoadout()._Equipment._ItemRight0 = ItemType.NONE;
                   if (CurrentLoadout().CanEquipItem(ActiveRagdoll.Side.LEFT, 0, item_selected))
                   {
                     CurrentLoadout()._Equipment._ItemLeft0 = item_selected;
@@ -4342,7 +4344,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
                     profile.UpdateIcons();
                 });
                 // Check if item is unlocked
-                if (item0 == ItemManager.Items.NONE)
+                if (item0 == ItemType.NONE)
                   actions_onCreated.Add(component0 => { });
                 else
                 {
@@ -4360,17 +4362,17 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
             .AddEvent(EventType.ON_RENDER, component =>
             {
               var item = CurrentLoadout()._Equipment._ItemRight0;
-              if (item == ItemManager.Items.FIST) item = ItemManager.Items.NONE;
+              if (item == ItemType.FIST) item = ItemType.NONE;
 
               var item_name = item.ToString();
-              var item_cost = ItemManager.GetItemValue(item);
-              if (item == ItemManager.Items.NONE)
+              var item_cost = EquippableManager.GetItemValue(item);
+              if (item == ItemType.NONE)
                 component.SetDisplayText(string.Format(loadout_format, "right hand", $"-", $"-") + "\n\n");
               else
                 component.SetDisplayText(string.Format(loadoutEquip_format, "right hand", $"{item_name}", $"{item_cost}") + "\n\n", true);
 
               // Check for two handed
-              component._obscured = CurrentLoadout()._Equipment._ItemLeft0 == ItemManager.Items.KATANA;
+              component._obscured = CurrentLoadout()._Equipment._ItemLeft0 == ItemType.KATANA;
 
               // Set dropdown data
               var selections = new List<string>();
@@ -4388,7 +4390,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
               foreach (var item0 in list_items)
               {
                 var desc = "-";
-                if (item0 != ItemManager.Items.NONE)
+                if (item0 != ItemType.NONE)
                 {
                   var unlock = (ShopHelper.Unlocks)System.Enum.Parse(typeof(ShopHelper.Unlocks), $"ITEM_{item0}", true);
                   desc = ShopHelper._Unlocks_Descriptions[unlock].Item1;
@@ -4396,22 +4398,22 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
                   // Check filter
                   if (ShopHelper._LoadoutDisplayMode == 0 && !ShopHelper.IsUnlocked(unlock)) continue;
                 }
-                var it_val = ItemManager.GetItemValue(item0);
+                var it_val = EquippableManager.GetItemValue(item0);
                 var use_color = it_val > CurrentLoadout()._available_points + item_cost ? "red" : "white";
                 var use_color2 = use_color == "white" ? "white" : _COLOR_GRAY;
-                if (item0 == item && item != ItemManager.Items.NONE) use_color = use_color2 = "yellow";
+                if (item0 == item && item != ItemType.NONE) use_color = use_color2 = "yellow";
                 selections.Add(string.Format($"</color><color={use_color2}>{loadout_format}<color=white>", item0, desc, $"</color><color={use_color}>{it_val}</color>"));
                 actions.Add(component0 =>
                 {
-                  var item_selected = (ItemManager.Items)System.Enum.Parse(typeof(ItemManager.Items), component0.GetDisplayText(false).Trim().Split(' ')[2].Split('>')[2]);
+                  var item_selected = (ItemType)System.Enum.Parse(typeof(ItemType), component0.GetDisplayText(false).Trim().Split(' ')[2].Split('>')[2]);
                   var item_other = CurrentLoadout()._Equipment._ItemLeft0;
                   // Check for two handed
-                  if (((item_selected == ItemManager.Items.BAT || item_selected == ItemManager.Items.KATANA) &&
-                    (item_other != ItemManager.Items.NONE)) ||
-                    ((item_other == ItemManager.Items.BAT || item_other == ItemManager.Items.KATANA) &&
-                    (item_selected != ItemManager.Items.NONE))
+                  if (((item_selected == ItemType.BAT || item_selected == ItemType.KATANA) &&
+                    (item_other != ItemType.NONE)) ||
+                    ((item_other == ItemType.BAT || item_other == ItemType.KATANA) &&
+                    (item_selected != ItemType.NONE))
                     )
-                    CurrentLoadout()._Equipment._ItemLeft0 = ItemManager.Items.NONE;
+                    CurrentLoadout()._Equipment._ItemLeft0 = ItemType.NONE;
                   if (CurrentLoadout().CanEquipItem(ActiveRagdoll.Side.RIGHT, 0, item_selected))
                   {
                     CurrentLoadout()._Equipment._ItemRight0 = item_selected;
@@ -4446,7 +4448,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
                     profile.UpdateIcons();
                 });
                 // Check if item is unlocked
-                if (item0 == ItemManager.Items.NONE)
+                if (item0 == ItemType.NONE)
                   actions_onCreated.Add(component0 => { });
                 else
                 {
@@ -4468,17 +4470,17 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
               .AddEvent(EventType.ON_RENDER, component =>
               {
                 var item = CurrentLoadout()._Equipment._ItemLeft1;
-                if (item == ItemManager.Items.FIST) item = ItemManager.Items.NONE;
+                if (item == ItemType.FIST) item = ItemType.NONE;
 
                 var item_name = item.ToString();
-                var item_cost = ItemManager.GetItemValue(item);
-                if (item == ItemManager.Items.NONE)
+                var item_cost = EquippableManager.GetItemValue(item);
+                if (item == ItemType.NONE)
                   component.SetDisplayText(string.Format(loadout_format, "left hand", $"-", $"-") + "\n");
                 else
                   component.SetDisplayText(string.Format(loadoutEquip_format, "left hand", $"{item_name}", $"{item_cost}") + "\n", true);
 
                 // Check for two handed
-                component._obscured = CurrentLoadout()._Equipment._ItemRight1 == ItemManager.Items.KATANA;
+                component._obscured = CurrentLoadout()._Equipment._ItemRight1 == ItemType.KATANA;
 
                 // Set dropdown data
                 var selections = new List<string>();
@@ -4489,7 +4491,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
                 foreach (var item0 in list_items)
                 {
                   var desc = "-";
-                  if (item0 != ItemManager.Items.NONE)
+                  if (item0 != ItemType.NONE)
                   {
                     var unlock = (ShopHelper.Unlocks)System.Enum.Parse(typeof(ShopHelper.Unlocks), $"ITEM_{item0}", true);
                     desc = ShopHelper._Unlocks_Descriptions[unlock].Item1;
@@ -4497,22 +4499,22 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
                     // Check filter
                     if (ShopHelper._LoadoutDisplayMode == 0 && !ShopHelper.IsUnlocked(unlock)) continue;
                   }
-                  var it_val = ItemManager.GetItemValue(item0);
+                  var it_val = EquippableManager.GetItemValue(item0);
                   var use_color = it_val > CurrentLoadout()._available_points + item_cost ? "red" : "white";
                   var use_color2 = use_color == "white" ? "white" : _COLOR_GRAY;
-                  if (item0 == item && item != ItemManager.Items.NONE) use_color = use_color2 = "yellow";
+                  if (item0 == item && item != ItemType.NONE) use_color = use_color2 = "yellow";
                   selections.Add(string.Format($"</color><color={use_color2}>{loadout_format}<color=white>", item0, desc, $"</color><color={use_color}>{it_val}</color>"));
                   actions.Add(component0 =>
                   {
-                    var item_selected = (ItemManager.Items)System.Enum.Parse(typeof(ItemManager.Items), component0.GetDisplayText(false).Trim().Split(' ')[2].Split('>')[2]);
+                    var item_selected = (ItemType)System.Enum.Parse(typeof(ItemType), component0.GetDisplayText(false).Trim().Split(' ')[2].Split('>')[2]);
                     var item_other = CurrentLoadout()._Equipment._ItemRight1;
                     // Check for two handed
-                    if (((item_selected == ItemManager.Items.BAT || item_selected == ItemManager.Items.KATANA) &&
-                      (item_other != ItemManager.Items.NONE)) ||
-                      ((item_other == ItemManager.Items.BAT || item_other == ItemManager.Items.KATANA) &&
-                      (item_selected != ItemManager.Items.NONE))
+                    if (((item_selected == ItemType.BAT || item_selected == ItemType.KATANA) &&
+                      (item_other != ItemType.NONE)) ||
+                      ((item_other == ItemType.BAT || item_other == ItemType.KATANA) &&
+                      (item_selected != ItemType.NONE))
                       )
-                      CurrentLoadout()._Equipment._ItemRight1 = ItemManager.Items.NONE;
+                      CurrentLoadout()._Equipment._ItemRight1 = ItemType.NONE;
                     if (CurrentLoadout().CanEquipItem(ActiveRagdoll.Side.LEFT, 1, item_selected))
                     {
                       CurrentLoadout()._Equipment._ItemLeft1 = item_selected;
@@ -4547,7 +4549,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
                       profile.UpdateIcons();
                   });
                   // Check if item is unlocked
-                  if (item0 == ItemManager.Items.NONE)
+                  if (item0 == ItemType.NONE)
                     actions_onCreated.Add(component0 => { });
                   else
                   {
@@ -4565,17 +4567,17 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
               .AddEvent(EventType.ON_RENDER, component =>
               {
                 var item = CurrentLoadout()._Equipment._ItemRight1;
-                if (item == ItemManager.Items.FIST) item = ItemManager.Items.NONE;
+                if (item == ItemType.FIST) item = ItemType.NONE;
 
                 var item_name = item.ToString();
-                var item_cost = ItemManager.GetItemValue(item);
-                if (item == ItemManager.Items.NONE)
+                var item_cost = EquippableManager.GetItemValue(item);
+                if (item == ItemType.NONE)
                   component.SetDisplayText(string.Format(loadout_format, "right hand", $"-", $"-") + "\n\n");
                 else
                   component.SetDisplayText(string.Format(loadoutEquip_format, "right hand", $"{item_name}", $"{item_cost}") + "\n\n", true);
 
                 // Check for two handed
-                component._obscured = CurrentLoadout()._Equipment._ItemLeft1 == ItemManager.Items.KATANA;
+                component._obscured = CurrentLoadout()._Equipment._ItemLeft1 == ItemType.KATANA;
 
                 // Set dropdown data
                 var selections = new List<string>();
@@ -4586,7 +4588,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
                 foreach (var item0 in list_items)
                 {
                   var desc = "-";
-                  if (item0 != ItemManager.Items.NONE)
+                  if (item0 != ItemType.NONE)
                   {
                     var unlock = (ShopHelper.Unlocks)System.Enum.Parse(typeof(ShopHelper.Unlocks), $"ITEM_{item0}", true);
                     desc = ShopHelper._Unlocks_Descriptions[unlock].Item1;
@@ -4594,23 +4596,23 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
                     // Check filter
                     if (ShopHelper._LoadoutDisplayMode == 0 && !ShopHelper.IsUnlocked(unlock)) continue;
                   }
-                  var it_val = ItemManager.GetItemValue(item0);
+                  var it_val = EquippableManager.GetItemValue(item0);
                   var use_color = it_val > CurrentLoadout()._available_points + item_cost ? "red" : "white";
                   var use_color2 = use_color == "white" ? "white" : _COLOR_GRAY;
-                  if (item0 == item && item != ItemManager.Items.NONE) use_color = use_color2 = "yellow";
+                  if (item0 == item && item != ItemType.NONE) use_color = use_color2 = "yellow";
                   selections.Add(string.Format($"</color><color={use_color2}>{loadout_format}<color=white>", item0, desc, $"</color><color={use_color}>{it_val}</color>"));
                   actions.Add(component0 =>
                   {
-                    var item_selected = (ItemManager.Items)System.Enum.Parse(typeof(ItemManager.Items), component0.GetDisplayText(false).Trim().Split(' ')[2].Split('>')[2]);
+                    var item_selected = (ItemType)System.Enum.Parse(typeof(ItemType), component0.GetDisplayText(false).Trim().Split(' ')[2].Split('>')[2]);
                     var item_other = CurrentLoadout()._Equipment._ItemLeft1;
 
                     // Check for two handed
-                    if (((item_selected == ItemManager.Items.BAT || item_selected == ItemManager.Items.KATANA) &&
-                      (item_other != ItemManager.Items.NONE)) ||
-                      ((item_other == ItemManager.Items.BAT || item_other == ItemManager.Items.KATANA) &&
-                      (item_selected != ItemManager.Items.NONE))
+                    if (((item_selected == ItemType.BAT || item_selected == ItemType.KATANA) &&
+                      (item_other != ItemType.NONE)) ||
+                      ((item_other == ItemType.BAT || item_other == ItemType.KATANA) &&
+                      (item_selected != ItemType.NONE))
                       )
-                      CurrentLoadout()._Equipment._ItemLeft1 = ItemManager.Items.NONE;
+                      CurrentLoadout()._Equipment._ItemLeft1 = ItemType.NONE;
 
                     if (CurrentLoadout().CanEquipItem(ActiveRagdoll.Side.RIGHT, 1, item_selected))
                     {
@@ -4651,7 +4653,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
                   });
 
                   // Check if item is unlocked
-                  if (item0 == ItemManager.Items.NONE)
+                  if (item0 == ItemType.NONE)
                     actions_onCreated.Add(component0 => { });
                   else
                   {
@@ -4685,7 +4687,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
                 var utility_amount = ShopHelper.GetUtilityCount(utilities[0]) * utilities.Length;
                 utility_name = utilities[0].ToString();
                 var mod = 1f / ShopHelper.GetUtilityCount(utilities[0]);
-                utility_cost = (int)(ItemManager.GetUtilityValue(utilities[0]) * utility_amount * mod);
+                utility_cost = (int)(EquippableManager.GetUtilityValue(utilities[0]) * utility_amount * mod);
                 component.SetDisplayText(string.Format(loadoutEquip_format, "left utility", $"{utility_name} x{utility_amount}", $"{utility_cost}") + "\n", true);
               }
               // Set dropdown data
@@ -4705,7 +4707,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
                   // Check filter
                   if (ShopHelper._LoadoutDisplayMode == 0 && !ShopHelper.IsUnlocked(unlock)) continue;
                 }
-                var ut_val = ItemManager.GetUtilityValue(utility0);
+                var ut_val = EquippableManager.GetUtilityValue(utility0);
                 var use_color = ut_val > CurrentLoadout()._available_points + utility_cost ? "red" : "white";
                 var use_color2 = use_color == "white" ? "white" : _COLOR_GRAY;
                 if (utility0.ToString() == utility_name && utility_name != UtilityType.NONE.ToString()) use_color = use_color2 = "yellow";
@@ -4787,7 +4789,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
                 var utility_amount = ShopHelper.GetUtilityCount(utilities[0]) * utilities.Length;
                 utility_name = utilities[0].ToString();
                 var mod = 1f / ShopHelper.GetUtilityCount(utilities[0]);
-                utility_cost = (int)(ItemManager.GetUtilityValue(utilities[0]) * utility_amount * mod);
+                utility_cost = (int)(EquippableManager.GetUtilityValue(utilities[0]) * utility_amount * mod);
                 component.SetDisplayText(string.Format(loadoutEquip_format, "right utility", $"{utility_name} x{utility_amount}", $"{utility_cost}") + "\n\n", true);
               }
               // Set dropdown data
@@ -4808,7 +4810,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
                   // Check filter
                   if (ShopHelper._LoadoutDisplayMode == 0 && !ShopHelper.IsUnlocked(unlock)) continue;
                 }
-                var ut_val = ItemManager.GetUtilityValue(utility0);
+                var ut_val = EquippableManager.GetUtilityValue(utility0);
                 var use_color = ut_val > CurrentLoadout()._available_points + utility_cost ? "red" : "white";
                 var use_color2 = use_color == "white" ? "white" : _COLOR_GRAY;
                 if (utility0.ToString() == utility_name && utility_name != UtilityType.NONE.ToString()) use_color = use_color2 = "yellow";
@@ -4898,7 +4900,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
                 for (var i = 0; i < 4; i++)
                 {
                   var hasperk = i < perks.Count;
-                  perkstring += (i == 0 ? "" : "    ") + string.Format(loadoutEquip_format, i == 0 ? "mods" : "", hasperk ? $"{perks[i]}" : "-", hasperk ? "" + ItemManager.GetPerkValue(perks[i]) : "-") + "\n";
+                  perkstring += (i == 0 ? "" : "    ") + string.Format(loadoutEquip_format, i == 0 ? "mods" : "", hasperk ? $"{perks[i]}" : "-", hasperk ? "" + EquippableManager.GetPerkValue(perks[i]) : "-") + "\n";
                 }
                 perkstring += '\n';
                 component.SetDisplayText(perkstring, true);
@@ -4929,20 +4931,20 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
                   {
                     case Perk.PerkType.MARTIAL_ARTIST:
                       var equipment = CurrentLoadout()._Equipment;
-                      if (equipment._ItemLeft0 == ItemManager.Items.FIST)
-                        equipment._ItemLeft0 = ItemManager.Items.NONE;
-                      if (equipment._ItemLeft1 == ItemManager.Items.FIST)
-                        equipment._ItemLeft1 = ItemManager.Items.NONE;
-                      if (equipment._ItemRight0 == ItemManager.Items.FIST)
-                        equipment._ItemRight0 = ItemManager.Items.NONE;
-                      if (equipment._ItemRight1 == ItemManager.Items.FIST)
-                        equipment._ItemRight1 = ItemManager.Items.NONE;
+                      if (equipment._ItemLeft0 == ItemType.FIST)
+                        equipment._ItemLeft0 = ItemType.NONE;
+                      if (equipment._ItemLeft1 == ItemType.FIST)
+                        equipment._ItemLeft1 = ItemType.NONE;
+                      if (equipment._ItemRight0 == ItemType.FIST)
+                        equipment._ItemRight0 = ItemType.NONE;
+                      if (equipment._ItemRight1 == ItemType.FIST)
+                        equipment._ItemRight1 = ItemType.NONE;
                       break;
                   }
                 }
 
                 //
-                var per_val = ItemManager.GetPerkValue(perk0);
+                var per_val = EquippableManager.GetPerkValue(perk0);
                 var use_color = per_val > CurrentLoadout()._available_points ? "red" : "white";
                 var use_color2 = use_color == "white" ? "white" : _COLOR_GRAY;
                 if (perks.Contains(perk0) && perk0 != Perk.PerkType.NONE) use_color = use_color2 = "yellow";
@@ -4950,7 +4952,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
                 actions.Add(component0 =>
                 {
                   var perk_selected = (Perk.PerkType)System.Enum.Parse(typeof(Perk.PerkType), component0.GetDisplayText(false).Trim().Split(' ')[2].Split('>')[2]);
-                  var perk_value = ItemManager.GetPerkValue(perk_selected);
+                  var perk_value = EquippableManager.GetPerkValue(perk_selected);
                   perks = CurrentLoadout()._Equipment._Perks;
 
                   // Check for none selection
@@ -7732,6 +7734,8 @@ about extras</color>
             s_menus[MenuType.GAMETYPE_MISSION]._SelectionIndex = 3;
             SwitchMenu(MenuType.GAMETYPE_MISSION);
           }
+
+          LevelSaveData.Save();
         })
         .AddEvent(EventType.ON_FOCUS, c =>
         {

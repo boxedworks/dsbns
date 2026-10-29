@@ -6,6 +6,7 @@ using SneakyGame.Game.Player;
 using UnityEngine;
 using SneakyGame.FX;
 using SneakyGame.Ragdoll.Equippables;
+using SneakyEngine.Equippable.Item;
 
 namespace SneakyGame.Objects
 {
@@ -17,7 +18,7 @@ namespace SneakyGame.Objects
     ActiveRagdoll _sourceItemRagdoll;
     EnemyScript.Loudness _sourceLoudness;
     float _sourceHitForce;
-    ItemManager.Items _sourceType;
+    ItemType _sourceType;
     bool _sourceDismember;
 
     //
@@ -65,7 +66,7 @@ namespace SneakyGame.Objects
 
     float _startTime;
 
-    new Light light;
+    Light light;
     Light _light
     {
       get
@@ -187,9 +188,9 @@ namespace SneakyGame.Objects
 
             Damage = (int)damage,
             DamageSource = _shootPosition,
-            DamageSourceType = _sourceType == ItemManager.Items.FLAMETHROWER ? ActiveRagdoll.DamageSourceType.FIRE : ActiveRagdoll.DamageSourceType.BULLET,
+            DamageSourceType = _sourceType == ItemType.FLAMETHROWER ? ActiveRagdoll.DamageSourceType.FIRE : ActiveRagdoll.DamageSourceType.BULLET,
 
-            SpawnBlood = _sourceType != ItemManager.Items.FLAMETHROWER,
+            SpawnBlood = _sourceType != ItemType.FLAMETHROWER,
             SpawnGiblets = _penatrationAmount > 1
           }
           ))
@@ -200,7 +201,7 @@ namespace SneakyGame.Objects
           {
 
             // Check smart bullets
-            if ((_sourceDamageRagdoll._PlayerScript?.HasPerk(Perk.PerkType.SMART_BULLETS) ?? false) && _sourceType != ItemManager.Items.FLAMETHROWER)
+            if ((_sourceDamageRagdoll._PlayerScript?.HasPerk(Perk.PerkType.SMART_BULLETS) ?? false) && _sourceType != ItemType.FLAMETHROWER)
             {
               RedirectToClosestTarget(r._Hip.gameObject, true);
             }
@@ -250,7 +251,7 @@ namespace SneakyGame.Objects
                 {
                   Achievements.UnlockAchievement(Achievements.Achievement.BAT_DEFLECT);
 
-                  if (item_fryingPan._type == ItemManager.Items.FRYING_PAN && SceneThemes._Theme._name == "Hedge")
+                  if (item_fryingPan._ItemType == ItemType.FRYING_PAN && SceneThemes._Theme._name == "Hedge")
                     Achievements.UnlockAchievement(Achievements.Achievement.FRYING_PAN_RAIN);
                 }
 #endif
@@ -298,7 +299,7 @@ namespace SneakyGame.Objects
               Achievements.UnlockAchievement(Achievements.Achievement.BAT_DEFLECT);
 
               ItemScript swingingItem = (r._ItemR?._IsSwinging ?? false) ? r._ItemR : ((r._ItemL?._IsSwinging ?? false) ? r._ItemL : null);
-              if ((swingingItem?._type ?? ItemManager.Items.NONE) == ItemManager.Items.FRYING_PAN && SceneThemes._Theme._name == "Hedge")
+              if ((swingingItem?._ItemType ?? ItemType.NONE) == ItemType.FRYING_PAN && SceneThemes._Theme._name == "Hedge")
                 Achievements.UnlockAchievement(Achievements.Achievement.FRYING_PAN_RAIN);
             }
 #endif
@@ -571,7 +572,7 @@ namespace SneakyGame.Objects
         _sourceItem._silenced,
         _sourceItem._hit_force,
         _sourceItem._dismember,
-        _sourceItem._type
+        _sourceItem._ItemType
       );
     }
 
@@ -579,7 +580,7 @@ namespace SneakyGame.Objects
     {
       if (
         other._triggered ||
-        (other._sourceType == ItemManager.Items.FLAMETHROWER) ||
+        (other._sourceType == ItemType.FLAMETHROWER) ||
         (!_canDamageSource && !other._canDamageSource && _RagdollID == other._RagdollID)
       )
         return false;
@@ -592,7 +593,7 @@ namespace SneakyGame.Objects
       bool silenced,
       float hitForce,
       bool dismember,
-      ItemManager.Items itemType,
+      ItemType itemType,
 
       bool canDamageSource = false
     )
@@ -609,11 +610,11 @@ namespace SneakyGame.Objects
       // Special case
       switch (_sourceType)
       {
-        case ItemManager.Items.FLAMETHROWER:
+        case ItemType.FLAMETHROWER:
           _maxDistance = 3.8f;
           break;
 
-        case ItemManager.Items.ROCKET_FIST:
+        case ItemType.ROCKET_FIST:
           _maxDistance = 0.9f;
           break;
 
@@ -623,7 +624,7 @@ namespace SneakyGame.Objects
       }
 
       // Delay the start of playing the system to keep particles from emitting across screen
-      if (itemType != ItemManager.Items.FLAMETHROWER && itemType != ItemManager.Items.ROCKET_FIST)
+      if (itemType != ItemType.FLAMETHROWER && itemType != ItemType.ROCKET_FIST)
       {
         if (_Particles != null)
         {
@@ -751,7 +752,7 @@ namespace SneakyGame.Objects
             sourceRagdoll,
             transform.position,
             (target._ragdoll._Hip.position - transform.position).normalized,
-            ItemManager.Items.NONE,
+            ItemType.NONE,
             0
           );
           bullet.SetBulletData(
@@ -759,7 +760,7 @@ namespace SneakyGame.Objects
             true,
             0.25f,
             false,
-            ItemManager.Items.PISTOL_SILENCED,
+            ItemType.PISTOL_SILENCED,
 
             true
           );

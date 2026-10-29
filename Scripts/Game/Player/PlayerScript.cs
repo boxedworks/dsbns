@@ -21,6 +21,7 @@ using SneakyGame.Ragdoll.Equippables;
 using SneakyGame.XR;
 using System.Linq;
 using SneakyGame.Game.Tutorial;
+using SneakyEngine.Equippable.Item;
 
 namespace SneakyGame.Game.Player
 {
@@ -63,7 +64,7 @@ namespace SneakyGame.Game.Player
 
     bool _spawnRunCheck;
 
-    public ItemManager.Items _itemLeft, _itemRight;
+    public ItemType _itemLeft, _itemRight;
 
     public static readonly float
     MOVESPEED = 4f,
@@ -145,6 +146,8 @@ namespace SneakyGame.Game.Player
     public bool _HasTwin { get { return _ConnectedTwin != null; } }
     bool _isLeftTwin { get { return !_HasTwin || _connectedTwinSide == ActiveRagdoll.Side.LEFT; } }
     bool _isRightTwin { get { return !_HasTwin || _connectedTwinSide == ActiveRagdoll.Side.RIGHT; } }
+
+    bool _canGameOver => !GameScript.s_IsPartyGameMode && !GameScript.s_IsIncrementalGameMode;
 
     // Use this for initialization
     public PlayerScript(Transform controller, int playerSpawnId, PlayerScript connectedTwin)
@@ -261,18 +264,18 @@ namespace SneakyGame.Game.Player
 
       CheckTwinSpawn();
 
-      _itemLeft = _isLeftTwin || ShopHelper.IsActuallyTwoHanded(_Profile._ItemLeft) ? _Profile._ItemLeft : ItemManager.Items.NONE;
-      _itemRight = _isRightTwin || ShopHelper.IsActuallyTwoHanded(_Profile._ItemRight) ? _Profile._ItemRight : ItemManager.Items.NONE;
+      _itemLeft = _isLeftTwin || ShopHelper.IsActuallyTwoHanded(_Profile._ItemLeft) ? _Profile._ItemLeft : ItemType.NONE;
+      _itemRight = _isRightTwin || ShopHelper.IsActuallyTwoHanded(_Profile._ItemRight) ? _Profile._ItemRight : ItemType.NONE;
 
       // Equip start items
-      if (_itemLeft != ItemManager.Items.NONE)
+      if (_itemLeft != ItemType.NONE)
         _ragdoll.EquipItem(_itemLeft, ActiveRagdoll.Side.LEFT);
       else
       {
         _ragdoll.AddArmJoint(ActiveRagdoll.Side.LEFT);
         _ragdoll.UnequipItem(ActiveRagdoll.Side.LEFT);
       }
-      if (_itemRight != ItemManager.Items.NONE)
+      if (_itemRight != ItemType.NONE)
         _ragdoll.EquipItem(_itemRight, ActiveRagdoll.Side.RIGHT);
       else if (_ragdoll._ItemL == null || !_ragdoll._ItemL._twoHanded)
       {
@@ -759,7 +762,7 @@ namespace SneakyGame.Game.Player
                   break;
                 }
               }
-              if (!onealive && !GameScript.s_IsPartyGameMode) desiredTimeScale = 0f;
+              if (!onealive && _canGameOver) desiredTimeScale = 0f;
 
               // Update timescale
               {
@@ -1149,7 +1152,7 @@ namespace SneakyGame.Game.Player
 
       //
       var useSword = false;
-      if ((_ragdoll._ItemL?._type ?? ItemManager.Items.NONE) == ItemManager.Items.KATANA)
+      if ((_ragdoll._ItemL?._ItemType ?? ItemType.NONE) == ItemType.KATANA)
       {
         useSword = true;
 
@@ -2458,7 +2461,7 @@ namespace SneakyGame.Game.Player
       if (_HasTwin && _ConnectedTwin._ragdoll != null && !_ConnectedTwin._ragdoll._IsDead) lastplayer = false;
       if (SettingsHelper._Slowmo_on_death && lastplayer && !HasPerk(Perk.PerkType.NO_SLOWMO)) _SlowmoTimer += 2f;
 
-      if (lastplayer && !GameScript.s_IsPartyGameMode)
+      if (lastplayer && _canGameOver)
       {
         _All_Dead = true;
 

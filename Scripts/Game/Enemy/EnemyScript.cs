@@ -16,6 +16,7 @@ using SneakyGame.Game.Items;
 using SneakyGame.Game.Player;
 using SneakyGame.Game.Survival;
 using SneakyGame.Game.Incremental;
+using SneakyEngine.Equippable.Item;
 
 public class EnemyScript : PlayerScript.IHasRagdoll
 {
@@ -183,7 +184,7 @@ public class EnemyScript : PlayerScript.IHasRagdoll
   public Vector3 _lastKnownPos,
     _searchDir;
 
-  public ItemManager.Items _itemLeft, _itemRight;
+  public ItemType _itemLeft, _itemRight;
 
   public enum State
   {
@@ -246,7 +247,7 @@ public class EnemyScript : PlayerScript.IHasRagdoll
 
     if (!_IsZombie)
     {
-      if (_itemLeft == ItemManager.Items.BAT)
+      if (_itemLeft == ItemType.BAT)
         _waitLookPos = PlayerspawnScript._PlayerSpawns[0].transform.position;
       else if (_PathScript.GetPathLength() > 0)
       {
@@ -294,20 +295,20 @@ public class EnemyScript : PlayerScript.IHasRagdoll
       switch (_itemLeft)
       {
 
-        case ItemManager.Items.KNIFE:
+        case ItemType.KNIFE:
 
           if (getCrownBonuses)
             if (crownRandom < 0.33f)
-              _itemLeft = ItemManager.Items.AXE;
+              _itemLeft = ItemType.AXE;
             else if (crownRandom < 0.66f)
-              _itemLeft = ItemManager.Items.FRYING_PAN;
+              _itemLeft = ItemType.FRYING_PAN;
             else
-              _itemLeft = ItemManager.Items.RAPIER;
+              _itemLeft = ItemType.RAPIER;
 
           if (Random.value < 0.5f)
           {
             _itemRight = _itemLeft;
-            _itemLeft = ItemManager.Items.NONE;
+            _itemLeft = ItemType.NONE;
           }
 
           var knifeColor = Color.green;
@@ -326,63 +327,63 @@ public class EnemyScript : PlayerScript.IHasRagdoll
           _ragdoll.ChangeColor(knifeColor);
           break;
 
-        case ItemManager.Items.PISTOL:
+        case ItemType.PISTOL:
 
           if (getCrownBonuses)
             if (crownRandom < 0.33f)
-              _itemLeft = ItemManager.Items.PISTOL_MACHINE;
+              _itemLeft = ItemType.PISTOL_MACHINE;
             else if (crownRandom < 0.66f)
-              _itemRight = ItemManager.Items.FRYING_PAN;
+              _itemRight = ItemType.FRYING_PAN;
             else
-              _itemRight = ItemManager.Items.PISTOL;
+              _itemRight = ItemType.PISTOL;
 
           _ragdoll.ChangeColor(Color.magenta);
           break;
 
-        case ItemManager.Items.PISTOL_SILENCED:
+        case ItemType.PISTOL_SILENCED:
 
           if (getCrownBonuses)
           {
             if (crownRandom < 0.5f)
-              _itemLeft = _itemRight = ItemManager.Items.FRYING_PAN;
+              _itemLeft = _itemRight = ItemType.FRYING_PAN;
             else
-              _itemLeft = ItemManager.Items.CROSSBOW;
+              _itemLeft = ItemType.CROSSBOW;
 
           }
           else
-            _itemRight = ItemManager.Items.KNIFE;
+            _itemRight = ItemType.KNIFE;
 
           _ragdoll.ChangeColor(Color.magenta / 3f);
           break;
 
-        case ItemManager.Items.REVOLVER:
+        case ItemType.REVOLVER:
 
           if (getCrownBonuses)
             if (crownRandom < 0.5f)
-              _itemLeft = _itemRight = ItemManager.Items.DMR;
+              _itemLeft = _itemRight = ItemType.DMR;
             else
             {
-              _itemLeft = ItemManager.Items.AK47;
-              _itemRight = ItemManager.Items.KNIFE;
+              _itemLeft = ItemType.AK47;
+              _itemRight = ItemType.KNIFE;
             }
 
           _ragdoll.ChangeColor((Color.red + Color.yellow) / 3f);
           break;
 
-        case ItemManager.Items.GRENADE_HOLD:
+        case ItemType.GRENADE_HOLD:
 
           if (getCrownBonuses)
-            _itemRight = ItemManager.Items.FRYING_PAN;
+            _itemRight = ItemType.FRYING_PAN;
 
           _ragdoll.ChangeColor(Color.red + Color.yellow);
           break;
 
-        case ItemManager.Items.SHOTGUN_PUMP:
+        case ItemType.SHOTGUN_PUMP:
           _ragdoll.ChangeColor(Color.white);
           _enemyType = EnemyType.ROBOT;
           break;
 
-        case ItemManager.Items.BAT:
+        case ItemType.BAT:
           //_itemLeft = ItemManager.Items.SHOTGUN_DOUBLE;
           _ragdoll.ChangeColor(Color.white);
           _enemyType = EnemyType.ROBOT;
@@ -391,7 +392,7 @@ public class EnemyScript : PlayerScript.IHasRagdoll
           _Chaser = this;
           break;
 
-        case ItemManager.Items.GRENADE_LAUNCHER:
+        case ItemType.GRENADE_LAUNCHER:
           _ragdoll.ChangeColor(Color.yellow);
           break;
       }
@@ -402,7 +403,7 @@ public class EnemyScript : PlayerScript.IHasRagdoll
 
       //
       if (_IsZombieReal)
-        _itemLeft = _itemRight = ItemManager.Items.AXE;
+        _itemLeft = _itemRight = ItemType.AXE;
       else
         _moveSpeed = PlayerScript.RUNSPEED;
 
@@ -906,8 +907,8 @@ public class EnemyScript : PlayerScript.IHasRagdoll
                   ChaseTarget();
 
                 // Check melee
-                bool hasFryingPan = _itemLeft == ItemManager.Items.FRYING_PAN || _itemRight == ItemManager.Items.FRYING_PAN;
-                if (hasFryingPan && (hasGun || _itemLeft == ItemManager.Items.GRENADE_HOLD)) { }
+                bool hasFryingPan = _itemLeft == ItemType.FRYING_PAN || _itemRight == ItemType.FRYING_PAN;
+                if (hasFryingPan && (hasGun || _itemLeft == ItemType.GRENADE_HOLD)) { }
                 else if (!_meleeDrawn && ((!_IsZombieReal && dis < (hasFryingPan ? 2f : 4f)) || (_IsZombieReal && dis < 2.5f)))
                 {
                   DrawBackMelee(true);
@@ -934,7 +935,7 @@ public class EnemyScript : PlayerScript.IHasRagdoll
                   // Only attack if is alive, the target is alive, and (the target is in front, or has a machine gun, or has a melee weapon)
                   if (!_ragdoll._IsDead && !_ragdollTarget._IsDead && (_targetDirectlyInFront || HasMachineGun() || !hasGun))
                   {
-                    if (_itemLeft == ItemManager.Items.GRENADE_HOLD)
+                    if (_itemLeft == ItemType.GRENADE_HOLD)
                       _leftweaponuse = true;
 
                     var useitem = _leftweaponuse ? (_ragdoll._ItemL != null ? _ragdoll._ItemL : _ragdoll._ItemR) : (_ragdoll._ItemR != null ? _ragdoll._ItemR : _ragdoll._ItemL);
@@ -949,7 +950,7 @@ public class EnemyScript : PlayerScript.IHasRagdoll
                     // Attack if close enough or pointed at target
                     else if (
                       hasGun ||
-                      (!hasGun && dis < (_itemLeft == ItemManager.Items.GRENADE_HOLD ? 1f : (_itemLeft == ItemManager.Items.BAT ? 1.2f : (_IsZombieReal ? 0.85f : (useitem._type == ItemManager.Items.RAPIER ? 2.8f : 1.8f)))))
+                      (!hasGun && dis < (_itemLeft == ItemType.GRENADE_HOLD ? 1f : (_itemLeft == ItemType.BAT ? 1.2f : (_IsZombieReal ? 0.85f : (useitem._ItemType == ItemType.RAPIER ? 2.8f : 1.8f)))))
                       )
                     {
                       UseItem(dis < 1.4f);
@@ -1124,7 +1125,7 @@ public class EnemyScript : PlayerScript.IHasRagdoll
 
     //
     _leftweaponuse = !_leftweaponuse;
-    if (_itemLeft == ItemManager.Items.GRENADE_HOLD)
+    if (_itemLeft == ItemType.GRENADE_HOLD)
       _leftweaponuse = true;
 
     if (_ragdoll._ItemL == null && _ragdoll._ItemR == null) { return; }
@@ -1202,7 +1203,7 @@ public class EnemyScript : PlayerScript.IHasRagdoll
   //
   void SetAttackTime(bool reset = false)
   {
-    if (_itemLeft == ItemManager.Items.GRENADE_HOLD)
+    if (_itemLeft == ItemType.GRENADE_HOLD)
     {
       _attackTime = Time.time;
       return;
@@ -1797,23 +1798,21 @@ public class EnemyScript : PlayerScript.IHasRagdoll
   void EquipStart()
   {
     // Equip start items
-    if (_itemLeft != ItemManager.Items.NONE)
+    if (_itemLeft != ItemType.NONE)
     {
-      ItemManager.SpawnItem(_itemLeft);
       _ragdoll.EquipItem(_itemLeft, ActiveRagdoll.Side.LEFT);
     }
     else
       _ragdoll.AddArmJoint(ActiveRagdoll.Side.LEFT);
-    if (_itemRight != ItemManager.Items.NONE)
+    if (_itemRight != ItemType.NONE)
     {
-      ItemManager.SpawnItem(_itemRight);
       _ragdoll.EquipItem(_itemRight, ActiveRagdoll.Side.RIGHT);
     }
     else
       _ragdoll.AddArmJoint(ActiveRagdoll.Side.RIGHT);
 
     // Special
-    if (_itemLeft == ItemManager.Items.PISTOL_SILENCED)
+    if (_itemLeft == ItemType.PISTOL_SILENCED)
     {
       IEnumerator delay_grappler()
       {
@@ -1825,7 +1824,7 @@ public class EnemyScript : PlayerScript.IHasRagdoll
     }
 
     // Zombie
-    if (_IsZombieReal && _itemLeft == ItemManager.Items.AXE)
+    if (_IsZombieReal && _itemLeft == ItemType.AXE)
     {
       _ragdoll._ItemL.transform.GetChild(0).GetComponent<Renderer>().enabled = false;
       _ragdoll._ItemR.transform.GetChild(0).GetComponent<Renderer>().enabled = false;
@@ -2264,13 +2263,13 @@ public class EnemyScript : PlayerScript.IHasRagdoll
                       return false;
 
                     // Check items equal
-                    var equipment0_items = new List<ItemManager.Items>(){
+                    var equipment0_items = new List<ItemType>(){
                     e0._ItemLeft0,
                     e0._ItemRight0,
                     e0._ItemLeft1,
                     e0._ItemRight1
                   };
-                    var equipment1_items = new List<ItemManager.Items>(){
+                    var equipment1_items = new List<ItemType>(){
                     e1._ItemLeft0,
                     e1._ItemRight0,
                     e1._ItemLeft1,

@@ -1,6 +1,7 @@
 
 using SneakyGame.Game.Items;
 using SneakyEngine.Equippable.Utility;
+using SneakyEngine.Equippable.Item;
 
 namespace SneakyGame.Settings.Extras
 {
@@ -17,7 +18,7 @@ namespace SneakyGame.Settings.Extras
 
     // Loadout
     public string loadoutDesc;
-    public ItemManager.Items[] items;
+    public ItemType[] items;
     public UtilityType[] utilities;
     public Perk.PerkType[] perks;
   }

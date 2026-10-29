@@ -2,9 +2,9 @@
 
 public static class ProgressBar
 {
-  static instance[] _ProgressBars;
+  static Instance[] _ProgressBars;
 
-  public class instance
+  public class Instance
   {
     public static int _ID;
 
@@ -12,7 +12,7 @@ public static class ProgressBar
     public Transform _transform, _slider, _parent;
     public float _timer, _timer_start;
     public System.Action _timerAction;
-    public System.Action<instance> _updateAction;
+    public System.Action<Instance> _updateAction;
     public bool _enabled;
   }
   static int _PoolIter;
@@ -20,12 +20,14 @@ public static class ProgressBar
   public static void Init()
   {
     // Populate pool of instances
-    _ProgressBars = new instance[10];
-    instance._ID = 1;
+    _ProgressBars = new Instance[10];
+    Instance._ID = 1;
     for (var i = 0; i < _ProgressBars.Length; i++)
     {
-      _ProgressBars[i] = new instance();
-      _ProgressBars[i]._transform = (Object.Instantiate(Resources.Load("ProgressBar")) as GameObject).transform;
+      _ProgressBars[i] = new()
+      {
+        _transform = (Object.Instantiate(Resources.Load("ProgressBar")) as GameObject).transform
+      };
       _ProgressBars[i]._transform.position = new Vector3(1000f, 0f, 0f);
       _ProgressBars[i]._slider = _ProgressBars[i]._transform.GetChild(0);
     }
@@ -64,11 +66,11 @@ public static class ProgressBar
     }
   }
 
-  public static void GetProgressBar(Transform parent, float time, System.Action timerAction, System.Action<instance> updateAction = null)
+  public static void GetProgressBar(Transform parent, float time, System.Action timerAction, System.Action<Instance> updateAction = null)
   {
     var set_progressbar = _ProgressBars[_PoolIter++ % _ProgressBars.Length];
 
-    set_progressbar._id = instance._ID++;
+    set_progressbar._id = Instance._ID++;
     set_progressbar._parent = parent;
     set_progressbar._enabled = true;
     set_progressbar._timer_start = set_progressbar._timer = time;

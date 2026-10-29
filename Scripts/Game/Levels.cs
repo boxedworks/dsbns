@@ -6,6 +6,7 @@ using SneakyGame.Settings;
 using SneakyGame.Settings.Serialization;
 using SneakyGame.Game.Items;
 using UnityEngine;
+using SneakyEngine.Equippable.Item;
 
 public class Levels : MonoBehaviour
 {
@@ -564,10 +565,10 @@ public class Levels : MonoBehaviour
     try
     {
 
-      equipment._ItemLeft0 = (ItemManager.Items)System.Enum.Parse(typeof(ItemManager.Items), left_item0);
-      equipment._ItemRight0 = (ItemManager.Items)System.Enum.Parse(typeof(ItemManager.Items), right_item0);
-      equipment._ItemLeft1 = (ItemManager.Items)System.Enum.Parse(typeof(ItemManager.Items), left_item1);
-      equipment._ItemRight1 = (ItemManager.Items)System.Enum.Parse(typeof(ItemManager.Items), right_item1);
+      equipment._ItemLeft0 = (ItemType)System.Enum.Parse(typeof(ItemType), left_item0);
+      equipment._ItemRight0 = (ItemType)System.Enum.Parse(typeof(ItemType), right_item0);
+      equipment._ItemLeft1 = (ItemType)System.Enum.Parse(typeof(ItemType), left_item1);
+      equipment._ItemRight1 = (ItemType)System.Enum.Parse(typeof(ItemType), right_item1);
 
       var utilities_left = new List<UtilityType>();
       if (left_util.Trim().Length > 0)

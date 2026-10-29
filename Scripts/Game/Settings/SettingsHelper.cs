@@ -8,6 +8,7 @@ using SneakyEngine.Engine;
 using SneakyEngine.Ragdoll;
 using UnityEngine;
 using UnityEngine.Rendering.Universal;
+using SneakyEngine.Equippable.Item;
 
 namespace SneakyGame.Settings
 {
@@ -566,8 +567,8 @@ namespace SneakyGame.Settings
           rating = 0,
           extras = null,
           loadoutDesc = "auto-unlocked",
-          items = new ItemManager.Items[] {
-            ItemManager.Items.KNIFE
+          items = new ItemType[] {
+            ItemType.KNIFE
           },
           utilities = null,
           perks = null
@@ -584,8 +585,8 @@ namespace SneakyGame.Settings
           rating = 0,
           extras = null,
           loadoutDesc = "auto-unlocked",
-          items = new ItemManager.Items[] {
-            ItemManager.Items.KNIFE
+          items = new ItemType[] {
+            ItemType.KNIFE
           },
           utilities = null,
           perks = null
@@ -602,9 +603,9 @@ namespace SneakyGame.Settings
           rating = 0,
           extras = null,
           loadoutDesc = "knife, silenced pistol",
-          items = new ItemManager.Items[] {
-            ItemManager.Items.KNIFE,
-            ItemManager.Items.PISTOL_SILENCED
+          items = new ItemType[] {
+            ItemType.KNIFE,
+            ItemType.PISTOL_SILENCED
             },
           utilities = null,
           perks = null
@@ -621,9 +622,9 @@ namespace SneakyGame.Settings
           rating = 2,
           extras = new ShopHelper.Unlocks[] { ShopHelper.Unlocks.EXTRA_HORDE },
           loadoutDesc = "knife, lever-action rifle",
-          items = new ItemManager.Items[] {
-            ItemManager.Items.KNIFE,
-            ItemManager.Items.RIFLE_LEVER
+          items = new ItemType[] {
+            ItemType.KNIFE,
+            ItemType.RIFLE_LEVER
             },
           utilities = null,
           perks = null
@@ -640,8 +641,8 @@ namespace SneakyGame.Settings
           rating = 2,
           extras = null,
           loadoutDesc = "sticky gun",
-          items = new ItemManager.Items[] {
-            ItemManager.Items.STICKY_GUN
+          items = new ItemType[] {
+            ItemType.STICKY_GUN
             },
           utilities = null,
           perks = null
@@ -658,9 +659,9 @@ namespace SneakyGame.Settings
           rating = 1,
           extras = null,
           loadoutDesc = "axe x2",
-          items = new ItemManager.Items[] {
-            ItemManager.Items.AXE,
-            ItemManager.Items.AXE
+          items = new ItemType[] {
+            ItemType.AXE,
+            ItemType.AXE
             },
           utilities = null,
           perks = null
@@ -677,9 +678,9 @@ namespace SneakyGame.Settings
           rating = 0,
           extras = null,
           loadoutDesc = "silenced pistol x2",
-          items = new ItemManager.Items[] {
-            ItemManager.Items.PISTOL_SILENCED,
-            ItemManager.Items.PISTOL_SILENCED
+          items = new ItemType[] {
+            ItemType.PISTOL_SILENCED,
+            ItemType.PISTOL_SILENCED
           },
           utilities = null,
           perks = null
@@ -696,8 +697,8 @@ namespace SneakyGame.Settings
           rating = 0,
           extras = null,
           loadoutDesc = "katana, shuriken x4",
-          items = new ItemManager.Items[] {
-            ItemManager.Items.KATANA,
+          items = new ItemType[] {
+            ItemType.KATANA,
             },
           utilities = new UtilityType[]{
             UtilityType.SHURIKEN,

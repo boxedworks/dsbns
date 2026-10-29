@@ -6,6 +6,7 @@ using SneakyGame.Settings.Localization;
 using SneakyGame.Settings.Serialization;
 using SneakyGame.UI.Menus;
 using UnityEngine;
+using SneakyEngine.Equippable.Item;
 
 namespace SneakyGame.Game.Items
 {
@@ -210,7 +211,7 @@ namespace SneakyGame.Game.Items
     static Dictionary<string, Unlocks[]> _Unlocks_Vault;
     public static Unlocks[] _Unlocks_Ignore_Shop;
 
-    static List<ItemManager.Items> _TwoHanded_Dictionary, _ActualTwoHanded_Dictionary;
+    static List<ItemType> _TwoHanded_Dictionary, _ActualTwoHanded_Dictionary;
 
     public static void Init()
     {
@@ -382,41 +383,41 @@ namespace SneakyGame.Game.Items
       }
 
       //
-      _TwoHanded_Dictionary = new List<ItemManager.Items>
+      _TwoHanded_Dictionary = new List<ItemType>
     {
-      ItemManager.Items.KATANA,
-      ItemManager.Items.BAT,
-      ItemManager.Items.DMR,
-      ItemManager.Items.RIFLE,
-      ItemManager.Items.RIFLE_LEVER,
-      ItemManager.Items.CROSSBOW,
-      ItemManager.Items.SNIPER,
-      ItemManager.Items.AK47,
-      ItemManager.Items.M16,
-      ItemManager.Items.SHOTGUN_BURST,
-      ItemManager.Items.SHOTGUN_PUMP,
-      ItemManager.Items.SHOTGUN_DOUBLE,
-      ItemManager.Items.GRENADE_LAUNCHER,
-      ItemManager.Items.FLAMETHROWER
+      ItemType.KATANA,
+      ItemType.BAT,
+      ItemType.DMR,
+      ItemType.RIFLE,
+      ItemType.RIFLE_LEVER,
+      ItemType.CROSSBOW,
+      ItemType.SNIPER,
+      ItemType.AK47,
+      ItemType.M16,
+      ItemType.SHOTGUN_BURST,
+      ItemType.SHOTGUN_PUMP,
+      ItemType.SHOTGUN_DOUBLE,
+      ItemType.GRENADE_LAUNCHER,
+      ItemType.FLAMETHROWER
     };
 
-      _ActualTwoHanded_Dictionary = new List<ItemManager.Items>
+      _ActualTwoHanded_Dictionary = new List<ItemType>
     {
-      ItemManager.Items.KATANA,
-      ItemManager.Items.BAT
+      ItemType.KATANA,
+      ItemType.BAT
     };
     }
 
     // Get a list of items with ItemManager.Items enum
-    public static ItemManager.Items[] GetItemList()
+    public static ItemType[] GetItemList()
     {
-      var list = new List<ItemManager.Items>
+      var list = new List<ItemType>
       {
-        ItemManager.Items.NONE
+        ItemType.NONE
       };
       foreach (var entry in _Unlocks_Descriptions)
         if (entry.Key.ToString().StartsWith("ITEM_"))
-          list.Add((ItemManager.Items)Enum.Parse(typeof(ItemManager.Items), entry.Key.ToString()[5..]));
+          list.Add((ItemType)Enum.Parse(typeof(ItemType), entry.Key.ToString()[5..]));
       return list.ToArray();
     }
     // Get a list of utilities with UtilityType enum
@@ -442,11 +443,11 @@ namespace SneakyGame.Game.Items
       return list.ToArray();
     }
 
-    public static bool IsTwoHanded(ItemManager.Items item)
+    public static bool IsTwoHanded(ItemType item)
     {
       return _TwoHanded_Dictionary.Contains(item);
     }
-    public static bool IsActuallyTwoHanded(ItemManager.Items item)
+    public static bool IsActuallyTwoHanded(ItemType item)
     {
       return _ActualTwoHanded_Dictionary.Contains(item);
     }

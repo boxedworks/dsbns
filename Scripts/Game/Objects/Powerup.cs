@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using SneakyEngine.Equippable.Item;
 using SneakyGame.Objects.CustomEntities;
 using SneakyGame.Ragdoll;
 using SneakyGame.UI.Menus;
@@ -118,12 +119,12 @@ namespace SneakyGame.Objects
       switch (_type)
       {
         case PowerupType.SILENCED_PISTOL:
-          r.EquipItem(ItemManager.Items.PISTOL_SILENCED, ActiveRagdoll.Side.RIGHT);
+          r.EquipItem(ItemType.PISTOL_SILENCED, ActiveRagdoll.Side.RIGHT);
           r.PlaySound("Ragdoll/Reload", 0.9f, 1.1f);
           break;
 
         case PowerupType.KNIFE:
-          r.EquipItem(ItemManager.Items.KNIFE, ActiveRagdoll.Side.LEFT);
+          r.EquipItem(ItemType.KNIFE, ActiveRagdoll.Side.LEFT);
           r.PlaySound("Ragdoll/Slice", 0.9f, 1.1f);
           break;
 
