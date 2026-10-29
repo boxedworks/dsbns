@@ -23,10 +23,6 @@ namespace SneakyGame.Ragdoll.Equippables
 
     static VfxSystem VfxModule { get { return SneakyEngineSystem.VfxSystem; } }
 
-    [System.NonSerialized]
-    public int _Id;
-    static int s_id;
-
     protected bool _isUtility;
 
     // Information about weapon holder
@@ -40,13 +36,41 @@ namespace SneakyGame.Ragdoll.Equippables
 
     AudioSource _sfx0, _sfx1;
 
-    public int _clipSize, _minimumClipToFire, _projectilesPerShot, _burstPerShot, _penatrationAmount;
-    public bool _reloading, _isMelee, _twoHanded, _runWhileUse, _reloadOneAtTime, _silenced, _throwable, _dismember, _useOnRelease, _randomSpread, _chargeHold;
-    public float _useTime, _reloadTime, _useRate, _downTime, _burstRate, _hit_force, _bullet_spread, _shoot_force, _shoot_forward_force;
+    public int _clipSize,
+      _minimumClipToFire,
+      _projectilesPerShot,
+      _burstPerShot,
+      _penatrationAmount;
+
+    [System.NonSerialized]
+    public bool _IsReloading;
+
+    public bool _isMelee,
+      _twoHanded,
+      _reloadOneAtTime,
+      _silenced,
+      _throwable,
+      _dismember,
+      _useOnRelease,
+      _randomSpread,
+      _chargeHold;
+
+    [System.NonSerialized]
+    protected float _downTime;
+
+    [System.NonSerialized]
+    public float _UseTime;
+
+    public float _reloadTime,
+      _useRate,
+      _burstRate,
+      _hit_force,
+      _bullet_spread,
+      _shoot_force,
+      _shoot_forward_force;
+
     protected float _downTimeSave;
     public FireMode _fireMode;
-
-    float _upTime;
 
     public UtilityType _customProjetile;
     public UtilityScript[] _customProjectiles;
@@ -130,7 +154,6 @@ namespace SneakyGame.Ragdoll.Equippables
     //
     protected int _clip, _bursts, _meleeIter;
     protected bool _triggerDown, _triggerDownLast, _used, _hitAnthing, _hitAnthingOverride, _hasHitEnemy;
-    public bool _HitAnything { get { return _hitAnthing; } }
 
     bool _triggerDownReal;
 
@@ -340,11 +363,10 @@ namespace SneakyGame.Ragdoll.Equippables
     }
 
     static int s_itemID;
+    [System.NonSerialized]
     public int _ItemId; // Unique id per item / weapon
     public void Start()
     {
-      _Id = s_id++;
-
       _disableOnRagdollDeath = true;
 
       if (_twoHanded)
@@ -1004,7 +1026,7 @@ namespace SneakyGame.Ragdoll.Equippables
       // Update laser sight
       if (_laserSight)
       {
-        if (_reloading)
+        if (_IsReloading)
           _laserSight.SetActive(false);
         else
         {
@@ -1036,7 +1058,6 @@ namespace SneakyGame.Ragdoll.Equippables
       // Increment down timer
       var downTimeLast = _downTime;
       if (_triggerDown && CanUse(false)) _downTime += Time.deltaTime;
-      else _upTime += Time.deltaTime;
 
       // Check special cases
       if (_type == ItemType.FLAMETHROWER)
@@ -1045,9 +1066,9 @@ namespace SneakyGame.Ragdoll.Equippables
         var light = _customLights[0];
 
         // Particles
-        if (flames.isPlaying && (!_used || _reloading || _clip == 0))
+        if (flames.isPlaying && (!_used || _IsReloading || _clip == 0))
           flames.Stop(true);
-        else if (!flames.isEmitting && _used && !_reloading && _clip > 0)
+        else if (!flames.isEmitting && _used && !_IsReloading && _clip > 0)
           flames.Play(true);
 
         // Sfx
@@ -1183,7 +1204,7 @@ namespace SneakyGame.Ragdoll.Equippables
 
         //
         _onUse?.Invoke();
-        _useTime = _time;
+        _UseTime = _time;
 
         if (_isMelee)
         {
@@ -1214,7 +1235,7 @@ namespace SneakyGame.Ragdoll.Equippables
       // Check use conditions
       if (_fireMode == FireMode.BURST && _used)
       {
-        if (CanUse() && (_time >= _useTime + _burstRate) && _bursts < _burstPerShot)
+        if (CanUse() && (_time >= _UseTime + _burstRate) && _bursts < _burstPerShot)
         {
           if (!_ragdoll._IsPlayer && _downTime > 0.2f || _ragdoll._IsPlayer)
           {
@@ -1315,7 +1336,7 @@ namespace SneakyGame.Ragdoll.Equippables
         {
           if (_isMelee && _ragdoll._IsPlayer)
           {
-            if (Time.time - _useTime <= 0.5f)
+            if (Time.time - _UseTime <= 0.5f)
               _bufferUse = true;
             else
             {
@@ -1328,7 +1349,7 @@ namespace SneakyGame.Ragdoll.Equippables
       _triggerDownLast = _triggerDown;
 
       // Check for melee ui
-      if (_swang && _time >= _useTime + UseRate() && !IsChargeWeapon())
+      if (_swang && _time >= _UseTime + UseRate() && !IsChargeWeapon())
       {
         _swang = false;
         _ragdoll._PlayerScript?._Profile.ItemReload(_side, 0);
@@ -1340,7 +1361,7 @@ namespace SneakyGame.Ragdoll.Equippables
     public void OnGrappled()
     {
       StopUse();
-      _useTime = -1f;
+      _UseTime = -1f;
     }
 
     //
@@ -1481,7 +1502,7 @@ namespace SneakyGame.Ragdoll.Equippables
 
         // If hit anything and two handed, allow to use immediatly
         if ((_hitAnthing && _IsBulletDeflector) || _hitAnthingOverride)
-          _useTime = -1f;
+          _UseTime = -1f;
       }
     }
 
@@ -1566,7 +1587,7 @@ namespace SneakyGame.Ragdoll.Equippables
 
       // Set clip and use time if applicable
       SetClip(clipSize);
-      _useTime = useTime;
+      _UseTime = useTime;
 
       // Gather custom utilities
       if (itemId != -1)
@@ -1668,7 +1689,6 @@ namespace SneakyGame.Ragdoll.Equippables
       //
       _triggerDown = true;
 
-      _upTime = 0f;
       _downTime = 0.01f;
 
       if (!_useOnRelease)
@@ -1706,7 +1726,6 @@ namespace SneakyGame.Ragdoll.Equippables
 
       _triggerDown = false;
 
-      _upTime = 0.01f;
       _downTimeSave = _downTime;
       _downTime = 0f;
       _meleeReleaseTrigger = false;
@@ -1720,11 +1739,11 @@ namespace SneakyGame.Ragdoll.Equippables
     public bool CanUse(bool playEmpty = true)
     {
       if (_isMelee)
-        return (_time >= _useTime + UseRate()) || (_bursts > 0 && _fireMode == FireMode.BURST && _time >= _useTime + _burstRate);
+        return (_time >= _UseTime + UseRate()) || (_bursts > 0 && _fireMode == FireMode.BURST && _time >= _UseTime + _burstRate);
 
       // Check clip
       if (_clip > 0)
-        return ((_time >= _useTime + UseRate()) || (_fireMode == FireMode.BURST && _bursts > 0 && _time >= _useTime + _burstRate)) && (!_used || _fireMode == FireMode.BURST) && (!_reloading || IsChargeWeapon());
+        return ((_time >= _UseTime + UseRate()) || (_fireMode == FireMode.BURST && _bursts > 0 && _time >= _UseTime + _burstRate)) && (!_used || _fireMode == FireMode.BURST) && (!_IsReloading || IsChargeWeapon());
       if (playEmpty)
         PlayEmpty();
       return false;
@@ -1771,11 +1790,11 @@ namespace SneakyGame.Ragdoll.Equippables
 
       // Show progress bar
       var reloadTime = _reloadTime / reload_speed_mod;
-      _reloading = true;
+      _IsReloading = true;
       ProgressBar.GetProgressBar(transform, reloadTime,
         () =>
         {
-          _reloading = false;
+          _IsReloading = false;
           if (!IsChargeWeapon()) _ragdoll._PlayerScript?._Profile.ItemReload(_side, _reloadOneAtTime ? clipDiff : 0);
         },
         instance =>
@@ -1827,7 +1846,7 @@ namespace SneakyGame.Ragdoll.Equippables
     {
       if (_isMelee && !IsChargeWeapon()) return false;
       if (!_isMelee && _useOnRelease && !IsChargeWeapon() && _triggerDownReal) return false;
-      return _clip < GetClipSize() && ((_time >= _useTime + (UseRate() * 0.6f)) || (_bursts > 0 && _fireMode == FireMode.BURST && _time >= _useTime + _burstRate * 0.3f)) && !_used && !_reloading;
+      return _clip < GetClipSize() && ((_time >= _UseTime + (UseRate() * 0.6f)) || (_bursts > 0 && _fireMode == FireMode.BURST && _time >= _UseTime + _burstRate * 0.3f)) && !_used && !_IsReloading;
     }
     public bool NeedsReload()
     {

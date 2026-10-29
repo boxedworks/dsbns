@@ -31,6 +31,7 @@ namespace SneakyGame.Ragdoll
     public static int s_ID;
     public int _Id;
     public Transform Transform, _Controller;
+
     // Body parts
     public Rigidbody _Hip;
     public HingeJoint _Spine, _Arm_upper_l, _Arm_upper_r, _Arm_lower_l, _Arm_lower_r, _Leg_upper_l, _Leg_upper_r, _Leg_lower_l, _Leg_lower_r;
@@ -56,7 +57,6 @@ namespace SneakyGame.Ragdoll
     float _bloodFootprintTimer;
 
     public bool _IsRagdolled,
-      _IsReviving,
       _IsPlayer,
       _IsDead,
       _IsDisabled,
@@ -78,7 +78,7 @@ namespace SneakyGame.Ragdoll
     }
     public bool _IsReloading
     {
-      get { return (_ItemL?._reloading ?? false) || (_ItemR?._reloading ?? false); }
+      get { return (_ItemL?._IsReloading ?? false) || (_ItemR?._IsReloading ?? false); }
     }
     public bool _IsEnemy { get { return !_IsPlayer; } }
 
@@ -93,9 +93,6 @@ namespace SneakyGame.Ragdoll
 
       collider_lowerLegPosition = new(0f, 0.96f, 0f),
       collider_lowerLegScale = new(0.5f, 2.24f, 0.36f);
-
-    // Holds rotation before Toggle()
-    Quaternion _saveRot;
 
     public int _health;
 
@@ -157,30 +154,6 @@ namespace SneakyGame.Ragdoll
         t.localPosition = info._pos;
         t.localEulerAngles = info._rot;
       }
-
-      /*    // Hip
-      returnList[0] = _hip.gameObject;
-      // Upper leg l
-      returnList[1] = returnList[0].transform.GetChild(0).gameObject;
-      // Upper leg r
-      returnList[2] = returnList[0].transform.GetChild(1).gameObject;
-      // Lower leg l
-      returnList[3] = returnList[1].transform.GetChild(0).gameObject;
-      // Lower leg r
-      returnList[4] = returnList[2].transform.GetChild(0).gameObject;
-      // Spine
-      returnList[5] = returnList[0].transform.GetChild(2).GetChild(0).gameObject;
-      // Arm upper l
-      returnList[6] = returnList[5].transform.GetChild(0).GetChild(0).GetChild(0).gameObject;
-      // Arm upper r
-      returnList[7] = returnList[5].transform.GetChild(0).GetChild(1).GetChild(0).gameObject;
-      // Arm lower l
-      returnList[8] = returnList[6].transform.GetChild(0).gameObject;
-      // Arm lower r
-      returnList[9] = returnList[7].transform.GetChild(0).gameObject;
-      // Head
-      returnList[10] = returnList[5].transform.GetChild(0).GetChild(2).gameObject;
-      */
     }
 
     public ActiveRagdoll(GameObject ragdoll, Transform controller, PlayerScript playerScript, EnemyScript enemyScript)
@@ -897,14 +870,14 @@ namespace SneakyGame.Ragdoll
           ItemType = _ItemR?._type ?? ItemManager.Items.NONE,
           ItemId = _ItemR?._ItemId ?? -1,
           ItemClip = _ItemR?.GetClip() ?? -1,
-          ItemUseItem = _ItemR?._useTime ?? -1f
+          ItemUseItem = _ItemR?._UseTime ?? -1f
         },
         new WeaponSwapData()
         {
           ItemType = _ItemL?._type ?? ItemManager.Items.NONE,
           ItemId = _ItemL?._ItemId ?? -1,
           ItemClip = _ItemL?.GetClip() ?? -1,
-          ItemUseItem = _ItemL?._useTime ?? -1f
+          ItemUseItem = _ItemL?._UseTime ?? -1f
         },
         index
       );
@@ -1884,9 +1857,6 @@ namespace SneakyGame.Ragdoll
     {
       if (_IsDead) return;
 
-      // If about to die, save hip rotation for later
-      if (!_IsRagdolled) _saveRot = _Hip.rotation;
-
       // Check crown
       if (GameScript.s_IsCrownModeEnabled)
         if (source != null && !source._IsDead)
@@ -2237,7 +2207,7 @@ namespace SneakyGame.Ragdoll
 
     public bool Active()
     {
-      return !_IsRagdolled && !_IsReviving;
+      return !_IsRagdolled;
     }
 
     // Return a true if o is in _parts
