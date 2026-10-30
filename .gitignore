@@ -85,6 +85,9 @@ PostProcessing/
 Audio/
 Resources/*
 !Resources/Maps/
+!Resources/Items/
+Resources/Items/*
+!Resources/Items/ItemData/
 InputActions/
 SteamVR*/
 

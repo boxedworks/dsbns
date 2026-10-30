@@ -554,6 +554,8 @@ namespace SneakyGame.Game.Items
       );
       s_UnlockString = "";
       s_SetLevelsMenuAfterUnlockString = false;
+
+      LevelSaveData.Save();
     }
 
     // Unlock from available unlocks

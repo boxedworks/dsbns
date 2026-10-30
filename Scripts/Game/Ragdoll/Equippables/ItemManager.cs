@@ -62,9 +62,11 @@ namespace SneakyGame.Ragdoll.Equippables
     {
       if (item == ItemType.NONE) return null;
 
-      GameObject new_item = Object.Instantiate(_ItemPrefabs[item].gameObject);
+      var itemPrefab = _ItemPrefabs[item];
+      GameObject new_item = Object.Instantiate(itemPrefab.gameObject);
       new_item.name = item.ToString();
       var script = new_item.GetComponent<ItemScript>();
+      script.SetItemData(itemPrefab.GetItemData());
       new_item.transform.position = new Vector3(0f, -10f, 0f);
       return script;
     }

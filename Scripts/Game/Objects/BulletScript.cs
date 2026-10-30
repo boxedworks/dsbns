@@ -320,7 +320,7 @@ namespace SneakyGame.Objects
       }
 
       // Wall hit sfx
-      if (hit_wall)
+      if (hit_wall && _sourceType != ItemType.FLAMETHROWER)
       {
 
         //Debug.Log(collider.gameObject.name);

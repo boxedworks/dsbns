@@ -27,9 +27,13 @@ namespace SneakyGame.Ragdoll.Equippables
     public void SetItemData(ItemData itemData)
     {
       _itemData = itemData;
+
+      _ItemType = (ItemType)_itemData.Type;
+      _FireMode = (FireMode)_itemData.FireMode;
     }
-    public ItemType _ItemType { get { return (ItemType)_itemData.Type; } }
-    public FireMode _FireMode { get { return (FireMode)_itemData.FireMode; } set { _itemData.FireMode = (int)value; } }
+    public ItemData GetItemData() { return _itemData; }
+    public ItemType _ItemType;
+    public FireMode _FireMode;
 
     protected bool _isUtility;
 
@@ -1224,7 +1228,7 @@ namespace SneakyGame.Ragdoll.Equippables
         //if(_customProjetile != UtilityType.NONE) playSound = false;
         if (playSound)
         {
-          if (_ItemType != ItemType.CHAINSAW)
+          if (_ItemType != ItemType.CHAINSAW && _ItemType != ItemType.FLAMETHROWER)
             PlaySound(Audio.GUN_SHOOT);
           if (IsGun())
           {

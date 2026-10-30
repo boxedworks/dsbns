@@ -481,7 +481,6 @@ public class EnemyScript : PlayerScript.IHasRagdoll
     _sawWithGoal;
   State _setstate;
   float noPartrolWaitTime;
-  bool _straightChase { get { return false; } }//GameScript.s_IsIncrementalGameMode; } }
 
   // Update is called once per frame
   void Handle()
@@ -684,6 +683,7 @@ public class EnemyScript : PlayerScript.IHasRagdoll
             // Just left waiting
             if (saveWait)
             {
+
               // Check for change state after wait
               if (setstate)
               {
@@ -694,6 +694,7 @@ public class EnemyScript : PlayerScript.IHasRagdoll
                   _patroling = true;
                 }
               }
+
               // Check for move back to path
               if (_state == State.NEUTRAL)
                 if (_PathScript.GetPathLength() > 1)
@@ -708,6 +709,7 @@ public class EnemyScript : PlayerScript.IHasRagdoll
           {
             if (!_IsZombie)
             {
+
               // Update patrol
               if (_patroling && !IsChaser())
               {
@@ -722,10 +724,9 @@ public class EnemyScript : PlayerScript.IHasRagdoll
                     Transform lp = _PathScript.GetLookPoint(),
                      p = _PathScript.GetPatrolPoint();
                     _waitLookPos = MathC.Get2DVector(position + (lp.position - p.position).normalized) + new Vector3(0f, position.y, 0f);
-
                   }
 
-                  _agent.Move(_PathScript.GetPatrolPoint().position - position);
+                  //_agent.Move(_PathScript.GetPatrolPoint().position - position);
 
                   // Wait until next movement
                   Wait(_PathScript.GetPatrolWait(), _PathScript.GetPathLength() > 1);
@@ -1017,7 +1018,6 @@ public class EnemyScript : PlayerScript.IHasRagdoll
 
           // Check if stuck and attempt to fix
           if (hasGun && _targetInLOS) { }
-          else if (_straightChase) { }
           else if (!_agent.hasPath && _state != State.NEUTRAL && _canMove)
           {
             _stuckIter++;
@@ -1228,9 +1228,9 @@ public class EnemyScript : PlayerScript.IHasRagdoll
       else return;
     }
 
-    var moveDir = (_straightChase ? _lastKnownPos : _agent.steeringTarget) - transform.position;
+    var moveDir = _agent.steeringTarget - transform.position;
     var movePos = _moveSpeed_lerped * PlayerScript.MOVESPEED * Time.deltaTime * moveDir.normalized;
-    if (_straightChase || !Equals(_agent.destination, transform.position))
+    if (!Equals(_agent.destination, transform.position))
     {
       _agent.Move(movePos);
     }
@@ -1242,8 +1242,12 @@ public class EnemyScript : PlayerScript.IHasRagdoll
     var forward = transform.forward;
     if ((_ragdoll.HasMelee() && !_ragdoll._IsSwinging) || !_ragdoll.HasMelee() || IsChaser())
     {
-      var steer = _straightChase ? _lastKnownPos : _agent.steeringTarget;
-      transform.LookAt(lookAtPos == Vector3.zero ? new Vector3(steer.x, transform.position.y, steer.z) : lookAtPos);
+      var steer = _agent.steeringTarget;
+      // Steering target on top of the agent (already at destination) gives a meaningless direction
+      bool pathReady = !_agent.pathPending && _agent.hasPath && MathC.Get2DDistance(transform.position, steer) > 0.15f;
+      if (lookAtPos == Vector3.zero && !pathReady) { /* keep current facing */ }
+      else
+        transform.LookAt(lookAtPos == Vector3.zero ? new Vector3(steer.x, transform.position.y, steer.z) : lookAtPos);
     }
     if (_IsZombie) return;
     var val = Mathf.Clamp(Mathf.Abs((transform.forward - forward).magnitude), 0f, 10f);
@@ -1416,7 +1420,8 @@ public class EnemyScript : PlayerScript.IHasRagdoll
           if (h.collider != null)
           {
             CheckRay(h, true);
-            if ((_state == State.SEARCHING || (_state == State.SUSPICIOUS && _patroling)) && _canMove) LookAt(_canMove ? transform.position + f : transform.position + -MathC.Get2DVector(_ragdoll._Head.position - _lastKnownPos).normalized);
+            if ((_state == State.SEARCHING || (_state == State.SUSPICIOUS && _patroling)) && _canMove)
+              LookAt(_canMove ? transform.position + f : transform.position + -MathC.Get2DVector(_ragdoll._Head.position - _lastKnownPos).normalized);
           }
         }
     }
@@ -1510,7 +1515,6 @@ public class EnemyScript : PlayerScript.IHasRagdoll
 
   void ChaseTarget(bool checkTurnaround = true)
   {
-    if (_straightChase) return;
     if (Time.time < _nextChaseTargetTime || _ragdollTarget._IsDead || !_canMove) return;
     if (_IsZombie) checkTurnaround = false;
     UpdateChaseTarget(checkTurnaround);
