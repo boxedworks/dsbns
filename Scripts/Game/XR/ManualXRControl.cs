@@ -1,6 +1,7 @@
 
 using System.Collections;
 using System.Collections.Generic;
+using SneakyEngine.Engine;
 using UnityEngine;
 using UnityEngine.XR;
 using UnityEngine.XR.Management;
@@ -13,7 +14,7 @@ namespace SneakyGame.XR
 
     public static void StartXr(System.Action onComplete)
     {
-      GameScript.s_Singleton.StartCoroutine(StartXRCoroutine(onComplete));
+      CoroutineSystem.InitiateCoroutine(StartXRCoroutine(onComplete));
     }
 
     public static IEnumerator StartXRCoroutine(System.Action onComplete)

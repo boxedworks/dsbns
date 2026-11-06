@@ -61,7 +61,7 @@ public static class Achievements
   public static void LoadAchievements()
   {
 
-    _Achievement_Last = new Dictionary<Achievement, float>();
+    _Achievement_Last = new();
     var checkSteam = GameScript.s_UsingSteam;
 
     foreach (var achievement in System.Enum.GetValues(typeof(Achievement)))

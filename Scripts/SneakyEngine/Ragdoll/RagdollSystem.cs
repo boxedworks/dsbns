@@ -53,6 +53,9 @@ namespace SneakyEngine.Ragdoll
     //   _onTriggerEnter = action;
     // }
 
+    // Ring
+    public bool RingsEnabled { get { return false; } }
+
   }
 
 

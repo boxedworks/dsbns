@@ -1,5 +1,3 @@
-
-using SneakyEngine.Engine;
 using SneakyEngine.Ragdoll.Body;
 using UnityEngine;
 
@@ -12,10 +10,10 @@ namespace SneakyEngine.Ragdoll
     public static int s_ID;
     public int Id;
 
+    protected Color color;
 
     public Transform Transform, Controller;
     public Rig Rig;
-
     public Rigidbody Hip => Rig.HipRb;
 
     public RagdollController(GameObject ragdoll, Transform controller)

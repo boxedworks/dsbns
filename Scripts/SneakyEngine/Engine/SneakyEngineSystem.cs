@@ -1,5 +1,6 @@
 using SneakyEngine.Ragdoll;
 using SneakyEngine.Effects;
+using UnityEngine;
 
 namespace SneakyEngine.Engine
 {
@@ -9,16 +10,21 @@ namespace SneakyEngine.Engine
 
     public static SneakyEngineSystem _Instance;
 
-    public VfxSystem _VfxSystem;
-    public static VfxSystem VfxSystem => _Instance._VfxSystem;
+    VfxSystem vfxSystem;
+    public static VfxSystem VfxSystem => _Instance.vfxSystem;
 
-    public RagdollSystem _RagdollSystem;
-    public static RagdollSystem RagdollSystem => _Instance._RagdollSystem;
+    RagdollSystem ragdollSystem;
+    public static RagdollSystem RagdollSystem => _Instance.ragdollSystem;
+
+    CoroutineSystem coroutineSystem;
+    public static CoroutineSystem CoroutineSystem => _Instance.coroutineSystem;
 
     public SneakyEngineSystem()
     {
-      _RagdollSystem = new();
-      _VfxSystem = new();
+      ragdollSystem = new();
+      vfxSystem = new();
+
+      coroutineSystem = new GameObject("CoroutineSystem").AddComponent<CoroutineSystem>();
     }
 
     public static void Initialize()

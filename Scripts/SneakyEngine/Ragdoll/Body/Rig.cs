@@ -55,7 +55,7 @@ namespace SneakyEngine.Ragdoll.Body
       ArmUpperR = BodyParts[7].transform;
       ArmLowerL = BodyParts[8].transform;
       ArmLowerR = BodyParts[9].transform;
-      Spine = BodyParts[5].transform.GetChild(0);
+      Spine = BodyParts[5].transform;
       Head = BodyParts[10].transform;
 
       HipRb = Hip.GetComponent<Rigidbody>();

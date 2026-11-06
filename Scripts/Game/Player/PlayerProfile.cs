@@ -64,7 +64,7 @@ public class PlayerProfile
     {
       if (Levels._HardcodedLoadout != null && !GameScript.s_EditorTesting) return;
       if (!GameScript.s_IsMissionsGameMode) return;
-      if (_Player?._Ragdoll?._IsGrappling ?? false) return;
+      if (_Player?._Ragdoll?.Grapple.IsGrappling ?? false) return;
 
       // Locate valid loadout to equip
       var iter = Loadout._Loadouts.Length;

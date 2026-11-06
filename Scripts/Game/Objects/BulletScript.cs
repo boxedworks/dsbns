@@ -9,6 +9,7 @@ using SneakyGame.Ragdoll.Equippables;
 using SneakyEngine.Equippable.Item;
 using SneakyEngine.Utility;
 using SneakyGame.Enemy;
+using SneakyEngine.Engine;
 
 namespace SneakyGame.Objects
 {
@@ -235,7 +236,7 @@ namespace SneakyGame.Objects
 
             // Don't deflect if bullet hits frying pan from grapler
             if (
-              _sourceItemRagdoll._IsGrappled &&
+              _sourceItemRagdoll.Grapple.IsGrappled &&
               _sourceItemRagdoll.Id == _sourceDamageRagdoll.Id &&
               item_fryingPan._ragdoll.IsGrappling(_sourceDamageRagdoll)
               )
@@ -707,8 +708,8 @@ namespace SneakyGame.Objects
       else
       {
         if (_hidingCoroutine != null)
-          GameScript.s_Singleton.StopCoroutine(_hidingCoroutine);
-        _hidingCoroutine = GameScript.s_Singleton.StartCoroutine(LagParticles(1f));
+          CoroutineSystem.TerminateCoroutine(_hidingCoroutine);
+        _hidingCoroutine = CoroutineSystem.InitiateCoroutine(LagParticles(1f));
       }
     }
     public static void HideAll()

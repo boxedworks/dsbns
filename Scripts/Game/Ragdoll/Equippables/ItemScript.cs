@@ -496,7 +496,7 @@ namespace SneakyGame.Ragdoll.Equippables
             if (_isZombie && _side == Side.RIGHT) return;
 
             // If is enemy, and isn't two handed, don't kill friendlies
-            if (!_ragdoll._IsPlayer && !_canMeleePenatrate && !raycastInfo._ragdoll._IsPlayer && !raycastInfo._ragdoll._IsGrappled && !_ragdoll._IsGrappled) return;
+            if (!_ragdoll._IsPlayer && !_canMeleePenatrate && !raycastInfo._ragdoll._IsPlayer && !raycastInfo._ragdoll.Grapple.IsGrappled && !_ragdoll.Grapple.IsGrappled) return;
 
             // If is player v player, is two handed, and hit enemy before, dont hit
             if (_ragdoll._IsPlayer && raycastInfo._ragdoll._IsPlayer && _canMeleePenatrate && _hasHitEnemy) return;
@@ -529,7 +529,7 @@ namespace SneakyGame.Ragdoll.Equippables
                   if (_isZombie && !deflectData._hitAnthingOverride)
                   {
                     // Die self
-                    if (!_ragdoll._IsGrappling)
+                    if (!_ragdoll.Grapple.IsGrappling)
                       deflectData.MeleeDamageOther(_ragdoll, deflectData._dismember);
                     else
                       _ragdoll.OnGrapplee((grapplee) => deflectData.MeleeDamageOther(grapplee, deflectData._dismember));
@@ -546,7 +546,7 @@ namespace SneakyGame.Ragdoll.Equippables
                   if (_ItemType == ItemType.FIST && deflectData._ItemType != ItemType.FIST)
                   {
                     // Die self
-                    if (!_ragdoll._IsGrappling)
+                    if (!_ragdoll.Grapple.IsGrappling)
                       deflectData.MeleeDamageOther(_ragdoll, deflectData._dismember);
                     else
                       _ragdoll.OnGrapplee((grapplee) => deflectData.MeleeDamageOther(grapplee, deflectData._dismember));
@@ -564,7 +564,7 @@ namespace SneakyGame.Ragdoll.Equippables
                   SetHitOverride();
 
                   // Bounce both ragdolls backward
-                  if (!_ragdoll._IsGrappled)
+                  if (!_ragdoll.Grapple.IsGrappled)
                     _ragdoll.BounceFromPosition(raycastInfo._ragdoll.Hip.position, 1.5f, true);
                   else
                     raycastInfo._ragdoll.OnGrappler((grappler) => grappler.BounceFromPosition(grappler.Hip.position, 1.5f, true));
@@ -1179,7 +1179,7 @@ namespace SneakyGame.Ragdoll.Equippables
         // Check grapple release
         if (_isMelee)
         {
-          if (_ragdoll._IsGrappling)
+          if (_ragdoll.Grapple.IsGrappling)
           {
             var snap_neck = false;
             if (_side == Side.RIGHT)
@@ -1196,7 +1196,7 @@ namespace SneakyGame.Ragdoll.Equippables
 
             if (snap_neck)
             {
-              _ragdoll.Grapple(false);
+              _ragdoll.ToggleGrapple(false);
 
 #if UNITY_STANDALONE
               // Grapple achievement

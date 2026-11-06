@@ -11,6 +11,7 @@ using SneakyEngine.Equippable.Item;
 using SneakyEngine.Utility;
 using SneakyGame.Enemy;
 using SneakyEngine.Ragdoll;
+using SneakyEngine.Engine;
 
 namespace SneakyGame.Ragdoll.Equippables
 {
@@ -811,7 +812,7 @@ namespace SneakyGame.Ragdoll.Equippables
                     gameObject.SetActive(false);
                 }
               }
-              GameScript.s_Singleton.StartCoroutine(SpawnBulletCo(0.5f));
+              CoroutineSystem.InitiateCoroutine(SpawnBulletCo(0.5f));
             };
 
             // Throw and queue next
@@ -1133,9 +1134,9 @@ namespace SneakyGame.Ragdoll.Equippables
 
           case UtilityType.TEMP_SHIELD:
 
-            if (_ragdoll._IsGrappling)
+            if (_ragdoll.Grapple.IsGrappling)
             {
-              _ragdoll.Grapple(false);
+              _ragdoll.ToggleGrapple(false);
             }
 
             _ragdoll.AddGrappler();

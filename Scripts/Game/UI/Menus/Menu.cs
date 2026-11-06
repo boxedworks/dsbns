@@ -16,6 +16,7 @@ using SneakyGame.Ragdoll.Equippables;
 using SneakyEngine.Equippable.Item;
 using SneakyEngine.Utility;
 using SneakyEngine.Ragdoll;
+using SneakyEngine.Engine;
 
 namespace SneakyGame.UI.Menus
 {
@@ -1654,7 +1655,7 @@ namespace SneakyGame.UI.Menus
                     _CanRender = false;
                     RenderMenu();
                   }
-                  GameScript.s_Singleton.StartCoroutine(reloaddelay());
+                  CoroutineSystem.InitiateCoroutine(reloaddelay());
                 });
           }
 
@@ -6807,7 +6808,7 @@ www.reddit.com/u/quaterniusdev
           }
           SwitchMenu(MenuType.MAIN);
         }
-        GameScript.s_Singleton.StartCoroutine(scrollCredits());
+        CoroutineSystem.InitiateCoroutine(scrollCredits());
       };
       m_cred._OnSwitched += () =>
       {

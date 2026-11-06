@@ -28,12 +28,15 @@ using SneakyEngine.Equippable.Utility;
 using SneakyEngine.Utility;
 using SneakyGame.Enemy;
 using SneakyEngine.Ragdoll;
+using SneakyEngine.Engine;
 
 namespace SneakyGame.Game.Player
 {
 
   public class PlayerScript : PlayerScript.IHasRagdoll
   {
+
+    static RagdollSystem s_RagdollSystem => RagdollSystem.Singleton;
 
 
     public interface IHasRagdoll
@@ -241,25 +244,27 @@ namespace SneakyGame.Game.Player
       _ragdoll.ChangeColor(_Profile.GetColor());
 
       // Create ring
-      var new_ring = Object.Instantiate(TileManager._Ring.gameObject);
-      _ring = new MeshRenderer[] { new_ring.transform.GetChild(0).GetComponent<MeshRenderer>(), new_ring.transform.GetChild(1).GetComponent<MeshRenderer>() };
-      Resources.UnloadAsset(_ring[0].sharedMaterial);
-      Resources.UnloadAsset(_ring[1].sharedMaterial);
-      var ringMaterialOffset = _HasTwin && !_IsOriginalTwin ? 1 : 0;
-      var ringMaterialIndex = _Id * 2 + ringMaterialOffset;
-      _ring[0].sharedMaterial = s_Materials_Ring[ringMaterialIndex];
-      _ring[1].sharedMaterial = s_Materials_Ring[ringMaterialIndex];
-      var localscale = _ring[0].transform.parent.localScale;
-      localscale *= 0.8f;
-      localscale.y = 2f;
-      _ring[0].transform.parent.localScale = localscale;
-      ChangeRingColor(GetRingColor());
+      if (s_RagdollSystem.RingsEnabled)
+      {
+        var new_ring = Object.Instantiate(TileManager._Ring.gameObject);
+        _ring = new MeshRenderer[] { new_ring.transform.GetChild(0).GetComponent<MeshRenderer>(), new_ring.transform.GetChild(1).GetComponent<MeshRenderer>() };
+        Resources.UnloadAsset(_ring[0].sharedMaterial);
+        Resources.UnloadAsset(_ring[1].sharedMaterial);
+        var ringMaterialOffset = _HasTwin && !_IsOriginalTwin ? 1 : 0;
+        var ringMaterialIndex = _Id * 2 + ringMaterialOffset;
+        _ring[0].sharedMaterial = s_Materials_Ring[ringMaterialIndex];
+        _ring[1].sharedMaterial = s_Materials_Ring[ringMaterialIndex];
+        var localscale = _ring[0].transform.parent.localScale;
+        localscale *= 0.8f;
+        localscale.y = 2f;
+        _ring[0].transform.parent.localScale = localscale;
+        ChangeRingColor(GetRingColor());
 
-      // Move ring with hip
-      var hippos = transform.position;
-      hippos.y = -1.38f;
-      if (!_ragdoll._IsDead)
+        // Move ring with hip
+        var hippos = transform.position;
+        hippos.y = -1.38f;
         _ring[0].transform.parent.position = hippos;
+      }
 
       // Equip starting weapons
       _Profile._EquipmentIndex = 0;
@@ -604,24 +609,27 @@ namespace SneakyGame.Game.Player
         //if (Time.timeScale < 0.9f)
         //{
 
-        var ringDis = hippos - _ring[0].transform.parent.position;
-        if (ringDis.magnitude > 2f)
+        if (_ring != null)
         {
-          _ring[0].transform.parent.position = hippos;
-        }
-        else
-        {
-          if (!_ring[0].transform.parent.gameObject.activeSelf)
-            _ring[0].transform.parent.gameObject.SetActive(true);
+          var ringDis = hippos - _ring[0].transform.parent.position;
+          if (ringDis.magnitude > 2f)
+          {
+            _ring[0].transform.parent.position = hippos;
+          }
+          else
+          {
+            if (!_ring[0].transform.parent.gameObject.activeSelf)
+              _ring[0].transform.parent.gameObject.SetActive(true);
 
-          _ring[0].transform.parent.position += 15f * Time.deltaTime * ringDis;
+            _ring[0].transform.parent.position += 15f * Time.deltaTime * ringDis;
+          }
+          //}
+          //else
+          //  _ring[0].transform.parent.position = hippos;
+          var lookpos = _ragdoll.Rig.Hip.position + _ragdoll.Rig.Hip.forward * 10f;
+          lookpos.y = _ring[0].transform.parent.position.y;
+          _ring[0].transform.parent.LookAt(lookpos);
         }
-        //}
-        //else
-        //  _ring[0].transform.parent.position = hippos;
-        var lookpos = _ragdoll.Rig.Hip.position + _ragdoll.Rig.Hip.forward * 10f;
-        lookpos.y = _ring[0].transform.parent.position.y;
-        _ring[0].transform.parent.LookAt(lookpos);
 
         // Check back at spawn
         var spawnDist = Vector3.Distance(new Vector3(_playerSpawn.transform.position.x, 0f, _playerSpawn.transform.position.z), new Vector3(_ragdoll.Hip.position.x, 0f, _ragdoll.Hip.position.z));
@@ -1348,7 +1356,7 @@ namespace SneakyGame.Game.Player
           }
 
           // Look
-          if (!_ragdoll._IsGrappled)
+          if (!_ragdoll.Grapple.IsGrappled)
             transform.LookAt(transform.position + new Vector3(x, 0f, y));
         }
 
@@ -1370,7 +1378,7 @@ namespace SneakyGame.Game.Player
             x += 1f;
 
           // Mouse look
-          if (!_ragdoll._IsGrappled)
+          if (!_ragdoll.Grapple.IsGrappled)
           {
             var p = GameResources._Camera_Main.ScreenPointToRay(ControllerManager.GetMousePosition()).GetPoint(Vector3.Distance(GameResources._Camera_Main.transform.position, transform.position));
             transform.LookAt(new Vector3(p.x, transform.position.y, p.z));
@@ -1442,7 +1450,7 @@ namespace SneakyGame.Game.Player
           }
 
           // End grapple (violently)
-          if (_ragdoll._IsGrappling)
+          if (_ragdoll.Grapple.IsGrappling)
           {
             if (_isLeftTwin)
               if (_ragdoll._ItemL == null && ControllerManager.GetMouseInput(0, ControllerManager.InputMode.UP))
@@ -1720,7 +1728,7 @@ namespace SneakyGame.Game.Player
         (HasPerk(Perk.PerkType.SPEED_UP) ? 1.15f : 1f);
 
       // Move player
-      if (!_ragdoll._IsGrappled)
+      if (!_ragdoll.Grapple.IsGrappled)
       {
         _saveInput = xy;
         if (!GameScript.s_IsPartyGameMode || (GameScript.s_IsPartyGameMode && VersusMode.s_PlayersCanMove))
@@ -1826,7 +1834,7 @@ namespace SneakyGame.Game.Player
           if (!_isLeftTwin) break;
           if (!_ragdoll._ItemL)
           {
-            if (_ragdoll._IsGrappling && _ragdoll._GrappleSide == Side.LEFT)
+            if (_ragdoll.Grapple.IsGrappling && _ragdoll._GrappleSide == Side.LEFT)
               HandleAction(PlayerAction.Grapple);
             else
               _ragdoll.UseRightUp();
@@ -1838,7 +1846,7 @@ namespace SneakyGame.Game.Player
           if (!_isRightTwin) break;
           if (!_ragdoll._ItemR)
           {
-            if (_ragdoll._IsGrappling && _ragdoll._GrappleSide == Side.RIGHT)
+            if (_ragdoll.Grapple.IsGrappling && _ragdoll._GrappleSide == Side.RIGHT)
               HandleAction(PlayerAction.Grapple);
             else
               _ragdoll.UseLeftUp();
@@ -1888,10 +1896,10 @@ namespace SneakyGame.Game.Player
           break;
 
         case PlayerAction.Grapple:
-          _ragdoll.Grapple(false);
+          _ragdoll.ToggleGrapple(false);
           break;
         case PlayerAction.GrappleGentle:
-          _ragdoll.Grapple(true);
+          _ragdoll.ToggleGrapple(true);
           break;
 
         // case PlayerAction.KickStart:
@@ -1924,7 +1932,7 @@ namespace SneakyGame.Game.Player
     public void MovePlayer(float deltaTime, float moveSpeed, Vector2 input)
     {
       // Decrease movespead
-      if (_ragdoll._IsGrappling) { moveSpeed *= 0.9f; }
+      if (_ragdoll.Grapple.IsGrappling) { moveSpeed *= 0.9f; }
 
       // Move player
       if (_ragdoll.Active() && _agent != null)
@@ -2288,18 +2296,9 @@ namespace SneakyGame.Game.Player
           if (collider != null && collider0 != null)
             Physics.IgnoreCollision(collider, collider0, false);
         }
-        StartCoroutine(sizeChange());
+        CoroutineSystem.InitiateCoroutine(sizeChange());
       }
       ThrowMoney();
-    }
-
-    Coroutine StartCoroutine(IEnumerator routine)
-    {
-      return GameScript.s_Singleton.StartCoroutine(routine);
-    }
-    void StopCoroutine(Coroutine routine)
-    {
-      GameScript.s_Singleton.StopCoroutine(routine);
     }
 
     void Whistle()
@@ -2372,11 +2371,11 @@ namespace SneakyGame.Game.Player
     {
       if (gamepad == null) return;
       if (_rumbleCoroutine != null)
-        StopCoroutine(_rumbleCoroutine);
+        CoroutineSystem.TerminateCoroutine(_rumbleCoroutine);
       if (intensityLeft == 0f && intensityRight == 0f)
         SetMotorSpeeds(gamepad, 0f, 0f);
       else
-        _rumbleCoroutine = StartCoroutine(rumbleCo(gamepad, time, intensityLeft, intensityRight));
+        _rumbleCoroutine = CoroutineSystem.InitiateCoroutine(rumbleCo(gamepad, time, intensityLeft, intensityRight));
     }
     void SetMotorSpeeds(Gamepad gamepad, float left, float right)
     {
@@ -2446,7 +2445,8 @@ namespace SneakyGame.Game.Player
         _ring?[0].transform.parent.gameObject.SetActive(false);
       }
 
-      GameScript.s_Singleton.StartCoroutine(fadeRing());
+      if (_ring != null)
+        CoroutineSystem.InitiateCoroutine(fadeRing());
 
       // Slow motion on player death
       var lastplayer = true;
@@ -2515,7 +2515,7 @@ namespace SneakyGame.Game.Player
             new Vector3(1000f, 0f, 0f);
         }
         if (!GameScript.s_IsVr)
-          GameScript.s_Singleton.StartCoroutine(FlashRestart());
+          CoroutineSystem.InitiateCoroutine(FlashRestart());
       }
       // Play death sound
       //_ragdoll._audioPlayer.volume = 1f;
@@ -2545,7 +2545,7 @@ namespace SneakyGame.Game.Player
           // Last killed settings
           if (SettingsModule.LevelEndCondition == SettingsSaveData.LevelEndConditionType.LAST_ENEMY_KILLED)
           {
-            IEnumerator waitForComplete()
+            IEnumerator delayLoadNextLevel()
             {
               var levelId = TileManager._s_MapIndex;
               yield return new WaitForSecondsRealtime(0.5f);
@@ -2553,7 +2553,7 @@ namespace SneakyGame.Game.Player
               if (levelId == TileManager._s_MapIndex)
                 GameScript.OnLevelComplete();
             }
-            StartCoroutine(waitForComplete());
+            CoroutineSystem.InitiateCoroutine(delayLoadNextLevel());
           }
         }
     }
@@ -2864,7 +2864,7 @@ namespace SneakyGame.Game.Player
                 EnemyScript.CheckSound(table.transform.position, EnemyScript.Loudness.NORMAL);
               }
             }
-            GameScript.s_Singleton.StartCoroutine(FlipTable());
+            CoroutineSystem.InitiateCoroutine(FlipTable());
 
             return true;
           }

@@ -7,6 +7,7 @@ using SneakyGame.UI.Menus;
 using SneakyGame.Game.Items;
 using SneakyGame.Game.Player;
 using SneakyEngine.Equippable.Item;
+using SneakyEngine.Engine;
 
 // Holds functions for versus mode
 public static class VersusMode
@@ -125,7 +126,7 @@ public static class VersusMode
         s_announcementText.text = "";
       }
     }
-    GameScript.s_Singleton.StartCoroutine(LevelStartCountdownCo());
+    CoroutineSystem.InitiateCoroutine(LevelStartCountdownCo());
   }
 
   //
@@ -621,7 +622,7 @@ public static class VersusMode
       }
 
     }
-    GameScript.s_Singleton.StartCoroutine(CheckPlayerDeathStatusCo());
+    CoroutineSystem.InitiateCoroutine(CheckPlayerDeathStatusCo());
   }
 
   //

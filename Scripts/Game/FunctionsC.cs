@@ -1,20 +1,23 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+
+using UnityEngine;
+
 using SneakyGame.Objects;
 using SneakyGame.Ragdoll;
 using SneakyGame.Settings;
 using SneakyGame.UI.Menus;
 using SneakyGame.Game.Items;
 using SneakyGame.Game.Player;
-using UnityEngine;
+using SneakyGame.Enemy;
+
+using SneakyEngine.Engine;
 using SneakyEngine.Utility;
 using SneakyEngine.Physics;
-using SneakyGame.Enemy;
 
 public static class FunctionsC
 {
   public static ParticleSystem[] s_ParticlesAll;
-  //static List<ParticleSystem> _BloodParticles;
 
   public static BookManager s_BookManager;
   public static void Init()
@@ -883,7 +886,7 @@ public static class FunctionsC
         s_TrackSource.Play();
         s_transitioning = false;
       }
-      GameScript.s_Singleton.StartCoroutine(LoadAsync());
+      CoroutineSystem.InitiateCoroutine(LoadAsync());
     }
 
     // fade out current music and play a new track
@@ -920,7 +923,7 @@ public static class FunctionsC
         s_TrackSource.Play();
         s_transitioning = false;
       }
-      GameScript.s_Singleton.StartCoroutine(TransitionToCo());
+      CoroutineSystem.InitiateCoroutine(TransitionToCo());
     }
 
     // Unload tracks not being played to reduce memory usage

@@ -18,6 +18,8 @@ using SneakyEngine.Equippable.Item;
 using SneakyEngine.Physics;
 using SneakyEngine.Utility;
 using SneakyEngine.Ragdoll;
+using SneakyEngine.Engine;
+using SneakyGame.Ragdoll.Actions;
 
 namespace SneakyGame.Ragdoll
 {
@@ -40,9 +42,6 @@ namespace SneakyGame.Ragdoll
 
     public Vector3 _Distance;
 
-    // Color of the ragdoll
-    public Color _Color;
-
     // What frame the hinge 'animations' are on
     float _movementIter, _movementIter2;
     public float _rotSpeed, _time_died;
@@ -54,8 +53,6 @@ namespace SneakyGame.Ragdoll
       _IsPlayer,
       _IsDead,
       _IsDisabled,
-      _CanMove,
-      _CanReceiveInput,
       _CanDie;
 
     public bool _IsSwinging
@@ -90,8 +87,6 @@ namespace SneakyGame.Ragdoll
 
     public int _health;
 
-    GameObject[] _parts;
-
     static List<Tuple<Material, Material>> s_Materials_Ragdoll;
 
     SkinnedMeshRenderer _renderer;
@@ -104,6 +99,8 @@ namespace SneakyGame.Ragdoll
       // Add to static _Ragdolls list
       s_Ragdolls ??= new();
       s_Ragdolls.Add(this);
+
+      Grapple = new();
 
       // Defaults
 #if UNITY_EDITOR
@@ -134,10 +131,9 @@ namespace SneakyGame.Ragdoll
       // Set default health
       _health = 1;
 
-      _Color = Color.blue * 1.3f;
+      color = Color.blue * 1.3f;
 
       _rotSpeed = 1f;
-      _CanMove = _CanReceiveInput = true;
       _CanDie = true;
 
       SetCollisionMode(CollisionDetectionMode.Continuous);
@@ -157,16 +153,16 @@ namespace SneakyGame.Ragdoll
       var dt = _IsPlayer ? Time.unscaledDeltaTime : Time.deltaTime;
 
       // Update grabbed rd
-      if (_IsGrappling)
+      if (Grapple.IsGrappling)
       {
-        if (_grapplee._IsDead)
-          _grapplee = null;
+        if (Grapple.Grapplee._IsDead)
+          Grapple.Grapplee = null;
 
         else
         {
           // Get melee side
-          _grapplee.Hip.position = Hip.position + Hip.transform.forward * 0.45f + (_GrappleSide == Side.LEFT ? -1f : 1f) * 0.09f * Hip.transform.right;
-          _grapplee.Hip.rotation = Hip.rotation;
+          Grapple.Grapplee.Hip.position = Hip.position + Hip.transform.forward * 0.45f + (_GrappleSide == Side.LEFT ? -1f : 1f) * 0.09f * Hip.transform.right;
+          Grapple.Grapplee.Hip.rotation = Hip.rotation;
         }
       }
 
@@ -220,13 +216,10 @@ namespace SneakyGame.Ragdoll
           var force_apply = 10f * Time.deltaTime * _ForceGlobal;
 
           var agent = _IsPlayer ? _PlayerScript._agent : _EnemyScript._agent;
-          if (!_IsGrappled)
+          if (!Grapple.IsGrappled)
             agent.Move(force_apply);
           _ForceGlobal -= force_apply;
         }
-
-        // Only update if enabled
-        if (!_CanReceiveInput) return;
       }
 
       // Move / rotate based on a rigidbody
@@ -240,8 +233,8 @@ namespace SneakyGame.Ragdoll
         _Distance = (movePos - Hip.position) * (Time.timeScale < 1f ? 0.3f : 1f);
       }
 
-      // If can't move, set movepos and distance to origin
-      if (!_CanMove || _IsGrappled)
+      // If grappled, set movepos and distance to origin
+      if (Grapple.IsGrappled)
       {
         movePos = Hip.position;
         _Distance = Vector3.zero;
@@ -257,7 +250,7 @@ namespace SneakyGame.Ragdoll
         _movementIter2 = Mathf.PingPong(_movementIter * 2.8f, 1f);
 
         // Play footsteps  based on controller distance moved
-        if (!_IsRagdolled && !_IsGrappled && ((save < 0.5f && _movementIter2 >= 0.5f) || (save > 0.5f && _movementIter2 <= 0.5f)))
+        if (!_IsRagdolled && !Grapple.IsGrappled && ((save < 0.5f && _movementIter2 >= 0.5f) || (save > 0.5f && _movementIter2 <= 0.5f)))
         {
           // If player, send footstep sound to enemies to check for detection
           if (_IsPlayer && _PlayerScript._CanDetect && _Distance.magnitude > 0.1f)
@@ -290,7 +283,7 @@ namespace SneakyGame.Ragdoll
       {
 
         // Move / rotate hip (base)
-        if (!_IsGrappled)
+        if (!Grapple.IsGrappled)
         {
           Hip.MovePosition(movePos);
           if (_IsPlayer)
@@ -447,25 +440,25 @@ namespace SneakyGame.Ragdoll
     }
     public bool IsGrappledBy(ActiveRagdoll other)
     {
-      return _IsGrappled && _grappler.Id == other.Id;
+      return Grapple.IsGrappled && Grapple.Grappler.Id == other.Id;
     }
     public bool IsGrappling(ActiveRagdoll other)
     {
-      return _IsGrappling && _grapplee.Id == other.Id;
+      return Grapple.IsGrappling && Grapple.Grapplee.Id == other.Id;
     }
 
     public void OnGrapplee(Action<ActiveRagdoll> onGrapplee)
     {
-      if (_IsGrappling)
-        onGrapplee?.Invoke(_grapplee);
+      if (Grapple.IsGrappling)
+        onGrapplee?.Invoke(Grapple.Grapplee);
     }
     public void OnGrappler(Action<ActiveRagdoll> onGrappler)
     {
-      if (_IsGrappled)
-        onGrappler?.Invoke(_grappler);
+      if (Grapple.IsGrappled)
+        onGrappler?.Invoke(Grapple.Grappler);
     }
 
-    public bool _IsGrapplerPlayer { get { return _IsGrappled && _grappler._IsPlayer; } }
+    public bool _IsGrapplerPlayer { get { return Grapple.IsGrappled && Grapple.Grappler._IsPlayer; } }
 
     // Bloody footprint increment
     public void SetBloodTimer()
@@ -483,37 +476,37 @@ namespace SneakyGame.Ragdoll
       return Transform.gameObject.activeSelf;
     }
 
-    // Remove all HingeJoints, Rigidbodies, and Colliders except for _Hip
+    // Remove all HingeJoints, Rigidbodies, and Colliders
     public void Disable()
     {
       if (_IsDisabled) return;
       _IsDisabled = true;
+
       IEnumerator delayDisable()
       {
         yield return new WaitForSecondsRealtime(5f);
-        if (Hip != null) Hip.isKinematic = true;
-        foreach (var part in _parts)
+        var waitForSeconds = new WaitForSecondsRealtime(0.05f);
+
+        foreach (var part in Rig.BodyParts)
         {
           if (part == null) continue;
 
           // Remove HingeJoint
-          var j = part.GetComponent<HingeJoint>();
-          if (j)
+          if (part.TryGetComponent<HingeJoint>(out var j))
             UnityEngine.Object.Destroy(j);
 
           // Remove Rigidbody
-          var r = part.GetComponent<Rigidbody>();
-          if (r)
+          if (part.TryGetComponent<Rigidbody>(out var r))
             UnityEngine.Object.Destroy(r);
 
           // Remove Collider
-          var c = part.GetComponent<Collider>();
-          if (c)
+          if (part.TryGetComponent<Collider>(out var c))
             UnityEngine.Object.Destroy(c);
-          yield return new WaitForSecondsRealtime(0.05f);
+
+          yield return waitForSeconds;
         }
       }
-      GameScript.s_Singleton.StartCoroutine(delayDisable());
+      CoroutineSystem.InitiateCoroutine(delayDisable());
     }
 
     // Invisibility
@@ -723,43 +716,6 @@ namespace SneakyGame.Ragdoll
         return null;
       }
 
-      /*/ Check each item vs each other
-      foreach (var itemSelf in new ItemScript[] { _ItemL, _ItemR })
-      {
-
-        // Check null item
-        if (itemSelf == null) continue;
-
-        // Make sure item is swinging
-        if (_IsPlayer && !ragdollOther._IsPlayer && ragdollOther._EnemyScript._IsZombieReal)
-          if (!itemSelf.IsSwingingSurvival()) continue;
-          else if (!itemSelf._IsSwinging) continue;
-
-        // Make sure has not already damaged ragdoll this swing
-        if (itemSelf.HasHitRagdoll(ragdollOther)) continue;
-
-        // Compare item deflects
-        foreach (var itemOther in new ItemScript[] { ragdollOther._ItemL, ragdollOther._ItemR })
-        {
-
-          // Check null item
-          if (itemOther == null) continue;
-
-          // Make sure item is swinging
-          if (ragdollOther._IsPlayer && !_IsPlayer && _EnemyScript._IsZombieReal)
-            if (!itemOther.IsSwingingSurvival()) continue;
-            else if (!itemOther._IsSwinging) continue;
-
-          // Make sure has not already damaged ragdoll this swing
-          if (itemOther.HasHitRagdoll(this)) continue;
-
-          //
-          return itemSelf;
-        }
-      }
-
-      return null;*/
-
       // Check weapons in order L / R
       bool CheckHit(ItemScript item)
       {
@@ -879,7 +835,7 @@ namespace SneakyGame.Ragdoll
             if (_ItemR != null && _ItemR.CanReload())
               _ItemR.Reload();
           }
-          GameScript.s_Singleton.StartCoroutine(delayedReload());
+          CoroutineSystem.InitiateCoroutine(delayedReload());
         }
       }
       // Right item
@@ -889,17 +845,16 @@ namespace SneakyGame.Ragdoll
 
     public void IgnoreCollision(Collider c, bool ignore = true)
     {
-      foreach (var part in _parts)
+      foreach (var part in Rig.BodyParts)
       {
-        var c0 = part.GetComponent<Collider>();
-        if (c0 == null) continue;
-        Physics.IgnoreCollision(c, c0, ignore);
+        if (part.TryGetComponent<Collider>(out var c_))
+          Physics.IgnoreCollision(c, c_, ignore);
       }
     }
     public void IgnoreGrappleCollision(Collider c, bool ignore = true)
     {
-      _grapplee?.IgnoreCollision(c, ignore);
-      _grappler?.IgnoreCollision(c, ignore);
+      Grapple.Grapplee?.IgnoreCollision(c, ignore);
+      Grapple.Grappler?.IgnoreCollision(c, ignore);
     }
 
     //
@@ -945,7 +900,7 @@ namespace SneakyGame.Ragdoll
 
     public void SetColors(Color skinColor, Color clothesColor)
     {
-      _Color = skinColor;
+      color = skinColor;
       var mesh = Transform.GetChild(0).GetComponent<SkinnedMeshRenderer>();
       mesh.sharedMaterials[1].color = skinColor;
       mesh.sharedMaterials[0].color = clothesColor;
@@ -958,12 +913,13 @@ namespace SneakyGame.Ragdoll
       var colorOverride = RagdollSystem.ColorOverride;
       if (colorOverride != default)
       {
-        c = colorOverride;
+        SetColors(colorOverride, colorOverride);
+        return;
       }
 
       //
-      if (Equals(_Color, Color.blue * 1.3f))
-        _Color = c;
+      if (Equals(color, Color.blue * 1.3f))
+        color = c;
 
       // Gather mesh renderers by amount of materials and final color
       var mesh = Transform.GetChild(0).GetComponent<SkinnedMeshRenderer>();
@@ -977,8 +933,8 @@ namespace SneakyGame.Ragdoll
         return;
       }
       if (_color_Coroutine != null)
-        GameScript.s_Singleton.StopCoroutine(_color_Coroutine);
-      _color_Coroutine = GameScript.s_Singleton.StartCoroutine(LerpColor(mesh, c, lerpAmount));
+        CoroutineSystem.TerminateCoroutine(_color_Coroutine);
+      _color_Coroutine = CoroutineSystem.InitiateCoroutine(LerpColor(mesh, c, lerpAmount));
     }
     void SetLerpAmount(ref SkinnedMeshRenderer mesh, Color c, float normalized, Color sc0, Color sc1)
     {
@@ -1149,10 +1105,6 @@ namespace SneakyGame.Ragdoll
     }
 
     // Grab a ragdoll in front of
-    public bool _IsGrappling { get { return _grapplee != null; } }
-    public bool _IsGrappled;
-    ActiveRagdoll _grappler, _grapplee;
-    float _lastTryGrapple;
     public Side _GrappleSide
     {
       get
@@ -1160,19 +1112,20 @@ namespace SneakyGame.Ragdoll
         return _ItemL == null || (_ItemL != null && _ItemL.IsMelee()) ? Side.LEFT : Side.RIGHT;
       }
     }
+    public Grapple Grapple;
     float _kickTimer, _kickTimer_start;
     bool _kicking;
-    public void Grapple(bool gentle)
+    public void ToggleGrapple(bool gentle)
     {
 
       // Throw grappled ragdoll
-      if (_IsGrappling)
+      if (Grapple.IsGrappling)
       {
 
         // If not player, throw
         if (!gentle)
         {
-          _grapplee.TakeDamage(
+          Grapple.Grapplee.TakeDamage(
             new RagdollDamageSource()
             {
               Source = this,
@@ -1186,8 +1139,8 @@ namespace SneakyGame.Ragdoll
               SpawnBlood = false,
               SpawnGiblets = false
             });
-          _grapplee.Hip.AddForce(Controller.forward * (20f + Random.value * 5f), ForceMode.Impulse);
-          _grapplee.Hip.AddTorque(new Vector3(0f, Random.value < 0.5f ? -1f : 1f, 0f) * 100f, ForceMode.Impulse);
+          Grapple.Grapplee.Hip.AddForce(Controller.forward * (20f + Random.value * 5f), ForceMode.Impulse);
+          Grapple.Grapplee.Hip.AddTorque(new Vector3(0f, Random.value < 0.5f ? -1f : 1f, 0f) * 100f, ForceMode.Impulse);
 
           PlaySound("Ragdoll/Neck_snap", 0.85f, 1.2f);
         }
@@ -1195,10 +1148,10 @@ namespace SneakyGame.Ragdoll
         // Else, gently let go (?)
         else
         {
-          _grapplee.Controller.position = _grapplee.Hip.position;
-          _grapplee.Controller.rotation = Controller.rotation;
+          Grapple.Grapplee.Controller.position = Grapple.Grapplee.Hip.position;
+          Grapple.Grapplee.Controller.rotation = Controller.rotation;
 
-          var agent = _grapplee._IsPlayer ? (_grapplee._PlayerScript?._agent) : (_grapplee._EnemyScript?._agent);
+          var agent = Grapple.Grapplee._IsPlayer ? (Grapple.Grapplee._PlayerScript?._agent) : (Grapple.Grapplee._EnemyScript?._agent);
           if (agent != null)
           {
             agent.enabled = true;
@@ -1207,24 +1160,23 @@ namespace SneakyGame.Ragdoll
           // Check armor perk
           if (_PlayerScript?.HasPerk(Perk.PerkType.GRAPPLE_MASTER) ?? false)
           {
-            if (_grapplee._hasArmor)
+            if (Grapple.Grapplee._hasArmor)
             {
-              _grapplee.RemoveArmor(Vector3.zero);
-              _grapplee._health = 1;
+              Grapple.Grapplee.RemoveArmor(Vector3.zero);
+              Grapple.Grapplee._health = 1;
             }
           }
         }
-        _grapplee._IsGrappled = false;
-        _grapplee._grappler = null;
-        _grapplee = null;
+        Grapple.Grapplee.Grapple.Grappler = null;
+        Grapple.Grapplee = null;
 
         PlaySound("Enemies/Grapple", 0.65f, 0.8f);
       }
 
       // Grapple a ragdoll
-      else if (Time.time - _lastTryGrapple > 0.5f)
+      else if (Time.time - Grapple._LastGrappleTime > 0.5f)
       {
-        _lastTryGrapple = Time.time;
+        Grapple._LastGrappleTime = Time.time;
 
         IEnumerator TryGrapple()
         {
@@ -1260,7 +1212,7 @@ namespace SneakyGame.Ragdoll
               }
 
               // Grab ragdoll
-              Grapple(ragdoll);
+              ToggleGrapple(ragdoll);
               break;
             }
 
@@ -1271,18 +1223,18 @@ namespace SneakyGame.Ragdoll
           // Clean up
           ToggleRaycasting(true, true);
         }
-        GameScript.s_Singleton.StartCoroutine(TryGrapple());
+        CoroutineSystem.InitiateCoroutine(TryGrapple());
       }
 
     }
 
-    void Grapple(ActiveRagdoll other)
+    void ToggleGrapple(ActiveRagdoll other)
     {
-      if (_IsGrappling) return;
+      if (Grapple.IsGrappling) return;
 
-      _grapplee = other;
-      other._IsGrappled = true;
-      other._grappler = this;
+      Grapple.Grapplee = other;
+      other.Grapple.Grappler = this;
+
       var agent = other._IsPlayer ? (other._PlayerScript?._agent) : (other._EnemyScript?._agent);
       if (agent != null)
       {
@@ -1332,11 +1284,11 @@ namespace SneakyGame.Ragdoll
       _time_died = Time.unscaledTime;
 
       // Check grapplee
-      if (_IsGrappling)
-        if (!_grapplee._IsDead)
+      if (Grapple.IsGrappling)
+        if (!Grapple.Grapplee._IsDead)
         {
-          var graplee = _grapplee;
-          Grapple(true);
+          var graplee = Grapple.Grapplee;
+          ToggleGrapple(true);
           graplee?._EnemyScript?.OnGrapplerRemoved(this);
         }
     }
@@ -1402,7 +1354,7 @@ namespace SneakyGame.Ragdoll
           }
         }
         PlaySound("Enemies/Electric_Shock", 0.9f, 1.1f);
-        GameScript.s_Singleton.StartCoroutine(PlaySparks());
+        CoroutineSystem.InitiateCoroutine(PlaySparks());
         return;
       }
 
@@ -1431,7 +1383,7 @@ namespace SneakyGame.Ragdoll
           confetti.transform.Rotate(new Vector3(1f, 0f, 0f), Random.value * -20f);
           rotationConfetti = confetti.transform.localRotation;
 
-          GameScript.s_Singleton.StartCoroutine(BloodFollow(confetti));
+          CoroutineSystem.InitiateCoroutine(BloodFollow(confetti));
 
           // Audio
           PlaySound("Ragdoll/Confetti", 0.6f, 1.2f);
@@ -1465,7 +1417,7 @@ namespace SneakyGame.Ragdoll
           blood.transform.Rotate(new Vector3(1f, 0f, 0f), Random.value * -20f);
           rotationBlood = blood.transform.localRotation;
 
-          GameScript.s_Singleton.StartCoroutine(BloodFollow(blood));
+          CoroutineSystem.InitiateCoroutine(BloodFollow(blood));
 
           // Bloody footprint
           FunctionsC.AoeHandler.RegisterAoeEffect(this, FunctionsC.AoeHandler.AoeType.BLOOD, Hip.position, 1f, 20f);
@@ -1668,8 +1620,8 @@ namespace SneakyGame.Ragdoll
       _stunTimer = Time.time + duration;
 
       // Release grapple
-      if (_IsGrappling)
-        Grapple(true);
+      if (Grapple.IsGrappling)
+        ToggleGrapple(true);
     }
 
     Tuple<bool, bool>[] _savedJointStates;
@@ -1706,7 +1658,7 @@ namespace SneakyGame.Ragdoll
 
     public void Recoil(Vector3 dir, float force, bool overwrite)
     {
-      _grappler?.Recoil(dir, force * 0.75f, overwrite);
+      Grapple.Grappler?.Recoil(dir, force * 0.75f, overwrite);
 
       if (overwrite)
       {
@@ -1723,7 +1675,7 @@ namespace SneakyGame.Ragdoll
           force *= 2f;
 
       //
-      Recoil(_IsGrappled ? -Hip.transform.forward : -Controller.forward, force, overwrite);
+      Recoil(Grapple.IsGrappled ? -Hip.transform.forward : -Controller.forward, force, overwrite);
     }
 
     bool _hasCrown;
@@ -1819,7 +1771,7 @@ namespace SneakyGame.Ragdoll
     {
 
       // Checks
-      if (_IsGrappling) return;
+      if (Grapple.IsGrappling) return;
       if (GameScript.s_EditorEnabled) return;
       if (!_CanGrapple) return;
 
@@ -1831,7 +1783,7 @@ namespace SneakyGame.Ragdoll
       );
 
       // Set grapplee
-      Grapple(enemy._Ragdoll);
+      ToggleGrapple(enemy._Ragdoll);
 
       // FX
       if (playSound)
@@ -1898,7 +1850,7 @@ namespace SneakyGame.Ragdoll
     // Return a true if o is in _parts
     public bool IsSelf(GameObject o)
     {
-      foreach (GameObject part in _parts)
+      foreach (var part in Rig.BodyParts)
         if (ReferenceEquals(part, o))
           return true;
       return false;
@@ -1907,7 +1859,7 @@ namespace SneakyGame.Ragdoll
     public void ToggleRaycasting(bool enable, bool andGrappleRelated, bool override_ = false)
     {
       if (_IsRagdolled && !override_) return;
-      foreach (var part in _parts)
+      foreach (var part in Rig.BodyParts)
       {
         if (part == null) continue;
         part.layer = enable ? 10 : 2;
@@ -1915,8 +1867,8 @@ namespace SneakyGame.Ragdoll
 
       if (andGrappleRelated)
       {
-        _grapplee?.ToggleRaycasting(enable, false, override_);
-        _grappler?.ToggleRaycasting(enable, false, override_);
+        Grapple.Grapplee?.ToggleRaycasting(enable, false, override_);
+        Grapple.Grappler?.ToggleRaycasting(enable, false, override_);
       }
     }
 
@@ -1940,15 +1892,15 @@ namespace SneakyGame.Ragdoll
 
       // Save for later
       _lastBubbleScriptTime = Time.time;
-      _bubbleScript = TextBubbleScript.SpawnBubbleWith(Rig.Head, text, _Color, size);
+      _bubbleScript = TextBubbleScript.SpawnBubbleWith(Rig.Head, text, color, size);
     }
 
     void SetCollisionMode(CollisionDetectionMode mode)
     {
-      foreach (var g in _parts)
+      foreach (var part in Rig.BodyParts)
       {
-        if (g.name.Equals("Hip") && mode == CollisionDetectionMode.Continuous) mode = CollisionDetectionMode.ContinuousSpeculative;
-        var rb = g.GetComponent<Rigidbody>();
+        if (part.name.Equals("Hip") && mode == CollisionDetectionMode.Continuous) mode = CollisionDetectionMode.ContinuousSpeculative;
+        var rb = part.GetComponent<Rigidbody>();
         if (rb == null) continue;
         rb.collisionDetectionMode = mode;
       }

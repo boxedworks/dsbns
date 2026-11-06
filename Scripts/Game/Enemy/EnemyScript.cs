@@ -19,6 +19,7 @@ using SneakyGame.Game.Incremental;
 using SneakyEngine.Equippable.Item;
 using SneakyEngine.Utility;
 using SneakyEngine.Ragdoll;
+using SneakyEngine.Engine;
 
 namespace SneakyGame.Enemy
 {
@@ -489,7 +490,7 @@ namespace SneakyGame.Enemy
     void Handle()
     {
       if (!_Enabled) return;
-      if (_ragdoll == null || !_ragdoll._CanReceiveInput) return;
+      if (_ragdoll == null) return;
 
       var hasGun = _ragdoll.HasGun();
       var position = _ragdoll.Hip.position;
@@ -506,7 +507,7 @@ namespace SneakyGame.Enemy
         _ragdoll._hip.transform.parent.rotation = rot;*/
 
         _beganPatrolling = true;
-        if (!_ragdoll._IsGrappled)
+        if (!_ragdoll.Grapple.IsGrappled)
           _agent.enabled = true;
 
         // Set state and begin patrolling
@@ -561,7 +562,7 @@ namespace SneakyGame.Enemy
       {
 
         // Check for attacking
-        if (_ragdoll._IsGrappled)
+        if (_ragdoll.Grapple.IsGrappled)
         {
           DrawBackMelee(true);
 
@@ -934,7 +935,7 @@ namespace SneakyGame.Enemy
                       _moveSpeed = PlayerScript.RUNSPEED;
 
                     // If grappling, slower
-                    if (_ragdoll._IsGrappling) { _moveSpeed *= 0.9f; }
+                    if (_ragdoll.Grapple.IsGrappling) { _moveSpeed *= 0.9f; }
 
                     // Only attack if is alive, the target is alive, and (the target is in front, or has a machine gun, or has a melee weapon)
                     if (!_ragdoll._IsDead && !_ragdollTarget._IsDead && (_targetDirectlyInFront || HasMachineGun() || !hasGun))
@@ -1101,7 +1102,7 @@ namespace SneakyGame.Enemy
       // Local
       void UseLeft()
       {
-        if (_ragdoll._ItemL.IsMelee() && _ragdoll._IsGrappling) return;
+        if (_ragdoll._ItemL.IsMelee() && _ragdoll.Grapple.IsGrappling) return;
         if (_ragdoll._ItemL._useOnRelease)
           _ragdoll._ItemL.UseUp();
         else
@@ -1109,7 +1110,7 @@ namespace SneakyGame.Enemy
       }
       void UseRight()
       {
-        if (_ragdoll._ItemR.IsMelee() && _ragdoll._IsGrappling) return;
+        if (_ragdoll._ItemR.IsMelee() && _ragdoll.Grapple.IsGrappling) return;
         if (_ragdoll._ItemR._useOnRelease)
           _ragdoll._ItemR.UseUp();
         else
@@ -1220,7 +1221,7 @@ namespace SneakyGame.Enemy
     void Move()
     {
 
-      if (!_canMove || _ragdoll._IsGrappled) return;
+      if (!_canMove || _ragdoll.Grapple.IsGrappled) return;
 
       // Check survial
       if (GameScript.s_IsZombieGameMode)
@@ -1241,7 +1242,7 @@ namespace SneakyGame.Enemy
     }
     void LookAt(Vector3 lookAtPos)
     {
-      if (_ragdoll?._IsGrappled ?? true) return;
+      if (_ragdoll?.Grapple.IsGrappled ?? true) return;
 
       var forward = transform.forward;
       if ((_ragdoll.HasMelee() && !_ragdoll._IsSwinging) || !_ragdoll.HasMelee() || IsChaser())
@@ -1652,8 +1653,8 @@ namespace SneakyGame.Enemy
       //   _ => Color.white
       // }, 1f);
       //if ((loudness != Loudness.LOUD && !IsLouder(loudness, _lastSuspiciousLoudness)) && !(loudness == Loudness.SUPERSOFT && _lastSuspiciousLoudness == Loudness.SUPERSOFT)) return;
-      if (_suspiciousCoroutine != null) StopCoroutine(_suspiciousCoroutine);
-      _suspiciousCoroutine = StartCoroutine(SuspiciousCo(source, loudness, waittime));
+      if (_suspiciousCoroutine != null) CoroutineSystem.TerminateCoroutine(_suspiciousCoroutine);
+      _suspiciousCoroutine = CoroutineSystem.InitiateCoroutine(SuspiciousCo(source, loudness, waittime));
     }
     IEnumerator SuspiciousCo(Vector3 source, Loudness loudness, float wait)
     {
@@ -1761,16 +1762,6 @@ namespace SneakyGame.Enemy
       _state = newState;
     }
 
-    Coroutine StartCoroutine(IEnumerator routine)
-    {
-      return GameScript.s_Singleton.StartCoroutine(routine);
-    }
-    void StopCoroutine(Coroutine routine)
-    {
-      GameScript.s_Singleton.StopCoroutine(routine);
-    }
-
-
     public ActiveRagdoll GetPlayer(GameObject obj)
     {
       if (PlayerScript.s_Players == null) return null;
@@ -1828,7 +1819,7 @@ namespace SneakyGame.Enemy
           if (!(_ragdoll?._IsDead ?? true))
             _ragdoll.AddGrappler(false);
         }
-        StartCoroutine(delay_grappler());
+        CoroutineSystem.InitiateCoroutine(delay_grappler());
       }
 
       // Zombie
@@ -2466,7 +2457,7 @@ namespace SneakyGame.Enemy
                 LevelSaveData.Save();
 
             }
-            StartCoroutine(AwardPlayer());
+            CoroutineSystem.InitiateCoroutine(AwardPlayer());
 
             // Teleport exit to player
             if (level_time_best != -1f)

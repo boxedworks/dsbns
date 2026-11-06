@@ -19,6 +19,7 @@ using Key = ControllerManager.Key;
 using SneakyEngine.Equippable.Item;
 using SneakyEngine.Physics;
 using SneakyGame.Enemy;
+using SneakyEngine.Engine;
 
 public class TileManager
 {
@@ -82,7 +83,7 @@ public class TileManager
       if (gameid != GameScript.s_GameId)
         _Text_GameOver.gameObject.SetActive(false);
     }
-    GameScript.s_Singleton.StartCoroutine(ShowTextCo());
+    CoroutineSystem.InitiateCoroutine(ShowTextCo());
     _Text_GameOver.gameObject.SetActive(true);
   }
   public static void HideGameOverText()
@@ -211,7 +212,7 @@ public class TileManager
 
       ResetMonie(index);
     }
-    GameScript.s_Singleton.StartCoroutine(MoveMonieCo());
+    CoroutineSystem.InitiateCoroutine(MoveMonieCo());
   }
 
   public static void Init()
@@ -2153,7 +2154,7 @@ public class TileManager
       yield return new WaitForSecondsRealtime(0.1f);
       CombineMeshes(false);
     }
-    GameScript.s_Singleton.StartCoroutine(co());
+    CoroutineSystem.InitiateCoroutine(co());
 
     // Move camera
     var campos = GameResources._Camera_Main.transform.position;
@@ -2191,7 +2192,7 @@ public class TileManager
       color.a = 0f;
       material.color = color;
     }
-    GameScript.s_Singleton.StartCoroutine(LerpCamera());
+    CoroutineSystem.InitiateCoroutine(LerpCamera());
   }
 
   public static void ResetParticles()
@@ -4072,7 +4073,7 @@ public class TileManager
       }
       // Toggle
       if (ControllerManager.GetMouseInput(1, ControllerManager.InputMode.DOWN) && _Selected_Tiles != null)
-        GameScript.s_Singleton.StartCoroutine(Tile.LerpPositions(_Selected_Tiles.ToArray(), 0f, false));
+        CoroutineSystem.InitiateCoroutine(Tile.LerpPositions(_Selected_Tiles.ToArray(), 0f, false));
     }
     ,
     _UpdateFunction_Object = selection =>
@@ -4988,7 +4989,7 @@ public class TileManager
     background.parent = container;
     background.transform.localPosition = Vector3.zero;
     background.transform.localScale = new Vector3(1f, 1f, 0.1f);
-    GameScript.s_Singleton.StartCoroutine(GetMapPreviewCo(container, mapData));
+    CoroutineSystem.InitiateCoroutine(GetMapPreviewCo(container, mapData));
     return container;
   }
 
@@ -5433,7 +5434,7 @@ public class TileManager
 
     public void ChangeColor(Color c)
     {
-      GameScript.s_Singleton.StartCoroutine(ChangeColorCo(c, 0.2f));
+      CoroutineSystem.InitiateCoroutine(ChangeColorCo(c, 0.2f));
     }
 
     IEnumerator ChangeColorCo(Color c, float time = 1f)
