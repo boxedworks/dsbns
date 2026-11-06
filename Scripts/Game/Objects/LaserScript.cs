@@ -1,4 +1,5 @@
-﻿using SneakyGame.Objects.CustomEntities;
+﻿using SneakyGame.Enemy;
+using SneakyGame.Objects.CustomEntities;
 using SneakyGame.Ragdoll;
 using UnityEngine;
 

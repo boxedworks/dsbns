@@ -20,6 +20,8 @@ using Random = UnityEngine.Random;
 using SneakyGame.Game.Incremental;
 using SneakyGame.Game.Tutorial;
 using SneakyEngine.Physics;
+using SneakyGame.Enemy;
+using SneakyGame.Ragdoll.Animation;
 
 public class GameScript : MonoBehaviour
 {
@@ -330,7 +332,7 @@ public class GameScript : MonoBehaviour
     ControllerManager.Init();
     TutorialInformation.Init();
     SceneThemes.Init();
-    ProgressBar.Init();
+    ProgressBarHelper.Init();
     Stats.Init();
 
     UpdateLevelVault();
@@ -655,7 +657,7 @@ public class GameScript : MonoBehaviour
       SurvivalManager.Update();
 
     // Update progress bars
-    ProgressBar.Update();
+    ProgressBarHelper.Update();
 
     // Check play mode
     if (!Menu.s_InMenus)

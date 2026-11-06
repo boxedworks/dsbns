@@ -113,19 +113,22 @@ public class GameUIController : MonoBehaviour
   public static void SetIncrementalHealth(int health)
   {
     s_PendingIncrementalHealth = health;
-    s_Instance?.SetIncrementalHealthDisplay(health);
+    if (s_Instance != null)
+      s_Instance.SetIncrementalHealthDisplay(health);
   }
 
   public static void SetIncrementalRespawnCountdown(int secondsRemaining)
   {
     s_PendingIncrementalRespawnCountdown = secondsRemaining;
-    s_Instance?.SetIncrementalRespawnCountdownDisplay(secondsRemaining);
+    if (s_Instance != null)
+      s_Instance.SetIncrementalRespawnCountdownDisplay(secondsRemaining);
   }
 
   public static void HideIncrementalRespawnCountdown()
   {
     s_PendingIncrementalRespawnCountdown = null;
-    s_Instance?.HideIncrementalRespawnCountdownDisplay();
+    if (s_Instance != null)
+      s_Instance.HideIncrementalRespawnCountdownDisplay();
   }
 
   void SetIncrementalHealthDisplay(int health)

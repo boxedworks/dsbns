@@ -18,6 +18,7 @@ using UnityEngine.AI;
 using Key = ControllerManager.Key;
 using SneakyEngine.Equippable.Item;
 using SneakyEngine.Physics;
+using SneakyGame.Enemy;
 
 public class TileManager
 {
@@ -2592,7 +2593,8 @@ public class TileManager
 
       // Laser script
       LaserScript ls = new_object.GetComponent<LaserScript>();
-      ls?.OnEditorEnable();
+      if (ls != null)
+        ls.OnEditorEnable();
 
       // Button
       if (new_object.name == "Button") new_object.layer = 0;

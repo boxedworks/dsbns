@@ -17,6 +17,8 @@ using SneakyEngine.Effects;
 using SneakyEngine.Equippable.Item;
 using SneakyEngine.Physics;
 using SneakyEngine.Utility;
+using SneakyGame.Objects;
+using SneakyGame.Enemy;
 
 namespace SneakyGame.Ragdoll
 {
@@ -1470,15 +1472,19 @@ namespace SneakyGame.Ragdoll
 
       // Fire events
       other._EnemyScript?.OnGrappled();
-      _ItemL?.OnGrappled();
-      _ItemR?.OnGrappled();
+      if (_ItemL != null)
+        _ItemL.OnGrappled();
+      if (_ItemR != null)
+        _ItemR.OnGrappled();
     }
 
     public void HideCompletely()
     {
       _renderer.enabled = false;
-      _ItemL?.gameObject.SetActive(false);
-      _ItemR?.gameObject.SetActive(false);
+      if (_ItemL != null)
+        _ItemL.gameObject.SetActive(false);
+      if (_ItemR != null)
+        _ItemR.gameObject.SetActive(false);
     }
 
     public void Kill(ActiveRagdoll source, DamageSourceType damageSourceType, Vector3 hitForce)
@@ -1807,15 +1813,19 @@ namespace SneakyGame.Ragdoll
         }
 
         // Fire item functions
-        _ItemL?.OnToggle();
-        _ItemR?.OnToggle();
+        if (_ItemL != null)
+          _ItemL.OnToggle();
+        if (_ItemR != null)
+          _ItemR.OnToggle();
       }
     }
 
     public void RefillAmmo()
     {
-      _ItemL?.SetClip();
-      _ItemR?.SetClip();
+      if (_ItemL != null)
+        _ItemL.SetClip();
+      if (_ItemR != null)
+        _ItemR.SetClip();
       _PlayerScript?.OnRefill();
     }
 

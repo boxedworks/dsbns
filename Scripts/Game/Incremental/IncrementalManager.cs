@@ -1,4 +1,5 @@
 
+using SneakyGame.Enemy;
 using SneakyGame.Game.Player;
 using SneakyGame.Game.Survival;
 using SneakyGame.Ragdoll;

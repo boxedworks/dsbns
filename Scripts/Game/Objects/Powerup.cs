@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using SneakyEngine.Equippable.Item;
+using SneakyGame.Enemy;
 using SneakyGame.Objects.CustomEntities;
 using SneakyGame.Ragdoll;
 using SneakyGame.UI.Menus;

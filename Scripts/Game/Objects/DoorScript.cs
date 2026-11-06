@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using SneakyGame.Enemy;
 using SneakyGame.Objects.CustomEntities;
 using SneakyGame.Settings;
 using SneakyGame.Settings.Serialization;

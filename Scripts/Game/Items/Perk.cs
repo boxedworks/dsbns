@@ -105,8 +105,10 @@ namespace SneakyGame.Game.Items
           {
             if (player._Id == playerId)
             {
-              player._Ragdoll._ItemL?.AddLaserSight();
-              player._Ragdoll._ItemR?.AddLaserSight();
+              if (player._Ragdoll._ItemL != null)
+                player._Ragdoll._ItemL.AddLaserSight();
+              if (player._Ragdoll._ItemR != null)
+                player._Ragdoll._ItemR.AddLaserSight();
               return;
             }
           }

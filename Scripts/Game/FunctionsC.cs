@@ -9,6 +9,7 @@ using SneakyGame.Game.Player;
 using UnityEngine;
 using SneakyEngine.Utility;
 using SneakyEngine.Physics;
+using SneakyGame.Enemy;
 
 public static class FunctionsC
 {

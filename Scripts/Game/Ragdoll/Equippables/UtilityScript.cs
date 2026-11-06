@@ -9,6 +9,7 @@ using SneakyEngine.Equippable.Utility;
 using UnityEngine;
 using SneakyEngine.Equippable.Item;
 using SneakyEngine.Utility;
+using SneakyGame.Enemy;
 
 namespace SneakyGame.Ragdoll.Equippables
 {

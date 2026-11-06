@@ -26,6 +26,7 @@ using SneakyGame.Game.Tutorial;
 using SneakyEngine.Equippable.Item;
 using SneakyEngine.Equippable.Utility;
 using SneakyEngine.Utility;
+using SneakyGame.Enemy;
 
 namespace SneakyGame.Game.Player
 {
@@ -2819,7 +2820,8 @@ namespace SneakyGame.Game.Player
 
               // TVs
               foreach (var tv in tvs)
-                tv?.Flip();
+                if (tv != null)
+                  tv.Flip();
 
               var t = 0f;
               var lastTime = Time.time;

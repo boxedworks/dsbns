@@ -11,6 +11,7 @@ using UnityEngine;
 using SneakyGame.Game.Player;
 using SneakyEngine.Equippable.Item;
 using SneakyEngine.Utility;
+using SneakyGame.Enemy;
 
 namespace SneakyGame.Game.Survival
 {
@@ -172,9 +173,12 @@ namespace SneakyGame.Game.Survival
 
     public static void OnLeaveMode()
     {
-      s_Text_Scores?.gameObject.SetActive(false);
-      s_Text_Wave?.gameObject.SetActive(false);
-      s_Text_EnemiesAlive?.gameObject.SetActive(false);
+      if (s_Text_Scores != null)
+        s_Text_Scores.gameObject.SetActive(false);
+      if (s_Text_Wave != null)
+        s_Text_Wave.gameObject.SetActive(false);
+      if (s_Text_EnemiesAlive != null)
+        s_Text_EnemiesAlive.gameObject.SetActive(false);
 
       if (s_money != null)
       {

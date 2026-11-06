@@ -13,6 +13,7 @@ using SneakyEngine.Engine;
 using SneakyEngine.Effects;
 using SneakyEngine.Equippable.Item;
 using SneakyEngine.Utility;
+using SneakyGame.Enemy;
 
 namespace SneakyGame.Ragdoll.Equippables
 {
@@ -1801,7 +1802,7 @@ namespace SneakyGame.Ragdoll.Equippables
       // Show progress bar
       var reloadTime = _reloadTime / reload_speed_mod;
       _IsReloading = true;
-      ProgressBar.GetProgressBar(transform, reloadTime,
+      ProgressBarHelper.GetProgressBar(transform, reloadTime,
         () =>
         {
           _IsReloading = false;
