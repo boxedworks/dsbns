@@ -17,7 +17,6 @@ public class PlayerProfile
 {
   //
   static SettingsSaveData SettingsModule { get { return SettingsHelper.s_SaveData.Settings; } }
-  static LevelSaveData LevelModule { get { return SettingsHelper.s_SaveData.LevelData; } }
 
   //
   static int s_currentSettingsID;
@@ -304,7 +303,7 @@ public class PlayerProfile
 
       // Check for alive player
       if (PlayerScript.s_Players != null)
-        foreach (PlayerScript p in PlayerScript.s_Players)
+        foreach (var p in PlayerScript.s_Players)
           if (p._Id == _Id && !p._Ragdoll._IsDead) p._Ragdoll.ChangeColor(GetColor());
 
       // Play SFX

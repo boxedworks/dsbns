@@ -19,6 +19,7 @@ using Valve.VR;
 using Random = UnityEngine.Random;
 using SneakyGame.Game.Incremental;
 using SneakyGame.Game.Tutorial;
+using SneakyEngine.Physics;
 
 public class GameScript : MonoBehaviour
 {
@@ -341,7 +342,7 @@ public class GameScript : MonoBehaviour
       SteamManager.Workshop_GetUserItems(true);
 #endif
 
-    ActiveRagdoll.Rigidbody_Handler.Init();
+    RigidbodyHandler.Init();
 
     var material = GameResources._CameraFader.sharedMaterial;
     var color = material.color;
@@ -662,7 +663,7 @@ public class GameScript : MonoBehaviour
       if (!s_Paused)
       {
         // Update ragdoll body sounds
-        ActiveRagdoll.Rigidbody_Handler.Update();
+        RigidbodyHandler.Update();
 
         // Check thunder sfx
         if (SceneThemes._Theme._rain)

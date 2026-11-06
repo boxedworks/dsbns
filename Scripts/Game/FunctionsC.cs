@@ -7,6 +7,8 @@ using SneakyGame.UI.Menus;
 using SneakyGame.Game.Items;
 using SneakyGame.Game.Player;
 using UnityEngine;
+using SneakyEngine.Utility;
+using SneakyEngine.Physics;
 
 public static class FunctionsC
 {
@@ -532,7 +534,7 @@ public static class FunctionsC
     PlayComplexParticleSystemAt(explosionType != ExplosiveScript.ExplosionType.STUN ? ExplosiveScript.s_ExplosionParticleType : ParticleSystemType.EXPLOSION_STUN, posAt + new Vector3(0f, 0.2f, 0f));
 
     // Send explosion to rigidbody handler
-    ActiveRagdoll.Rigidbody_Handler.ApplyExplosion(posAt, explosionRadius);
+    RigidbodyHandler.ApplyExplosion(posAt, explosionRadius);
 
     // Loop through ragdolls to raycast and affect
     var numKilled = 0;

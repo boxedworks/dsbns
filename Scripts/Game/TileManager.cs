@@ -17,6 +17,7 @@ using UnityEngine.AI;
 
 using Key = ControllerManager.Key;
 using SneakyEngine.Equippable.Item;
+using SneakyEngine.Physics;
 
 public class TileManager
 {
@@ -1085,7 +1086,7 @@ public class TileManager
         rb.mass = 3f;
         rb.interpolation = RigidbodyInterpolation.Interpolate;
 
-        ActiveRagdoll.Rigidbody_Handler.AddListener(rb, ActiveRagdoll.Rigidbody_Handler.RigidbodyType.WOOD);
+        RigidbodyHandler.AddListener(rb, RigidbodyType.WOOD);
 
         break;
 

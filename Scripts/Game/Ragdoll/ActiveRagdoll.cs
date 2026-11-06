@@ -1,21 +1,22 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+
 using UnityEngine;
-
-using System;
-
 using Random = UnityEngine.Random;
+
 using SneakyGame.Settings;
-using SneakyGame.Objects;
 using SneakyGame.Objects.CustomEntities;
 using SneakyGame.Game.Items;
 using SneakyGame.Ragdoll.Equippables;
-using SneakyGame.Game.Survival;
 using SneakyGame.Game.Player;
+
 using SneakyEngine.Engine;
 using SneakyEngine.Ragdoll;
 using SneakyEngine.Effects;
 using SneakyEngine.Equippable.Item;
+using SneakyEngine.Physics;
+using SneakyEngine.Utility;
 
 namespace SneakyGame.Ragdoll
 {
@@ -319,7 +320,7 @@ namespace SneakyGame.Ragdoll
       Debug.DrawRay(_Hip.position, _Hip.transform.forward * 100f, Color.yellow);*/
 #endif
 
-      var dt = _PlayerScript != null ? Time.unscaledDeltaTime : Time.deltaTime;
+      var dt = _IsPlayer ? Time.unscaledDeltaTime : Time.deltaTime;
 
       // Update grabbed rd
       if (_IsGrappling)
@@ -1073,32 +1074,6 @@ namespace SneakyGame.Ragdoll
       _grappler?.IgnoreCollision(c, ignore);
     }
 
-    public void OnTriggerEnter(Collider other)
-    {
-      // Check player / enemy specific triggers
-      if (_IsPlayer) _PlayerScript.OnTriggerEnter(other);
-
-      // Check general triggers
-      if (other.TryGetComponent<CustomEntityUI>(out var u))
-      {
-        u.Activate();
-      }
-
-      // Check stepped on mine, play audio; Explodes in OnTriggerExit()
-      else if (other.name.Equals("Mine"))
-      {
-        var s = other.transform.parent.GetComponent<ExplosiveScript>();
-        PlaySound("Ragdoll/Tick", 0.95f, 1.1f);
-      }
-
-      // If ran into powerup, activate it
-      else if (other.name.Equals("Goal") && !_IsDead && _IsPlayer)
-      {
-        other.transform.parent.GetComponent<Powerup>()
-          .Activate(this);
-      }
-    }
-
     //
     float _meleeStartTime;
     public void OnMeleeStart()
@@ -1114,14 +1089,20 @@ namespace SneakyGame.Ragdoll
     }
 
     //
+    public void OnTriggerEnter(Collider other)
+    {
+      // Check player / enemy specific triggers
+      if (_IsPlayer)
+        _PlayerScript.OnTriggerEnter(other);
+
+      // Check general triggers
+      if (other.TryGetComponent<CustomEntityUI>(out var u))
+      {
+        u.Activate();
+      }
+    }
     public void OnTriggerExit(Collider other)
     {
-      /*/ Explode mine stepping on
-      if (other.name.Equals("Mine"))
-      {
-        ExplosiveScript s = other.transform.parent.GetComponent<ExplosiveScript>();
-        s.Trigger();
-      }*/
       if (_IsPlayer) _PlayerScript.OnTriggerExit(other);
     }
     public void OnTriggerStay(Collider other)
@@ -1129,131 +1110,9 @@ namespace SneakyGame.Ragdoll
       if (_IsPlayer) _PlayerScript.OnTriggerStay(other);
     }
 
-    // Handle body part noises
-    public static class Rigidbody_Handler
-    {
-      static List<RigidbodyData> _Rbs;
-      struct RigidbodyData
-      {
-        public Rigidbody Rigidbody;
-        public RigidbodyType RigidbodyType;
-        public float MagnitudeOld;
-        public float LastSoundFX;
-      }
-
-      static int _RbsIndex;
-
-      public enum RigidbodyType
-      {
-        BODY,
-        WOOD,
-      }
-
-      //
-      public static void Init()
-      {
-        _Rbs = new List<RigidbodyData>();
-      }
-
-      //
-      public static void Update()
-      {
-        // If no rbs, ignore
-        if (_Rbs.Count == 0) return;
-
-        for (var u = Mathf.Clamp(3, 1, _Rbs.Count) - 1; u >= 0; u--)
-        {
-
-          // Gather data
-          var index = _RbsIndex++ % _Rbs.Count;
-          var rbData = _Rbs[index];
-
-          // Check for null and remove
-          var rb = rbData.Rigidbody;
-          if (rb == null)
-          {
-            _Rbs.RemoveAt(index);
-            continue;
-          }
-
-          //
-          var mag = rb.linearVelocity.magnitude;
-          var mag_old = rbData.MagnitudeOld;
-          var lastSound = rbData.LastSoundFX;
-          var bodyType = rbData.RigidbodyType;
-
-          //
-          var min = 3.5f;
-          if (mag > mag_old && mag > min)
-          {
-            rbData.MagnitudeOld = mag;
-            rbData.LastSoundFX = lastSound;
-
-            _Rbs[index] = rbData;
-            continue;
-          }
-
-          //
-          if (Time.time - lastSound > 0.15f && mag_old > mag && mag_old > 0.5f)
-          {
-            rbData.MagnitudeOld = mag;
-            rbData.LastSoundFX = Time.time;
-
-            _Rbs[index] = rbData;
-
-            switch (bodyType)
-            {
-
-              case RigidbodyType.BODY:
-                var soundName = mag_old > 7f ? "Thud_loud" : "Thud";
-                SfxManager.PlayAudioSourceSimple(rb.position, $"Ragdoll/{soundName}", 0.7f, 1.25f, SfxManager.AudioClass.FOOTSTEP);
-                break;
-              case RigidbodyType.WOOD:
-                soundName = mag_old > 6f ? "Wood_hard" : "Wood_soft";
-                SfxManager.PlayAudioSourceSimple(rb.position, $"Etc/{soundName}", 0.7f, 1.25f, SfxManager.AudioClass.FOOTSTEP);
-                break;
-
-            }
-
-          }
-        }
-      }
-
-      public static void AddListener(Rigidbody rb, RigidbodyType rigidbodyType)
-      {
-        _Rbs.Add(
-          new RigidbodyData()
-          {
-            Rigidbody = rb,
-            RigidbodyType = rigidbodyType,
-
-            MagnitudeOld = 0f,
-            LastSoundFX = 0f
-          });
-      }
-
-      public static void ApplyExplosion(Vector3 position, float radius)
-      {
-        foreach (var bodyData in _Rbs)
-        {
-          if (bodyData.RigidbodyType == RigidbodyType.BODY) continue;
-
-          var dir = MathC.Get2DVector(bodyData.Rigidbody.position - position);
-          var dist = dir.magnitude;
-          if (dist > radius * 1.5f) continue;
-          bodyData.Rigidbody.AddForce(dir.normalized * 30f, ForceMode.Impulse);
-        }
-      }
-
-      public static void Reset()
-      {
-        _Rbs.Clear();
-      }
-    }
-
     void AddPartListener(Rigidbody rb)
     {
-      Rigidbody_Handler.AddListener(rb, Rigidbody_Handler.RigidbodyType.BODY);
+      RigidbodyHandler.AddListener(rb, RigidbodyType.BODY);
     }
 
     public void SetColors(Color skinColor, Color clothesColor)
@@ -1267,6 +1126,14 @@ namespace SneakyGame.Ragdoll
     Coroutine _color_Coroutine;
     public void ChangeColor(Color c, float lerpAmount = 0f)
     {
+      // Color override
+      var colorOverride = SneakyEngineSystem.RagdollSystem.ColorOverride;
+      if (colorOverride != default)
+      {
+        c = colorOverride;
+      }
+
+      //
       if (Equals(_Color, Color.blue * 1.3f))
         _Color = c;
 
@@ -1292,6 +1159,7 @@ namespace SneakyGame.Ragdoll
 
       // Skin
       mesh.sharedMaterials[1].color = c;
+
       // Clothes
       mesh.sharedMaterials[0].color = c0;
     }
@@ -1373,13 +1241,13 @@ namespace SneakyGame.Ragdoll
           Kill(source, damageSourceType, hitForce);
         }
 
-        // Player armor
         if (_IsPlayer)
         {
           // Fire player events
           _PlayerScript.OnDamageTaken(ragdollDamageSource);
           PlaySoundLocal("Enemies/Ugh0", 0.9f, 1.1f);
 
+          // Player armor
           if (_hasArmor)
           {
             spawnBlood = false;
@@ -1419,11 +1287,6 @@ namespace SneakyGame.Ragdoll
               {
                 spawnBlood = true;
               }
-              else
-
-                // Change color to normal for survival
-                if (_EnemyScript?._survivalAttributes != null)
-                  ChangeColor(Color.green, 0.8f);
             }
             else if (_health > 0)
             {
@@ -1882,13 +1745,6 @@ namespace SneakyGame.Ragdoll
       _IsRagdolled = !_IsRagdolled;
       if (!_IsRagdolled)
       {
-        /*Ragdoll(false);
-        _controller.GetComponent<UnityEngine.AI.NavMeshAgent>().enabled = true;
-
-        // If not dead anymore, rise
-        _reviving = true;
-        GameScript._Singleton.StartCoroutine(Rise());
-        if (changeColor) ChangeColor(_color, 2f);*/
       }
 
       else
@@ -2130,10 +1986,6 @@ namespace SneakyGame.Ragdoll
       // Spawn enemy
       var spawn_pos = _Hip.position + Transform.forward * 0.3f;
       var enemy = EnemyScript.SpawnEnemyAt(
-        new EnemyScript.SurvivalAttributes()
-        {
-          _enemyType = SurvivalManager.EnemyType.KNIFE_RUN
-        },
         new Vector2(spawn_pos.x, spawn_pos.z),
         true
       );
@@ -2237,10 +2089,6 @@ namespace SneakyGame.Ragdoll
 
     TextBubbleScript _bubbleScript;
     public float _lastBubbleScriptTime;
-    /// <summary>
-    /// Displays a text bubble over a ragdoll to convey something
-    /// </summary>
-    /// <param name="text"></param>
     public void DisplayText(string text, float size = 0.75f)
     {
       if (_EnemyScript != null && _EnemyScript.IsChaser()) return;
@@ -2252,15 +2100,15 @@ namespace SneakyGame.Ragdoll
 
       // Save for later
       _lastBubbleScriptTime = Time.time;
-      _bubbleScript = TextBubbleScript.SpawnBubbleWith(_Head, text, _Color, 0.75f);
+      _bubbleScript = TextBubbleScript.SpawnBubbleWith(_Head, text, _Color, size);
     }
 
     void SetCollisionMode(CollisionDetectionMode mode)
     {
-      foreach (GameObject t in _parts)
+      foreach (var g in _parts)
       {
-        if (t.name.Equals("Hip") && mode == CollisionDetectionMode.Continuous) mode = CollisionDetectionMode.ContinuousSpeculative;
-        Rigidbody rb = t.GetComponent<Rigidbody>();
+        if (g.name.Equals("Hip") && mode == CollisionDetectionMode.Continuous) mode = CollisionDetectionMode.ContinuousSpeculative;
+        var rb = g.GetComponent<Rigidbody>();
         if (rb == null) continue;
         rb.collisionDetectionMode = mode;
       }
@@ -2404,7 +2252,7 @@ namespace SneakyGame.Ragdoll
       }
       s_ID = 0;
 
-      Rigidbody_Handler.Reset();
+      RigidbodyHandler.Reset();
       SfxManager.Reset();
       UtilityScript.Reset();
     }

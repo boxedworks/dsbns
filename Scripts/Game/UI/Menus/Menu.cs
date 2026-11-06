@@ -14,6 +14,7 @@ using UnityEngine;
 using Valve.VR;
 using SneakyGame.Ragdoll.Equippables;
 using SneakyEngine.Equippable.Item;
+using SneakyEngine.Utility;
 
 namespace SneakyGame.UI.Menus
 {

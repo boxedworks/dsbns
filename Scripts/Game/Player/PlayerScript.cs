@@ -1,11 +1,14 @@
 ﻿using System.Collections;
-using SneakyEngine.Equippable.Utility;
+using System.Collections.Generic;
+using System.Linq;
+
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.AI;
-
 using Random = UnityEngine.Random;
-using System.Collections.Generic;
+
+using Valve.VR;
+
 using SneakyGame.Settings.Localization;
 using SneakyGame.Settings;
 using SneakyGame.Settings.Serialization;
@@ -15,13 +18,14 @@ using SneakyGame.Objects;
 using SneakyGame.Objects.CustomEntities;
 using SneakyGame.Game.Items;
 using SneakyGame.Game.Survival;
-using Valve.VR;
 using SneakyGame.FX;
 using SneakyGame.Ragdoll.Equippables;
 using SneakyGame.XR;
-using System.Linq;
 using SneakyGame.Game.Tutorial;
+
 using SneakyEngine.Equippable.Item;
+using SneakyEngine.Equippable.Utility;
+using SneakyEngine.Utility;
 
 namespace SneakyGame.Game.Player
 {
@@ -233,10 +237,6 @@ namespace SneakyGame.Game.Player
 
       // Assign color by _PlayerID
       _ragdoll.ChangeColor(_Profile.GetColor());
-      // _ragdoll.SetColors(
-      //   new Color(201f / 255f, 181f / 255f, 141f / 255f),
-      //   _Profile.GetColor()
-      // );
 
       // Create ring
       var new_ring = Object.Instantiate(TileManager._Ring.gameObject);
@@ -1107,10 +1107,6 @@ namespace SneakyGame.Game.Player
 
                   //
                   var enemy = EnemyScript.SpawnEnemyAt(
-                    new EnemyScript.SurvivalAttributes()
-                    {
-                      _enemyType = SurvivalManager.EnemyType.KNIFE_RUN
-                    },
                     new Vector2(PlayerspawnScript._PlayerSpawns[0].transform.position.x + 0.5f * Random.value, PlayerspawnScript._PlayerSpawns[0].transform.position.z + 0.5f * Random.value),
                     false,
                     true
@@ -2569,7 +2565,9 @@ namespace SneakyGame.Game.Player
     static float _LastMoneyPickupNoiseTime;
     public void OnTriggerEnter(Collider other)
     {
-      if (_ragdoll == null || _ragdoll._IsDead) return;
+      if (_ragdoll == null || _ragdoll._IsDead)
+        return;
+
       switch (other.name)
       {
         case "SHURIKEN":
@@ -2578,6 +2576,10 @@ namespace SneakyGame.Game.Player
 
         case "SHURIKEN_BIG":
           other.transform.parent.GetComponent<UtilityScript>().PickUp(this);
+          break;
+
+        case "Goal":
+          other.transform.parent.GetComponent<Powerup>().Activate(_ragdoll);
           break;
 
         default:

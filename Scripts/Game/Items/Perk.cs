@@ -75,6 +75,7 @@ namespace SneakyGame.Game.Items
       return PlayerProfile.s_Profiles[playerId]._Equipment._Perks.Count;
     }
 
+    // Fired when player buys a perk in survival mode
     public static void BuyPerk(int playerId, PerkType perk)
     {
       if (!GameScript.s_IsZombieGameMode) return;
@@ -84,6 +85,7 @@ namespace SneakyGame.Game.Items
 
       switch (perk)
       {
+
         // Increase max ammo
         case PerkType.MAX_AMMO_UP:
           foreach (var player in PlayerScript.s_Players)
@@ -96,6 +98,7 @@ namespace SneakyGame.Game.Items
             }
           }
           break;
+
         // Give laser sights to ranged weapons
         case PerkType.LASER_SIGHTS:
           foreach (var player in PlayerScript.s_Players)
@@ -108,6 +111,7 @@ namespace SneakyGame.Game.Items
             }
           }
           break;
+
         // Give two extra health
         case PerkType.ARMOR_UP:
           foreach (var player in PlayerScript.s_Players)

@@ -10,6 +10,7 @@ using SneakyGame.Game.Items;
 using UnityEngine;
 using SneakyGame.Game.Player;
 using SneakyEngine.Equippable.Item;
+using SneakyEngine.Utility;
 
 namespace SneakyGame.Game.Survival
 {

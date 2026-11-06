@@ -7,6 +7,7 @@ using UnityEngine;
 using SneakyGame.FX;
 using SneakyGame.Ragdoll.Equippables;
 using SneakyEngine.Equippable.Item;
+using SneakyEngine.Utility;
 
 namespace SneakyGame.Objects
 {

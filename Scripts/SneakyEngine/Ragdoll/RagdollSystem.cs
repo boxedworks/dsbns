@@ -34,6 +34,21 @@ namespace SneakyEngine.Ragdoll
       _explodeOnDeath = type;
     }
 
+    // Color override
+    Color _colorOverride = new(255f / 255f, 203f / 255f, 196f / 255f);
+    public Color ColorOverride => _colorOverride;
+    public void SetColorOverride(Color color)
+    {
+      _colorOverride = color;
+    }
+
+    // Trigger extension
+    // System.Action<Collider, ActiveRagdoll> _onTriggerEnter;
+    // public System.Action<Collider, ActiveRagdoll> OnTriggerEnter => _onTriggerEnter;
+    // public void RegisterOnTriggerEnter(System.Action<Collider, ActiveRagdoll> action)
+    // {
+    //   _onTriggerEnter = action;
+    // }
 
   }
 

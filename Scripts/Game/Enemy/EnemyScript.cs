@@ -17,6 +17,7 @@ using SneakyGame.Game.Player;
 using SneakyGame.Game.Survival;
 using SneakyGame.Game.Incremental;
 using SneakyEngine.Equippable.Item;
+using SneakyEngine.Utility;
 
 public class EnemyScript : PlayerScript.IHasRagdoll
 {
@@ -233,6 +234,7 @@ public class EnemyScript : PlayerScript.IHasRagdoll
 
     lastBulletID = -1;
 
+    // Configure path
     var path = transform.parent.GetChild(1).gameObject;
     if (_IsZombie)
     {
@@ -243,10 +245,7 @@ public class EnemyScript : PlayerScript.IHasRagdoll
       _PathScript = new();
       _PathScript.Init(path.transform);
       _PathScript.GetNearestPatrolPoint(transform.position);
-    }
 
-    if (!_IsZombie)
-    {
       if (_itemLeft == ItemType.BAT)
         _waitLookPos = PlayerspawnScript._PlayerSpawns[0].transform.position;
       else if (_PathScript.GetPathLength() > 0)
@@ -276,7 +275,7 @@ public class EnemyScript : PlayerScript.IHasRagdoll
     _ragdoll = new ActiveRagdoll(ragdollObj, transform, null, this);
 
     // Check crown
-    bool getCrownBonuses = false;
+    var shouldGetCrownBonuses = false;
     float crownRandom = 0f;
     if (GameScript.s_IsCrownModeEnabled)
       if (GameScript.s_CrownEnemy == _Id)
@@ -285,7 +284,7 @@ public class EnemyScript : PlayerScript.IHasRagdoll
 
         if (LevelModule.ExtraCrownMode == 1)
         {
-          getCrownBonuses = true;
+          shouldGetCrownBonuses = true;
           crownRandom = Random.value;
         }
       }
@@ -297,7 +296,7 @@ public class EnemyScript : PlayerScript.IHasRagdoll
 
         case ItemType.KNIFE:
 
-          if (getCrownBonuses)
+          if (shouldGetCrownBonuses)
             if (crownRandom < 0.33f)
               _itemLeft = ItemType.AXE;
             else if (crownRandom < 0.66f)
@@ -312,7 +311,7 @@ public class EnemyScript : PlayerScript.IHasRagdoll
           }
 
           var knifeColor = Color.green;
-          if (_survivalAttributes != null)
+          if (_IsZombie)
           {
             knifeColor = _survivalAttributes._enemyType switch
             {
@@ -329,7 +328,7 @@ public class EnemyScript : PlayerScript.IHasRagdoll
 
         case ItemType.PISTOL:
 
-          if (getCrownBonuses)
+          if (shouldGetCrownBonuses)
             if (crownRandom < 0.33f)
               _itemLeft = ItemType.PISTOL_MACHINE;
             else if (crownRandom < 0.66f)
@@ -342,7 +341,7 @@ public class EnemyScript : PlayerScript.IHasRagdoll
 
         case ItemType.PISTOL_SILENCED:
 
-          if (getCrownBonuses)
+          if (shouldGetCrownBonuses)
           {
             if (crownRandom < 0.5f)
               _itemLeft = _itemRight = ItemType.FRYING_PAN;
@@ -358,7 +357,7 @@ public class EnemyScript : PlayerScript.IHasRagdoll
 
         case ItemType.REVOLVER:
 
-          if (getCrownBonuses)
+          if (shouldGetCrownBonuses)
             if (crownRandom < 0.5f)
               _itemLeft = _itemRight = ItemType.DMR;
             else
@@ -372,7 +371,7 @@ public class EnemyScript : PlayerScript.IHasRagdoll
 
         case ItemType.GRENADE_HOLD:
 
-          if (getCrownBonuses)
+          if (shouldGetCrownBonuses)
             _itemRight = ItemType.FRYING_PAN;
 
           _ragdoll.ChangeColor(Color.red + Color.yellow);
@@ -1828,7 +1827,7 @@ public class EnemyScript : PlayerScript.IHasRagdoll
     }
 
     // Zombie
-    if (_IsZombieReal && _itemLeft == ItemType.AXE)
+    if (_IsZombieReal)
     {
       _ragdoll._ItemL.transform.GetChild(0).GetComponent<Renderer>().enabled = false;
       _ragdoll._ItemR.transform.GetChild(0).GetComponent<Renderer>().enabled = false;
@@ -2555,6 +2554,10 @@ public class EnemyScript : PlayerScript.IHasRagdoll
     enemyScript.Init(survivalAttributes, grappled);
 
     return enemyScript;
+  }
+  public static EnemyScript SpawnEnemyAt(Vector2 spawnAtPos, bool grappled = false, bool isZombieRealOverride = false)
+  {
+    return SpawnEnemyAt(new SurvivalAttributes() { _enemyType = SurvivalManager.EnemyType.KNIFE_RUN }, spawnAtPos, grappled, isZombieRealOverride);
   }
 
   #region Sound Functions

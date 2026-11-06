@@ -12,6 +12,7 @@ using SneakyGame.Ragdoll.Animation;
 using SneakyEngine.Engine;
 using SneakyEngine.Effects;
 using SneakyEngine.Equippable.Item;
+using SneakyEngine.Utility;
 
 namespace SneakyGame.Ragdoll.Equippables
 {
@@ -1312,7 +1313,7 @@ namespace SneakyGame.Ragdoll.Equippables
           }
           if (_isMelee)
           {
-            if (_ragdoll._IsEnemy && _ragdoll._EnemyScript._IsZombie)
+            if (_ragdoll._IsEnemy && _ragdoll._EnemyScript._IsZombieReal)
               _ragdoll.RecoilSimple(-0.25f, false);
             else
               switch (_ItemType)
@@ -1923,7 +1924,7 @@ namespace SneakyGame.Ragdoll.Equippables
       }
 
       //
-      if (_ragdoll._IsEnemy && _ragdoll._EnemyScript._IsZombie)
+      if (_ragdoll._IsEnemy && _ragdoll._EnemyScript._IsZombieReal)
         Destroy(gameObject);
       else
         Destroy(this);
