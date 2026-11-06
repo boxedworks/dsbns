@@ -836,14 +836,14 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
 
         // Check if others in front
         var hit = new RaycastHit();
-        if (Physics.SphereCast(new Ray(enemy_ragdoll._Hip.transform.position, MathC.Get2DVector(enemy_ragdoll._Hip.transform.forward) * 100f), 0.5f, out hit, 100f, GameResources._Layermask_Ragdoll))
+        if (Physics.SphereCast(new Ray(enemy_ragdoll.Hip.transform.position, MathC.Get2DVector(enemy_ragdoll.Hip.transform.forward) * 100f), 0.5f, out hit, 100f, GameResources._Layermask_Ragdoll))
         {
           enemy_ragdoll.ToggleRaycasting(true, true);
           if (hit.distance > 10f) return;
           var ragdoll = ActiveRagdoll.GetRagdoll(hit.collider.gameObject);
           if (ragdoll == null || ragdoll._IsPlayer) return;
 
-          enemy_ragdoll._ForceGlobal += (enemy_next._strafeRight ? 1f : -1f) * 3f * Time.deltaTime * enemy_ragdoll._Hip.transform.right;
+          enemy_ragdoll._ForceGlobal += (enemy_next._strafeRight ? 1f : -1f) * 3f * Time.deltaTime * enemy_ragdoll.Hip.transform.right;
           return;
         }
 

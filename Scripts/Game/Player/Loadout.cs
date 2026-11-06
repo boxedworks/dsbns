@@ -6,6 +6,7 @@ using SneakyGame.Settings.Serialization;
 using SneakyGame.Ragdoll.Equippables;
 using UnityEngine;
 using SneakyEngine.Equippable.Item;
+using SneakyEngine.Ragdoll;
 
 public class Loadout
 {
@@ -103,14 +104,14 @@ public class Loadout
     Load();
   }
 
-  public bool CanEquipItem(ActiveRagdoll.Side side, int index, ItemType item)
+  public bool CanEquipItem(Side side, int index, ItemType item)
   {
-    var currentEquipValue = EquippableManager.GetItemValue(side == ActiveRagdoll.Side.LEFT ? (index == 0 ? _Equipment._ItemLeft0 : _Equipment._ItemLeft1) : (index == 0 ? _Equipment._ItemRight0 : _Equipment._ItemRight1));
+    var currentEquipValue = EquippableManager.GetItemValue(side == Side.LEFT ? (index == 0 ? _Equipment._ItemLeft0 : _Equipment._ItemLeft1) : (index == 0 ? _Equipment._ItemRight0 : _Equipment._ItemRight1));
     return _available_points + currentEquipValue - EquippableManager.GetItemValue(item) >= 0;
   }
-  public bool CanEquipUtility(ActiveRagdoll.Side side, UtilityType utility)
+  public bool CanEquipUtility(Side side, UtilityType utility)
   {
-    var currentUtilities = side == ActiveRagdoll.Side.LEFT ? _Equipment._UtilitiesLeft : _Equipment._UtilitiesRight;
+    var currentUtilities = side == Side.LEFT ? _Equipment._UtilitiesLeft : _Equipment._UtilitiesRight;
     var currentEquipValue = 0;
     // Check if adding a new utility or adding additional
     if (currentUtilities.Length > 0 && utility != currentUtilities[0])

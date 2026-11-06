@@ -15,6 +15,7 @@ using Valve.VR;
 using SneakyGame.Ragdoll.Equippables;
 using SneakyEngine.Equippable.Item;
 using SneakyEngine.Utility;
+using SneakyEngine.Ragdoll;
 
 namespace SneakyGame.UI.Menus
 {
@@ -4310,7 +4311,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
                     (item_selected != ItemType.NONE))
                     )
                     CurrentLoadout()._Equipment._ItemRight0 = ItemType.NONE;
-                  if (CurrentLoadout().CanEquipItem(ActiveRagdoll.Side.LEFT, 0, item_selected))
+                  if (CurrentLoadout().CanEquipItem(Side.LEFT, 0, item_selected))
                   {
                     CurrentLoadout()._Equipment._ItemLeft0 = item_selected;
                     SendInput(Input.BACK);
@@ -4415,7 +4416,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
                     (item_selected != ItemType.NONE))
                     )
                     CurrentLoadout()._Equipment._ItemLeft0 = ItemType.NONE;
-                  if (CurrentLoadout().CanEquipItem(ActiveRagdoll.Side.RIGHT, 0, item_selected))
+                  if (CurrentLoadout().CanEquipItem(Side.RIGHT, 0, item_selected))
                   {
                     CurrentLoadout()._Equipment._ItemRight0 = item_selected;
                     SendInput(Input.BACK);
@@ -4516,7 +4517,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
                       (item_selected != ItemType.NONE))
                       )
                       CurrentLoadout()._Equipment._ItemRight1 = ItemType.NONE;
-                    if (CurrentLoadout().CanEquipItem(ActiveRagdoll.Side.LEFT, 1, item_selected))
+                    if (CurrentLoadout().CanEquipItem(Side.LEFT, 1, item_selected))
                     {
                       CurrentLoadout()._Equipment._ItemLeft1 = item_selected;
                       SendInput(Input.BACK);
@@ -4615,7 +4616,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
                       )
                       CurrentLoadout()._Equipment._ItemLeft1 = ItemType.NONE;
 
-                    if (CurrentLoadout().CanEquipItem(ActiveRagdoll.Side.RIGHT, 1, item_selected))
+                    if (CurrentLoadout().CanEquipItem(Side.RIGHT, 1, item_selected))
                     {
                       CurrentLoadout()._Equipment._ItemRight1 = item_selected;
                       SendInput(Input.BACK);
@@ -4719,7 +4720,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
 
                   if (utility_selected == UtilityType.NONE)
                     CurrentLoadout()._Equipment._UtilitiesLeft = new UtilityType[0];
-                  else if (CurrentLoadout().CanEquipUtility(ActiveRagdoll.Side.LEFT, utility_selected))
+                  else if (CurrentLoadout().CanEquipUtility(Side.LEFT, utility_selected))
                   {
                     // Check if different
                     if (CurrentLoadout()._Equipment._UtilitiesLeft.Length == 0 || utility_selected != CurrentLoadout()._Equipment._UtilitiesLeft[0])
@@ -4821,7 +4822,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
                   var utility_selected = (UtilityType)System.Enum.Parse(typeof(UtilityType), component0.GetDisplayText(false).Trim().Split(' ')[2].Split('>')[2]);
                   if (utility_selected == UtilityType.NONE)
                     CurrentLoadout()._Equipment._UtilitiesRight = new UtilityType[0];
-                  else if (CurrentLoadout().CanEquipUtility(ActiveRagdoll.Side.RIGHT, utility_selected))
+                  else if (CurrentLoadout().CanEquipUtility(Side.RIGHT, utility_selected))
                   {
                     // Check if different
                     if (CurrentLoadout()._Equipment._UtilitiesRight.Length == 0 || utility_selected != CurrentLoadout()._Equipment._UtilitiesRight[0])

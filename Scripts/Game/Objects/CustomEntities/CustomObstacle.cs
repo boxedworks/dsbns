@@ -7,6 +7,7 @@ using SneakyGame.Game.Survival;
 using SneakyGame.Game.Player;
 using UnityEngine;
 using SneakyEngine.Equippable.Item;
+using SneakyEngine.Ragdoll;
 
 namespace SneakyGame.Objects.CustomEntities
 {
@@ -442,7 +443,7 @@ namespace SneakyGame.Objects.CustomEntities
           var item_info = _weapon_info;
           var item_type = item_info.Item1;
 
-          var equip_side = ActiveRagdoll.Side.RIGHT;
+          var equip_side = Side.RIGHT;
 
           var hasAkimbo = Perk.HasPerk(p._Id, Perk.PerkType.AKIMBO);
 
@@ -481,11 +482,11 @@ namespace SneakyGame.Objects.CustomEntities
                   var equip_info2 = CheckEquip(p, current_item, InteractSide.DEFAULT, hasAkimbo, 1);
                   var equip_side2 = equip_info2.Item2;
 
-                  var current_item2 = equip_side2 == ActiveRagdoll.Side.LEFT ? p._Profile._ItemLeft_Other : p._Profile._ItemRight_Other;
+                  var current_item2 = equip_side2 == Side.LEFT ? p._Profile._ItemLeft_Other : p._Profile._ItemRight_Other;
                   if (current_item2 == ItemType.NONE)
                     if (equip_info2.Item1)
                     {
-                      if (equip_side2 == ActiveRagdoll.Side.LEFT)
+                      if (equip_side2 == Side.LEFT)
                         p._Profile._ItemLeft_Other = current_item;
                       else
                         p._Profile._ItemRight_Other = current_item;
@@ -496,18 +497,18 @@ namespace SneakyGame.Objects.CustomEntities
           }
           else
           {
-            var current_item = equip_side == ActiveRagdoll.Side.LEFT ? p._Profile._ItemLeft : p._Profile._ItemRight;
+            var current_item = equip_side == Side.LEFT ? p._Profile._ItemLeft : p._Profile._ItemRight;
             if (current_item != ItemType.NONE)
             {
               // Try to equip in other slots
               var equip_info2 = CheckEquip(p, current_item, InteractSide.DEFAULT, hasAkimbo, 1);
               var equip_side2 = equip_info2.Item2;
 
-              var current_item2 = equip_side2 == ActiveRagdoll.Side.LEFT ? p._Profile._ItemLeft_Other : p._Profile._ItemRight_Other;
+              var current_item2 = equip_side2 == Side.LEFT ? p._Profile._ItemLeft_Other : p._Profile._ItemRight_Other;
               if (current_item2 == ItemType.NONE)
                 if (equip_info2.Item1)
                 {
-                  if (equip_side2 == ActiveRagdoll.Side.LEFT)
+                  if (equip_side2 == Side.LEFT)
                     p._Profile._ItemLeft_Other = current_item;
                   else
                     p._Profile._ItemRight_Other = current_item;
@@ -521,7 +522,7 @@ namespace SneakyGame.Objects.CustomEntities
             p._Profile._ItemRight = ItemType.NONE;
 
           // Update UI
-          if (equip_side == ActiveRagdoll.Side.LEFT)
+          if (equip_side == Side.LEFT)
             p._Profile._ItemLeft = item_type;
           else
             p._Profile._ItemRight = item_type;
@@ -539,8 +540,8 @@ namespace SneakyGame.Objects.CustomEntities
         {
           var utility_type = _utility_info.Item1;
           var purchase_amount = _utility_info.Item3;
-          var equip_side = side == InteractSide.LEFT ? ActiveRagdoll.Side.LEFT : ActiveRagdoll.Side.RIGHT;
-          if (side == InteractSide.DEFAULT) equip_side = ActiveRagdoll.Side.RIGHT;
+          var equip_side = side == InteractSide.LEFT ? Side.LEFT : Side.RIGHT;
+          if (side == InteractSide.DEFAULT) equip_side = Side.RIGHT;
 
           // Check utility side
           var equipment = p._Profile._Equipment;
@@ -555,7 +556,7 @@ namespace SneakyGame.Objects.CustomEntities
               {
                 if (equipment._UtilitiesLeft.Length == 0)
                 {
-                  equip_side = ActiveRagdoll.Side.LEFT;
+                  equip_side = Side.LEFT;
                 }
                 else if (equipment._UtilitiesLeft.Length > 0 && equipment._UtilitiesLeft[0] == utility_type)
                 {
@@ -565,7 +566,7 @@ namespace SneakyGame.Objects.CustomEntities
                     p._Ragdoll.DisplayText(LocalizationController.GetString("customObstacle_tooMany"));
                     return;
                   }
-                  equip_side = ActiveRagdoll.Side.LEFT;
+                  equip_side = Side.LEFT;
                   add = true;
                 }
                 else
@@ -586,7 +587,7 @@ namespace SneakyGame.Objects.CustomEntities
               {
                 if (equipment._UtilitiesRight.Length == 0)
                 {
-                  equip_side = ActiveRagdoll.Side.RIGHT;
+                  equip_side = Side.RIGHT;
                 }
                 else if (equipment._UtilitiesRight.Length > 0 && equipment._UtilitiesRight[0] == utility_type)
                 {
@@ -596,7 +597,7 @@ namespace SneakyGame.Objects.CustomEntities
                     p._Ragdoll.DisplayText(LocalizationController.GetString("customObstacle_tooMany"));
                     return;
                   }
-                  equip_side = ActiveRagdoll.Side.RIGHT;
+                  equip_side = Side.RIGHT;
                   add = true;
                 }
                 else
@@ -607,12 +608,12 @@ namespace SneakyGame.Objects.CustomEntities
               }
               else
               {
-                equip_side = ActiveRagdoll.Side.LEFT;
+                equip_side = Side.LEFT;
                 add = true;
               }
             }
           }
-          else if (equip_side == ActiveRagdoll.Side.LEFT)
+          else if (equip_side == Side.LEFT)
           {
             if (equipment._UtilitiesLeft.Length == 0) { }
             else if (equipment._UtilitiesLeft.Length > 0 && equipment._UtilitiesLeft[0] == utility_type)
@@ -627,11 +628,11 @@ namespace SneakyGame.Objects.CustomEntities
               // Mark to add
               add = true;
             }
-            else if (equipment._UtilitiesRight.Length == 0) { equip_side = ActiveRagdoll.Side.RIGHT; }
+            else if (equipment._UtilitiesRight.Length == 0) { equip_side = Side.RIGHT; }
             else if (equipment._UtilitiesLeft.Length > 0) { }
             else return;
           }
-          else if (equip_side == ActiveRagdoll.Side.RIGHT)
+          else if (equip_side == Side.RIGHT)
           {
             if (equipment._UtilitiesRight.Length == 0) { }
             else if (equipment._UtilitiesRight.Length > 0 && equipment._UtilitiesRight[0] == utility_type)
@@ -646,19 +647,19 @@ namespace SneakyGame.Objects.CustomEntities
               // Mark to add
               add = true;
             }
-            else if (equipment._UtilitiesLeft.Length == 0) { equip_side = ActiveRagdoll.Side.RIGHT; }
+            else if (equipment._UtilitiesLeft.Length == 0) { equip_side = Side.RIGHT; }
             else if (equipment._UtilitiesRight.Length > 0) { }
             else return;
           }
 
           // Check if replacing utility
-          var utilities = equip_side == ActiveRagdoll.Side.LEFT ? equipment._UtilitiesLeft : equipment._UtilitiesRight;
+          var utilities = equip_side == Side.LEFT ? equipment._UtilitiesLeft : equipment._UtilitiesRight;
 
           // Equip; add vs overwrite
           var add_amount = _purchaseAmount;
           var saveamount = add ? p.UtilityCount(equip_side) + add_amount : -1;
           var new_amount = add ? utilities.Length + add_amount : add_amount;
-          if (equip_side == ActiveRagdoll.Side.LEFT)
+          if (equip_side == Side.LEFT)
           {
             equipment._UtilitiesLeft = new UtilityType[new_amount];
             for (var i = 0; i < equipment._UtilitiesLeft.Length; i++)
@@ -741,10 +742,10 @@ namespace SneakyGame.Objects.CustomEntities
     }
 
     //
-    System.Tuple<bool, ActiveRagdoll.Side, string> CheckEquip(PlayerScript p, ItemType item_type, InteractSide side, bool akimbo, int equipmentIndex)
+    System.Tuple<bool, Side, string> CheckEquip(PlayerScript p, ItemType item_type, InteractSide side, bool akimbo, int equipmentIndex)
     {
-      var equip_side = ActiveRagdoll.Side.RIGHT;
-      if (side == InteractSide.LEFT) equip_side = ActiveRagdoll.Side.LEFT;
+      var equip_side = Side.RIGHT;
+      if (side == InteractSide.LEFT) equip_side = Side.LEFT;
 
       var item_type_l = equipmentIndex == 0 ? p._Profile._ItemLeft : p._Profile._ItemLeft_Other;
       var item_type_r = equipmentIndex == 0 ? p._Profile._ItemRight : p._Profile._ItemRight_Other;
@@ -754,8 +755,8 @@ namespace SneakyGame.Objects.CustomEntities
 
       var has_actual_two_handed = (item_type_l != ItemType.NONE && ShopHelper.IsActuallyTwoHanded(item_type_l)) ||
         (item_type_r != ItemType.NONE && ShopHelper.IsActuallyTwoHanded(item_type_r));
-      var actual_two_handed_side = item_type_l != ItemType.NONE ? ActiveRagdoll.Side.LEFT : ActiveRagdoll.Side.RIGHT;
-      var actual_two_handed_type = actual_two_handed_side == ActiveRagdoll.Side.LEFT ? item_type_l : item_type_r;
+      var actual_two_handed_side = item_type_l != ItemType.NONE ? Side.LEFT : Side.RIGHT;
+      var actual_two_handed_type = actual_two_handed_side == Side.LEFT ? item_type_l : item_type_r;
 
       // Ragdoll text
       var text = "";
@@ -776,7 +777,7 @@ namespace SneakyGame.Objects.CustomEntities
           if (actual_two_handed_type == item_type)
             return System.Tuple.Create(false, equip_side, text_haveAlready);
           else
-            return System.Tuple.Create(true, ActiveRagdoll.Side.LEFT, "BOTH");
+            return System.Tuple.Create(true, Side.LEFT, "BOTH");
         else if (has_item_r && has_item_l)
         {
           if (ShopHelper.IsTwoHanded(item_type_r) && ShopHelper.IsTwoHanded(item_type))
@@ -786,7 +787,7 @@ namespace SneakyGame.Objects.CustomEntities
               if (item_type_l != item_type)
               {
                 if (akimbo)
-                  return System.Tuple.Create(true, ActiveRagdoll.Side.LEFT, text);
+                  return System.Tuple.Create(true, Side.LEFT, text);
                 else
                   text = text_needAkimbo;
               }
@@ -795,7 +796,7 @@ namespace SneakyGame.Objects.CustomEntities
               return System.Tuple.Create(false, equip_side, text);
             }
             else if (akimbo && !ShopHelper.IsTwoHanded(item_type_l))
-              equip_side = ActiveRagdoll.Side.LEFT;
+              equip_side = Side.LEFT;
           }
           else if (ShopHelper.IsTwoHanded(item_type_l) && ShopHelper.IsTwoHanded(item_type))
           {
@@ -804,7 +805,7 @@ namespace SneakyGame.Objects.CustomEntities
               if (item_type_r != item_type)
               {
                 if (akimbo)
-                  return System.Tuple.Create(true, ActiveRagdoll.Side.RIGHT, text);
+                  return System.Tuple.Create(true, Side.RIGHT, text);
                 else
                   text = text_needAkimbo;
               }
@@ -813,8 +814,8 @@ namespace SneakyGame.Objects.CustomEntities
               return System.Tuple.Create(false, equip_side, text);
             }
             else if (akimbo && !ShopHelper.IsTwoHanded(item_type_r))
-              return System.Tuple.Create(false, ActiveRagdoll.Side.RIGHT, text);
-            equip_side = ActiveRagdoll.Side.LEFT;
+              return System.Tuple.Create(false, Side.RIGHT, text);
+            equip_side = Side.LEFT;
           }
           else if (item_type_r == item_type)
           {
@@ -824,7 +825,7 @@ namespace SneakyGame.Objects.CustomEntities
               return System.Tuple.Create(false, equip_side, text);
             }
             else
-              equip_side = ActiveRagdoll.Side.LEFT;
+              equip_side = Side.LEFT;
           }
         }
         else if (has_item_r && !has_item_l)
@@ -832,19 +833,19 @@ namespace SneakyGame.Objects.CustomEntities
           if (ShopHelper.IsTwoHanded(item_type_r) && ShopHelper.IsTwoHanded(item_type))
           {
             if (akimbo)
-              return System.Tuple.Create(true, ActiveRagdoll.Side.LEFT, text);
+              return System.Tuple.Create(true, Side.LEFT, text);
             else
             {
               if (item_type == item_type_r)
               {
                 text = text_haveAlready;
-                return System.Tuple.Create(false, ActiveRagdoll.Side.RIGHT, text);
+                return System.Tuple.Create(false, Side.RIGHT, text);
               }
-              return System.Tuple.Create(true, ActiveRagdoll.Side.RIGHT, text);
+              return System.Tuple.Create(true, Side.RIGHT, text);
             }
           }
           else
-            equip_side = ActiveRagdoll.Side.LEFT;
+            equip_side = Side.LEFT;
         }
         else if (!has_item_r && has_item_l)
         {
@@ -852,15 +853,15 @@ namespace SneakyGame.Objects.CustomEntities
           {
             if (item_type_l == item_type)
               if (akimbo)
-                return System.Tuple.Create(true, ActiveRagdoll.Side.RIGHT, text);
+                return System.Tuple.Create(true, Side.RIGHT, text);
               else
               {
                 if (item_type == item_type_l)
                 {
                   text = text_haveAlready;
-                  return System.Tuple.Create(false, ActiveRagdoll.Side.LEFT, text);
+                  return System.Tuple.Create(false, Side.LEFT, text);
                 }
-                return System.Tuple.Create(true, ActiveRagdoll.Side.LEFT, text);
+                return System.Tuple.Create(true, Side.LEFT, text);
               }
           }
         }
@@ -880,13 +881,13 @@ namespace SneakyGame.Objects.CustomEntities
           if (actual_two_handed_type == item_type)
             return System.Tuple.Create(false, equip_side, text_haveAlready);
           else
-            return System.Tuple.Create(true, ActiveRagdoll.Side.LEFT, "BOTH");
+            return System.Tuple.Create(true, Side.LEFT, "BOTH");
         else if (has_item_l && !has_item_r)
         {
           if (item_type_l == item_type)
           {
             text = text_haveAlready;
-            return System.Tuple.Create(false, ActiveRagdoll.Side.LEFT, text);
+            return System.Tuple.Create(false, Side.LEFT, text);
           }
         }
         else if (has_item_l && has_item_r)
@@ -902,7 +903,7 @@ namespace SneakyGame.Objects.CustomEntities
           else if (ShopHelper.IsTwoHanded(item_type_r) && ShopHelper.IsTwoHanded(item_type))
           {
             if (akimbo)
-              return System.Tuple.Create(true, ActiveRagdoll.Side.LEFT, text);
+              return System.Tuple.Create(true, Side.LEFT, text);
             else
             {
               text = text_needAkimbo;
@@ -922,7 +923,7 @@ namespace SneakyGame.Objects.CustomEntities
             if (ShopHelper.IsTwoHanded(item_type_r))
             {
               if (akimbo)
-                return System.Tuple.Create(true, ActiveRagdoll.Side.LEFT, text);
+                return System.Tuple.Create(true, Side.LEFT, text);
               else
               {
                 text = text_needAkimbo;
@@ -946,13 +947,13 @@ namespace SneakyGame.Objects.CustomEntities
           if (actual_two_handed_type == item_type)
             return System.Tuple.Create(false, equip_side, text_haveAlready);
           else
-            return System.Tuple.Create(true, ActiveRagdoll.Side.LEFT, "BOTH");
+            return System.Tuple.Create(true, Side.LEFT, "BOTH");
         else if (has_item_r && !has_item_l)
         {
           if (item_type_r == item_type)
           {
             text = text_haveAlready;
-            return System.Tuple.Create(false, ActiveRagdoll.Side.RIGHT, text);
+            return System.Tuple.Create(false, Side.RIGHT, text);
           }
         }
         else if (has_item_r && has_item_l)
@@ -968,7 +969,7 @@ namespace SneakyGame.Objects.CustomEntities
           else if (ShopHelper.IsTwoHanded(item_type_l) && ShopHelper.IsTwoHanded(item_type))
           {
             if (akimbo)
-              return System.Tuple.Create(true, ActiveRagdoll.Side.RIGHT, text);
+              return System.Tuple.Create(true, Side.RIGHT, text);
             else
             {
               text = text_needAkimbo;
@@ -988,7 +989,7 @@ namespace SneakyGame.Objects.CustomEntities
             if (ShopHelper.IsTwoHanded(item_type_l))
             {
               if (akimbo)
-                return System.Tuple.Create(true, ActiveRagdoll.Side.RIGHT, text);
+                return System.Tuple.Create(true, Side.RIGHT, text);
               else
               {
                 text = text_needAkimbo;

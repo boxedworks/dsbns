@@ -1,10 +1,14 @@
 
 
+using SneakyEngine.Engine;
+
 namespace SneakyEngine.Effects
 {
 
   public class VfxSystem
   {
+
+    public static VfxSystem Singleton => SneakyEngineSystem.VfxSystem;
 
     // Blood / blood smoke toggles
     bool _useBlood, _useBloodSmoke;

@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using SneakyEngine.Equippable.Item;
+using SneakyEngine.Ragdoll;
 using SneakyGame.Enemy;
 using SneakyGame.Objects.CustomEntities;
 using SneakyGame.Ragdoll;
@@ -120,12 +121,12 @@ namespace SneakyGame.Objects
       switch (_type)
       {
         case PowerupType.SILENCED_PISTOL:
-          r.EquipItem(ItemType.PISTOL_SILENCED, ActiveRagdoll.Side.RIGHT);
+          r.EquipItem(ItemType.PISTOL_SILENCED, Side.RIGHT);
           r.PlaySound("Ragdoll/Reload", 0.9f, 1.1f);
           break;
 
         case PowerupType.KNIFE:
-          r.EquipItem(ItemType.KNIFE, ActiveRagdoll.Side.LEFT);
+          r.EquipItem(ItemType.KNIFE, Side.LEFT);
           r.PlaySound("Ragdoll/Slice", 0.9f, 1.1f);
           break;
 
@@ -133,7 +134,7 @@ namespace SneakyGame.Objects
           remove = false;
           if (r._IsPlayer && !GameScript.s_Singleton._ExitOpen)
           {
-            SfxManager.PlayAudioSourceSimple(r._Controller.position, "Etc/Ping");
+            SfxManager.PlayAudioSourceSimple(r.Controller.position, "Etc/Ping");
 
             /*if (EnemyScript.AllDead())
             {
@@ -201,7 +202,7 @@ namespace SneakyGame.Objects
 
       if (_activated)
       {
-        if (_activator == null || _activator._IsDead || _activator._Hip == null)
+        if (_activator == null || _activator._IsDead || _activator.Hip == null)
         {
           Destroy(gameObject);
           return;
@@ -226,7 +227,7 @@ namespace SneakyGame.Objects
         {
           //Vector3 newPos = MathC.Get2DVector(_icon.transform.position - GameObject.Find("EndLight").transform.position);
           //if (newPos.magnitude > 1f) newPos.Normalize();
-          _rb.MovePosition(_rb.position + 4f * Time.deltaTime * (_activator._Controller.transform.position - _activator._Hip.transform.forward + new Vector3(0f, 1f, 0f) - _rb.position));
+          _rb.MovePosition(_rb.position + 4f * Time.deltaTime * (_activator.Controller.transform.position - _activator.Hip.transform.forward + new Vector3(0f, 1f, 0f) - _rb.position));
         }
 
       }

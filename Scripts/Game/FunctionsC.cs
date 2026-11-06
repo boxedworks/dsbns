@@ -104,7 +104,7 @@ public static class FunctionsC
     foreach (var p in PlayerScript.s_Players)
     {
       if (p._Ragdoll._IsDead) continue;
-      var dist = MathC.Get2DDistance(p._Ragdoll._Hip.position, pos);
+      var dist = MathC.Get2DDistance(p._Ragdoll.Hip.position, pos);
       if (dist > info._distance)
       {
         info._distance = dist;
@@ -126,11 +126,11 @@ public static class FunctionsC
     };
     foreach (var ragdollHolder in ofRagdolls)
     {
-      if (ragdollHolder._Ragdoll._Id == (sourceRagdoll?._Id ?? -1) || ragdollHolder._Ragdoll._IsDead || ragdollHolder._Ragdoll._Hip == null) continue;
+      if (ragdollHolder._Ragdoll.Id == (sourceRagdoll?.Id ?? -1) || ragdollHolder._Ragdoll._IsDead || ragdollHolder._Ragdoll.Hip == null) continue;
       if (!include_chaser && ragdollHolder._Ragdoll._IsEnemy && ragdollHolder._Ragdoll._EnemyScript.IsChaser()) continue;
       if (!include_graplee && sourceRagdoll != null && ragdollHolder._Ragdoll.IsGrappledBy(sourceRagdoll)) continue;
 
-      var dist = MathC.Get2DDistance(ragdollHolder._Ragdoll._Hip.position, atPos);
+      var dist = MathC.Get2DDistance(ragdollHolder._Ragdoll.Hip.position, atPos);
       if (dist < info._distance)
       {
         info._distance = dist;
@@ -150,7 +150,7 @@ public static class FunctionsC
     foreach (var enemy in enemiesAlive)
     {
       if (enemy.IsChaser() && !include_chaser) { continue; }
-      var dist = MathC.Get2DDistance(enemy._Ragdoll._Hip.position, pos);
+      var dist = MathC.Get2DDistance(enemy._Ragdoll.Hip.position, pos);
 
       info._distance = dist;
       info._ragdoll = enemy._Ragdoll;
@@ -505,10 +505,10 @@ public static class FunctionsC
     foreach (var r in ActiveRagdoll.s_Ragdolls)
     {
       // Sanitize
-      if (r._Hip == null) continue;
+      if (r.Hip == null) continue;
 
       // Check radius
-      if (MathC.Get2DDistance(position, r._Hip.position) > radius) continue;
+      if (MathC.Get2DDistance(position, r.Hip.position) > radius) continue;
       returnList.Add(r);
     }
     return returnList.ToArray();
@@ -544,7 +544,7 @@ public static class FunctionsC
     foreach (var ragdoll in ragdolls)
     {
 
-      var explosionDist = MathC.Get2DDistance(posAt, ragdoll._Hip.position);
+      var explosionDist = MathC.Get2DDistance(posAt, ragdoll.Hip.position);
 
       // Force backward
       if (!isStunExplosion)
@@ -556,7 +556,7 @@ public static class FunctionsC
         }
 
         // Check for perk
-        if (ragdoll._IsPlayer && ragdoll._Id == explosionSource._Id && ragdoll._PlayerScript.HasPerk(Perk.PerkType.EXPLOSION_RESISTANCE)) continue;
+        if (ragdoll._IsPlayer && ragdoll.Id == explosionSource.Id && ragdoll._PlayerScript.HasPerk(Perk.PerkType.EXPLOSION_RESISTANCE)) continue;
       }
 
       // Check dist
@@ -567,7 +567,7 @@ public static class FunctionsC
       {
         ragdoll.ToggleRaycasting(true, false, true);
         var raycastHit = new RaycastHit();
-        var dir = -(ragdoll._IsDead ? posOrigin - ragdoll._Hip.position : MathC.Get2DVector(posOrigin - ragdoll._Hip.position)).normalized;
+        var dir = -(ragdoll._IsDead ? posOrigin - ragdoll.Hip.position : MathC.Get2DVector(posOrigin - ragdoll.Hip.position)).normalized;
         if (!Physics.SphereCast(new Ray(posOrigin, dir), 0.05f, out raycastHit, explosionRadius + 5f, GameResources._Layermask_Ragdoll))
         {
           ragdoll.ToggleRaycasting(false, false, true);
@@ -615,7 +615,7 @@ public static class FunctionsC
           if (explosionType == ExplosiveScript.ExplosionType.UPWARD) explosionForce = new Vector3(0f, 50f, 0f);
           else if (explosionType == ExplosiveScript.ExplosionType.AWAY)
           {
-            var dirAway = -(posAt - ragdoll._Hip.position).normalized;
+            var dirAway = -(posAt - ragdoll.Hip.position).normalized;
             dirAway.y = 0.2f;
             explosionForce = dirAway * 40f;
           }
@@ -1299,10 +1299,10 @@ public static class FunctionsC
           var ragdoll = ragdolls[s_u];
 
           // Check distance in AOE
-          if (ragdoll._IsDead || ragdoll._Hip == null) { }
+          if (ragdoll._IsDead || ragdoll.Hip == null) { }
           else
           {
-            var hipPosition = ragdoll._Hip.position;
+            var hipPosition = ragdoll.Hip.position;
             if (MathC.Get2DDistance(hipPosition, aoe.Position) <= aoe.Radius)
             {
 

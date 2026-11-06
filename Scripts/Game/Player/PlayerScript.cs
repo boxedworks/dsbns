@@ -27,6 +27,7 @@ using SneakyEngine.Equippable.Item;
 using SneakyEngine.Equippable.Utility;
 using SneakyEngine.Utility;
 using SneakyGame.Enemy;
+using SneakyEngine.Ragdoll;
 
 namespace SneakyGame.Game.Player
 {
@@ -131,7 +132,7 @@ namespace SneakyGame.Game.Player
     public static Material[] s_Materials_Ring;
 
     static float s_autoUseRate;
-    static ActiveRagdoll.Side s_autoSide;
+    static Side s_autoSide;
 
     // Last time whistled
     public float _LastWhistle;
@@ -143,14 +144,14 @@ namespace SneakyGame.Game.Player
 
     //
     public PlayerScript _ConnectedTwin;
-    ActiveRagdoll.Side _connectedTwinSide;
+    Side _connectedTwinSide;
 
     public bool _IsOriginalTwin;
     public bool _IsPlayer1 { get { return _Id == 0 && _IsOriginal; } }
     public bool _IsOriginal { get { return !_HasTwin || _IsOriginalTwin; } }
     public bool _HasTwin { get { return _ConnectedTwin != null; } }
-    bool _isLeftTwin { get { return !_HasTwin || _connectedTwinSide == ActiveRagdoll.Side.LEFT; } }
-    bool _isRightTwin { get { return !_HasTwin || _connectedTwinSide == ActiveRagdoll.Side.RIGHT; } }
+    bool _isLeftTwin { get { return !_HasTwin || _connectedTwinSide == Side.LEFT; } }
+    bool _isRightTwin { get { return !_HasTwin || _connectedTwinSide == Side.RIGHT; } }
 
     bool _canGameOver => !GameScript.s_IsPartyGameMode && !GameScript.s_IsIncrementalGameMode;
 
@@ -201,7 +202,7 @@ namespace SneakyGame.Game.Player
       if (_HasTwin)
       {
         _Id = _ConnectedTwin._Id;
-        _connectedTwinSide = ActiveRagdoll.Side.RIGHT;
+        _connectedTwinSide = Side.RIGHT;
       }
       else
       {
@@ -270,18 +271,18 @@ namespace SneakyGame.Game.Player
 
       // Equip start items
       if (_itemLeft != ItemType.NONE)
-        _ragdoll.EquipItem(_itemLeft, ActiveRagdoll.Side.LEFT);
+        _ragdoll.EquipItem(_itemLeft, Side.LEFT);
       else
       {
-        _ragdoll.AddArmJoint(ActiveRagdoll.Side.LEFT);
-        _ragdoll.UnequipItem(ActiveRagdoll.Side.LEFT);
+        _ragdoll.Rig.AddArmJoints(Side.LEFT);
+        _ragdoll.UnequipItem(Side.LEFT);
       }
       if (_itemRight != ItemType.NONE)
-        _ragdoll.EquipItem(_itemRight, ActiveRagdoll.Side.RIGHT);
+        _ragdoll.EquipItem(_itemRight, Side.RIGHT);
       else if (_ragdoll._ItemL == null || !_ragdoll._ItemL._twoHanded)
       {
-        _ragdoll.AddArmJoint(ActiveRagdoll.Side.RIGHT);
-        _ragdoll.UnequipItem(ActiveRagdoll.Side.RIGHT);
+        _ragdoll.Rig.AddArmJoints(Side.RIGHT);
+        _ragdoll.UnequipItem(Side.RIGHT);
       }
       _saveLoadoutIndex = _Profile._LoadoutIndex;
 
@@ -377,12 +378,12 @@ namespace SneakyGame.Game.Player
     {
       // Register utilities
       if (_isLeftTwin)
-        RegisterUtility(ActiveRagdoll.Side.LEFT);
+        RegisterUtility(Side.LEFT);
       if (_isRightTwin)
-        RegisterUtility(ActiveRagdoll.Side.RIGHT);
+        RegisterUtility(Side.RIGHT);
     }
 
-    public void RegisterUtility(ActiveRagdoll.Side side, int amount = -1)
+    public void RegisterUtility(Side side, int amount = -1)
     {
       // Check extra
       if (SettingsHelper._Extras_CanUse)
@@ -401,7 +402,7 @@ namespace SneakyGame.Game.Player
 
       // Equip
       var max = amount == -1 ? 100 : amount;
-      if (side == ActiveRagdoll.Side.LEFT)
+      if (side == Side.LEFT)
       {
         _UtilitiesLeft = new();
         foreach (var utility in _Equipment._UtilitiesLeft)
@@ -422,22 +423,22 @@ namespace SneakyGame.Game.Player
       }
     }
 
-    public void AddUtility(UtilityType utility, ActiveRagdoll.Side side)
+    public void AddUtility(UtilityType utility, Side side)
     {
       var util = UtilityScript.GetUtility(utility);
       util.SetSide(side);
-      (side == ActiveRagdoll.Side.LEFT ? _UtilitiesLeft : _UtilitiesRight).Add(util);
+      (side == Side.LEFT ? _UtilitiesLeft : _UtilitiesRight).Add(util);
       util.RegisterUtility(_ragdoll);
     }
 
     // Remove utility
-    public void NextUtility(ActiveRagdoll.Side side)
+    public void NextUtility(Side side)
     {
-      var utilities = side == ActiveRagdoll.Side.LEFT ? _UtilitiesLeft : _UtilitiesRight;
+      var utilities = side == Side.LEFT ? _UtilitiesLeft : _UtilitiesRight;
       if (utilities.Count == 0) return;
       utilities.RemoveAt(0);
     }
-    public void NextUtility(ActiveRagdoll.Side side, UtilityScript utility)
+    public void NextUtility(Side side, UtilityScript utility)
     {
       if (IsUtility(side, utility))
       {
@@ -445,7 +446,7 @@ namespace SneakyGame.Game.Player
       }
       else
       {
-        var otherside = side == ActiveRagdoll.Side.LEFT ? ActiveRagdoll.Side.RIGHT : ActiveRagdoll.Side.LEFT;
+        var otherside = side == Side.LEFT ? Side.RIGHT : Side.LEFT;
         if (IsUtility(otherside, utility))
         {
           NextUtility(otherside);
@@ -454,21 +455,21 @@ namespace SneakyGame.Game.Player
       }
     }
 
-    public bool IsUtility(ActiveRagdoll.Side side, UtilityScript utility)
+    public bool IsUtility(Side side, UtilityScript utility)
     {
-      var utilities = side == ActiveRagdoll.Side.LEFT ? _UtilitiesLeft : _UtilitiesRight;
+      var utilities = side == Side.LEFT ? _UtilitiesLeft : _UtilitiesRight;
       return utilities != null && utilities.Count > 0 &&
         utilities[0] == utility;
     }
 
-    public int UtilityCount(ActiveRagdoll.Side side)
+    public int UtilityCount(Side side)
     {
-      return (side == ActiveRagdoll.Side.LEFT ? _UtilitiesLeft : _UtilitiesRight).Count;
+      return (side == Side.LEFT ? _UtilitiesLeft : _UtilitiesRight).Count;
     }
 
     public void AddLight()
     {
-      var light = _ragdoll._Head.gameObject.AddComponent<Light>();
+      var light = _ragdoll.Rig.Head.gameObject.AddComponent<Light>();
       light.type = LightType.Point;
       light.shadows = LightShadows.Hard;
       light.color = Color.white;// _ragdoll._color;
@@ -550,7 +551,7 @@ namespace SneakyGame.Game.Player
         _IsPlayer1 && !_level_ratings_shown && !TileManager._Level_Complete && !GameScript.s_Paused &&
         (
           (!_TimerStarted && Time.time - GameScript.s_LevelStartTime > 0.75f) ||
-          (_All_Dead && Time.unscaledTime - _ragdoll._time_dead > 0.75f)
+          (_All_Dead && Time.unscaledTime - _ragdoll._time_died > 0.75f)
         )
       )
       {
@@ -598,7 +599,7 @@ namespace SneakyGame.Game.Player
       // Move ring with hip
       if (!_ragdoll._IsDead)
       {
-        var hippos = _ragdoll._Hip.position;
+        var hippos = _ragdoll.Hip.position;
         hippos.y = -1.38f;
         //if (Time.timeScale < 0.9f)
         //{
@@ -618,12 +619,12 @@ namespace SneakyGame.Game.Player
         //}
         //else
         //  _ring[0].transform.parent.position = hippos;
-        var lookpos = _ragdoll._transform_parts._hip.position + _ragdoll._transform_parts._hip.forward * 10f;
+        var lookpos = _ragdoll.Rig.Hip.position + _ragdoll.Rig.Hip.forward * 10f;
         lookpos.y = _ring[0].transform.parent.position.y;
         _ring[0].transform.parent.LookAt(lookpos);
 
         // Check back at spawn
-        var spawnDist = Vector3.Distance(new Vector3(_playerSpawn.transform.position.x, 0f, _playerSpawn.transform.position.z), new Vector3(_ragdoll._Hip.position.x, 0f, _ragdoll._Hip.position.z));
+        var spawnDist = Vector3.Distance(new Vector3(_playerSpawn.transform.position.x, 0f, _playerSpawn.transform.position.z), new Vector3(_ragdoll.Hip.position.x, 0f, _ragdoll.Hip.position.z));
         if (_HasExit)
         {
           if (GameScript._inLevelEnd)
@@ -736,12 +737,12 @@ namespace SneakyGame.Game.Player
 
                     var bulletSourceId = bullet._RagdollID;
                     if (
-                      bulletSourceId == p._ragdoll._Id ||
+                      bulletSourceId == p._ragdoll.Id ||
                       p._ragdoll.IsGrappleRelated(bullet._SourceDamageRagdoll)
                     )
                       continue;
 
-                    if (MathC.Get2DDistance(p._ragdoll._Hip.position, bullet.transform.position) < minDist)
+                    if (MathC.Get2DDistance(p._ragdoll.Hip.position, bullet.transform.position) < minDist)
                     {
                       //_SlowmoTimer = Mathf.Clamp(_SlowmoTimer + 1f, 0f, 2f);
                       desiredTimeScale = slowTime;
@@ -909,8 +910,8 @@ namespace SneakyGame.Game.Player
             foreach (var p in s_Players)
             {
               if (p._ragdoll._IsDead && followAlive) continue;
-              sharedPos += new Vector3(p._ragdoll._Hip.position.x, 0f, p._ragdoll._Hip.position.z);
-              sharedForward += MathC.Get2DVector(p._ragdoll._Hip.transform.forward).normalized * forwardMagnitude;
+              sharedPos += new Vector3(p._ragdoll.Hip.position.x, 0f, p._ragdoll.Hip.position.z);
+              sharedForward += MathC.Get2DVector(p._ragdoll.Hip.transform.forward).normalized * forwardMagnitude;
               if (lastPlayer == null) lastPlayer = p;
               var distance = Vector3.Distance(p.gameObject.transform.position, lastPlayer.gameObject.transform.position);
               //if (distance > biggestDist) biggestDist = distance;
@@ -1013,7 +1014,7 @@ namespace SneakyGame.Game.Player
           (playerScript) =>
           {
             _ConnectedTwin = playerScript;
-            _connectedTwinSide = ActiveRagdoll.Side.LEFT;
+            _connectedTwinSide = Side.LEFT;
           },
           true,
           _PlayerSpawnId);
@@ -1825,7 +1826,7 @@ namespace SneakyGame.Game.Player
           if (!_isLeftTwin) break;
           if (!_ragdoll._ItemL)
           {
-            if (_ragdoll._IsGrappling && _ragdoll._GrappleSide == ActiveRagdoll.Side.LEFT)
+            if (_ragdoll._IsGrappling && _ragdoll._GrappleSide == Side.LEFT)
               HandleAction(PlayerAction.Grapple);
             else
               _ragdoll.UseRightUp();
@@ -1837,7 +1838,7 @@ namespace SneakyGame.Game.Player
           if (!_isRightTwin) break;
           if (!_ragdoll._ItemR)
           {
-            if (_ragdoll._IsGrappling && _ragdoll._GrappleSide == ActiveRagdoll.Side.RIGHT)
+            if (_ragdoll._IsGrappling && _ragdoll._GrappleSide == Side.RIGHT)
               HandleAction(PlayerAction.Grapple);
             else
               _ragdoll.UseLeftUp();
@@ -1905,7 +1906,7 @@ namespace SneakyGame.Game.Player
           {
             _currentInteractable.Interact(this, CustomObstacle.InteractSide.DEFAULT);
           }
-          else if (FlipTable(_ragdoll._Hip.position, transform.forward))
+          else if (FlipTable(_ragdoll.Hip.position, transform.forward))
           {
 #if !DISABLESTEAMWORKS
             Achievements.UnlockAchievement(Achievements.Achievement.TABLE_FLIP);
@@ -1974,7 +1975,7 @@ namespace SneakyGame.Game.Player
               HitForce = Vector3.zero,
 
               Damage = 100,
-              DamageSource = _ragdoll._Hip.position,
+              DamageSource = _ragdoll.Hip.position,
               DamageSourceType = ActiveRagdoll.DamageSourceType.MELEE,
 
               SpawnBlood = false,
@@ -2263,17 +2264,17 @@ namespace SneakyGame.Game.Player
         SurvivalManager.AddMoney(money);
         money.name = $"Credits {amount}";
         money.transform.parent = GameScript.s_Singleton.transform;
-        money.transform.position = _ragdoll._Hip.position + _ragdoll._Hip.transform.forward * 0.2f;
+        money.transform.position = _ragdoll.Hip.position + _ragdoll.Hip.transform.forward * 0.2f;
 
         var collider = money.GetComponent<Collider>();
-        var collider0 = _ragdoll._Hip.GetComponents<Collider>()[1];
+        var collider0 = _ragdoll.Hip.GetComponents<Collider>()[1];
         //_ragdoll.IgnoreCollision(collider);
         Physics.IgnoreCollision(collider, collider0);
         collider.enabled = true;
 
         var rb = money.GetComponent<Rigidbody>();
         rb.isKinematic = false;
-        rb.AddForce(_ragdoll._Hip.transform.forward * 2f, ForceMode.Impulse);
+        rb.AddForce(_ragdoll.Hip.transform.forward * 2f, ForceMode.Impulse);
 
         _ragdoll.PlaySound("Ragdoll/Throw", 0.9f, 1.1f);
 
@@ -2305,7 +2306,7 @@ namespace SneakyGame.Game.Player
     {
       _ragdoll.PlaySound("Ragdoll/Whistle", 0.85f, 1.2f);
 
-      EnemyScript.CheckSound(_ragdoll._Hip.position + _ragdoll._Hip.transform.forward * 3f, _ragdoll._Hip.position, EnemyScript.Loudness.SOFT);
+      EnemyScript.CheckSound(_ragdoll.Hip.position + _ragdoll.Hip.transform.forward * 3f, _ragdoll.Hip.position, EnemyScript.Loudness.SOFT);
       _ragdoll.DisplayText(LocalizationController.GetString("!"));
 
       _LastWhistle = Time.time;
@@ -2325,7 +2326,7 @@ namespace SneakyGame.Game.Player
       foreach (var player in s_Players)
       {
         if (player?._ragdoll._IsDead ?? true) continue;
-        var distance0 = Vector2.Distance(position, new Vector2(player._ragdoll._Controller.position.x, player._ragdoll._Controller.position.z));
+        var distance0 = Vector2.Distance(position, new Vector2(player._ragdoll.Controller.position.x, player._ragdoll.Controller.position.z));
         if (distance0 < distance)
         {
           distance = distance0;
@@ -2440,7 +2441,7 @@ namespace SneakyGame.Game.Player
           _ring[0].sharedMaterial.color = baseColor;
           _ring[0].sharedMaterial.SetColor("_EmissionColor", emissionColor);
           yield return new WaitForSeconds(0.05f);
-          if (this == null || _ragdoll == null || _ragdoll._Hip == null) break;
+          if (this == null || _ragdoll == null || _ragdoll.Hip == null) break;
         }
         _ring?[0].transform.parent.gameObject.SetActive(false);
       }
@@ -2480,7 +2481,7 @@ namespace SneakyGame.Game.Player
           var tutorial_ui0 = tutorial_keyboard ? TutorialInformation._Tutorial_Restart_Keyboard0 : TutorialInformation._Tutorial_Restart_Controller0;
           var tutorial_ui1 = tutorial_keyboard ? TutorialInformation._Tutorial_Restart_Keyboard1 : TutorialInformation._Tutorial_Restart_Controller1;
 
-          while (this != null && _ragdoll != null && _ragdoll._Head != null)
+          while (this != null && _ragdoll != null && _ragdoll.Rig.Head != null)
           {
             yield return new WaitForSecondsRealtime(0.01f);
             // Wait before showing tutorial; wait longer if already seen tutorial
@@ -2652,20 +2653,20 @@ namespace SneakyGame.Game.Player
       _ring = null;
     }
 
-    public System.Tuple<bool, ActiveRagdoll.Side> HasUtility(UtilityType utility)
+    public System.Tuple<bool, Side> HasUtility(UtilityType utility)
     {
       if (_Equipment._UtilitiesLeft != null && _Equipment._UtilitiesLeft.Length > 0 && _Equipment._UtilitiesLeft[0] == utility)
-        return System.Tuple.Create(true, ActiveRagdoll.Side.LEFT);
+        return System.Tuple.Create(true, Side.LEFT);
       if (_Equipment._UtilitiesRight != null && _Equipment._UtilitiesRight.Length > 0 && _Equipment._UtilitiesRight[0] == utility)
-        return System.Tuple.Create(true, ActiveRagdoll.Side.RIGHT);
-      return System.Tuple.Create(false, ActiveRagdoll.Side.LEFT);
+        return System.Tuple.Create(true, Side.RIGHT);
+      return System.Tuple.Create(false, Side.LEFT);
     }
-    public System.Tuple<bool, ActiveRagdoll.Side> HasUtility(UtilityType utility, ActiveRagdoll.Side side)
+    public System.Tuple<bool, Side> HasUtility(UtilityType utility, Side side)
     {
-      if (_Equipment._UtilitiesLeft != null && _Equipment._UtilitiesLeft.Length > 0 && _Equipment._UtilitiesLeft[0] == utility && side == ActiveRagdoll.Side.LEFT)
-        return System.Tuple.Create(true, ActiveRagdoll.Side.LEFT);
-      if (_Equipment._UtilitiesRight != null && _Equipment._UtilitiesRight.Length > 0 && _Equipment._UtilitiesRight[0] == utility && side == ActiveRagdoll.Side.RIGHT)
-        return System.Tuple.Create(true, ActiveRagdoll.Side.RIGHT);
+      if (_Equipment._UtilitiesLeft != null && _Equipment._UtilitiesLeft.Length > 0 && _Equipment._UtilitiesLeft[0] == utility && side == Side.LEFT)
+        return System.Tuple.Create(true, Side.LEFT);
+      if (_Equipment._UtilitiesRight != null && _Equipment._UtilitiesRight.Length > 0 && _Equipment._UtilitiesRight[0] == utility && side == Side.RIGHT)
+        return System.Tuple.Create(true, Side.RIGHT);
       return System.Tuple.Create(false, side);
     }
 

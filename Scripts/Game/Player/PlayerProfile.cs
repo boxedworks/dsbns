@@ -11,6 +11,7 @@ using SneakyGame.Ragdoll.Equippables;
 using UnityEngine;
 using Valve.VR;
 using SneakyEngine.Equippable.Item;
+using SneakyEngine.Ragdoll;
 
 // Assists with controls
 public class PlayerProfile
@@ -638,13 +639,13 @@ public class PlayerProfile
   }
 
   //
-  public void PlayAnimation(Animation.AnimationType type, float duration, bool isItem, ActiveRagdoll.Side side)
+  public void PlayAnimation(Animation.AnimationType type, float duration, bool isItem, Side side)
   {
     int animationIndex;
     if (isItem)
-      animationIndex = side == ActiveRagdoll.Side.LEFT ? 0 : 1;
+      animationIndex = side == Side.LEFT ? 0 : 1;
     else
-      animationIndex = side == ActiveRagdoll.Side.LEFT ? 2 : 3;
+      animationIndex = side == Side.LEFT ? 2 : 3;
 
     var currentAnimation = _itemAnimations[animationIndex];
     if (currentAnimation != null)
@@ -656,13 +657,13 @@ public class PlayerProfile
     };
     _itemAnimations[animationIndex] = newAnimation;
   }
-  public void TryPlayAnimation(Animation.AnimationType type, float duration, bool isItem, ActiveRagdoll.Side side)
+  public void TryPlayAnimation(Animation.AnimationType type, float duration, bool isItem, Side side)
   {
     int animationIndex;
     if (isItem)
-      animationIndex = side == ActiveRagdoll.Side.LEFT ? 0 : 1;
+      animationIndex = side == Side.LEFT ? 0 : 1;
     else
-      animationIndex = side == ActiveRagdoll.Side.LEFT ? 2 : 3;
+      animationIndex = side == Side.LEFT ? 2 : 3;
     var currentAnimation = _itemAnimations[animationIndex];
     if (currentAnimation != null)
     {
@@ -844,7 +845,7 @@ public class PlayerProfile
       Object.Destroy(_ammoUI.gameObject);
     }
 
-    public void Init(EquippableManager.ItemUIInfo data, int index, System.Tuple<PlayerScript, bool, ActiveRagdoll.Side> item_data, bool is_utility)
+    public void Init(EquippableManager.ItemUIInfo data, int index, System.Tuple<PlayerScript, bool, Side> item_data, bool is_utility)
     {
       _base = data._Transform;
       _base.localPosition += new Vector3(_Offset.x, _Offset.y, 0f);
@@ -852,7 +853,7 @@ public class PlayerProfile
       _ammoCount = _ammoVisible = data._ClipSize;
 
       // Spawn ammo border
-      GameResources.s_AmmoSideUi.text = !is_utility ? "" : item_data.Item3 == ActiveRagdoll.Side.LEFT ? "L" : "R";
+      GameResources.s_AmmoSideUi.text = !is_utility ? "" : item_data.Item3 == Side.LEFT ? "L" : "R";
       _ammoUI = Object.Instantiate(GameResources.s_AmmoUi).transform;
       _ammoUI.gameObject.layer = 11;
       _ammoUI.parent = _base.parent;
@@ -873,12 +874,12 @@ public class PlayerProfile
         var side = item_data.Item3;
         if (!isUtility)
         {
-          if (side == ActiveRagdoll.Side.LEFT)
+          if (side == Side.LEFT)
             ammo = player._Ragdoll._ItemL != null ? player._Ragdoll._ItemL.GetClip() : ammo;
           else
             ammo = player._Ragdoll._ItemR != null ? player._Ragdoll._ItemR.GetClip() : ammo;
         }
-        else if (side == ActiveRagdoll.Side.LEFT)
+        else if (side == Side.LEFT)
           ammo = player._UtilitiesLeft != null ? player._UtilitiesLeft.Count : ammo;
         else
         {
@@ -941,53 +942,53 @@ public class PlayerProfile
     }
   }
 
-  ItemIcon GetItemIcon(ActiveRagdoll.Side side)
+  ItemIcon GetItemIcon(Side side)
   {
-    var iconType = side == ActiveRagdoll.Side.LEFT ? IconType.ITEM_LEFT : IconType.ITEM_RIGHT;
+    var iconType = side == Side.LEFT ? IconType.ITEM_LEFT : IconType.ITEM_RIGHT;
     return _itemIcons.TryGetValue(iconType, out var icon) ? icon : null;
   }
-  ItemIcon GetUtilityIcon(ActiveRagdoll.Side side)
+  ItemIcon GetUtilityIcon(Side side)
   {
-    var iconType = side == ActiveRagdoll.Side.LEFT ? IconType.UTILITY_LEFT : IconType.UTILITY_RIGHT;
+    var iconType = side == Side.LEFT ? IconType.UTILITY_LEFT : IconType.UTILITY_RIGHT;
     return _itemIcons.TryGetValue(iconType, out var icon) ? icon : null;
   }
 
-  public void ItemUse(ActiveRagdoll.Side side)
+  public void ItemUse(Side side)
   {
     GetItemIcon(side)?.Clip_Deincrement();
   }
-  public void ItemReload(ActiveRagdoll.Side side, int amount)
+  public void ItemReload(Side side, int amount)
   {
     GetItemIcon(side)?.Clip_Reload(amount);
   }
-  public void ItemSetClip(ActiveRagdoll.Side side, int clip)
+  public void ItemSetClip(Side side, int clip)
   {
     GetItemIcon(side)?.UpdateIconManual(clip);
   }
 
-  public void UtilityUse(ActiveRagdoll.Side side)
+  public void UtilityUse(Side side)
   {
     var utility = GetUtilityIcon(side);
     utility?.Clip_Deincrement();
   }
-  public void UtilityReload(ActiveRagdoll.Side side, int amount)
+  public void UtilityReload(Side side, int amount)
   {
     var utility = GetUtilityIcon(side);
     utility?.Clip_Reload(amount);
   }
 
-  public bool CanUtilityReload(ActiveRagdoll.Side side)
+  public bool CanUtilityReload(Side side)
   {
     var util = GetUtilityIcon(side);
     if (util._ammo.Length == 0) return false;
     return !util._ammo[util._ammo.Length - 1].gameObject.activeSelf;
   }
 
-  public int GetUtilitiesLength(ActiveRagdoll.Side side)
+  public int GetUtilitiesLength(Side side)
   {
     // Check which utilities to check
     var utils = _Equipment._UtilitiesLeft;
-    if (side == ActiveRagdoll.Side.RIGHT)
+    if (side == Side.RIGHT)
       utils = _Equipment._UtilitiesRight;
 
     // Check for no utilities
@@ -1090,8 +1091,8 @@ public class PlayerProfile
     _itemAnimations = new Animation[4];
 
     // Load icons per player equipment
-    var utilLength_left = GetUtilitiesLength(ActiveRagdoll.Side.LEFT);
-    var utilLength_right = GetUtilitiesLength(ActiveRagdoll.Side.RIGHT);
+    var utilLength_left = GetUtilitiesLength(Side.LEFT);
+    var utilLength_right = GetUtilitiesLength(Side.RIGHT);
     var bg = _ui.GetChild(1).transform;
 
     // Check for empty
@@ -1109,35 +1110,35 @@ public class PlayerProfile
     if (_ItemLeft != ItemType.NONE)
     {
       var itemIcon = new ItemIcon();
-      itemIcon.Init(EquippableManager.LoadIcon(_ItemLeft.ToString(), equipmentIter, _Player, _ui), equipmentIter++, System.Tuple.Create(_Player, false, ActiveRagdoll.Side.LEFT), false);
+      itemIcon.Init(EquippableManager.LoadIcon(_ItemLeft.ToString(), equipmentIter, _Player, _ui), equipmentIter++, System.Tuple.Create(_Player, false, Side.LEFT), false);
       _itemIcons.Add(IconType.ITEM_LEFT, itemIcon);
     }
     if (_ItemRight != ItemType.NONE)
     {
       var itemIcon = new ItemIcon();
-      itemIcon.Init(EquippableManager.LoadIcon(_ItemRight.ToString(), equipmentIter, _Player, _ui), equipmentIter++, System.Tuple.Create(_Player, false, ActiveRagdoll.Side.RIGHT), false);
+      itemIcon.Init(EquippableManager.LoadIcon(_ItemRight.ToString(), equipmentIter, _Player, _ui), equipmentIter++, System.Tuple.Create(_Player, false, Side.RIGHT), false);
       _itemIcons.Add(IconType.ITEM_RIGHT, itemIcon);
     }
 
     // Load utilities
-    var utilsLoaded = new List<System.Tuple<EquippableManager.ItemUIInfo, int, ActiveRagdoll.Side>>();
+    var utilsLoaded = new List<System.Tuple<EquippableManager.ItemUIInfo, int, Side>>();
     if (_Equipment._UtilitiesLeft.Length > 0)
     {
       var itemInfo = EquippableManager.LoadIcon(_Equipment._UtilitiesLeft[0].ToString(), equipmentIter, _Player, _ui);
       itemInfo._ClipSize = utilLength_left;
-      utilsLoaded.Add(System.Tuple.Create(itemInfo, equipmentIter++, ActiveRagdoll.Side.LEFT));
+      utilsLoaded.Add(System.Tuple.Create(itemInfo, equipmentIter++, Side.LEFT));
     }
     if (_Equipment._UtilitiesRight.Length > 0)
     {
       var itemInfo = EquippableManager.LoadIcon(_Equipment._UtilitiesRight[0].ToString(), equipmentIter, _Player, _ui);
       itemInfo._ClipSize = utilLength_right;
-      utilsLoaded.Add(System.Tuple.Create(itemInfo, equipmentIter++, ActiveRagdoll.Side.RIGHT));
+      utilsLoaded.Add(System.Tuple.Create(itemInfo, equipmentIter++, Side.RIGHT));
     }
     foreach (var util in utilsLoaded)
     {
       var itemIcon = new ItemIcon();
       itemIcon.Init(util.Item1, util.Item2, System.Tuple.Create(_Player, true, util.Item3), true);
-      _itemIcons.Add(util.Item3 == ActiveRagdoll.Side.LEFT ? IconType.UTILITY_LEFT : IconType.UTILITY_RIGHT, itemIcon);
+      _itemIcons.Add(util.Item3 == Side.LEFT ? IconType.UTILITY_LEFT : IconType.UTILITY_RIGHT, itemIcon);
     }
 
 

@@ -14,6 +14,7 @@ using SneakyEngine.Effects;
 using SneakyEngine.Equippable.Item;
 using SneakyEngine.Utility;
 using SneakyGame.Enemy;
+using SneakyEngine.Ragdoll;
 
 namespace SneakyGame.Ragdoll.Equippables
 {
@@ -42,8 +43,8 @@ namespace SneakyGame.Ragdoll.Equippables
     // Information about weapon holder
     [System.NonSerialized]
     public ActiveRagdoll _ragdoll;
-    protected ActiveRagdoll.Side _side;
-    public void SetSide(ActiveRagdoll.Side side)
+    protected Side _side;
+    public void SetSide(Side side)
     {
       _side = side;
     }
@@ -208,12 +209,12 @@ namespace SneakyGame.Ragdoll.Equippables
     public bool HasHitRagdoll(ActiveRagdoll ragdoll)
     {
       if (_hitRagdolls == null) return false;
-      return _hitRagdolls.Contains(ragdoll._Id);
+      return _hitRagdolls.Contains(ragdoll.Id);
     }
     public void RegisterHitRagdoll(ActiveRagdoll ragdoll)
     {
       _hitRagdolls ??= new();
-      _hitRagdolls.Add(ragdoll._Id);
+      _hitRagdolls.Add(ragdoll.Id);
     }
 
     public enum Audio
@@ -481,8 +482,8 @@ namespace SneakyGame.Ragdoll.Equippables
             raycastInfo._ragdoll.OnGrapplee((grapplee) =>
             {
               // Get dir from target to swinger; if hostage is held in front of knife, kill hostage
-              var dir = (raycastInfo._ragdoll._Hip.position - _ragdoll._Hip.position).normalized;
-              var target_frwd = raycastInfo._ragdoll._Controller.forward;
+              var dir = (raycastInfo._ragdoll.Hip.position - _ragdoll.Hip.position).normalized;
+              var target_frwd = raycastInfo._ragdoll.Controller.forward;
 
               if ((dir - target_frwd).magnitude > 1f)
               {
@@ -492,7 +493,7 @@ namespace SneakyGame.Ragdoll.Equippables
             });
 
             // Check zombie invisible 2nd weapon
-            if (_isZombie && _side == ActiveRagdoll.Side.RIGHT) return;
+            if (_isZombie && _side == Side.RIGHT) return;
 
             // If is enemy, and isn't two handed, don't kill friendlies
             if (!_ragdoll._IsPlayer && !_canMeleePenatrate && !raycastInfo._ragdoll._IsPlayer && !raycastInfo._ragdoll._IsGrappled && !_ragdoll._IsGrappled) return;
@@ -564,10 +565,10 @@ namespace SneakyGame.Ragdoll.Equippables
 
                   // Bounce both ragdolls backward
                   if (!_ragdoll._IsGrappled)
-                    _ragdoll.BounceFromPosition(raycastInfo._ragdoll._Hip.position, 1.5f, true);
+                    _ragdoll.BounceFromPosition(raycastInfo._ragdoll.Hip.position, 1.5f, true);
                   else
-                    raycastInfo._ragdoll.OnGrappler((grappler) => grappler.BounceFromPosition(grappler._Hip.position, 1.5f, true));
-                  raycastInfo._ragdoll.BounceFromPosition(_ragdoll._Hip.position, 1.5f, true);
+                    raycastInfo._ragdoll.OnGrappler((grappler) => grappler.BounceFromPosition(grappler.Hip.position, 1.5f, true));
+                  raycastInfo._ragdoll.BounceFromPosition(_ragdoll.Hip.position, 1.5f, true);
 
                   // Check stun from baton
                   var hasBaton = _ItemType == ItemType.STUN_BATON;
@@ -586,16 +587,16 @@ namespace SneakyGame.Ragdoll.Equippables
                   if (otherHasBaton || hasBaton)
                   {
                     var parts = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.ELECTRIC_SPARK)[0];
-                    parts.transform.position = (_ragdoll._Hip.position + raycastInfo._ragdoll._Hip.position) / 2f;
+                    parts.transform.position = (_ragdoll.Hip.position + raycastInfo._ragdoll.Hip.position) / 2f;
                     parts.Play();
                   }
 
                   // Fx
                   {
-                    SfxManager.PlayAudioSourceSimple(_ragdoll._Hip.position, "Ragdoll/MeleeClash", 0.85f, 1.15f, SfxManager.AudioClass.NONE, true);
+                    SfxManager.PlayAudioSourceSimple(_ragdoll.Hip.position, "Ragdoll/MeleeClash", 0.85f, 1.15f, SfxManager.AudioClass.NONE, true);
 
                     var parts = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.BULLET_COLLIDE)[0];
-                    parts.transform.position = (_ragdoll._Hip.position + raycastInfo._ragdoll._Hip.position) / 2f;
+                    parts.transform.position = (_ragdoll.Hip.position + raycastInfo._ragdoll.Hip.position) / 2f;
                     parts.Play();
                   }
 
@@ -620,7 +621,7 @@ namespace SneakyGame.Ragdoll.Equippables
             if (_damageAnything) return;
 
             // Record ragdoll id to stop multiple hits
-            _hitRagdolls.Add(raycastInfo._ragdoll._Id);
+            _hitRagdolls.Add(raycastInfo._ragdoll.Id);
 
             // Damage
             _damageAnything = true;
@@ -628,13 +629,13 @@ namespace SneakyGame.Ragdoll.Equippables
 
             // Zombie knockback
             if (!_ragdoll._IsPlayer && _ragdoll._EnemyScript._IsZombieReal)
-              raycastInfo._ragdoll.BounceFromPosition(_ragdoll._Hip.position, 0.5f, false);
+              raycastInfo._ragdoll.BounceFromPosition(_ragdoll.Hip.position, 0.5f, false);
 
             // Play noise
             if (_ItemType == ItemType.FRYING_PAN)
             {
               PlaySound(Audio.MELEE_HIT, 0.78f, 1.1f);
-              EnemyScript.CheckSound(_ragdoll._Hip.position, EnemyScript.Loudness.SOFT);
+              EnemyScript.CheckSound(_ragdoll.Hip.position, EnemyScript.Loudness.SOFT);
             }
             else
             {
@@ -642,7 +643,7 @@ namespace SneakyGame.Ragdoll.Equippables
               if (_ItemType == ItemType.FIST && _isChargedFist)
                 playExtra = true;
               PlaySound(raycastInfo._ragdoll._IsEnemy && raycastInfo._ragdoll._EnemyScript.IsChaser() ? Audio.MELEE_HIT_METAL : (playExtra ? Audio.MELEE_HIT_BULLET : Audio.MELEE_HIT));
-              EnemyScript.CheckSound(_ragdoll._Hip.position, EnemyScript.Loudness.SUPERSOFT);
+              EnemyScript.CheckSound(_ragdoll.Hip.position, EnemyScript.Loudness.SUPERSOFT);
             }
 
             // If not two handed, stop checking
@@ -765,8 +766,8 @@ namespace SneakyGame.Ragdoll.Equippables
           // Spawn bullet
           var spawn_pos = _forward.position;
           if (_ItemType == ItemType.ROCKET_FIST)
-            spawn_pos = _ragdoll._Hip.position;
-          spawn_pos.y = _ragdoll._Spine.transform.position.y;
+            spawn_pos = _ragdoll.Hip.position;
+          spawn_pos.y = _ragdoll.Rig.SpineJoint.transform.position.y;
 
           var bullet = SpawnBulletTowards(
             _ragdoll,
@@ -835,7 +836,7 @@ namespace SneakyGame.Ragdoll.Equippables
 
       // Add force to spine
       var torqueForce = _hit_force * 20000f * -Vector3.right.normalized;
-      _ragdoll._Spine.GetComponent<Rigidbody>().AddRelativeTorque(torqueForce);
+      _ragdoll.Rig.SpineJoint.GetComponent<Rigidbody>().AddRelativeTorque(torqueForce);
 
       // Recoil player
       _ragdoll.RecoilSimple(_shoot_force, false);
@@ -947,7 +948,7 @@ namespace SneakyGame.Ragdoll.Equippables
         }
 
         //
-        var sideMod = _side == ActiveRagdoll.Side.LEFT ? 1f : -1f;
+        var sideMod = _side == Side.LEFT ? 1f : -1f;
         switch (_ItemType)
         {
           case ItemType.KNIFE:
@@ -1181,14 +1182,14 @@ namespace SneakyGame.Ragdoll.Equippables
           if (_ragdoll._IsGrappling)
           {
             var snap_neck = false;
-            if (_side == ActiveRagdoll.Side.RIGHT)
+            if (_side == Side.RIGHT)
             {
               if (!(_ragdoll._ItemL?.IsMelee() ?? false))
               {
                 snap_neck = true;
               }
             }
-            else if (_side == ActiveRagdoll.Side.LEFT)
+            else if (_side == Side.LEFT)
             {
               snap_neck = true;
             }
@@ -1234,11 +1235,11 @@ namespace SneakyGame.Ragdoll.Equippables
             PlaySound(Audio.GUN_SHOOT);
           if (IsGun())
           {
-            EnemyScript.CheckSound(_ragdoll._Hip.position, _silenced ? EnemyScript.Loudness.SUPERSOFT : EnemyScript.Loudness.NORMAL);
+            EnemyScript.CheckSound(_ragdoll.Hip.position, _silenced ? EnemyScript.Loudness.SUPERSOFT : EnemyScript.Loudness.NORMAL);
           }
           else
           {
-            EnemyScript.CheckSound(_ragdoll._Hip.position, EnemyScript.Loudness.SUPERSOFT);
+            EnemyScript.CheckSound(_ragdoll.Hip.position, EnemyScript.Loudness.SUPERSOFT);
           }
         }
       }
@@ -1532,13 +1533,13 @@ namespace SneakyGame.Ragdoll.Equippables
         if (shouldStun && !targetRagdoll._HasBeenStunned && !targetRagdoll._IsStunned)
         {
           targetRagdoll.Stun();
-          targetRagdoll.BounceFromPosition(sourceRagdoll._Hip.position, 0.5f, false);
+          targetRagdoll.BounceFromPosition(sourceRagdoll.Hip.position, 0.5f, false);
           return true;
         }
       }
 
       // Damage
-      var hitForce = MathC.Get2DVector((80f + (Random.value * 30f)) * hitForceMultiplier * -(sourceRagdoll._Hip.position - targetRagdoll._Hip.position).normalized);
+      var hitForce = MathC.Get2DVector((80f + (Random.value * 30f)) * hitForceMultiplier * -(sourceRagdoll.Hip.position - targetRagdoll.Hip.position).normalized);
       if (targetRagdoll.TakeDamage(
          new ActiveRagdoll.RagdollDamageSource()
          {
@@ -1547,7 +1548,7 @@ namespace SneakyGame.Ragdoll.Equippables
            HitForce = hitForce,
 
            Damage = 1,
-           DamageSource = sourceRagdoll._Hip.position,
+           DamageSource = sourceRagdoll.Hip.position,
            DamageSourceType = ActiveRagdoll.DamageSourceType.MELEE,
 
            SpawnBlood = true,
@@ -1582,7 +1583,7 @@ namespace SneakyGame.Ragdoll.Equippables
     }
 
     // Equip this item to ragdoll on side, utilizing cached item data if passed (weapon pair swapping)
-    public void OnEquip(ActiveRagdoll ragdoll, ActiveRagdoll.Side side, int clipSize = -1, float useTime = -1f, int itemId = -1)
+    public void OnEquip(ActiveRagdoll ragdoll, Side side, int clipSize = -1, float useTime = -1f, int itemId = -1)
     {
       _ItemId = s_itemID++;
 
@@ -1631,15 +1632,15 @@ namespace SneakyGame.Ragdoll.Equippables
         // Upper arm
         FunctionsC.SetRotationLocal(_arm_upper, new Vector3(
           29f,
-          _side == ActiveRagdoll.Side.LEFT ? -50f : -21f,
-          (_side == ActiveRagdoll.Side.LEFT ? 1f : -1f) * 73f
+          _side == Side.LEFT ? -50f : -21f,
+          (_side == Side.LEFT ? 1f : -1f) * 73f
         ));
 
         // Lower arm
         FunctionsC.SetRotationLocal(_arm_lower, new Vector3(
           0f,
           0f,
-          (_side == ActiveRagdoll.Side.LEFT ? 1f : -1f) * 7f
+          (_side == Side.LEFT ? 1f : -1f) * 7f
         ));
       }
 
@@ -1651,10 +1652,10 @@ namespace SneakyGame.Ragdoll.Equippables
       transform.localScale = new Vector3(1f, 1f, 1f);
 
       // Set rotation
-      var dir = _ragdoll._Hip.transform.forward;
+      var dir = _ragdoll.Hip.transform.forward;
       dir.y = 0f;
       transform.forward = dir;
-      //transform.Rotate(new Vector3(0f, 1f, 0f) * (side == ActiveRagdoll.Side.LEFT ? -2f : 2.25f));
+      //transform.Rotate(new Vector3(0f, 1f, 0f) * (side == Side.LEFT ? -2f : 2.25f));
       // Set position
       Vector3 dist = transform.parent.position - _handle.position;
       transform.position += dist;
@@ -1690,7 +1691,7 @@ namespace SneakyGame.Ragdoll.Equippables
       //if (this == null) return;
 
       // Check other item
-      var item_other = _side == ActiveRagdoll.Side.LEFT ? _ragdoll._ItemR : _ragdoll._ItemL;
+      var item_other = _side == Side.LEFT ? _ragdoll._ItemR : _ragdoll._ItemL;
       if (_isMelee && item_other != null && item_other._isMelee && item_other._triggerDown)
         if (_ragdoll._IsEnemy && _ragdoll._EnemyScript._IsZombieReal)
           ;
@@ -1763,14 +1764,14 @@ namespace SneakyGame.Ragdoll.Equippables
     void PlayEmpty()
     {
       PlaySound(Audio.GUN_EMPTY);
-      EnemyScript.CheckSound(_ragdoll._Hip.position, EnemyScript.Loudness.SUPERSOFT);
+      EnemyScript.CheckSound(_ragdoll.Hip.position, EnemyScript.Loudness.SUPERSOFT);
       _triggerDown = false;
     }
 
     public void PlayBulletHit()
     {
       PlaySound(Audio.MELEE_HIT_BULLET, 0.8f, 1.2f);
-      EnemyScript.CheckSound(_ragdoll._Hip.position, EnemyScript.Loudness.SOFT);
+      EnemyScript.CheckSound(_ragdoll.Hip.position, EnemyScript.Loudness.SOFT);
     }
 
     // Reload function
@@ -1786,7 +1787,7 @@ namespace SneakyGame.Ragdoll.Equippables
 
       // Play noise and set clip
       PlaySound(Audio.GUN_RELOAD, reload_speed_mod - 0.1f, reload_speed_mod + 0.1f);
-      if (_ragdoll._IsPlayer) EnemyScript.CheckSound(_ragdoll._Hip.position, EnemyScript.Loudness.SUPERSOFT);
+      if (_ragdoll._IsPlayer) EnemyScript.CheckSound(_ragdoll.Hip.position, EnemyScript.Loudness.SUPERSOFT);
       var clipSave = _clip;
       _clip = Mathf.Clamp(
         _reloadOneAtTime ? _clip + 1 : GetClipSize(),
@@ -1822,7 +1823,7 @@ namespace SneakyGame.Ragdoll.Equippables
       // Reload animation
       float totalTime = reloadTime,
         halfTime = totalTime * 0.5f,
-        side_mod = _side == ActiveRagdoll.Side.LEFT ? -1f : 1f;
+        side_mod = _side == Side.LEFT ? -1f : 1f;
       if (_reloadTime > 1f)
       {
         AnimateTransformAdditive(_arm_lower, _save_rot_lower, -60f, 0f, 20f * -side_mod, totalTime * 0.7f, halfTime * 0.7f,
@@ -1947,19 +1948,19 @@ namespace SneakyGame.Ragdoll.Equippables
       switch (iter % 3)
       {
         case 1:
-          add = _ragdoll._Hip.transform.right;
+          add = _ragdoll.Hip.transform.right;
           break;
         case 2:
-          add = -_ragdoll._Hip.transform.right;
+          add = -_ragdoll.Hip.transform.right;
           break;
       }
 
       // Cast ray from startPos to dir (cast a ray from the handle forwards)
-      var forward = _ragdoll._Controller.forward;
-      _ragdoll.OnGrappler((grappler) => { forward = grappler._Controller.forward; });
+      var forward = _ragdoll.Controller.forward;
+      _ragdoll.OnGrappler((grappler) => { forward = grappler.Controller.forward; });
       forward.y = 0f;
       var ray = new Ray(
-        _ragdoll._Hip.position - _ragdoll._Hip.transform.forward * 0.1f + Vector3.up * 0.4f + add * 0.1f,
+        _ragdoll.Hip.position - _ragdoll.Hip.transform.forward * 0.1f + Vector3.up * 0.4f + add * 0.1f,
         forward + -add * (_twoHanded ? 1f : 0.2f)
       );
       var hit = false;
@@ -1978,7 +1979,7 @@ namespace SneakyGame.Ragdoll.Equippables
 
         if (raycastInfo._raycastHit.collider.gameObject.name == "Books")
         {
-          FunctionsC.BookManager.ExplodeBooks(raycastInfo._raycastHit.collider, _ragdoll._Hip.position);
+          FunctionsC.BookManager.ExplodeBooks(raycastInfo._raycastHit.collider, _ragdoll.Hip.position);
         }
         else
         {

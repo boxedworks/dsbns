@@ -1,3 +1,4 @@
+using SneakyEngine.Engine;
 using UnityEngine;
 
 namespace SneakyEngine.Ragdoll
@@ -5,6 +6,8 @@ namespace SneakyEngine.Ragdoll
 
   public class RagdollSystem
   {
+
+    public static RagdollSystem Singleton => SneakyEngineSystem.RagdollSystem;
 
     // Footstep audio sources
     AudioSource _sfx_footstep, _sfx_footstepBloody;

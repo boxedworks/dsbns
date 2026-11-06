@@ -10,35 +10,26 @@ using SneakyGame.Objects.CustomEntities;
 using SneakyGame.Game.Items;
 using SneakyGame.Ragdoll.Equippables;
 using SneakyGame.Game.Player;
+using SneakyGame.Objects;
+using SneakyGame.Enemy;
 
-using SneakyEngine.Engine;
-using SneakyEngine.Ragdoll;
 using SneakyEngine.Effects;
 using SneakyEngine.Equippable.Item;
 using SneakyEngine.Physics;
 using SneakyEngine.Utility;
-using SneakyGame.Objects;
-using SneakyGame.Enemy;
+using SneakyEngine.Ragdoll;
 
 namespace SneakyGame.Ragdoll
 {
 
-  public class ActiveRagdoll
+  public class ActiveRagdoll : RagdollController
   {
 
-    static RagdollSystem RagdollSystem { get { return SneakyEngineSystem.RagdollSystem; } }
-    static VfxSystem VfxSystem { get { return SneakyEngineSystem.VfxSystem; } }
+    static RagdollSystem RagdollSystem => RagdollSystem.Singleton;
+    static VfxSystem VfxSystem => VfxSystem.Singleton;
 
     //
     public static List<ActiveRagdoll> s_Ragdolls;
-    public static int s_ID;
-    public int _Id;
-    public Transform Transform, _Controller;
-
-    // Body parts
-    public Rigidbody _Hip;
-    public HingeJoint _Spine, _Arm_upper_l, _Arm_upper_r, _Arm_lower_l, _Arm_lower_r, _Leg_upper_l, _Leg_upper_r, _Leg_lower_l, _Leg_lower_r;
-    public Transform _Head;
 
     // Item info
     public ItemScript _ItemL, _ItemR;
@@ -54,9 +45,9 @@ namespace SneakyGame.Ragdoll
 
     // What frame the hinge 'animations' are on
     float _movementIter, _movementIter2;
-    public float _rotSpeed, _time_dead;
+    public float _rotSpeed, _time_died;
 
-    bool _footprint;
+    bool _footprintSwitch;
     float _bloodFootprintTimer;
 
     public bool _IsRagdolled,
@@ -99,7 +90,7 @@ namespace SneakyGame.Ragdoll
 
     public int _health;
 
-    public GameObject[] _parts;
+    GameObject[] _parts;
 
     static List<Tuple<Material, Material>> s_Materials_Ragdoll;
 
@@ -107,79 +98,23 @@ namespace SneakyGame.Ragdoll
 
     public float _totalDistanceMoved;
 
-    public Parts _transform_parts;
-    public class Parts
+    public ActiveRagdoll(GameObject ragdoll, Transform controller, PlayerScript playerScript, EnemyScript enemyScript) : base(ragdoll, controller)
     {
-      public Transform _hip, _spine, _arm_upper_l, _arm_upper_r, _arm_lower_l, _arm_lower_r, _head, _leg_upper_l, _leg_upper_r, _leg_lower_l, _leg_lower_r;
-
-      Dictionary<EntityId, SaveInfo> _saveInfo;
-      public class SaveInfo
-      {
-        public Vector3 _pos, _rot;
-        public SaveInfo(Transform t)
-        {
-          _pos = t.localPosition;
-          _rot = t.localEulerAngles;
-        }
-      }
-
-      public Parts(ActiveRagdoll ragdoll)
-      {
-        _hip = ragdoll._parts[0].transform;
-        _leg_upper_l = ragdoll._parts[1].transform;
-        _leg_upper_r = ragdoll._parts[2].transform;
-        _leg_lower_l = ragdoll._parts[3].transform;
-        _leg_lower_r = ragdoll._parts[4].transform;
-        _arm_upper_l = ragdoll._parts[6].transform;
-        _arm_upper_r = ragdoll._parts[7].transform;
-        _arm_lower_l = ragdoll._parts[8].transform;
-        _arm_lower_r = ragdoll._parts[9].transform;
-        _spine = ragdoll._parts[5].transform.GetChild(0);
-        _head = ragdoll._parts[10].transform;
-
-        _saveInfo = new();
-
-        void AddSaveInfo(Transform part)
-        {
-          _saveInfo.Add(part.GetEntityId(), new SaveInfo(part));
-
-        }
-        AddSaveInfo(_spine);
-        AddSaveInfo(_arm_upper_l);
-        AddSaveInfo(_arm_upper_r);
-        AddSaveInfo(_arm_lower_l);
-        AddSaveInfo(_arm_lower_r);
-      }
-
-      public void SetDefault(Transform t)
-      {
-        var info = _saveInfo[t.GetEntityId()];
-        t.localPosition = info._pos;
-        t.localEulerAngles = info._rot;
-      }
-    }
-
-    public ActiveRagdoll(GameObject ragdoll, Transform controller, PlayerScript playerScript, EnemyScript enemyScript)
-    {
-      // Assign unique ID
-      _Id = s_ID++;
 
       // Add to static _Ragdolls list
       s_Ragdolls ??= new();
       s_Ragdolls.Add(this);
 
       // Defaults
-      _Controller = controller;
 #if UNITY_EDITOR
       ragdoll.name = "Ragdoll";
 #endif
-      Transform = ragdoll.transform;
-      _time_dead = -1f;
+      _time_died = -1f;
 
       // Set materials
       _renderer = Transform.GetChild(0).GetComponent<SkinnedMeshRenderer>();
       s_Materials_Ragdoll ??= new();
-      if (_Id == s_Materials_Ragdoll.Count)
+      if (Id == s_Materials_Ragdoll.Count)
       {
         var mat0 = new Material(_renderer.sharedMaterials[0]);
         mat0.SetFloat("_Metallic", 0.8f);
@@ -190,7 +125,7 @@ namespace SneakyGame.Ragdoll
       }
       Resources.UnloadAsset(_renderer.sharedMaterials[0]);
       Resources.UnloadAsset(_renderer.sharedMaterials[1]);
-      _renderer.sharedMaterials = new Material[] { s_Materials_Ragdoll[_Id].Item1, s_Materials_Ragdoll[_Id].Item2 };
+      _renderer.sharedMaterials = new Material[] { s_Materials_Ragdoll[Id].Item1, s_Materials_Ragdoll[Id].Item2 };
 
       // Register enemy / player script
       _EnemyScript = enemyScript;
@@ -199,116 +134,13 @@ namespace SneakyGame.Ragdoll
       // Set default health
       _health = 1;
 
-      // Index body parts
-      _Hip = ragdoll.transform.GetChild(1).GetChild(0).GetChild(0).GetComponent<Rigidbody>();
-      _Leg_upper_l = _Hip.transform.GetChild(0).GetComponent<HingeJoint>();
-      _Leg_upper_r = _Hip.transform.GetChild(1).GetComponent<HingeJoint>();
-      _Leg_lower_l = _Leg_upper_l.transform.GetChild(0).GetComponent<HingeJoint>();
-      _Leg_lower_r = _Leg_upper_r.transform.GetChild(0).GetComponent<HingeJoint>();
-      _Spine = _Hip.transform.GetChild(2).GetChild(0).GetComponent<HingeJoint>();
-      /*_arm_upper_l = _spine.transform.GetChild(0).GetChild(0).GetChild(0).GetComponent<HingeJoint>();
-      _arm_upper_r = _spine.transform.GetChild(0).GetChild(1).GetChild(0).GetComponent<HingeJoint>();
-      _arm_lower_l = _arm_upper_l.transform.GetChild(0).GetComponent<HingeJoint>();
-      _arm_lower_r = _arm_upper_r.transform.GetChild(0).GetComponent<HingeJoint>();*/
-      _Head = _Spine.transform.GetChild(0).GetChild(2);
-
-      _parts = GetParts();
-      _transform_parts = new Parts(this);
-
       _Color = Color.blue * 1.3f;
 
       _rotSpeed = 1f;
-
       _CanMove = _CanReceiveInput = true;
-
       _CanDie = true;
 
       SetCollisionMode(CollisionDetectionMode.Continuous);
-
-      /*if (GameScript._GameMode == GameScript.GameModes.SURVIVAL)
-      {
-        if (_isPlayer)
-        {
-          var joints = new HingeJoint[] { _arm_lower_l, _arm_lower_r, _arm_upper_l, _arm_upper_r };
-          foreach (var joint in joints)
-          {
-            var rb = joint.gameObject.GetComponent<Rigidbody>();
-            GameObject.DestroyImmediate(joint);
-            GameObject.DestroyImmediate(rb);
-
-          }
-        }
-      }*/
-    }
-
-    public void AddArmJoint(Side side)
-    {
-      var upper = (side == Side.LEFT ? _transform_parts._arm_upper_l : _transform_parts._arm_upper_r).gameObject;
-      if (upper.GetComponent<Rigidbody>()) return;
-
-      var lower = (side == Side.LEFT ? _transform_parts._arm_lower_l : _transform_parts._arm_lower_r).gameObject;
-      var side_mod = side == Side.LEFT ? -1f : 1f;
-      var upper_rb = upper.AddComponent<Rigidbody>();
-      var lower_rb = lower.AddComponent<Rigidbody>();
-
-      upper_rb.interpolation = lower_rb.interpolation = RigidbodyInterpolation.Interpolate;
-      upper_rb.mass = lower_rb.mass = 0.2f;
-
-      var upper_joint = upper.AddComponent<HingeJoint>();
-      upper_joint.axis = new Vector3(0f, 0f, 1f);
-      upper_joint.useLimits = true;
-      SetJointLimits(upper_joint, -70f * side_mod, 15f * side_mod);
-      var lower_joint = lower.AddComponent<HingeJoint>();
-      lower_joint.axis = new Vector3(0f, 0f, 1f);
-      lower_joint.useLimits = true;
-      SetJointLimits(lower_joint, -150f * side_mod, 0f);
-      upper_joint.connectedBody = _Spine.GetComponent<Rigidbody>();
-      lower_joint.connectedBody = upper_rb;
-      if (side == Side.LEFT)
-      {
-        _Arm_upper_l = upper_joint;
-        _Arm_lower_l = lower_joint;
-      }
-      else
-      {
-        _Arm_upper_r = upper_joint;
-        _Arm_lower_r = lower_joint;
-      }
-    }
-
-    public void RemoveArmJoint(Side side)
-    {
-      var joints = new HingeJoint[] {
-      side == Side.LEFT ? _Arm_upper_l : _Arm_upper_r,
-      side == Side.LEFT ? _Arm_lower_l : _Arm_lower_r
-    };
-      foreach (var joint in joints)
-      {
-        if (joint == null) continue;
-        var rb = joint.gameObject.GetComponent<Rigidbody>();
-        UnityEngine.Object.DestroyImmediate(joint);
-        UnityEngine.Object.DestroyImmediate(rb);
-      }
-      // Set arms to default
-      _transform_parts.SetDefault(_transform_parts._spine);
-      if (side == Side.LEFT)
-      {
-        _transform_parts.SetDefault(_transform_parts._arm_upper_l);
-        _transform_parts.SetDefault(_transform_parts._arm_lower_l);
-      }
-      else
-      {
-        _transform_parts.SetDefault(_transform_parts._arm_upper_r);
-        _transform_parts.SetDefault(_transform_parts._arm_lower_r);
-      }
-    }
-
-    void SetJointLimits(HingeJoint joint, float min = 0f, float max = 0f)
-    {
-      var limits = joint.limits;
-      limits.min = min;
-      limits.max = max;
-      joint.limits = limits;
     }
 
     float _invisibility_timer, _confusedTimer;
@@ -333,13 +165,13 @@ namespace SneakyGame.Ragdoll
         else
         {
           // Get melee side
-          _grapplee._Hip.position = _Hip.position + _Hip.transform.forward * 0.45f + (_GrappleSide == Side.LEFT ? -1f : 1f) * 0.09f * _Hip.transform.right;
-          _grapplee._Hip.rotation = _Hip.rotation;
+          _grapplee.Hip.position = Hip.position + Hip.transform.forward * 0.45f + (_GrappleSide == Side.LEFT ? -1f : 1f) * 0.09f * Hip.transform.right;
+          _grapplee.Hip.rotation = Hip.rotation;
         }
       }
 
       // Update arm spread
-      if (_Spine != null)
+      if (Rig.SpineJoint != null)
       {
         if (_ItemL != null && _ItemL._twoHanded) { }
         else
@@ -353,7 +185,7 @@ namespace SneakyGame.Ragdoll
 
               // Lerp
               _la_limit = Mathf.Clamp(_la_limit + ((_la_targetLimit - _la_limit) > 0f ? 1f : -1f) * 0.5f * spread_speed, 0f, 1f);
-              var arm_upper = _Spine.transform.GetChild(0).GetChild(0).GetChild(0);
+              var arm_upper = Rig.SpineJoint.transform.GetChild(0).GetChild(0).GetChild(0);
               var localrot = arm_upper.localRotation.eulerAngles;
               localrot.z = Mathf.Lerp(startPos, startPos - 90f, _la_limit);
               var q = arm_upper.localRotation;
@@ -368,7 +200,7 @@ namespace SneakyGame.Ragdoll
 
               // Lerp
               _ra_limit = Mathf.Clamp(_ra_limit + ((_ra_targetLimit - _ra_limit) > 0f ? 1f : -1f) * 0.5f * spread_speed, 0f, 1f);
-              var arm_upper = _Spine.transform.GetChild(0).GetChild(1).GetChild(0);
+              var arm_upper = Rig.SpineJoint.transform.GetChild(0).GetChild(1).GetChild(0);
               var localrot = arm_upper.localRotation.eulerAngles;
               localrot.z = Mathf.Lerp(startPos, startPos + 90f, _ra_limit);
               var q = arm_upper.localRotation;
@@ -398,20 +230,20 @@ namespace SneakyGame.Ragdoll
       }
 
       // Move / rotate based on a rigidbody
-      var movePos = _Controller.position + _GROUNDHEIGHT;
-      _Distance = (movePos - _Hip.position) * (Time.timeScale < 1f ? 0.3f : 1f);
+      var movePos = Controller.position + _GROUNDHEIGHT;
+      _Distance = (movePos - Hip.position) * (Time.timeScale < 1f ? 0.3f : 1f);
 
       // Moving ragdoll too fast will break joints, clamp to .35f magnitude
       if (_Distance.magnitude > 0.35f)
       {
-        movePos = _Hip.position + _Distance.normalized * 0.35f;
-        _Distance = (movePos - _Hip.position) * (Time.timeScale < 1f ? 0.3f : 1f);
+        movePos = Hip.position + _Distance.normalized * 0.35f;
+        _Distance = (movePos - Hip.position) * (Time.timeScale < 1f ? 0.3f : 1f);
       }
 
       // If can't move, set movepos and distance to origin
       if (!_CanMove || _IsGrappled)
       {
-        movePos = _Hip.position;
+        movePos = Hip.position;
         _Distance = Vector3.zero;
       }
 
@@ -429,16 +261,16 @@ namespace SneakyGame.Ragdoll
         {
           // If player, send footstep sound to enemies to check for detection
           if (_IsPlayer && _PlayerScript._CanDetect && _Distance.magnitude > 0.1f)
-            EnemyScript.CheckSound(_Controller.position, _Distance.magnitude > 0.2f ? EnemyScript.Loudness.SOFT : EnemyScript.Loudness.SUPERSOFT);
+            EnemyScript.CheckSound(Controller.position, _Distance.magnitude > 0.2f ? EnemyScript.Loudness.SOFT : EnemyScript.Loudness.SUPERSOFT);
 
           // Sfx
           var footstepAudioSource = false && _bloodFootprintTimer > 0f ? RagdollSystem.SfxFootstepBloody : RagdollSystem.SfxFootstep;
-          SfxManager.PlayAudioSourceSimple(_Controller.position, footstepAudioSource.clip, footstepAudioSource.volume, 0.89f, 1.11f, SfxManager.AudioClass.FOOTSTEP);
+          SfxManager.PlayAudioSourceSimple(Controller.position, footstepAudioSource.clip, footstepAudioSource.volume, 0.89f, 1.11f, SfxManager.AudioClass.FOOTSTEP);
 
           // Footprint
-          var footprint_pos = _footprint ? _Leg_lower_l.transform.position : _Leg_lower_r.transform.position;
+          var footprint_pos = _footprintSwitch ? Rig.LegLowerL.transform.position : Rig.LegLowerR.transform.position;
           footprint_pos.y -= 0.4f;
-          _footprint = !_footprint;
+          _footprintSwitch = !_footprintSwitch;
           FunctionsC.PlayComplexParticleSystemAt(_bloodFootprintTimer > 0f ? FunctionsC.ParticleSystemType.FOOTPRINT_BLOOD : FunctionsC.ParticleSystemType.FOOTPRINT, footprint_pos);
         }
       }
@@ -446,9 +278,9 @@ namespace SneakyGame.Ragdoll
         _bloodFootprintTimer -= Time.deltaTime;
 
       // Set rotation
-      var posSave = _Hip.position;
-      var rot = _Hip.rotation;
-      var f = _Controller.rotation.eulerAngles.y;
+      var posSave = Hip.position;
+      var rot = Hip.rotation;
+      var f = Controller.rotation.eulerAngles.y;
       if (f > 180.0f)
         f -= 360.0f;
       rot.eulerAngles = new Vector3(rot.eulerAngles.x, f, rot.eulerAngles.z);
@@ -460,11 +292,11 @@ namespace SneakyGame.Ragdoll
         // Move / rotate hip (base)
         if (!_IsGrappled)
         {
-          _Hip.MovePosition(movePos);
+          Hip.MovePosition(movePos);
           if (_IsPlayer)
             dt = Time.unscaledDeltaTime;
 
-          _Hip.MoveRotation(Quaternion.RotateTowards(_Hip.rotation, rot, dt * (Time.timeScale < 0.75f && _IsPlayer ? 4f : 14f) * _rotSpeed * Mathf.Abs(Quaternion.Angle(_Hip.rotation, rot))));
+          Hip.MoveRotation(Quaternion.RotateTowards(Hip.rotation, rot, dt * (Time.timeScale < 0.75f && _IsPlayer ? 4f : 14f) * _rotSpeed * Mathf.Abs(Quaternion.Angle(Hip.rotation, rot))));
         }
 
         // Use iter to move joints
@@ -477,16 +309,16 @@ namespace SneakyGame.Ragdoll
           _IsPlayer &&
           Time.time - _meleeStartTime < 0.25f &&
           _PlayerScript.GetInput().magnitude > 0.7f &&
-          (martialArts || (moveDir - _Controller.forward).magnitude > 1.4f))
+          (martialArts || (moveDir - Controller.forward).magnitude > 1.4f))
         {
           _meleeStartTime = -1f;
 
           _ForceGlobal += MathC.Get2DVector(moveDir * 0.5f);
 
           // FX
-          SfxManager.PlayAudioSourceSimple(_Hip.position, "Ragdoll/Quickstep", 0.85f, 1.15f, SfxManager.AudioClass.NONE, true);
+          SfxManager.PlayAudioSourceSimple(Hip.position, "Ragdoll/Quickstep", 0.85f, 1.15f, SfxManager.AudioClass.NONE, true);
           var particles = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.CLOUD_RING)[0];
-          particles.transform.position = _Hip.position + new Vector3(0f, -0.5f, 0f);
+          particles.transform.position = Hip.position + new Vector3(0f, -0.5f, 0f);
           particles.Play();
         }
 
@@ -497,14 +329,14 @@ namespace SneakyGame.Ragdoll
           {
             _confusedTimer = Time.time + Random.Range(0.2f, 0.5f);
             var p = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.CONFUSED)[0];
-            p.transform.position = _Head != null ? _Head.position : _Controller.position;
+            p.transform.position = Rig.Head != null ? Rig.Head.position : Controller.position;
             p.Play();
           }
         }
       }
       else
       {
-        _Controller.position = _Hip.position;
+        Controller.position = Hip.position;
 
         // Use iter to move joints
         _movementIter += _Distance.magnitude / 10f * Time.deltaTime * 50f;
@@ -529,7 +361,7 @@ namespace SneakyGame.Ragdoll
 
             RaycastHit hit;
             ToggleRaycasting(false, true);
-            if (Physics.SphereCast(_Controller.position, 0.25f, _Controller.forward, out hit, 0.5f, GameResources._Layermask_Ragdoll))
+            if (Physics.SphereCast(Controller.position, 0.25f, Controller.forward, out hit, 0.5f, GameResources._Layermask_Ragdoll))
             {
               var ragdoll = GetRagdoll(hit.collider.gameObject);
               if (ragdoll != null)
@@ -548,7 +380,7 @@ namespace SneakyGame.Ragdoll
       }
 
       // Animate joints; walking
-      var joints = new HingeJoint[] { _Leg_upper_l, _Leg_upper_r, _Arm_lower_l, _Arm_lower_r };
+      var joints = new HingeJoint[] { Rig.LegUpperLJoint, Rig.LegUpperRJoint, Rig.ArmLowerLJoint, Rig.ArmLowerRJoint };
       var opposite = false;
       var first = true;
       foreach (var joint in joints)
@@ -615,11 +447,11 @@ namespace SneakyGame.Ragdoll
     }
     public bool IsGrappledBy(ActiveRagdoll other)
     {
-      return _IsGrappled && _grappler._Id == other._Id;
+      return _IsGrappled && _grappler.Id == other.Id;
     }
     public bool IsGrappling(ActiveRagdoll other)
     {
-      return _IsGrappling && _grapplee._Id == other._Id;
+      return _IsGrappling && _grapplee.Id == other.Id;
     }
 
     public void OnGrapplee(Action<ActiveRagdoll> onGrapplee)
@@ -659,7 +491,7 @@ namespace SneakyGame.Ragdoll
       IEnumerator delayDisable()
       {
         yield return new WaitForSecondsRealtime(5f);
-        if (_Hip != null) _Hip.isKinematic = true;
+        if (Hip != null) Hip.isKinematic = true;
         foreach (var part in _parts)
         {
           if (part == null) continue;
@@ -697,7 +529,7 @@ namespace SneakyGame.Ragdoll
 
       // Play FX
       PlaySound("Ragdoll/Combust", 0.9f, 1.1f);
-      FunctionsC.PlayComplexParticleSystemAt(FunctionsC.ParticleSystemType.SMOKEBALL, _Hip.position);
+      FunctionsC.PlayComplexParticleSystemAt(FunctionsC.ParticleSystemType.SMOKEBALL, Hip.position);
 
       // Set timer
       if (toggle)
@@ -770,8 +602,8 @@ namespace SneakyGame.Ragdoll
 
     void AddLegCollider(Side side)
     {
-      var upperLeg = side == Side.LEFT ? _transform_parts._leg_upper_l : _transform_parts._leg_upper_r;
-      var lowerLeg = side == Side.LEFT ? _transform_parts._leg_lower_l : _transform_parts._leg_lower_r;
+      var upperLeg = side == Side.LEFT ? Rig.LegUpperL : Rig.LegUpperR;
+      var lowerLeg = side == Side.LEFT ? Rig.LegLowerL : Rig.LegLowerR;
 
       if (upperLeg != null)
       {
@@ -788,17 +620,11 @@ namespace SneakyGame.Ragdoll
       }
     }
 
-    public enum Side
-    {
-      LEFT,
-      RIGHT
-    }
-
     public void EquipItem(ItemType itemType, Side side, int clipSize = -1, float useTime = -1f, int itemId = -1)
     {
       if (itemType == ItemType.NONE)
       {
-        AddArmJoint(side);
+        Rig.AddArmJoints(side);
         return;
       }
 
@@ -818,19 +644,19 @@ namespace SneakyGame.Ragdoll
       if (rb != null) UnityEngine.Object.Destroy(rb);
 
       // Remove joints for better aiming
-      RemoveArmJoint(side);
-      if (two_hands) RemoveArmJoint(side_other);
+      Rig.RemoveArmJoints(side);
+      if (two_hands) Rig.RemoveArmJoints(side_other);
 
       // Decide which hand to place in
       Transform arm;
       if (side == Side.LEFT || two_hands)
       {
-        arm = _transform_parts._arm_lower_l;
+        arm = Rig.ArmLowerL;
         _ItemL = itemScript;
       }
       else
       {
-        arm = _transform_parts._arm_lower_r;
+        arm = Rig.ArmLowerR;
         _ItemR = itemScript;
       }
       itemScript.transform.parent = arm.GetChild(0);
@@ -842,13 +668,13 @@ namespace SneakyGame.Ragdoll
       var item = side == Side.LEFT ? _ItemL : _ItemR;
       if (side == Side.LEFT)
       {
-        _transform_parts.SetDefault(_transform_parts._arm_upper_l);
-        _transform_parts.SetDefault(_transform_parts._arm_lower_l);
+        Rig.SetDefault(Rig.ArmUpperL);
+        Rig.SetDefault(Rig.ArmLowerL);
       }
       else
       {
-        _transform_parts.SetDefault(_transform_parts._arm_upper_r);
-        _transform_parts.SetDefault(_transform_parts._arm_lower_r);
+        Rig.SetDefault(Rig.ArmUpperR);
+        Rig.SetDefault(Rig.ArmLowerR);
       }
       if (item == null) return;
       UnityEngine.Object.DestroyImmediate(item.gameObject);
@@ -889,8 +715,8 @@ namespace SneakyGame.Ragdoll
     {
 
       // Check facing each other
-      var forwardSelf = _Hip.transform.forward;
-      var forwardOther = ragdollOther._Hip.transform.forward;
+      var forwardSelf = Hip.transform.forward;
+      var forwardOther = ragdollOther.Hip.transform.forward;
       var forwardMagnitude = (forwardOther - forwardSelf).magnitude;
       if (forwardMagnitude < 1.7f)
       {
@@ -986,14 +812,14 @@ namespace SneakyGame.Ragdoll
       if (_IsPlayer && _PlayerScript._HasTwin && !_PlayerScript._IsOriginalTwin)
       {
         UnequipItem(Side.LEFT);
-        AddArmJoint(Side.LEFT);
+        Rig.AddArmJoints(Side.LEFT);
       }
       else if (itemL_type != ItemType.NONE)
         EquipItem(itemL_type, Side.LEFT, itemL_clip, itemL_useTime, itemL_id);
       else
       {
         UnequipItem(Side.LEFT);
-        AddArmJoint(Side.LEFT);
+        Rig.AddArmJoints(Side.LEFT);
       }
 
       if (_IsPlayer && _PlayerScript._IsOriginalTwin)
@@ -1001,7 +827,7 @@ namespace SneakyGame.Ragdoll
         if (_ItemL == null || !_ItemL._twoHanded)
         {
           UnequipItem(Side.RIGHT);
-          AddArmJoint(Side.RIGHT);
+          Rig.AddArmJoints(Side.RIGHT);
         }
       }
       else if (itemR_type != ItemType.NONE)
@@ -1011,7 +837,7 @@ namespace SneakyGame.Ragdoll
         if (_ItemL == null || !_ItemL._twoHanded)
         {
           UnequipItem(Side.RIGHT);
-          AddArmJoint(Side.RIGHT);
+          Rig.AddArmJoints(Side.RIGHT);
         }
       }
 
@@ -1086,7 +912,7 @@ namespace SneakyGame.Ragdoll
     //
     public void BounceFromPosition(Vector3 position, float force, bool overwright)
     {
-      var bounceForce = (MathC.Get2DVector(_Hip.position) - MathC.Get2DVector(position)).normalized * force;
+      var bounceForce = (MathC.Get2DVector(Hip.position) - MathC.Get2DVector(position)).normalized * force;
       Recoil(bounceForce, 1f, overwright);
     }
 
@@ -1129,7 +955,7 @@ namespace SneakyGame.Ragdoll
     public void ChangeColor(Color c, float lerpAmount = 0f)
     {
       // Color override
-      var colorOverride = SneakyEngineSystem.RagdollSystem.ColorOverride;
+      var colorOverride = RagdollSystem.ColorOverride;
       if (colorOverride != default)
       {
         c = colorOverride;
@@ -1181,7 +1007,7 @@ namespace SneakyGame.Ragdoll
       while (true)
       {
         yield return waitForSeconds;
-        if (_Hip == null || levelId != TileManager._s_MapIndex) break;
+        if (Hip == null || levelId != TileManager._s_MapIndex) break;
 
         timer = Mathf.Clamp(timer + (Time.time - timeLast) * 1.25f, 0f, lerpAmount);
         timeLast = Time.time;
@@ -1227,7 +1053,7 @@ namespace SneakyGame.Ragdoll
           PlaySoundLocal("Enemies/Metal_hit", 0.8f, 1.2f);
 
           var parts = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.BULLET_COLLIDE)[0];
-          parts.transform.position = _Hip.position;
+          parts.transform.position = Hip.position;
           parts.Play();
         }
         return false;
@@ -1260,7 +1086,7 @@ namespace SneakyGame.Ragdoll
             {
               PlaySoundLocal("Enemies/Metal_hit", 0.8f, 1.2f);
               var parts = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.BULLET_COLLIDE)[0];
-              parts.transform.position = _Hip.position;
+              parts.transform.position = Hip.position;
               parts.Play();
             }
           }
@@ -1269,7 +1095,7 @@ namespace SneakyGame.Ragdoll
             if (damageSourceType == DamageSourceType.FIRE)
             {
               PlaySoundLocal("Ragdoll/Combust", 0.9f, 1.1f);
-              FunctionsC.PlayComplexParticleSystemAt(FunctionsC.ParticleSystemType.FIREBALL, _Hip.position);
+              FunctionsC.PlayComplexParticleSystemAt(FunctionsC.ParticleSystemType.FIREBALL, Hip.position);
             }
             else
               PlaySoundLocal("Ragdoll/Punch", 0.9f, 1.1f);
@@ -1294,7 +1120,7 @@ namespace SneakyGame.Ragdoll
             {
               PlaySoundLocal("Enemies/Metal_hit", 0.8f, 1.2f);
               var parts = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.BULLET_COLLIDE)[0];
-              parts.transform.position = _Hip.position;
+              parts.transform.position = Hip.position;
               parts.Play();
             }
           }
@@ -1303,11 +1129,11 @@ namespace SneakyGame.Ragdoll
             if (damageSourceType == DamageSourceType.FIRE)
             {
               PlaySoundLocal("Ragdoll/Combust", 0.9f, 1.1f);
-              FunctionsC.PlayComplexParticleSystemAt(FunctionsC.ParticleSystemType.FIREBALL, _Hip.position);
-              FunctionsC.SpawnExplosionScar(_Hip.position);
+              FunctionsC.PlayComplexParticleSystemAt(FunctionsC.ParticleSystemType.FIREBALL, Hip.position);
+              FunctionsC.SpawnExplosionScar(Hip.position);
 
               var smokeParts = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.EXPLOSION_SMOKE)[0];
-              var spawnPos = _Hip.position;
+              var spawnPos = Hip.position;
               spawnPos.y = 1f;
               smokeParts.transform.position = spawnPos;
               smokeParts.Emit(3);
@@ -1354,14 +1180,14 @@ namespace SneakyGame.Ragdoll
               HitForce = Vector3.zero,
 
               Damage = 100,
-              DamageSource = _Hip.position,
+              DamageSource = Hip.position,
               DamageSourceType = DamageSourceType.MELEE,
 
               SpawnBlood = false,
               SpawnGiblets = false
             });
-          _grapplee._Hip.AddForce(_Controller.forward * (20f + Random.value * 5f), ForceMode.Impulse);
-          _grapplee._Hip.AddTorque(new Vector3(0f, Random.value < 0.5f ? -1f : 1f, 0f) * 100f, ForceMode.Impulse);
+          _grapplee.Hip.AddForce(Controller.forward * (20f + Random.value * 5f), ForceMode.Impulse);
+          _grapplee.Hip.AddTorque(new Vector3(0f, Random.value < 0.5f ? -1f : 1f, 0f) * 100f, ForceMode.Impulse);
 
           PlaySound("Ragdoll/Neck_snap", 0.85f, 1.2f);
         }
@@ -1369,8 +1195,8 @@ namespace SneakyGame.Ragdoll
         // Else, gently let go (?)
         else
         {
-          _grapplee._Controller.position = _grapplee._Hip.position;
-          _grapplee._Controller.rotation = _Controller.rotation;
+          _grapplee.Controller.position = _grapplee.Hip.position;
+          _grapplee.Controller.rotation = Controller.rotation;
 
           var agent = _grapplee._IsPlayer ? (_grapplee._PlayerScript?._agent) : (_grapplee._EnemyScript?._agent);
           if (agent != null)
@@ -1414,12 +1240,12 @@ namespace SneakyGame.Ragdoll
             // Raycast for ragdoll
             RaycastHit hit;
             ToggleRaycasting(false, true);
-            var dir = _Controller.forward;
+            var dir = Controller.forward;
             if (i == 2)
-              dir += _Controller.right * 0.25f;
+              dir += Controller.right * 0.25f;
             else if (i == 1)
-              dir += -_Controller.right * 0.25f;
-            if (Physics.SphereCast(_Spine != null ? _Spine.transform.position : _Hip.transform.position, 0.3f, dir, out hit, 0.75f, GameResources._Layermask_Ragdoll))
+              dir += -Controller.right * 0.25f;
+            if (Physics.SphereCast(Rig.SpineJoint != null ? Rig.SpineJoint.transform.position : Hip.transform.position, 0.3f, dir, out hit, 0.75f, GameResources._Layermask_Ragdoll))
             {
               var ragdoll = GetRagdoll(hit.collider.gameObject);
               if (ragdoll == null)
@@ -1428,7 +1254,7 @@ namespace SneakyGame.Ragdoll
               }
 
               // Check facing somewhat away dir
-              if ((_Controller.forward - ragdoll._Controller.forward).magnitude > 1.1f || (ragdoll._EnemyScript?.IsChaser() ?? false))
+              if ((Controller.forward - ragdoll.Controller.forward).magnitude > 1.1f || (ragdoll._EnemyScript?.IsChaser() ?? false))
               {
                 continue;
               }
@@ -1497,13 +1323,13 @@ namespace SneakyGame.Ragdoll
 
       // Add to part listener for audio
       else
-        AddPartListener(_Hip);
+        AddPartListener(Hip);
 
       // Die instantly
       if (!_CanDie) return;
       Toggle(source, damageSourceType, hitForce);
       _IsDead = true;
-      _time_dead = Time.unscaledTime;
+      _time_died = Time.unscaledTime;
 
       // Check grapplee
       if (_IsGrappling)
@@ -1522,7 +1348,7 @@ namespace SneakyGame.Ragdoll
         var saveParent = system.transform.parent;
         system.transform.parent = GameScript.s_Singleton.transform;
 
-        system.transform.position = _Hip.position;
+        system.transform.position = Hip.position;
 
         EnemyScript.CheckSound(system.transform.position, EnemyScript.Loudness.SUPERSOFT);
         yield return new WaitForSeconds(0.05f);
@@ -1539,9 +1365,9 @@ namespace SneakyGame.Ragdoll
           timeLast = Time.time;
 
           yield return waitForSeconds2;
-          if (_Hip == null) break;
+          if (Hip == null) break;
 
-          system.transform.position = _Hip.position;
+          system.transform.position = Hip.position;
         }
 
         if (Time.time - GameScript.s_LevelStartTime < 1f)
@@ -1559,7 +1385,7 @@ namespace SneakyGame.Ragdoll
         void PlaySpark()
         {
           var particles_sparks = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.SPARKS_ROBOT)[0];
-          particles_sparks.transform.position = _Hip.position;
+          particles_sparks.transform.position = Hip.position;
           particles_sparks.transform.Rotate(new Vector3(0f, 1f, 0f) * (Random.value * 360f));
           particles_sparks.Play();
 
@@ -1568,9 +1394,9 @@ namespace SneakyGame.Ragdoll
         IEnumerator PlaySparks()
         {
 
-          while (_Hip != null)
+          while (Hip != null)
           {
-            if (_Hip != null)
+            if (Hip != null)
               PlaySpark();
             yield return new WaitForSeconds(0.13f + Random.value * 0.7f);
           }
@@ -1596,7 +1422,7 @@ namespace SneakyGame.Ragdoll
         {
           var emissionconfetti = confetti.emission;
           emissionconfetti.enabled = false;
-          confetti.transform.position = _Hip.position;
+          confetti.transform.position = Hip.position;
           confetti.transform.LookAt(damageSource);
           confetti.transform.Rotate(new Vector3(0f, 1f, 0f) * 180f);
           var rotationConfetti = confetti.transform.localRotation;
@@ -1630,7 +1456,7 @@ namespace SneakyGame.Ragdoll
         {
           var emissionBlood = blood.emission;
           emissionBlood.enabled = false;
-          blood.transform.position = _Hip.position;
+          blood.transform.position = Hip.position;
           blood.transform.LookAt(damageSource);
           blood.transform.Rotate(new Vector3(0f, 1f, 0f) * 180f);
           var rotationBlood = blood.transform.localRotation;
@@ -1642,7 +1468,7 @@ namespace SneakyGame.Ragdoll
           GameScript.s_Singleton.StartCoroutine(BloodFollow(blood));
 
           // Bloody footprint
-          FunctionsC.AoeHandler.RegisterAoeEffect(this, FunctionsC.AoeHandler.AoeType.BLOOD, _Hip.position, 1f, 20f);
+          FunctionsC.AoeHandler.RegisterAoeEffect(this, FunctionsC.AoeHandler.AoeType.BLOOD, Hip.position, 1f, 20f);
 
           // Audio
           PlaySound($"Ragdoll/Blood{/*Random.Range(0, 10) < 3 ? 1 : */0}", 1.1f, 1.5f);
@@ -1686,7 +1512,7 @@ namespace SneakyGame.Ragdoll
             if (particlesGiblet == null || particlesGiblet.Length == 0) return;
 
             var giblets = particlesGiblet[0];
-            giblets.transform.position = _Hip.position;
+            giblets.transform.position = Hip.position;
             giblets.transform.LookAt(damageSource);
             giblets.transform.localRotation = rotationBlood;
 
@@ -1698,7 +1524,7 @@ namespace SneakyGame.Ragdoll
         if (VfxSystem.UseBloodSmoke)
         {
           var parts = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.BLOOD_SMOKE)[0];
-          parts.transform.position = _Hip.position + new Vector3(0f, 0.5f, 0f);
+          parts.transform.position = Hip.position + new Vector3(0f, 0.5f, 0f);
           parts.Emit(2);
         }
       }
@@ -1746,7 +1572,7 @@ namespace SneakyGame.Ragdoll
           }
 
       // Invert values
-      _Hip.isKinematic = !_Hip.isKinematic;
+      Hip.isKinematic = !Hip.isKinematic;
       ToggleRaycasting(false, false);
       _IsRagdolled = !_IsRagdolled;
       if (!_IsRagdolled)
@@ -1761,9 +1587,9 @@ namespace SneakyGame.Ragdoll
           ChangeColor(_IsPlayer ? Color.black * 0.5f : Color.black, 0.8f);
 
         //
-        _Controller.GetComponent<UnityEngine.AI.NavMeshAgent>().enabled = false;
+        Controller.GetComponent<UnityEngine.AI.NavMeshAgent>().enabled = false;
 
-        _Hip.AddForce(hitForce, ForceMode.Impulse);
+        Hip.AddForce(hitForce, ForceMode.Impulse);
         AddLegCollider(Side.LEFT);
         AddLegCollider(Side.RIGHT);
       }
@@ -1805,7 +1631,7 @@ namespace SneakyGame.Ragdoll
           }
           if (shouldExplode)
           {
-            var explosion = _Hip.gameObject.AddComponent<ExplosiveScript>();
+            var explosion = Hip.gameObject.AddComponent<ExplosiveScript>();
             explosion._explosionType = ExplosiveScript.ExplosionType.AWAY;
             explosion._radius = 3 * 0.8f;
             explosion.Trigger(source, damageSourceType == DamageSourceType.MELEE ? 1f : 0.1f, false, true);
@@ -1846,30 +1672,34 @@ namespace SneakyGame.Ragdoll
         Grapple(true);
     }
 
-    Tuple<bool, bool>[] _saveRagdollState;
-    public void Ragdoll(bool toggle)
+    Tuple<bool, bool>[] _savedJointStates;
+    public void Ragdoll(bool shouldDisable)
     {
       var joints = GetJoints();
-      if (toggle)
+
+      // Ragdoll
+      if (shouldDisable)
       {
-        _saveRagdollState = new Tuple<bool, bool>[joints.Length];
+        _savedJointStates = new Tuple<bool, bool>[joints.Length];
         for (var i = 0; i < joints.Length; i++)
         {
           if (joints[i] == null) continue;
-          _saveRagdollState[i] = new Tuple<bool, bool>(joints[i].useSpring, joints[i].useLimits);
+          _savedJointStates[i] = new Tuple<bool, bool>(joints[i].useSpring, joints[i].useLimits);
           joints[i].useSpring = false;
           joints[i].useLimits = true;
         }
-        if (_Arm_upper_l != null) _Arm_upper_l.useLimits = false;
-        if (_Arm_upper_r != null) _Arm_upper_r.useLimits = false;
+        if (Rig.ArmUpperLJoint != null) Rig.ArmUpperLJoint.useLimits = false;
+        if (Rig.ArmUpperRJoint != null) Rig.ArmUpperRJoint.useLimits = false;
       }
+
+      // Get up; Reset ragdoll joints to saved state
       else
       {
         for (var i = 0; i < joints.Length; i++)
         {
           if (joints[i] == null) continue;
-          joints[i].useSpring = _saveRagdollState[i].Item1;
-          joints[i].useLimits = _saveRagdollState[i].Item2;
+          joints[i].useSpring = _savedJointStates[i].Item1;
+          joints[i].useLimits = _savedJointStates[i].Item2;
         }
       }
     }
@@ -1893,7 +1723,7 @@ namespace SneakyGame.Ragdoll
           force *= 2f;
 
       //
-      Recoil(_IsGrappled ? -_Hip.transform.forward : -_Controller.forward, force, overwrite);
+      Recoil(_IsGrappled ? -Hip.transform.forward : -Controller.forward, force, overwrite);
     }
 
     bool _hasCrown;
@@ -1903,7 +1733,7 @@ namespace SneakyGame.Ragdoll
 
       var crown = UnityEngine.Object.Instantiate(GameResources._Crown).transform;
 
-      crown.transform.parent = _Head;
+      crown.transform.parent = Rig.Head;
       crown.localScale = Vector3.one * 2f;
       crown.localEulerAngles = new Vector3(-60f, 90f, 0f);
       crown.localPosition = new Vector3(0.067f, 1f, 0.095f);
@@ -1917,7 +1747,7 @@ namespace SneakyGame.Ragdoll
     {
       if (!_hasCrown) return;
 
-      UnityEngine.Object.Destroy(_Head.GetChild(0).gameObject);
+      UnityEngine.Object.Destroy(Rig.Head.GetChild(0).gameObject);
 
       _hasCrown = false;
     }
@@ -1933,9 +1763,9 @@ namespace SneakyGame.Ragdoll
       PlaySound("Enemies/Armor_give", 0.9f, 1.1f);
 
       // Equip helmet
-      _Head.localScale = new Vector3(0.3f, 0.3f, 0.3f);
+      Rig.Head.localScale = new Vector3(0.3f, 0.3f, 0.3f);
 
-      helmet.transform.parent = _Head;
+      helmet.transform.parent = Rig.Head;
       helmet.localScale = new Vector3(5f, 5f, 5f);
       helmet.localEulerAngles = new Vector3(-90f, 180f, 0f);
       helmet.localPosition = new Vector3(0f, 2.1f, 0.9f);
@@ -1951,12 +1781,12 @@ namespace SneakyGame.Ragdoll
       PlaySound("Enemies/Armor_break", 0.9f, 1.1f);
 
       var parts = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.BULLET_COLLIDE)[0];
-      parts.transform.position = _Hip.position;
+      parts.transform.position = Hip.position;
       parts.Play();
 
-      var helmet = _Head.GetChild(0).gameObject;
+      var helmet = Rig.Head.GetChild(0).gameObject;
       helmet.transform.parent =
-        save_til_die ? _Controller.parent : GameResources._Container_Objects;
+        save_til_die ? Controller.parent : GameResources._Container_Objects;
 
       var rb = helmet.AddComponent<Rigidbody>();
       helmet.GetComponent<BoxCollider>().enabled = true;
@@ -1966,7 +1796,7 @@ namespace SneakyGame.Ragdoll
       rb.AddForce(hitForce.normalized * 4f, ForceMode.Impulse);
       rb.AddTorque(new Vector3(1f, 0f, 0f) * 50f, ForceMode.Impulse);
 
-      _Head.localScale = new Vector3(1f, 1f, 1f);
+      Rig.Head.localScale = new Vector3(1f, 1f, 1f);
 
       _hasArmor = false;
     }
@@ -1994,7 +1824,7 @@ namespace SneakyGame.Ragdoll
       if (!_CanGrapple) return;
 
       // Spawn enemy
-      var spawn_pos = _Hip.position + Transform.forward * 0.3f;
+      var spawn_pos = Hip.position + Transform.forward * 0.3f;
       var enemy = EnemyScript.SpawnEnemyAt(
         new Vector2(spawn_pos.x, spawn_pos.z),
         true
@@ -2110,7 +1940,7 @@ namespace SneakyGame.Ragdoll
 
       // Save for later
       _lastBubbleScriptTime = Time.time;
-      _bubbleScript = TextBubbleScript.SpawnBubbleWith(_Head, text, _Color, size);
+      _bubbleScript = TextBubbleScript.SpawnBubbleWith(Rig.Head, text, _Color, size);
     }
 
     void SetCollisionMode(CollisionDetectionMode mode)
@@ -2124,55 +1954,23 @@ namespace SneakyGame.Ragdoll
       }
     }
 
-    /// <summary>
-    /// Return all the body parts in the ActiveRagdoll in array of GameObjects; head, arms, legs, etc.
-    /// </summary>
-    /// <returns></returns>
-    GameObject[] GetParts()
-    {
-      // If hip is null, ActiveRagdoll is null. Throw exception
-      if (_Hip == null)
-        throw new NullReferenceException("Attempting to access a null ActiveRagdoll.");
-
-      // Manually return body parts
-      GameObject[] returnList = new GameObject[11];
-      // Hip
-      returnList[0] = _Hip.gameObject;
-      // Upper leg l
-      returnList[1] = returnList[0].transform.GetChild(0).gameObject;
-      // Upper leg r
-      returnList[2] = returnList[0].transform.GetChild(1).gameObject;
-      // Lower leg l
-      returnList[3] = returnList[1].transform.GetChild(0).gameObject;
-      // Lower leg r
-      returnList[4] = returnList[2].transform.GetChild(0).gameObject;
-      // Spine
-      returnList[5] = returnList[0].transform.GetChild(2).GetChild(0).gameObject;
-      // Arm upper l
-      returnList[6] = returnList[5].transform.GetChild(0).GetChild(0).GetChild(0).gameObject;
-      // Arm upper r
-      returnList[7] = returnList[5].transform.GetChild(0).GetChild(1).GetChild(0).gameObject;
-      // Arm lower l
-      returnList[8] = returnList[6].transform.GetChild(0).gameObject;
-      // Arm lower r
-      returnList[9] = returnList[7].transform.GetChild(0).gameObject;
-      // Head
-      returnList[10] = returnList[5].transform.GetChild(0).GetChild(2).gameObject;
-      return returnList;
-    }
     HingeJoint[] GetJoints()
     {
       return new HingeJoint[]
       {
-      _Spine, _Arm_upper_l, _Arm_upper_r, _Arm_lower_l, _Arm_lower_r, _Leg_upper_l, _Leg_upper_r, _Leg_lower_l, _Leg_lower_r
+        Rig.SpineJoint,
+        Rig.ArmUpperLJoint,
+        Rig.ArmUpperRJoint,
+        Rig.ArmLowerLJoint,
+        Rig.ArmLowerRJoint,
+        Rig.LegUpperLJoint,
+        Rig.LegUpperRJoint,
+        Rig.LegLowerLJoint,
+        Rig.LegLowerRJoint
       };
     }
 
-    public bool Dismember(HingeJoint joint)
-    {
-      return Dismember(joint, Vector3.zero);
-    }
-    public bool Dismember(HingeJoint joint, Vector3 force)
+    public bool Dismember(HingeJoint joint, Vector3 force = default)
     {
       if (!_CanDie || !_IsDead) return false;
 
@@ -2180,12 +1978,12 @@ namespace SneakyGame.Ragdoll
       if (joint == null) return false;
 
       var t = joint.transform;
-      if (t.parent == _Hip.transform.parent) return false;
+      if (t.parent == Hip.transform.parent) return false;
 
       // Dismember
       joint.gameObject.layer = 2;
       UnityEngine.Object.Destroy(joint);
-      t.parent = _Hip.transform.parent;
+      t.parent = Hip.transform.parent;
 
       // Make sure has collider (arm joint)
       if (t.GetComponent<Collider>() == null)
@@ -2207,46 +2005,32 @@ namespace SneakyGame.Ragdoll
     }
     public bool DismemberRandom(Vector3 force)
     {
-      return Dismember(GetRandomJoint(), force);
+      return Dismember(Rig.GetRandomJoint(), force);
     }
     public void DismemberRandomTimes(Vector3 force, int n)
     {
       for (var i = 0; i < n; i++)
       {
-        Dismember(GetRandomJoint(), force * (0.7f + Random.value * 0.4f));
+        Dismember(Rig.GetRandomJoint(), force * (0.7f + Random.value * 0.4f));
       }
-    }
-
-    public HingeJoint GetRandomJoint()
-    {
-      return Random.Range(0, 5) switch
-      {
-        0 => _Spine,
-        1 => _Arm_upper_l,
-        2 => _Arm_upper_r,
-        3 => _Leg_upper_l,
-        4 => _Leg_upper_r,
-
-        _ => null,
-      };
     }
 
     public float GetDistanceTo(Vector3 position)
     {
-      return MathC.Get2DDistance(_Hip.position, position);
+      return MathC.Get2DDistance(Hip.position, position);
     }
 
     public void PlaySound(string soundPath, float min = 1f, float max = 1f, SfxManager.AudioClass audioClass = SfxManager.AudioClass.NONE, bool changePitch = true)
     {
-      SfxManager.PlayAudioSourceSimple(_Controller.position, soundPath, min, max, audioClass, changePitch);
+      SfxManager.PlayAudioSourceSimple(Controller.position, soundPath, min, max, audioClass, changePitch);
     }
 
     public void Destroy()
     {
       _PlayerScript = null;
       _EnemyScript = null;
-      if (_Controller != null)
-        UnityEngine.Object.Destroy(_Controller.parent.gameObject);
+      if (Controller != null)
+        UnityEngine.Object.Destroy(Controller.parent.gameObject);
     }
 
     public static void Reset()

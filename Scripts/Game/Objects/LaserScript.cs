@@ -77,9 +77,11 @@ namespace SneakyGame.Objects
           {
             switch (_type)
             {
+
               // Slice ragdoll in half and kill
               case LaserType.KILL:
                 if (r._IsDead) break;
+
                 // If ragdoll does not take damage, dismember
                 if (!r.TakeDamage(
                   new ActiveRagdoll.RagdollDamageSource()
@@ -96,22 +98,24 @@ namespace SneakyGame.Objects
                     SpawnGiblets = false
                   }))
                   break;
-                HingeJoint j = null;// h.collider.GetComponent<HingeJoint>();
-                if (j == null) j = r._Spine;
+
+                var j = r.Rig.SpineJoint;
                 r.Dismember(j);
-                r._Hip.linearVelocity = Vector3.zero;
+                r.Hip.linearVelocity = Vector3.zero;
+
                 // Particles
                 FunctionsC.PlayComplexParticleSystemAt(FunctionsC.ParticleSystemType.SMOKE, j.transform.position);
                 // Sound
                 r.PlaySound("Ragdoll/Slice", 0.9f, 1.1f);
                 r.PlaySound("Etc/Sizzle", 0.9f, 1.1f);
                 break;
+
               // Alert AIs
               case LaserType.ALARM:
                 _canTrigger = false;
                 foreach (EnemyScript e in EnemyScript._Enemies_alive)
                 {
-                  if (e._Ragdoll._Id == r._Id) continue;
+                  if (e._Ragdoll.Id == r.Id) continue;
                   e.SetRagdollTarget(r);
                   e.TargetFound();
                 }

@@ -144,7 +144,7 @@ namespace SneakyGame.Objects
     }
 
     public ActiveRagdoll _SourceDamageRagdoll { get { return _sourceDamageRagdoll; } }
-    public int _RagdollID { get { return _sourceDamageRagdoll._Id; } }
+    public int _RagdollID { get { return _sourceDamageRagdoll.Id; } }
 
     int _penatrationAmount;
     float _initialForce;
@@ -197,7 +197,7 @@ namespace SneakyGame.Objects
           }
           ))
         {
-          if (_sourceDismember && r._health <= 0) r.Dismember(r._Spine, hitForce);
+          if (_sourceDismember && r._health <= 0) r.Dismember(r.Rig.SpineJoint, hitForce);
           _hitAmount += (int)damage;
           if (_hitAmount <= _penatrationAmount)
           {
@@ -205,7 +205,7 @@ namespace SneakyGame.Objects
             // Check smart bullets
             if ((_sourceDamageRagdoll._PlayerScript?.HasPerk(Perk.PerkType.SMART_BULLETS) ?? false) && _sourceType != ItemType.FLAMETHROWER)
             {
-              RedirectToClosestTarget(r._Hip.gameObject, true);
+              RedirectToClosestTarget(r.Hip.gameObject, true);
             }
 
             return true;
@@ -228,7 +228,7 @@ namespace SneakyGame.Objects
         else if (collider.transform.parent.name == "FRYING_PAN")
         {
           var item_fryingPan = collider.transform.parent.GetComponent<ItemScript>();
-          if (item_fryingPan._ragdoll._Id != _sourceDamageRagdoll._Id)
+          if (item_fryingPan._ragdoll.Id != _sourceDamageRagdoll.Id)
           {
 
             var logic = true;
@@ -236,7 +236,7 @@ namespace SneakyGame.Objects
             // Don't deflect if bullet hits frying pan from grapler
             if (
               _sourceItemRagdoll._IsGrappled &&
-              _sourceItemRagdoll._Id == _sourceDamageRagdoll._Id &&
+              _sourceItemRagdoll.Id == _sourceDamageRagdoll.Id &&
               item_fryingPan._ragdoll.IsGrappling(_sourceDamageRagdoll)
               )
               logic = false;
@@ -263,7 +263,7 @@ namespace SneakyGame.Objects
                 PlaySparks(true);
                 PlayBulletEffectDropBullets(transform.position, 1);
 
-                item_fryingPan._ragdoll.Recoil(-(_sourceItemRagdoll._Hip.position - item_fryingPan.transform.position).normalized, _rb.linearVelocity.magnitude / 15f, false);
+                item_fryingPan._ragdoll.Recoil(-(_sourceItemRagdoll.Hip.position - item_fryingPan.transform.position).normalized, _rb.linearVelocity.magnitude / 15f, false);
 
                 CheckOnDestroy(item_fryingPan._ragdoll, item_fryingPan.GetEntityId());
                 OnHideBullet();
@@ -285,10 +285,10 @@ namespace SneakyGame.Objects
         {
 
           if (r._IsDead) return;
-          if (r._Id == _lastRagdollId) return;
+          if (r.Id == _lastRagdollId) return;
           if (r.IsGrappleRelated(_sourceDamageRagdoll)) return;
-          _lastRagdollId = r._Id;
-          if (r._Id == _sourceDamageRagdoll._Id && !_canDamageSource) return;
+          _lastRagdollId = r.Id;
+          if (r.Id == _sourceDamageRagdoll.Id && !_canDamageSource) return;
 
           // If bullet hit is swinging and has a two-handed weapon (sword), reflect bullet
           if (r.HasActiveBulletDeflector())
@@ -369,7 +369,7 @@ namespace SneakyGame.Objects
       // Check closest target
       var target = FunctionsC.GetClosestTargetTo(_sourceDamageRagdoll, transform.position, false, false);
       if (target != null && target._ragdoll != null)
-        targetPosition = GetLocalPosition(target._ragdoll._Hip.position);
+        targetPosition = GetLocalPosition(target._ragdoll.Hip.position);
 
       // Check 2nd closest enemy
       var bulletPos = _rb.position + new Vector3(0f, 0.6f, 0f);
@@ -378,7 +378,7 @@ namespace SneakyGame.Objects
       {
         target = FunctionsC.GetClosestTargetTo(_sourceDamageRagdoll, transform.position, false, false);
         if (target != null && target._ragdoll != null)
-          targetPosition = GetLocalPosition(target._ragdoll._Hip.position);
+          targetPosition = GetLocalPosition(target._ragdoll.Hip.position);
       }
 
       // Check nearest mirrors
@@ -753,7 +753,7 @@ namespace SneakyGame.Objects
           var bullet = ItemScript.SpawnBulletTowards(
             sourceRagdoll,
             transform.position,
-            (target._ragdoll._Hip.position - transform.position).normalized,
+            (target._ragdoll.Hip.position - transform.position).normalized,
             ItemType.NONE,
             0
           );
@@ -780,7 +780,7 @@ namespace SneakyGame.Objects
 
       // Change direction
       var speed = rb.linearVelocity.magnitude;
-      rb.linearVelocity = -MathC.Get2DVector(rb.position - _sourceDamageRagdoll._Hip.position).normalized * Mathf.Clamp(speed * 1.6f, 0f, 30f);
+      rb.linearVelocity = -MathC.Get2DVector(rb.position - _sourceDamageRagdoll.Hip.position).normalized * Mathf.Clamp(speed * 1.6f, 0f, 30f);
 
       // Do not hurt person who just redirected
       _sourceDamageRagdoll = redirectorItem._ragdoll;
@@ -798,7 +798,7 @@ namespace SneakyGame.Objects
 
       // Recoil char
       if (recoil)
-        _sourceDamageRagdoll.Recoil(-(_sourceItemRagdoll._Hip.position - _sourceDamageRagdoll._Controller.transform.position).normalized, _rb.linearVelocity.magnitude / 25f, false);
+        _sourceDamageRagdoll.Recoil(-(_sourceItemRagdoll.Hip.position - _sourceDamageRagdoll.Controller.transform.position).normalized, _rb.linearVelocity.magnitude / 25f, false);
 
       // Check special
       if (redirectorItem._ragdoll._IsPlayer && redirectorItem._ragdoll._PlayerScript.HasPerk(Perk.PerkType.EXPLOSIVE_PARRY))

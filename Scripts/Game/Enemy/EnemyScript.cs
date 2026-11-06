@@ -18,6 +18,7 @@ using SneakyGame.Game.Survival;
 using SneakyGame.Game.Incremental;
 using SneakyEngine.Equippable.Item;
 using SneakyEngine.Utility;
+using SneakyEngine.Ragdoll;
 
 namespace SneakyGame.Enemy
 {
@@ -95,17 +96,17 @@ namespace SneakyGame.Enemy
       // Register to handler to index this._id
       SpherecastHandler.Register(this);
 
-      var origin = _ragdoll._Head.position;// + new Vector3(0f, -0.3f, 0f);
+      var origin = _ragdoll.Rig.Head.position;// + new Vector3(0f, -0.3f, 0f);
       var radius = 0.2f;
 
       // 0; Cast at ragdolltarget
-      var target = _ragdollTarget != null ? _ragdollTarget._Hip.transform.position : transform.forward;
-      var dir = -MathC.Get2DVector(_ragdoll._Hip.transform.position - target).normalized;
+      var target = _ragdollTarget != null ? _ragdollTarget.Hip.transform.position : transform.forward;
+      var dir = -MathC.Get2DVector(_ragdoll.Hip.transform.position - target).normalized;
       SpherecastHandler.QueueSpherecast(origin, dir, radius);
 
       // Cast two directions
-      var forward = MathC.Get2DVector(_ragdoll._Head.forward).normalized;
-      var right = MathC.Get2DVector(_ragdoll._Head.right).normalized;
+      var forward = MathC.Get2DVector(_ragdoll.Rig.Head.forward).normalized;
+      var right = MathC.Get2DVector(_ragdoll.Rig.Head.right).normalized;
 
       // 1; left
       dir = (forward + right * (0.025f + Mathf.PingPong(Time.time * 4f, 0.9f))).normalized;
@@ -117,7 +118,7 @@ namespace SneakyGame.Enemy
       SpherecastHandler.QueueSpherecast(origin, dir, radius);
 
       // 3; Cast towards lastknownpos
-      dir = -MathC.Get2DVector(_ragdoll._Head.position - _lastKnownPos).normalized + right * (0.1f + (Mathf.PingPong(Time.time * 1.5f + _Id, 2f) - 1f));
+      dir = -MathC.Get2DVector(_ragdoll.Rig.Head.position - _lastKnownPos).normalized + right * (0.1f + (Mathf.PingPong(Time.time * 1.5f + _Id, 2f) - 1f));
       SpherecastHandler.QueueSpherecast(origin, dir, radius);
 
       // Disable self casting collide
@@ -491,7 +492,7 @@ namespace SneakyGame.Enemy
       if (_ragdoll == null || !_ragdoll._CanReceiveInput) return;
 
       var hasGun = _ragdoll.HasGun();
-      var position = _ragdoll._Hip.position;
+      var position = _ragdoll.Hip.position;
 
       if (!_beganPatrolling)
       {
@@ -781,7 +782,7 @@ namespace SneakyGame.Enemy
               else if ((_ragdollTarget?._invisible ?? false) && !IsChaser() && _targetInLOS)
               {
                 ChangeState(State.SEARCHING);
-                _lastKnownPos = _ragdollTarget._Hip.position;
+                _lastKnownPos = _ragdollTarget.Hip.position;
                 _agent.SetDestination(_lastKnownPos);
 
                 _time_lost = 0f;
@@ -817,7 +818,7 @@ namespace SneakyGame.Enemy
 
                 if (_targetInLOS)
                 {
-                  var dir = MathC.Get2DVector(_ragdollTarget._Hip.position - position);
+                  var dir = MathC.Get2DVector(_ragdollTarget.Hip.position - position);
                   var dis = dir.magnitude;
                   dir = dir.normalized;
 
@@ -846,7 +847,7 @@ namespace SneakyGame.Enemy
                   if (hasGun)
                   {
                     if (_targetInFront)
-                      lookAtPos = new Vector3(_ragdollTarget._Hip.position.x, position.y, _ragdollTarget._Hip.position.z) + dir;
+                      lookAtPos = new Vector3(_ragdollTarget.Hip.position.x, position.y, _ragdollTarget.Hip.position.z) + dir;
                     else
                       lookAtPos = _lastKnownPos;
 
@@ -881,7 +882,7 @@ namespace SneakyGame.Enemy
                         ChaseTarget(false);
                       else
                       {
-                        var samplePos = position + (position - _ragdollTarget._Hip.position).normalized * 5f;
+                        var samplePos = position + (position - _ragdollTarget.Hip.position).normalized * 5f;
                         if (UnityEngine.AI.NavMesh.SamplePosition(samplePos, out _, 4f, UnityEngine.AI.NavMesh.AllAreas))
                         {
                           var save_distance = FunctionsC.GetPathLength(_agent.path.corners);
@@ -1028,7 +1029,7 @@ namespace SneakyGame.Enemy
                 if (_IsZombie) { /*Debug.Log("stuck");*/ }
                 else if (IsChaser() && Time.time - _lastPosSetTime > 0.1f)
                 {
-                  _agent.SetDestination(_ragdollTarget._Hip.position);
+                  _agent.SetDestination(_ragdollTarget.Hip.position);
                   _lastPosSetTime = Time.time;
                 }
                 else
@@ -1279,18 +1280,18 @@ namespace SneakyGame.Enemy
       {
         var olddis = _DIS;
         var targ = _ragdollTarget;
-        var closestTarget = FunctionsC.GetClosestTargetTo(_ragdoll, _ragdoll._Hip.position);
-        if (closestTarget._distance < olddis && targ._Id != closestTarget._ragdoll._Id)
+        var closestTarget = FunctionsC.GetClosestTargetTo(_ragdoll, _ragdoll.Hip.position);
+        if (closestTarget._distance < olddis && targ.Id != closestTarget._ragdoll.Id)
           SetRagdollTarget(closestTarget._ragdoll);
         _DIS = closestTarget._distance;
       }
       else
-        _DIS = FunctionsC.GetClosestTargetTo(_ragdoll, _ragdoll._Hip.position)._distance;
+        _DIS = FunctionsC.GetClosestTargetTo(_ragdoll, _ragdoll.Hip.position)._distance;
 
       {
         RaycastHit h;
-        Vector3 f = MathC.Get2DVector(_ragdoll._Head.forward).normalized,
-           r = _ragdoll._Head.up;
+        Vector3 f = MathC.Get2DVector(_ragdoll.Rig.Head.forward).normalized,
+           r = _ragdoll.Rig.Head.up;
 
         // Check if lost object perusing
         if (_targetFound && _ragdollTarget != null)
@@ -1316,7 +1317,7 @@ namespace SneakyGame.Enemy
 
           // Check if target is in LOS
           bool found = false;
-          Vector3 dirToTarget = -MathC.Get2DVector(_ragdoll._Hip.transform.position - _ragdollTarget._Hip.transform.position).normalized;
+          Vector3 dirToTarget = -MathC.Get2DVector(_ragdoll.Hip.transform.position - _ragdollTarget.Hip.transform.position).normalized;
           if (_IsZombie && _survivalAttributes._enemyType != SurvivalManager.EnemyType.PISTOL_WALK)
           {
             found = true;
@@ -1386,11 +1387,11 @@ namespace SneakyGame.Enemy
           else
           {
             _lastSeenTime = Time.time;
-            _lastKnownPos = _ragdollTarget._Controller.position;
+            _lastKnownPos = _ragdollTarget.Controller.position;
             _time_seen += Time.deltaTime;
             _time_lost = 0f;
             _targetInLOS = true;
-            float lookMagnitude = (dirToTarget - MathC.Get2DVector(_ragdoll._Head.forward)).magnitude;
+            float lookMagnitude = (dirToTarget - MathC.Get2DVector(_ragdoll.Rig.Head.forward)).magnitude;
             if (lookMagnitude < 1.4f)
             {
               _targetInFront = true;
@@ -1424,7 +1425,7 @@ namespace SneakyGame.Enemy
             {
               CheckRay(h, true);
               if ((_state == State.SEARCHING || (_state == State.SUSPICIOUS && _patroling)) && _canMove)
-                LookAt(_canMove ? transform.position + f : transform.position + -MathC.Get2DVector(_ragdoll._Head.position - _lastKnownPos).normalized);
+                LookAt(_canMove ? transform.position + f : transform.position + -MathC.Get2DVector(_ragdoll.Rig.Head.position - _lastKnownPos).normalized);
             }
           }
       }
@@ -1462,8 +1463,8 @@ namespace SneakyGame.Enemy
         {
           c = false;
           var minVal = 0.5f;
-          var dirToTarget = -MathC.Get2DVector(_ragdoll._Head.position - _ragdollTarget._Hip.transform.position).normalized;
-          var lookMagnitude = (dirToTarget - MathC.Get2DVector(_ragdoll._Head.forward)).magnitude;
+          var dirToTarget = -MathC.Get2DVector(_ragdoll.Rig.Head.position - _ragdollTarget.Hip.transform.position).normalized;
+          var lookMagnitude = (dirToTarget - MathC.Get2DVector(_ragdoll.Rig.Head.forward)).magnitude;
           if (lookMagnitude < minVal)
             c = true;
         }
@@ -1486,7 +1487,7 @@ namespace SneakyGame.Enemy
 
       // Check if found another enemy
       var rag = ActiveRagdoll.GetRagdoll(hit.collider.gameObject);
-      if (rag != null && !rag.IsSelf(_ragdoll._Hip.gameObject) && !rag._IsPlayer)
+      if (rag != null && !rag.IsSelf(_ragdoll.Hip.gameObject) && !rag._IsPlayer)
       {
         var e = rag._EnemyScript;
 
@@ -1527,7 +1528,7 @@ namespace SneakyGame.Enemy
     void UpdateChaseTarget(bool checkTurnaround)
     {
       //if(_targetInLOS && _time_lost < 10f)
-      _lastKnownPos = _ragdollTarget._Controller.position;
+      _lastKnownPos = _ragdollTarget.Controller.position;
 
       // Check chaser
       if (!checkTurnaround)
@@ -1585,10 +1586,10 @@ namespace SneakyGame.Enemy
       }
 
       // Make sure is not targeting self
-      if (_ragdoll._Id == ragdoll._Id) return;
+      if (_ragdoll.Id == ragdoll.Id) return;
 
       // Check for same setting
-      if (_ragdollTarget != null && _ragdollTarget._Id == ragdoll._Id) return;
+      if (_ragdollTarget != null && _ragdollTarget.Id == ragdoll.Id) return;
       _ragdollTarget = ragdoll;
     }
 
@@ -1596,7 +1597,7 @@ namespace SneakyGame.Enemy
     // Fired when target is first found
     public void TargetFound(bool run = true)
     {
-      _lastKnownPos = _ragdollTarget._Controller.position;
+      _lastKnownPos = _ragdollTarget.Controller.position;
       _lastSeenTime = Time.time;
 
       // Make sure not already pursuing
@@ -1807,16 +1808,16 @@ namespace SneakyGame.Enemy
       // Equip start items
       if (_itemLeft != ItemType.NONE)
       {
-        _ragdoll.EquipItem(_itemLeft, ActiveRagdoll.Side.LEFT);
+        _ragdoll.EquipItem(_itemLeft, Side.LEFT);
       }
       else
-        _ragdoll.AddArmJoint(ActiveRagdoll.Side.LEFT);
+        _ragdoll.Rig.AddArmJoints(Side.LEFT);
       if (_itemRight != ItemType.NONE)
       {
-        _ragdoll.EquipItem(_itemRight, ActiveRagdoll.Side.RIGHT);
+        _ragdoll.EquipItem(_itemRight, Side.RIGHT);
       }
       else
-        _ragdoll.AddArmJoint(ActiveRagdoll.Side.RIGHT);
+        _ragdoll.Rig.AddArmJoints(Side.RIGHT);
 
       // Special
       if (_itemLeft == ItemType.PISTOL_SILENCED)
@@ -2478,7 +2479,7 @@ namespace SneakyGame.Enemy
                 }
                 else
                 {
-                  var closest_player = PlayerScript.GetClosestPlayerTo(new Vector2(_ragdoll._Controller.position.x, _ragdoll._Controller.position.z));
+                  var closest_player = PlayerScript.GetClosestPlayerTo(new Vector2(_ragdoll.Controller.position.x, _ragdoll.Controller.position.z));
                   if (closest_player != null)
                   {
                     Powerup._Powerups[0].Activate(closest_player._Ragdoll);

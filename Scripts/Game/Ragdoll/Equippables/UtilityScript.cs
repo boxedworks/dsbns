@@ -10,6 +10,7 @@ using UnityEngine;
 using SneakyEngine.Equippable.Item;
 using SneakyEngine.Utility;
 using SneakyGame.Enemy;
+using SneakyEngine.Ragdoll;
 
 namespace SneakyGame.Ragdoll.Equippables
 {
@@ -386,7 +387,7 @@ namespace SneakyGame.Ragdoll.Equippables
               var killed = false;
               if (rag != null)
               {
-                if (rag._Id == _ragdoll._Id) return;
+                if (rag.Id == _ragdoll.Id) return;
                 if (rag._IsDead) return;
                 killed = true;
                 transform.parent = c.transform;
@@ -398,7 +399,7 @@ namespace SneakyGame.Ragdoll.Equippables
                     HitForce = new Vector3(0f, 1f, 0f),
 
                     Damage = 1,
-                    DamageSource = _ragdoll._Hip.position,
+                    DamageSource = _ragdoll.Hip.position,
                     DamageSourceType = ActiveRagdoll.DamageSourceType.THROW_MELEE,
 
                     SpawnBlood = true,
@@ -443,13 +444,13 @@ namespace SneakyGame.Ragdoll.Equippables
               var rag = ActiveRagdoll.GetRagdoll(c.gameObject);
               if (rag != null)
               {
-                if (rag._Id == _ragdoll._Id) return;
+                if (rag.Id == _ragdoll.Id) return;
                 if (rag.IsGrappleRelated(_ragdoll)) return;
                 if (!rag._IsDead)
                 {
                   // Check for same ragdoll
-                  if (_hitRagdolls.Contains(rag._Id)) return;
-                  _hitRagdolls.Add(rag._Id);
+                  if (_hitRagdolls.Contains(rag.Id)) return;
+                  _hitRagdolls.Add(rag.Id);
 
                   rag.TakeDamage(
                     new ActiveRagdoll.RagdollDamageSource()
@@ -459,13 +460,13 @@ namespace SneakyGame.Ragdoll.Equippables
                       HitForce = new Vector3(0f, 1f, 0f),
 
                       Damage = 1,
-                      DamageSource = _ragdoll._Hip.position,
+                      DamageSource = _ragdoll.Hip.position,
                       DamageSourceType = ActiveRagdoll.DamageSourceType.THROW_MELEE,
 
                       SpawnBlood = true,
                       SpawnGiblets = true
                     });
-                  rag.Dismember(rag._Spine);
+                  rag.Dismember(rag.Rig.SpineJoint);
                   EnemyScript.CheckSound(transform.position, EnemyScript.Loudness.SUPERSOFT);
                   PlaySound(Audio.UTILITY_ACTION);
                 }
@@ -546,7 +547,7 @@ namespace SneakyGame.Ragdoll.Equippables
                 var rag = ActiveRagdoll.GetRagdoll(c.collider.gameObject);
                 if (rag != null)
                 {
-                  if (rag._Id == _ragdoll._Id) return;
+                  if (rag.Id == _ragdoll.Id) return;
                   transform.parent = c.transform;
                   PlaySound(Audio.UTILITY_ACTION);
                 }
@@ -599,7 +600,7 @@ namespace SneakyGame.Ragdoll.Equippables
                 var rag = ActiveRagdoll.GetRagdoll(c.collider.gameObject);
                 if (rag != null)
                 {
-                  if (rag._Id == _ragdoll._Id) return;
+                  if (rag.Id == _ragdoll.Id) return;
                   transform.parent = c.transform;
                   PlaySound(Audio.UTILITY_ACTION);
                 }
@@ -727,7 +728,7 @@ namespace SneakyGame.Ragdoll.Equippables
               var killed = false;
               if (rag != null)
               {
-                if (rag._Id == _ragdoll._Id || rag._IsDead) return;
+                if (rag.Id == _ragdoll.Id || rag._IsDead) return;
                 transform.parent = c.transform;
 
                 killed = true;
@@ -739,7 +740,7 @@ namespace SneakyGame.Ragdoll.Equippables
                     HitForce = new Vector3(0f, 1f, 0f),
 
                     Damage = 1,
-                    DamageSource = _ragdoll._Hip.position,
+                    DamageSource = _ragdoll.Hip.position,
                     DamageSourceType = ActiveRagdoll.DamageSourceType.THROW_MELEE,
 
                     SpawnBlood = true,
@@ -773,7 +774,7 @@ namespace SneakyGame.Ragdoll.Equippables
                     var targetPosition = Vector3.zero;
                     var closestTarget = FunctionsC.GetClosestTargetTo(_ragdoll, transform.position, false, false);
                     if (closestTarget._ragdoll != null)
-                      targetPosition = closestTarget._ragdoll._Hip.position;
+                      targetPosition = closestTarget._ragdoll.Hip.position;
 
                     if (targetPosition != Vector3.zero)
                     {
@@ -781,7 +782,7 @@ namespace SneakyGame.Ragdoll.Equippables
                       var shootDir = (targetPosition - transform.position).normalized;
                       var bullet = SpawnBulletTowards(
                         _ragdoll,
-                        new Vector3(transform.position.x, _ragdoll._Spine.transform.position.y, transform.position.z) + shootDir * 0.2f + MathC.Get2DVector(_throwPosition - transform.position).normalized * 0.2f,
+                        new Vector3(transform.position.x, _ragdoll.Rig.SpineJoint.transform.position.y, transform.position.z) + shootDir * 0.2f + MathC.Get2DVector(_throwPosition - transform.position).normalized * 0.2f,
                         shootDir,
                         ItemType.NONE,
                         0
@@ -844,7 +845,7 @@ namespace SneakyGame.Ragdoll.Equippables
               var killed = false;
               if (rag != null)
               {
-                if (rag._Id == _ragdoll._Id) return;
+                if (rag.Id == _ragdoll.Id) return;
                 if (rag._IsDead) return;
                 killed = true;
                 transform.parent = c.transform;
@@ -856,7 +857,7 @@ namespace SneakyGame.Ragdoll.Equippables
                     HitForce = new Vector3(0f, 1f, 0f),
 
                     Damage = 1,
-                    DamageSource = _ragdoll._Hip.position,
+                    DamageSource = _ragdoll.Hip.position,
                     DamageSourceType = ActiveRagdoll.DamageSourceType.THROW_MELEE,
 
                     SpawnBlood = true,
@@ -949,7 +950,7 @@ namespace SneakyGame.Ragdoll.Equippables
                   var rag = ActiveRagdoll.GetRagdoll(c.collider.gameObject);
                   if (rag != null)
                   {
-                    if (rag._Id == _ragdoll._Id) return;
+                    if (rag.Id == _ragdoll.Id) return;
                     transform.parent = c.transform;
                     Destroy(_rb);
                     _explosion.enabled = false;
@@ -992,7 +993,7 @@ namespace SneakyGame.Ragdoll.Equippables
 
                   //
                   if (Time.time - _thrownTimer < 0.1f)
-                    if (rag._Id == _ragdoll._Id) return;
+                    if (rag.Id == _ragdoll.Id) return;
 
                   var distance = rag.GetDistanceTo(transform.position);
                   if (distance > 0.4f) return;
@@ -1005,7 +1006,7 @@ namespace SneakyGame.Ragdoll.Equippables
                     if (grappleeDistance < distance)
                     {
                       rag = grapplee;
-                      stickToTransform = (rag._Leg_lower_l != null ? rag._Leg_lower_l : rag._Leg_lower_r).transform;
+                      stickToTransform = (rag.Rig.LegLowerL != null ? rag.Rig.LegLowerL : rag.Rig.LegLowerR).transform;
                     }
                   });
 
@@ -1018,7 +1019,7 @@ namespace SneakyGame.Ragdoll.Equippables
                     //HitForce = new Vector3(0f, 1f, 0f),
 
                     Damage = 1,
-                    DamageSource = _ragdoll._Hip.position,
+                    DamageSource = _ragdoll.Hip.position,
                     DamageSourceType = ActiveRagdoll.DamageSourceType.MELEE,
 
                     SpawnBlood = true,
@@ -1085,7 +1086,7 @@ namespace SneakyGame.Ragdoll.Equippables
 
                   //
                   if (Time.time - _thrownTimer < 0.1f)
-                    if (rag._Id == _ragdoll._Id) return;
+                    if (rag.Id == _ragdoll.Id) return;
 
                   var distance = rag.GetDistanceTo(transform.position);
                   if (distance > 0.4f) return;
@@ -1208,7 +1209,7 @@ namespace SneakyGame.Ragdoll.Equippables
         if (_utility_type == UtilityType.MORTAR_STRIKE && _mortarAim != null)
           if (_triggerDown)
           {
-            var desiredPos = _ragdoll._Hip.position + MathC.Get2DVector(_ragdoll._Hip.transform.forward) * Mathf.Clamp(_downTime * 6f, 0f, 3f);
+            var desiredPos = _ragdoll.Hip.position + MathC.Get2DVector(_ragdoll.Hip.transform.forward) * Mathf.Clamp(_downTime * 6f, 0f, 3f);
             _mortarAim.position += 20f * Time.deltaTime * (desiredPos - _mortarAim.position);
 
             var scaleMod = 2f + Mathf.Sin(Time.time * 6f) * 0.1f;
@@ -1221,13 +1222,13 @@ namespace SneakyGame.Ragdoll.Equippables
           // Show ring for cooked grenade
           Vector3 ringPos;
           if (_utility_type == UtilityType.GRENADE && extra && !_thrown)
-            ringPos = _ragdoll._transform_parts._hip.position + _ragdoll._transform_parts._hip.forward * 0.3f;
+            ringPos = _ragdoll.Rig.Hip.position + _ragdoll.Rig.Hip.forward * 0.3f;
 
           // Normal ring behavior
           else
           {
-            if (!_mesh.activeSelf && _ragdoll != null && _ragdoll._transform_parts._hip != null)
-              ringPos = _ragdoll._transform_parts._hip.position;
+            if (!_mesh.activeSelf && _ragdoll != null && _ragdoll.Rig.Hip != null)
+              ringPos = _ragdoll.Rig.Hip.position;
             else
               ringPos = transform.position;
           }
@@ -1267,7 +1268,7 @@ namespace SneakyGame.Ragdoll.Equippables
                 // If not thrown, explode in hand
                 if (!_thrown)
                 {
-                  var spawnPos = _ragdoll._transform_parts._hip.position + _ragdoll._transform_parts._hip.forward * 0.3f;
+                  var spawnPos = _ragdoll.Rig.Hip.position + _ragdoll.Rig.Hip.forward * 0.3f;
                   spawnPos.y = BulletScript.s_BULLET_HEIGHT;
                   transform.position = spawnPos;
                   if (_unregister) _ragdoll._PlayerScript?._Profile.UtilityUse(_side);
@@ -1361,9 +1362,9 @@ namespace SneakyGame.Ragdoll.Equippables
         AnimateUi(PlayerProfile.Animation.AnimationType.Shoot, 0.2f);
 
       //
-      var forward = _ragdoll._Hip.transform.forward;
-      if (mode == 1) forward = _ragdoll._Hip.transform.right;
-      else if (mode == 2) forward = -_ragdoll._Hip.transform.right;
+      var forward = _ragdoll.Hip.transform.forward;
+      if (mode == 1) forward = _ragdoll.Hip.transform.right;
+      else if (mode == 2) forward = -_ragdoll.Hip.transform.right;
 
       // Rotation
       if (_spawnDirection != Vector3.zero)
@@ -1372,7 +1373,7 @@ namespace SneakyGame.Ragdoll.Equippables
       }
 
       var spawnPosition = _spawnLocation != Vector3.zero ? _spawnLocation :
-        _ragdoll._Spine.transform.position + forward * 0.6f + new Vector3(0f, _explosion != null ? 0.25f : 0.1f, 0f);
+        _ragdoll.Rig.SpineJoint.transform.position + forward * 0.6f + new Vector3(0f, _explosion != null ? 0.25f : 0.1f, 0f);
       spawnPosition.y = BulletScript.s_BULLET_HEIGHT;
       _rb.position = _throwPosition = spawnPosition;
       transform.localScale = new Vector3(0.01f, 0.01f, 0.01f);
@@ -1386,20 +1387,20 @@ namespace SneakyGame.Ragdoll.Equippables
       _rb.AddForce(
         MathC.Get2DVector(((_throwSpeed + Mathf.Clamp(_downTimeSave, 0f, 4f)) * 250f * forward +
         Vector3.up * 55f +
-        _ragdoll._Hip.linearVelocity * 1.3f) * _forceModifier) * 0.012f, ForceMode.Impulse);
+        _ragdoll.Hip.linearVelocity * 1.3f) * _forceModifier) * 0.012f, ForceMode.Impulse);
 
       // Rotate
       if (_spin)
       {
         var isCoin = _utility_type == UtilityType.COIN;
         if (isCoin)
-          CoinSpin(_ragdoll._Hip.transform.right);
+          CoinSpin(_ragdoll.Hip.transform.right);
         else
         {
           if (_spinYAxis)
             _rb.maxAngularVelocity = 45f + 5f * Random.value;
           var spinForce = 50f;
-          _rb.AddTorque((_spinYAxis ? Vector3.up : _ragdoll._Hip.transform.right) * spinForce, ForceMode.Impulse);
+          _rb.AddTorque((_spinYAxis ? Vector3.up : _ragdoll.Hip.transform.right) * spinForce, ForceMode.Impulse);
         }
       }
 
@@ -1435,7 +1436,7 @@ namespace SneakyGame.Ragdoll.Equippables
       //
       if (_utility_type == UtilityType.MORTAR_STRIKE && _mortarAim != null)
       {
-        _mortarAim.position = _ragdoll._Hip.position;
+        _mortarAim.position = _ragdoll.Hip.position;
 
         if (_mortarAudioSource == null)
         {
@@ -1459,9 +1460,9 @@ namespace SneakyGame.Ragdoll.Equippables
         if (!player._Profile.CanUtilityReload(side))
         {
           // Check for right side
-          if (side == ActiveRagdoll.Side.LEFT && player.HasUtility(_utility_type, ActiveRagdoll.Side.RIGHT).Item1)
+          if (side == Side.LEFT && player.HasUtility(_utility_type, Side.RIGHT).Item1)
           {
-            side = ActiveRagdoll.Side.RIGHT;
+            side = Side.RIGHT;
             if (player._Profile.CanUtilityReload(side))
             {
               // Give player utility and update player UI
