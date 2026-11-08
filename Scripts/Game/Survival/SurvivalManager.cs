@@ -680,16 +680,16 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
       //var healed = false;
       if (Perk.HasPerk(p._Id, Perk.PerkType.ARMOR_UP))
       {
-        if (p._Ragdoll._health != 5)
+        if (p._Ragdoll.Health != 5)
         {
-          p._Ragdoll._health = 5;
+          p._Ragdoll.Health = 5;
           p._Ragdoll.AddArmor();
           //healed = true;
         }
       }
-      else if (p._Ragdoll._health != 3)
+      else if (p._Ragdoll.Health != 3)
       {
-        p._Ragdoll._health = 3;
+        p._Ragdoll.Health = 3;
         //healed = true;
       }
 
@@ -843,7 +843,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
           var ragdoll = ActiveRagdoll.GetRagdoll(hit.collider.gameObject);
           if (ragdoll == null || ragdoll._IsPlayer) return;
 
-          enemy_ragdoll._ForceGlobal += (enemy_next._strafeRight ? 1f : -1f) * 3f * Time.deltaTime * enemy_ragdoll.Hip.transform.right;
+          enemy_ragdoll.Recoil((enemy_next._strafeRight ? 1f : -1f) * Time.deltaTime * enemy_ragdoll.Hip.transform.right, 3f, false);
           return;
         }
 
@@ -1057,7 +1057,7 @@ you survived 10 waves and have unlocked a <color=yellow>new survival map</color>
             if (e != null)
             {
               e._moveSpeed = movespeed + (-0.1f + Random.value * 0.2f);
-              e._Ragdoll._health = health;
+              e._Ragdoll.Health = health;
             }
 
             SpawnLogic._NextSpawnTime = Time.time + SpawnLogic._SpawnTime;

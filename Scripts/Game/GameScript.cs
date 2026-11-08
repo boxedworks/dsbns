@@ -1119,7 +1119,7 @@ public class GameScript : MonoBehaviour
   {
     foreach (var player in PlayerScript.s_Players)
     {
-      if (player == null || player._Ragdoll == null || player._Ragdoll._health < 1) continue;
+      if (player == null || player._Ragdoll == null || player._Ragdoll.Health < 1) continue;
 
       RemoveCrown();
 

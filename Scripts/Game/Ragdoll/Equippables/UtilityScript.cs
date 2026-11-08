@@ -12,6 +12,7 @@ using SneakyEngine.Utility;
 using SneakyGame.Enemy;
 using SneakyEngine.Ragdoll;
 using SneakyEngine.Engine;
+using SneakyEngine.Ragdoll.Actions;
 
 namespace SneakyGame.Ragdoll.Equippables
 {
@@ -401,7 +402,7 @@ namespace SneakyGame.Ragdoll.Equippables
 
                     Damage = 1,
                     DamageSource = _ragdoll.Hip.position,
-                    DamageSourceType = ActiveRagdoll.DamageSourceType.THROW_MELEE,
+                    DamageSourceType = DamageSourceType.THROW_MELEE,
 
                     SpawnBlood = true,
                     SpawnGiblets = false
@@ -462,7 +463,7 @@ namespace SneakyGame.Ragdoll.Equippables
 
                       Damage = 1,
                       DamageSource = _ragdoll.Hip.position,
-                      DamageSourceType = ActiveRagdoll.DamageSourceType.THROW_MELEE,
+                      DamageSourceType = DamageSourceType.THROW_MELEE,
 
                       SpawnBlood = true,
                       SpawnGiblets = true
@@ -742,7 +743,7 @@ namespace SneakyGame.Ragdoll.Equippables
 
                     Damage = 1,
                     DamageSource = _ragdoll.Hip.position,
-                    DamageSourceType = ActiveRagdoll.DamageSourceType.THROW_MELEE,
+                    DamageSourceType = DamageSourceType.THROW_MELEE,
 
                     SpawnBlood = true,
                     SpawnGiblets = false
@@ -859,7 +860,7 @@ namespace SneakyGame.Ragdoll.Equippables
 
                     Damage = 1,
                     DamageSource = _ragdoll.Hip.position,
-                    DamageSourceType = ActiveRagdoll.DamageSourceType.THROW_MELEE,
+                    DamageSourceType = DamageSourceType.THROW_MELEE,
 
                     SpawnBlood = true,
                     SpawnGiblets = false
@@ -1021,7 +1022,7 @@ namespace SneakyGame.Ragdoll.Equippables
 
                     Damage = 1,
                     DamageSource = _ragdoll.Hip.position,
-                    DamageSourceType = ActiveRagdoll.DamageSourceType.MELEE,
+                    DamageSourceType = DamageSourceType.MELEE,
 
                     SpawnBlood = true,
                     SpawnGiblets = false

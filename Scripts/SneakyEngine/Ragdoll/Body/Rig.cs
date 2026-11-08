@@ -1,5 +1,6 @@
 
 using System.Collections.Generic;
+using SneakyEngine.Physics;
 using UnityEngine;
 
 namespace SneakyEngine.Ragdoll.Body
@@ -78,6 +79,11 @@ namespace SneakyEngine.Ragdoll.Body
       AddSaveInfo(ArmUpperR);
       AddSaveInfo(ArmLowerL);
       AddSaveInfo(ArmLowerR);
+    }
+
+    public static void Reset()
+    {
+      RigidbodyHandler.Reset();
     }
 
     public void SetDefault(Transform t)
@@ -221,6 +227,11 @@ namespace SneakyEngine.Ragdoll.Body
         SetDefault(ArmUpperR);
         SetDefault(ArmLowerR);
       }
+    }
+
+    public void AddPartListener(Rigidbody rb)
+    {
+      RigidbodyHandler.AddListener(rb, RigidbodyType.BODY);
     }
   }
 }

@@ -311,7 +311,7 @@ public class PlayerProfile
       Menu.PlayNoise(Menu.Noise.COLOR_CHANGE);
 
       // Update UI
-      CreateHealthUI(_Player == null ? 1 : _Player._Ragdoll._health);
+      CreateHealthUI(_Player == null ? 1 : _Player._Ragdoll.Health);
     }
   }
   Transform _ui { get { return GameResources._UI_Player.GetChild(_Id); } }
@@ -799,7 +799,7 @@ public class PlayerProfile
 
   public void UpdateHealthUI()
   {
-    UpdateHealthUI(_Player._Ragdoll._health);
+    UpdateHealthUI(_Player._Ragdoll.Health);
   }
   public void UpdateHealthUI(int health)
   {
@@ -1181,6 +1181,6 @@ public class PlayerProfile
   {
     UpdateIcons();
 
-    CreateHealthUI(_Player == null ? 1 : _Player._Ragdoll._health);
+    CreateHealthUI(_Player == null ? 1 : _Player._Ragdoll.Health);
   }
 }

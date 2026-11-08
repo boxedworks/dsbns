@@ -29,6 +29,7 @@ using SneakyEngine.Utility;
 using SneakyGame.Enemy;
 using SneakyEngine.Ragdoll;
 using SneakyEngine.Engine;
+using SneakyEngine.Ragdoll.Actions;
 
 namespace SneakyGame.Game.Player
 {
@@ -182,7 +183,7 @@ namespace SneakyGame.Game.Player
       _ragdoll = new ActiveRagdoll(ragdollObj, transform, this, null)
       {
         _IsPlayer = true,
-        _health = health
+        Health = health
       };
 
       // Check armor for editor maps
@@ -190,7 +191,7 @@ namespace SneakyGame.Game.Player
         if (_Equipment._Perks != null && _Equipment._Perks.Contains(Perk.PerkType.ARMOR_UP))
         {
           _ragdoll.AddArmor();
-          _ragdoll._health = 3;
+          _ragdoll.Health = 3;
         }
 
       // Get NavMeshAgent
@@ -1082,7 +1083,7 @@ namespace SneakyGame.Game.Player
           var minSpawnDistance = 0f;
           foreach (var player in s_Players)
           {
-            if ((player?._ragdoll._health ?? -1) <= 0) continue;
+            if ((player?._ragdoll.Health ?? -1) <= 0) continue;
             var spawnDistance = player._ragdoll.GetDistanceTo(player._playerSpawn.transform.position);
 
             if (spawnDistance > minSpawnDistance)
@@ -1984,7 +1985,7 @@ namespace SneakyGame.Game.Player
 
               Damage = 100,
               DamageSource = _ragdoll.Hip.position,
-              DamageSourceType = ActiveRagdoll.DamageSourceType.MELEE,
+              DamageSourceType = DamageSourceType.MELEE,
 
               SpawnBlood = false,
               SpawnGiblets = false
@@ -2022,19 +2023,19 @@ namespace SneakyGame.Game.Player
         var rightItem = _Profile._ItemRight;
 
         _ragdoll.SwapItems(
-          new ActiveRagdoll.WeaponSwapData()
+          new WeaponSwapData()
           {
             ItemType = leftItem,
             ItemId = -1,
             ItemClip = -1,
-            ItemUseItem = -1f
+            ItemUseTime = -1f
           },
-          new ActiveRagdoll.WeaponSwapData()
+          new WeaponSwapData()
           {
             ItemType = rightItem,
             ItemId = -1,
             ItemClip = -1,
-            ItemUseItem = -1f
+            ItemUseTime = -1f
           },
           _Profile._EquipmentIndex
         );
@@ -2114,19 +2115,19 @@ namespace SneakyGame.Game.Player
       if (_IsOriginal)
         _Profile._EquipmentIndex++;
       _ragdoll.SwapItems(
-        new ActiveRagdoll.WeaponSwapData()
+        new WeaponSwapData()
         {
           ItemType = _Profile._ItemLeft,
           ItemId = itemId_l,
           ItemClip = clip_l,
-          ItemUseItem = useTime_l
+          ItemUseTime = useTime_l
         },
-        new ActiveRagdoll.WeaponSwapData()
+        new WeaponSwapData()
         {
           ItemType = _Profile._ItemRight,
           ItemId = itemId_r,
           ItemClip = clip_r,
-          ItemUseItem = useTime_r
+          ItemUseTime = useTime_r
         },
         _Profile._EquipmentIndex
       );
@@ -2383,7 +2384,7 @@ namespace SneakyGame.Game.Player
     }
 
 
-    public void OnToggle(ActiveRagdoll source, ActiveRagdoll.DamageSourceType damageSourceType)
+    public void OnToggle(ActiveRagdoll source, DamageSourceType damageSourceType)
     {
       // Record stat
       Stats.RecordDeath(_Id);
@@ -2408,7 +2409,7 @@ namespace SneakyGame.Game.Player
         Achievements.UnlockAchievement(Achievements.Achievement.DIE);
         if (source._IsPlayer && source._PlayerScript != null && source._PlayerScript._Id != _Id)
           Achievements.UnlockAchievement(Achievements.Achievement.TEAM_KILL);
-        if (damageSourceType == ActiveRagdoll.DamageSourceType.EXPLOSION)
+        if (damageSourceType == DamageSourceType.EXPLOSION)
           Achievements.UnlockAchievement(Achievements.Achievement.EXPLODE);
       }
 #endif
@@ -2882,7 +2883,7 @@ namespace SneakyGame.Game.Player
       foreach (var player in s_Players)
       {
         if (playerIds.Contains(player._Id)) continue;
-        if (player._ragdoll._health > 0)
+        if (player._ragdoll.Health > 0)
         {
           playerIds.Add(player._Id);
           numAlive++;

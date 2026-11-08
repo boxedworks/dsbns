@@ -15,6 +15,7 @@ using SneakyEngine.Equippable.Item;
 using SneakyEngine.Utility;
 using SneakyGame.Enemy;
 using SneakyEngine.Ragdoll;
+using SneakyEngine.Ragdoll.Actions;
 
 namespace SneakyGame.Ragdoll.Equippables
 {
@@ -1549,7 +1550,7 @@ namespace SneakyGame.Ragdoll.Equippables
 
            Damage = 1,
            DamageSource = sourceRagdoll.Hip.position,
-           DamageSourceType = ActiveRagdoll.DamageSourceType.MELEE,
+           DamageSourceType = DamageSourceType.MELEE,
 
            SpawnBlood = true,
            SpawnGiblets = shouldDismember

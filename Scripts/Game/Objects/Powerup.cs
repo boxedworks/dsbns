@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using SneakyEngine.Equippable.Item;
 using SneakyEngine.Ragdoll;
+using SneakyEngine.Ragdoll.Actions;
 using SneakyGame.Enemy;
 using SneakyGame.Objects.CustomEntities;
 using SneakyGame.Ragdoll;
@@ -157,7 +158,7 @@ namespace SneakyGame.Objects
 
                     Damage = 100,
                     DamageSource = Vector3.zero,
-                    DamageSourceType = ActiveRagdoll.DamageSourceType.MELEE,
+                    DamageSourceType = DamageSourceType.MELEE,
 
                     SpawnBlood = false,
                     SpawnGiblets = false

@@ -120,9 +120,9 @@ namespace SneakyGame.Game.Items
           {
             if (player._Id == playerId)
             {
-              player._Ragdoll._health += 2;
+              player._Ragdoll.Health += 2;
               player._Profile.UpdateHealthUI();
-              if (player._Ragdoll._health > 3)
+              if (player._Ragdoll.Health > 3)
                 player._Ragdoll.AddArmor();
               return;
             }

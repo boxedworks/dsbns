@@ -10,6 +10,7 @@ using SneakyEngine.Equippable.Item;
 using SneakyEngine.Utility;
 using SneakyGame.Enemy;
 using SneakyEngine.Engine;
+using SneakyEngine.Ragdoll.Actions;
 
 namespace SneakyGame.Objects
 {
@@ -174,7 +175,7 @@ namespace SneakyGame.Objects
           (_deflected ? Mathf.Clamp(_sourceHitForce * 1.5f, 0.5f, 2f) : _sourceHitForce) * (85f + (Random.value * 10f)) * -(_shootPosition - collider.transform.position).normalized
         );
         var pen = _penatrationAmount + 1;
-        var health = r._health;
+        var health = r.Health;
         var max = Mathf.Clamp(pen - _hitAmount, 1f, 10f);
         var damage = Mathf.Clamp(health, 1f, max);
         var damageSource = _sourceDamageRagdoll;
@@ -191,14 +192,14 @@ namespace SneakyGame.Objects
 
             Damage = (int)damage,
             DamageSource = _shootPosition,
-            DamageSourceType = _sourceType == ItemType.FLAMETHROWER ? ActiveRagdoll.DamageSourceType.FIRE : ActiveRagdoll.DamageSourceType.BULLET,
+            DamageSourceType = _sourceType == ItemType.FLAMETHROWER ? DamageSourceType.FIRE : DamageSourceType.BULLET,
 
             SpawnBlood = _sourceType != ItemType.FLAMETHROWER,
             SpawnGiblets = _penatrationAmount > 1
           }
           ))
         {
-          if (_sourceDismember && r._health <= 0) r.Dismember(r.Rig.SpineJoint, hitForce);
+          if (_sourceDismember && r.Health <= 0) r.Dismember(r.Rig.SpineJoint, hitForce);
           _hitAmount += (int)damage;
           if (_hitAmount <= _penatrationAmount)
           {

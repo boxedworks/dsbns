@@ -20,6 +20,7 @@ using SneakyEngine.Equippable.Item;
 using SneakyEngine.Utility;
 using SneakyEngine.Ragdoll;
 using SneakyEngine.Engine;
+using SneakyEngine.Ragdoll.Actions;
 
 namespace SneakyGame.Enemy
 {
@@ -433,7 +434,7 @@ namespace SneakyGame.Enemy
         if (_survivalAttributes._enemyType == SurvivalManager.EnemyType.ARMORED)
         {
           _ragdoll.AddArmor();
-          _ragdoll._health = 3;
+          _ragdoll.Health = 3;
         }
       }
 
@@ -541,7 +542,7 @@ namespace SneakyGame.Enemy
           _ragdoll.TakeDamage(new ActiveRagdoll.RagdollDamageSource()
           {
             Damage = 9999,
-            DamageSourceType = ActiveRagdoll.DamageSourceType.MELEE,
+            DamageSourceType = DamageSourceType.MELEE,
             MuteAudio = true
           });
         }
@@ -1836,7 +1837,7 @@ namespace SneakyGame.Enemy
       return _Enemies_alive.Count == 0;
     }
 
-    public void OnToggle(ActiveRagdoll source, ActiveRagdoll.DamageSourceType damageSourceType)
+    public void OnToggle(ActiveRagdoll source, DamageSourceType damageSourceType)
     {
 
       // Check achievement

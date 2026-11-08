@@ -232,7 +232,7 @@ public static class VersusMode
 
                 PlayerScript lastAlive = null;
                 foreach (var player in PlayerScript.s_Players)
-                  if (player._Ragdoll._health > 0)
+                  if (player._Ragdoll.Health > 0)
                     lastAlive = player;
 
                 // Check game types
@@ -273,7 +273,7 @@ public static class VersusMode
               var teamsAlive = new List<int>();
               foreach (var player in PlayerScript.s_Players)
               {
-                if (player._Ragdoll._health > 0)
+                if (player._Ragdoll.Health > 0)
                 {
                   var teamId = s_playerTeams[player._Id];
                   if (!teamsAlive.Contains(teamId))
@@ -460,7 +460,7 @@ public static class VersusMode
                 var teamId = s_playerTeams[player._Id];
                 if (!teamsAll.Contains(teamId))
                   teamsAll.Add(teamId);
-                if (player._Ragdoll._health > 0)
+                if (player._Ragdoll.Health > 0)
                 {
                   if (!teamsAlive.Contains(teamId))
                     teamsAlive.Add(teamId);

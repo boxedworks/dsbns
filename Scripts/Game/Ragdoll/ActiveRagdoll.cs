@@ -15,11 +15,11 @@ using SneakyGame.Enemy;
 
 using SneakyEngine.Effects;
 using SneakyEngine.Equippable.Item;
-using SneakyEngine.Physics;
 using SneakyEngine.Utility;
 using SneakyEngine.Ragdoll;
 using SneakyEngine.Engine;
 using SneakyGame.Ragdoll.Actions;
+using SneakyEngine.Ragdoll.Actions;
 
 namespace SneakyGame.Ragdoll
 {
@@ -73,23 +73,16 @@ namespace SneakyGame.Ragdoll
     }
     public bool _IsEnemy { get { return !_IsPlayer; } }
 
-    public Vector3 _ForceGlobal;
-
-    // Height above ground
-    static readonly public Vector3 _GROUNDHEIGHT = new(0f, 0.73f, 0f);
+    Vector3 _forceGlobal;
 
     static readonly Vector3
+      _GROUNDHEIGHT = new(0f, 0.73f, 0f),
+
       collider_upperLegPosition = new(0f, 0.71f, 0f),
       collider_upperLegScale = new(0.78f, 1.5f, 0.6f),
 
       collider_lowerLegPosition = new(0f, 0.96f, 0f),
       collider_lowerLegScale = new(0.5f, 2.24f, 0.36f);
-
-    public int _health;
-
-    static List<Tuple<Material, Material>> s_Materials_Ragdoll;
-
-    SkinnedMeshRenderer _renderer;
 
     public float _totalDistanceMoved;
 
@@ -108,28 +101,9 @@ namespace SneakyGame.Ragdoll
 #endif
       _time_died = -1f;
 
-      // Set materials
-      _renderer = Transform.GetChild(0).GetComponent<SkinnedMeshRenderer>();
-      s_Materials_Ragdoll ??= new();
-      if (Id == s_Materials_Ragdoll.Count)
-      {
-        var mat0 = new Material(_renderer.sharedMaterials[0]);
-        mat0.SetFloat("_Metallic", 0.8f);
-        var mat1 = new Material(_renderer.sharedMaterials[1]);
-        mat1.SetFloat("_Metallic", 0.8f);
-
-        s_Materials_Ragdoll.Add(new Tuple<Material, Material>(mat0, mat1));
-      }
-      Resources.UnloadAsset(_renderer.sharedMaterials[0]);
-      Resources.UnloadAsset(_renderer.sharedMaterials[1]);
-      _renderer.sharedMaterials = new Material[] { s_Materials_Ragdoll[Id].Item1, s_Materials_Ragdoll[Id].Item2 };
-
       // Register enemy / player script
       _EnemyScript = enemyScript;
       _PlayerScript = playerScript;
-
-      // Set default health
-      _health = 1;
 
       color = Color.blue * 1.3f;
 
@@ -151,20 +125,6 @@ namespace SneakyGame.Ragdoll
 #endif
 
       var dt = _IsPlayer ? Time.unscaledDeltaTime : Time.deltaTime;
-
-      // Update grabbed rd
-      if (Grapple.IsGrappling)
-      {
-        if (Grapple.Grapplee._IsDead)
-          Grapple.Grapplee = null;
-
-        else
-        {
-          // Get melee side
-          Grapple.Grapplee.Hip.position = Hip.position + Hip.transform.forward * 0.45f + (_GrappleSide == Side.LEFT ? -1f : 1f) * 0.09f * Hip.transform.right;
-          Grapple.Grapplee.Hip.rotation = Hip.rotation;
-        }
-      }
 
       // Update arm spread
       if (Rig.SpineJoint != null)
@@ -210,15 +170,15 @@ namespace SneakyGame.Ragdoll
       {
 
         // Add outside recoil
-        if (_ForceGlobal.magnitude > 0f)
+        if (_forceGlobal.magnitude > 0f)
         {
-          var force_normalize = _ForceGlobal.magnitude < 1f ? _ForceGlobal : _ForceGlobal.normalized;
-          var force_apply = 10f * Time.deltaTime * _ForceGlobal;
+          var force_normalize = _forceGlobal.magnitude < 1f ? _forceGlobal : _forceGlobal.normalized;
+          var force_apply = 10f * Time.deltaTime * _forceGlobal;
 
           var agent = _IsPlayer ? _PlayerScript._agent : _EnemyScript._agent;
           if (!Grapple.IsGrappled)
             agent.Move(force_apply);
-          _ForceGlobal -= force_apply;
+          _forceGlobal -= force_apply;
         }
       }
 
@@ -231,6 +191,26 @@ namespace SneakyGame.Ragdoll
       {
         movePos = Hip.position + _Distance.normalized * 0.35f;
         _Distance = (movePos - Hip.position) * (Time.timeScale < 1f ? 0.3f : 1f);
+      }
+
+      // Grapple logic
+      if (Grapple.IsGrappling)
+      {
+
+        // End grappled
+        if (Grapple.Grapplee._IsDead)
+        {
+          Grapple.Grapplee = null;
+        }
+
+        // Continue grapple
+        else
+        {
+          // Get melee side
+          var sideMod = _GrappleSide == Side.LEFT ? -1f : 1f;
+          Grapple.Grapplee.Hip.position = Hip.position + Hip.transform.forward * 0.45f + sideMod * 0.09f * Hip.transform.right;
+          Grapple.Grapplee.Hip.rotation = Hip.rotation;
+        }
       }
 
       // If grappled, set movepos and distance to origin
@@ -306,7 +286,7 @@ namespace SneakyGame.Ragdoll
         {
           _meleeStartTime = -1f;
 
-          _ForceGlobal += MathC.Get2DVector(moveDir * 0.5f);
+          _forceGlobal += MathC.Get2DVector(moveDir * 0.5f);
 
           // FX
           SfxManager.PlayAudioSourceSimple(Hip.position, "Ragdoll/Quickstep", 0.85f, 1.15f, SfxManager.AudioClass.NONE, true);
@@ -517,7 +497,7 @@ namespace SneakyGame.Ragdoll
       _invisible = toggle;
 
       // Set renderer / layer
-      _renderer.enabled = !toggle;
+      meshRenderer.enabled = !toggle;
       //ToggleRaycasting(!toggle);
 
       // Play FX
@@ -685,14 +665,14 @@ namespace SneakyGame.Ragdoll
           ItemType = _ItemR?._ItemType ?? ItemType.NONE,
           ItemId = _ItemR?._ItemId ?? -1,
           ItemClip = _ItemR?.GetClip() ?? -1,
-          ItemUseItem = _ItemR?._UseTime ?? -1f
+          ItemUseTime = _ItemR?._UseTime ?? -1f
         },
         new WeaponSwapData()
         {
           ItemType = _ItemL?._ItemType ?? ItemType.NONE,
           ItemId = _ItemL?._ItemId ?? -1,
           ItemClip = _ItemL?.GetClip() ?? -1,
-          ItemUseItem = _ItemL?._UseTime ?? -1f
+          ItemUseTime = _ItemL?._UseTime ?? -1f
         },
         index
       );
@@ -744,12 +724,6 @@ namespace SneakyGame.Ragdoll
     }
 
     // Change weapons mid-game
-    public struct WeaponSwapData
-    {
-      public ItemType ItemType;
-      public int ItemClip, ItemId;
-      public float ItemUseItem;
-    }
     public void SwapItems(WeaponSwapData item_left, WeaponSwapData item_right, int index)
     {
       if (!CanSwapWeapons()) return;
@@ -757,12 +731,12 @@ namespace SneakyGame.Ragdoll
       var itemL_type = item_left.ItemType;
       var itemL_id = item_left.ItemId;
       var itemL_clip = item_left.ItemClip;
-      var itemL_useTime = item_left.ItemUseItem;
+      var itemL_useTime = item_left.ItemUseTime;
 
       var itemR_type = item_right.ItemType;
       var itemR_id = item_right.ItemId;
       var itemR_clip = item_right.ItemClip;
-      var itemR_useTime = item_right.ItemUseItem;
+      var itemR_useTime = item_right.ItemUseTime;
 
       // Equip items
       if (_IsPlayer && _PlayerScript._HasTwin && !_PlayerScript._IsOriginalTwin)
@@ -893,17 +867,11 @@ namespace SneakyGame.Ragdoll
       if (_IsPlayer) _PlayerScript.OnTriggerStay(other);
     }
 
-    void AddPartListener(Rigidbody rb)
-    {
-      RigidbodyHandler.AddListener(rb, RigidbodyType.BODY);
-    }
-
     public void SetColors(Color skinColor, Color clothesColor)
     {
       color = skinColor;
-      var mesh = Transform.GetChild(0).GetComponent<SkinnedMeshRenderer>();
-      mesh.sharedMaterials[1].color = skinColor;
-      mesh.sharedMaterials[0].color = clothesColor;
+      meshRenderer.sharedMaterials[1].color = skinColor;
+      meshRenderer.sharedMaterials[0].color = clothesColor;
     }
 
     Coroutine _color_Coroutine;
@@ -922,19 +890,18 @@ namespace SneakyGame.Ragdoll
         color = c;
 
       // Gather mesh renderers by amount of materials and final color
-      var mesh = Transform.GetChild(0).GetComponent<SkinnedMeshRenderer>();
       if (lerpAmount == 0f)
       {
-        Color startColor0 = mesh.sharedMaterials[0].color,
-         startColor1 = mesh.sharedMaterials[1].color;
+        Color startColor0 = meshRenderer.sharedMaterials[0].color,
+         startColor1 = meshRenderer.sharedMaterials[1].color;
 
-        SetLerpAmount(ref mesh, c, 1f, startColor0, startColor1);
+        SetLerpAmount(ref meshRenderer, c, 1f, startColor0, startColor1);
         _PlayerScript?.ChangeRingColor(GameScript.s_IsPartyGameMode && !VersusMode.s_Settings._FreeForAll ? VersusMode.GetTeamColorFromPlayerId(_PlayerScript._Id) : c);
         return;
       }
       if (_color_Coroutine != null)
         CoroutineSystem.TerminateCoroutine(_color_Coroutine);
-      _color_Coroutine = CoroutineSystem.InitiateCoroutine(LerpColor(mesh, c, lerpAmount));
+      _color_Coroutine = CoroutineSystem.InitiateCoroutine(LerpColor(meshRenderer, c, lerpAmount));
     }
     void SetLerpAmount(ref SkinnedMeshRenderer mesh, Color c, float normalized, Color sc0, Color sc1)
     {
@@ -1015,12 +982,12 @@ namespace SneakyGame.Ragdoll
         return false;
       }
 
-      var save_health = _health;
+      var save_health = Health;
       if (!_IsDead)
       {
-        _health -= damage;
+        Health -= damage;
 
-        if (_health <= 0f)
+        if (Health <= 0f)
         {
           Kill(source, damageSourceType, hitForce);
         }
@@ -1036,7 +1003,7 @@ namespace SneakyGame.Ragdoll
           {
             spawnBlood = false;
             var health_threshhold = GameScript.s_IsZombieGameMode ? 3 : 1;
-            if (save_health > health_threshhold && _health <= health_threshhold)
+            if (save_health > health_threshhold && Health <= health_threshhold)
               RemoveArmor(hitForce, false);
             else
             {
@@ -1063,16 +1030,16 @@ namespace SneakyGame.Ragdoll
           if (_hasArmor)
           {
             spawnBlood = false;
-            if (_health <= 1 && save_health > 1)
+            if (Health <= 1 && save_health > 1)
             {
               RemoveArmor(hitForce, false);
 
-              if (_health < 1)
+              if (Health < 1)
               {
                 spawnBlood = true;
               }
             }
-            else if (_health > 0)
+            else if (Health > 0)
             {
               PlaySoundLocal("Enemies/Metal_hit", 0.8f, 1.2f);
               var parts = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.BULLET_COLLIDE)[0];
@@ -1163,7 +1130,7 @@ namespace SneakyGame.Ragdoll
             if (Grapple.Grapplee._hasArmor)
             {
               Grapple.Grapplee.RemoveArmor(Vector3.zero);
-              Grapple.Grapplee._health = 1;
+              Grapple.Grapplee.Health = 1;
             }
           }
         }
@@ -1245,7 +1212,7 @@ namespace SneakyGame.Ragdoll
       if (_PlayerScript?.HasPerk(Perk.PerkType.GRAPPLE_MASTER) ?? false)
       {
         other.AddArmor();
-        other._health = 3;
+        other.Health = 3;
       }
 
       // Fire events
@@ -1258,7 +1225,7 @@ namespace SneakyGame.Ragdoll
 
     public void HideCompletely()
     {
-      _renderer.enabled = false;
+      meshRenderer.enabled = false;
       if (_ItemL != null)
         _ItemL.gameObject.SetActive(false);
       if (_ItemR != null)
@@ -1275,7 +1242,7 @@ namespace SneakyGame.Ragdoll
 
       // Add to part listener for audio
       else
-        AddPartListener(Hip);
+        Rig.AddPartListener(Hip);
 
       // Die instantly
       if (!_CanDie) return;
@@ -1482,17 +1449,6 @@ namespace SneakyGame.Ragdoll
       }
     }
 
-    public enum DamageSourceType
-    {
-      MELEE,
-      BULLET,
-      THROW_MELEE,
-      EXPLOSION,
-      LASER,
-      LARGE_FAST_OBJECT,
-      FIRE
-    }
-
     public void Toggle(ActiveRagdoll source, DamageSourceType damageSourceType, Vector3 hitForce, bool changeColor = true)
     {
       if (_IsDead) return;
@@ -1662,10 +1618,10 @@ namespace SneakyGame.Ragdoll
 
       if (overwrite)
       {
-        _ForceGlobal = MathC.Get2DVector(dir) * force;
+        _forceGlobal = MathC.Get2DVector(dir) * force;
         return;
       }
-      _ForceGlobal += MathC.Get2DVector(dir) * force;
+      _forceGlobal += MathC.Get2DVector(dir) * force;
     }
     public void RecoilSimple(float force, bool overwrite)
     {
@@ -1944,13 +1900,13 @@ namespace SneakyGame.Ragdoll
       }
 
       // Set to render outside of camera
-      _renderer.updateWhenOffscreen = true;
+      meshRenderer.updateWhenOffscreen = true;
 
       // Add force to body part
       if (force.magnitude != 0f)
       {
         var rb = t.GetComponent<Rigidbody>();
-        AddPartListener(rb);
+        Rig.AddPartListener(rb);
         rb.AddForce(force * (t.name == "Head" ? 0.1f : 0.2f), ForceMode.Impulse);
       }
       return true;
@@ -1965,11 +1921,6 @@ namespace SneakyGame.Ragdoll
       {
         Dismember(Rig.GetRandomJoint(), force * (0.7f + Random.value * 0.4f));
       }
-    }
-
-    public float GetDistanceTo(Vector3 position)
-    {
-      return MathC.Get2DDistance(Hip.position, position);
     }
 
     public void PlaySound(string soundPath, float min = 1f, float max = 1f, SfxManager.AudioClass audioClass = SfxManager.AudioClass.NONE, bool changePitch = true)
@@ -1998,7 +1949,7 @@ namespace SneakyGame.Ragdoll
       }
       s_ID = 0;
 
-      RigidbodyHandler.Reset();
+      RagdollController.Reset();
       SfxManager.Reset();
       UtilityScript.Reset();
     }

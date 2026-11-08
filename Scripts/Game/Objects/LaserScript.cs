@@ -1,4 +1,5 @@
-﻿using SneakyGame.Enemy;
+﻿using SneakyEngine.Ragdoll.Actions;
+using SneakyGame.Enemy;
 using SneakyGame.Objects.CustomEntities;
 using SneakyGame.Ragdoll;
 using UnityEngine;
@@ -92,7 +93,7 @@ namespace SneakyGame.Objects
 
                     Damage = 1,
                     DamageSource = new Vector3(0f, 1f, 0f),
-                    DamageSourceType = ActiveRagdoll.DamageSourceType.LASER,
+                    DamageSourceType = DamageSourceType.LASER,
 
                     SpawnBlood = false,
                     SpawnGiblets = false

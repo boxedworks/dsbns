@@ -14,6 +14,7 @@ using SneakyGame.Enemy;
 using SneakyEngine.Engine;
 using SneakyEngine.Utility;
 using SneakyEngine.Physics;
+using SneakyEngine.Ragdoll.Actions;
 
 public static class FunctionsC
 {
@@ -584,7 +585,7 @@ public static class FunctionsC
       // Increment exploded counter and award achievements
       if (!isStunExplosion)
       {
-        if (!ragdoll._IsDead && ragdoll._health <= 3)
+        if (!ragdoll._IsDead && ragdoll.Health <= 3)
         {
           // Check for 3+ kills for slowmo
           if (numKilled++ == 3)
@@ -637,7 +638,7 @@ public static class FunctionsC
 
               Damage = 3,
               DamageSource = Vector3.zero,
-              DamageSourceType = disintigrateCompletely ? ActiveRagdoll.DamageSourceType.FIRE : ActiveRagdoll.DamageSourceType.EXPLOSION,
+              DamageSourceType = disintigrateCompletely ? DamageSourceType.FIRE : DamageSourceType.EXPLOSION,
 
               SpawnBlood = spawnBlood,
               SpawnGiblets = spawnBlood
@@ -1321,7 +1322,7 @@ public static class FunctionsC
                   {
                     Damage = 1,
                     Source = aoe.Source,
-                    DamageSourceType = ActiveRagdoll.DamageSourceType.FIRE,
+                    DamageSourceType = DamageSourceType.FIRE,
                   });
                   break;
               }
