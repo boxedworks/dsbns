@@ -234,7 +234,12 @@ namespace SneakyGame.Ragdoll
         {
           // If player, send footstep sound to enemies to check for detection
           if (_IsPlayer && _PlayerScript._CanDetect && _Distance.magnitude > 0.1f)
-            EnemyScript.CheckSound(Controller.position, _Distance.magnitude > 0.2f ? EnemyScript.Loudness.SOFT : EnemyScript.Loudness.SUPERSOFT);
+            EnemyScript.CheckSound(new CheckSoundData()
+            {
+              NoisePosition = Controller.position,
+              LoudnessLevel = _Distance.magnitude > 0.2f ? Loudness.SOFT : Loudness.SUPERSOFT,
+              RagdollSource = this
+            });
 
           // Sfx
           var footstepAudioSource = false && _bloodFootprintTimer > 0f ? RagdollSystem.SfxFootstepBloody : RagdollSystem.SfxFootstep;
@@ -1269,7 +1274,12 @@ namespace SneakyGame.Ragdoll
 
         system.transform.position = Hip.position;
 
-        EnemyScript.CheckSound(system.transform.position, EnemyScript.Loudness.SUPERSOFT);
+        EnemyScript.CheckSound(new CheckSoundData()
+        {
+          NoisePosition = system.transform.position,
+          LoudnessLevel = Loudness.SUPERSOFT,
+          RagdollSource = this
+        });
         yield return new WaitForSeconds(0.05f);
 
         var emission = system.emission;

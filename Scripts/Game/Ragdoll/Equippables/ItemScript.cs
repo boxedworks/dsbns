@@ -636,7 +636,12 @@ namespace SneakyGame.Ragdoll.Equippables
             if (_ItemType == ItemType.FRYING_PAN)
             {
               PlaySound(Audio.MELEE_HIT, 0.78f, 1.1f);
-              EnemyScript.CheckSound(_ragdoll.Hip.position, EnemyScript.Loudness.SOFT);
+              EnemyScript.CheckSound(new CheckSoundData()
+              {
+                NoisePosition = _ragdoll.Hip.position,
+                LoudnessLevel = Loudness.SOFT,
+                RagdollSource = _ragdoll
+              });
             }
             else
             {
@@ -644,7 +649,12 @@ namespace SneakyGame.Ragdoll.Equippables
               if (_ItemType == ItemType.FIST && _isChargedFist)
                 playExtra = true;
               PlaySound(raycastInfo._ragdoll._IsEnemy && raycastInfo._ragdoll._EnemyScript.IsChaser() ? Audio.MELEE_HIT_METAL : (playExtra ? Audio.MELEE_HIT_BULLET : Audio.MELEE_HIT));
-              EnemyScript.CheckSound(_ragdoll.Hip.position, EnemyScript.Loudness.SUPERSOFT);
+              EnemyScript.CheckSound(new CheckSoundData()
+              {
+                NoisePosition = _ragdoll.Hip.position,
+                LoudnessLevel = Loudness.SUPERSOFT,
+                RagdollSource = _ragdoll
+              });
             }
 
             // If not two handed, stop checking
@@ -1236,11 +1246,21 @@ namespace SneakyGame.Ragdoll.Equippables
             PlaySound(Audio.GUN_SHOOT);
           if (IsGun())
           {
-            EnemyScript.CheckSound(_ragdoll.Hip.position, _silenced ? EnemyScript.Loudness.SUPERSOFT : EnemyScript.Loudness.NORMAL);
+            EnemyScript.CheckSound(new CheckSoundData()
+            {
+              NoisePosition = _ragdoll.Hip.position,
+              LoudnessLevel = _silenced ? Loudness.SUPERSOFT : Loudness.NORMAL,
+              RagdollSource = _ragdoll
+            });
           }
           else
           {
-            EnemyScript.CheckSound(_ragdoll.Hip.position, EnemyScript.Loudness.SUPERSOFT);
+            EnemyScript.CheckSound(new CheckSoundData()
+            {
+              NoisePosition = _ragdoll.Hip.position,
+              LoudnessLevel = Loudness.SUPERSOFT,
+              RagdollSource = _ragdoll
+            });
           }
         }
       }
@@ -1765,14 +1785,24 @@ namespace SneakyGame.Ragdoll.Equippables
     void PlayEmpty()
     {
       PlaySound(Audio.GUN_EMPTY);
-      EnemyScript.CheckSound(_ragdoll.Hip.position, EnemyScript.Loudness.SUPERSOFT);
+      EnemyScript.CheckSound(new CheckSoundData()
+      {
+        NoisePosition = _ragdoll.Hip.position,
+        LoudnessLevel = Loudness.SUPERSOFT,
+        RagdollSource = _ragdoll
+      });
       _triggerDown = false;
     }
 
     public void PlayBulletHit()
     {
       PlaySound(Audio.MELEE_HIT_BULLET, 0.8f, 1.2f);
-      EnemyScript.CheckSound(_ragdoll.Hip.position, EnemyScript.Loudness.SOFT);
+      EnemyScript.CheckSound(new CheckSoundData()
+      {
+        NoisePosition = _ragdoll.Hip.position,
+        LoudnessLevel = Loudness.SOFT,
+        RagdollSource = _ragdoll
+      });
     }
 
     // Reload function
@@ -1788,7 +1818,13 @@ namespace SneakyGame.Ragdoll.Equippables
 
       // Play noise and set clip
       PlaySound(Audio.GUN_RELOAD, reload_speed_mod - 0.1f, reload_speed_mod + 0.1f);
-      if (_ragdoll._IsPlayer) EnemyScript.CheckSound(_ragdoll.Hip.position, EnemyScript.Loudness.SUPERSOFT);
+      if (_ragdoll._IsPlayer)
+        EnemyScript.CheckSound(new CheckSoundData()
+        {
+          NoisePosition = _ragdoll.Hip.position,
+          LoudnessLevel = Loudness.SUPERSOFT,
+          RagdollSource = _ragdoll
+        });
       var clipSave = _clip;
       _clip = Mathf.Clamp(
         _reloadOneAtTime ? _clip + 1 : GetClipSize(),

@@ -567,7 +567,13 @@ namespace SneakyGame.Enemy
         {
           DrawBackMelee(true);
 
-          if (Time.time - _attackTime > 0f && _canAttack)
+          // If enemy grappling enemy, only allow attack if the grappler is in pursuit state
+          var canAttackWhileGrappled = true;
+          if (_ragdoll.Grapple.Grappler._IsEnemy && _ragdoll.Grapple.Grappler._EnemyScript._state != State.PURSUIT)
+            canAttackWhileGrappled = false;
+
+          // Attack
+          if (canAttackWhileGrappled && _canAttack && Time.time - _attackTime > 0f)
           {
 
             // Only attack if is alive, the target is alive, and (the target is in front, or has a machine gun, or has a melee weapon)
@@ -2560,27 +2566,18 @@ namespace SneakyGame.Enemy
 
     #region Sound Functions
     // Check if enemy hears a noise
-    public enum Loudness
-    {
-      //SUPERSUPERSOFT,
-      SUPERSOFT,
-      SOFT,
-      NORMAL,
-      LOUD
-    }
     Loudness _lastLoudness = Loudness.SUPERSOFT;
     int lastBulletID;
-    public static void CheckSound(Vector3 position, Loudness loudness, int bulletID = -1, bool slowReaction = true)
-    {
-      CheckSound(position, position, loudness, bulletID, slowReaction);
-    }
-    /// <summary>
-    /// Noise of volume loudness is produced a position noisePosition.
-    /// If an enemy is within range of noisePosition, they are suspicious at position sourcePosition
-    /// </summary>
-    public static void CheckSound(Vector3 noisePosition, Vector3 sourcePosition, Loudness loudness, int bulletID = -1, bool slowReaction = true)
+    public static void CheckSound(CheckSoundData checkSoundData)
     {
       if (_Enemies_alive == null || GameScript.s_IsZombieGameMode) return;
+
+      var noiseAt = checkSoundData.NoisePosition;
+      var alertPosition = checkSoundData.AlertPosition == null ? noiseAt : checkSoundData.AlertPosition;
+      var loudness = checkSoundData.LoudnessLevel;
+      var bulletID = checkSoundData.BulletID;
+      var slowReaction = checkSoundData.SlowReaction;
+      var ragdollSource = checkSoundData.RagdollSource;
 
       // Decide distance
       var minDistance = loudness == Loudness.SUPERSOFT ? 1.5f : (loudness == Loudness.SOFT ? 3f : (loudness == Loudness.NORMAL ? 6f : 9f));
@@ -2589,7 +2586,13 @@ namespace SneakyGame.Enemy
       foreach (var e in _Enemies_alive)
       {
         // If the ragdoll is dead continue
-        if (e._ragdoll._IsDead || !e._reactToSound || e._IsZombie) continue;
+        if (e._ragdoll._IsDead || !e._reactToSound || e._IsZombie)
+          continue;
+        if (ragdollSource != null)
+        {
+          if (ragdollSource.IsGrappleRelated(e._ragdoll))
+            continue;
+        }
 
         // If ragdoll is chasing, continue
         if (e._state == State.PURSUIT)
@@ -2599,7 +2602,7 @@ namespace SneakyGame.Enemy
           {
 
             // Check distance
-            var dis0 = MathC.Get2DDistance(noisePosition, e.transform.position);
+            var dis0 = MathC.Get2DDistance(noiseAt, e.transform.position);
             if (dis0 < minDistance)
             {
               if (Time.time - e._lastHeardTimer > 0.2f)
@@ -2615,7 +2618,7 @@ namespace SneakyGame.Enemy
 
                 e._lastHeardTimer = Time.time;
                 if (!e._targetInFront && !e._canMove)
-                  e._lastKnownPos = noisePosition;
+                  e._lastKnownPos = noiseAt;
               }
             }
           }
@@ -2624,7 +2627,7 @@ namespace SneakyGame.Enemy
         }
 
         // Check distance
-        var dis = MathC.Get2DDistance(noisePosition, e.transform.position);
+        var dis = MathC.Get2DDistance(noiseAt, e.transform.position);
         if (dis < minDistance)
         {
           if (Time.time - e._lastHeardTimer > 0.15f || IsLouder(loudness, e._lastLoudness))
@@ -2639,11 +2642,10 @@ namespace SneakyGame.Enemy
 
             e._lastLoudness = loudness;
             e._lastHeardTimer = Time.time;
-            //Debug.Log("[" + Time.time + "] Enemy heard noise with loudness: " + loudness + ".. last loudness: " + e._lastLoudness);
             if (slowReaction)
-              e.Suspicious(sourcePosition, loudness);
+              e.Suspicious(alertPosition, loudness);
             else
-              e.Suspicious(sourcePosition, loudness, 0.2f * Random.value);
+              e.Suspicious(alertPosition, loudness, 0.2f * Random.value);
           }
         }
       }

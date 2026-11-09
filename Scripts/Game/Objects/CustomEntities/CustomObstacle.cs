@@ -172,7 +172,7 @@ namespace SneakyGame.Objects.CustomEntities
         CreateUtilityTier(1, UtilityType.GRENADE_IMPACT, 75);
         CreateUtilityTier(1, UtilityType.GRENADE_STUN, 30);
         CreateUtilityTier(1, UtilityType.MIRROR, 50);
-        CreateUtilityTier(1, UtilityType.TACTICAL_BULLET, 25, 2);
+        //CreateUtilityTier(1, UtilityType.TACTICAL_BULLET, 25, 2);
         CreateUtilityTier(1, UtilityType.KUNAI_STICKY, 60);
         CreateUtilityTier(1, UtilityType.C4, 40);
         CreateUtilityTier(1, UtilityType.STOP_WATCH, 40);

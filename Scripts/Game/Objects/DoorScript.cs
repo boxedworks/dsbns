@@ -154,7 +154,11 @@ namespace SneakyGame.Objects
       }
 
       if (!GameScript.s_EditorEnabled)
-        EnemyScript.CheckSound(_door.position, EnemyScript.Loudness.SOFT);
+        EnemyScript.CheckSound(new CheckSoundData()
+        {
+          NoisePosition = _door.position,
+          LoudnessLevel = Loudness.SOFT
+        });
 
       _Opened = !_Opened;
       Toggle(_Opened);

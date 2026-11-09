@@ -410,7 +410,12 @@ namespace SneakyGame.Ragdoll.Equippables
                 PlaySound(Audio.UTILITY_ACTION);
               }
 
-              EnemyScript.CheckSound(transform.position, killed ? EnemyScript.Loudness.SUPERSOFT : EnemyScript.Loudness.SOFT);
+              EnemyScript.CheckSound(new CheckSoundData()
+              {
+                NoisePosition = transform.position,
+                LoudnessLevel = killed ? Loudness.SUPERSOFT : Loudness.SOFT,
+                RagdollSource = _ragdoll
+              });
               _throwParticles.Stop();
               Destroy(_rb);
               _stuck = true;
@@ -469,7 +474,12 @@ namespace SneakyGame.Ragdoll.Equippables
                       SpawnGiblets = true
                     });
                   rag.Dismember(rag.Rig.SpineJoint);
-                  EnemyScript.CheckSound(transform.position, EnemyScript.Loudness.SUPERSOFT);
+                  EnemyScript.CheckSound(new CheckSoundData()
+                  {
+                    NoisePosition = transform.position,
+                    LoudnessLevel = Loudness.SUPERSOFT,
+                    RagdollSource = _ragdoll
+                  });
                   PlaySound(Audio.UTILITY_ACTION);
                 }
               }
@@ -486,7 +496,12 @@ namespace SneakyGame.Ragdoll.Equippables
 
                 //((SphereCollider)_c).radius *= 1.7f;
                 PlaySound(Audio.UTILITY_HIT_FLOOR);
-                EnemyScript.CheckSound(transform.position, EnemyScript.Loudness.SOFT);
+                EnemyScript.CheckSound(new CheckSoundData()
+                {
+                  NoisePosition = transform.position,
+                  LoudnessLevel = Loudness.SOFT,
+                  RagdollSource = _ragdoll
+                });
               }
             };
 
@@ -560,7 +575,12 @@ namespace SneakyGame.Ragdoll.Equippables
                 //_rb.isKinematic = true;
 
                 // Trigger explosion
-                EnemyScript.CheckSound(transform.position, EnemyScript.Loudness.SOFT);
+                EnemyScript.CheckSound(new CheckSoundData()
+                {
+                  NoisePosition = transform.position,
+                  LoudnessLevel = Loudness.SOFT,
+                  RagdollSource = _ragdoll
+                });
                 Explode(1f);
               }
             };
@@ -698,7 +718,12 @@ namespace SneakyGame.Ragdoll.Equippables
               particles.transform.position = transform.position;
               particles.Play();
 
-              EnemyScript.CheckSound(transform.position, EnemyScript.Loudness.SOFT);
+              EnemyScript.CheckSound(new CheckSoundData()
+              {
+                NoisePosition = transform.position,
+                LoudnessLevel = Loudness.SOFT,
+                RagdollSource = _ragdoll
+              });
               PlaySound(3);
             }
             System.Action<ProjectileCollisionData, ProjectileCollisionData> onDisable = (self, other) =>
@@ -753,7 +778,12 @@ namespace SneakyGame.Ragdoll.Equippables
               else
                 PlaySound(Audio.UTILITY_HIT_FLOOR);
               _throwParticles.Stop();
-              EnemyScript.CheckSound(transform.position, killed ? EnemyScript.Loudness.SUPERSOFT : EnemyScript.Loudness.SOFT);
+              EnemyScript.CheckSound(new CheckSoundData()
+              {
+                NoisePosition = transform.position,
+                LoudnessLevel = killed ? Loudness.SUPERSOFT : Loudness.SOFT,
+                RagdollSource = _ragdoll
+              });
               Destroy(_rb);
 
               //
@@ -868,7 +898,12 @@ namespace SneakyGame.Ragdoll.Equippables
                 PlaySound(Audio.UTILITY_ACTION);
               }
 
-              EnemyScript.CheckSound(transform.position, killed ? EnemyScript.Loudness.SUPERSOFT : EnemyScript.Loudness.SOFT);
+              EnemyScript.CheckSound(new CheckSoundData()
+              {
+                NoisePosition = transform.position,
+                LoudnessLevel = killed ? Loudness.SUPERSOFT : Loudness.SOFT,
+                RagdollSource = _ragdoll
+              });
               _throwParticles.Stop();
               Destroy(_rb);
               _stuck = true;
@@ -1263,7 +1298,12 @@ namespace SneakyGame.Ragdoll.Equippables
               // Delayed explode grenade
               _explosion.Trigger(_ragdoll, 1.3f);
               PlaySound(Audio.UTILITY_EXTRA);
-              EnemyScript.CheckSound(transform.position, EnemyScript.Loudness.SUPERSOFT);
+              EnemyScript.CheckSound(new CheckSoundData()
+              {
+                NoisePosition = transform.position,
+                LoudnessLevel = Loudness.SUPERSOFT,
+                RagdollSource = _ragdoll
+              });
 
               _explosion._onExplode += () =>
               {
@@ -1509,7 +1549,12 @@ namespace SneakyGame.Ragdoll.Equippables
 
           // Play noise
           PlaySound(Audio.UTILITY_ACTION);
-          EnemyScript.CheckSound(_rb.position, EnemyScript.Loudness.SOFT);
+          EnemyScript.CheckSound(new CheckSoundData()
+          {
+            NoisePosition = _rb.position,
+            LoudnessLevel = Loudness.SOFT,
+            RagdollSource = _ragdoll
+          });
 
           // Hide
           if (_ring != null)

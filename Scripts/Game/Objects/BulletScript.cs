@@ -20,7 +20,7 @@ namespace SneakyGame.Objects
     // Source info
     ItemScript _sourceItem;
     ActiveRagdoll _sourceItemRagdoll;
-    EnemyScript.Loudness _sourceLoudness;
+    Loudness _sourceLoudness;
     float _sourceHitForce;
     ItemType _sourceType;
     bool _sourceDismember;
@@ -141,7 +141,14 @@ namespace SneakyGame.Objects
       {
         _lastPos = _rb.position;
         if (dis > 1.5f) return;
-        EnemyScript.CheckSound(transform.position, _sourceLoudness, _id, false);
+        EnemyScript.CheckSound(new CheckSoundData()
+        {
+          NoisePosition = transform.position,
+          LoudnessLevel = _sourceLoudness,
+          BulletID = _id,
+          SlowReaction = false,
+          RagdollSource = _sourceDamageRagdoll
+        });
       }
     }
 
@@ -604,7 +611,7 @@ namespace SneakyGame.Objects
     {
       _sourceDamageRagdoll = _sourceItemRagdoll = sourceRagdoll;
 
-      _sourceLoudness = silenced ? EnemyScript.Loudness.SUPERSOFT : EnemyScript.Loudness.SOFT;
+      _sourceLoudness = silenced ? Loudness.SUPERSOFT : Loudness.SOFT;
       _sourceHitForce = hitForce;
       _sourceDismember = dismember;
       _sourceType = itemType;

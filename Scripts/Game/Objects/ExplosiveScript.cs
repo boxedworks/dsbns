@@ -165,7 +165,11 @@ namespace SneakyGame.Objects
       }
 
       // Set sound alert
-      EnemyScript.CheckSound(transform.position, EnemyScript.Loudness.LOUD);
+      EnemyScript.CheckSound(new CheckSoundData()
+      {
+        NoisePosition = transform.position,
+        LoudnessLevel = Loudness.LOUD
+      });
 
       //
       var smokeParts = FunctionsC.GetParticleSystem(FunctionsC.ParticleSystemType.EXPLOSION_SMOKE)[0];

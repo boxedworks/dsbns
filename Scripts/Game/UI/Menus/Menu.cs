@@ -3464,6 +3464,8 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
         {
           var wave = "-";
           var rank_lowest = "";
+          var rank_lowest_color = "";
+
           if (GameScript.s_IsZombieGameMode)
           {
             wave = LevelModule.GetHighestSurvivalWave(i) + "";
@@ -3472,6 +3474,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
           }
           else if (GameScript.s_IsMissionsGameMode)
           {
+
             // Get lowest rank from all levels in dir
             for (var u = i == 0 ? 1 : 0; u < 12; u++)
             {
@@ -3482,21 +3485,24 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
                 break;
               }
               var level_rating = level_rating_data.Item1;
+              var level_rating_color = level_rating_data.Item2;
 
               if (rank_lowest == "")
               {
                 rank_lowest = level_rating;
+                rank_lowest_color = level_rating_color;
               }
               else if (level_rating.Length < rank_lowest.Length)
               {
                 rank_lowest = level_rating;
+                rank_lowest_color = level_rating_color;
               }
             }
           }
 
           var display_text =
             GameScript.s_IsMissionsGameMode ?
-              string.Format(format_subdirs, $"\\dir{i}", $"{rank_lowest}    ", "", "") + '\n'
+              string.Format("{0,-15}{1,-50}", $"\\dir{i}", $"<color={rank_lowest_color}>{rank_lowest}</color>", "", "") + '\n'
             :
               string.Format(format_subdirs, $"\\dir{i}", $"{wave}    ", "") + '\n';
           s_menus[MenuType.LEVELS].AddComponent(display_text,
@@ -3523,7 +3529,7 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
                 var first_level_iter = component._buttonIndex * levels_per_dir;
                 if (first_level_iter > 0 && !Levels.LevelCompleted(first_level_iter - 1))
                 {
-                  component.SetDisplayText(string.Format(format_subdirs, $"****", $"-    ", "", "") + '\n');
+                  component.SetDisplayText(string.Format(format_subdirs, $"****", $"-      ", "", "") + '\n');
                   return;
                 }
               }
@@ -3577,8 +3583,9 @@ if you don't know how to play, visit the '<color=yellow>briefing</color>' menu~1
 
                   var level_rating = Levels.GetLevelRating(dev_time, level_time_best);
                   var text_rating = level_time_best == -1f ? "-" : level_rating == null ? "?" : level_rating.Item1;
+                  var text_rating_color = level_rating == null ? "" : level_rating.Item2;
 
-                  selections.Add(string.Format(format_subdirs, $"\\{level_iter + 1}", text_levelTimeBest, text_rating, ""));
+                  selections.Add(string.Format("{0,-7}{1,15}{2,11}{3,-30}", $"\\{level_iter + 1}", text_levelTimeBest, "", $"<color={text_rating_color}>{text_rating}</color>"));
 
                   // Check if unlocked
                   if (level_unlocked)

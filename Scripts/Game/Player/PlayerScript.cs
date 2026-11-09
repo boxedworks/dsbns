@@ -2306,7 +2306,13 @@ namespace SneakyGame.Game.Player
     {
       _ragdoll.PlaySound("Ragdoll/Whistle", 0.85f, 1.2f);
 
-      EnemyScript.CheckSound(_ragdoll.Hip.position + _ragdoll.Hip.transform.forward * 3f, _ragdoll.Hip.position, EnemyScript.Loudness.SOFT);
+      EnemyScript.CheckSound(new CheckSoundData()
+      {
+        NoisePosition = _ragdoll.Hip.position + _ragdoll.Hip.transform.forward * 3f,
+        AlertPosition = _ragdoll.Hip.position,
+        LoudnessLevel = Loudness.SOFT,
+        RagdollSource = _ragdoll
+      });
       _ragdoll.DisplayText(LocalizationController.GetString("!"));
 
       _LastWhistle = Time.time;
@@ -2862,7 +2868,11 @@ namespace SneakyGame.Game.Player
 
                 parts.Play();
 
-                EnemyScript.CheckSound(table.transform.position, EnemyScript.Loudness.NORMAL);
+                EnemyScript.CheckSound(new CheckSoundData()
+                {
+                  NoisePosition = table.transform.position,
+                  LoudnessLevel = Loudness.NORMAL,
+                });
               }
             }
             CoroutineSystem.InitiateCoroutine(FlipTable());
