@@ -2573,7 +2573,7 @@ namespace SneakyGame.Enemy
       if (_Enemies_alive == null || GameScript.s_IsZombieGameMode) return;
 
       var noiseAt = checkSoundData.NoisePosition;
-      var alertPosition = checkSoundData.AlertPosition == null ? noiseAt : checkSoundData.AlertPosition;
+      var alertPosition = checkSoundData.AlertPosition == default ? noiseAt : checkSoundData.AlertPosition;
       var loudness = checkSoundData.LoudnessLevel;
       var bulletID = checkSoundData.BulletID;
       var slowReaction = checkSoundData.SlowReaction;

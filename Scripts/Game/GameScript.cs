@@ -105,6 +105,10 @@ public class GameScript : MonoBehaviour
       _ => Color.black
     };*/
 
+    var hexColor = "#0E0E0E";//#545454"; //#0E0E0E
+    ColorUtility.TryParseHtmlString(hexColor, out var ambientColor);
+    RenderSettings.ambientLight = ambientColor;
+
     // Color adjustments
     var profile_ = GameResources._Camera_Main.GetComponent<UnityEngine.Rendering.Volume>().profile;
     UnityEngine.Rendering.Universal.ColorAdjustments colorAdj = null;

@@ -1814,11 +1814,13 @@ public class TileManager
         // Check for light color change
         if (loadedObject.transform.childCount > 2)
         {
-          Light l = loadedObject.transform.GetChild(2).GetComponent<Light>();
-          if (l != null)
+          var light = loadedObject.transform.GetChild(2).GetComponent<Light>();
+          if (light != null)
           {
-            l.color = SceneThemes._Theme._lightColor;
-            l.shadowStrength = SceneThemes._Theme._shadowStrength;
+            light.color = SceneThemes._Theme._lightColor;
+            light.shadowStrength = SceneThemes._Theme._shadowStrength;
+
+            //light.shadows = LightShadows.None;
 
             // Ignore raycasts on lamps
             if (!GameScript.s_EditorEnabled)

@@ -883,12 +883,12 @@ namespace SneakyGame.Ragdoll
     public void ChangeColor(Color c, float lerpAmount = 0f)
     {
       // Color override
-      var colorOverride = RagdollSystem.ColorOverride;
-      if (colorOverride != default)
-      {
-        SetColors(colorOverride, colorOverride);
-        return;
-      }
+      // var colorOverride = RagdollSystem.ColorOverride;
+      // if (colorOverride != default)
+      // {
+      //   SetColors(colorOverride, colorOverride);
+      //   return;
+      // }
 
       //
       if (Equals(color, Color.blue * 1.3f))
